@@ -347,12 +347,12 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
     return cTestSuccess;
 }
 
-void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep)
+void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDACValue, uint32_t pMaxDACValue, uint32_t pStep, bool pCalibrate)
 {
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-    uint8_t             cTrim;
-    uint8_t             cVersion    = 0;
-    std::string         registerStr = "VREFTUNE";
+    uint8_t             cTrim           = 0;
+    uint8_t             cVersion        = 0;
+    std::string         registerStr     = "VREFTUNE";
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
@@ -369,11 +369,17 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             cDACtoADCTree->Branch("DAC", &cDACValVect);
             cDACtoADCTree->Branch("ADC", &cADCValVect);
 
-            cTrim = calibrateADC();
+#ifdef __SEH_USB__
+            if(pCalibrate)
+            {
+                cTrim = calibrateADC();
+                calibrateCurrentDAC();
+            }
+#endif
 
             cVersion = static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getVersion();
             if(cVersion == 0) { registerStr = "VREFCNTR"; }
-            calibrateCurrentDAC();
+
             LOG(INFO) << BOLDBLUE << "VREFTune value " << +cTrim << RESET;
 
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, registerStr, cTrim);
@@ -969,15 +975,6 @@ bool OTHybridTester::LpGBTCheckClocks()
             }
             if(cClkTestDone)
             {
-                cClkStat = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_stat");
-                if(cClkStat)
-                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
-                else
-                {
-                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
-                    cStatus &= false;
-                }
-
                 std::string cRegName        = "";
                 uint16_t    cClkTestCounter = 0, cClkRefCounter = 0;
                 if(cMapIterator->first == "320_l_Clk_Test")
@@ -1002,6 +999,25 @@ bool OTHybridTester::LpGBTCheckClocks()
                 }
 
                 LOG(INFO) << "\t Test Counter = " << +cClkTestCounter << " --- Ref Counter = " << +cClkRefCounter << RESET;
+                // Ignored until firmware is fixed
+                cClkStat = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_stat");
+                if(cClkStat)
+                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED (firmware)" << RESET;
+                else
+                {
+                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDRED << " FAILED (firmware)" << RESET;
+                    // cStatus &= false;
+                }
+                // HOTFIX
+                cClkStat = (abs(cClkTestCounter - cClkRefCounter) < 5);
+
+                if(cClkStat)
+                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED (counter)" << RESET;
+                else
+                {
+                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDRED << " FAILED (counter)" << RESET;
+                    cStatus &= false;
+                }
                 fillSummaryTree(cMapIterator->first, cClkStat);
             }
             cMapIterator++;

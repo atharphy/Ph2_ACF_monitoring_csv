@@ -465,7 +465,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 
         setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * cHvSet) + ",";
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-        std::this_thread::sleep_for(std::chrono::milliseconds(3500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(4500));
         std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
         cHvMea             = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
 #ifdef __TCP_SERVER__
