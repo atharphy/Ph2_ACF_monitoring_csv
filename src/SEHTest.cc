@@ -91,6 +91,8 @@ int main(int argc, char* argv[])
     // test ADC channels
     cmd.defineOption("test-adc", "Test LpGBT ADCs on SEH");
     cmd.defineOptionAlternative("test-adc", "a");
+    cmd.defineOption("calibrate-adc", "Calibrate LpGBT ADCs on SEH via testcard");
+    cmd.defineOptionAlternative("calibrate-adc", "c");
     // run Eye Opening Monitor
     cmd.defineOption("test-eom", "Run Eye Opening Monitor test");
     cmd.defineOptionAlternative("test-eom", "eom");
@@ -107,6 +109,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("fcmd-test", "Run fast command tests", ArgvParser::NoOptionAttribute);
     cmd.defineOption("fcmd-test-start-pattern", "Fast command FSM test start pattern", ArgvParser::OptionRequiresValue);
     cmd.defineOption("fcmd-test-userfile", "User file with fastcommands for testing", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("test-ber", "Run Bit Error Rate test");
+    cmd.defineOptionAlternative("test-ber", "ber");
     // FCMD check in BRAM
     cmd.defineOption("bramfcmd-check", "Access to written data in BRAM", ArgvParser::OptionRequiresValue);
     // Write reference patterns to BRAM
@@ -288,7 +292,18 @@ int main(int argc, char* argv[])
 
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
+    cTool.fillSummaryTree("setup_type", (cGui) ? 1 : 0);
+    if(cGui)
+    {
+        gui::message("");
+        gui::status("Establishing optical link");
+        gui::progress(0 / 10.0);
 
+        gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
+        // gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
+        LOG(DEBUG) << BOLDBLUE << cSEHTester.getDirectoryName().c_str() << RESET;
+        LOG(DEBUG) << BOLDBLUE << cTool.GetMonitorFileName().c_str() << RESET;
+    }
     if(cmd.foundOption("measure-input-iv"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control and perform I-V scan" << RESET;
@@ -342,6 +357,7 @@ int main(int argc, char* argv[])
     //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     //     // cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+
     cTool.ConfigureHw();
 
     cTool.fBeBoardInterface->setBoard(pBoard->getId());
@@ -362,7 +378,7 @@ int main(int argc, char* argv[])
     }
     // Initialize tester
     cSEHTester.Initialise();
-
+    // std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     if(cmd.foundOption("test-parameter"))
     {
         cSEHTester.readTestParameters(cTestParameterFileName);
@@ -384,7 +400,7 @@ int main(int argc, char* argv[])
             gui::status("Testing uplink");
             gui::progress(1 / 10.0);
 
-            gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
+            // gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
             // gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
             LOG(DEBUG) << BOLDBLUE << cSEHTester.getDirectoryName().c_str() << RESET;
             LOG(DEBUG) << BOLDBLUE << cTool.GetMonitorFileName().c_str() << RESET;
@@ -505,8 +521,9 @@ int main(int argc, char* argv[])
             gui::status("Testing ADC lines on the lpGBT");
             gui::progress(5 / 10.0);
         }
-        std::vector<std::string> cADCs = {"ADC0", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 600); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        bool                     cCalibrate = cmd.foundOption("calibrate-adc");
+        std::vector<std::string> cADCs      = {"ADC0", "ADC3"};
+        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 600, cCalibrate); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
         cSEHTester.LpGBTTestFixedADCs();
     }
 
@@ -545,7 +562,7 @@ int main(int argc, char* argv[])
         {
             gui::message("Eye opening monitoring finished");
             gui::status("Testing clock lines");
-            gui::progress(8.5 / 10.0);
+            gui::progress(6 / 10.0);
         }
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
         bool cStatus = cSEHTester.LpGBTCheckClocks();
@@ -571,7 +588,7 @@ int main(int argc, char* argv[])
         {
             gui::message("ADC test finished");
             gui::status("Testing FCMD lines");
-            gui::progress(6 / 10.0);
+            gui::progress(7 / 10.0);
         }
         if(cmd.foundOption("fcmd-pattern"))
         {
@@ -608,7 +625,7 @@ int main(int argc, char* argv[])
         {
             gui::message("FCMD test finished");
             gui::status("Testing efficiency");
-            gui::progress(7 / 10.0);
+            gui::progress(8 / 10.0);
         }
         LOG(INFO) << BOLDBLUE << "Efficiency Test" << RESET;
         cSEHTester.TestEfficiency(0, 2502, 417);
@@ -620,6 +637,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-leak-parallel"))
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         LOG(INFO) << BOLDBLUE << "Ending leakage current with external power supply in parallel" << RESET;
         cSEHTester.EndExternalTestLeakageCurrent(cHVPowerSupplyId, cHVChannelId);
     }
@@ -632,7 +650,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("test-ext-leak") & !cmd.foundOption("test-leak-parallel"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
-        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 30, cHVPowerSupplyId, cHVChannelId);
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
     }
 
     /*********************/
@@ -651,7 +669,7 @@ int main(int argc, char* argv[])
         {
             gui::message("Efficiency test finished");
             gui::status("Testing bias voltage");
-            gui::progress(8 / 10.0);
+            gui::progress(9 / 10.0);
         }
         LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side with external power supply" << RESET;
         cSEHTester.ExternalTestBiasVoltage(cHVPowerSupplyId, cHVChannelId);
