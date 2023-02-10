@@ -724,7 +724,7 @@ float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, f
 }
 
 // Calculation vaild for 2S SEH v3.2 prototypes in W
-// Resistor values also valid for PS ROH v2 
+// Resistor values also valid for PS ROH v2
 // R1=1k; Voltage divider 680k and 1000K
 // Typical responsivity 0.45-0.55 A/W
 float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
@@ -770,7 +770,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
     // Enable Internal VREF
     uint8_t cVrefcntrContent = ReadChipReg(pChip, "VREFCNTR");
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | (0x3f & CVrefcntrContent));
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | (0x3f & cVrefcntrContent));
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
     // Start ADC conversion
@@ -796,7 +796,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, false, false);
 
     // disable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 0 << 7 | (0x3f & CVrefcntrContent));
+    WriteChipReg(pChip, "VREFCNTR", 0 << 7 | (0x3f & cVrefcntrContent));
 
     return (cADCvalue1 << 8 | cADCvalue2);
 }
