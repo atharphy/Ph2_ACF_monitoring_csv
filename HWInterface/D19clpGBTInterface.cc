@@ -325,7 +325,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
     // uint8_t              cTxDataRate = 3, cTxDriveStr = 4  , cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 0, cTxPreEmphWidth = 0, cTxInvert = 0;
+    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {
