@@ -845,8 +845,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("SSA2") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("MPA") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("CIC") != std::string::npos;
-            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53A") != std::string::npos;
-            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53B") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
 
             if(cIsTrackerASIC)
             {

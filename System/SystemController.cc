@@ -49,12 +49,16 @@ SystemController::~SystemController() {}
 
 void SystemController::Inherit(const SystemController* pController)
 {
-    fBeBoardInterface             = pController->fBeBoardInterface;
-    fReadoutChipInterface         = pController->fReadoutChipInterface;
-    flpGBTInterface               = pController->flpGBTInterface;
-    fBeBoardFWMap                 = pController->fBeBoardFWMap;
-    fSettingsMap                  = pController->fSettingsMap;
-    fFileHandler                  = pController->fFileHandler;
+    fBeBoardInterface     = pController->fBeBoardInterface;
+    fReadoutChipInterface = pController->fReadoutChipInterface;
+    flpGBTInterface       = pController->flpGBTInterface;
+    fBeBoardFWMap         = pController->fBeBoardFWMap;
+    fSettingsMap          = pController->fSettingsMap;
+    fFileHandler          = pController->fFileHandler;
+    fRawFileName          = pController->fRawFileName;
+    // fParsedFile                   = pController->fParsedFile;
+    fWriteHandlerEnabled          = pController->fWriteHandlerEnabled;
+    fDetectorMonitor              = pController->fDetectorMonitor;
     fDQMStreamerEnabled           = pController->fDQMStreamerEnabled;
     fMonitorDQMStreamerEnabled    = pController->fMonitorDQMStreamerEnabled;
     fDQMStreamer                  = pController->fDQMStreamer;
@@ -63,6 +67,13 @@ void SystemController::Inherit(const SystemController* pController)
     fCicInterface                 = pController->fCicInterface;
     fPowerSupplyClient            = pController->fPowerSupplyClient;
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
+    fEventList                    = pController->fEventList;
+    // fFuture                       = pController->fFuture;
+    fEventSize                      = pController->fEventSize;
+    fNCbc                           = pController->fNCbc;
+    fParser                         = pController->fParser;
+    fSameChannelGroupForAllChannels = pController->fSameChannelGroupForAllChannels;
+    fInitializeInterfaces           = pController->fInitializeInterfaces;
 
 #ifdef __TCP_SERVER__
     fTestcardClient = pController->fTestcardClient;
@@ -339,6 +350,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
 
+    // ####################
+    // # Set module type  #
+    // ####################
     DetectorMonitorConfig theDetectorMonitorConfig;
     std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os);
 
@@ -355,12 +369,13 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
             abort();
         }
+
         fDetectorMonitor->forkMonitor();
     }
 
-    // ############################################
-    // # Make sure  all interfaces are configured #
-    // ############################################
+    // ###########################################
+    // # Make sure all interfaces are configured #
+    // ###########################################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() == BoardType::RD53) continue;
@@ -368,9 +383,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureInterfaces(cBoard);
     }
 
-    // ###################
-    // # Set module type #
-    // ###################
+    // ##########################
+    // # Set module type for OT #
+    // ##########################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() != BoardType::D19C) continue;
