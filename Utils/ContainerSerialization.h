@@ -15,13 +15,18 @@ class ThresholdAndNoise;
 class EmptyContainer;
 template <size_t size, typename T>
 class GenericDataArray;
+template <size_t size1, size_t size2, typename T>
+class GenericDataArray_2D;
 
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<uint8_t>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<uint32_t>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<float>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<Occupancy>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<ThresholdAndNoise>)))
 
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<Occupancy,Occupancy>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer,Occupancy>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer,float>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<ThresholdAndNoise,ThresholdAndNoise>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<uint16_t,EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer,EmptyContainer>)))
@@ -31,6 +36,10 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<VECSIZE, ui
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<TDCBINS, uint16_t>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>, EmptyContainer>)))
 
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<NCHANNELS + 1, uint32_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>, GenericDataArray<NCHANNELS + 1, uint32_t>>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>, EmptyContainer>)))
 
 #include "Utils/Occupancy.h"
 #include <iostream>

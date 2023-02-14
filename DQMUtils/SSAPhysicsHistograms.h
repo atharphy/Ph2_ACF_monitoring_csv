@@ -26,8 +26,7 @@ class SSAPhysicsHistograms : public DQMHistogramBase
     void fillOccupancy(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer fDetectorData;
-
+    DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fOccupancy;
 };
 

@@ -59,7 +59,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     void reset(void) override;
 
   private:
-    DetectorDataContainer fDetectorData;
+    DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fChipHitHistograms;
     DetectorDataContainer fHybridHitHistograms;
     DetectorDataContainer fModuleHitHistograms;

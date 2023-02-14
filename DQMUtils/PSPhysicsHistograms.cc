@@ -9,11 +9,9 @@
 
 #include "PSPhysicsHistograms.h"
 #include "HWDescription/Definition.h"
-#include "Utils/ChannelContainerStream.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 
-#include "Utils/ContainerStream.h"
 #include "Utils/PSSync.h"
 
 using namespace Ph2_HwDescription;
@@ -32,7 +30,6 @@ void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
                     if(chip->getFrontEndType() == FrontEndType::SSA2) std::cout << "SSA2" << std::endl;
                 }
 
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     HistContainer<TH1F> theSClusterTemplateHistogram = HistContainer<TH1F>("S clusters", "S clusters", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
     HistContainer<TH2F> thePClusterTemplateHistogram =
         HistContainer<TH2F>("P clusters", "P clusters", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPACHANNELS / NSSACHANNELS, -0.5, float(NMPACHANNELS / NSSACHANNELS) - 0.5);
@@ -203,29 +200,22 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
 
 bool PSPhysicsHistograms::fill(std::vector<char>& dataBuffer)
 {
-    // std::cout<<__PRETTY_FUNCTION__ << "Begin of function"<<std::endl;
-    // ChipContainerStream<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>> thePSEventStreamer("PSPhysics");
-    ChannelContainerStream<float> theOccupancyStream("PSPhysicsOccupancy");
-    ChannelContainerStream<float> theStubStream("PSPhysicsStub");
+    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theOccupancySerialization("PSPhysicsOccupancy");
+    ContainerSerialization theStubSerialization("PSPhysicsStub");
 
-    if(theOccupancyStream.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << __PRETTY_FUNCTION__ << "attached Occupancy!!!" << std::endl;
-        theOccupancyStream.decodeChipData(fDetectorData);
-        std::cout << __LINE__ << std::endl;
+        std::cout << "Matched PSPhysics Occupancy!!!!!\n";
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeHybridContainer<float,EmptyContainer,EmptyContainer>(fDetectorContainer);
         fillOccupancy(fDetectorData);
-        std::cout << __LINE__ << std::endl;
-        fDetectorData.cleanDataStored();
-        std::cout << __LINE__ << std::endl;
         return true;
     }
-
-    if(theStubStream.attachBuffer(&dataBuffer))
+    if(theStubSerialization.attachDeserializer(inputStream))
     {
-        std::cout << __PRETTY_FUNCTION__ << "attached Stub!!!" << std::endl;
-        theStubStream.decodeChipData(fDetectorData);
+        std::cout << "Matched PSPhysics Stub!!!!!\n";
+        DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<float,EmptyContainer,EmptyContainer>(fDetectorContainer);
         fillStub(fDetectorData);
-        fDetectorData.cleanDataStored();
         return true;
     }
     return false;
