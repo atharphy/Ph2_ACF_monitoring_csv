@@ -104,14 +104,22 @@ build:StandAlone_wEUDAQ_c7:
     - source ./setup.sh ci
     - export CompileWithEUDAQ=true
 
-# Compile with TC_USB library
+# Compile with TC_USB library for FEHs
+build:StandAlone_wTC_USB_FEH_c7:
+  extends: .build
+  before_script:
+    - yum install -y libusb-devel libusbx-devel
+    - source ./setup.sh ci
+    - export CompileWithTCUSB=true
+
+# Compile with TC_USB library for SEH
 build:StandAlone_wTC_USB_SEH_c7:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
     - source ./setup.sh ci
     - export CompileWithTCUSB=true
-    - export UseTCUSBTcpServer=true
+    - export UseTCUSBforROH=true
 
 
 # Compile with TC_USB library for ROH
@@ -122,8 +130,6 @@ build:StandAlone_wTC_USB_ROH_c7:
     - source ./setup.sh ci
     - export CompileWithTCUSB=true
     - export UseTCUSBforROH=true
-    - export UseTCUSBTcpServer=true
-
 
 ## BUILD AL8 ##########
 
