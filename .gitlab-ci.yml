@@ -119,7 +119,7 @@ build:StandAlone_wTC_USB_SEH_c7:
     - yum install -y libusb-devel libusbx-devel
     - source ./setup.sh ci
     - export CompileWithTCUSB=true
-    - export UseTCUSBforROH=true
+    - export UseTCUSBforSEH=true
 
 
 # Compile with TC_USB library for ROH
