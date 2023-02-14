@@ -10,7 +10,7 @@
 
         <OpticalGroup Id="0" FMCId="L12" reset="1">
             <lpGBT_Files path="./settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+            <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
                 <!-- <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt"> -->
                 <Settings />
             </lpGBT>
