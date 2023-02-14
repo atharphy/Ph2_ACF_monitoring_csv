@@ -76,7 +76,6 @@ class OTHybridTester : public Tool
     bool     LpGBTGetLinkLock();
     bool     LpGBTCheckClocks();
     bool     LpGBTFastCommandChecker(uint8_t pPattern);
-    void     freeTest();
     uint16_t calibrateADC();
     void     calibrateCurrentDAC();
     // Run Eye Openin Monitor
