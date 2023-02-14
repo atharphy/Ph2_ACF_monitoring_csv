@@ -90,7 +90,7 @@ void DQMInterface::stopProcessingData(void)
     std::chrono::milliseconds span(1000);
     int                       timeout = 3; // in seconds
 
-    fListener->close();
+    fListener->disconnect();
     while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout > 0)
     { LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET; }
 
