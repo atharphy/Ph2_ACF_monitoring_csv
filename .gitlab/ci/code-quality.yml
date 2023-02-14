@@ -34,6 +34,26 @@ quality:cpplint:
     paths:
       - artifacts
 
+quality:clang-format:
+  image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
+  stage: quality
+  tags:
+    - cvmfs
+  stage: quality
+  needs: []
+  allow_failure: true
+
+  before_script:
+    - echo "Running code quality clang-format checks"
+  script:
+    - echo "Inside script"
+  after_script:
+    - echo "Running code quality checks after script"
+  artifacts:
+    expire_in: 1 month
+    paths:
+      - artifacts
+
 code_quality:
   stage: quality
   allow_failure: false
