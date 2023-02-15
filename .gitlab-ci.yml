@@ -104,14 +104,6 @@ build:StandAlone_wEUDAQ_c7:
     - source ./setup.sh ci
     - export CompileWithEUDAQ=true
 
-# Compile with TC_USB library for FEHs
-build:StandAlone_wTC_USB_FEH_c7:
-  extends: .build
-  before_script:
-    - yum install -y libusb-devel libusbx-devel
-    - source ./setup.sh ci
-    - export CompileWithTCUSB=true
-
 # Compile with TC_USB library for SEH
 build:StandAlone_wTC_USB_SEH_c7:
   extends: .build
@@ -174,14 +166,6 @@ build:StandAlone_wEUDAQ_al8:
     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
     entrypoint: ["/bin/sh","-c"]
 
-# Compile with TC_USB library for FEHs
-build:StandAlone_wTC_USB_FEH_al8:
-  extends: build:StandAlone_wTC_USB_FEH_c7
-  stage: build_al8
-  image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
-    entrypoint: ["/bin/sh","-c"]
-
 # Compile with TC_USB library for SEH
 build:StandAlone_wTC_USB_SEH_al8:
   extends: build:StandAlone_wTC_USB_SEH_c7
@@ -199,7 +183,6 @@ build:StandAlone_wTC_USB_ROH_al8:
     entrypoint: ["/bin/sh","-c"]
 
 ## BUILD AL9 ##########
-
 
 # Stand-alone application, without data streaming
 build:StandAlone_woDS_al9:
@@ -236,14 +219,6 @@ build:ShepApplication_al9:
 # Compile with EUDAQ libraries
 build:StandAlone_wEUDAQ_al9:
   extends: build:StandAlone_wEUDAQ_c7
-  stage: build_al9
-  image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
-    entrypoint: ["/bin/sh","-c"]
-
-# Compile with TC_USB library for FEHs
-build:StandAlone_wTC_USB_FEH_al9:
-  extends: build:StandAlone_wTC_USB_FEH_c7
   stage: build_al9
   image:
     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
