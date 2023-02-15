@@ -30,7 +30,7 @@ class InjectionDelayHistograms : public DQMHistogramBase
     void fillInjectionDelay(const DetectorDataContainer& InjectionDelayContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer Occupancy1D;
     DetectorDataContainer InjectionDelay;

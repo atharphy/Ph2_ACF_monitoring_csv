@@ -12,6 +12,7 @@
 #include <boost/multiprecision/number.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
+#include "Utils/ContainerSerialization.h"
 
 using namespace boost::numeric;
 using namespace Ph2_HwDescription;
@@ -84,21 +85,20 @@ void Gain::Running()
 
 void Gain::sendData()
 {
-    auto theOccStream  = this->prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
-    auto theGainStream = this->prepareChannelContainerStreamer<GainFit>("Gain");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
+        ContainerSerialization theOccupancySerialization("GainOccupancy");
         size_t index = 0;
         for(const auto theOccContainer: detectorContainerVector)
         {
-            theOccStream->setHeaderElement(dacList[index] - offset);
-            for(const auto cBoard: *theOccContainer) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
-            index++;
+            uint16_t deltaVcal = dacList[index++] - offset;
+            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVcal);
         }
-
         if(theGainContainer != nullptr)
-            for(const auto cBoard: *theGainContainer.get()) theGainStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        {
+            ContainerSerialization theGainSerialization("GainGain");
+            theGainSerialization.streamByChipContainer(fDQMStreamer, *theGainContainer.get());
+        }
     }
 }
 

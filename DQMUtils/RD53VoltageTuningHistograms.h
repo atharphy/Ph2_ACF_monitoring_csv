@@ -28,7 +28,7 @@ class VoltageTuningHistograms : public DQMHistogramBase
     void fillAna(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
     DetectorDataContainer VoltageDig;
     DetectorDataContainer VoltageAna;
 };

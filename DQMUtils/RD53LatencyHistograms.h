@@ -12,7 +12,6 @@
 #define RD53LatencyHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
@@ -31,7 +30,7 @@ class LatencyHistograms : public DQMHistogramBase
     void fillLatency(const DetectorDataContainer& LatencyContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer Occupancy1D;
     DetectorDataContainer Latency;

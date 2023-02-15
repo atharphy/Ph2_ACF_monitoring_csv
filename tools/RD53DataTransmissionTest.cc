@@ -8,6 +8,7 @@
 */
 
 #include "RD53DataTransmissionTest.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -43,13 +44,13 @@ void DataTransmissionTest::Running()
 
 void DataTransmissionTest::sendData()
 {
-    auto theStreamTAP0scan = this->prepareChipContainerStreamer<EmptyContainer, std::array<std::tuple<uint16_t, double, double, double>, 11>>("DataTransmissionTestTAP0scan");
-    auto theStreamTAP0tgt  = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("DataTransmissionTestTAP0target");
-
-    if(fDQMStreamerEnabled == true)
+    // WARNING: theTAP0scanContainer contains std::array<std::tuple<uint16_t, double, double, double>, 11> members that cannot be streamed using boost serialization
+    // without some custom serialization ad hoc function. Please consider another way of storing data or create a class containing a data member with that time
+    // Given the current implementation, theTAP0scanContainer is not streamed through the network
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP0tgtContainer) theStreamTAP0tgt->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("DataTransmissionTestTAP0target");
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, theTAP0tgtContainer);
     }
 }
 

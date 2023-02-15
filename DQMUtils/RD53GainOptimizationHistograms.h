@@ -28,7 +28,7 @@ class GainOptimizationHistograms : public DQMHistogramBase
     void fill(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer KrumCurr;
 };
