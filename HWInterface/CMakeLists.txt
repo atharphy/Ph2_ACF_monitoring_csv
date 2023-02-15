@@ -52,9 +52,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
           message(STATUS "    Building the SEH TestCards USB components")
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
       endif($ENV{UseTCUSBforSEH})
-      if($ENV{UseTCUSBTcpServer})
-          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
-      endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
 
     ####################################

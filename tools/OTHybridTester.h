@@ -21,9 +21,9 @@
 #include "HWInterface/D19cTriggerInterface.h"
 #include "HWInterface/DPInterface.h"
 #include "HWInterface/L1ReadoutInterface.h"
+#include "Utils/linearFitter.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/Tool.h"
-#include "Utils/linearFitter.h"
 
 #include "TAxis.h"
 #include "TF1.h"

@@ -105,7 +105,6 @@ export Amc13Flag='-D__AMC13__'
 export TCUSBFlag='-D__TCUSB__'
 export TCUSBforROHFlag='-D__ROH_USB__'
 export TCUSBforSEHFlag='-D__SEH_USB__'
-export TCUSBTcpServerFlag='-D__TCP_SERVER__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
@@ -146,8 +145,6 @@ export CompileWithTCUSB=false
 # OTHybridTester for either ROH or SEH
 export UseTCUSBforROH=false
 export UseTCUSBforSEH=false
-# Outdated and to be removed in a future update
-export UseTCUSBTcpServer=false
 
 
 # Clang-format command
@@ -166,7 +163,6 @@ if [[ $1 == "ci" ]]; then
     export CompileWithTCUSB=false
     export UseTCUSBforROH=false
     export UseTCUSBforSEH=false
-    export UseTCUSBTcpServer=false
 fi
 
 echo "=== DONE: you can now run cmake ==="
