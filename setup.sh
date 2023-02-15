@@ -143,8 +143,10 @@ export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
 export CompileWithTCUSB=false
+# OTHybridTester for either ROH or SEH
 export UseTCUSBforROH=false
 export UseTCUSBforSEH=false
+# Outdated and to be removed in a future update
 export UseTCUSBTcpServer=false
 
 
