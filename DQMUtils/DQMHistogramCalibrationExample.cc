@@ -12,7 +12,6 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TH1F.h"
-#include "Utils/ChannelContainerStream.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
