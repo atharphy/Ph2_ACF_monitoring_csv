@@ -2,7 +2,6 @@
 #include "HWDescription/Definition.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/D19clpGBTInterface.h"
-#include "Utils/CharArray.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ValueAndTime.h"
 
