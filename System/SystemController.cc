@@ -49,14 +49,16 @@ SystemController::~SystemController() {}
 
 void SystemController::Inherit(const SystemController* pController)
 {
-    fBeBoardInterface     = pController->fBeBoardInterface;
-    fReadoutChipInterface = pController->fReadoutChipInterface;
-    flpGBTInterface       = pController->flpGBTInterface;
-    fBeBoardFWMap         = pController->fBeBoardFWMap;
-    fSettingsMap          = pController->fSettingsMap;
-    fFileHandler          = pController->fFileHandler;
-    fRawFileName          = pController->fRawFileName;
-    // fParsedFile                   = pController->fParsedFile;
+    fBeBoardInterface             = pController->fBeBoardInterface;
+    fReadoutChipInterface         = pController->fReadoutChipInterface;
+    flpGBTInterface               = pController->flpGBTInterface;
+    fBeBoardFWMap                 = pController->fBeBoardFWMap;
+    fSettingsMap                  = pController->fSettingsMap;
+    fFileHandler                  = pController->fFileHandler;
+    fRawFileName                  = pController->fRawFileName;
+    fParsedFile.clear();
+    fParsedFile.str("");
+    fParsedFile << pController->fParsedFile.rdbuf();
     fWriteHandlerEnabled          = pController->fWriteHandlerEnabled;
     fDetectorMonitor              = pController->fDetectorMonitor;
     fDQMStreamerEnabled           = pController->fDQMStreamerEnabled;
@@ -804,31 +806,30 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
             }
-	    bool setSSACurrent=true;
-	    for(auto cChip: *cHybrid)
-	    {
-            	if (cChip->getFrontEndType() == FrontEndType::MPA2) 
-		    {
-		    setSSACurrent=false;
-		    break;
-		    }
-	    }
-	    if (setSSACurrent)
-	    {
-            bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
-            for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
+            bool setSSACurrent = true;
+            for(auto cChip: *cHybrid)
             {
-                if(cSkipSSA3 && cSSAId == 3) continue;
-                SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
-                uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
-                cSSA->setOptical(cHybrid->isOptical());
-                cSSA->setMasterId(cHybrid->getMasterId());
-                LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
-                auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
-                (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
-
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    setSSACurrent = false;
+                    break;
+                }
             }
-	    }
+            if(setSSACurrent)
+            {
+                bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
+                for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
+                {
+                    if(cSkipSSA3 && cSSAId == 3) continue;
+                    SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
+                    uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
+                    cSSA->setOptical(cHybrid->isOptical());
+                    cSSA->setMasterId(cHybrid->getMasterId());
+                    LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
+                    auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
+                    (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
+                }
+            }
 
         } // hybrid
     }     // lpGBT part ... resets + clocks
@@ -992,7 +993,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
 }
-void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doAlsoFrontend)
+void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
 {
     if(fDetectorContainer == nullptr)
     {
@@ -1098,7 +1099,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doA
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
             ConfigureIT(cBoard);
-            if(doAlsoFrontend == true) ConfigureFrontendIT(cBoard);
+            ConfigureFrontendIT(cBoard);
 
             // ######################################
             // # Dispatch threads for data decoding #
@@ -1168,14 +1169,12 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
+void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
-    std::stringstream outp;
-
-    InitializeHw(cHWFile, outp, enableStream, DQMportNumber);
-    InitializeSettings(cHWFile, outp);
-    std::cout << outp.str() << std::endl;
-    ConfigureHw(false, true, doAlsoFrontend);
+    InitializeHw(cHWFile, fParsedFile, enableStream, DQMportNumber);
+    InitializeSettings(cHWFile, fParsedFile);
+    std::cout << fParsedFile.str() << std::endl;
+    ConfigureHw(false, true);
 }
 
 void SystemController::Start(int runNumber)

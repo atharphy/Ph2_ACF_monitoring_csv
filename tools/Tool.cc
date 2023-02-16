@@ -120,9 +120,9 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
+void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber, doAlsoFrontend);
+    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
     ConfigureCalibration();
 }
 

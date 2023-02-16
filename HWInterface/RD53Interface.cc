@@ -15,13 +15,13 @@ namespace Ph2_HwInterface
 {
 RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {}
 
-bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerifLoop)
+bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
 
     auto                  nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
-    PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerifLoop);
+    PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerify);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
@@ -29,7 +29,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 
     bool     status      = true;
     uint16_t actualValue = 0;
-    if(pVerifLoop == true)
+    if(pVerify == true)
     {
         if(regName == "PIX_PORTAL")
         {
@@ -54,7 +54,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
                    << ", read = " << BOLDYELLOW << actualValue << RESET;
     }
-    else if((pVerifLoop == true) && (status == true))
+    else if((pVerify == true) && (status == true))
     {
         LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
     }
@@ -104,7 +104,7 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
     return 0;
 }
 
-bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerify, uint32_t pBlockSize)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -113,7 +113,7 @@ bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoo
     return true;
 }
 
-bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLoop)
+bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerify)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -127,7 +127,7 @@ bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLo
     return true;
 }
 
-bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
+bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify)
 {
     RD53* pRD53          = static_cast<RD53*>(pChip);
     auto& pixMaskDefault = pRD53->getPixelsMaskDefault();
@@ -191,7 +191,7 @@ uint16_t RD53Interface::GetFieldValue(uint16_t regValue, uint8_t start, uint8_t 
 void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
 void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
 
-bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerifLoop)
+bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerify)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 

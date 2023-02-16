@@ -18,14 +18,14 @@ namespace Ph2_HwInterface
 // # Read and Write LpGBT registers #
 // ##################################
 
-bool RD53lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
+bool RD53lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify)
 {
-    bool writeGood = RD53lpGBTInterface::WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
+    bool writeGood = RD53lpGBTInterface::WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerify);
     pChip->setReg(pRegNode, pValue);
     return writeGood;
 }
 
-bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
+bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
 {
     bool writeGood = true;
     for(const auto& cReg: pRegVec) writeGood &= RD53lpGBTInterface::WriteChipReg(pChip, cReg.first, cReg.second);
@@ -34,7 +34,7 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
 
 uint16_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode) { return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); }
 
-bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop)
+bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -54,11 +54,11 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
     bool status;
     do
     {
-        status = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerifLoop);
+        status = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerify);
         nAttempts++;
-    } while((pVerifLoop == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
+    } while((pVerify == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
-    if((pVerifLoop == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
+    if((pVerify == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
 
     return true;
 }
@@ -73,7 +73,7 @@ uint16_t RD53lpGBTInterface::ReadReg(Chip* pChip, uint16_t pAddress)
 // # Main configurarion #
 // ######################
 
-bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSize)
 {
     this->setBoard(pChip->getBeBoardId());
 

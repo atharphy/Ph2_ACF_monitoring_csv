@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSize)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -24,8 +24,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ########################################################################
     // # Switching to pixel-register configuration, instead of the hard-wired #
     // ########################################################################
-    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG", 0x9CE2, pVerifLoop);
-    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, pVerifLoop);
+    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG", 0x9CE2, pVerify);
+    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, pVerify);
 
     // ######################
     // # Reset Core Columns #
@@ -109,7 +109,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
-            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerifLoop);
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
         }
 
     // ###################################
