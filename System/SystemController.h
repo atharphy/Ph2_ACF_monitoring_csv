@@ -175,7 +175,7 @@ class SystemController
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
-    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize = true, bool doAlsoFrontend = true);
+    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize = true);
 
     // IT + OT specific configurations
     /*!
@@ -236,7 +236,7 @@ class SystemController
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000, bool doAlsoFrontend = true);
+    virtual void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);

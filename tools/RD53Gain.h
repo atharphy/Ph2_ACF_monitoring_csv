@@ -72,6 +72,7 @@ class Gain : public CalibBase
     ContainerRecycleBin<OccupancyAndPh>    theRecyclingBin;
 
   protected:
+    size_t                                   injType;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     size_t rowStart;

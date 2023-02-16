@@ -1133,9 +1133,9 @@ uint16_t OTHybridTester::calibrateADC()
 
 void OTHybridTester::calibrateCurrentDAC()
 {
-    float                 cGain         = 0;
-    uint16_t              cOffset       = 0;
-    uint16_t              cADCTempp     = 0;
+    float                 cGain     = 0;
+    uint16_t              cOffset   = 0;
+    uint16_t              cADCTempp = 0;
     std::vector<uint16_t> cDACVect;
     std::vector<float>    cCurrentVect;
     std::vector<uint16_t> cADCVect;
