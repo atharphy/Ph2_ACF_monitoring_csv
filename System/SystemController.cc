@@ -49,13 +49,13 @@ SystemController::~SystemController() {}
 
 void SystemController::Inherit(const SystemController* pController)
 {
-    fBeBoardInterface             = pController->fBeBoardInterface;
-    fReadoutChipInterface         = pController->fReadoutChipInterface;
-    flpGBTInterface               = pController->flpGBTInterface;
-    fBeBoardFWMap                 = pController->fBeBoardFWMap;
-    fSettingsMap                  = pController->fSettingsMap;
-    fFileHandler                  = pController->fFileHandler;
-    fRawFileName                  = pController->fRawFileName;
+    fBeBoardInterface     = pController->fBeBoardInterface;
+    fReadoutChipInterface = pController->fReadoutChipInterface;
+    flpGBTInterface       = pController->flpGBTInterface;
+    fBeBoardFWMap         = pController->fBeBoardFWMap;
+    fSettingsMap          = pController->fSettingsMap;
+    fFileHandler          = pController->fFileHandler;
+    fRawFileName          = pController->fRawFileName;
     fParsedFile.clear();
     fParsedFile.str("");
     fParsedFile << pController->fParsedFile.rdbuf();
@@ -81,6 +81,7 @@ void SystemController::Inherit(const SystemController* pController)
     fTestcardClient = pController->fTestcardClient;
 #endif
 }
+
 void SystemController::StopMonitoring()
 {
     if(fDetectorMonitor != nullptr) { fDetectorMonitor->stopMonitoring(); }
@@ -135,11 +136,6 @@ void SystemController::Destroy()
 
     delete fChannelGroupHandlerContainer;
     fChannelGroupHandlerContainer = nullptr;
-
-#ifdef __TCP_SERVER__
-    delete fTestcardClient;
-    fTestcardClient = nullptr;
-#endif
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -218,16 +214,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     {
         LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
     }
-
-#ifdef __TCP_SERVER__
-    fTestcardClient = new TCPClient("127.0.0.1", 8000);
-    if(!fTestcardClient->connect(1))
-    {
-        std::cerr << "Cannot connect to the Testcard Server" << '\n';
-        delete fTestcardClient;
-        fTestcardClient = nullptr;
-    }
-#endif
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
