@@ -12,7 +12,6 @@
 #define RD53GainOptimizationHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 
 #include <TH1F.h>
