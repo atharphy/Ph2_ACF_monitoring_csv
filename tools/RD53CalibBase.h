@@ -61,6 +61,12 @@ class CalibBase : public Tool
   protected:
     std::string theHistoFileName;
     std::string dataOutputDir;
+    enum INJtype
+    {
+        None,
+        Analog,
+        Digital
+    };
 
   private:
     virtual void fillHisto() = 0;
