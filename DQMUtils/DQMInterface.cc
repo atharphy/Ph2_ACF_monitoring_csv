@@ -118,12 +118,6 @@ bool DQMInterface::running()
     while(fRunning)
     {
         // LOG(INFO) << __PRETTY_FUNCTION__ << " Running = " << fRunning << RESET;
-        // if(receive(configBuffer, 1) != -1)
-        // if(receive(*reinterpret_cast<std::vector<char>*>(*configBuffer.end()), 1) != -1)
-        // TODO We need to optimize the data readout so we don't do multiple copies
-        // TODO We need to optimize the data readout so we don't do multiple copies
-        // TODO We need to optimize the data readout so we don't do multiple copies
-        // if(fListener->receive(tmpDataBuffer, 0, 100000) > 0)
         try
         {
             tmpDataBuffer = fListener->receive<std::vector<char>>();
