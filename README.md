@@ -124,87 +124,96 @@ For more information on the firmware, please check the doc directory of https://
     ii. expand the `Variables` section
 
     iii. click the `Add variable` button
-
         - add key: USER_NAME and value: <your CERN user name>
 
     iv. click the `Add variable` button
-
         - select the flag `Mask variable`
         - add key: USER_PASS and value: <your CERN password encoded to base64>
           e.g encode "thisword": printf "thisword" | base64
 
 3. Enable shared Runners (if not enabled)
-
     i. from `settings > CI/CD` expand the `Runners` section
-
     ii. click the `Allow shared Runners` button
-
 
 ### Setup on CentOs7
 1. Install devtoolset 10
-
-        $> sudo yum install -y centos-release-scl-rh
-        $> sudo yum install -y devtoolset-10
+```bash
+sudo yum install -y centos-release-scl-rh
+sudo yum install -y devtoolset-10
+```
 
 2. On CC7 you also need to install boost v1.53 headers (default on this system) and pugixml as they don't ship with uHAL any more:
 
-        $> sudo yum install -y boost-devel pugixml-devel json-devel
+```bash
+sudo yum install -y boost-devel pugixml-devel json-devel
+```
 
 2. Install uHAL. SW tested with uHAL version up to 2.7.1
 
-        Follow instructions from
-        https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html
+    Follow instructions from
+    https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html
 
 3. Install CERN ROOT
-
-        $> sudo yum install -y root
-        $> sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
-
+```bash
+sudo yum install -y root
+sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+```
 
 5. Install CMAKE3 > 3.0:
 
-        $> sudo yum install -y cmake3
+```bash
+sudo yum install -y cmake3
+```
 
 6. Install python3
 
-        $> sudo yum install -y python3 python3-devel
+```bash
+sudo yum install -y python3 python3-devel
+```
 
 7. Install protobuf:
 
-        Follow instructions from
-        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+   Follow instructions from
+   https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
 8. Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
-
-        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
-        $> tar zxvf v2.9.2.tar.gz
+```bash
+wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+tar zxvf v2.9.2.tar.gz
+```
 
 
 ### Run in docker container
     Docker container are provided to facilitate users and developers in setting up the framework.
 
-    All docker containers can be found here:
-    https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
+All docker containers can be found here:
+https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
 
-    Do run using one of the container, use the command:
-    $> docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
+Do run using one of the container, use the command:
+```bash
+docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
+```
 
-    Suggested images are:
-    For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
-    For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
+Suggested images are:
+  -  For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
+  -  For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
 
-    Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
+  Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
 
 
 ### clang-format (required to submit merge requests!!!)
 1. install 7.0 llvm toolset:
 
-        $> yum install centos-release-scl
-        $> yum install llvm-toolset-7.0
+```bash
+yum install centos-release-scl
+yum install llvm-toolset-7.0
+```
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
 
-        $> formatAll
+```bash
+formatAll
+```
 
 
 ### The Ph2_ACF software
@@ -212,12 +221,14 @@ Follow these instructions to install and compile the libraries (provided you ins
 
 1. Clone the GitHub repo and run cmake
 
-        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
-        $> cd Ph2_ACF
-        $> source setup.sh
-        $> mkdir build
-        $> cd build
-        $> cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to tall it `cmake3 ..`
+```bash
+git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
+cd Ph2_ACF
+source setup.sh
+mkdir build
+cd build
+cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to tall it `cmake3 ..`
+```
 
 2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the Ph2_ACF root directory.
 
@@ -225,110 +236,198 @@ Follow these instructions to install and compile the libraries (provided you ins
 
 4. Launch
 
-        $> systemtest --help
-
-    to test the parsing of the HWDescription.xml file.
+```bash
+systemtest --help
+```
+to test the parsing of the HWDescription.xml file.
 
 5. Launch
 
-        $> datatest --help
-
-    to test if you can correctly read data
+```bash
+datatest --help
+```
+to test if you can correctly read data
 
 6. Launch
 
-        $> calibrate --help
+```bash
+calibrate --help
+```
+to calibrate a hybrid,
 
-    to calibrate a hybrid,
+```bash
+hybridtest --help
+```
+to test a hybird's I2C registers and input channel connectivity
 
-        $> hybridtest --help
+```bash
+cmtest --help
+```
+to run the CM noise study
 
-    to test a hybird's I2C registers and input channel connectivity
+```bash
+pulseshape --help
+```
+to measure the analog pulseshape of the cbc
 
-          $> cmtest --help
-
-    to run the CM noise study
-
-          $> pulseshape --help
-
-    to measure the analog pulseshape of the cbc
-
-          $> configure --help
-
-    to apply a configuration to the CBCs
+```bash
+configure --help
+```
+to apply a configuration to the CBCs
 
 7. Launch
 
-          $> commission --help
-
-    to do latency & threshold scans
+```bash
+commission --help
+```
+to do latency & threshold scans
 
 8. Launch
 
-          $> fpgaconfig --help
-
-    to upload a new FW image to the GLIB
+```bash
+fpgaconfig --help
+```
+to upload a new FW image to the GLIB
 
 9. Launch
 
-          $> miniDAQ --help
-
-    to save binary data from the GLIB to file
+```bash
+miniDAQ --help
+```
+to save binary data from the GLIB to file
 
 10. Launch
 
-          $> miniDQM --help
+```bash
+miniDQM --help
+```
+to run the DQM code from the June '15 beamtest
 
-    to run the DQM code from the June '15 beamtest
 
-
-### Setup on CentOs8
+### Setup on CentOs8 (deprecated)
 The following procedure will install (in order):
 1. the `boost` and `pugixml` libraries
 2. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
 3. `root` with all its needed libraries
 4. `cmake`, tools for clang, including `clang-format` and `git-extras`
 
-```bash
 # Libraries needed by Ph2_ACF
+```bash
 sudo yum install -y boost-devel pugixml-devel json-devel
+```
 
 # uHAL libraries (cactus)
+```bash
 sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
   -o /etc/yum.repos.d/ipbus-sw.repo
 sudo yum-config-manager --enable powertools
 sudo yum clean all
 sudo yum groupinstall uhal
+```
 
 # ROOT
+```bash
 sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
   root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+```
 
 # Build tools and some nice git extras
+```bash
 sudo yum install -y cmake3
 sudo yum install -y clang-tools-extra
 sudo yum install -y git-extras
 ```
 
 Install devtoolset 10
-
-        $> sudo yum makecache --refresh
-        $> sudo yum -y install gcc-toolset-10-gcc
+```bash
+sudo yum makecache --refresh
+sudo yum -y install gcc-toolset-10-gcc
+```
 
 Install python3
 
-        $> sudo yum install -y python3 python3-devel
+```bash
+sudo yum install -y python3 python3-devel
+```
 
 Install protobuf:
 
-        Follow instructions to install protobuf from (Just install section is needed)
-        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+Follow instructions to install protobuf from (Just install section is needed)
+https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
-Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+Install `pybind11` (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
 
-        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
-        $> tar zxvf v2.9.2.tar.gz
+```bash
+wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+tar zxvf v2.9.2.tar.gz
+```
 
+### Setup on RHEL 9.1 or AlmaLinux 9.1
+The following procedure will install (in order):
+0. complete the `cern` installation
+1. the `boost` and `pugixml` libraries
+2. `erlang` (using [these instructions](https://www.rabbitmq.com/install-rpm.html))
+3. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+4. `root` with all its needed libraries
+5. `cmake`, tools for clang, including `clang-format` and `git-extras`
+
+#### Complete the CERN installation
+Make sure that the CERN installation is complete by running
+```bash
+sudo dnf --repofrompath=cern9el,http://linuxsoft.cern.ch/internal/repos/cern9el-stable/x86_64/os --repo=cern9el install cern-release
+```
+
+#### Libraries needed by Ph2_ACF
+```bash
+sudo yum install -y boost-devel pugixml-devel json-devel
+```
+
+#### Erlang (needed by uHAL)
+This installs `erlang` from a specific rpm. It would be nice if in the future, the correct version
+of `erlang` could be made available via the CERN repository
+```bash
+wget https://github.com/rabbitmq/erlang-rpm/releases/download/v25.1.2/erlang-25.1.2-1.el9.x86_64.rpm
+sudo yum -y install erlang-25.1.2-1.el9.x86_64.rpm
+```
+
+#### uHAL libraries (cactus)
+```bash
+sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.el9.repo -o /etc/yum.repos.d/ipbus-sw.repo
+sudo yum clean all
+sudo yum groupinstall -y uhal controlhub
+```
+
+#### ROOT
+```bash
+sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
+  root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+```
+
+#### Build tools and some nice git extras
+```bash
+sudo yum install -y cmake3 clang-tools-extra git-extras
+```
+
+**devtoolset 12**
+```bash
+sudo yum makecache --refresh
+sudo yum -y install gcc-toolset-12-gcc
+```
+
+**python3**
+```bash
+sudo yum install -y python3 python3-devel
+```
+
+**protobuf**
+Follow instructions to install protobuf from (Just install section is needed)
+https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+
+**pybind11** (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+```bash
+wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+tar zxvf v2.9.2.tar.gz
+```
 
 ### Nota Bene
 When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.

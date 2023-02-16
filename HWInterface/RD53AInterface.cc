@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSize)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -68,7 +68,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
-            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerifLoop);
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
         }
 
     // ###################################

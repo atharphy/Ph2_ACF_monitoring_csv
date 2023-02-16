@@ -130,11 +130,7 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName << RESET;
     float cValue = 0;
 #if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
-#ifdef __TCP_SERVER__
-    fTheSystemController->fTestcardClient->sendAndReceivePacket("read_hvmon:HV_meas");
-#else
     fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().HV_meas, cValue);
-#endif
     LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
 #endif
     DetectorDataContainer theTestCardContainer;

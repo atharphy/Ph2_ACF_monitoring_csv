@@ -453,9 +453,9 @@ void Eudaq2Producer::DoTerminate()
 {
     LOG(INFO) << "[CMS-OT Producer] Terminating Run..." << RESET;
     fExitRun = true, fConfigured = false;
-    if(fThreadRun.joinable()) { fThreadRun.join(); }
     LOG(INFO) << "[CMS-OT Producer] Terminated Run" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Terminated Run");
+    if(fThreadRun.joinable()) { fThreadRun.join(); }
 }
 
 // ReadoutLoop has been modified in order to allow for the acquisition of multiple events by a single trigger signal.

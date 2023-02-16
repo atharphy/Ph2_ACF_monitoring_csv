@@ -18,8 +18,10 @@
 #include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
+#include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
 
@@ -130,6 +132,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::OptionRequiresValue);
     // general
+    cmd.defineOption("runBias", "Run bias scan", ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
 
@@ -139,6 +143,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("reconfigure", "Reconfigure Hardware");
     cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
+    cmd.defineOption("phaseScan", "Phase Scan");
 
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
@@ -344,6 +349,7 @@ int main(int argc, char* argv[])
             } // configure lpGBT
         }
     }
+
     // read chip ids
     if(cmd.foundOption("readIDs"))
     {
@@ -480,6 +486,8 @@ int main(int argc, char* argv[])
         cPSAlignment.ConfigureDefaultAlignmentParameters();
         cPSAlignment.Reset();
 
+        LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
+
         LinkAlignmentOT cLinkAlignment;
         cLinkAlignment.Inherit(&cTool);
         try
@@ -498,12 +506,16 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
-
         // align FEs - CIC
+        LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
+
+        // Doesnt work PSv2
         cCicAligner.Start(cRunNumber);
         cCicAligner.waitForRunToBeCompleted();
+        //\Doesnt work PSv2
+
         cCicAligner.dumpConfigFiles();
 
         // quickly check ReadData
@@ -574,17 +586,22 @@ int main(int argc, char* argv[])
         {
             LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
             StubBackEndAlignment cStubBackEndAligner;
+            LOG(INFO) << BOLDBLUE << "1 " << RESET;
             cStubBackEndAligner.Inherit(&cTool);
+            LOG(INFO) << BOLDBLUE << "2 " << RESET;
             cStubBackEndAligner.Start(cRunNumber);
+            LOG(INFO) << BOLDBLUE << "3 " << RESET;
             cStubBackEndAligner.waitForRunToBeCompleted();
+            LOG(INFO) << BOLDBLUE << "4 " << RESET;
         }
-
+        LOG(INFO) << BOLDRED << "PSAlignment " << RESET;
         // now align data between SSA-MPA
         bool cSkipMPAin = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("mpaInputs") != std::string::npos);
         if(cSkipMPAin)
             LOG(INFO) << BOLDBLUE << "Will skip alignment of SSA output data (L1+stubs) to MPAs " << RESET;
         else
         {
+            LOG(INFO) << BOLDRED << "PSAlignment! " << RESET;
             // map MPA outputs for PS module
             PSAlignment cPSAlignment;
             cPSAlignment.Inherit(&cTool);
@@ -594,6 +611,7 @@ int main(int argc, char* argv[])
             cPSAlignment.Align();
             cPSAlignment.Reset();
             cPSAlignment.dumpConfigFiles();
+            LOG(INFO) << BOLDRED << "PSAlignment DONE! " << RESET;
         }
     }
 
@@ -613,6 +631,16 @@ int main(int argc, char* argv[])
     // cStubBackEndAligner.waitForRunToBeCompleted();
 
     // equalize thresholds on readout chips
+
+    if(cmd.foundOption("runBias") && !cmd.foundOption("read"))
+    {
+        PSBiasCal cPSBiasCal;
+        cPSBiasCal.Inherit(&cTool);
+        cPSBiasCal.Initialise();
+        // cPSBiasCal.CalibrateADC();
+        cPSBiasCal.CalibrateBias();
+    }
+
     if(cmd.foundOption("tuneOffsets") && !cmd.foundOption("read"))
     {
         bool cAllChan = (cmd.foundOption("allChan")) ? true : false;
@@ -770,6 +798,7 @@ int main(int argc, char* argv[])
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
+                                cTool.fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x00);
                                 for(auto cInjection: cInjections) { cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
                             }
                         } // chip
@@ -854,8 +883,80 @@ int main(int argc, char* argv[])
                                 {
                                     std::stringstream cRegName;
                                     cRegName << "ENFLAGS_S" << +sStrp;
-                                    cTool.fReadoutChipInterface->WriteChipReg(chip, cRegName.str(), 0x13, false);
+                                    // cTool.fReadoutChipInterface->WriteChipReg(chip, cRegName.str(), 0x13, false);
+                                    cTool.fReadoutChipInterface->WriteChipReg(chip, cRegName.str(), 0x11, false);
                                 }
+                            }
+                        }
+                    }
+                }
+
+                for(auto opticalGroup: *board)
+                {
+                    for(auto hybrid: *opticalGroup)
+                    {
+                        for(auto chip: *hybrid)
+                        {
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
+                            {
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "CalPulse_duration", 0x01);
+                            }
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
+                            {
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
+                            }
+                        }
+                    }
+                }
+            }
+            else if(cInjectionSource.find("external") != std::string::npos)
+            {
+                // configure trigger
+                uint8_t                                       cTriggerSource   = 4;
+                uint16_t                                      cDelayAfterReset = 100;
+                uint16_t                                      cDelayTillNext   = 400;
+                std::vector<std::string>                      cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_before_next_pulse"};
+                std::vector<uint16_t>                         cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayTillNext};
+                std::vector<uint16_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+                std::vector<std::pair<std::string, uint32_t>> cRegVec;
+                cRegVec.clear();
+                for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
+                {
+                    std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+                    cFcmdRegOrigVals[cIndx] = cTool.fBeBoardInterface->ReadBoardReg(board, cRegName);
+                    cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
+                }
+                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+                cTool.fBeBoardInterface->WriteBoardMultReg(board, cRegVec);
+                cTool.fBeBoardInterface->WriteBoardReg(board, "fc7_daq_cnfg.tlu_block.tlu_enabled", 1);
+                cTool.fBeBoardInterface->WriteBoardReg(board, "fc7_daq_cnfg.tlu_block.handshake_mode", 2);
+
+                int cPSmoduleSSAth = cTool.findValueInSettings<double>("PSmoduleSSAthreshold", 100);
+                int cPSmoduleMPAth = cTool.findValueInSettings<double>("PSmoduleMPAthreshold", 100);
+                int cInjectionAmpl = cTool.findValueInSettings<double>("PSOccupancyPulseAmplitude", 0xFF);
+                int cSamplingSSA   = cTool.findValueInSettings<double>("SamplingModeSSA", 0);
+                int cSamplingMPA   = cTool.findValueInSettings<double>("SamplingModeMPA", 0);
+                // analogue injection
+                cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "InjectedCharge", cInjectionAmpl);
+                cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "AnalogueSync", 1);
+                LOG(INFO) << BOLDBLUE << cInjectionAmpl << " injected charge, " << cPSmoduleSSAth << " as SSA threshold " << cPSmoduleMPAth << " as MPA threshold " << RESET;
+                // disable injection on all pixels MPAs
+                for(auto opticalGroup: *board)
+                {
+                    for(auto hybrid: *opticalGroup)
+                    {
+                        for(auto chip: *hybrid)
+                        {
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
+                            {
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0xF, false); // 0x5E
+                            }
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
+                            {
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x1, false); // 0x5E
                             }
                         }
                     }
@@ -915,11 +1016,18 @@ int main(int argc, char* argv[])
                 }
             }
         }
-
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize();
         cLatencyScan.ScanLatency();
+
+        if(cmd.foundOption("phaseScan"))
+        {
+            PhaseScan cPhaseScan;
+            cPhaseScan.Inherit(&cTool);
+            cPhaseScan.Initialize();
+            cPhaseScan.ScanPhase();
+        }
     }
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))
@@ -1021,7 +1129,7 @@ int main(int argc, char* argv[])
         cPedeNoise.Inherit(&cTool);
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
-        cPedeNoise.Validate();
+        // cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.Reset();

@@ -61,7 +61,7 @@
 // # Librariries for communicating with Hybrid Test Cards #
 // ########################################################
 #ifdef __TCUSB__
-#include "TCInterface.h"
+#include "HWInterface/TCInterface.h"
 #endif
 
 class DetectorMonitor;
@@ -101,9 +101,6 @@ class SystemController
     TCPPublishServer*       fMonitorDQMStreamer;
     DetectorMonitor*        fDetectorMonitor;
     TCPClient*              fPowerSupplyClient{nullptr};
-#ifdef __TCP_SERVER__
-    TCPClient* fTestcardClient{nullptr};
-#endif
     /*!
      * \brief Constructor of the SystemController class
      */
