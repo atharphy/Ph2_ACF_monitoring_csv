@@ -121,9 +121,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("clear-check-bram", "", ArgvParser::NoOptionAttribute);
     // Flush ref BRAM
     cmd.defineOption("clear-ref-bram", "", ArgvParser::NoOptionAttribute);
-    // debug
-    cmd.defineOption("debug", "Run debug", ArgvParser::NoOptionAttribute);
-    cmd.defineOptionAlternative("debug", "d");
     // Test VTRx+ registers
     cmd.defineOption("test-vtrx", "Test testVTRx+ slow control");
     cmd.defineOptionAlternative("test-vtrx", "v");
@@ -183,7 +180,6 @@ int main(int argc, char* argv[])
     bool        batchMode  = (cmd.foundOption("batch")) ? true : false;
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
-    bool        cDebug     = (cmd.foundOption("debug"));
     // Test to perform
     bool        cFCMDTest              = (cmd.foundOption("fcmd-test")) ? true : false;
     std::string cFCMDTestStartPattern  = (cmd.foundOption("fcmd-test-start-pattern")) ? cmd.optionValue("fcmd-test-start-pattern") : "11000001";

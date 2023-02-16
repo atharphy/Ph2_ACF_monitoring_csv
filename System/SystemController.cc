@@ -63,10 +63,6 @@ void SystemController::Inherit(const SystemController* pController)
     fCicInterface                 = pController->fCicInterface;
     fPowerSupplyClient            = pController->fPowerSupplyClient;
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
-
-#ifdef __TCP_SERVER__
-    fTestcardClient = pController->fTestcardClient;
-#endif
 }
 void SystemController::StopMonitoring()
 {
@@ -122,11 +118,6 @@ void SystemController::Destroy()
 
     delete fChannelGroupHandlerContainer;
     fChannelGroupHandlerContainer = nullptr;
-
-#ifdef __TCP_SERVER__
-    delete fTestcardClient;
-    fTestcardClient = nullptr;
-#endif
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -205,16 +196,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     {
         LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
     }
-
-#ifdef __TCP_SERVER__
-    fTestcardClient = new TCPClient("127.0.0.1", 8000);
-    if(!fTestcardClient->connect(1))
-    {
-        std::cerr << "Cannot connect to the Testcard Server" << '\n';
-        delete fTestcardClient;
-        fTestcardClient = nullptr;
-    }
-#endif
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
@@ -789,31 +770,30 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
             }
-	    bool setSSACurrent=true;
-	    for(auto cChip: *cHybrid)
-	    {
-            	if (cChip->getFrontEndType() == FrontEndType::MPA2) 
-		    {
-		    setSSACurrent=false;
-		    break;
-		    }
-	    }
-	    if (setSSACurrent)
-	    {
-            bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
-            for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
+            bool setSSACurrent = true;
+            for(auto cChip: *cHybrid)
             {
-                if(cSkipSSA3 && cSSAId == 3) continue;
-                SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
-                uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
-                cSSA->setOptical(cHybrid->isOptical());
-                cSSA->setMasterId(cHybrid->getMasterId());
-                LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
-                auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
-                (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
-
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    setSSACurrent = false;
+                    break;
+                }
             }
-	    }
+            if(setSSACurrent)
+            {
+                bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
+                for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
+                {
+                    if(cSkipSSA3 && cSSAId == 3) continue;
+                    SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
+                    uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
+                    cSSA->setOptical(cHybrid->isOptical());
+                    cSSA->setMasterId(cHybrid->getMasterId());
+                    LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
+                    auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
+                    (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
+                }
+            }
 
         } // hybrid
     }     // lpGBT part ... resets + clocks

@@ -621,11 +621,7 @@ bool OTHybridTester::LpGBTTestResetLines()
             flpGBTInterface->GetExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
-#ifdef __TCP_SERVER__
-            cMeasurement = this->getMeasurement("read_reset:" + cMapIterator->first);
-#else
             flpGBTInterface->GetExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
-#endif
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
             fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
             cStatus = cStatus && (cDifference_mV <= 100);
@@ -1057,7 +1053,6 @@ uint16_t OTHybridTester::calibrateADC()
     float    cGain         = 0;
     uint16_t cOffset       = 0;
     uint16_t cADC1V25      = 0;
-    uint16_t cADCTempp     = 0;
 
     // Create TTree for DAC to ADC conversion in lpGBT
     auto cCalibrationTree  = new TTree("tADCCalibration", "Calibration of the ADC");
@@ -1138,10 +1133,8 @@ uint16_t OTHybridTester::calibrateADC()
 
 void OTHybridTester::calibrateCurrentDAC()
 {
-    float                 cTestCard1V25 = 0;
     float                 cGain         = 0;
     uint16_t              cOffset       = 0;
-    uint16_t              cADC1V25      = 0;
     uint16_t              cADCTempp     = 0;
     std::vector<uint16_t> cDACVect;
     std::vector<float>    cCurrentVect;
@@ -1184,19 +1177,4 @@ void OTHybridTester::calibrateCurrentDAC()
     cCalibrationTree->Write();
 }
 
-#ifdef __TCP_SERVER__
-float OTHybridTester::getMeasurement(std::string name)
-{
-    std::string buffer = fTestcardClient->sendAndReceivePacket(name);
-    float       value  = std::stof(this->getVariableValue("value", buffer));
-    return value;
-}
-std::string OTHybridTester::getVariableValue(std::string variable, std::string buffer)
-{
-    size_t begin = buffer.find(variable) + variable.size() + 1;
-    size_t end   = buffer.find(',', begin);
-    if(end == std::string::npos) end = buffer.size();
-    return buffer.substr(begin, end - begin);
-}
-#endif
 #endif

@@ -66,9 +66,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
       link_directories(${PH2_TCUSB_LIBRARY_DIRS})
       set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
-      if($ENV{UseTCUSBTcpServer})
-          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
-      endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
 
     # Boost also needs to be linked

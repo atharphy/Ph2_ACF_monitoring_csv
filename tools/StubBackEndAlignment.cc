@@ -234,12 +234,12 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 }
 bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
-    uint32_t cNevents   = 10;
+    uint32_t cNevents = 10;
     LOG(INFO) << BOLDMAGENTA << "StubAlignmentThreshold" << RESET;
-    //auto     cSetting   = fSettingsMap.find("StubAlignmentThreshold");
+    // auto     cSetting   = fSettingsMap.find("StubAlignmentThreshold");
     uint32_t cThreshold = 120;
     LOG(INFO) << BOLDMAGENTA << "StubAlignmentScanStart" << RESET;
-    //auto     cSetting1  = fSettingsMap.find("StubAlignmentScanStart");
+    // auto     cSetting1  = fSettingsMap.find("StubAlignmentScanStart");
     uint32_t cScanStart = 100;
     LOG(INFO) << BOLDMAGENTA << "DNEN" << RESET;
 
@@ -275,8 +275,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // reconfigure fast commands
     // fast command config
     // if PS module want trigger multiplicty to be 3
-    uint8_t                  cMult            = (cWithPS) ? 2 : 0;
-   // uint8_t                  cMult            = 0;
+    uint8_t cMult = (cWithPS) ? 2 : 0;
+    // uint8_t                  cMult            = 0;
     uint8_t                  cTriggerSource   = 6;
     uint16_t                 cDelayAfterReset = 100;
     uint16_t                 cDelayAfterTP    = 200;
