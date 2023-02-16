@@ -224,8 +224,8 @@
     <Setting name="TDACGainNSteps">        0 </Setting>
     <Setting name="DoNSteps">              0 </Setting>
 
-    <Setting name="ThrStart">            340 </Setting>
-    <Setting name="ThrStop">             440 </Setting>
+    <Setting name="ThrStart">            400 </Setting>
+    <Setting name="ThrStop">             450 </Setting>
     <Setting name="TargetThr">          2000 </Setting>
     <Setting name="TargetOcc">          1e-6 </Setting>
     <Setting name="OccPerPixel">        2e-5 </Setting>
