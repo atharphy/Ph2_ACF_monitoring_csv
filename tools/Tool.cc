@@ -103,6 +103,10 @@ bool Tool::GetRunningStatus()
         {
             if(fRunningFuture.valid()) fRunningFuture.get();
         }
+        catch(const std::future_error& e)
+        {
+            LOG(INFO) << "Ignoring future exception, future already retrieved";
+        }
         catch(const std::exception& e)
         {
             throw std::runtime_error(e.what());
@@ -115,7 +119,14 @@ bool Tool::GetRunningStatus()
 
 void Tool::waitForRunToBeCompleted()
 {
-    fRunningFuture.wait();
+    try
+    {
+        if(fRunningFuture.valid()) fRunningFuture.wait();
+    }
+    catch(const std::future_error& e)
+    {
+        LOG(INFO) << "Ignoring future exception, future already retrieved";
+    }
     // std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
@@ -162,7 +173,11 @@ void Tool::Stop()
         // if(fRunningThread.joinable() == true) fRunningThread.join();
         try
         {
-            fRunningFuture.get();
+            if(fRunningFuture.valid()) fRunningFuture.get();
+        }
+        catch(const std::future_error& e)
+        {
+            LOG(INFO) << "Ignoring future exception, future already retrieved";
         }
         catch(const std::exception& e)
         {

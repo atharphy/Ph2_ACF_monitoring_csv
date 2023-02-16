@@ -12,13 +12,14 @@ def getNewRunNumber():
     
     try:
         file = open(runNumberFileName, "r")
+        with file as runNumberFile:
+            for line in runNumberFile:
+                pass
+            runNumber = int(line) + 1
     except FileNotFoundError:
         file = open(runNumberFileName, "w")
+        runNumber = 0
     
-    with file as runNumberFile:
-        for line in runNumberFile:
-            pass
-        runNumber = int(line) + 1
     
     runNumberFile = open(runNumberFileName, "a")
     runNumberFile.write(str(runNumber) + "\n")

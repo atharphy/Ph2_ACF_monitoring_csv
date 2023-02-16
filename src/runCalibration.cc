@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
     signal(SIGINT, SIG_DFL);
     runCompleted = 1;
 
-    theApp.Run();
+    if(!batchMode) theApp.Run();
 
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");
