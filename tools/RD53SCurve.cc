@@ -23,6 +23,7 @@ void SCurve::ConfigureCalibration()
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
     nEvents        = this->findValueInSettings<double>("nEvents");
+    injType        = this->findValueInSettings<double>("INJtype");
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
     nSteps         = this->findValueInSettings<double>("VCalHnsteps");
@@ -38,8 +39,9 @@ void SCurve::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-        rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), RD53GroupType::Groups, nHITxCol, doOnlyNGroups);
+    auto groupType = injType != CalibBase::INJtype::None ? RD53GroupType::Groups : RD53GroupType::AllPixels;
+    theChnGroupHandler =
+        std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################

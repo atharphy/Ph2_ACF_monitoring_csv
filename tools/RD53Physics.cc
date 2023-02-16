@@ -143,7 +143,7 @@ void Physics::run()
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
 
-    while(this->fKeepRunning == true)
+    while(Tool::fKeepRunning == true)
     {
         RD53Event::decodedEvents.clear();
         Physics::analyze();

@@ -18,6 +18,8 @@ using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+std::atomic<bool> Tool::fKeepRunning(false);
+
 Tool::Tool()
     : SystemController()
     ,
@@ -60,6 +62,7 @@ Tool::Tool(THttpServer* pHttpServer)
     , fDirectoryName("")
     , fResultFile(nullptr)
     , fHttpServer(pHttpServer)
+    , fRunNumber(0)
     , fSkipMaskedChannels(false)
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
@@ -117,9 +120,9 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
+void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber, doAlsoFrontend);
+    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
     ConfigureCalibration();
 }
 
@@ -134,9 +137,9 @@ void Tool::Start(int runNumber)
     InitResultFile("Hybrid");
 #endif
     // doExit       = false;
-    fKeepRunning   = true;
-    fRunNumber     = runNumber;
-    fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+    Tool::fKeepRunning = true;
+    fRunNumber         = runNumber;
+    fRunningFuture     = std::async(std::launch::async, &Tool::Running, this);
     // std::promise<int> thePromise;
     // fRunningFuture = thePromise.get_future();
     // fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
@@ -152,18 +155,21 @@ void Tool::Start(int runNumber)
 
 void Tool::Stop()
 {
-    fKeepRunning = false;
-    Tool::waitForRunToBeCompleted();
-    // if(fRunningThread.joinable() == true) fRunningThread.join();
-    try
+    if(Tool::fKeepRunning == true)
     {
-        fRunningFuture.get();
+        Tool::fKeepRunning = false;
+        Tool::waitForRunToBeCompleted();
+        // if(fRunningThread.joinable() == true) fRunningThread.join();
+        try
+        {
+            fRunningFuture.get();
+        }
+        catch(const std::exception& e)
+        {
+            throw std::runtime_error(e.what());
+        }
+        SystemController::Stop();
     }
-    catch(const std::exception& e)
-    {
-        throw std::runtime_error(e.what());
-    }
-    SystemController::Stop();
 }
 
 void Tool::Inherit(const Tool* pTool)
@@ -176,19 +182,29 @@ void Tool::Inherit(const Tool* pTool)
     fType          = pTool->fType;
     fDirectoryName = pTool->fDirectoryName;
 #ifdef __USE_ROOT__
-    fSummaryTree    = pTool->fSummaryTree;
-    fCanvasMap      = pTool->fCanvasMap;
-    fChipHistMap    = pTool->fChipHistMap;
-    fHybridHistMap  = pTool->fHybridHistMap;
-    fBeBoardHistMap = pTool->fBeBoardHistMap;
+    fSummaryTree          = pTool->fSummaryTree;
+    fCanvasMap            = pTool->fCanvasMap;
+    fChipHistMap          = pTool->fChipHistMap;
+    fHybridHistMap        = pTool->fHybridHistMap;
+    fBeBoardHistMap       = pTool->fBeBoardHistMap;
+    fSummaryTreeParameter = pTool->fSummaryTreeParameter;
+    fSummaryTreeValue     = pTool->fSummaryTreeValue;
 #endif
-    fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
+    fTestGroupChannelMap = pTool->fTestGroupChannelMap;
+    fRunNumber           = pTool->fRunNumber;
+    // fRunningFuture               = pTool->fRunningFuture;
     fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
     fAllChan                     = pTool->fAllChan;
+    fMaskForTestGroupChannelMap  = pTool->fMaskForTestGroupChannelMap;
     fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
     fTestPulse                   = pTool->fTestPulse;
     fDoBoardBroadcast            = pTool->fDoBoardBroadcast;
     fDoHybridBroadcast           = pTool->fDoHybridBroadcast;
+    fDirectoryName               = pTool->fDirectoryName;
+    fResultFileName              = pTool->fResultFileName;
+    fUseReadNEvents              = pTool->fUseReadNEvents;
+    fNReadbackEvents             = pTool->fNReadbackEvents;
+    fNormalize                   = pTool->fNormalize;
 
 #ifdef __HTTP__
     fHttpServer = pTool->fHttpServer;

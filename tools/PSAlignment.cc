@@ -659,9 +659,9 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
     auto     cTriggerMult = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint32_t cNevents     = 10;
 
-    //auto     cSetting                = fSettingsMap.find("MinStubPhase");
-    uint32_t cStartPhase             =   3;
-    //cSetting                         = fSettingsMap.find("MaxStubPhase");
+    // auto     cSetting                = fSettingsMap.find("MinStubPhase");
+    uint32_t cStartPhase = 3;
+    // cSetting                         = fSettingsMap.find("MaxStubPhase");
     uint32_t              cEndPhase  = 8;
     bool                  cOnlyFirst = true;
     bool                  cCheckL1   = true;
@@ -995,7 +995,8 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     if(cChip->getId() % 8 != pChipId) continue;
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency - 1);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA)
+                        fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency - 1);
 
                     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency + 1);
@@ -1660,9 +1661,9 @@ bool PSAlignment::Align()
 {
     LOG(INFO) << BOLDBLUE << "Starting MPA-SSA alignment procedure .... " << RESET;
     // not sure I need this here .. lets check
-    //auto     cSetting       = fSettingsMap.find("TxDrive");
-    uint32_t cTxDriveStr    =  4;
-    //cSetting                = fSettingsMap.find("PreEmph");
+    // auto     cSetting       = fSettingsMap.find("TxDrive");
+    uint32_t cTxDriveStr = 4;
+    // cSetting                = fSettingsMap.find("PreEmph");
     uint32_t cTxPreEmphMode = 1;
     // configure TxDrive for lpGBT
     for(auto cBoard: *fDetectorContainer)

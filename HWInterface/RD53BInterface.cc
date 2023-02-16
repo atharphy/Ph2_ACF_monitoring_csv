@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSize)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -24,15 +24,14 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ########################################################################
     // # Switching to pixel-register configuration, instead of the hard-wired #
     // ########################################################################
-    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG", 0x9CE2, pVerifLoop);
-    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, pVerifLoop);
-
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG", 0x9CE2, pVerify);
+    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, pVerify);
 
     // ######################
     // # Reset Core Columns #
     // ######################
     RD53BInterface::ResetCoreColumns(pRD53);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // ##############
     // # Field data #
@@ -69,15 +68,21 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     }
     if(doWriteClkDataDelay == true) RD53BInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
+    // #############################################
+    // # Programmig global registers: pre-emphasis #
+    // #############################################
+    static const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
+
+    for(auto& cRegItem: pRD53RegMap)
+        if((cRegItem.second.fPrmptCfg == true) && (registerPreEmphasisWhiteList.find(cRegItem.first) != registerPreEmphasisWhiteList.end()))
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, false);
+
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {"ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};
-
-    // ################################################
-    // # Programming global registers from white list #
-    // ################################################
-    static const std::set<std::string> registerWhileList = {"DAC_PREAMP_L_LIN",
+    static const std::set<std::string> registerBlackList = {
+        "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+    static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
                                                             "DAC_PREAMP_R_LIN",
                                                             "DAC_PREAMP_TL_LIN",
                                                             "DAC_PREAMP_TR_LIN",
@@ -94,7 +99,9 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
                                                             "DAC_LDAC_LIN"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
-        if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end())) || (registerWhileList.find(cRegItem.first) != registerWhileList.end()))
+        if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
+            (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
+           (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
         {
             if(cRegItem.first == "CDR_CONFIG")
             {
@@ -102,7 +109,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
-            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerifLoop);
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
         }
 
     // ###################################
@@ -309,7 +316,7 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
     {
         for(int i = 0; i < 2; i++)
         {
-            uint16_t value = 0x55 << i;
+            uint16_t value = 0x5555 << i;
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);
             RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
@@ -368,10 +375,10 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 
         for(auto col = 0u; col < RD53B::NCOLS; col += 2)
         {
-            if((std::find(mask.Enable.begin() + (0 + RD53A::NROWS * col), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col), true) ==
-                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col))) &&
-               (std::find(mask.Enable.begin() + (0 + RD53A::NROWS * (col + 1)), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)), true) ==
-                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)))))
+            if((std::find(mask.Enable.begin() + (0 + RD53B::NROWS * col), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col), true) ==
+                (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col))) &&
+               (std::find(mask.Enable.begin() + (0 + RD53B::NROWS * (col + 1)), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)), true) ==
+                (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)))))
                 continue;
 
             RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);

@@ -171,12 +171,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
             message(STATUS "    Building the SEH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforSEH})
-
-        if($ENV{UseTCUSBTcpServer})
-            message(STATUS "    Building the components to use the TCP Server")
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
-        endif($ENV{UseTCUSBTcpServer})
-
     endif($ENV{CompileWithTCUSB})
 
     # EUDAQ

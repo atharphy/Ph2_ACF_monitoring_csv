@@ -21,9 +21,9 @@
 #include "HWInterface/D19cTriggerInterface.h"
 #include "HWInterface/DPInterface.h"
 #include "HWInterface/L1ReadoutInterface.h"
+#include "Utils/linearFitter.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/Tool.h"
-#include "Utils/linearFitter.h"
 
 #include "TAxis.h"
 #include "TF1.h"
@@ -76,7 +76,6 @@ class OTHybridTester : public Tool
     bool     LpGBTGetLinkLock();
     bool     LpGBTCheckClocks();
     bool     LpGBTFastCommandChecker(uint8_t pPattern);
-    void     freeTest();
     uint16_t calibrateADC();
     void     calibrateCurrentDAC();
     // Run Eye Openin Monitor

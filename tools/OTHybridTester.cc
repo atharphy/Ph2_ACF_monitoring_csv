@@ -621,11 +621,7 @@ bool OTHybridTester::LpGBTTestResetLines()
             flpGBTInterface->GetExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
-#ifdef __TCP_SERVER__
-            cMeasurement = this->getMeasurement("read_reset:" + cMapIterator->first);
-#else
             flpGBTInterface->GetExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
-#endif
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
             fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
             cStatus = cStatus && (cDifference_mV <= 100);
@@ -1057,7 +1053,6 @@ uint16_t OTHybridTester::calibrateADC()
     float    cGain         = 0;
     uint16_t cOffset       = 0;
     uint16_t cADC1V25      = 0;
-    uint16_t cADCTempp     = 0;
 
     // Create TTree for DAC to ADC conversion in lpGBT
     auto cCalibrationTree  = new TTree("tADCCalibration", "Calibration of the ADC");
@@ -1138,11 +1133,9 @@ uint16_t OTHybridTester::calibrateADC()
 
 void OTHybridTester::calibrateCurrentDAC()
 {
-    float                 cTestCard1V25 = 0;
-    float                 cGain         = 0;
-    uint16_t              cOffset       = 0;
-    uint16_t              cADC1V25      = 0;
-    uint16_t              cADCTempp     = 0;
+    float                 cGain     = 0;
+    uint16_t              cOffset   = 0;
+    uint16_t              cADCTempp = 0;
     std::vector<uint16_t> cDACVect;
     std::vector<float>    cCurrentVect;
     std::vector<uint16_t> cADCVect;
@@ -1184,102 +1177,4 @@ void OTHybridTester::calibrateCurrentDAC()
     cCalibrationTree->Write();
 }
 
-void OTHybridTester::freeTest()
-{
-    float    cTestCard1V25 = 0;
-    float    cGain         = 0;
-    uint16_t cOffset       = 0;
-    uint16_t cADC1V25      = 0;
-    uint16_t cADCTempp     = 0;
-
-    flpGBTInterface->GetExternalController()->getInterface().read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
-    flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-    std::cout << "trim"
-              << ","
-              << "offset"
-              << ","
-              << "gain"
-              << ","
-              << "cADC1V25"
-              << ","
-              << "cTestCard1V25"
-              << ","
-              << "cVref" << std::endl;
-
-    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-    for(auto cBoard: *fDetectorContainer)
-    {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
-        for(auto cOpticalGroup: *cBoard)
-        {
-            /* for(int trim=0; trim<0xff;trim+=0x1){
-            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE",trim);
-
-            cGain=clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT,false);
-            cOffset=clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT,false);
-            cADC1V25=clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC1", "VREF/2");
-            float cVref=cTestCard1V25*200./310.*cGain*512/(cADC1V25-cOffset*(1-cGain/2.));
-            std::cout<<std::dec << trim << "," << cOffset << "," << cGain << ","<< cADC1V25 << "," << cTestCard1V25 << "," << cVref << std::endl;
-
-            } */
-            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE", 132); // optimal tune
-            cGain   = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, false);
-            cOffset = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, false);
-            for(int cDAC = 0; cDAC < 0xff; cDAC += 0x1)
-            {
-                clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, cDAC);
-                cADCTempp           = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC4", "VREF/2", 1);
-                float cTemppVoltage = 1. / cGain / 512. * (cADCTempp - cOffset * (1. - cGain / 2.));
-                float cCurrent      = cTemppVoltage / 5000. * 1e6;
-                std::cout << std::dec << cDAC << "," << cADCTempp << "," << cTemppVoltage << "," << cCurrent << std::endl;
-            }
-            //######################################
-            // uint16_t offset;
-            // uint16_t GNDmVREF;
-            // uint16_t VREFmGND;
-            // uint16_t VDDmVREF;
-            // uint16_t VREFmVDD;
-            // // flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-            // std::cout << "trim" << "," << "offset" << "," << "GNDmVREF" << ","<< "VREFmGND" << "," << "VDDmVREF" << ","<< "VREFmVDD" << ","<< std::endl;
-
-            // for(int trim=0; trim<0xff;trim+=0x1){
-            //     clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE",trim);
-            //     clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "ADCMon", 0);
-            //     offset = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VREF/2", "VREF/2");
-            //     GNDmVREF = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDD", "VREF/2");
-            //     VREFmGND = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VREF/2", "VDD");
-            //     clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "ADCMon", 0xff);
-            //     VDDmVREF = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDD", "VREF/2");
-            //     VREFmVDD = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VREF/2", "VDD");
-            //     //LOG(INFO) << BOLDBLUE << "Trim value " << +i << RESET;
-
-            //     // clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT);
-            //     // cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC1");
-            //     // LOG(INFO) << BOLDBLUE << "ADC VMON_P1V25 " << +cADCValue << RESET;
-            //     std::cout<<std::dec << trim << "," << offset << "," << GNDmVREF << ","<< VREFmGND << "," << VDDmVREF << ","<< VREFmVDD << ","<< std::endl;
-            // }
-            //######################################
-
-            //##########
-            for(int i = 0; i < 0xff; i += 4) { clpGBTInterface->ReadChipFusedBlock(cOpticalGroup->flpGBT, 0, i); }
-            //##########
-        }
-    }
-}
-
-#ifdef __TCP_SERVER__
-float OTHybridTester::getMeasurement(std::string name)
-{
-    std::string buffer = fTestcardClient->sendAndReceivePacket(name);
-    float       value  = std::stof(this->getVariableValue("value", buffer));
-    return value;
-}
-std::string OTHybridTester::getVariableValue(std::string variable, std::string buffer)
-{
-    size_t begin = buffer.find(variable) + variable.size() + 1;
-    size_t end   = buffer.find(',', begin);
-    if(end == std::string::npos) end = buffer.size();
-    return buffer.substr(begin, end - begin);
-}
-#endif
 #endif

@@ -47,10 +47,10 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     auto hMask1Drow = CanvasContainer<TH1F>("Masked1Drow", "Masked pixels projection", nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Mask1Drow, hMask1Drow, "Rows", "Entries");
 
-    auto hToT1D = CanvasContainer<TH1F>("ToT1D", "ToT Distribution", ToTsize, 0, ToTsize);
+    auto hToT1D = CanvasContainer<TH1F>("ToT1D", "<ToT> Distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
 
-    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "<ToT> Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 
     auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 1, BCIDsize + 1);

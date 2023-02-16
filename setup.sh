@@ -55,7 +55,7 @@ export AMC13DIR=$CACTUSINCLUDE/amc13
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 # These are git references for the dependencies that are included via CMake ExternalProjects
-export PH2_TCUSB_REF=9c39f0f4082f8db6a6788baf3567f55631b53f16
+export PH2_TCUSB_REF=a60e057b2c4f4603cdc6b42e300ad07de132cd81
 export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
 export PYBIND11_REF=v2.9.2
 
@@ -105,7 +105,6 @@ export Amc13Flag='-D__AMC13__'
 export TCUSBFlag='-D__TCUSB__'
 export TCUSBforROHFlag='-D__ROH_USB__'
 export TCUSBforSEHFlag='-D__SEH_USB__'
-export TCUSBTcpServerFlag='-D__TCP_SERVER__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
@@ -143,9 +142,9 @@ export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
 export CompileWithTCUSB=false
+# OTHybridTester for either ROH or SEH
 export UseTCUSBforROH=false
 export UseTCUSBforSEH=false
-export UseTCUSBTcpServer=false
 
 
 # Clang-format command
@@ -164,7 +163,6 @@ if [[ $1 == "ci" ]]; then
     export CompileWithTCUSB=false
     export UseTCUSBforROH=false
     export UseTCUSBforSEH=false
-    export UseTCUSBTcpServer=false
 fi
 
 echo "=== DONE: you can now run cmake ==="

@@ -49,12 +49,18 @@ SystemController::~SystemController() {}
 
 void SystemController::Inherit(const SystemController* pController)
 {
-    fBeBoardInterface             = pController->fBeBoardInterface;
-    fReadoutChipInterface         = pController->fReadoutChipInterface;
-    flpGBTInterface               = pController->flpGBTInterface;
-    fBeBoardFWMap                 = pController->fBeBoardFWMap;
-    fSettingsMap                  = pController->fSettingsMap;
-    fFileHandler                  = pController->fFileHandler;
+    fBeBoardInterface     = pController->fBeBoardInterface;
+    fReadoutChipInterface = pController->fReadoutChipInterface;
+    flpGBTInterface       = pController->flpGBTInterface;
+    fBeBoardFWMap         = pController->fBeBoardFWMap;
+    fSettingsMap          = pController->fSettingsMap;
+    fFileHandler          = pController->fFileHandler;
+    fRawFileName          = pController->fRawFileName;
+    fParsedFile.clear();
+    fParsedFile.str("");
+    fParsedFile << pController->fParsedFile.rdbuf();
+    fWriteHandlerEnabled          = pController->fWriteHandlerEnabled;
+    fDetectorMonitor              = pController->fDetectorMonitor;
     fDQMStreamerEnabled           = pController->fDQMStreamerEnabled;
     fMonitorDQMStreamerEnabled    = pController->fMonitorDQMStreamerEnabled;
     fDQMStreamer                  = pController->fDQMStreamer;
@@ -63,11 +69,19 @@ void SystemController::Inherit(const SystemController* pController)
     fCicInterface                 = pController->fCicInterface;
     fPowerSupplyClient            = pController->fPowerSupplyClient;
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
+    fEventList                    = pController->fEventList;
+    // fFuture                       = pController->fFuture;
+    fEventSize                      = pController->fEventSize;
+    fNCbc                           = pController->fNCbc;
+    fParser                         = pController->fParser;
+    fSameChannelGroupForAllChannels = pController->fSameChannelGroupForAllChannels;
+    fInitializeInterfaces           = pController->fInitializeInterfaces;
 
 #ifdef __TCP_SERVER__
     fTestcardClient = pController->fTestcardClient;
 #endif
 }
+
 void SystemController::StopMonitoring()
 {
     if(fDetectorMonitor != nullptr) { fDetectorMonitor->stopMonitoring(); }
@@ -122,11 +136,6 @@ void SystemController::Destroy()
 
     delete fChannelGroupHandlerContainer;
     fChannelGroupHandlerContainer = nullptr;
-
-#ifdef __TCP_SERVER__
-    delete fTestcardClient;
-    fTestcardClient = nullptr;
-#endif
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -205,16 +214,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     {
         LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
     }
-
-#ifdef __TCP_SERVER__
-    fTestcardClient = new TCPClient("127.0.0.1", 8000);
-    if(!fTestcardClient->connect(1))
-    {
-        std::cerr << "Cannot connect to the Testcard Server" << '\n';
-        delete fTestcardClient;
-        fTestcardClient = nullptr;
-    }
-#endif
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
@@ -338,6 +337,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
 
+    // ####################
+    // # Set module type  #
+    // ####################
     DetectorMonitorConfig theDetectorMonitorConfig;
     std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os);
 
@@ -354,12 +356,13 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
             abort();
         }
+
         fDetectorMonitor->forkMonitor();
     }
 
-    // ############################################
-    // # Make sure  all interfaces are configured #
-    // ############################################
+    // ###########################################
+    // # Make sure all interfaces are configured #
+    // ###########################################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() == BoardType::RD53) continue;
@@ -367,9 +370,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureInterfaces(cBoard);
     }
 
-    // ###################
-    // # Set module type #
-    // ###################
+    // ##########################
+    // # Set module type for OT #
+    // ##########################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() != BoardType::D19C) continue;
@@ -789,31 +792,30 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
             }
-	    bool setSSACurrent=true;
-	    for(auto cChip: *cHybrid)
-	    {
-            	if (cChip->getFrontEndType() == FrontEndType::MPA2) 
-		    {
-		    setSSACurrent=false;
-		    break;
-		    }
-	    }
-	    if (setSSACurrent)
-	    {
-            bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
-            for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
+            bool setSSACurrent = true;
+            for(auto cChip: *cHybrid)
             {
-                if(cSkipSSA3 && cSSAId == 3) continue;
-                SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
-                uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
-                cSSA->setOptical(cHybrid->isOptical());
-                cSSA->setMasterId(cHybrid->getMasterId());
-                LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
-                auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
-                (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
-
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    setSSACurrent = false;
+                    break;
+                }
             }
-	    }
+            if(setSSACurrent)
+            {
+                bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
+                for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
+                {
+                    if(cSkipSSA3 && cSSAId == 3) continue;
+                    SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
+                    uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
+                    cSSA->setOptical(cHybrid->isOptical());
+                    cSSA->setMasterId(cHybrid->getMasterId());
+                    LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
+                    auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
+                    (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
+                }
+            }
 
         } // hybrid
     }     // lpGBT part ... resets + clocks
@@ -977,7 +979,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
 }
-void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doAlsoFrontend)
+void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
 {
     if(fDetectorContainer == nullptr)
     {
@@ -1083,7 +1085,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doA
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
             ConfigureIT(cBoard);
-            if(doAlsoFrontend == true) ConfigureFrontendIT(cBoard);
+            ConfigureFrontendIT(cBoard);
 
             // ######################################
             // # Dispatch threads for data decoding #
@@ -1153,14 +1155,12 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
+void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
-    std::stringstream outp;
-
-    InitializeHw(cHWFile, outp, enableStream, DQMportNumber);
-    InitializeSettings(cHWFile, outp);
-    std::cout << outp.str() << std::endl;
-    ConfigureHw(false, true, doAlsoFrontend);
+    InitializeHw(cHWFile, fParsedFile, enableStream, DQMportNumber);
+    InitializeSettings(cHWFile, fParsedFile);
+    std::cout << fParsedFile.str() << std::endl;
+    ConfigureHw(false, true);
 }
 
 void SystemController::Start(int runNumber)
