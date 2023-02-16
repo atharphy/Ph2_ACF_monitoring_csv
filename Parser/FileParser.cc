@@ -2,6 +2,7 @@
 #include "HWDescription/Cbc.h"
 #include "HWDescription/Cic.h"
 #include "HWDescription/Hybrid.h"
+#include "HWDescription/MPA2.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWDescription/RD53A.h"
 #include "HWDescription/RD53B.h"
@@ -618,6 +619,7 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     cSSA2->setOptical(pHybrid->isOptical());
     cSSA2->setNumberOfChannels(NSSACHANNELS);
     cSSA2->setClockFrequency(320);
+    cSSA2->setMasterId(pHybrid->getMasterId());
 }
 
 void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, ReadoutChip* pSSA)
@@ -656,11 +658,44 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
        << "---- MPA controlled by I2CMaster " << +cMPA->getMasterId() << RESET << std::endl;
 }
 
+// Irene
+void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
+{ // Get ID of MPA then add to the Hybrid!
+    uint32_t    cChipId    = pMPANode.attribute("Id").as_int();
+    uint32_t    cPartnerId = pMPANode.attribute("partid").as_int();
+    std::string cFileName;
+    if(!cFilePrefix.empty())
+    {
+        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
+
+        cFileName = cFilePrefix + expandEnvironmentVariables(pMPANode.attribute("configfile").value());
+    }
+    else
+        cFileName = expandEnvironmentVariables(pMPANode.attribute("configfile").value());
+
+    ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA2(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
+
+    cMPA->setOptical(pHybrid->isOptical());
+    cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
+    cMPA->setClockFrequency(320);
+    cMPA->setMasterId(pHybrid->getMasterId());
+
+    os << BOLDCYAN << "|"
+       << "  "
+       << "|"
+       << "   "
+       << "|"
+       << "   "
+       << "|"
+       << "   "
+       << "|"
+       << "---- MPA2 controlled by I2CMaster " << +cMPA->getMasterId() << RESET << std::endl;
+}
+
 void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
 {
     LOG(INFO) << BOLDBLUE << "Now I'm parsing global PS settings for MPA " << RESET;
     pugi::xml_node cGlobalSettingsNode = pHybridNode.child("Global");
-
     if(cGlobalSettingsNode != nullptr)
     {
         os << BOLDCYAN << "|\t|\t|----Global MPA Settings: " << RESET << std::endl;
@@ -700,7 +735,6 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                    << +cRegVal << std::dec << RESET << std::endl;
             }
         }
-
         // then hit logic mode
         pugi::xml_node cHitLogicNode = cGlobalSettingsNode.child("HitLogic");
         if(cHitLogicNode != nullptr)
@@ -709,7 +743,18 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 uint8_t cMode = static_cast<uint8_t>(convertAnyInt(cHitLogicNode.attribute("pixelMode").value()));
-                cChip->setReg("ModeSel_ALL", cMode);
+
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    cChip->setReg("ModeSel_ALL", cMode); // Irene
+                }
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    cChip->setReg("Mask_ALL", 0x3);
+                    cChip->setReg("PixelControl_ALL", cMode); // Irene
+                    cChip->setReg("Mask_ALL", 0xFF);
+                }
+
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
                    << std::dec << RESET << std::endl;
             }
@@ -744,8 +789,19 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cLatency = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
-                cChip->setReg("L1Offset_1_ALL", cLatency & 0xFF);
-                cChip->setReg("L1Offset_2_ALL", (cLatency >> 8) & 0xFF);
+
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    cChip->setReg("L1Offset_1_ALL", cLatency & 0xFF);        // Irene
+                    cChip->setReg("L1Offset_2_ALL", (cLatency >> 8) & 0xFF); // Irene
+                }
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    cChip->setReg("MemoryControl_1_ALL", cLatency & 0xFF);
+                    cChip->setReg("Mask_ALL", 0x1);
+                    cChip->setReg("MemoryControl_2_ALL", ((cLatency >> 8)) & 0xFF);
+                    cChip->setReg("Mask_ALL", 0xFF);
+                }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
                    << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
             }
@@ -759,7 +815,13 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCut = convertAnyInt(cHIPmode.attribute("pixelCut").value());
-                cChip->setReg("HipCut_ALL", cCut);
+                if(cChip->getFrontEndType() == FrontEndType::MPA) cChip->setReg("HipCut_ALL", cCut); // Irene
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    cChip->setReg("Mask_ALL", 0xe0);
+                    cChip->setReg("PixelControl_ALL", (cCut << 5)); // Irene
+                    cChip->setReg("Mask_ALL", 0xFF);
+                }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
                    << RESET << std::endl;
             }
@@ -774,7 +836,20 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("pixelFine").value());
-                cChip->setReg("PhaseShift", cCoarse);
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                {
+                    cChip->setReg("PhaseShift", cCoarse); // Irene
+                }
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    cChip->setReg("Mask", 0x70);
+                    cChip->setReg("Control_1", (cCoarse << 4));
+                    cChip->setReg("Mask", 0xFF);
+
+                    cChip->setReg("Mask", 0x0F);
+                    cChip->setReg("ConfDLL", (cFine));
+                    cChip->setReg("Mask", 0xFF);
+                }
                 cChip->setReg("ConfDLL", cFine);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
@@ -996,6 +1071,13 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
                         pBoard->setFrontEndType(FrontEndType::MPA);
                         this->parseMPAContainer(cChild, cHybrid, cConfigFileDirectory, os);
+                        if(cNextName.empty() || cNextName != cName) this->parseMPASettings(pHybridNode, cHybrid, os);
+                    }
+                    else if(cName == "MPA2") // Irene
+                    {
+                        cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
+                        pBoard->setFrontEndType(FrontEndType::MPA2);
+                        this->parseMPA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) this->parseMPASettings(pHybridNode, cHybrid, os);
                     }
                 }

@@ -74,6 +74,8 @@ class LatencyScan : public Tool
     uint32_t fHoleMode;
     uint32_t fStartLatency;
     uint32_t fLatencyRange;
+    uint32_t fStartPhase;
+    uint32_t fPhaseRange;
     uint32_t fNCbc;
     uint8_t  fTestPulseAmplitude;
     uint32_t trigSource;

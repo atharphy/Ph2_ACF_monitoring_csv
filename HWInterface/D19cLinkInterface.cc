@@ -12,7 +12,7 @@ D19cLinkInterface::D19cLinkInterface(const std::string& pId, const std::string& 
 {
     fConfiguration.fResetWait_ms = 2000;
     fConfiguration.fReTry        = 1;
-    fConfiguration.fMaxAttempts  = 10;
+    fConfiguration.fMaxAttempts  = 5;
 }
 
 D19cLinkInterface::D19cLinkInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : LinkInterface(puHalConfigFileName, pBoardId)

@@ -408,9 +408,11 @@ bool MPAInterface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj
 bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pMPA, bool pVerify, uint32_t pBlockSize)
 {
     // use pix 1 as a proxy. Better to save this as a constant
-    auto pixval = readPixel(pMPA, "PixelEnable", 1);
+
+    auto pixval = readPixel(pMPA, "ENFLAGS", 1);
     // write broadcast then mask is much much faster than full config
-    configPixel(pMPA, "PixelEnable", 0, pixval);
+    configPixel(pMPA, "ENFLAGS", 0, pixval);
+
     auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     return maskChannelGroup(pMPA, allChannelEnabledGroup, pVerify);
 }

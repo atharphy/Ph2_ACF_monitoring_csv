@@ -27,6 +27,7 @@ MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
     : ReadoutChip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId)
 {
     fChipCode         = 2;
+    fChipAddress      = 0x40 + pChipId % 8;
     fMaxRegValue      = 255;
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
@@ -43,6 +44,7 @@ MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
 MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
 {
     fChipCode         = 2;
+    fChipAddress      = 0x40 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in MPA
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
@@ -151,7 +153,8 @@ std::stringstream MPA2::saveRegMap(const std::string& fName2Add)
     return std::stringstream("");
 } // end saveRegMap
 
-bool MPARegItemComparer::operator()(const MPARegPair& pRegItem1, const MPARegPair& pRegItem2) const
+// Irene
+bool MPA2RegItemComparer::operator()(const MPARegPair& pRegItem1, const MPARegPair& pRegItem2) const
 {
     if(pRegItem1.second.fPage != pRegItem2.second.fPage)
         return pRegItem1.second.fPage < pRegItem2.second.fPage;

@@ -88,7 +88,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     const uint8_t  VALID_L1_HEADER     = 0x0A;
     const uint8_t  VALID_STUB_HEADER   = 0x05;
     uint32_t       cNEvents            = 0;
-    // for( auto cWord : pData ) LOG (INFO) << BOLDYELLOW << std::bitset<32>(cWord) << RESET;
+    for(auto cWord: pData) LOG(DEBUG) << BOLDYELLOW << std::bitset<32>(cWord) << RESET;
     auto cEventIterator = pData.begin();
     do
     {

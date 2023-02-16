@@ -14,15 +14,16 @@
 
 #if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
-#include "D19cDebugFWInterface.h"
-#include "D19cLinkInterface.h"
-#include "D19cOpticalInterface.h"
-#include "D19cTriggerInterface.h"
+#include "HWInterface/D19cDebugFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cLinkInterface.h"
+#include "HWInterface/D19cOpticalInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
 #include "HWInterface/DPInterface.h"
-#include "L1ReadoutInterface.h"
-#include "LinkAlignmentOT.h"
-#include "Tool.h"
-#include "linearFitter.h"
+#include "HWInterface/L1ReadoutInterface.h"
+#include "tools/LinkAlignmentOT.h"
+#include "tools/Tool.h"
+#include "Utils/linearFitter.h"
 
 #include "TAxis.h"
 #include "TF1.h"
@@ -75,7 +76,6 @@ class OTHybridTester : public Tool
     bool     LpGBTGetLinkLock();
     bool     LpGBTCheckClocks();
     bool     LpGBTFastCommandChecker(uint8_t pPattern);
-    void     freeTest();
     uint16_t calibrateADC();
     void     calibrateCurrentDAC();
     // Run Eye Openin Monitor

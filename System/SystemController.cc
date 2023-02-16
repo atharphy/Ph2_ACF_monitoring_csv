@@ -276,14 +276,13 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     bool cWithMPA2 = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     bool cMPAtype  = cWithMPA2 | cWithMPA;
                     bool cSSAtype  = cWithSSA2 | cWithSSA;
-
                     if(cWithCBC)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
                         fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
                     }
 
-                    if(cSSAtype && !cMPAtype) // SSA boards?
+                    /*if(cSSAtype && !cMPAtype) // SSA boards?
                     {
                         if(cWithSSA)
                         {
@@ -306,11 +305,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         }
                         if(cWithMPA2)
                         {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA2(s)" << RESET;
                             fReadoutChipInterface = new MPA2Interface(fBeBoardFWMap);
                         }
-                    }
-                    if((cMPAtype && cSSAtype) && cWithLpGBT)
+                    }*/
+                    if((cMPAtype || cSSAtype) && cWithLpGBT)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS module(s)" << RESET;
                         fReadoutChipInterface = new PSInterface(fBeBoardFWMap);
@@ -319,7 +318,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     {
                         bool cFoundLpgbt = fReadoutChipInterface->lpGBTCheck(cFirstBoard);
                         if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Readout chip interface aware of the lpGBT connected to this board ... " << RESET;
-                        if(cWithMPA && cWithSSA) static_cast<PSInterface*>(fReadoutChipInterface)->SetOptical();
+                        if(cWithMPA || cWithSSA) static_cast<PSInterface*>(fReadoutChipInterface)->SetOptical();
                     }
                 } // creat Chip interfaces
 
@@ -771,8 +770,8 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             cClkCnfg.fClkDriveStr     = cSsaClockDrive;
             cClkCnfg.fClkInvert       = 1;
             cClkCnfg.fClkPreEmphWidth = 0;
-            cClkCnfg.fClkPreEmphMode  = 0; // 3;
-            cClkCnfg.fClkPreEmphStr   = 0; // 7;
+            cClkCnfg.fClkPreEmphMode  = 3; // 3;
+            cClkCnfg.fClkPreEmphStr   = 7; // 7;
 
             LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide << "]" << RESET;
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
@@ -805,12 +804,21 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
             }
-
+	    bool setSSACurrent=true;
+	    for(auto cChip: *cHybrid)
+	    {
+            	if (cChip->getFrontEndType() == FrontEndType::MPA2) 
+		    {
+		    setSSACurrent=false;
+		    break;
+		    }
+	    }
+	    if (setSSACurrent)
+	    {
             bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
             for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
             {
                 if(cSkipSSA3 && cSSAId == 3) continue;
-
                 SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
                 uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
                 cSSA->setOptical(cHybrid->isOptical());
@@ -818,7 +826,9 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
                 auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
                 (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
+
             }
+	    }
 
         } // hybrid
     }     // lpGBT part ... resets + clocks
@@ -982,8 +992,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
 }
-
-void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
+void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doAlsoFrontend)
 {
     if(fDetectorContainer == nullptr)
     {
@@ -1089,7 +1098,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
             ConfigureIT(cBoard);
-            ConfigureFrontendIT(cBoard);
+            if(doAlsoFrontend == true) ConfigureFrontendIT(cBoard);
 
             // ######################################
             // # Dispatch threads for data decoding #
@@ -1159,12 +1168,14 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
+void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
 {
-    InitializeHw(cHWFile, fParsedFile, enableStream, DQMportNumber);
-    InitializeSettings(cHWFile, fParsedFile);
-    std::cout << fParsedFile.str() << std::endl;
-    ConfigureHw(false, true);
+    std::stringstream outp;
+
+    InitializeHw(cHWFile, outp, enableStream, DQMportNumber);
+    InitializeSettings(cHWFile, outp);
+    std::cout << outp.str() << std::endl;
+    ConfigureHw(false, true, doAlsoFrontend);
 }
 
 void SystemController::Start(int runNumber)
