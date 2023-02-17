@@ -5,7 +5,7 @@
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/Occupancy.h"
@@ -103,6 +103,10 @@ bool Tool::GetRunningStatus()
         {
             if(fRunningFuture.valid()) fRunningFuture.get();
         }
+        catch(const std::future_error& e)
+        {
+            LOG(INFO) << "Ignoring future exception, future already retrieved";
+        }
         catch(const std::exception& e)
         {
             throw std::runtime_error(e.what());
@@ -115,7 +119,14 @@ bool Tool::GetRunningStatus()
 
 void Tool::waitForRunToBeCompleted()
 {
-    fRunningFuture.wait();
+    try
+    {
+        if(fRunningFuture.valid()) fRunningFuture.wait();
+    }
+    catch(const std::future_error& e)
+    {
+        LOG(INFO) << "Ignoring future exception, future already retrieved";
+    }
     // std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
@@ -128,8 +139,11 @@ void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNum
 
 void Tool::Start(int runNumber)
 {
-    std::string resultDirectory = "Results";
-    CreateResultDirectory(resultDirectory, false, false);
+    if(fDirectoryName == "")
+    {
+        std::string resultDirectory = "Results/Run_" + std::to_string(runNumber);
+        CreateResultDirectory(resultDirectory, false, false);
+    }
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
 #endif
@@ -159,7 +173,11 @@ void Tool::Stop()
         // if(fRunningThread.joinable() == true) fRunningThread.join();
         try
         {
-            fRunningFuture.get();
+            if(fRunningFuture.valid()) fRunningFuture.get();
+        }
+        catch(const std::future_error& e)
+        {
+            LOG(INFO) << "Ignoring future exception, future already retrieved";
         }
         catch(const std::exception& e)
         {

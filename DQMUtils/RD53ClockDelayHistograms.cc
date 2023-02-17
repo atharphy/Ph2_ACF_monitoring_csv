@@ -8,12 +8,13 @@
 */
 
 #include "RD53ClockDelayHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void ClockDelayHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
@@ -37,24 +38,24 @@ bool ClockDelayHistograms::fill(std::vector<char>& dataBuffer)
 {
     const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    ChipContainerStream<EmptyContainer, GenericDataArray<ClkDelaySize>> theOccStreamer("ClockDelayOcc");
-    ChipContainerStream<EmptyContainer, uint16_t>                       theClockDelayStreamer("ClockDelayClkDelay");
+    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theOccupancySerialization("ClockDelayOccupancy");
+    ContainerSerialization theClockDelaySerialization("ClockDelayClockDelay");
 
-    if(theOccStreamer.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        theOccStreamer.decodeChipData(DetectorData);
-        ClockDelayHistograms::fillOccupancy(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched ClockDelay Occupancy!!!!!\n";
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<ClkDelaySize>>(fDetectorContainer);
+        ClockDelayHistograms::fillOccupancy(fDetectorData);
         return true;
     }
-    else if(theClockDelayStreamer.attachBuffer(&dataBuffer))
+    if(theClockDelaySerialization.attachDeserializer(inputStream))
     {
-        theClockDelayStreamer.decodeChipData(DetectorData);
-        ClockDelayHistograms::fillClockDelay(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched ClockDelay ClockDelay!!!!!\n";
+        DetectorDataContainer fDetectorData = theClockDelaySerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        ClockDelayHistograms::fillClockDelay(fDetectorData);
         return true;
     }
-
     return false;
 }
 

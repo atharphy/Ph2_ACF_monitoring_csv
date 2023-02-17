@@ -11,7 +11,6 @@
 #define RD53VoltageTuningHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 
 #include <TH1F.h>
@@ -28,7 +27,7 @@ class VoltageTuningHistograms : public DQMHistogramBase
     void fillAna(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
     DetectorDataContainer VoltageDig;
     DetectorDataContainer VoltageAna;
 };

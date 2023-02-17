@@ -1,6 +1,7 @@
 #include "OTCMNoise.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
+#include "Utils/ContainerSerialization.h"
 
 // PUBLIC METHODS
 OTCMNoise::OTCMNoise() : Tool() {}
@@ -140,24 +141,17 @@ void OTCMNoise::TakeData()
     fDQMHistogramOTCMNoise.fillHitPlots(theHitContainer);
     if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
 #else
-    auto theHitStream = prepareOpticalGroupContainerStreamer<EmptyContainer,
-                                                             GenericDataArray<NCHANNELS + 1, uint32_t>,
-                                                             GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>,
-                                                             GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>("CMNoise_HitStream");
-    for(auto board: theHitContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theHitStream->streamAndSendBoard(board, fDQMStreamer);
-    }
-    if(f2DHistograms)
-    {
-        auto the2DHitStream =
-            prepareOpticalGroupContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>("CMNoise_2DHitStream");
-        for(auto board: the2DHitContainer)
+        ContainerSerialization theHitSerialization("OTCMNoiseHitStream");
+        theHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, theHitContainer);
+        if(f2DHistograms)
         {
-            if(fDQMStreamerEnabled) the2DHitStream->streamAndSendBoard(board, fDQMStreamer);
+            ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
+            the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, theHitContainer);
+         
         }
     }
-
 #endif
 }
 

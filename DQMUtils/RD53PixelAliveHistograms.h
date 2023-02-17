@@ -12,8 +12,6 @@
 #define RD53PixelAliveHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChannelContainerStream.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 
@@ -33,7 +31,7 @@ class PixelAliveHistograms : public DQMHistogramBase
     void fillTrgID(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer Occupancy1D;
     DetectorDataContainer Occupancy2D;

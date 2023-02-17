@@ -22,8 +22,10 @@
 #include <map>
 #include <type_traits>
 #include <vector>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/base_object.hpp>
 
-class ChannelDataContainerBase;
 template <typename T>
 class ChannelContainer;
 class ChipContainer;
@@ -40,7 +42,13 @@ class SummaryBase
                                         const uint32_t                          numberOfEvents)                                                                                                         = 0;
     virtual void  makeSummaryOfSummary(const SummaryContainerBase* theSummaryList, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) = 0;
     virtual void* getSummaryPointer()                                                                                                                                          = 0;
+    
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version){}
 };
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(SummaryBase)
 
 class SummaryContainerBase
 {
@@ -202,6 +210,16 @@ class Summary : public SummaryBase
     void* getSummaryPointer() { return static_cast<void*>(&theSummary_); }
 
     S theSummary_;
+
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        theArchive.template register_type<Summary<S, C>>();
+        theArchive & boost::serialization::base_object<SummaryBase>(*this);
+        theArchive & theSummary_;
+    }
 };
 
 // Functor for summarize channels - case when makeChannelAverage<C> is defined
@@ -305,7 +323,17 @@ class BaseDataContainer
 
     SummaryBase* summary_;
     bool         isNormalized{false};
+
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        theArchive & summary_;
+    }
 };
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(BaseDataContainer)
+
 
 template <class T>
 class DataContainer
@@ -319,6 +347,15 @@ class DataContainer
 
     DataContainer(const DataContainer&) = delete;
     DataContainer(DataContainer&& theCopyContainer) : Container<T>(std::move(theCopyContainer)), BaseDataContainer(std::move(theCopyContainer)) {}
+
+    void remapIdtoPointer()
+    {
+        for(auto object : *this)
+        {
+             Container<T>::idObjectMap_[object->getId()] = object;
+            object->remapIdtoPointer();
+        }
+    }
 
     template <typename S, typename V>
     void initialize()
@@ -388,6 +425,16 @@ class DataContainer
         summary_ = nullptr;
         for(auto container: *this) { container->cleanDataStored(); }
     }
+
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {   
+        theArchive & this->id_;
+        theArchive & boost::serialization::base_object<BaseDataContainer>(*this);
+        theArchive & boost::serialization::base_object<Container<T>>(*this);
+    }
 };
 
 template <typename T>
@@ -417,6 +464,14 @@ class ChannelDataContainer : public ChannelContainer<T> //, public ChannelContai
         ChannelNormalizer<T, has_normalize<T>::value> theChannelNormalizer;
         theChannelNormalizer(*this, numberOfEvents);
     }
+
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        theArchive & boost::serialization::base_object<ChannelContainer<T>>(*this);
+    }
 };
 
 // Functor for mormalizing channels - case when normalize is defined
@@ -435,6 +490,7 @@ class ChipDataContainer
 {
   public:
     ChipDataContainer(uint16_t id) : ChipContainer(id) {}
+    ChipDataContainer() : ChipContainer(65535) {}
 
     ChipDataContainer(uint16_t id, unsigned int numberOfRows, unsigned int numberOfCols = 1) : ChipContainer(id, numberOfRows, numberOfCols) {}
 
@@ -443,16 +499,29 @@ class ChipDataContainer
 
     virtual ~ChipDataContainer() { ; }
 
+    void remapIdtoPointer(){};
+
     template <typename S, typename V>
     void initialize()
     {
         if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S, V>();
-        if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_);
+        initializeChannels<V>();
     }
     template <typename S, typename V>
     void initialize(S& theSummary, V& initialValue)
     {
         if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S, V>(theSummary);
+        initializeChannels<V>(initialValue);
+    }
+
+    template <typename V>
+    void initializeChannels()
+    {
+        if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_);
+    }
+    template <typename V>
+    void initializeChannels(V& initialValue)
+    {
         if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_, initialValue);
     }
 
@@ -512,12 +581,24 @@ class ChipDataContainer
         summary_ = nullptr;
         ChipContainer::cleanDataStored();
     }
+
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {   
+        theArchive & id_;
+        theArchive & boost::serialization::base_object<BaseDataContainer>(*this);
+        theArchive & container_;
+    }
 };
 
 class HybridDataContainer : public DataContainer<ChipDataContainer>
 {
   public:
     HybridDataContainer(uint16_t id) : DataContainer<ChipDataContainer>(id) {}
+    HybridDataContainer() : DataContainer<ChipDataContainer>(65535u) {}
+
     HybridDataContainer(const HybridDataContainer&) = delete;
     HybridDataContainer(HybridDataContainer&& theCopyContainer) : DataContainer<ChipDataContainer>(std::move(theCopyContainer)) {}
 
@@ -540,12 +621,19 @@ class HybridDataContainer : public DataContainer<ChipDataContainer>
     }
 
   private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {   
+        theArchive & boost::serialization::base_object<DataContainer<ChipDataContainer>>(*this);
+    }
 };
 
 class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
 {
   public:
     OpticalGroupDataContainer(uint16_t id) : DataContainer<HybridDataContainer>(id) {}
+    OpticalGroupDataContainer() : DataContainer<HybridDataContainer>(65535u) {}
     OpticalGroupDataContainer(const OpticalGroupDataContainer&) = delete;
     OpticalGroupDataContainer(OpticalGroupDataContainer&& theCopyContainer) : DataContainer<HybridDataContainer>(std::move(theCopyContainer)) {}
 
@@ -569,12 +657,19 @@ class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
     }
 
   private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {   
+        theArchive & boost::serialization::base_object<DataContainer<HybridDataContainer>>(*this);
+    }
 };
 
 class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
 {
   public:
     BoardDataContainer(uint16_t id) : DataContainer<OpticalGroupDataContainer>(id) {}
+    BoardDataContainer() : DataContainer<OpticalGroupDataContainer>(65535u) {}
     BoardDataContainer(const BoardDataContainer&) = delete;
     BoardDataContainer(BoardDataContainer&& theCopyContainer) : DataContainer<OpticalGroupDataContainer>(std::move(theCopyContainer)) {}
 
@@ -596,8 +691,14 @@ class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
         LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
         return DataContainer<OpticalGroupDataContainer>::getObject(id);
     }
-
+    
   private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {   
+        theArchive & boost::serialization::base_object<DataContainer<OpticalGroupDataContainer>>(*this);
+    }
 };
 
 class DetectorDataContainer : public DataContainer<BoardDataContainer>
@@ -626,8 +727,14 @@ class DetectorDataContainer : public DataContainer<BoardDataContainer>
         LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
         return DataContainer<BoardDataContainer>::getObject(id);
     }
-
+    
   private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {   
+        theArchive & boost::serialization::base_object<DataContainer<BoardDataContainer>>(*this);
+    }
 };
 
 #endif

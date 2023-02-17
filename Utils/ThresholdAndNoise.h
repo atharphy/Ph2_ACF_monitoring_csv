@@ -37,6 +37,19 @@ class ThresholdAndNoise
 
     float fNoise;
     float fNoiseError;
+
+
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        theArchive & fThreshold;
+        theArchive & fThresholdError;
+        theArchive & fNoise;
+        theArchive & fNoiseError;
+    }
+
 };
 
 template <>

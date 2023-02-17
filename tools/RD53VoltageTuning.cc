@@ -8,6 +8,7 @@
 */
 
 #include "RD53VoltageTuning.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -39,13 +40,13 @@ void VoltageTuning::Running()
 
 void VoltageTuning::sendData()
 {
-    auto theDigStreamer = this->prepareChipContainerStreamer<EmptyContainer, double>("VoltageDig");
-    auto theAnaStreamer = this->prepareChipContainerStreamer<EmptyContainer, double>("VoltageAna");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: theDigContainer) theDigStreamer->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theAnaContainer) theAnaStreamer->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theVoltageDigitalSerialization("VoltageTuningVoltageDigital");
+        theVoltageDigitalSerialization.streamByChipContainer(fDQMStreamer, theDigContainer);
+
+        ContainerSerialization theVoltageAnalogSerialization("VoltageTuningVoltageAnalog");
+        theVoltageAnalogSerialization.streamByChipContainer(fDQMStreamer, theAnaContainer);
     }
 }
 

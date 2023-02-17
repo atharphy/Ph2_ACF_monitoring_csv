@@ -12,7 +12,7 @@
 
 #include "DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
 
@@ -31,7 +31,7 @@ class GenericDacDacScanHistograms : public DQMHistogramBase
     void fillGenericDacDacScan(const DetectorDataContainer& GenericDacDacScanContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer Occupancy2D;
     DetectorDataContainer GenericDac1Scan;

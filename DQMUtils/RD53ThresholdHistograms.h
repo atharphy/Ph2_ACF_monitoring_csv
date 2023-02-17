@@ -12,7 +12,6 @@
 #define RD53ThresholdHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 
 #include <TH1F.h>
@@ -28,7 +27,7 @@ class ThresholdHistograms : public DQMHistogramBase
     void fill(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer Threhsold;
 };

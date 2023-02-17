@@ -8,6 +8,7 @@
 */
 
 #include "RD53PixelAlive.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -75,18 +76,16 @@ void PixelAlive::Running()
 
 void PixelAlive::sendData()
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
-
-    auto theOccStream   = this->prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
-    auto theBCIDStream  = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
-    auto theTrgIDStream = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: *theOccContainer.get()) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theBCIDContainer) theBCIDStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTrgIDContainer) theTrgIDStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theOccupancySerialization("PixelAliveOccupancy");
+        theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer.get());
+        
+        ContainerSerialization theBCIDSerialization("PixelAliveBCID");
+        theBCIDSerialization.streamByChipContainer(fDQMStreamer, theBCIDContainer);
+
+        ContainerSerialization theTrgIDSerialization("PixelAliveTrgID");
+        theTrgIDSerialization.streamByChipContainer(fDQMStreamer, theTrgIDContainer);
     }
 }
 

@@ -231,8 +231,6 @@ bool D19cTriggerInterface::WaitForNTriggers(uint32_t pNTriggers)
 bool D19cTriggerInterface::RunTriggerFSM()
 {
     this->Start();
-    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
-    auto cDuration         = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
     auto cRunningTime      = 0;
     bool cCheckRunningTime = true;
     // check if trigger state machine is running

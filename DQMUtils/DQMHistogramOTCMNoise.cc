@@ -8,8 +8,8 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
-#include "Utils/OpticalGroupContainerStream.h"
 #include "Utils/Utilities.h"
+#include "Utils/ContainerSerialization.h"
 
 //========================================================================================================================
 DQMHistogramOTCMNoise::DQMHistogramOTCMNoise() {}
@@ -25,6 +25,7 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
     // make fDetectorData ready to receive the information fromm the stream
     // SoC utilities only - END
+    fDetectorContainer = &theDetectorStructure;
 
     auto cSetting = pSettingsMap.find("Nevents");
     if(cSetting != std::end(pSettingsMap))
@@ -42,8 +43,6 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     }
     else
         f2DHistograms = false;
-
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
     HistContainer<TH1F> hChipHits("ChipHits", "ChipHits", NCHANNELS + 1, -0.5, NCHANNELS + 1 + 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fChipHitHistograms, hChipHits);
@@ -107,29 +106,24 @@ void DQMHistogramOTCMNoise::reset(void)
 //========================================================================================================================
 bool DQMHistogramOTCMNoise::fill(std::vector<char>& dataBuffer)
 {
-    // Contains CM Noise summary per channel at hybrid and chip level
-    OpticalGroupContainerStream<EmptyContainer, GenericDataArray<NCHANNELS + 1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>
-                                                                                                                                                     theOpticalGroupHitStreamer("CMNoise_HitStream");
-    OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>> the2DOpticalGroupHitStreamer(
-        "CMNoise_2DHitStream");
+    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theHitSerialization("OTCMNoiseHitStream");
+    ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
 
-    // Try to see if the char buffer matched what I'm expection (container of uint32_t from OTCMNoise
-    // procedure)
-    if(theOpticalGroupHitStreamer.attachBuffer(&dataBuffer))
+    if(theHitSerialization.attachDeserializer(inputStream))
     {
-        theOpticalGroupHitStreamer.decodeData(fDetectorData);
+        std::cout << "Matched OTCMNoise HitStream!!!!!\n";
+        DetectorDataContainer fDetectorData = theHitSerialization.deserializeOpticalGroupContainer<EmptyContainer, GenericDataArray<NCHANNELS + 1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>(fDetectorContainer);
         fillHitPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
         return true;
     }
-    if(the2DOpticalGroupHitStreamer.attachBuffer(&dataBuffer))
+    if(theHitSerialization.attachDeserializer(inputStream))
     {
-        the2DOpticalGroupHitStreamer.decodeData(fDetectorData);
+        std::cout << "Matched OTCMNoise 2DHitStream!!!!!\n";
+        DetectorDataContainer fDetectorData = theHitSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>(fDetectorContainer);
         fill2DHitPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
         return true;
     }
-
     return false;
 }
 
