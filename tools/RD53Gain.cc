@@ -44,7 +44,7 @@ void Gain::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    auto groupType = injType != CalibBase::INJtype::None ? RD53GroupType::Groups : RD53GroupType::AllPixels;
+    auto groupType = (injType != CalibBase::INJtype::None) && (injType != CalibBase::INJtype::Custom) ? RD53GroupType::Groups : RD53GroupType::AllPixels;
     theChnGroupHandler =
         std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
@@ -151,7 +151,7 @@ void Gain::run()
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
     this->SetBoardBroadcast(true);
-    this->SetTestPulse(injType != CalibBase::INJtype::None);
+    this->SetTestPulse((injType != CalibBase::INJtype::None) && (injType != CalibBase::INJtype::Custom));
     this->fMaskChannelsFromOtherGroups = true;
     this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 
