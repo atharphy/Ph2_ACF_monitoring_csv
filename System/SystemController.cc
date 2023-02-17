@@ -199,9 +199,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     fBeBoardInterface->setBoard(0);
 
-    fChannelGroupHandlerContainer = new DetectorDataContainer();
-    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
-
     LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
@@ -1389,6 +1386,12 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
+    if(fChannelGroupHandlerContainer == nullptr)
+    {
+        delete fChannelGroupHandlerContainer;
+    }
+    fChannelGroupHandlerContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
     uint16_t totalNumberOfChips = 0;
     for(const auto board: *fDetectorContainer)
     {
@@ -1399,7 +1402,6 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
     }
 
     uint16_t totalNumberOfQueriedChips = 0;
-    fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
     for(const auto board: *fDetectorContainer)
     {
         for(const auto opticalGroup: *board)
@@ -1409,17 +1411,19 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
                 totalNumberOfQueriedChips += hybrid->size();
                 for(const auto chip: *hybrid)
                 {
-                    fChannelGroupHandlerContainer->getObject(board->getId())
-                        ->getObject(opticalGroup->getId())
-                        ->getObject(hybrid->getId())
-                        ->getObject(chip->getId())
-                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
+                    if(theQueryFunction(chip))
+                    {
+                        fChannelGroupHandlerContainer->getObject(board->getId())
+                            ->getObject(opticalGroup->getId())
+                            ->getObject(hybrid->getId())
+                            ->getObject(chip->getId())
+                            ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
+                    }
                 }
             }
         }
     }
 
-    fDetectorContainer->resetReadoutChipQueryFunction();
     fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
 }
 
