@@ -29,7 +29,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 
-## ~=-=~ Middleware for the Inner-Tracker (IT) system  ~=-=~
+## =x= Middleware for the Inner-Tracker (IT) system  =x=
 ```diff
 + Last change made to this section: 21/11/2022
 ```
@@ -105,7 +105,7 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 ```
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations, for instance `noise`, `gain`, and "the rest".
-### ~=-=~ End of Inner-Tracker section ~=-=~
+### =x= End of Inner-Tracker section =x=
 
 
 ### Setup
