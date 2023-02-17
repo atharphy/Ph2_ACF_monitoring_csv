@@ -44,7 +44,7 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
     auto hThreshold1D = CanvasContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue - offset, stopValue - offset);
     bookImplementer(theOutputFile, theDetectorStructure, Threshold1D, hThreshold1D, "Threshold (#DeltaVCal)", "Entries");
 
-    auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", 100, 0, 50);
+    auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", 200, 0, 200);
     bookImplementer(theOutputFile, theDetectorStructure, Noise1D, hNoise1D, "Noise (#DeltaVCal)", "Entries");
 
     auto hThreshold2D = CanvasContainer<TH2F>("Threshold2D", "Threshold Map", nCols, 0, nCols, nRows, 0, nRows);
