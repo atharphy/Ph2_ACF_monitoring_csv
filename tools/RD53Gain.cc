@@ -151,7 +151,7 @@ void Gain::run()
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
     this->SetBoardBroadcast(true);
-    this->SetTestPulse((injType != CalibBase::INJtype::Analog) || (injType != CalibBase::INJtype::Digital));
+    this->SetTestPulse((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital));
     this->fMaskChannelsFromOtherGroups = true;
     this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 

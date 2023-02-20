@@ -228,7 +228,7 @@ void PixelAlive::runPixelAlive()
     this->fDetectorDataContainer = theOccContainer.get();
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
 
-    this->SetTestPulse((injType != CalibBase::INJtype::Analog) || (injType != CalibBase::INJtype::Digital));
+    this->SetTestPulse((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital));
     this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nEvents, nEvtsBurst);
 
