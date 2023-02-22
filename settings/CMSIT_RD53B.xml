@@ -286,15 +286,15 @@
   <MonitoringSettings>
     <Monitoring type="RD53B" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElement device="RD53" register="VINA"                 enable="1"/>
-      <MonitoringElement device="RD53" register="VDDA"                 enable="1"/>
-      <MonitoringElement device="RD53" register="ANA_IN_CURR"          enable="1"/>
-      <MonitoringElement device="RD53" register="VIND"                 enable="1"/>
-      <MonitoringElement device="RD53" register="VDDD"                 enable="1"/>
-      <MonitoringElement device="RD53" register="DIG_IN_CURR"          enable="1"/>
-      <MonitoringElement device="RD53" register="Iref"                 enable="1"/>
-      <MonitoringElement device="RD53" register="POLY_TEMPSENS_TOP"    enable="1"/>
-      <MonitoringElement device="RD53" register="POLY_TEMPSENS_BOTTOM" enable="1"/>
+      <MonitoringElement device="RD53B" register="VINA"                 enable="1"/>
+      <MonitoringElement device="RD53B" register="VDDA"                 enable="1"/>
+      <MonitoringElement device="RD53B" register="ANA_IN_CURR"          enable="1"/>
+      <MonitoringElement device="RD53B" register="VIND"                 enable="1"/>
+      <MonitoringElement device="RD53B" register="VDDD"                 enable="1"/>
+      <MonitoringElement device="RD53B" register="DIG_IN_CURR"          enable="1"/>
+      <MonitoringElement device="RD53B" register="Iref"                 enable="1"/>
+      <MonitoringElement device="RD53B" register="POLY_TEMPSENS_TOP"    enable="1"/>
+      <MonitoringElement device="RD53B" register="POLY_TEMPSENS_BOTTOM" enable="1"/>
 
       <MonitoringElement device="LpGBT" register="TEMP"                enable="0"/>
       <MonitoringElement device="LpGBT" register="VDD"                 enable="0"/>

@@ -305,14 +305,14 @@
   <MonitoringSettings>
     <Monitoring type="RD53A" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElement device="RD53" register="VIN_ana_ShuLDO"  enable="1"/>
-      <MonitoringElement device="RD53" register="VOUT_ana_ShuLDO" enable="1"/>
-      <MonitoringElement device="RD53" register="VIN_dig_ShuLDO"  enable="1"/>
-      <MonitoringElement device="RD53" register="VOUT_dig_ShuLDO" enable="1"/>
-      <MonitoringElement device="RD53" register="ADCbandgap"      enable="1"/>
-      <MonitoringElement device="RD53" register="Iref"            enable="1"/>
-      <MonitoringElement device="RD53" register="TEMPSENS_1"      enable="1"/>
-      <MonitoringElement device="RD53" register="TEMPSENS_4"      enable="1"/>
+      <MonitoringElement device="RD53A" register="VIN_ana_ShuLDO"  enable="1"/>
+      <MonitoringElement device="RD53A" register="VOUT_ana_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53A" register="VIN_dig_ShuLDO"  enable="1"/>
+      <MonitoringElement device="RD53A" register="VOUT_dig_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53A" register="ADCbandgap"      enable="1"/>
+      <MonitoringElement device="RD53A" register="Iref"            enable="1"/>
+      <MonitoringElement device="RD53A" register="TEMPSENS_1"      enable="1"/>
+      <MonitoringElement device="RD53A" register="TEMPSENS_4"      enable="1"/>
 
       <MonitoringElement device="LpGBT" register="TEMP"           enable="0"/>
       <MonitoringElement device="LpGBT" register="VDD"            enable="0"/>

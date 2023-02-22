@@ -347,7 +347,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     {
         if(monitoringType == "2S")
             fDetectorMonitor = new CBCMonitor(this, theDetectorMonitorConfig);
-        else if(monitoringType == "RD53")
+        else if((monitoringType == "RD53A") || (monitoringType == "RD53B"))
             fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "2SSEH")
             fDetectorMonitor = new SEHMonitor(this, theDetectorMonitorConfig);

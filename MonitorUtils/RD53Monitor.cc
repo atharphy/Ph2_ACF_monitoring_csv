@@ -13,9 +13,13 @@
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
+    std::cout << "AAAAAAAAAAA " << __LINE__ << std::endl;
     fMonitorPlotDQM = new MonitorDQMPlotRD53();
+    std::cout << "AAAAAAAAAAA " << __LINE__ << std::endl;
     fMonitorDQM     = static_cast<MonitorDQMPlotRD53*>(fMonitorPlotDQM);
+    std::cout << "AAAAAAAAAAA " << __LINE__ << std::endl;
     fMonitorDQM->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    std::cout << "AAAAAAAAAAA " << __LINE__ << std::endl;
 #endif
 }
 
