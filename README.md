@@ -42,8 +42,8 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 - Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
-- Program to generate enable/injection patterns for x-talk studies: https://cernbox.cern.ch/s/XZncDuYZtjJpbWN
-- Mask converter from `Ph2_ACF` to `Alki's` code: https://cernbox.cern.ch/index.php/s/1kiut5EPAFpXZg1
+- Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
+- Mask converter from `Ph2_ACF` to `Alki's` code: `pyUtilsIT/ConvertPh2ACFMask2Alkis.py`
 
 **FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
