@@ -16,7 +16,7 @@
 
     # Add the library
     add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} pugixml boost_thread boost_date_time boost_iostreams boost_filesystem rt MessageUtils)
+    set(LIBS ${LIBS} pugixml boost_serialization boost_thread boost_date_time boost_iostreams boost_filesystem rt MessageUtils)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
 
     # Boost also needs to be linked

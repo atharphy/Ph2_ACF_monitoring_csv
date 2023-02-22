@@ -8,6 +8,7 @@
 */
 
 #include "RD53SCurve.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -80,21 +81,20 @@ void SCurve::Running()
 
 void SCurve::sendData()
 {
-    auto theOccStream         = this->prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
-    auto theThrAndNoiseStream = this->prepareChannelContainerStreamer<ThresholdAndNoise>("ThrAndNoise");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
+        if(theThresholdAndNoiseContainer != nullptr)
+        {
+            ContainerSerialization theThresholdAndNoiseSerialization("SCurveThresholdAndNoise");
+            theThresholdAndNoiseSerialization.streamByChipContainer(fDQMStreamer, *theThresholdAndNoiseContainer.get());
+        }
         size_t index = 0;
+        ContainerSerialization theOccupancySerialization("SCurveOccupancy");
         for(const auto theOccContainer: detectorContainerVector)
         {
-            theOccStream->setHeaderElement(dacList[index] - offset);
-            for(const auto cBoard: *theOccContainer) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
-            index++;
+            int deltaVacl = dacList[index++] - offset;
+            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVacl);
         }
-
-        if(theThresholdAndNoiseContainer != nullptr)
-            for(const auto cBoard: *theThresholdAndNoiseContainer.get()) theThrAndNoiseStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

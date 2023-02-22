@@ -69,7 +69,7 @@ class MonitorDQMPlotSEH : public MonitorDQMPlotBase
     std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fPowerSupplyMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fTestCardMonitorPlotMap;
-    DetectorDataContainer                        fDetectorData;
+    const DetectorContainer*                     fDetectorContainer;
     // void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
     void bookPowerSupplyPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
     void bookTestCardPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);

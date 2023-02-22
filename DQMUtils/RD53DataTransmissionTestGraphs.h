@@ -11,7 +11,6 @@
 #define RD53DataTransmissionTestGraphs_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
@@ -31,7 +30,7 @@ class DataTransmissionTestGraphs : public DQMHistogramBase
     void fillTAP0tgt(const DetectorDataContainer& TAP0tgtContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer TAP0scan;
     DetectorDataContainer TAP0tgt;

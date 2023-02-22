@@ -15,6 +15,7 @@
 #include "Utils/Occupancy.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -76,18 +77,6 @@ void Physics2S::Running()
     Physics2S::run();
 }
 
-void Physics2S::sendBoardData(BoardContainer* const& cBoard)
-{
-    auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>("Occupancy");
-    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
-
-    if(fDQMStreamerEnabled == true)
-    {
-        theOccupancyStream->streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theStubStream->streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
-    }
-}
-
 void Physics2S::Stop()
 {
     LOG(INFO) << GREEN << "[Physics2S::Stop] Stopping" << RESET;
@@ -140,9 +129,18 @@ unsigned int Physics2S::getDataFromBoards()
             // for(const auto& event : events)
             //     std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(event)->L1Id(1,0)<<std::endl;
             fillDataContainer(cBoard, events);
-            sendBoardData(cBoard);
         }
     }
+
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theOccupancySerialization("Physics2SOccupancy");
+        theOccupancySerialization.streamByHybridContainer(fDQMStreamer, fOccupancyContainer);
+
+        ContainerSerialization theStubSerialization("Physics2SStub");
+        theStubSerialization.streamByHybridContainer(fDQMStreamer, fStubContainer);
+    }
+
     return dataSize;
 }
 

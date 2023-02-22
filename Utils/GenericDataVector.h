@@ -11,6 +11,7 @@
 #define GenericDataVector_H
 
 #include "OccupancyAndPh.h"
+#include <boost/serialization/vector.hpp>
 
 class GenericDataVector : public OccupancyAndPh
 {
@@ -28,6 +29,14 @@ class GenericDataVector : public OccupancyAndPh
 
     std::vector<float> data1;
     std::vector<float> data2;
+
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        theArchive & data1;
+        theArchive & data2;
+    }
 };
 
 #endif

@@ -11,7 +11,6 @@
 #define RD53InjectionDelayHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
@@ -30,7 +29,7 @@ class InjectionDelayHistograms : public DQMHistogramBase
     void fillInjectionDelay(const DetectorDataContainer& InjectionDelayContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer Occupancy1D;
     DetectorDataContainer InjectionDelay;

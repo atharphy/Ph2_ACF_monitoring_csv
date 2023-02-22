@@ -10,7 +10,6 @@
 #define RD53BERtestHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 
 #include <TH1F.h>
@@ -26,7 +25,7 @@ class BERtestHistograms : public DQMHistogramBase
     void fillBERtest(const DetectorDataContainer& BERtestContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer BERtest;
 };

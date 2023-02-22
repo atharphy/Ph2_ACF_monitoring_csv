@@ -11,8 +11,6 @@
 #define RD53PhysicsHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChannelContainerStream.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 
@@ -32,7 +30,7 @@ class PhysicsHistograms : public DQMHistogramBase
     void fillTrgID(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer*    fDetectorContainer;
 
     DetectorDataContainer ToT1D;
     DetectorDataContainer ToT2D;

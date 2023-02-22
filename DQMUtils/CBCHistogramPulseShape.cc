@@ -11,13 +11,11 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TH2F.h"
-#include "Utils/ChannelContainerStream.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
+#include "Utils/ContainerSerialization.h"
 
 //========================================================================================================================
 CBCHistogramPulseShape::CBCHistogramPulseShape() {}
@@ -28,13 +26,6 @@ CBCHistogramPulseShape::~CBCHistogramPulseShape() {}
 //========================================================================================================================
 void CBCHistogramPulseShape::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
-    // SoC utilities only - BEGIN
-    // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
-    // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
-    // make fDetectorData ready to receive the information fromm the stream
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
-    // SoC utilities only - END
-
     fInitialVcth           = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialVcth", 250);
     fInitialLatency        = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialLatency", 200);
     fFinalVcth             = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalVcth", 600);
@@ -214,33 +205,25 @@ void CBCHistogramPulseShape::reset(void)
 //========================================================================================================================
 bool CBCHistogramPulseShape::fill(std::vector<char>& dataBuffer)
 {
-    // SoC utilities only - BEGIN
-    // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
-    // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
-    // I'm expecting to receive a data stream from an uint32_t contained from calibration "CalibrationExample"
-    ChipContainerStream<ThresholdAndNoise, ThresholdAndNoise, uint16_t> thePulseShapeStreamer("CBCPulseShape");
-    ChannelContainerStream<Occupancy, uint16_t, uint16_t, uint16_t>     theSCurve("CBCPulseShapeSCurve");
+    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theThresholdAndNoiseSerialization("CBCPulseShapeThresholdAndNoise");
+    ContainerSerialization theSCurveSerialization("CBCPulseShapeSCurve");
 
-    // Try to see if the char buffer matched what I'm expection (container of uint32_t from CalibrationExample
-    // procedure)
-    if(thePulseShapeStreamer.attachBuffer(&dataBuffer))
+    if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
-        // It matched! Decoding chip data
-        thePulseShapeStreamer.decodeChipData(fDetectorData);
-        // Filling the histograms
-
-        fillCBCPulseShapePlots(thePulseShapeStreamer.getHeaderElement<0>(), fDetectorData);
-        // Cleaning the data container to be ready for the next TCP string
-        fDetectorData.cleanDataStored();
+        std::cout << "Matched CBCPulseShape ThresholdAndNoise!!!!!\n";
+        uint16_t delay;
+        DetectorDataContainer fDetectorData = theThresholdAndNoiseSerialization.deserializeHybridContainer<ThresholdAndNoise,ThresholdAndNoise,ThresholdAndNoise, uint16_t>(fDetectorContainer, delay);
+        fillCBCPulseShapePlots(delay, fDetectorData);
         return true;
     }
-    else if(theSCurve.attachBuffer(&dataBuffer))
+    else if(theSCurveSerialization.attachDeserializer(inputStream))
     {
-        theSCurve.decodeChipData(fDetectorData);
-        fillSCurvePlots(theSCurve.getHeaderElement<0>(), theSCurve.getHeaderElement<1>(), theSCurve.getHeaderElement<2>(), fDetectorData);
-
-        fDetectorData.cleanDataStored();
+        std::cout << "Matched CBCPulseShape SCurve!!!!!\n";
+        uint16_t threshold, latencyDAC, delayDAC;
+        DetectorDataContainer fDetectorData = theSCurveSerialization.deserializeHybridContainer<Occupancy,Occupancy,Occupancy, uint16_t, uint16_t, uint16_t>(fDetectorContainer,  threshold, latencyDAC, delayDAC);
+        fillSCurvePlots(threshold, latencyDAC, delayDAC, fDetectorData);
         return true;
     }
     // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking

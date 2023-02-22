@@ -17,6 +17,7 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -138,41 +139,6 @@ void PSPhysics::Running()
     PSPhysics::run();
 }
 
-// void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
-// {
-//     auto thePSSyncStream = prepareChipContainerStreamer<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
-
-//     if(fDQMStreamerEnabled == true) { thePSSyncStream->streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fDQMStreamer); }
-// }
-
-void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
-{
-    auto theOccupancyStream = prepareChannelContainerStreamer<float>("Occupancy");
-    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
-
-    // for(const auto board : fOccupancyContainer)
-    // {
-    //     for(const auto opticalGroup : *board)
-    //     {
-    //         for(const auto hybrid : *opticalGroup)
-    //         {
-    //             for(const auto chip : *hybrid)
-    //             {
-    //                 for(const auto channel : *chip->getChannelContainer<float>()) std::cout<< channel << " ";
-    //                 std::cout<<std::endl;
-    //             }
-    //         }
-
-    //     }
-    // }
-
-    if(fDQMStreamerEnabled == true)
-    {
-        theOccupancyStream->streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theStubStream->streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
-    }
-}
-
 void PSPhysics::Stop()
 {
     LOG(INFO) << GREEN << "[PSPhysics::Stop] Stopping" << RESET;
@@ -228,13 +194,22 @@ unsigned int PSPhysics::getDataFromBoards()
             // std::cout<<__LINE__<<std::endl;
             PSPhysics::fillDataContainer(cBoard, events);
             // std::cout<<__LINE__<<std::endl;
-            PSPhysics::sendBoardData(cBoard);
             // std::cout<<__LINE__<<std::endl;
         }
         // std::cout<<__LINE__<<std::endl;
         // std::cout<<__LINE__<<std::endl;
     }
     std::cout << "Readout " << dataSize << " events" << std::endl;
+
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theOccupancySerialization("PSPhysicsOccupancy");
+        theOccupancySerialization.streamByHybridContainer(fDQMStreamer, fOccupancyContainer);
+
+        ContainerSerialization theStubSerialization("PSPhysicsStub");
+        theStubSerialization.streamByHybridContainer(fDQMStreamer, fStubContainer);
+    }
+    
     return dataSize;
 }
 

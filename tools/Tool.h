@@ -11,11 +11,6 @@
 #define __TOOL_H__
 
 #include "System/SystemController.h"
-#include "Utils/BoardContainerStream.h"
-#include "Utils/ChannelContainerStream.h"
-#include "Utils/ChipContainerStream.h"
-#include "Utils/HybridContainerStream.h"
-#include "Utils/OpticalGroupContainerStream.h"
 
 #ifdef __USE_ROOT__
 #include "TCanvas.h"
@@ -312,44 +307,6 @@ class Tool : public Ph2_System::SystemController
     // Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
     void setSameDac(const std::string& dacName, const uint16_t dacValue);
 
-    template <typename T, typename... H>
-    std::unique_ptr<ChannelContainerStream<T, H...>> prepareChannelContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<ChannelContainerStream<T, H...>>(new ChannelContainerStream<T, H...>(getCalibrationName() + appendName));
-        // ChannelContainerStream<T, H...> theContainerStreamer(getCalibrationName() + appendName);
-        return theContainerStreamer;
-    }
-
-    template <typename T, typename C, typename... H>
-    std::unique_ptr<ChipContainerStream<T, C, H...>> prepareChipContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<ChipContainerStream<T, C, H...>>(new ChipContainerStream<T, C, H...>(getCalibrationName() + appendName));
-        // ChipContainerStream<T, C, H...> theContainerStreamer(getCalibrationName() + appendName);
-        return theContainerStreamer;
-    }
-
-    template <typename T, typename C, typename M, typename... H>
-    std::unique_ptr<HybridContainerStream<T, C, M, H...>> prepareHybridContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<HybridContainerStream<T, C, M, H...>>(new HybridContainerStream<T, C, M, H...>(getCalibrationName() + appendName));
-        // HybridContainerStream<T, C, M, H...> theContainerStreamer(getCalibrationName() + appendName);
-        return theContainerStreamer;
-    }
-
-    template <typename T, typename C, typename H, typename O, typename... I>
-    std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>> prepareOpticalGroupContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>>(new OpticalGroupContainerStream<T, C, H, O, I...>(getCalibrationName() + appendName));
-        return theContainerStreamer;
-    }
-
-    template <typename T, typename C, typename H, typename O, typename B, typename... I>
-    std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>> prepareBoardContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>>(new BoardContainerStream<T, C, H, O, B, I...>(getCalibrationName() + appendName));
-        return theContainerStreamer;
-    }
-
     std::string getDirectoryName() { return fDirectoryName; }
 
     struct StatsSum
@@ -412,7 +369,7 @@ class Tool : public Ph2_System::SystemController
 
     std::map<int, std::vector<uint8_t>> fMaskForTestGroupChannelMap;
 
-    std::string fDirectoryName; /*< the Directoryname for the Root file with results */
+    std::string fDirectoryName {""}; /*< the Directoryname for the Root file with results */
 #ifdef __USE_ROOT__
     TFile* fResultFile; /*< the Name for the Root file with results */
 #endif

@@ -754,7 +754,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             LOG(INFO) << BOLDMAGENTA << "Readout rate on PS-module (Hybrid# " << +cHybrid->getId() << ") is " << +cReadoutRate << " Mbps" << RESET;
 
             lpGBTClockConfig cClkCnfg;
-            cClkCnfg.fClkFreq         = (cReadoutRate == 320) ? 4 : 5;
+            cClkCnfg.fClkFreq         = 4;
             cClkCnfg.fClkDriveStr     = cSsaClockDrive;
             cClkCnfg.fClkInvert       = 1;
             cClkCnfg.fClkPreEmphWidth = 0;

@@ -8,11 +8,12 @@
 */
 
 #include "MonitorDQM/MonitorDQMPlotRD53.h"
-#include "Utils/ChipContainerStream.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/ValueAndTime.h"
 
 void MonitorDQMPlotRD53::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& fDetectorMonitorConfig)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
 
     for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("RD53").size(); i++)
         bookPlots(theOutputFile, theDetectorStructure, fDetectorMonitorConfig.fMonitorElementList.at("RD53")[i]);
@@ -26,16 +27,17 @@ void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer
 
 bool MonitorDQMPlotRD53::fill(std::vector<char>& dataBuffer)
 {
-    ChipContainerStream<EmptyContainer, std::tuple<time_t, float>, CharArray> theDQMStreamer("RD53MonitorRegister");
+    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theContainerSerialization("RD53MonitorRegister");
 
-    if(theDQMStreamer.attachBuffer(&dataBuffer))
+    if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        theDQMStreamer.decodeChipData(DetectorData);
-        fillRegisterPlots(DetectorData, theDQMStreamer.getHeaderElement().getString());
-        DetectorData.cleanDataStored();
+        std::cout << "Matched RD53Monitor Register!!!!!\n";
+        std::string registerName;
+        DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, ValueAndTime<float>>(fDetectorContainer, registerName);
+        fillRegisterPlots(fDetectorData, registerName);
         return true;
     }
-
     return false;
 }
 
@@ -63,6 +65,6 @@ void MonitorDQMPlotRD53::fillRegisterPlots(DetectorDataContainer& DataContainer,
 
                     if(cChip->hasSummary() == false) continue;
                     chipDQMPlot->SetPoint(
-                        chipDQMPlot->GetN(), this->getTimeStampForRoot(std::get<0>(cChip->getSummary<std::tuple<time_t, float>>())), std::get<1>(cChip->getSummary<std::tuple<time_t, float>>()));
+                        chipDQMPlot->GetN(), this->getTimeStampForRoot(cChip->getSummary<ValueAndTime<float>>().fTime), cChip->getSummary<ValueAndTime<float>>().fValue);
                 }
 }
