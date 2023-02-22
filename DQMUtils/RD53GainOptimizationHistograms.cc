@@ -30,13 +30,13 @@ void GainOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& t
 
 bool GainOptimizationHistograms::fill(std::vector<char>& dataBuffer)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theSCurveSerialization("GainOptimizationKrumCurr");
 
     if(theSCurveSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched GainOptimization KrumCurr!!!!!\n";
-        DetectorDataContainer fDetectorData = theSCurveSerialization.deserializeChipContainer<EmptyContainer,uint16_t>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theSCurveSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         GainOptimizationHistograms::fill(fDetectorData);
         return true;
     }

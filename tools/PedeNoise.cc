@@ -5,6 +5,7 @@
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
@@ -12,7 +13,6 @@
 #include "Utils/ThresholdAndNoise.h"
 #include "boost/format.hpp"
 #include <math.h>
-#include "Utils/ContainerSerialization.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMHistogramPedeNoise.h"

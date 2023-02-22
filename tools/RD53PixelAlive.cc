@@ -80,7 +80,7 @@ void PixelAlive::sendData()
     {
         ContainerSerialization theOccupancySerialization("PixelAliveOccupancy");
         theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer.get());
-        
+
         ContainerSerialization theBCIDSerialization("PixelAliveBCID");
         theBCIDSerialization.streamByChipContainer(fDQMStreamer, theBCIDContainer);
 

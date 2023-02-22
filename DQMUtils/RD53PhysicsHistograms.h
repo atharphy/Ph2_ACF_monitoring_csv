@@ -30,7 +30,7 @@ class PhysicsHistograms : public DQMHistogramBase
     void fillTrgID(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer ToT1D;
     DetectorDataContainer ToT2D;

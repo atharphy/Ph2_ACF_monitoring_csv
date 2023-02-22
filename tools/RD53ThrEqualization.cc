@@ -96,7 +96,7 @@ void ThrEqualization::sendData()
 
         ContainerSerialization theOccupancyScanSerialization("ThrEqualizationOccupancyScan");
         theOccupancyScanSerialization.streamByChipContainer(fDQMStreamer, theContainer);
-        
+
         ContainerSerialization theTDACGainSerialization("ThrEqualizationTDACGain");
         theTDACGainSerialization.streamByChipContainer(fDQMStreamer, theTDACGainContainer);
     }

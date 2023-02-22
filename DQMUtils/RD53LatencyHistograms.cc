@@ -34,8 +34,8 @@ void LatencyHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 
 bool LatencyHistograms::fill(std::vector<char>& dataBuffer)
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    const size_t           LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("LatencyOccupancy");
     ContainerSerialization theLatencySerialization("LatencyLatency");
 

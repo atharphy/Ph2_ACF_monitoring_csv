@@ -16,11 +16,11 @@
 #include "TH1I.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
-#include "Utils/ContainerSerialization.h"
 
 //========================================================================================================================
 DQMHistogramPedestalEqualization::DQMHistogramPedestalEqualization() {}
@@ -57,21 +57,21 @@ bool DQMHistogramPedestalEqualization::fill(std::vector<char>& dataBuffer)
     if(theVCthSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PedestalEqualization Vcth!!!!!\n";
-        DetectorDataContainer theDetectorData = theVCthSerialization.deserializeHybridContainer<EmptyContainer,uint16_t,EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theVCthSerialization.deserializeHybridContainer<EmptyContainer, uint16_t, EmptyContainer>(fDetectorContainer);
         fillVplusPlots(theDetectorData);
         return true;
     }
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PedestalEqualization Occupancy!!!!!\n";
-        DetectorDataContainer theDetectorData = theOccupancySerialization.deserializeHybridContainer<Occupancy,Occupancy,Occupancy>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theOccupancySerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer);
         fillOccupancyPlots(theDetectorData);
         return true;
     }
     if(theOffsetSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PedestalEqualization Offset!!!!!\n";
-        DetectorDataContainer theDetectorData = theOffsetSerialization.deserializeHybridContainer<EmptyContainer,EmptyContainer,uint8_t>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theOffsetSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, uint8_t>(fDetectorContainer);
         fillOffsetPlots(theDetectorData);
         return true;
     }
@@ -133,8 +133,12 @@ void DQMHistogramPedestalEqualization::fillVplusPlots(DetectorDataContainer& the
                 for(auto chip: *hybrid)
                 {
                     if(!chip->hasSummary()) continue;
-                    TH1I* chipVplusHistogram =
-                        fDetectorVplusHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
+                    TH1I* chipVplusHistogram = fDetectorVplusHistograms.getObject(board->getId())
+                                                   ->getObject(opticalGroup->getId())
+                                                   ->getObject(hybrid->getId())
+                                                   ->getObject(chip->getId())
+                                                   ->getSummary<HistContainer<TH1I>>()
+                                                   .fTheHistogram;
                     chipVplusHistogram->SetBinContent(1, chip->getSummary<uint16_t>());
                 }
             }
@@ -155,8 +159,12 @@ void DQMHistogramPedestalEqualization::fillOccupancyPlots(DetectorDataContainer&
                 for(auto chip: *hybrid)
                 {
                     if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
-                    TH1F* chipOccupancyHistogram =
-                        fDetectorOccupancyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* chipOccupancyHistogram = fDetectorOccupancyHistograms.getObject(board->getId())
+                                                       ->getObject(opticalGroup->getId())
+                                                       ->getObject(hybrid->getId())
+                                                       ->getObject(chip->getId())
+                                                       ->getSummary<HistContainer<TH1F>>()
+                                                       .fTheHistogram;
                     uint channelBin = 1;
                     for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
@@ -182,8 +190,12 @@ void DQMHistogramPedestalEqualization::fillOffsetPlots(DetectorDataContainer& th
                 for(auto chip: *hybrid)
                 {
                     if(chip->getChannelContainer<uint8_t>() == nullptr) continue;
-                    TH1I* chipOffsetHistogram =
-                        fDetectorOffsetHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
+                    TH1I* chipOffsetHistogram = fDetectorOffsetHistograms.getObject(board->getId())
+                                                    ->getObject(opticalGroup->getId())
+                                                    ->getObject(hybrid->getId())
+                                                    ->getObject(chip->getId())
+                                                    ->getSummary<HistContainer<TH1I>>()
+                                                    .fTheHistogram;
                     uint channelBin = 1;
                     for(auto channel: *chip->getChannelContainer<uint8_t>()) { chipOffsetHistogram->SetBinContent(channelBin++, channel); }
                 }

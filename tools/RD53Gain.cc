@@ -9,10 +9,10 @@
 
 #include "RD53Gain.h"
 
+#include "Utils/ContainerSerialization.h"
 #include <boost/multiprecision/number.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
-#include "Utils/ContainerSerialization.h"
 
 using namespace boost::numeric;
 using namespace Ph2_HwDescription;
@@ -90,7 +90,7 @@ void Gain::sendData()
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theOccupancySerialization("GainOccupancy");
-        size_t index = 0;
+        size_t                 index = 0;
         for(const auto theOccContainer: detectorContainerVector)
         {
             uint16_t deltaVcal = dacList[index++] - offset;

@@ -9,6 +9,7 @@
 
 #include "tools/PSPhysics.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
@@ -17,7 +18,6 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
-#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -209,7 +209,7 @@ unsigned int PSPhysics::getDataFromBoards()
         ContainerSerialization theStubSerialization("PSPhysicsStub");
         theStubSerialization.streamByHybridContainer(fDQMStreamer, fStubContainer);
     }
-    
+
     return dataSize;
 }
 

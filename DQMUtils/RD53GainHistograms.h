@@ -39,7 +39,7 @@ class GainHistograms : public DQMHistogramBase
     void fillGain(const DetectorDataContainer& GainContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Occupancy2D;
     DetectorDataContainer Occupancy3D;

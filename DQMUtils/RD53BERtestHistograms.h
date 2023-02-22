@@ -25,7 +25,7 @@ class BERtestHistograms : public DQMHistogramBase
     void fillBERtest(const DetectorDataContainer& BERtestContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer BERtest;
 };

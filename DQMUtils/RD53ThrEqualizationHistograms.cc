@@ -52,7 +52,7 @@ bool ThrEqualizationHistograms::fill(std::vector<char>& dataBuffer)
 {
     const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("ThrEqualizationOccupancy");
     ContainerSerialization theTDACSerialization("ThrEqualizationTDAC");
     ContainerSerialization theOccupancyScanSerialization("ThrEqualizationOccupancyScan");
@@ -61,7 +61,7 @@ bool ThrEqualizationHistograms::fill(std::vector<char>& dataBuffer)
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched ThrEqualization Occupancy!!!!!\n";
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh,GenericDataVector>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, GenericDataVector>(fDetectorContainer);
         ThrEqualizationHistograms::fillOccupancy(fDetectorData);
         return true;
     }

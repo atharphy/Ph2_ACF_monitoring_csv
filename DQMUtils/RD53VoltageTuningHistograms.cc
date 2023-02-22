@@ -26,7 +26,7 @@ void VoltageTuningHistograms::book(TFile* theOutputFile, DetectorContainer& theD
 
 bool VoltageTuningHistograms::fill(std::vector<char>& dataBuffer)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theVoltageDigitalSerialization("VoltageTuningVoltageDigital");
     ContainerSerialization theVoltageAnalogSerialization("VoltageTuningVoltageAnalog");
 

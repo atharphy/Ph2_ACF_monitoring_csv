@@ -30,7 +30,7 @@ class DataTransmissionTestGraphs : public DQMHistogramBase
     void fillTAP0tgt(const DetectorDataContainer& TAP0tgtContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer TAP0scan;
     DetectorDataContainer TAP0tgt;

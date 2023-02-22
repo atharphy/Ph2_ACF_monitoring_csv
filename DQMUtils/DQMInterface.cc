@@ -111,8 +111,8 @@ bool DQMInterface::running()
     // CheckStream* theCurrentStream;
     // int               packetNumber = -1;
     std::vector<char> tmpDataBuffer;
-    PacketHeader thePacketHeader;
-    uint8_t packerHeaderSize = thePacketHeader.getPacketHeaderSize();
+    PacketHeader      thePacketHeader;
+    uint8_t           packerHeaderSize = thePacketHeader.getPacketHeaderSize();
 
     while(fRunning)
     {

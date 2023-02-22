@@ -19,8 +19,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <TApplication.h>
 #include "TROOT.h"
+#include <TApplication.h>
 
 #include "Utils/easylogging++.h"
 
@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
                     {
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                         std::string status = theMiddlewareInterface.status();
-                        
+
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                         while(status != "Done")
                         {

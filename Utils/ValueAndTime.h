@@ -1,23 +1,21 @@
 #include "Utils/ContainerSerialization.h"
 
-template<typename T>
+template <typename T>
 class ValueAndTime
 {
   public:
-    ValueAndTime(T theValue, time_t theTime)
-    : fValue(theValue)
-    , fTime(theTime){}
+    ValueAndTime(T theValue, time_t theTime) : fValue(theValue), fTime(theTime) {}
     ValueAndTime() = default;
 
-    T fValue;
+    T      fValue;
     time_t fTime;
 
   private:
     friend class boost::serialization::access;
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & fValue;
-        theArchive & fTime;
+        theArchive& fValue;
+        theArchive& fTime;
     }
 };
