@@ -14,7 +14,11 @@
 
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/Exception.h"
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <boost/iterator/filter_iterator.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -51,8 +55,10 @@ class BaseContainer
     void                   setIndex(uint16_t index) { index_ = index; }
     void                   setGlobalIndex(uint16_t globalIndex) { globalIndex_ = globalIndex; }
 
-  private:
+  protected:
     uint16_t id_;
+
+  private:
     uint16_t index_, globalIndex_;
     bool     isEnabled_;
 };
@@ -128,6 +134,14 @@ class Container
         return object;
     }
     std::map<uint16_t, T*> idObjectMap_;
+
+  private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        theArchive& boost::serialization::base_object<std::vector<T*>>(*this);
+    }
 };
 
 class ChannelContainerBase
@@ -136,7 +150,16 @@ class ChannelContainerBase
     ChannelContainerBase() { ; }
     virtual ~ChannelContainerBase() { ; }
     virtual void normalize(uint32_t numberOfEvents) { ; }
+
+  private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        ;
+    }
 };
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(ChannelContainerBase)
 
 template <typename T>
 class ChannelContainer
@@ -154,6 +177,15 @@ class ChannelContainer
     {
         for(auto& channel: channelContainer) os << channel;
         return os;
+    }
+
+  private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        theArchive& boost::serialization::base_object<ChannelContainerBase>(*this);
+        theArchive& boost::serialization::base_object<std::vector<T>>(*this);
     }
 };
 
@@ -274,6 +306,8 @@ class ChipContainer : public BaseContainer
             container_ = nullptr;
         }
     }
+
+    ChannelContainerBase* getChannelContainer() { return container_; }
 
   protected:
     unsigned int          nOfRows_;

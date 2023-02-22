@@ -12,7 +12,6 @@
 #define RD53SCurveHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChannelContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/RD53Shared.h"
 #include "Utils/ThresholdAndNoise.h"
@@ -33,7 +32,7 @@ class SCurveHistograms : public DQMHistogramBase
     void fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Occupancy2D;
     DetectorDataContainer Occupancy3D;

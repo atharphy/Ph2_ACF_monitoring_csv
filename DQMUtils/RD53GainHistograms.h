@@ -12,7 +12,6 @@
 #define RD53GainHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChannelContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GainFit.h"
 #include "Utils/RD53Shared.h"
@@ -40,7 +39,7 @@ class GainHistograms : public DQMHistogramBase
     void fillGain(const DetectorDataContainer& GainContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Occupancy2D;
     DetectorDataContainer Occupancy3D;

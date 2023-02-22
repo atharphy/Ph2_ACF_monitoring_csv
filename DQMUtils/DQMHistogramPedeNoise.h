@@ -111,8 +111,6 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorDataContainer fDetectorChannelStripNoiseEvenHistograms;
     DetectorDataContainer fDetectorChannelStripNoiseOddHistograms;
 
-    DetectorDataContainer fDetectorData;
-
     bool fWithCBC = false;
     bool fWithSSA = false;
     bool fWithMPA = false;

@@ -64,6 +64,6 @@ class DQMHistogramCalibrationExample : public DQMHistogramBase
 
   private:
     DetectorDataContainer fDetectorHitHistograms;
-    DetectorDataContainer fDetectorData;
+    DetectorContainer*    fDetectorContainer;
 };
 #endif

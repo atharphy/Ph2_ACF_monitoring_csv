@@ -28,9 +28,8 @@ class PSPhysicsHistograms : public DQMHistogramBase
     void fillStub(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer fDetectorData;
-    DetectorDataContainer fIsMPAContainer;
     DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fIsMPAContainer;
     // DetectorDataContainer fSClusterHistograms;
     // DetectorDataContainer fPClusterHistograms;
     // DetectorDataContainer fStubHistograms;

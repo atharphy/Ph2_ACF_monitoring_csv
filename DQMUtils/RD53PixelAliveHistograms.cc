@@ -11,12 +11,13 @@
 #include "RD53PixelAliveHistograms.h"
 #include "HWDescription/RD53A.h"
 #include "HWDescription/RD53B.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     nRows = RD53Shared::firstChip->getNRows();
@@ -64,32 +65,32 @@ bool PixelAliveHistograms::fill(std::vector<char>& dataBuffer)
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
-    ChannelContainerStream<OccupancyAndPh>                           theOccStreamer("PixelAliveOcc");
-    ChipContainerStream<EmptyContainer, GenericDataArray<BCIDsize>>  theBCIDStreamer("PixelAliveBCID");
-    ChipContainerStream<EmptyContainer, GenericDataArray<TrgIDsize>> theTrgIDStreamer("PixelAliveTrgID");
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theOccupancySerialization("PixelAliveOccupancy");
+    ContainerSerialization theBCIDSerialization("PixelAliveBCID");
+    ContainerSerialization theTrgIDSerialization("PixelAliveTrgID");
 
-    if(theOccStreamer.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        theOccStreamer.decodeChipData(DetectorData);
-        PixelAliveHistograms::fill(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched PixelAlive Occupancy!!!!!\n";
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer);
+        PixelAliveHistograms::fill(fDetectorData);
         return true;
     }
-    else if(theBCIDStreamer.attachBuffer(&dataBuffer))
+    if(theBCIDSerialization.attachDeserializer(inputStream))
     {
-        theBCIDStreamer.decodeChipData(DetectorData);
-        PixelAliveHistograms::fillBCID(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched PixelAlive BCID!!!!!\n";
+        DetectorDataContainer fDetectorData = theBCIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<BCIDsize>>(fDetectorContainer);
+        PixelAliveHistograms::fillBCID(fDetectorData);
         return true;
     }
-    else if(theTrgIDStreamer.attachBuffer(&dataBuffer))
+    if(theTrgIDSerialization.attachDeserializer(inputStream))
     {
-        theTrgIDStreamer.decodeChipData(DetectorData);
-        PixelAliveHistograms::fillTrgID(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched PixelAlive TrgID!!!!!\n";
+        DetectorDataContainer fDetectorData = theTrgIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TrgIDsize>>(fDetectorContainer);
+        PixelAliveHistograms::fillTrgID(fDetectorData);
         return true;
     }
-
     return false;
 }
 

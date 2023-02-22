@@ -8,6 +8,7 @@
 */
 
 #include "RD53Physics.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -73,20 +74,18 @@ void Physics::Running()
     Physics::run();
 }
 
-void Physics::sendBoardData(const BoardContainer* cBoard)
+void Physics::sendData()
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
-
-    auto theOccStream   = this->prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
-    auto theBCIDStream  = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
-    auto theTrgIDStream = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        theOccStream->streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theBCIDStream->streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theTrgIDStream->streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fDQMStreamer);
+        ContainerSerialization theOccupancySerialization("PhysicsOccupancy");
+        theOccupancySerialization.streamByChipContainer(fDQMStreamer, theOccContainer);
+
+        ContainerSerialization theBCIDSerialization("PhysicsBCID");
+        theBCIDSerialization.streamByChipContainer(fDQMStreamer, theBCIDContainer);
+
+        ContainerSerialization theTrgIDSerialization("PhysicsTrgID");
+        theTrgIDSerialization.streamByChipContainer(fDQMStreamer, theTrgIDContainer);
     }
 }
 
@@ -197,6 +196,7 @@ void Physics::draw(bool saveData)
 
 void Physics::analyze(bool doReadBinary)
 {
+    bool gotData = false;
     for(const auto cBoard: *fDetectorContainer)
     {
         size_t dataSize = 0;
@@ -212,9 +212,10 @@ void Physics::analyze(bool doReadBinary)
         if(dataSize != 0)
         {
             Physics::fillDataContainer(*cBoard);
-            Physics::sendBoardData(cBoard);
+            gotData = true;
         }
     }
+    if(gotData) Physics::sendData();
 }
 
 void Physics::fillHisto()

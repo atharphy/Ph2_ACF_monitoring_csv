@@ -16,10 +16,8 @@
 #include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/GenericDataArray.h"
-#include "Utils/HybridContainerStream.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
@@ -184,46 +182,46 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
 //========================================================================================================================
 bool DQMHistogramBeamTestCheck::fill(std::vector<char>& dataBuffer)
 {
-    HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>                            theLatencyStream("LatencyScan");
-    HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>                            theStubStream("LatencyScanStub");
-    HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>> the2DStream("LatencyScan2D");
-    HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>                            theTriggerTDCStream("LatencyScanTriggerTDC");
+    // HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>                            theLatencyStream("LatencyScan");
+    // HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>                            theStubStream("LatencyScanStub");
+    // HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>> the2DStream("LatencyScan2D");
+    // HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>                            theTriggerTDCStream("LatencyScanTriggerTDC");
 
-    if(theLatencyStream.attachBuffer(&dataBuffer))
-    {
-        std::cout << "Matched Latency Stream!!!!!\n";
-        theLatencyStream.decodeData(fDetectorData);
-        fillLatencyPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
-        return true;
-    }
+    // if(theLatencyStream.attachBuffer(&dataBuffer))
+    // {
+    //     std::cout << "Matched Latency Stream!!!!!\n";
+    //     theLatencyStream.decodeData(fDetectorData);
+    //     fillLatencyPlots(fDetectorData);
+    //     fDetectorData.cleanDataStored();
+    //     return true;
+    // }
 
-    if(theTriggerTDCStream.attachBuffer(&dataBuffer))
-    {
-        std::cout << "Matched TriggerTDC!!!!!\n";
-        theTriggerTDCStream.decodeData(fDetectorData);
-        fillTriggerTDCPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
-        return true;
-    }
+    // if(theTriggerTDCStream.attachBuffer(&dataBuffer))
+    // {
+    //     std::cout << "Matched TriggerTDC!!!!!\n";
+    //     theTriggerTDCStream.decodeData(fDetectorData);
+    //     fillTriggerTDCPlots(fDetectorData);
+    //     fDetectorData.cleanDataStored();
+    //     return true;
+    // }
 
-    if(theTriggerTDCStream.attachBuffer(&dataBuffer))
-    {
-        std::cout << "Matched Stub Latency!!!!!\n";
-        theStubStream.decodeData(fDetectorData);
-        fillStubLatencyPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
-        return true;
-    }
+    // if(theTriggerTDCStream.attachBuffer(&dataBuffer))
+    // {
+    //     std::cout << "Matched Stub Latency!!!!!\n";
+    //     theStubStream.decodeData(fDetectorData);
+    //     fillStubLatencyPlots(fDetectorData);
+    //     fDetectorData.cleanDataStored();
+    //     return true;
+    // }
 
-    if(the2DStream.attachBuffer(&dataBuffer))
-    {
-        std::cout << "Matched 2D Latency!!!!!\n";
-        the2DStream.decodeData(fDetectorData);
-        fill2DLatencyPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
-        return true;
-    }
+    // if(the2DStream.attachBuffer(&dataBuffer))
+    // {
+    //     std::cout << "Matched 2D Latency!!!!!\n";
+    //     the2DStream.decodeData(fDetectorData);
+    //     fill2DLatencyPlots(fDetectorData);
+    //     fDetectorData.cleanDataStored();
+    //     return true;
+    // }
 
     return false;
 }

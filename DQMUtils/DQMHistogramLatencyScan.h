@@ -64,7 +64,7 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
   private:
     void parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap);
 
-    DetectorDataContainer fDetectorData;
+    DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fLatencyHitMaps;
     DetectorDataContainer fLatencyTDCHistograms;
     DetectorDataContainer fLatencyHistograms;

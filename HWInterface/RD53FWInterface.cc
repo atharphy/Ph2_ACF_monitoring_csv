@@ -780,6 +780,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 // # injType == 0 --> None    #
 // # injType == 1 --> Analog  #
 // # injType == 2 --> Digital #
+// # injType == 3 --> Custom  #
 // ############################
 // ##################################################################################
 // # Finite state machine                                                           #
@@ -796,7 +797,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     {
         None,
         Analog,
-        Digital
+        Digital,
+        Custom
     };
     enum INJdelay
     {
@@ -830,7 +832,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
-    else if(injType == INJtype::Analog)
+    else if((injType == INJtype::Analog) || (injType == INJtype::Custom))
     {
         // ######################################
         // # Configuration for analog injection #

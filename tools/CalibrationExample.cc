@@ -1,7 +1,7 @@
 #include "tools/CalibrationExample.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+#include "Utils/ContainerSerialization.h"
 
 #include <boost/any.hpp>
 #include <math.h>
@@ -69,16 +69,11 @@ void CalibrationExample::runCalibrationExample(void)
       // Calibration is not running on the SoC: plotting directly the data, no shipping is done
     fDQMHistogramCalibrationExample.fillCalibrationExamplePlots(theHitContainer);
 #else
-      // Calibration is running on the SoC: shipping the data!!!
-    // I prepare a stream of an uint32_t container, prepareChannelContainerStreamer adds in the stream also the
-    // calibration name
-    // that is used when multiple calibrations are concatenated
-    auto theHitStream = prepareChannelContainerStreamer<uint32_t>();
-    // if the streamer was enabled (the supervisor script enable it) data are streamed
+    // Calibration is running on the SoC: shipping the data!!!
     if(fDQMStreamerEnabled)
     {
-        // Disclamer: final MW will not do a for loop on board since each instance will hanlde 1 board only
-        for(auto board: theHitContainer) theHitStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("CalibrationExampleHits");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theHitContainer);
     }
 #endif
 }

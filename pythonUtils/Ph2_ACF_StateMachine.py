@@ -109,7 +109,7 @@ class StateMachine(object):
         stopMessage = Query.QueryMessage()
         stopMessage.query_type.type = Query.QueryType.STOP
         stringStopMessage = stopMessage.SerializeToString()
-        replyBuffer = Ph2_ACF_controller.halt(stringStopMessage)
+        replyBuffer = Ph2_ACF_controller.stop(stringStopMessage)
         self.status_ = "STOPPED"
         if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
             self.status_ = "ERROR"

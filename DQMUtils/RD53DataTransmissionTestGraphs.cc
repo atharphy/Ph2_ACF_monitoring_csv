@@ -8,13 +8,14 @@
 */
 
 #include "RD53DataTransmissionTestGraphs.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
 void DataTransmissionTestGraphs::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
@@ -32,21 +33,14 @@ void DataTransmissionTestGraphs::book(TFile* theOutputFile, DetectorContainer& t
 
 bool DataTransmissionTestGraphs::fill(std::vector<char>& dataBuffer)
 {
-    ChipContainerStream<EmptyContainer, std::array<std::tuple<uint16_t, double, double, double>, 11>> theTAP0scanStreamer("DataTransmissionTestTAP0scan");
-    ChipContainerStream<EmptyContainer, uint16_t>                                                     theTAP0tgtStreamer("DataTransmissionTestTAP0tgteshold");
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theTAP0targetSerialization("DataTransmissionTestTAP0target");
 
-    if(theTAP0scanStreamer.attachBuffer(&dataBuffer))
+    if(theTAP0targetSerialization.attachDeserializer(inputStream))
     {
-        theTAP0scanStreamer.decodeChipData(DetectorData);
-        DataTransmissionTestGraphs::fillTAP0scan(DetectorData);
-        DetectorData.cleanDataStored();
-        return true;
-    }
-    else if(theTAP0tgtStreamer.attachBuffer(&dataBuffer))
-    {
-        theTAP0tgtStreamer.decodeChipData(DetectorData);
-        DataTransmissionTestGraphs::fillTAP0tgt(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched DataTransmissionTest TAP0target!!!!!\n";
+        DetectorDataContainer fDetectorData = theTAP0targetSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        DataTransmissionTestGraphs::fillTAP0tgt(fDetectorData);
         return true;
     }
     return false;

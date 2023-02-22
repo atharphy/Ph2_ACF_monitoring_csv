@@ -2,7 +2,7 @@
 #include "DQMUtils/DQMCalibrationFactory.h"
 #include "NetworkUtils/TCPSubscribeClient.h"
 #include "Parser/FileParser.h"
-#include "Utils/ObjectStream.h"
+#include "Utils/ContainerSerialization.h"
 
 #include "TFile.h"
 
@@ -87,10 +87,10 @@ void DQMInterface::stopProcessingData(void)
 {
     fRunning = false;
     std::chrono::milliseconds span(1000);
-    int                       timeout = 10; // in seconds
+    int                       timeout = 3; // in seconds
 
-    fListener->close();
-    while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout >= 0)
+    fListener->disconnect();
+    while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout > 0)
     { LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET; }
 
     LOG(INFO) << __PRETTY_FUNCTION__ << " Thread done running" << RESET;
@@ -108,19 +108,15 @@ void DQMInterface::stopProcessingData(void)
 //========================================================================================================================
 bool DQMInterface::running()
 {
-    CheckStream* theCurrentStream;
+    // CheckStream* theCurrentStream;
     // int               packetNumber = -1;
     std::vector<char> tmpDataBuffer;
+    PacketHeader      thePacketHeader;
+    uint8_t           packerHeaderSize = thePacketHeader.getPacketHeaderSize();
 
     while(fRunning)
     {
         // LOG(INFO) << __PRETTY_FUNCTION__ << " Running = " << fRunning << RESET;
-        // if(receive(configBuffer, 1) != -1)
-        // if(receive(*reinterpret_cast<std::vector<char>*>(*configBuffer.end()), 1) != -1)
-        // TODO We need to optimize the data readout so we don't do multiple copies
-        // TODO We need to optimize the data readout so we don't do multiple copies
-        // TODO We need to optimize the data readout so we don't do multiple copies
-        // if(fListener->receive(tmpDataBuffer, 0, 100000) > 0)
         try
         {
             tmpDataBuffer = fListener->receive<std::vector<char>>();
@@ -132,28 +128,28 @@ bool DQMInterface::running()
             break;
         }
         LOG(DEBUG) << "Got something" << RESET;
+        LOG(DEBUG) << "Tmp buffer size: " << tmpDataBuffer.size() << RESET;
         fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
         LOG(DEBUG) << "Data buffer size: " << fDataBuffer.size() << RESET;
         while(fDataBuffer.size() > 0)
         {
-            if(fDataBuffer.size() < sizeof(CheckStream))
+            if(fDataBuffer.size() < packerHeaderSize)
             {
                 LOG(WARNING) << BOLDBLUE << "Not enough bytes to retrieve data stream" << RESET;
                 break; // Not enough bytes to retreive the packet size
             }
-            theCurrentStream = reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
-            LOG(DEBUG) << "Packet number received = " << int(theCurrentStream->getPacketNumber()) << RESET;
+            uint32_t packetSize = thePacketHeader.getPacketSize(fDataBuffer);
 
-            LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << theCurrentStream->getPacketSize() << RESET;
+            LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << packetSize << RESET;
 
-            if(fDataBuffer.size() < theCurrentStream->getPacketSize())
+            if(fDataBuffer.size() < packetSize)
             {
                 LOG(DEBUG) << "Packet not completed, waiting" << RESET;
                 break;
             }
 
-            std::vector<char> streamDataBuffer(fDataBuffer.begin(), fDataBuffer.begin() + theCurrentStream->getPacketSize());
-            fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + theCurrentStream->getPacketSize());
+            std::vector<char> streamDataBuffer(fDataBuffer.begin() + packerHeaderSize, fDataBuffer.begin() + packetSize);
+            fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + packetSize);
 
             for(auto dqmHistogrammer: fDQMHistogrammerVector)
                 if(dqmHistogrammer->fill(streamDataBuffer)) break;

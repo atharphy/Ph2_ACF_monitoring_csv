@@ -3,6 +3,7 @@
 #include "HWDescription/Cbc.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
@@ -121,10 +122,10 @@ void LatencyScan::MeasureTriggerTDC()
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fillTriggerTDCPlots(theTriggerTDCContainer);
 #else
-    auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>("TriggerTDC");
-    for(auto board: theTriggerTDCContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theTriggerTDCStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("LatencyScanTriggerTDC");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theTriggerTDCContainer);
     }
 #endif
 }
@@ -386,10 +387,10 @@ void LatencyScan::ScanLatency()
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fillLatencyPlots(theLatencyContainerS0, theLatencyContainerS1);
 #else
-    auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
-    for(auto board: theLatencyContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theLatencyStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("LatencyScanData");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theLatencyContainer);
     }
 #endif
 }
@@ -749,10 +750,10 @@ void LatencyScan::StubLatencyScan()
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fillStubLatencyPlots(theStubContainer);
 #else
-    auto theStubStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
-    for(auto board: theStubContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theStubStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("LatencyScanStub");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theStubContainer);
     }
 #endif
 }
@@ -889,10 +890,10 @@ void LatencyScan::ScanLatency2D()
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fill2DLatencyPlots(theLatencyContainer);
 #else
-    auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>("2D");
-    for(auto board: theLatencyContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theLatencyStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("LatencyScan2D");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theLatencyContainer);
     }
 #endif
 }
