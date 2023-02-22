@@ -122,12 +122,18 @@ uint16_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
     return (cMSB << 8 | cLSB);
 }
 
-float SSA2Interface::calculateADCLSB(Chip* pSSA2, float vrefExp)
+uint16_t SSA2Interface::MeasureGND(Chip* pSSA2)
 {
-    float offset = this->ReadADC(static_cast<ReadoutChip*>(pSSA2),12); //12 is GND
+    LOG(INFO) << BOLDMAGENTA << "GND  "<< +this->ReadADC(static_cast<ReadoutChip*>(pSSA2),12) << RESET;
+    return this->ReadADC(static_cast<ReadoutChip*>(pSSA2),12);
+}
+
+float SSA2Interface::CalculateADCLSB(Chip* pSSA2, float vrefExp)
+{
+    float offset = this->MeasureGND(pSSA2);
 
     LOG(INFO) << BOLDMAGENTA << "ADCLSB "<<vrefExp/(4095.0 - offset) << RESET;
-    return vrefExp / (4095.0 - offset);
+    return vrefExp / (4095.0 - offset); 
 }
 
 
