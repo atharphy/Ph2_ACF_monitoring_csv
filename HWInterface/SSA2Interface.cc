@@ -122,6 +122,15 @@ uint16_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
     return (cMSB << 8 | cLSB);
 }
 
+float SSA2Interface::calculateADCLSB(Chip* pSSA2, float vrefExp)
+{
+    float offset = this->ReadADC(static_cast<ReadoutChip*>(pSSA2),12); //12 is GND
+
+    LOG(INFO) << BOLDMAGENTA << "ADCLSB "<<vrefExp/(4095.0 - offset) << RESET;
+    return vrefExp / (4095.0 - offset);
+}
+
+
 // READ REGISTER ON CHIP:
 uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
 {
