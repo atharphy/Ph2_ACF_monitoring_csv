@@ -23,6 +23,7 @@ class MonitorDQMInterface
     bool running(void);
 
   private:
+    DetectorContainer                fDetectorStructure;
     void                             destroy(void);
     void                             destroyDQMs(void);
     TCPSubscribeClient*              fListener;

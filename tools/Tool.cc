@@ -5,7 +5,7 @@
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/Occupancy.h"
@@ -17,6 +17,8 @@
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+
+std::atomic<bool> Tool::fKeepRunning(false);
 
 Tool::Tool()
     : SystemController()
@@ -60,6 +62,7 @@ Tool::Tool(THttpServer* pHttpServer)
     , fDirectoryName("")
     , fResultFile(nullptr)
     , fHttpServer(pHttpServer)
+    , fRunNumber(0)
     , fSkipMaskedChannels(false)
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
@@ -100,6 +103,10 @@ bool Tool::GetRunningStatus()
         {
             if(fRunningFuture.valid()) fRunningFuture.get();
         }
+        catch(const std::future_error& e)
+        {
+            LOG(INFO) << "Ignoring future exception, future already retrieved";
+        }
         catch(const std::exception& e)
         {
             throw std::runtime_error(e.what());
@@ -112,28 +119,38 @@ bool Tool::GetRunningStatus()
 
 void Tool::waitForRunToBeCompleted()
 {
-    fRunningFuture.wait();
+    try
+    {
+        if(fRunningFuture.valid()) fRunningFuture.wait();
+    }
+    catch(const std::future_error& e)
+    {
+        LOG(INFO) << "Ignoring future exception, future already retrieved";
+    }
     // std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
+void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber, doAlsoFrontend);
+    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
     ConfigureCalibration();
 }
 
 void Tool::Start(int runNumber)
 {
-    std::string resultDirectory = "Results";
-    CreateResultDirectory(resultDirectory, false, false);
+    if(fDirectoryName == "")
+    {
+        std::string resultDirectory = "Results/Run_" + std::to_string(runNumber);
+        CreateResultDirectory(resultDirectory, false, false);
+    }
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
 #endif
     // doExit       = false;
-    fKeepRunning   = true;
-    fRunNumber     = runNumber;
-    fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+    Tool::fKeepRunning = true;
+    fRunNumber         = runNumber;
+    fRunningFuture     = std::async(std::launch::async, &Tool::Running, this);
     // std::promise<int> thePromise;
     // fRunningFuture = thePromise.get_future();
     // fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
@@ -149,18 +166,25 @@ void Tool::Start(int runNumber)
 
 void Tool::Stop()
 {
-    fKeepRunning = false;
-    Tool::waitForRunToBeCompleted();
-    // if(fRunningThread.joinable() == true) fRunningThread.join();
-    try
+    if(Tool::fKeepRunning == true)
     {
-        fRunningFuture.get();
+        Tool::fKeepRunning = false;
+        Tool::waitForRunToBeCompleted();
+        // if(fRunningThread.joinable() == true) fRunningThread.join();
+        try
+        {
+            if(fRunningFuture.valid()) fRunningFuture.get();
+        }
+        catch(const std::future_error& e)
+        {
+            LOG(INFO) << "Ignoring future exception, future already retrieved";
+        }
+        catch(const std::exception& e)
+        {
+            throw std::runtime_error(e.what());
+        }
+        SystemController::Stop();
     }
-    catch(const std::exception& e)
-    {
-        throw std::runtime_error(e.what());
-    }
-    SystemController::Stop();
 }
 
 void Tool::Inherit(const Tool* pTool)
@@ -173,19 +197,29 @@ void Tool::Inherit(const Tool* pTool)
     fType          = pTool->fType;
     fDirectoryName = pTool->fDirectoryName;
 #ifdef __USE_ROOT__
-    fSummaryTree    = pTool->fSummaryTree;
-    fCanvasMap      = pTool->fCanvasMap;
-    fChipHistMap    = pTool->fChipHistMap;
-    fHybridHistMap  = pTool->fHybridHistMap;
-    fBeBoardHistMap = pTool->fBeBoardHistMap;
+    fSummaryTree          = pTool->fSummaryTree;
+    fCanvasMap            = pTool->fCanvasMap;
+    fChipHistMap          = pTool->fChipHistMap;
+    fHybridHistMap        = pTool->fHybridHistMap;
+    fBeBoardHistMap       = pTool->fBeBoardHistMap;
+    fSummaryTreeParameter = pTool->fSummaryTreeParameter;
+    fSummaryTreeValue     = pTool->fSummaryTreeValue;
 #endif
-    fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
+    fTestGroupChannelMap = pTool->fTestGroupChannelMap;
+    fRunNumber           = pTool->fRunNumber;
+    // fRunningFuture               = pTool->fRunningFuture;
     fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
     fAllChan                     = pTool->fAllChan;
+    fMaskForTestGroupChannelMap  = pTool->fMaskForTestGroupChannelMap;
     fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
     fTestPulse                   = pTool->fTestPulse;
     fDoBoardBroadcast            = pTool->fDoBoardBroadcast;
     fDoHybridBroadcast           = pTool->fDoHybridBroadcast;
+    fDirectoryName               = pTool->fDirectoryName;
+    fResultFileName              = pTool->fResultFileName;
+    fUseReadNEvents              = pTool->fUseReadNEvents;
+    fNReadbackEvents             = pTool->fNReadbackEvents;
+    fNormalize                   = pTool->fNormalize;
 
 #ifdef __HTTP__
     fHttpServer = pTool->fHttpServer;

@@ -8,6 +8,7 @@
 */
 
 #include "RD53InjectionDelay.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -68,15 +69,13 @@ void InjectionDelay::Running()
 
 void InjectionDelay::sendData()
 {
-    const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
-    auto theStream               = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<InjDelaySize>>("Occ");
-    auto theInjectionDelayStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("InjDelay");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: theOccContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theInjectionDelayContainer) theInjectionDelayStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theOccupancySerialization("InjectionDelayOccupancy");
+        theOccupancySerialization.streamByChipContainer(fDQMStreamer, theOccContainer);
+
+        ContainerSerialization theInjectionDelaySerialization("InjectionDelayInjectionDelay");
+        theInjectionDelaySerialization.streamByChipContainer(fDQMStreamer, theInjectionDelayContainer);
     }
 }
 

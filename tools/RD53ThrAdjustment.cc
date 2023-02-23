@@ -8,6 +8,7 @@
 */
 
 #include "RD53ThrAdjustment.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -69,10 +70,11 @@ void ThrAdjustment::Running()
 
 void ThrAdjustment::sendData()
 {
-    auto theThrStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>();
-
-    if(fDQMStreamerEnabled == true)
-        for(const auto cBoard: theThrContainer) theThrStream->streamAndSendBoard(cBoard, fDQMStreamer);
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("ThrAdjustmentThreshold");
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, theThrContainer);
+    }
 }
 
 void ThrAdjustment::Stop()

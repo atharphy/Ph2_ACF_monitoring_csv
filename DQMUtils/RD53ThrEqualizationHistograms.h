@@ -12,8 +12,6 @@
 #define RD53ThrEqualizationHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChannelContainerStream.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
@@ -35,7 +33,7 @@ class ThrEqualizationHistograms : public DQMHistogramBase
     void fillTDACGain(const DetectorDataContainer& TDACGainContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer ThrEqualization;
     DetectorDataContainer TDAC1D;

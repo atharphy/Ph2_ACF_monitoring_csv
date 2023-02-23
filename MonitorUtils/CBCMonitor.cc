@@ -2,8 +2,9 @@
 #include "HWDescription/Definition.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/D19clpGBTInterface.h"
-#include "Utils/CharArray.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/ValueAndTime.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -31,7 +32,7 @@ void CBCMonitor::runMonitor()
 void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
 {
     DetectorDataContainer theCBCRegisterContainer;
-    ContainerFactory::copyAndInitChip<std::tuple<time_t, uint16_t>>(*fTheSystemController->fDetectorContainer, theCBCRegisterContainer);
+    ContainerFactory::copyAndInitChip<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theCBCRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
@@ -43,8 +44,9 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
                 {
                     uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(chip, registerName); // just to read something
                     LOG(DEBUG) << BOLDMAGENTA << "CBC " << hybrid->getId() << " - " << registerName << " = " << registerValue << RESET;
-                    theCBCRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() =
-                        std::make_tuple(getTimeStamp(), registerValue);
+                    ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
+                    theCBCRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ValueAndTime<uint16_t>>() =
+                        theRegisterAndTime;
                 }
             }
         }
@@ -53,11 +55,10 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
 #ifdef __USE_ROOT__
     fMonitorDQMPlotCBC->fillCBCRegisterPlots(theCBCRegisterContainer, registerName);
 #else
-    auto theCBCRegisterStreamer = prepareBoardContainerStreamer<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer, CharArray>("CBCRegister");
-    theCBCRegisterStreamer->setHeaderElement(CharArray(registerName));
-    if(fTheSystemController->fDQMStreamerEnabled)
+    if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        for(auto board: theCBCRegisterContainer) { theCBCRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer); }
+        ContainerSerialization theContainerSerialization("CBCMonitorCBCRegister");
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theCBCRegisterContainer, registerName);
     }
 #endif
 }
@@ -65,32 +66,35 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
 void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
 {
     DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<std::tuple<time_t, uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
         if(board->at(0)->flpGBT == nullptr)
         {
             for(const auto& opticalGroup: *board)
-                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), -1);
+            {
+                ValueAndTime<uint16_t> theRegisterAndTime(0, getTimeStamp());
+                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
+            }
             continue;
         }
         for(const auto& opticalGroup: *board)
         {
-            uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
+            uint16_t               registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
+            ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
+            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
         }
     }
 
 #ifdef __USE_ROOT__
     fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
 #else
-    auto theLpGBTRegisterStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray>("LpGBTRegister");
-    theLpGBTRegisterStreamer->setHeaderElement(CharArray(registerName));
-    if(fTheSystemController->fDQMStreamerEnabled)
+    if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        for(auto board: theLpGBTRegisterContainer) theLpGBTRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        ContainerSerialization theContainerSerialization("CBCMonitorLpGBTRegister");
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theLpGBTRegisterContainer, registerName);
     }
 #endif
 }

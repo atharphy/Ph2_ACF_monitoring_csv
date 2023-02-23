@@ -12,10 +12,9 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TH1F.h"
-#include "Utils/ChannelContainerStream.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+#include "Utils/ContainerSerialization.h"
 
 //========================================================================================================================
 DQMHistogramCalibrationExample::DQMHistogramCalibrationExample() {}
@@ -26,13 +25,7 @@ DQMHistogramCalibrationExample::~DQMHistogramCalibrationExample() {}
 //========================================================================================================================
 void DQMHistogramCalibrationExample::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
-    // SoC utilities only - BEGIN
-    // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
-    // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
-    // make fDetectorData ready to receive the information fromm the stream
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
-    // SoC utilities only - END
-
+    fDetectorContainer = &theDetectorStructure;
     // creating the histograms fo all the chips:
     // create the HistContainer<TH1F> as you would create a TH1F (it implements some feature needed to avoid memory
     // leaks in copying histograms like the move constructor)
@@ -123,19 +116,15 @@ bool DQMHistogramCalibrationExample::fill(std::vector<char>& dataBuffer)
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
+    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
     // I'm expecting to receive a data stream from an uint32_t contained from calibration "CalibrationExample"
-    ChannelContainerStream<uint32_t> theHitStreamer("CalibrationExample");
+    ContainerSerialization theHitSerialization("CalibrationExampleHits");
 
-    // Try to see if the char buffer matched what I'm expection (container of uint32_t from CalibrationExample
-    // procedure)
-    if(theHitStreamer.attachBuffer(&dataBuffer))
+    if(theHitSerialization.attachDeserializer(inputStream))
     {
-        // It matched! Decoding chip data
-        theHitStreamer.decodeChipData(fDetectorData);
-        // Filling the histograms
+        std::cout << "Matched CalibrationExample Hits!!!!!\n";
+        DetectorDataContainer fDetectorData = theHitSerialization.deserializeHybridContainer<uint32_t, uint32_t, uint32_t>(fDetectorContainer);
         fillCalibrationExamplePlots(fDetectorData);
-        // Cleaning the data container to be ready for the next TCP string
-        fDetectorData.cleanDataStored();
         return true;
     }
     // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking

@@ -52,7 +52,7 @@ class Physics : public CalibBase
     void draw(bool saveData = true) override;
 
     void analyze(bool doReadBinary = false);
-    void sendBoardData(const BoardContainer* cBoard);
+    void sendData();
     void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
     void setGenericEvtConverter(evtConvType arg)
     {

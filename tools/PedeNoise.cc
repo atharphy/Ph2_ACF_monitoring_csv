@@ -5,7 +5,7 @@
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
@@ -15,7 +15,6 @@
 #include <math.h>
 
 #ifdef __USE_ROOT__
-// static_assert(false,"use root is defined");
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #endif
 
@@ -405,15 +404,10 @@ void PedeNoise::Validate()
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
 #else
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
-    auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
-    // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
-
-    for(auto board: theOccupancyContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theOccupancyStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("PedeNoiseValidation");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theOccupancyContainer);
     }
 #endif
     for(auto cBoard: *fDetectorContainer)
@@ -422,10 +416,6 @@ void PedeNoise::Validate()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                // std::cout << __PRETTY_FUNCTION__ << " The Hybrid Occupancy = " <<
-                // theOccupancyContainer.at(cBoard->getIndex())->at(cHybrid->getIndex())->getSummary<Occupancy,Occupancy>().fOccupancy
-                // << std::endl;
-
                 for(auto cChip: *cHybrid)
                 {
                     auto           cType = cChip->getFrontEndType();
@@ -625,17 +615,16 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
             }
             cStripGlobalOccupancy /= cNStripChips;
             cPixelGlobalOccupancy /= cNPixelChips;
+
 #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cStripValue, cPixelValue, *theOccupancyContainer);
 #else
-            if(fPlotSCurves)
+            if(fDQMStreamerEnabled)
             {
-                auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t, uint16_t>("SCurve");
-                theSCurveStreamer->setHeaderElement<0>(cStripValue);
-                theSCurveStreamer->setHeaderElement<1>(cPixelValue);
-                for(auto board: *theOccupancyContainer)
+                if(fPlotSCurves)
                 {
-                    if(fDQMStreamerEnabled) theSCurveStreamer->streamAndSendBoard(board, fDQMStreamer);
+                    ContainerSerialization theContainerSerialization("PedeNoiseSCurve");
+                    theContainerSerialization.streamByHybridContainer(fDQMStreamer, *theOccupancyContainer, cStripValue, cPixelValue);
                 }
             }
 #endif
@@ -963,10 +952,10 @@ void PedeNoise::producePedeNoisePlots()
     }
 
 #else
-    auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
-    for(auto board: *fThresholdAndNoiseContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) { theThresholdAndNoiseStream->streamAndSendBoard(board, fDQMStreamer); }
+        ContainerSerialization theContainerSerialization("PedeNoiseThresholdAndNoise");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, *fThresholdAndNoiseContainer);
     }
 #endif
 }
@@ -1099,7 +1088,7 @@ void PedeNoise::Running()
     // HybridContainer::SetQueryFunction(myFunction);
     measureNoise();
     // HybridContainer::ResetQueryFunction();
-    // Validate();
+    Validate();
     LOG(INFO) << "Done with noise";
     Reset();
 }
