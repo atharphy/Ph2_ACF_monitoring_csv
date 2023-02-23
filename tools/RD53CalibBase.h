@@ -26,6 +26,16 @@
 class CalibBase : public Tool
 {
   public:
+    enum class INJtype : uint8_t
+    {
+        None,
+        Analog,
+        Digital,
+        Custom,
+        XtalkCoupled,
+        XtalkUnCoupled
+    };
+
     void chipErrorReport() const;
     void copyMaskFromDefault(const std::string& which = "all") const;
     void saveChipRegisters(int currentRun, bool doUpdateChip);
@@ -36,6 +46,7 @@ class CalibBase : public Tool
                                  size_t                                     offset,
                                  size_t                                     nEvents,
                                  const std::string&                         name);
+    uint8_t assignGroupType(CalibBase::INJtype injType) const;
 
     virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) = 0;
     virtual void   run()                                                                      = 0;
@@ -61,13 +72,6 @@ class CalibBase : public Tool
   protected:
     std::string theHistoFileName;
     std::string dataOutputDir;
-    enum INJtype
-    {
-        None,
-        Analog,
-        Digital,
-        Custom
-    };
 
   private:
     virtual void fillHisto() = 0;

@@ -25,7 +25,7 @@ void PixelAlive::ConfigureCalibration()
     nEvents         = this->findValueInSettings<double>("nEvents");
     nEvtsBurst      = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
     nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
-    injType         = this->findValueInSettings<double>("INJtype");
+    injType         = static_cast<CalibBase::INJtype>(this->findValueInSettings<double>("INJtype"));
     nHITxCol        = this->findValueInSettings<double>("nHITxCol");
     doDataIntegrity = this->findValueInSettings<double>("DoDataIntegrity");
     doOnlyNGroups   = this->findValueInSettings<double>("DoOnlyNGroups");
@@ -40,7 +40,7 @@ void PixelAlive::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    auto groupType = ((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital)) ? RD53GroupType::Groups : RD53GroupType::AllPixels;
+    auto groupType = CalibBase::assignGroupType(injType);
     theChnGroupHandler =
         std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
@@ -227,7 +227,8 @@ void PixelAlive::runPixelAlive()
     this->fDetectorDataContainer = theOccContainer.get();
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
 
-    this->SetTestPulse((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital));
+    auto groupType = CalibBase::assignGroupType(injType);
+    this->SetTestPulse(groupType != RD53GroupType::AllPixels);
     this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nEvents, nEvtsBurst);
 

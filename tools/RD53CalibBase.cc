@@ -167,3 +167,15 @@ void CalibBase::saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*
                     fileOutID.close();
                 }
 }
+
+uint8_t CalibBase::assignGroupType(CalibBase::INJtype injType) const
+{
+    auto groupType = ((injType == CalibBase::INJtype::None) || (injType == CalibBase::INJtype::Custom)) ? RD53GroupType::AllPixels : RD53GroupType::Groups;
+
+    if(injType == CalibBase::INJtype::XtalkCoupled)
+        groupType = RD53GroupType::XtalkCoupled;
+    else if(injType == CalibBase::INJtype::XtalkUnCoupled)
+        groupType = RD53GroupType::XtalkUnCoupled;
+
+    return groupType;
+}
