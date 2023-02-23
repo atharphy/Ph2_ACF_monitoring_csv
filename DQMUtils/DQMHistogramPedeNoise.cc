@@ -91,7 +91,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     if(fWithCBC || fWithSSA)
     {
         // Set query function to only include strip chips in the data container
-        fDetectorContainer->setReadoutChipQueryFunction(selectStripChipFunction);
+        fDetectorContainer->addReadoutChipQueryFunction(selectStripChipFunction);
 
         if(fPlotSCurves)
         {
@@ -154,7 +154,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     if(fWithMPA)
     {
         // Set query function to only include strip chips in the data container
-        fDetectorContainer->setReadoutChipQueryFunction(selectPixelChipFunction);
+        fDetectorContainer->addReadoutChipQueryFunction(selectPixelChipFunction);
 
         if(fPlotSCurves)
         {

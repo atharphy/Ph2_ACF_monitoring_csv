@@ -14,6 +14,7 @@
 #include "HWDescription/Definition.h"
 #include "HWDescription/OpticalGroup.h"
 #include "Parser/DetectorMonitorConfig.h"
+#include "Parser/CommunicationSettingConfig.h"
 #include "Utils/ConditionDataSet.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Exception.h"
@@ -55,6 +56,7 @@ class FileParser
     void                                                                  parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
     void                                                                  parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
     std::string                                                           parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
+    void                                                                  parseCommunicationSettings(const std::string& pFilename, CommunicationSettingConfig& theCommunicationSettingConfig, std::ostream& os);
     void                                                                  openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
     std::map<uint16_t, std::tuple<std::string, std::string, std::string>> getRegManagerInfoList(const std::string& pFilename);
 

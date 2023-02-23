@@ -29,7 +29,6 @@
 #include "HWInterface/lpGBTInterface.h"
 #include "NetworkUtils/TCPClient.h"
 #include "NetworkUtils/TCPPublishServer.h"
-#include "Parser/DetectorMonitorConfig.h"
 #include "Parser/FileParser.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
@@ -163,7 +162,7 @@ class SystemController
      * \param pFilename : HW Description file
      * \param os        : ostream to dump output
      */
-    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool streamData = false, uint16_t DQMportNumber = 6000, uint16_t monitorDQMportNumber = 7000);
+    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout);
 
     /*!
      * \brief Initialize the settings
@@ -236,7 +235,7 @@ class SystemController
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000);
+    virtual void Configure(std::string cHWFile);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);

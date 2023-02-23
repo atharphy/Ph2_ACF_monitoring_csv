@@ -31,7 +31,7 @@ void MiddlewareStateMachine::configure(const std::string& calibrationName, const
 
     LOG(INFO) << "Configuration file: " << configurationFile << RESET;
 
-    fTheTool->Configure(configurationFile, true);
+    fTheTool->Configure(configurationFile);
 
     LOG(INFO) << "Configured" << RESET;
 

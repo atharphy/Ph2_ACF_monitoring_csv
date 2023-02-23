@@ -131,9 +131,9 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
+void Tool::Configure(std::string cHWFile)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
+    SystemController::Configure(cHWFile);
     ConfigureCalibration();
 }
 

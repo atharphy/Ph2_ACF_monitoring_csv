@@ -409,7 +409,7 @@ class HWDescriptionContainer : public Container<T>
 
   protected:
     static void resetQueryFunction();
-    static void setQueryFunction(std::function<bool(const T*)> theQueryFunction);
+    static void addQueryFunction(std::function<bool(const T*)> theQueryFunction);
 
   private:
     uint16_t size_;
@@ -424,9 +424,17 @@ void HWDescriptionContainer<T, HW>::resetQueryFunction()
 }
 
 template <typename T, typename HW>
-void HWDescriptionContainer<T, HW>::setQueryFunction(std::function<bool(const T*)> theQueryFunction)
+void HWDescriptionContainer<T, HW>::addQueryFunction(std::function<bool(const T*)> theInputQueryFunction)
 {
-    QueryFunction::fQueryFunction = theQueryFunction;
+    if(QueryFunction::fQueryFunction != 0)
+    {
+        auto theCurrentQueryFunction = QueryFunction::fQueryFunction;
+        QueryFunction::fQueryFunction = [theCurrentQueryFunction, theInputQueryFunction](const T* container)
+        {
+            return (theCurrentQueryFunction(container) && theInputQueryFunction(container));
+        };
+    }
+    else QueryFunction::fQueryFunction = theInputQueryFunction;
 }
 
 template <typename T, typename HW>
@@ -592,24 +600,24 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
         updateChipIndex();
     }
 
-    void setBoardQueryFunction(std::function<bool(const BoardContainer*)> theQueryFunction)
+    void addBoardQueryFunction(std::function<bool(const BoardContainer*)> theQueryFunction)
     {
-        DetectorContainer ::setQueryFunction(theQueryFunction);
+        DetectorContainer ::addQueryFunction(theQueryFunction);
         updateBoardIndex();
     }
-    void setOpticalGroupQueryFunction(std::function<bool(const OpticalGroupContainer*)> theQueryFunction)
+    void addOpticalGroupQueryFunction(std::function<bool(const OpticalGroupContainer*)> theQueryFunction)
     {
-        BoardContainer ::setQueryFunction(theQueryFunction);
+        BoardContainer ::addQueryFunction(theQueryFunction);
         updateOpticalGroupIndex();
     }
-    void setHybridQueryFunction(std::function<bool(const HybridContainer*)> theQueryFunction)
+    void addHybridQueryFunction(std::function<bool(const HybridContainer*)> theQueryFunction)
     {
-        OpticalGroupContainer::setQueryFunction(theQueryFunction);
+        OpticalGroupContainer::addQueryFunction(theQueryFunction);
         updateHybridIndex();
     }
-    void setReadoutChipQueryFunction(std::function<bool(const ChipContainer*)> theQueryFunction)
+    void addReadoutChipQueryFunction(std::function<bool(const ChipContainer*)> theQueryFunction)
     {
-        HybridContainer ::setQueryFunction(theQueryFunction);
+        HybridContainer ::addQueryFunction(theQueryFunction);
         updateChipIndex();
     }
 

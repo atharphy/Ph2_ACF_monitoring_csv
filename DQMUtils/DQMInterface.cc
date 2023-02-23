@@ -50,9 +50,13 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
 
-    std::string serverIP   = "127.0.0.1";
-    int         serverPort = 6000;
-    fListener              = new TCPSubscribeClient(serverIP, serverPort);
+    Ph2_Parser::FileParser  theFileParser;
+    std::stringstream       out;
+    Ph2_Parser::SettingsMap pSettingsMap;
+
+    CommunicationSettingConfig theCommunicationSettingConfig;
+    theFileParser.parseCommunicationSettings(configurationFilePath, theCommunicationSettingConfig, out);
+    fListener              = new TCPSubscribeClient(theCommunicationSettingConfig.fDQMCommunication.fIP, theCommunicationSettingConfig.fDQMCommunication.fPort);
 
     if(!fListener->connect())
     {
@@ -61,12 +65,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
     }
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
 
-    Ph2_Parser::FileParser  fParser;
-    std::stringstream       out;
-    Ph2_Parser::SettingsMap pSettingsMap;
-
-    fParser.parseHW(configurationFilePath, &fDetectorStructure, out);
-    fParser.parseSettings(configurationFilePath, pSettingsMap, out);
+    theFileParser.parseHW(configurationFilePath, &fDetectorStructure, out);
+    theFileParser.parseSettings(configurationFilePath, pSettingsMap, out);
 
     DQMCalibrationFactory theDQMCalibrationFactory;
     fDQMHistogrammerVector = theDQMCalibrationFactory.createDQMHistogrammerVector(calibrationName);
