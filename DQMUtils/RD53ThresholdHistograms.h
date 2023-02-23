@@ -27,7 +27,7 @@ class ThresholdHistograms : public DQMHistogramBase
     void fill(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Threhsold;
 };

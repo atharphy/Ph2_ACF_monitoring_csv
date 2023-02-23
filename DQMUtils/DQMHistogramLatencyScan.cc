@@ -16,12 +16,12 @@
 #include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
-#include "Utils/ContainerSerialization.h"
 
 //========================================================================================================================
 DQMHistogramLatencyScan::DQMHistogramLatencyScan()
@@ -87,7 +87,7 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theD
 //========================================================================================================================
 bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theDataSerialization("LatencyScanData");
     ContainerSerialization theStubSerialization("LatencyScanStub");
     ContainerSerialization the2DSerialization("LatencyScan2D");
@@ -110,7 +110,8 @@ bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer)
     if(the2DSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched LatencyScan 2D!!!!!\n";
-        DetectorDataContainer fDetectorData = the2DSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData =
+            the2DSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>(fDetectorContainer);
         fill2DLatencyPlots(fDetectorData);
         return true;
     }
@@ -265,13 +266,20 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                                       << " - have found " << channel.fOccupancy << " hits." << RESET;
                         cChnlIndx++;
                     }
-                    TH2F* cLatencyTDC =
-                        fLatencyTDCHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cLatencyTDC = fLatencyTDCHistograms.getObject(board->getId())
+                                            ->getObject(opticalGroup->getId())
+                                            ->getObject(hybrid->getId())
+                                            ->getObject(chip->getId())
+                                            ->getSummary<HistContainer<TH2F>>()
+                                            .fTheHistogram;
                     for(uint8_t cTDC = 0; cTDC < TDCBINS; cTDC++)
                     {
-                        cBin = cLatencyTDC->FindBin((float)pLatency, (float)cTDC);
-                        uint32_t cNhits =
-                            pTDCsummary.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
+                        cBin            = cLatencyTDC->FindBin((float)pLatency, (float)cTDC);
+                        uint32_t cNhits = pTDCsummary.getObject(board->getId())
+                                              ->getObject(opticalGroup->getId())
+                                              ->getObject(hybrid->getId())
+                                              ->getObject(chip->getId())
+                                              ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid"
                                    << +hybrid->getId() << " Chip" << +chip->getId() << " - have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);
@@ -304,8 +312,10 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
                 bool cFillS0 = (hybrid->hasSummary());
                 bool cFillS1 = (cHybridHitsS1->hasSummary());
 
-                TH1F* hybridLatencyHistogramS0 = fLatencyHistogramsS0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                TH1F* hybridLatencyHistogramS1 = fLatencyHistogramsS1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogramS0 =
+                    fLatencyHistogramsS0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogramS1 =
+                    fLatencyHistogramsS1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
                     if(cFillS0)
@@ -337,8 +347,9 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
         {
             for(auto hybrid: *opticalGroup)
             {
-                bool  cFill                  = (hybrid->hasSummary());
-                TH1F* hybridLatencyHistogram = fLatencyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                bool  cFill = (hybrid->hasSummary());
+                TH1F* hybridLatencyHistogram =
+                    fLatencyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
                     if(cFill)

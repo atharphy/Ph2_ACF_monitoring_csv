@@ -200,21 +200,21 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
 
 bool PSPhysicsHistograms::fill(std::vector<char>& dataBuffer)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("PSPhysicsOccupancy");
     ContainerSerialization theStubSerialization("PSPhysicsStub");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PSPhysics Occupancy!!!!!\n";
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeHybridContainer<float,EmptyContainer,EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeHybridContainer<float, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillOccupancy(fDetectorData);
         return true;
     }
     if(theStubSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PSPhysics Stub!!!!!\n";
-        DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<float,EmptyContainer,EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<float, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillStub(fDetectorData);
         return true;
     }

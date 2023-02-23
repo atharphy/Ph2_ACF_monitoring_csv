@@ -29,7 +29,7 @@ class ClockDelayHistograms : public DQMHistogramBase
     void fillClockDelay(const DetectorDataContainer& ClockDelayContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Occupancy1D;
     DetectorDataContainer ClockDelay;

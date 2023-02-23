@@ -15,8 +15,8 @@
 #include "TGraph.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ValueAndTime.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/ValueAndTime.h"
 
 //========================================================================================================================
 MonitorDQMPlotSEH::MonitorDQMPlotSEH() {}
@@ -139,7 +139,7 @@ void MonitorDQMPlotSEH::fillPowerSupplyPlots(DetectorDataContainer& theThreshold
     }
 
     TGraph* PowerSupplyDQMPlot = fPowerSupplyMonitorPlotMap[registerName].getSummary<GraphContainer<TGraph>>().fTheGraph;
-    auto theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
+    auto    theValueAndTime    = theThresholdContainer.getSummary<ValueAndTime<float>>();
     PowerSupplyDQMPlot->SetPoint(PowerSupplyDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue);
 }
 
@@ -155,7 +155,7 @@ void MonitorDQMPlotSEH::fillTestCardPlots(DetectorDataContainer& theThresholdCon
     }
 
     TGraph* TestCardDQMPlot = fTestCardMonitorPlotMap[registerName].getSummary<GraphContainer<TGraph>>().fTheGraph;
-    auto theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
+    auto    theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
     TestCardDQMPlot->SetPoint(TestCardDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue);
 }
 
@@ -171,6 +171,6 @@ void MonitorDQMPlotSEH::reset(void)
 //========================================================================================================================
 bool MonitorDQMPlotSEH::fill(std::vector<char>& dataBuffer)
 {
-    //FILL not implemented, it will probably never need the dual process
+    // FILL not implemented, it will probably never need the dual process
     return false;
 }

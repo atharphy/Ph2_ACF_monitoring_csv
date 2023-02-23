@@ -32,7 +32,7 @@ class SCurveHistograms : public DQMHistogramBase
     void fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Occupancy2D;
     DetectorDataContainer Occupancy3D;

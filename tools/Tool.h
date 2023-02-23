@@ -369,7 +369,7 @@ class Tool : public Ph2_System::SystemController
 
     std::map<int, std::vector<uint8_t>> fMaskForTestGroupChannelMap;
 
-    std::string fDirectoryName {""}; /*< the Directoryname for the Root file with results */
+    std::string fDirectoryName{""}; /*< the Directoryname for the Root file with results */
 #ifdef __USE_ROOT__
     TFile* fResultFile; /*< the Name for the Root file with results */
 #endif

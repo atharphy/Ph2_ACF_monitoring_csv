@@ -67,7 +67,7 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
   private:
     std::map<std::string, DetectorDataContainer> fCBCRegisterMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
-    const DetectorContainer*    fDetectorContainer;
+    const DetectorContainer*                     fDetectorContainer;
 
     void bookCBCPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
     void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);

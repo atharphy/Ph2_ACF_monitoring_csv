@@ -97,7 +97,7 @@ bool GenericDacDacScanHistograms::fill(std::vector<char>& dataBuffer)
 {
     const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("GenericDacDacScanOccupancy");
     ContainerSerialization theDACDACSerialization("GenericDacDacScanDACDAC");
 

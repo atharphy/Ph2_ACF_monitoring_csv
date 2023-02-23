@@ -31,12 +31,11 @@ class GenericDataArray
     T data[size];
 
     friend class boost::serialization::access;
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        for(size_t i = 0; i < size; ++i) theArchive & data[i];
+        for(size_t i = 0; i < size; ++i) theArchive& data[i];
     }
-
 };
 
 // 2D generic array, accessed with () instead of [] to make overloading easier
@@ -58,12 +57,12 @@ class GenericDataArray_2D
     T&     operator()(size_t position_0, size_t position_1) { return data[position_0][position_1]; }
 
     friend class boost::serialization::access;
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
         for(size_t i = 0; i < size_0; ++i)
         {
-            for(size_t j = 0; j < size_1; ++j) theArchive & data[i][j];
+            for(size_t j = 0; j < size_1; ++j) theArchive& data[i][j];
         }
     }
 

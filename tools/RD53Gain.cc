@@ -9,10 +9,10 @@
 
 #include "RD53Gain.h"
 
+#include "Utils/ContainerSerialization.h"
 #include <boost/multiprecision/number.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
-#include "Utils/ContainerSerialization.h"
 
 using namespace boost::numeric;
 using namespace Ph2_HwDescription;
@@ -45,7 +45,7 @@ void Gain::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    auto groupType = injType != CalibBase::INJtype::None ? RD53GroupType::Groups : RD53GroupType::AllPixels;
+    auto groupType = ((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital)) ? RD53GroupType::Groups : RD53GroupType::AllPixels;
     theChnGroupHandler =
         std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
@@ -90,7 +90,7 @@ void Gain::sendData()
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theOccupancySerialization("GainOccupancy");
-        size_t index = 0;
+        size_t                 index = 0;
         for(const auto theOccContainer: detectorContainerVector)
         {
             uint16_t deltaVcal = dacList[index++] - offset;
@@ -151,7 +151,7 @@ void Gain::run()
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
     this->SetBoardBroadcast(true);
-    this->SetTestPulse(true);
+    this->SetTestPulse((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital));
     this->fMaskChannelsFromOtherGroups = true;
     this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 

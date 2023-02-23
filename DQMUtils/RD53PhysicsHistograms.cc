@@ -54,16 +54,15 @@ bool PhysicsHistograms::fill(std::vector<char>& dataBuffer)
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("PhysicsOccupancy");
     ContainerSerialization theBCIDSerialization("PhysicsBCID");
     ContainerSerialization theTrgIDSerialization("PhysicsTrgID");
 
-
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Physics Occupancy!!!!!\n";
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh,OccupancyAndPh>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer);
         PhysicsHistograms::fill(fDetectorData);
         return true;
     }

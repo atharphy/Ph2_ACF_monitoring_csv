@@ -13,9 +13,9 @@
 #include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "Utils/ContainerSerialization.h"
 
 //========================================================================================================================
 CBCHistogramPulseShape::CBCHistogramPulseShape() {}
@@ -205,24 +205,25 @@ void CBCHistogramPulseShape::reset(void)
 //========================================================================================================================
 bool CBCHistogramPulseShape::fill(std::vector<char>& dataBuffer)
 {
-
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theThresholdAndNoiseSerialization("CBCPulseShapeThresholdAndNoise");
     ContainerSerialization theSCurveSerialization("CBCPulseShapeSCurve");
 
     if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched CBCPulseShape ThresholdAndNoise!!!!!\n";
-        uint16_t delay;
-        DetectorDataContainer fDetectorData = theThresholdAndNoiseSerialization.deserializeHybridContainer<ThresholdAndNoise,ThresholdAndNoise,ThresholdAndNoise, uint16_t>(fDetectorContainer, delay);
+        uint16_t              delay;
+        DetectorDataContainer fDetectorData =
+            theThresholdAndNoiseSerialization.deserializeHybridContainer<ThresholdAndNoise, ThresholdAndNoise, ThresholdAndNoise, uint16_t>(fDetectorContainer, delay);
         fillCBCPulseShapePlots(delay, fDetectorData);
         return true;
     }
     else if(theSCurveSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched CBCPulseShape SCurve!!!!!\n";
-        uint16_t threshold, latencyDAC, delayDAC;
-        DetectorDataContainer fDetectorData = theSCurveSerialization.deserializeHybridContainer<Occupancy,Occupancy,Occupancy, uint16_t, uint16_t, uint16_t>(fDetectorContainer,  threshold, latencyDAC, delayDAC);
+        uint16_t              threshold, latencyDAC, delayDAC;
+        DetectorDataContainer fDetectorData =
+            theSCurveSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy, uint16_t, uint16_t, uint16_t>(fDetectorContainer, threshold, latencyDAC, delayDAC);
         fillSCurvePlots(threshold, latencyDAC, delayDAC, fDetectorData);
         return true;
     }

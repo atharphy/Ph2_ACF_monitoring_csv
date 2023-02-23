@@ -14,16 +14,16 @@
 
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/Exception.h"
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <boost/iterator/filter_iterator.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
 #include <functional>
 #include <iostream>
 #include <map>
 #include <typeinfo>
 #include <vector>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/base_object.hpp>
 
 class ChannelContainerBase;
 template <typename T>
@@ -135,13 +135,12 @@ class Container
     }
     std::map<uint16_t, T*> idObjectMap_;
 
-
   private:
     friend class boost::serialization::access;
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & boost::serialization::base_object<std::vector<T*>>(*this);
+        theArchive& boost::serialization::base_object<std::vector<T*>>(*this);
     }
 };
 
@@ -154,8 +153,11 @@ class ChannelContainerBase
 
   private:
     friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive& theArchive, const unsigned int version) {;}
+    template <class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        ;
+    }
 };
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(ChannelContainerBase)
 
@@ -179,11 +181,11 @@ class ChannelContainer
 
   private:
     friend class boost::serialization::access;
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & boost::serialization::base_object<ChannelContainerBase>(*this);
-        theArchive & boost::serialization::base_object<std::vector<T>>(*this);
+        theArchive& boost::serialization::base_object<ChannelContainerBase>(*this);
+        theArchive& boost::serialization::base_object<std::vector<T>>(*this);
     }
 };
 
@@ -305,10 +307,7 @@ class ChipContainer : public BaseContainer
         }
     }
 
-    ChannelContainerBase* getChannelContainer()
-    {
-        return container_;
-    }
+    ChannelContainerBase* getChannelContainer() { return container_; }
 
   protected:
     unsigned int          nOfRows_;
