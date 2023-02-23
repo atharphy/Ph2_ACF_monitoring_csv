@@ -55,7 +55,7 @@ class PixelAlive : public CalibBase
     DetectorDataContainer                  theTrgIDContainer;
 
   protected:
-    CalibBase::INJtype                       injType;
+    RD53Shared::INJtype                      injType;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     size_t rowStart;

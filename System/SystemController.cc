@@ -438,7 +438,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // # Configuring FSM #
     // ###################
     size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
-    size_t injType     = SystemController::findValueInSettings<double>("INJtype");
+    auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"));
     size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
     size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
     size_t colStart    = SystemController::findValueInSettings<double>("COLstart");

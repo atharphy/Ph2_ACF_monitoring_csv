@@ -28,7 +28,7 @@ void Gain::ConfigureCalibration()
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
     nEvents        = this->findValueInSettings<double>("nEvents");
-    injType        = static_cast<CalibBase::INJtype>(this->findValueInSettings<double>("INJtype"));
+    injType        = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
     targetCharge   = RD53Shared::firstChip->Charge2VCal(this->findValueInSettings<double>("TargetCharge"));

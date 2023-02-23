@@ -25,7 +25,7 @@ void PixelAlive::ConfigureCalibration()
     nEvents         = this->findValueInSettings<double>("nEvents");
     nEvtsBurst      = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
     nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
-    injType         = static_cast<CalibBase::INJtype>(this->findValueInSettings<double>("INJtype"));
+    injType         = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     nHITxCol        = this->findValueInSettings<double>("nHITxCol");
     doDataIntegrity = this->findValueInSettings<double>("DoDataIntegrity");
     doOnlyNGroups   = this->findValueInSettings<double>("DoOnlyNGroups");
@@ -48,7 +48,7 @@ void PixelAlive::ConfigureCalibration()
     // ######################
     // # Set injection type #
     // ######################
-    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DIGITAL_INJ_EN", injType == CalibBase::INJtype::Digital);
+    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DIGITAL_INJ_EN", injType == RD53Shared::INJtype::Digital);
 
     // #######################
     // # Initialize progress #
@@ -283,7 +283,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     size_t nMaskedPixelsPerCalib = 0;
-                    if(injType == CalibBase::INJtype::None)
+                    if(injType == RD53Shared::INJtype::None)
                         theOccContainer->at(cBoard->getIndex())
                             ->at(cOpticalGroup->getIndex())
                             ->at(cHybrid->getIndex())
@@ -312,7 +312,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
                             {
-                                if(injType == CalibBase::INJtype::None)
+                                if(injType == RD53Shared::INJtype::None)
                                     theOccContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
                                         ->at(cHybrid->getIndex())
@@ -326,7 +326,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                       ->at(cChip->getIndex())
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
-                                bool enable = (injType == CalibBase::INJtype::None ? occupancy <= occPerPixel : occupancy >= occPerPixel);
+                                bool enable = (injType == RD53Shared::INJtype::None ? occupancy <= occPerPixel : occupancy >= occPerPixel);
                                 if(unstuckPixels == false)
                                     static_cast<RD53*>(cChip)->enablePixel(row, col, enable);
                                 else if(enable == false)
