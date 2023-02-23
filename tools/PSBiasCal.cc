@@ -186,8 +186,8 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     }
     else
     {
-        LOG(INFO) << BOLDRED << " calibration procedure unknown for this chip type " << RESET;
-        abort();
+        LOG(ERROR) << BOLDRED << "Calibration procedure unknown for this chip type - aborting."<< RESET;
+        std::runtime_error(std::string("PSBiasCal::CalibrateChipBias: Error, procedure implemented only for MPA2 & SSA2 at this time. Abort.")); 
     }
 
     if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
