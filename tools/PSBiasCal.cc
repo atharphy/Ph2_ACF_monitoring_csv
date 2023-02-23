@@ -170,7 +170,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 {
     // float VREF_LPGBT        = 1.0;
     // float cConversionFactor = VREF_LPGBT / 1024.;
-    float cConversionFactor = CONVERSION_FACTOR;
+    //float cConversionFactor = CONVERSION_FACTOR;
 
     uint32_t    DAC_new_val = 0;
     std::string DAC;
