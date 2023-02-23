@@ -271,9 +271,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 
 
     uint32_t offsetval = 0;
-    uint32_t distanceToNominal = (float(act_val) - float(exp_val_conv) - float(gnd_corr));
-    uint32_t distanceToNominalInRegSteps = distanceToNominal/LSB;
-    DAC_new_val        = DAC_val - uint32_t(std::round(distanceToNominalInRegSteps)) + offsetval;
+    DAC_new_val        = DAC_val - uint32_t(std::round((float(act_val) - float(exp_val_conv) - float(gnd_corr))/LSB)) + offsetval;
     LOG(INFO) << BOLDRED << "DAC_new_val "<<DAC_new_val <<RESET;
 
     uint32_t DAC_nom_val;
