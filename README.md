@@ -34,11 +34,11 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 + Last change made to this section: 21/11/2022
 ```
 
-**Suggested software and firmware versions:**
+# Suggested software and firmware versions:
 - Software git branch / tag : `Dev` / `v4-10`
 - Firmware tag: `4.5`
 
-**Important webpages:**
+# Important webpages:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 - Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
