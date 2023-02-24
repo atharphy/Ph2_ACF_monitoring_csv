@@ -65,7 +65,8 @@ class CalibBase : public Tool
     {
         None,
         Analog,
-        Digital
+        Digital,
+        Custom
     };
 
   private:

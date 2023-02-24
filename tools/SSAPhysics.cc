@@ -10,8 +10,8 @@
 #include "tools/SSAPhysics.h"
 
 #include "HWInterface/D19cFWInterface.h"
-#include "Utils/Occupancy.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -95,10 +95,7 @@ void SSAPhysics::run()
         for(const auto cBoard: *fDetectorContainer)
         {
             unsigned int dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
-            if(dataSize != 0)
-            {
-                SSAPhysics::fillDataContainer(cBoard);
-            }
+            if(dataSize != 0) { SSAPhysics::fillDataContainer(cBoard); }
             totalDataSize += dataSize;
         }
 

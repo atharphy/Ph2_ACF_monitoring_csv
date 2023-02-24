@@ -27,13 +27,13 @@ void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer
 
 bool MonitorDQMPlotRD53::fill(std::vector<char>& dataBuffer)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theContainerSerialization("RD53MonitorRegister");
 
     if(theContainerSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched RD53Monitor Register!!!!!\n";
-        std::string registerName;
+        std::string           registerName;
         DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, ValueAndTime<float>>(fDetectorContainer, registerName);
         fillRegisterPlots(fDetectorData, registerName);
         return true;
@@ -64,7 +64,6 @@ void MonitorDQMPlotRD53::fillRegisterPlots(DetectorDataContainer& DataContainer,
                                               .fTheGraph;
 
                     if(cChip->hasSummary() == false) continue;
-                    chipDQMPlot->SetPoint(
-                        chipDQMPlot->GetN(), this->getTimeStampForRoot(cChip->getSummary<ValueAndTime<float>>().fTime), cChip->getSummary<ValueAndTime<float>>().fValue);
+                    chipDQMPlot->SetPoint(chipDQMPlot->GetN(), this->getTimeStampForRoot(cChip->getSummary<ValueAndTime<float>>().fTime), cChip->getSummary<ValueAndTime<float>>().fValue);
                 }
 }

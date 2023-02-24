@@ -36,10 +36,12 @@ class EmptyContainer //: public streammable
     }
     void normalize(uint32_t numberOfEvents) { ; }
 
-        friend class boost::serialization::access;
+    friend class boost::serialization::access;
 
-    template<class Archive>
-    void serialize(Archive& theArchive, const unsigned int version) {}
+    template <class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+    }
 };
 
 #endif

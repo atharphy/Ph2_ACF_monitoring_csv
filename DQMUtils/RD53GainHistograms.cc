@@ -78,22 +78,22 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
 
 bool GainHistograms::fill(std::vector<char>& dataBuffer)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("GainOccupancy");
     ContainerSerialization theGainSerialization("GainGain");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Gain Occupancy!!!!!\n";
-        uint16_t deltaVcal;
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh,OccupancyAndPh>(fDetectorContainer, deltaVcal);
+        uint16_t              deltaVcal;
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer, deltaVcal);
         GainHistograms::fillOccupancy(fDetectorData, deltaVcal);
         return true;
     }
     if(theGainSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Gain Gain!!!!!\n";
-        DetectorDataContainer fDetectorData = theGainSerialization.deserializeChipContainer<GainFit,GainFit>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theGainSerialization.deserializeChipContainer<GainFit, GainFit>(fDetectorContainer);
         GainHistograms::fillGain(fDetectorData);
         return true;
     }

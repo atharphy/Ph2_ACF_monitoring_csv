@@ -37,11 +37,11 @@ class Occupancy //: public streammable
     void normalize(const uint32_t numberOfEvents);
 
     friend class boost::serialization::access;
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & fOccupancy;
-        theArchive & fOccupancyError;
+        theArchive& fOccupancy;
+        theArchive& fOccupancyError;
     }
 
     float fOccupancy;

@@ -1,7 +1,7 @@
 #include "OTCMNoise.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/GenericDataArray.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/GenericDataArray.h"
 
 // PUBLIC METHODS
 OTCMNoise::OTCMNoise() : Tool() {}
@@ -149,7 +149,6 @@ void OTCMNoise::TakeData()
         {
             ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
             the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, theHitContainer);
-         
         }
     }
 #endif

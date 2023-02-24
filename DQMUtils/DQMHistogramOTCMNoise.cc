@@ -7,9 +7,9 @@
 #include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/Utilities.h"
-#include "Utils/ContainerSerialization.h"
 
 //========================================================================================================================
 DQMHistogramOTCMNoise::DQMHistogramOTCMNoise() {}
@@ -106,21 +106,26 @@ void DQMHistogramOTCMNoise::reset(void)
 //========================================================================================================================
 bool DQMHistogramOTCMNoise::fill(std::vector<char>& dataBuffer)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theHitSerialization("OTCMNoiseHitStream");
     ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
 
     if(theHitSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTCMNoise HitStream!!!!!\n";
-        DetectorDataContainer fDetectorData = theHitSerialization.deserializeOpticalGroupContainer<EmptyContainer, GenericDataArray<NCHANNELS + 1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theHitSerialization.deserializeOpticalGroupContainer<EmptyContainer,
+                                                                                                   GenericDataArray<NCHANNELS + 1, uint32_t>,
+                                                                                                   GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>,
+                                                                                                   GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>(fDetectorContainer);
         fillHitPlots(fDetectorData);
         return true;
     }
     if(theHitSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTCMNoise 2DHitStream!!!!!\n";
-        DetectorDataContainer fDetectorData = theHitSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData =
+            theHitSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>(
+                fDetectorContainer);
         fill2DHitPlots(fDetectorData);
         return true;
     }

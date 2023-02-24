@@ -76,7 +76,6 @@ void Physics::Running()
 
 void Physics::sendData()
 {
-
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theOccupancySerialization("PhysicsOccupancy");

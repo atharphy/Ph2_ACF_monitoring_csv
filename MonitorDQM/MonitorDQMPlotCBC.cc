@@ -117,10 +117,10 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
                     if(!chip->hasSummary()) continue;
                     auto theValueAndTime = chip->getSummary<ValueAndTime<uint16_t>>();
                     chipDQMPlot->SetPoint(chipDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue); // for on channel - end
-                }                                                                                         // for on chip - end
-            }                                                                                             // for on hybrid - end
-        }                                                                                                 // for on opticalGroup - end
-    }                                                                                                     // for on boards - end
+                }                                                                                                                   // for on chip - end
+            }                                                                                                                       // for on hybrid - end
+        }                                                                                                                           // for on opticalGroup - end
+    }                                                                                                                               // for on boards - end
 }
 
 //========================================================================================================================
@@ -140,9 +140,9 @@ void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresho
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
             if(!opticalGroup->hasSummary()) continue;
-            size_t  opticalGroupId = opticalGroup->getId();
-            TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].getObject(boardId)->getObject(opticalGroupId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
-            auto theValueAndTime = opticalGroup->getSummary<ValueAndTime<uint16_t>>();
+            size_t  opticalGroupId  = opticalGroup->getId();
+            TGraph* LpGBTDQMPlot    = fLpGBTRegisterMonitorPlotMap[registerName].getObject(boardId)->getObject(opticalGroupId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+            auto    theValueAndTime = opticalGroup->getSummary<ValueAndTime<uint16_t>>();
             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue * CONVERSION_FACTOR);
         } // for on opticalGroup - end
     }     // for on boards - end
@@ -160,23 +160,25 @@ void MonitorDQMPlotCBC::reset(void)
 //========================================================================================================================
 bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theCBCRegisterSerialization("CBCMonitorCBCRegister");
     ContainerSerialization theLpGBTRegisterSerialization("CBCMonitorLpGBTRegister");
 
     if(theCBCRegisterSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched CBCMonitor CBCRegister!!!!!\n";
-        std::string registerName;
-        DetectorDataContainer fDetectorData = theCBCRegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
+        std::string           registerName;
+        DetectorDataContainer fDetectorData =
+            theCBCRegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
         fillCBCRegisterPlots(fDetectorData, registerName);
         return true;
     }
     if(theLpGBTRegisterSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched CBCMonitor LpGBTRegister!!!!!\n";
-        std::string registerName;
-        DetectorDataContainer fDetectorData = theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, registerName);
+        std::string           registerName;
+        DetectorDataContainer fDetectorData =
+            theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, registerName);
         fillLpGBTRegisterPlots(fDetectorData, registerName);
         return true;
     }

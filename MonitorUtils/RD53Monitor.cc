@@ -8,8 +8,8 @@
 */
 
 #include "MonitorUtils/RD53Monitor.h"
-#include "Utils/ValueAndTime.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/ValueAndTime.h"
 #include <array>
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
@@ -52,11 +52,8 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                         LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                                   << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
 
-                        theRegisterContainer.getObject(cBoard->getId())
-                            ->getObject(cOpticalGroup->getId())
-                            ->getObject(cHybrid->getId())
-                            ->getObject(cChip->getId())
-                            ->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
+                        theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
+                            ValueAndTime<float>(registerValue, getTimeStamp());
                     }
                     catch(...)
                     {

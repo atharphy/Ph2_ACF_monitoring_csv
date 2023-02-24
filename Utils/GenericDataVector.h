@@ -31,11 +31,11 @@ class GenericDataVector : public OccupancyAndPh
     std::vector<float> data2;
 
     friend class boost::serialization::access;
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & data1;
-        theArchive & data2;
+        theArchive& data1;
+        theArchive& data2;
     }
 };
 

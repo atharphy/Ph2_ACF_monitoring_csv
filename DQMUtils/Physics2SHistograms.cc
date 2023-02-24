@@ -19,7 +19,7 @@ using namespace Ph2_HwDescription;
 
 void Physics2SHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    fDetectorContainer = &theDetectorStructure;
+    fDetectorContainer                                    = &theDetectorStructure;
     HistContainer<TH1F> theTopSensorOccupancyHistogram    = HistContainer<TH1F>("TopSensorOccupancy", "Top Sensor Occupancy", NCHANNELS / 2, -0.5, float(NCHANNELS / 2.) - 0.5);
     HistContainer<TH1F> theBottomSensorOccupancyHistogram = HistContainer<TH1F>("BottomSensorOccupancy", "Bottom Sensor Occupancy", NCHANNELS / 2, -0.5, float(NCHANNELS / 2.) - 0.5);
     HistContainer<TH1F> theStubPositionHistogram          = HistContainer<TH1F>("Stub Position", "Stub Position", NCHANNELS, -0.25, float(NCHANNELS / 2.) - 0.25);
@@ -144,21 +144,21 @@ void Physics2SHistograms::fillStub(const DetectorDataContainer& DataContainer)
 
 bool Physics2SHistograms::fill(std::vector<char>& dataBuffer)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("Physics2SOccupancy");
     ContainerSerialization theStubSerialization("Physics2SStub");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Physics2S Occupancy!!!!!\n";
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeHybridContainer<Occupancy,EmptyContainer,EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeHybridContainer<Occupancy, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillOccupancy(fDetectorData);
         return true;
     }
     if(theStubSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Physics2S Stub!!!!!\n";
-        DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<float,EmptyContainer,EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<float, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillStub(fDetectorData);
         return true;
     }

@@ -123,7 +123,7 @@ bool DQMHistogramCalibrationExample::fill(std::vector<char>& dataBuffer)
     if(theHitSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched CalibrationExample Hits!!!!!\n";
-        DetectorDataContainer fDetectorData = theHitSerialization.deserializeHybridContainer<uint32_t,uint32_t,uint32_t>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theHitSerialization.deserializeHybridContainer<uint32_t, uint32_t, uint32_t>(fDetectorContainer);
         fillCalibrationExamplePlots(fDetectorData);
         return true;
     }

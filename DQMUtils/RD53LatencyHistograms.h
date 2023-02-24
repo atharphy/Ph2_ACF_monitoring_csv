@@ -30,7 +30,7 @@ class LatencyHistograms : public DQMHistogramBase
     void fillLatency(const DetectorDataContainer& LatencyContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Occupancy1D;
     DetectorDataContainer Latency;

@@ -31,7 +31,7 @@ class PixelAliveHistograms : public DQMHistogramBase
     void fillTrgID(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Occupancy1D;
     DetectorDataContainer Occupancy2D;

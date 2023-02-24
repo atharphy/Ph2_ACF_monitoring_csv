@@ -65,7 +65,7 @@ bool PixelAliveHistograms::fill(std::vector<char>& dataBuffer)
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("PixelAliveOccupancy");
     ContainerSerialization theBCIDSerialization("PixelAliveBCID");
     ContainerSerialization theTrgIDSerialization("PixelAliveTrgID");
@@ -73,7 +73,7 @@ bool PixelAliveHistograms::fill(std::vector<char>& dataBuffer)
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PixelAlive Occupancy!!!!!\n";
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh,OccupancyAndPh>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer);
         PixelAliveHistograms::fill(fDetectorData);
         return true;
     }

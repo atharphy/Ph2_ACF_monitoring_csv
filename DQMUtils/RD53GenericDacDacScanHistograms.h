@@ -31,7 +31,7 @@ class GenericDacDacScanHistograms : public DQMHistogramBase
     void fillGenericDacDacScan(const DetectorDataContainer& GenericDacDacScanContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Occupancy2D;
     DetectorDataContainer GenericDac1Scan;

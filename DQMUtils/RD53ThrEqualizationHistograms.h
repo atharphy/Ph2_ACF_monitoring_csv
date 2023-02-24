@@ -33,7 +33,7 @@ class ThrEqualizationHistograms : public DQMHistogramBase
     void fillTDACGain(const DetectorDataContainer& TDACGainContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer ThrEqualization;
     DetectorDataContainer TDAC1D;

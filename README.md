@@ -29,20 +29,21 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 
-## Middleware for the Inner-Tracker (IT) system
+## =x= Middleware for the Inner-Tracker (IT) system  =x=
 ```diff
 + Last change made to this section: 21/11/2022
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `Dev` / `v4-09`
+- Software git branch / tag : `Dev` / `v4-10`
 - Firmware tag: `4.5`
 
 **Important webpages:**
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 - Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
-- Mask converter from `Ph2_ACF` to `Alki's` code: https://cernbox.cern.ch/index.php/s/1kiut5EPAFpXZg1
+- Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
+- Mask converter from `Ph2_ACF` to `Alki's` code: `pyUtilsIT/ConvertPh2ACFMask2Alkis.py`
 
 **FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
@@ -105,7 +106,7 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 ```
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations, for instance `noise`, `gain`, and "the rest".
-### ~=-=~ End of Inner-Tracker section ~=-=~
+### =x= End of Inner-Tracker section =x=
 
 
 ### Setup

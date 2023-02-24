@@ -18,11 +18,11 @@
 #include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
-#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
@@ -220,22 +220,22 @@ bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
     if(theSCurveSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PedeNoise SCurve!!!!!\n";
-        uint16_t cStripValue, cPixelValue;
-        DetectorDataContainer theDetectorData = theSCurveSerialization.deserializeHybridContainer<Occupancy,Occupancy,Occupancy>(fDetectorContainer, cStripValue, cPixelValue);
+        uint16_t              cStripValue, cPixelValue;
+        DetectorDataContainer theDetectorData = theSCurveSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer, cStripValue, cPixelValue);
         fillSCurvePlots(cStripValue, cPixelValue, theDetectorData);
         return true;
     }
     if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PedeNoise Threshold And Noise!!!!!\n";
-        DetectorDataContainer theDetectorData = theThresholdAndNoiseSerialization.deserializeHybridContainer<ThresholdAndNoise,ThresholdAndNoise,ThresholdAndNoise>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theThresholdAndNoiseSerialization.deserializeHybridContainer<ThresholdAndNoise, ThresholdAndNoise, ThresholdAndNoise>(fDetectorContainer);
         fillPedestalAndNoisePlots(theDetectorData);
         return true;
     }
     if(theValidationSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PedeNoise Validation!!!!!\n";
-        DetectorDataContainer theDetectorData = theValidationSerialization.deserializeHybridContainer<Occupancy,Occupancy,Occupancy>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theValidationSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer);
         fillValidationPlots(theDetectorData);
         return true;
     }
@@ -742,7 +742,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
 
 //========================================================================================================================
 void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh, DetectorDataContainer& fSCurveOccupancy)
-{    
+{
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
