@@ -74,6 +74,7 @@
               MONITOR_CONFIG_ADC     =     "5"
               MONITOR_CONFIG_BG      =    "12"
 
+              RESISTORI2V            = "10000"
               ADC_OFFSET_VOLT        =    "63"
               ADC_MAXIMUM_VOLT       =   "839"
               TEMPSENS_IDEAL_FACTOR  =  "1225"
