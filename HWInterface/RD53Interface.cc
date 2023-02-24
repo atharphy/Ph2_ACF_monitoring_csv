@@ -258,7 +258,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
 
     if((observableName.find("TEMPSENS") != std::string::npos) || (observableName.find("RADSENS") != std::string::npos) || (observableName.find("INTERNAL_NTC") != std::string::npos))
     {
-        std::string type = "CENTER";
+        std::string type;
         if(observableName.find("POLY") != std::string::npos)
             type = "POLY";
         else if(observableName.find("ANA") != std::string::npos)
@@ -296,12 +296,13 @@ float RD53Interface::convertADC2VorI(ReadoutChip* pChip, uint32_t value, bool is
 // # Current output units: micro-Ampere #
 // ######################################
 {
-    // ######################################################################
-    // # ADCoffset     =  63 [1/10 mV] Offset due to ground shift           #
-    // # actualVrefADC = 839 [mV]      Lower than VrefADC due to parasitics #
-    // ######################################################################
+    // ################################################################################
+    // # resistorI2V   = 0.01-0.005 [MOhm] resistor for current to voltage conversion #
+    // # ADCoffset     =  63 [1/10 mV] Offset due to ground shift                     #
+    // # actualVrefADC = 839 [mV]      Lower than VrefADC due to parasitics           #
+    // ################################################################################
 
-    const float resistorI2V   = 0.00499; // 0.01; // [MOhm] // @TMP@
+    const float resistorI2V   = pChip->getRegItem("RESISTORI2V").fValue / 1e6; // [MOhm]
     const float ADCoffset     = pChip->getRegItem("ADC_OFFSET_VOLT").fValue / 1e4;
     const float actualVrefADC = pChip->getRegItem("ADC_MAXIMUM_VOLT").fValue / 1e3;
 

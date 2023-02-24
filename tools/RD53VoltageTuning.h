@@ -22,8 +22,9 @@ typedef bool VoltageTuningHistograms;
 // #############
 // # CONSTANTS #
 // #############
-#define CONVERSIONfactor 2 // Conversion factor from DAC voltage to actual voltage
-#define NSIGMA 2           // Number of sigmas for voltage tolerance
+#define CONVERSIONfactor 2   // Conversion factor from DAC voltage to actual voltage
+#define NSIGMA 2             // Number of sigmas for voltage tolerance
+#define STARTfraction 2. / 4 // Fraction of full voltage range
 
 // #############################
 // # Voltage tuning test suite #

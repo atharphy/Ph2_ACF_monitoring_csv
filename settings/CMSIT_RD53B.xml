@@ -65,6 +65,7 @@
               ToT6to4Mapping         =     "0"
               ToTDualEdgeCount       =     "0"
 
+              RESISTORI2V            =  "5000"
               ADC_OFFSET_VOLT        =    "63"
               ADC_MAXIMUM_VOLT       =   "839"
               TEMPSENS_IDEAL_FACTOR  =  "1225"
@@ -301,6 +302,7 @@
       <MonitoringElement device="RD53" register="Iref"                 enable="1"/>
       <MonitoringElement device="RD53" register="POLY_TEMPSENS_TOP"    enable="1"/>
       <MonitoringElement device="RD53" register="POLY_TEMPSENS_BOTTOM" enable="1"/>
+      <MonitoringElement device="RD53" register="INTERNAL_NTC"         enable="1"/>
 
       <MonitoringElement device="LpGBT" register="TEMP"                enable="0"/>
       <MonitoringElement device="LpGBT" register="VDD"                 enable="0"/>
