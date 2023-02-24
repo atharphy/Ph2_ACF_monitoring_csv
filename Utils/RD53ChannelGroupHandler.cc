@@ -35,12 +35,15 @@ const std::shared_ptr<ChannelGroupBase> RD53ChannelGroupHandler::getTestGroup(in
 {
     size_t nRows        = regionOfInterest.getNumberOfRows();
     size_t nCols        = regionOfInterest.getNumberOfCols();
-    auto   channelGroup = std::make_shared<RD53ChannelGroup>(nRows, nCols);
+    auto   channelGroup = std::make_shared<RD53ChannelGroup>(nRows, nCols, groupType);
 
     if(groupType == RD53GroupType::AllPixels) { *channelGroup = regionOfInterest; }
     else
     {
-        for(auto col = 0u; col < nCols; col++)
+        auto step  = (groupType == RD53GroupType::XtalkCoupled) || (groupType == RD53GroupType::XtalkUnCoupled) ? 2u : 1u;
+        auto start = groupType == RD53GroupType::XtalkUnCoupled ? 1u : 0u;
+
+        for(auto col = start; col < nCols; col += step)
             for(auto i = 0u; i < hitPerCol; i++)
             {
                 auto row = (RD53Constants::NROW_CORE * col + i * nRows / hitPerCol) % nRows;
