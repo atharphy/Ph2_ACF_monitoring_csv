@@ -3,6 +3,7 @@
 #include "NetworkUtils/TCPSubscribeClient.h"
 #include "Parser/FileParser.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/ConfigureInfo.h"
 
 #include "TFile.h"
 
@@ -46,8 +47,10 @@ void DQMInterface::destroyHistogram(void)
 }
 
 //========================================================================================================================
-void DQMInterface::configure(std::string const& calibrationName, std::string const& configurationFilePath)
+void DQMInterface::configure(const ConfigureInfo& theConfigureInfo)
 {
+    std::string calibrationName = theConfigureInfo.getCalibrationName();
+    std::string configurationFilePath = theConfigureInfo.getConfigurationFile();
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
 
     Ph2_Parser::FileParser  theFileParser;
@@ -67,6 +70,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
 
     theFileParser.parseHW(configurationFilePath, &fDetectorStructure, out);
     theFileParser.parseSettings(configurationFilePath, pSettingsMap, out);
+
+    theConfigureInfo.setEnabledObjects(&fDetectorStructure);
 
     DQMCalibrationFactory theDQMCalibrationFactory;
     fDQMHistogrammerVector = theDQMCalibrationFactory.createDQMHistogrammerVector(calibrationName);

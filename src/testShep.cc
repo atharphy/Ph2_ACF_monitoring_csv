@@ -2,6 +2,7 @@
 #include "MonitorDQM/MonitorDQMInterface.h"
 #include "Utils/MiddlewareInterface.h"
 #include "Utils/argvparser.h"
+#include "Utils/ConfigureInfo.h"
 #include <google/protobuf/descriptor.h>
 
 #include <cstring>
@@ -136,9 +137,12 @@ int main(int argc, char* argv[])
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
                 std::string calibrationName   = cmd.optionValue("calibration");
                 std::string configurationFile = cmd.optionValue("file");
-                theMiddlewareInterface.configure(calibrationName, configurationFile);
-                theDQMInterface.configure(calibrationName, configurationFile);
-                theMonitorDQMInterface.configure(configurationFile);
+                ConfigureInfo theConfigureInfo;
+                theConfigureInfo.setConfigurationFile(configurationFile);
+                theConfigureInfo.setCalibrationName(calibrationName);
+                theMiddlewareInterface.configure(theConfigureInfo);
+                theDQMInterface.configure(theConfigureInfo);
+                theMonitorDQMInterface.configure(theConfigureInfo);
                 stateMachineStatus = CONFIGURED;
                 break;
             }

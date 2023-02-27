@@ -9,6 +9,7 @@
 #include "Utils/MiddlewareInterface.h"
 #include "Utils/argvparser.h"
 #include "miniDAQ/CombinedCalibrationFactory.h"
+#include "Utils/ConfigureInfo.h"
 
 #include <cstring>
 #include <errno.h>
@@ -269,9 +270,13 @@ int main(int argc, char* argv[])
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
                     std::string calibrationName   = cmd.optionValue("calibration");
                     std::string configurationFile = cmd.optionValue("file");
-                    theMiddlewareInterface.configure(calibrationName, configurationFile);
-                    theDQMInterface.configure(calibrationName, configurationFile);
-                    theMonitorDQMInterface.configure(configurationFile);
+                    ConfigureInfo theConfigureInfo;
+                    theConfigureInfo.setConfigurationFile(configurationFile);
+                    theConfigureInfo.setCalibrationName(calibrationName);
+                    theConfigureInfo.enableOpticalGroup(0, "myModule");
+                    theMiddlewareInterface.configure(theConfigureInfo);
+                    theDQMInterface.configure(theConfigureInfo);
+                    theMonitorDQMInterface.configure(theConfigureInfo);
                     stateMachineStatus = CONFIGURED;
                     break;
                 }

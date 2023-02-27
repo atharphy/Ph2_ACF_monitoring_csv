@@ -13,6 +13,7 @@
 
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
+#include "Utils/ConfigureInfo.h"
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -131,9 +132,9 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(std::string cHWFile)
+void Tool::Configure(const ConfigureInfo theConfigureInfo)
 {
-    SystemController::Configure(cHWFile);
+    SystemController::Configure(theConfigureInfo);
     ConfigureCalibration();
 }
 

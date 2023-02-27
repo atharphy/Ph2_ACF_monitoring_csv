@@ -25,6 +25,7 @@
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
 #include "tools/RD53VoltageTuning.h"
+#include "Utils/ConfigureInfo.h"
 
 #ifdef __EUDAQ__
 #include "TROOT.h"
@@ -216,7 +217,9 @@ int main(int argc, char** argv)
         // # Initialize Hardware #
         // #######################
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-        mySysCntr.Configure(configFile);
+        ConfigureInfo theConfigureInfo;
+        theConfigureInfo.setConfigurationFile(configFile);
+        mySysCntr.Configure(theConfigureInfo);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
 

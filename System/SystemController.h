@@ -65,6 +65,7 @@
 
 class DetectorMonitor;
 class ChannelGroupHandler;
+class ConfigureInfo;
 
 /*!
  * \namespace Ph2_System
@@ -235,7 +236,7 @@ class SystemController
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(std::string cHWFile);
+    virtual void Configure(const ConfigureInfo theConfigureInfo);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);

@@ -27,6 +27,7 @@ class DetectorDataContainer;
 class ChannelGroupHandler;
 class ChannelGroupBase;
 class ScanBase;
+class ConfigureInfo;
 
 #ifdef __HTTP__
 #include "THttpServer.h"
@@ -99,7 +100,7 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void Configure(std::string cHWFile) override;
+    void Configure(const ConfigureInfo theConfigureInfo) override;
 
     void Start(int runNumber) override;
     // void InformImDone();

@@ -5,6 +5,7 @@
 #include <vector>
 #include <tuple>
 #include <unordered_map>
+#include "MessageUtils/cpp/QueryMessage.pb.h"
 
 class DetectorContainer;
 
@@ -13,7 +14,6 @@ class ConfigureInfo
   public:
     ConfigureInfo();
     ~ConfigureInfo();
-    enum ObjectType {Board, OpticalGroup, Hybrid, ReadoutChip};
 
     void setConfigurationFile(const std::string& theConfigurationFile) {fConfigurationFile = theConfigurationFile;}
     std::string getConfigurationFile() const {return fConfigurationFile;}
@@ -21,20 +21,27 @@ class ConfigureInfo
     void setCalibrationName(const std::string& theCalibrationName) {fCalibrationName = theCalibrationName;}
     std::string getCalibrationName() const {return fCalibrationName;}
 
-    void enableObject(ObjectType theObjectType, uint16_t objectId, const std::string& objectName="")
-    {
-        fObjectList[theObjectType][objectId] = objectName;
-    }
-    auto getModuleNameMap() const {return fObjectList;}
-
     void setEnabledObjects(DetectorContainer* theDetectorContainer) const;
 
+    void parseProtobufMessage(const std::string& theConfigureInfoString);
+
+    std::string createProtobufMessage() const;
+
+    void enableBoard       (uint16_t id, const std::string name) {enableObject(MessageUtils::ObjectType::BOARD       , id, name);}
+    void enableOpticalGroup(uint16_t id, const std::string name) {enableObject(MessageUtils::ObjectType::OPTICALGROUP, id, name);}
+    void enableHybrid      (uint16_t id, const std::string name) {enableObject(MessageUtils::ObjectType::HYBRID      , id, name);}
+    void enableChip        (uint16_t id, const std::string name) {enableObject(MessageUtils::ObjectType::CHIP        , id, name);}
 
   private:
     std::string fConfigurationFile {""};
-    std::string fCalibrationName {""};
+    std::string fCalibrationName   {""};
 
-    std::unordered_map<ObjectType, std::unordered_map<uint16_t, std::string>> fObjectList;
+    std::unordered_map<MessageUtils::ObjectType::ObjectTypeEnum, std::unordered_map<uint16_t, std::string>> fObjectList;
+    
+    void enableObject(MessageUtils::ObjectType::ObjectTypeEnum theObjectType, uint16_t objectId, const std::string& objectName="")
+    {
+        fObjectList[theObjectType][objectId] = objectName;
+    }
 
 };
 

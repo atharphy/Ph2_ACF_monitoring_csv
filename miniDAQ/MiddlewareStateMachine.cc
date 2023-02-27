@@ -2,6 +2,7 @@
 #include "HWInterface/FC7FpgaConfig.h"
 #include "Parser/FileParser.h"
 #include "tools/Tool.h"
+#include "Utils/ConfigureInfo.h"
 
 using namespace Ph2_Parser;
 using namespace Ph2_HwInterface;
@@ -23,15 +24,13 @@ void MiddlewareStateMachine::initialize()
     return;
 }
 
-void MiddlewareStateMachine::configure(const std::string& calibrationName, const std::string& configurationFile)
+void MiddlewareStateMachine::configure(const ConfigureInfo theConfigureInfo)
 {
-    fTheTool = fCombinedCalibrationFactory.createCombinedCalibration(calibrationName);
+    fTheTool = fCombinedCalibrationFactory.createCombinedCalibration(theConfigureInfo.getCalibrationName());
 
     LOG(INFO) << BOLDBLUE << "Tool created" << RESET;
 
-    LOG(INFO) << "Configuration file: " << configurationFile << RESET;
-
-    fTheTool->Configure(configurationFile);
+    fTheTool->Configure(theConfigureInfo);
 
     LOG(INFO) << "Configured" << RESET;
 

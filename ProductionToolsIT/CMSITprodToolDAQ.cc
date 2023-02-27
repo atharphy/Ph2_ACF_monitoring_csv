@@ -3,6 +3,7 @@
 #include "Utils/MiddlewareInterface.h"
 #include "Utils/RD53Shared.h"
 #include "Utils/argvparser.h"
+#include "Utils/ConfigureInfo.h"
 
 #include "ProductionToolsIT/RD53EyeDiag.h"
 #include "ProductionToolsIT/RD53EyeScanOptimization.h"
@@ -110,7 +111,9 @@ int main(int argc, char** argv)
         // #######################
 
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-        mySysCntr.Configure(configFile);
+        ConfigureInfo theConfigureInfo;
+        theConfigureInfo.setConfigurationFile(configFile);
+        mySysCntr.Configure(theConfigureInfo);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
 

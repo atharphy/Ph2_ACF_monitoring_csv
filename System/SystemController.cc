@@ -20,6 +20,7 @@
 #include "MonitorUtils/SEHMonitor.h"
 #include "Parser/DetectorMonitorConfig.h"
 #include "Parser/CommunicationSettingConfig.h"
+#include "Utils/ConfigureInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -1163,10 +1164,11 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile)
+void SystemController::Configure(const ConfigureInfo theConfigureInfo)
 {
-    InitializeHw(cHWFile, fParsedFile);
-    InitializeSettings(cHWFile, fParsedFile);
+    InitializeHw(theConfigureInfo.getConfigurationFile(), fParsedFile);
+    InitializeSettings(theConfigureInfo.getConfigurationFile(), fParsedFile);
+    theConfigureInfo.setEnabledObjects(fDetectorContainer);
     // auto excludeEven = [](const OpticalGroupContainer* theContainer)
     // {
     //     return theContainer->getId()%2 == 1;

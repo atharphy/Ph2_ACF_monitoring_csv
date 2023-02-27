@@ -22,6 +22,7 @@ class CommunicationSettingConfig
     CommunicationSettingConfig() {};
     ~CommunicationSettingConfig() {};
 
+    CommunicationSetting fControllerCommunication;
     CommunicationSetting fDQMCommunication;
     CommunicationSetting fMonitorDQMCommunication;
     CommunicationSetting fPowerSupplyDQMCommunication;

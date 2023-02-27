@@ -6,6 +6,7 @@
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/ConfigureInfo.h"
 
 #include "TFile.h"
 
@@ -50,10 +51,11 @@ void MonitorDQMInterface::destroyDQMs(void)
 }
 
 //========================================================================================================================
-void MonitorDQMInterface::configure(std::string const& configurationFilePath)
+void MonitorDQMInterface::configure(const ConfigureInfo& theConfigureInfo)
 {
     Ph2_Parser::FileParser theFileParser;
     std::stringstream      out;
+    std::string configurationFilePath = theConfigureInfo.getConfigurationFile();
 
     CommunicationSettingConfig theCommunicationSettingConfig;
     theFileParser.parseCommunicationSettings(configurationFilePath, theCommunicationSettingConfig, out);
@@ -68,6 +70,8 @@ void MonitorDQMInterface::configure(std::string const& configurationFilePath)
 
 
     theFileParser.parseHW(configurationFilePath, &fDetectorStructure, out);
+
+    theConfigureInfo.setEnabledObjects(&fDetectorStructure);
 
     DetectorMonitorConfig theDetectorMonitorConfig;
     std::string           monitoringType = theFileParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);

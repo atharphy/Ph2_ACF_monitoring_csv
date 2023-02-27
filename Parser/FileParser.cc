@@ -1721,6 +1721,7 @@ void FileParser::parseCommunicationSettings(const std::string& pFilename, Commun
             }
         };
 
+        retrieveDQMParameters(theCommunicationSettingConfig.fControllerCommunication    , "Controller"       );
         retrieveDQMParameters(theCommunicationSettingConfig.fDQMCommunication           , "DQM"              );
         retrieveDQMParameters(theCommunicationSettingConfig.fMonitorDQMCommunication    , "MonitorDQM"       );
         retrieveDQMParameters(theCommunicationSettingConfig.fPowerSupplyDQMCommunication, "PowerSupplyClient");
