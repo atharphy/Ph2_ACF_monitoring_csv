@@ -137,18 +137,20 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     // ##########
     // # Enable #
     // ##########
-    if(mask == true) std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), pRD53group->getMask().begin(), pixMask.Enable.begin(), std::logical_and<>{});
+    if(mask == true)
+    {
+        std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), pRD53group->getMask().begin(), pixMask.Enable.begin(), std::logical_and<>{});
+        std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), pRD53group->getMask().begin(), pixMask.InjEn.begin(), std::logical_and<>{});
+        if(inject == false) std::transform(pixMask.InjEn.begin(), pixMask.InjEn.end(), pixMaskDefault.InjEn.begin(), pixMask.InjEn.begin(), std::logical_and<>{});
+    }
 
     // ##########
     // # Inject #
     // ##########
     if((pRD53group->groupType == RD53GroupType::XtalkCoupled) || (pRD53group->groupType == RD53GroupType::XtalkUnCoupled))
         pixMask.InjEn = pRD53group->getMaskNextCol();
-    else
-    {
-        std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), pRD53group->getMask().begin(), pixMask.InjEn.begin(), std::logical_and<>{});
-        if(inject == false) std::transform(pixMask.InjEn.begin(), pixMask.InjEn.end(), pixMaskDefault.InjEn.begin(), pixMask.InjEn.begin(), std::logical_and<>{});
-    }
+    else if(pRD53group->groupType == RD53GroupType::Custom)
+        pixMask.InjEn = pixMaskDefault.InjEn;
 
     // #########
     // # Apply #

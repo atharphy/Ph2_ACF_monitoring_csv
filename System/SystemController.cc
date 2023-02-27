@@ -437,11 +437,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ###################
     // # Configuring FSM #
     // ###################
-    size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
-    auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"));
-    size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
-    size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
-    size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
+    const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
+    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"));
+    const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
+    const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
+    const size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
 
     auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
