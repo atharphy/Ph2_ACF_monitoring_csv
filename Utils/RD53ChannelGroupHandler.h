@@ -17,8 +17,9 @@ namespace RD53GroupType
 {
 constexpr uint8_t AllPixels      = 0;
 constexpr uint8_t Groups         = 1;
-constexpr uint8_t XtalkCoupled   = 2;
-constexpr uint8_t XtalkUnCoupled = 3;
+constexpr uint8_t Custom         = 2;
+constexpr uint8_t XtalkCoupled   = 3;
+constexpr uint8_t XtalkUnCoupled = 4;
 } // namespace RD53GroupType
 
 class RD53ChannelGroup : public ChannelGroupBase
