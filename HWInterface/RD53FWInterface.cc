@@ -1155,6 +1155,8 @@ void RD53FWInterface::ReadClockGenerator()
 
 float RD53FWInterface::ReadHybridTemperature(int hybridId)
 {
+    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
+
     RegManager::WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     uint32_t sensor1 = RegManager::ReadReg("user.stat_regs.i2c_block_1.NTC1");
@@ -1163,13 +1165,16 @@ float RD53FWInterface::ReadHybridTemperature(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcTemperature(sensor1, sensor2);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE << " temperature: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE << " temperature: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " C"
+              << std::setprecision(-1) << RESET;
 
     return value;
 }
 
 float RD53FWInterface::ReadHybridVoltage(int hybridId)
 {
+    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
+
     RegManager::WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     uint32_t senseVDD = RegManager::ReadReg("user.stat_regs.i2c_block_2.vdd_sense");
@@ -1178,7 +1183,8 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " V"
+              << std::setprecision(-1) << RESET;
 
     return value;
 }
