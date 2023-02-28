@@ -20,7 +20,7 @@ void RD53eudaqProducer::DoReset()
 void RD53eudaqProducer::DoInitialise()
 {
     std::stringstream outp;
-    RD53sysCntrPhys.InitializeHw(configFile, outp, false);
+    RD53sysCntrPhys.InitializeHw(configFile, outp);
     RD53sysCntrPhys.InitializeSettings(configFile, outp);
     nTRIGxEvent = RD53sysCntrPhys.findValueInSettings<double>("nTRIGxEvent");
 }
