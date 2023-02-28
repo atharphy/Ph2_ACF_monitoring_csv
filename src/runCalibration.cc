@@ -6,6 +6,7 @@
 #include "Utils/easylogging++.h"
 #include "boost/format.hpp"
 #include "miniDAQ/MiddlewareStateMachine.h"
+#include "Utils/ConfigureInfo.h"
 
 #include "TApplication.h"
 #include "TROOT.h"
@@ -153,9 +154,12 @@ int main(int argc, char* argv[])
         {
         case HALTED:
         {
-            std::string calibrationName   = cmd.optionValue("calibration");
             std::string configurationFile = cmd.optionValue("file");
-            theMiddlewareStateMachine.configure(calibrationName, configurationFile);
+            std::string calibrationName   = cmd.optionValue("calibration");
+            ConfigureInfo theConfigureInfo;
+            theConfigureInfo.setConfigurationFile(configurationFile);
+            theConfigureInfo.setCalibrationName(calibrationName);
+            theMiddlewareStateMachine.configure(theConfigureInfo);
             stateMachineStatus = CONFIGURED;
             break;
         }
