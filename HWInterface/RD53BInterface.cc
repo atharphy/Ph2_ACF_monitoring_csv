@@ -693,12 +693,12 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         bool     isCurrentNotVoltage;
         uint32_t observable = RD53BInterface::getADCobservable("INTERNAL_NTC_VOLT", isCurrentNotVoltage);
         float    voltage    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable));
-        float    current    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data), true); // @TMP@ : / 4990;
+        float    current    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data), true);
 
         // ###############################################
         // # Calculate temperature with NTC Beta formula #
         // ###############################################
-        float resistance  = 1e-3 * voltage / current;                               // [kOhm]
+        float resistance  = 1e3 * voltage / current;                                // [kOhm]
         float temperature = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
 
         return temperature;
@@ -708,13 +708,13 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // Get high bias voltage
         sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type == "DIG" ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
-        valueLow = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data)); // @TMP@ : / 3
+        valueLow = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
 
         // Get low bias voltage
         sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type == "DIG" ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
     }
-    valueHigh = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data)); // @TMP@ : / 3
+    valueHigh = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
 
     // ####################
     // # Turn off sensing #
@@ -722,7 +722,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     RD53Interface::WriteChipReg(pChip, "MON_SENS_ACB", 0);
     RD53Interface::WriteChipReg(pChip, "MON_SENS_SLDO", 0);
 
-    return e / (idealityFactor * kb * log(R)) * (valueLow - valueHigh) - T0C; // @TMP@ : (valueHigh - valueLow)
+    return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) - T0C;
 }
 
 } // namespace Ph2_HwInterface
