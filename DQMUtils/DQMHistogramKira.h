@@ -58,7 +58,7 @@ class DQMHistogramKira : public DQMHistogramBase
     void fillBottomSensorPlots(DetectorDataContainer& pTDCsummary, uint32_t pNevents, uint16_t pLED);
     void fillTopSensorPlots(DetectorDataContainer& pTDCsummary, uint32_t pNevents, uint16_t pLED);
     void fillSensorPlotsCalibration(DetectorDataContainer& pOccupancyContainer, uint32_t pNevents, uint16_t pLED, uint32_t cIntensity, uint16_t pSensor);
-    
+
   private:
     void parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap);
 

@@ -29,39 +29,37 @@
 #include "tools/Physics2S.h"
 #include "tools/StubBackEndAlignment.h"
 
-#define CALIBRATION_NAME(x) #x, CalibrationList::x
-
 using namespace MessageUtils;
 
 CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
     // OT calibrations
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>(CALIBRATION_NAME(calibration));
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>(CALIBRATION_NAME(takedata)); // will be used in future version of GIPHT
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, KIRA>(CALIBRATION_NAME(calibrationandkira));
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, KIRA>(CALIBRATION_NAME(calibrationandpedenoiseandkira)); // will be used in future version of GIPHT
-    Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>(CALIBRATION_NAME(pedenoise));
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>(CALIBRATION_NAME(calibrationandpedenoise));
-    Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>(CALIBRATION_NAME(calibrationexample));
-    Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>(CALIBRATION_NAME(cbcpulseshape));
-    Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>(CALIBRATION_NAME(otlatency));
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration");
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("takedata"); // will be used in future version of GIPHT
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, KIRA>("calibrationandkira");
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, KIRA>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
+    Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise");
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>("calibrationandpedenoise");
+    Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample");
+    Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("cbcpulseshape");
+    Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("otlatency");
 
     // IT calibrations
-    Register<PixelAlive>(CALIBRATION_NAME(pixelalive));
-    Register<PixelAlive>(CALIBRATION_NAME(noise));
-    Register<SCurve>(CALIBRATION_NAME(scurve));
-    Register<Gain>(CALIBRATION_NAME(gain));
-    Register<GainOptimization>(CALIBRATION_NAME(gainopt));
-    Register<ThrEqualization>(CALIBRATION_NAME(threqu));
-    Register<ThrMinimization>(CALIBRATION_NAME(thrmin));
-    Register<ThrAdjustment>(CALIBRATION_NAME(thradj));
-    Register<Latency>(CALIBRATION_NAME(latency));
-    Register<InjectionDelay>(CALIBRATION_NAME(injdelay));
-    Register<ClockDelay>(CALIBRATION_NAME(clockdelay));
-    Register<Physics>(CALIBRATION_NAME(physics));
-    Register<PSPhysics>(CALIBRATION_NAME(psphysics));
-    Register<Physics2S>(CALIBRATION_NAME(physics2s));
-    Register<DataTransmissionTest>(CALIBRATION_NAME(datatrtest));
+    Register<PixelAlive>("pixelalive");
+    Register<PixelAlive>("noise");
+    Register<SCurve>("scurve");
+    Register<Gain>("gain");
+    Register<GainOptimization>("gainopt");
+    Register<ThrEqualization>("threqu");
+    Register<ThrMinimization>("thrmin");
+    Register<ThrAdjustment>("thradj");
+    Register<Latency>("latency");
+    Register<InjectionDelay>("injdelay");
+    Register<ClockDelay>("clockdelay");
+    Register<Physics>("physics");
+    Register<PSPhysics>("psphysics");
+    Register<Physics2S>("physics2s");
+    Register<DataTransmissionTest>("datatrtest");
 }
 
 CombinedCalibrationFactory::~CombinedCalibrationFactory()
@@ -74,15 +72,15 @@ CombinedCalibrationFactory::~CombinedCalibrationFactory()
     fCalibrationMap.clear();
 }
 
-Tool* CombinedCalibrationFactory::createCombinedCalibration(const std::string& calibrationTag) const
+Tool* CombinedCalibrationFactory::createCombinedCalibration(const std::string& calibrationName) const
 {
     try
     {
-        return fCalibrationMap.at(calibrationTag)->Create();
+        return fCalibrationMap.at(calibrationName)->Create();
     }
     catch(const std::exception& theException)
     {
-        std::string errorMessage = "Error: calibration tag " + calibrationTag + " does not exist";
+        std::string errorMessage = "Error: calibration tag " + calibrationName + " does not exist";
         throw std::runtime_error(errorMessage);
     }
 

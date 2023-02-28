@@ -11,6 +11,7 @@
 #include "Utils/Occupancy.h"
 #include <future>
 
+#include "Utils/ConfigureInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
 
@@ -131,9 +132,9 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
+void Tool::Configure(const ConfigureInfo theConfigureInfo)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
+    SystemController::Configure(theConfigureInfo);
     ConfigureCalibration();
 }
 

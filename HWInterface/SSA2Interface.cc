@@ -124,18 +124,17 @@ uint16_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
 
 uint16_t SSA2Interface::MeasureGND(Chip* pSSA2)
 {
-    LOG(DEBUG) << BOLDMAGENTA << "GND  "<< +this->ReadADC(static_cast<ReadoutChip*>(pSSA2),12) << RESET;
-    return this->ReadADC(static_cast<ReadoutChip*>(pSSA2),12);
+    LOG(DEBUG) << BOLDMAGENTA << "GND  " << +this->ReadADC(static_cast<ReadoutChip*>(pSSA2), 12) << RESET;
+    return this->ReadADC(static_cast<ReadoutChip*>(pSSA2), 12);
 }
 
 float SSA2Interface::CalculateADCLSB(Chip* pSSA2, float vrefExp)
 {
     float offset = this->MeasureGND(pSSA2);
 
-    LOG(DEBUG) << BOLDMAGENTA << "ADCLSB "<<vrefExp/(4095.0 - offset) << RESET;
-    return vrefExp / (4095.0 - offset); 
+    LOG(DEBUG) << BOLDMAGENTA << "ADCLSB " << vrefExp / (4095.0 - offset) << RESET;
+    return vrefExp / (4095.0 - offset);
 }
-
 
 // READ REGISTER ON CHIP:
 uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)

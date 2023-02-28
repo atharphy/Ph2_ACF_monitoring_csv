@@ -170,24 +170,21 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 {
     // float VREF_LPGBT        = 1.0;
     // float cConversionFactor = VREF_LPGBT / 1024.;
-    //float cConversionFactor = CONVERSION_FACTOR;
+    // float cConversionFactor = CONVERSION_FACTOR;
 
     uint32_t    DAC_new_val = 0;
     std::string DAC;
     uint8_t     regIndex = 0;
-    float ADCLSB = 0;
-    if(cChip->getFrontEndType() == FrontEndType::MPA2)
-    { 
-        ADCLSB = (static_cast<MPA2Interface*>(fReadoutChipInterface)->calculateADCLSB(cChip));
-    }
+    float       ADCLSB   = 0;
+    if(cChip->getFrontEndType() == FrontEndType::MPA2) { ADCLSB = (static_cast<MPA2Interface*>(fReadoutChipInterface)->calculateADCLSB(cChip)); }
     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
-    { 
+    {
         ADCLSB = (static_cast<SSA2Interface*>(fReadoutChipInterface)->CalculateADCLSB(cChip));
     }
     else
     {
-        LOG(ERROR) << BOLDRED << "Calibration procedure unknown for this chip type - aborting."<< RESET;
-        std::runtime_error(std::string("PSBiasCal::CalibrateChipBias: Error, procedure implemented only for MPA2 & SSA2 at this time. Abort.")); 
+        LOG(ERROR) << BOLDRED << "Calibration procedure unknown for this chip type - aborting." << RESET;
+        std::runtime_error(std::string("PSBiasCal::CalibrateChipBias: Error, procedure implemented only for MPA2 & SSA2 at this time. Abort."));
     }
 
     if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
@@ -216,14 +213,14 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
     {
         std::vector<std::string> nameDAC{"Bias_D5BFEED", "Bias_D5PREAMP", "Bias_D5TDR", "Bias_D5ALLV", "Bias_D5ALLI", "Bias_D5DAC8"};
-        std::vector<uint8_t>     ADCcontrolIndex{1,2,3,4,5,10};
+        std::vector<uint8_t>     ADCcontrolIndex{1, 2, 3, 4, 5, 10};
         std::vector<uint32_t>    iDAC{0, 1, 2, 3, 4, 9};
         uint32_t                 shift = iDAC[point];
 
         uint32_t MtoWr = (1 << shift);
         fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB", MtoWr & 0xff);
         fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB", (MtoWr >> 8) & 0xff);
-        DAC = nameDAC[point];
+        DAC      = nameDAC[point];
         regIndex = ADCcontrolIndex[point];
     }
     // write DAC (ie one of the registers) with value 0 (minimum)
@@ -236,8 +233,8 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
         off_val = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ADCMeasure(cChip))); // dac_str not needed here
     else
-        off_val = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),regIndex)));
-    
+        off_val = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), regIndex)));
+
     LOG(INFO) << BOLDRED << " value for DAC " << DAC << " at 0 is off_val " << off_val << RESET;
 
     // now set the DAC value to its default value and get the nominal value
@@ -249,9 +246,9 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
         act_val = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ADCMeasure(cChip)));
     else
-        act_val = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),regIndex)));
+        act_val = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), regIndex)));
 
-    LOG(INFO) << BOLDRED << " value for DAC " << DAC << " at " <<  DAC_val << " is act_val " << unsigned(act_val) << RESET;
+    LOG(INFO) << BOLDRED << " value for DAC " << DAC << " at " << DAC_val << " is act_val " << unsigned(act_val) << RESET;
 
     // for (uint8_t ival=0;ival<32;ival++)
     // {
@@ -261,18 +258,15 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     //     LOG(INFO) << BOLDRED << static_cast<MPA2Interface*>(fReadoutChipInterface)->ADCMeasure(cChip)<< RESET;
     // }
 
-    float LSB          = (float(act_val) - float(off_val)) / float(0x1F); 
-    LOG(INFO) << BOLDRED << DAC <<" LSB "<< LSB << RESET;
+    float LSB = (float(act_val) - float(off_val)) / float(0x1F);
+    LOG(INFO) << BOLDRED << DAC << " LSB " << LSB << RESET;
     float exp_val_conv = 0.0;
-    exp_val_conv = exp_val / ADCLSB; // converted from volts to ADC
-    LOG(INFO) << BOLDRED <<"exp_val_conv "<< exp_val_conv << RESET;
-
-
-
+    exp_val_conv       = exp_val / ADCLSB; // converted from volts to ADC
+    LOG(INFO) << BOLDRED << "exp_val_conv " << exp_val_conv << RESET;
 
     uint32_t offsetval = 0;
-    DAC_new_val        = DAC_val - uint32_t(std::round((float(act_val) - float(exp_val_conv) - float(gnd_corr))/LSB)) + offsetval;
-    LOG(INFO) << BOLDRED << "DAC_new_val "<<DAC_new_val <<RESET;
+    DAC_new_val        = DAC_val - uint32_t(std::round((float(act_val) - float(exp_val_conv) - float(gnd_corr)) / LSB)) + offsetval;
+    LOG(INFO) << BOLDRED << "DAC_new_val " << DAC_new_val << RESET;
 
     uint32_t DAC_nom_val;
 
@@ -293,9 +287,9 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
         new_val = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ADCMeasure(cChip)));
     else
-        new_val = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),regIndex)));
+        new_val = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), regIndex)));
 
-    LOG(INFO) << BOLDRED << " value for DAC " << DAC << "at " <<  DAC_nom_val << " is new_val " << new_val << RESET;
+    LOG(INFO) << BOLDRED << " value for DAC " << DAC << "at " << DAC_nom_val << " is new_val " << new_val << RESET;
 
     bool checkadj = true;
     if(checkadj) // This checks if the linear extrapolation finds the best value.
@@ -317,7 +311,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
             if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 new_val_down = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ADCMeasure(cChip)));
             else
-                new_val_down = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),regIndex)));
+                new_val_down = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), regIndex)));
 
             uint32_t DAC_up_val;
             DAC_up_val = std::max(uint32_t(0), DAC_new_val + 1);
@@ -331,7 +325,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
             if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 new_val_up = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ADCMeasure(cChip)));
             else
-                new_val_up = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),regIndex)));
+                new_val_up = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), regIndex)));
 
             // LOG(INFO) << BOLDRED << "Down " << new_val_down - gnd_corr << " Up " << new_val_up - gnd_corr << RESET;
 
@@ -356,11 +350,11 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
             else
             {
                 LOG(INFO) << BOLDRED << "Correct extrapolation in PSBiasCal , iteration:" << niter << RESET;
-                if(cChip->getFrontEndType() == FrontEndType::SSA2) 
+                if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     usleep(100000);
-                    LOG(INFO) << BOLDRED << " Register " << DAC << " corresponding to index "<< unsigned(regIndex)<<" gives ADC "<< RESET;
-                    LOG(INFO) << BOLDRED << +static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),regIndex) << RESET;
+                    LOG(INFO) << BOLDRED << " Register " << DAC << " corresponding to index " << unsigned(regIndex) << " gives ADC " << RESET;
+                    LOG(INFO) << BOLDRED << +static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), regIndex) << RESET;
                 }
                 searching = false;
             }
@@ -373,7 +367,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
             if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 new_val = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ADCMeasure(cChip)));
             else
-                new_val = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),regIndex)));
+                new_val = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), regIndex)));
 
             niter += 1;
         }
@@ -480,7 +474,7 @@ void PSBiasCal::CalibrateBias()
                     if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         LOG(INFO) << BOLDRED << "SSA " << +(cChip->getId()) << " Hyb " << +(cHybrid->getId()) << RESET;
-                        LOG(INFO) << BOLDRED << "ground is " << gndval <<RESET;
+                        LOG(INFO) << BOLDRED << "ground is " << gndval << RESET;
                         std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF, 0xF};
                         std::vector<float>    exp_val{0.082, 0.082, 0.115, 0.082, 0.082, 0.086};
                         for(int ipoint = 0; ipoint <= 5; ipoint++)
