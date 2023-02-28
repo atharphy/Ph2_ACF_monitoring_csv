@@ -56,3 +56,4 @@ if(theStateMachine.isSuccess()):
     print("Success")
 else:
     print("Failed, Error message = " + theStateMachine.getErrorMessage())
+    sys.exit(999)
