@@ -2,8 +2,8 @@
 #include "DQMUtils/DQMCalibrationFactory.h"
 #include "NetworkUtils/TCPSubscribeClient.h"
 #include "Parser/FileParser.h"
-#include "Utils/ContainerSerialization.h"
 #include "Utils/ConfigureInfo.h"
+#include "Utils/ContainerSerialization.h"
 
 #include "TFile.h"
 
@@ -49,7 +49,7 @@ void DQMInterface::destroyHistogram(void)
 //========================================================================================================================
 void DQMInterface::configure(const ConfigureInfo& theConfigureInfo)
 {
-    std::string calibrationName = theConfigureInfo.getCalibrationName();
+    std::string calibrationName       = theConfigureInfo.getCalibrationName();
     std::string configurationFilePath = theConfigureInfo.getConfigurationFile();
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
 
@@ -59,7 +59,7 @@ void DQMInterface::configure(const ConfigureInfo& theConfigureInfo)
 
     CommunicationSettingConfig theCommunicationSettingConfig;
     theFileParser.parseCommunicationSettings(configurationFilePath, theCommunicationSettingConfig, out);
-    fListener              = new TCPSubscribeClient(theCommunicationSettingConfig.fDQMCommunication.fIP, theCommunicationSettingConfig.fDQMCommunication.fPort);
+    fListener = new TCPSubscribeClient(theCommunicationSettingConfig.fDQMCommunication.fIP, theCommunicationSettingConfig.fDQMCommunication.fPort);
 
     if(!fListener->connect())
     {

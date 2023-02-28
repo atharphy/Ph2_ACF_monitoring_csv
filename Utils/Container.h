@@ -427,13 +427,11 @@ void HWDescriptionContainer<T, HW>::addQueryFunction(std::function<bool(const T*
 {
     if(QueryFunction::fQueryFunction != 0)
     {
-        auto theCurrentQueryFunction = QueryFunction::fQueryFunction;
-        QueryFunction::fQueryFunction = [theCurrentQueryFunction, theInputQueryFunction](const T* container)
-        {
-            return (theCurrentQueryFunction(container) && theInputQueryFunction(container));
-        };
+        auto theCurrentQueryFunction  = QueryFunction::fQueryFunction;
+        QueryFunction::fQueryFunction = [theCurrentQueryFunction, theInputQueryFunction](const T* container) { return (theCurrentQueryFunction(container) && theInputQueryFunction(container)); };
     }
-    else QueryFunction::fQueryFunction = theInputQueryFunction;
+    else
+        QueryFunction::fQueryFunction = theInputQueryFunction;
 }
 
 template <typename T, typename HW>

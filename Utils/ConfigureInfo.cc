@@ -1,61 +1,48 @@
 #include "Utils/ConfigureInfo.h"
 #include "Utils/Container.h"
 
-ConfigureInfo::ConfigureInfo()
-{
-}
+ConfigureInfo::ConfigureInfo() {}
 
-ConfigureInfo::~ConfigureInfo()
-{
-}
+ConfigureInfo::~ConfigureInfo() {}
 
 void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) const
 {
-    auto getIdList = [this](const MessageUtils::ObjectType::ObjectTypeEnum theObjectType) -> std::set<int16_t>
-    {
+    auto getIdList = [this](const MessageUtils::ObjectType::ObjectTypeEnum theObjectType) -> std::set<int16_t> {
         std::set<int16_t> enabledIdList;
         if(this->fObjectList.find(theObjectType) != fObjectList.end())
         {
-            for(const auto& entry : fObjectList.at(theObjectType)) enabledIdList.insert(entry.first);
+            for(const auto& entry: fObjectList.at(theObjectType)) enabledIdList.insert(entry.first);
         }
         return enabledIdList;
     };
-    
+
     auto enabledBoardIds = getIdList(MessageUtils::ObjectType::BOARD);
-    if(enabledBoardIds.size()>0)
+    if(enabledBoardIds.size() > 0)
     {
-        auto enableBoardListFunction = [enabledBoardIds](const BoardContainer* theBoard)
-        {
-            return enabledBoardIds.find(theBoard->getId()) != enabledBoardIds.end();
-        };
+        auto enableBoardListFunction = [enabledBoardIds](const BoardContainer* theBoard) { return enabledBoardIds.find(theBoard->getId()) != enabledBoardIds.end(); };
         theDetectorContainer->addBoardQueryFunction(enableBoardListFunction);
     }
 
     auto enabledOpticalGroupIds = getIdList(MessageUtils::ObjectType::OPTICALGROUP);
-    if(enabledOpticalGroupIds.size()>0)
+    if(enabledOpticalGroupIds.size() > 0)
     {
-        auto enableOpticalGroupListFunction = [enabledOpticalGroupIds](const OpticalGroupContainer* theOpticalGroup)
-        {
+        auto enableOpticalGroupListFunction = [enabledOpticalGroupIds](const OpticalGroupContainer* theOpticalGroup) {
             return enabledOpticalGroupIds.find(theOpticalGroup->getId()) != enabledOpticalGroupIds.end();
         };
         theDetectorContainer->addOpticalGroupQueryFunction(enableOpticalGroupListFunction);
     }
 
     auto enabledHybridIds = getIdList(MessageUtils::ObjectType::HYBRID);
-    if(enabledHybridIds.size()>0)
+    if(enabledHybridIds.size() > 0)
     {
-        auto enableHybridListFunction = [enabledHybridIds](const HybridContainer* theHybrid)
-        {
-            return enabledHybridIds.find(theHybrid->getId()) != enabledHybridIds.end();
-        };
+        auto enableHybridListFunction = [enabledHybridIds](const HybridContainer* theHybrid) { return enabledHybridIds.find(theHybrid->getId()) != enabledHybridIds.end(); };
         theDetectorContainer->addHybridQueryFunction(enableHybridListFunction);
     }
 
     auto enabledReadoutChipIds = getIdList(MessageUtils::ObjectType::CHIP);
-    if(enabledReadoutChipIds.size()>0)
+    if(enabledReadoutChipIds.size() > 0)
     {
-        auto enableReadoutChipListFunction = [enabledReadoutChipIds](const ChipContainer* theReadoutChip)
-        {
+        auto enableReadoutChipListFunction = [enabledReadoutChipIds](const ChipContainer* theReadoutChip) {
             return enabledReadoutChipIds.find(theReadoutChip->getId()) != enabledReadoutChipIds.end();
         };
         theDetectorContainer->addReadoutChipQueryFunction(enableReadoutChipListFunction);
@@ -68,13 +55,9 @@ void ConfigureInfo::parseProtobufMessage(const std::string& theConfigureInfoStri
     theConfigureMessage.ParseFromString(theConfigureInfoString);
 
     fConfigurationFile = theConfigureMessage.data().configuration_file();
-    fCalibrationName = theConfigureMessage.data().calibration_name();
+    fCalibrationName   = theConfigureMessage.data().calibration_name();
 
-    for (const auto& objectInfo : theConfigureMessage.data().object_list())
-    {
-        fObjectList[objectInfo.object_type().type()][uint16_t(objectInfo.id())] = objectInfo.name();
-
-    }
+    for(const auto& objectInfo: theConfigureMessage.data().object_list()) { fObjectList[objectInfo.object_type().type()][uint16_t(objectInfo.id())] = objectInfo.name(); }
 }
 
 std::string ConfigureInfo::createProtobufMessage() const
@@ -84,9 +67,9 @@ std::string ConfigureInfo::createProtobufMessage() const
     theConfigureMessage.mutable_data()->set_calibration_name(fCalibrationName);
     theConfigureMessage.mutable_data()->set_configuration_file(fConfigurationFile);
 
-    for(const auto& theObjectTypeMap : fObjectList)
+    for(const auto& theObjectTypeMap: fObjectList)
     {
-        for(const auto& theObjectIdAndName : theObjectTypeMap.second)
+        for(const auto& theObjectIdAndName: theObjectTypeMap.second)
         {
             auto theObject = theConfigureMessage.mutable_data()->add_object_list();
             theObject->mutable_object_type()->set_type(theObjectTypeMap.first);
@@ -99,5 +82,3 @@ std::string ConfigureInfo::createProtobufMessage() const
     theConfigureMessage.SerializeToString(&theConfigurationMessageString);
     return theConfigurationMessageString;
 }
-
-

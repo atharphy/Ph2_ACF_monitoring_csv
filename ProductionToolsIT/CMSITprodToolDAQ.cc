@@ -1,9 +1,9 @@
 #include "DQMUtils/DQMInterface.h"
 #include "System/SystemController.h"
+#include "Utils/ConfigureInfo.h"
 #include "Utils/MiddlewareInterface.h"
 #include "Utils/RD53Shared.h"
 #include "Utils/argvparser.h"
-#include "Utils/ConfigureInfo.h"
 
 #include "ProductionToolsIT/RD53EyeDiag.h"
 #include "ProductionToolsIT/RD53EyeScanOptimization.h"

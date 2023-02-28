@@ -1,6 +1,6 @@
 #include "Utils/MiddlewareInterface.h"
-#include "Utils/ConfigureInfo.h"
 #include "MessageUtils/cpp/ReplyMessage.pb.h"
+#include "Utils/ConfigureInfo.h"
 #include <iostream>
 
 using namespace MessageUtils;
@@ -55,7 +55,7 @@ void MiddlewareInterface::configure(const ConfigureInfo& theConfigureInfo)
     // theQuery.SerializeToString(&theCommandString);
 
     std::string theCommandString = theConfigureInfo.createProtobufMessage();
-    std::string readBuffer = sendCommand(theCommandString);
+    std::string readBuffer       = sendCommand(theCommandString);
     std::cout << __PRETTY_FUNCTION__ << "DONE WITH Configure-" << readBuffer << "-" << std::endl;
 }
 

@@ -11,9 +11,9 @@
 #include "Utils/Occupancy.h"
 #include <future>
 
+#include "Utils/ConfigureInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
-#include "Utils/ConfigureInfo.h"
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;

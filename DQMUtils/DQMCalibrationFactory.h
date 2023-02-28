@@ -79,16 +79,16 @@ class DQMCalibrationFactory
             std::cerr << "calibrationName " << calibrationName << " already exists, aborting..." << std::endl;
             abort();
         }
-       
-        fDQMInterfaceMap[calibrationName]             = new DQMCreator<Args...>;
+
+        fDQMInterfaceMap[calibrationName] = new DQMCreator<Args...>;
     }
 
     std::vector<DQMHistogramBase*> createDQMHistogrammerVector(const std::string& calibrationName) const;
 
     std::vector<std::string> getAvailableCalibrations() const;
-    
+
   private:
-    std::map<std::string, DQMBaseCreator*>                                    fDQMInterfaceMap;
+    std::map<std::string, DQMBaseCreator*> fDQMInterfaceMap;
 };
 
 #endif

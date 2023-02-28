@@ -8,6 +8,7 @@
 */
 
 #include "System/SystemController.h"
+#include "Utils/ConfigureInfo.h"
 #include "Utils/argvparser.h"
 #include "tools/RD53BERtest.h"
 #include "tools/RD53ClockDelay.h"
@@ -25,7 +26,6 @@
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
 #include "tools/RD53VoltageTuning.h"
-#include "Utils/ConfigureInfo.h"
 
 #ifdef __EUDAQ__
 #include "TROOT.h"

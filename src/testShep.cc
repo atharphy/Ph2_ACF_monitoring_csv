@@ -1,8 +1,8 @@
 #include "DQMUtils/DQMInterface.h"
 #include "MonitorDQM/MonitorDQMInterface.h"
+#include "Utils/ConfigureInfo.h"
 #include "Utils/MiddlewareInterface.h"
 #include "Utils/argvparser.h"
-#include "Utils/ConfigureInfo.h"
 #include <google/protobuf/descriptor.h>
 
 #include <cstring>
@@ -135,8 +135,8 @@ int main(int argc, char* argv[])
             case HALTED:
             {
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                std::string calibrationName   = cmd.optionValue("calibration");
-                std::string configurationFile = cmd.optionValue("file");
+                std::string   calibrationName   = cmd.optionValue("calibration");
+                std::string   configurationFile = cmd.optionValue("file");
                 ConfigureInfo theConfigureInfo;
                 theConfigureInfo.setConfigurationFile(configurationFile);
                 theConfigureInfo.setCalibrationName(calibrationName);

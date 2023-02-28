@@ -1712,22 +1712,21 @@ void FileParser::parseCommunicationSettings(const std::string& pFilename, Commun
     auto theCommunicationSettingsNode = doc.child("HwDescription").child("CommunicationSettings");
     if(bool(theCommunicationSettingsNode))
     {
-        auto retrieveDQMParameters = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting& theCommunicationSetting, const std::string& theNodeName)
-        {
+        auto retrieveDQMParameters = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting& theCommunicationSetting, const std::string& theNodeName) {
             auto theDQMnode = theCommunicationSettingsNode.child(theNodeName.c_str());
             if(bool(theDQMnode))
             {
-                theCommunicationSetting = CommunicationSettingConfig::CommunicationSetting(std::string(theDQMnode.attribute("ip").value()), uint16_t(convertAnyInt(theDQMnode.attribute("port").value())), bool(convertAnyInt(theDQMnode.attribute("enableConnection").value())));
+                theCommunicationSetting = CommunicationSettingConfig::CommunicationSetting(std::string(theDQMnode.attribute("ip").value()),
+                                                                                           uint16_t(convertAnyInt(theDQMnode.attribute("port").value())),
+                                                                                           bool(convertAnyInt(theDQMnode.attribute("enableConnection").value())));
             }
         };
 
-        retrieveDQMParameters(theCommunicationSettingConfig.fControllerCommunication    , "Controller"       );
-        retrieveDQMParameters(theCommunicationSettingConfig.fDQMCommunication           , "DQM"              );
-        retrieveDQMParameters(theCommunicationSettingConfig.fMonitorDQMCommunication    , "MonitorDQM"       );
+        retrieveDQMParameters(theCommunicationSettingConfig.fControllerCommunication, "Controller");
+        retrieveDQMParameters(theCommunicationSettingConfig.fDQMCommunication, "DQM");
+        retrieveDQMParameters(theCommunicationSettingConfig.fMonitorDQMCommunication, "MonitorDQM");
         retrieveDQMParameters(theCommunicationSettingConfig.fPowerSupplyDQMCommunication, "PowerSupplyClient");
     }
-
 }
 
 } // namespace Ph2_Parser
-

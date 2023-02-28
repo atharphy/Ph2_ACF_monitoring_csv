@@ -1319,7 +1319,7 @@ int main(int argc, char* argv[])
         cKira.Inherit(&cTool);
         cKira.Initialise(cKiraPort, cKiraID);
         cKira.determineLatency();
-        if (cKiraCalibration) cKira.calibrateIntensity();
+        if(cKiraCalibration) cKira.calibrateIntensity();
         cKira.performKIRATest();
     }
 

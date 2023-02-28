@@ -1,12 +1,12 @@
 #include <cstring>
 
+#include "Utils/ConfigureInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "Utils/easylogging++.h"
 #include "boost/format.hpp"
 #include "miniDAQ/MiddlewareStateMachine.h"
-#include "Utils/ConfigureInfo.h"
 
 #include "TApplication.h"
 #include "TROOT.h"
@@ -154,8 +154,8 @@ int main(int argc, char* argv[])
         {
         case HALTED:
         {
-            std::string configurationFile = cmd.optionValue("file");
-            std::string calibrationName   = cmd.optionValue("calibration");
+            std::string   configurationFile = cmd.optionValue("file");
+            std::string   calibrationName   = cmd.optionValue("calibration");
             ConfigureInfo theConfigureInfo;
             theConfigureInfo.setConfigurationFile(configurationFile);
             theConfigureInfo.setCalibrationName(calibrationName);

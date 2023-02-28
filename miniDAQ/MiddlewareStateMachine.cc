@@ -1,8 +1,8 @@
 #include "miniDAQ/MiddlewareStateMachine.h"
 #include "HWInterface/FC7FpgaConfig.h"
 #include "Parser/FileParser.h"
-#include "tools/Tool.h"
 #include "Utils/ConfigureInfo.h"
+#include "tools/Tool.h"
 
 using namespace Ph2_Parser;
 using namespace Ph2_HwInterface;

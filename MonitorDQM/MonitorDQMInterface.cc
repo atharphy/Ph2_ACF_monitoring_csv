@@ -5,8 +5,8 @@
 #include "MonitorDQM/MonitorDQMInterface.h"
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
 #include "Parser/DetectorMonitorConfig.h"
-#include "Utils/ContainerSerialization.h"
 #include "Utils/ConfigureInfo.h"
+#include "Utils/ContainerSerialization.h"
 
 #include "TFile.h"
 
@@ -55,11 +55,11 @@ void MonitorDQMInterface::configure(const ConfigureInfo& theConfigureInfo)
 {
     Ph2_Parser::FileParser theFileParser;
     std::stringstream      out;
-    std::string configurationFilePath = theConfigureInfo.getConfigurationFile();
+    std::string            configurationFilePath = theConfigureInfo.getConfigurationFile();
 
     CommunicationSettingConfig theCommunicationSettingConfig;
     theFileParser.parseCommunicationSettings(configurationFilePath, theCommunicationSettingConfig, out);
-    fListener              = new TCPSubscribeClient(theCommunicationSettingConfig.fMonitorDQMCommunication.fIP, theCommunicationSettingConfig.fMonitorDQMCommunication.fPort);
+    fListener = new TCPSubscribeClient(theCommunicationSettingConfig.fMonitorDQMCommunication.fIP, theCommunicationSettingConfig.fMonitorDQMCommunication.fPort);
 
     if(!fListener->connect())
     {
@@ -67,7 +67,6 @@ void MonitorDQMInterface::configure(const ConfigureInfo& theConfigureInfo)
         abort();
     }
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
-
 
     theFileParser.parseHW(configurationFilePath, &fDetectorStructure, out);
 

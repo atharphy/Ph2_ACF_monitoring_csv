@@ -38,7 +38,7 @@ class CombinedCalibrationFactory
             std::cerr << "calibrationTag " << calibrationTag << " already exists, aborting..." << std::endl;
             abort();
         }
-        fCalibrationMap[calibrationTag]              = new Creator<Args...>;
+        fCalibrationMap[calibrationTag] = new Creator<Args...>;
     }
 
     Tool* createCombinedCalibration(const std::string& calibrationName) const;

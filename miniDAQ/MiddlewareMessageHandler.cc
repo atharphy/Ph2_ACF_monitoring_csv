@@ -1,6 +1,6 @@
 #include "miniDAQ/MiddlewareMessageHandler.h"
-#include "miniDAQ/CombinedCalibrationFactory.h"
 #include "Utils/ConfigureInfo.h"
+#include "miniDAQ/CombinedCalibrationFactory.h"
 
 MiddlewareMessageHandler::MiddlewareMessageHandler() {}
 
@@ -109,8 +109,8 @@ std::string MiddlewareMessageHandler::firmwareAction(const std::string& message)
     {
         try
         {
-            MessageUtils::FirmwareReplyMessage     theFirmwareListReply;
-            std::vector<std::string> firmwareList = fMiddlewareStateMachine.getFirmwareList(configurationFile, boardId);
+            MessageUtils::FirmwareReplyMessage theFirmwareListReply;
+            std::vector<std::string>           firmwareList = fMiddlewareStateMachine.getFirmwareList(configurationFile, boardId);
             theFirmwareListReply.mutable_reply_type()->set_type(MessageUtils::ReplyType::SUCCESS);
 
             for(const auto& firmware: firmwareList) theFirmwareListReply.add_firmware_name(firmware);
@@ -170,10 +170,7 @@ std::string MiddlewareMessageHandler::calibrationList(const std::string& message
     MessageUtils::CalibrationListReplyMessage theCalibrationList;
     theCalibrationList.mutable_reply_type()->set_type(MessageUtils::ReplyType::SUCCESS);
 
-    for(const auto& theCalibrationPair: fMiddlewareStateMachine.getCombinedCalibrationFactory().getAvailableCalibrations())
-    {
-        theCalibrationList.add_calibration(theCalibrationPair);
-    }
+    for(const auto& theCalibrationPair: fMiddlewareStateMachine.getCombinedCalibrationFactory().getAvailableCalibrations()) { theCalibrationList.add_calibration(theCalibrationPair); }
 
     return serializeMessage(theCalibrationList);
 }

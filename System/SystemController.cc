@@ -18,8 +18,8 @@
 #include "MonitorUtils/DetectorMonitor.h"
 #include "MonitorUtils/RD53Monitor.h"
 #include "MonitorUtils/SEHMonitor.h"
-#include "Parser/DetectorMonitorConfig.h"
 #include "Parser/CommunicationSettingConfig.h"
+#include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
 
 using namespace Ph2_HwDescription;
@@ -177,7 +177,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     CommunicationSettingConfig theCommunicationSettingConfig;
     this->fParser.parseCommunicationSettings(pFilename, theCommunicationSettingConfig, os);
 
-    fDQMStreamerEnabled        = theCommunicationSettingConfig.fDQMCommunication.fEnable;
+    fDQMStreamerEnabled = theCommunicationSettingConfig.fDQMCommunication.fEnable;
     if(fDQMStreamerEnabled)
     {
         fDQMStreamer = new TCPPublishServer(theCommunicationSettingConfig.fDQMCommunication.fPort, 1);
@@ -1409,10 +1409,7 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
-    if(fChannelGroupHandlerContainer == nullptr)
-    {
-        delete fChannelGroupHandlerContainer;
-    }
+    if(fChannelGroupHandlerContainer == nullptr) { delete fChannelGroupHandlerContainer; }
     fChannelGroupHandlerContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
     uint16_t totalNumberOfChips = 0;
