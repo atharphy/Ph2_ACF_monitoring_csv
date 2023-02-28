@@ -96,7 +96,7 @@
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
     		<Register name="trigger_source"> 3 </Register>
-    		<Register name="user_trigger_frequency"> 5 </Register>
+    		<Register name="user_trigger_frequency"> 100 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
     		<Register name="stub_trigger_delay_value"> 0 </Register>
@@ -171,9 +171,9 @@
                 <Register name="threshold"> 50 </Register>
             </Register>
         <Register name="ch2">
-                <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 0 </Register>
-                <Register name="threshold"> 0 </Register>
+                <Register name="out_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
+                <Register name="threshold"> 50 </Register>
             </Register>
         <Register name="ch3">
                 <Register name="out_enable"> 1 </Register>
@@ -273,6 +273,15 @@
     <Setting name="Check2SRefSide">1</Setting>   <!-- L == 1  ; R== 0 --> 
     <Setting name="Check2SRefChip">0</Setting>   <!-- L == 1  ; R== 0 --> 
     
+    <Setting name="KIRA_ID">    myArduino  </Setting>
+    <Setting name="KIRA_Port" > 7011 </Setting>
+    <Setting name="KiraLatencyLed" > 4</Setting>
+    <Setting name="KiraLatencySensor" > 0</Setting>
+    <Setting name="KiraLatencyIntensity" >30000</Setting>
+    <Setting name="KiraIntensity" >30000</Setting>
+    <Setting name="KiraCalibrationIntensityStart" > 29000 </Setting>
+    <Setting name="KiraCalibrationIntensityStop" > 31500 </Setting>
+    <Setting name="KiraCalibrationIntensityStep" > 100 </Setting>
 </Settings>
 
 
