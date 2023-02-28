@@ -73,6 +73,7 @@ const uint32_t INCOMPLETE = 0x00000008; // Event status Incomplete event header
 const uint32_t L1A        = 0x00000010; // Event status L1A counter mismatch
 const uint32_t NOFRHEADER = 0x00000020; // Event status No frame header found in data
 const uint32_t MISSCHIP   = 0x00000040; // Event status Chip data are missing
+const uint32_t CORRUPTED  = 0x00000080; // Event status Corrupted event
 } // namespace RD53FWEvtEncoder
 
 namespace Ph2_HwInterface

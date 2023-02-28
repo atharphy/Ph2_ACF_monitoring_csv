@@ -44,6 +44,16 @@ const uint8_t  MAXATTEMPTS            = 10;                                     
 const uint16_t MAXATTEMPTSCMDDISPATCH = 100;                                             // Maximum number of attempts to dispatch a command
 const uint8_t  MAXSTEPS               = 10;                                              // Maximum number of steps for a scan
 
+enum class INJtype : uint8_t
+{
+    None,
+    Analog,
+    Digital,
+    Custom,
+    XtalkCoupled,
+    XtalkUnCoupled
+};
+
 std::string fromInt2Str(int val);
 std::string composeFileName(const std::string& configFileName, const std::string& fName2Add);
 size_t      countBitsOne(size_t num);

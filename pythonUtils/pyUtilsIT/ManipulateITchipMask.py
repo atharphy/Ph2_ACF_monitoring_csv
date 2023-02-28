@@ -83,10 +83,11 @@ def ArgParser():
     return options
 
 
-def makeGroup(groupNumber, oddOReven, origMask):
+def makeGroup(groupNumber, oddOReven):
     # Definition: black = injected, grey = enabled
     newMaskEn  = []
     newMaskInj = []
+
     for col in range(oddOReven, NCOLS, 2):
         for i in range(HITPERCOL):
             row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
@@ -94,21 +95,15 @@ def makeGroup(groupNumber, oddOReven, origMask):
             row %= NROWS
 
             ##########
-            # Inject #
-            ##########
-            newMaskInj.append([row, col])
-
-            ##########
             # Enable #
             ##########
-            if col + 1 < NCOLS and orgMask.enable[col][row] == '1':
-                newMaskEn.append([row, col + 1])
+            newMaskEn.append([row, col])
 
-    return newMaskEn, newMaskInj
-
-
-def makePattern(groupNumber, patternType, origMask):
-    # Definition: patternType = 'coupled', patternType = 'uncoupled'
+            ##########
+            # Inject #
+            ##########
+            if col + 1 < NCOLS:
+                newMaskInj.append([row, col + 1])
 
     return newMaskEn, newMaskInj
 
@@ -130,7 +125,7 @@ def readMaskFile(fileName):
     return newMaskEn, newMaskInj
 
 
-def applyMask(newMaskEn, newMaskInj, mask, origMask):
+def applyMask(newMaskEn, newMaskInj, mask, orgMask):
     mask.reset()
 
     for en in newMaskEn:
@@ -223,7 +218,7 @@ elif cmd.patternType:
     oddOReven = 0
     if cmd.patternType == 'uncoupled':
         oddOReven = 1
-    newMaskEn, newMaskInj = makeGroup(cmd.groupNumber, oddOReven, orgMask)
+    newMaskEn, newMaskInj = makeGroup(cmd.groupNumber, oddOReven)
     applyMask(newMaskEn, newMaskInj, mask, orgMask)
 
 saveCFGfile(cmd.outFile, mask)
