@@ -45,20 +45,23 @@ class KIRA : public OTTool
     void PrepareForExternal(BeBoard* pBoard);
     void determineLatency();
     void performKIRATest();
+    void calibrateIntensity();
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
     void Running() override;
     void Stop() override;
     void Pause() override;
     void Resume() override;
+    bool check_channel_illumination(BeBoard* pBoard, DetectorDataContainer& pContainer, uint16_t pLED);
 
   private:
     TCPClient*                     fKiraClient{nullptr};
     std::string                    fKiraId;
     ContainerRecycleBin<Occupancy> fRecycleBin;
+    uint32_t fTargetIntensity;
 #ifdef __USE_ROOT__
     DQMHistogramKira fDQMHistogrammer;
 #endif
-    DetectorDataContainer analyseEvents(BeBoard* pBoard, const std::vector<Event*>& pEvents, uint16_t pSensor, uint16_t pLED);
+    DetectorDataContainer analyseEvents(BeBoard* pBoard, const std::vector<Event*>& pEvents, uint16_t pSensor, uint16_t pLED, bool pSkipChips=true);
 };
 
 #endif
