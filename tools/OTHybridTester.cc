@@ -700,7 +700,7 @@ bool OTHybridTester::LpGBTTestVTRx()
             clpGBTInterface->ResetI2C(clpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
-	    //Configuring I2C Master pull-ups
+            // Configuring I2C Master pull-ups
             clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 1 << 4 | 1 << 6);
 
             uint8_t cMasterId = 1, cSlaveAddress = 0x50, cSlaveData = 0x15, cNbyte = 1, cFrequency = 2;
