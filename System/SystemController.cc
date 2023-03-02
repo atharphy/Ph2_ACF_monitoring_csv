@@ -76,10 +76,6 @@ void SystemController::Inherit(const SystemController* pController)
     fParser                         = pController->fParser;
     fSameChannelGroupForAllChannels = pController->fSameChannelGroupForAllChannels;
     fInitializeInterfaces           = pController->fInitializeInterfaces;
-
-#ifdef __TCP_SERVER__
-    fTestcardClient = pController->fTestcardClient;
-#endif
 }
 
 void SystemController::StopMonitoring()
