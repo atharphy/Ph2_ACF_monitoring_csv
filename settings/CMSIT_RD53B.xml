@@ -65,6 +65,7 @@
               ToT6to4Mapping         =     "0"
               ToTDualEdgeCount       =     "0"
 
+              RESISTORI2V            =  "5000"
               ADC_OFFSET_VOLT        =    "63"
               ADC_MAXIMUM_VOLT       =   "839"
               TEMPSENS_IDEAL_FACTOR  =  "1225"
@@ -170,7 +171,13 @@
 
   <Settings>
     <!-- === Calibration parameters ===
-         INJtype               = 0:  no injection;                       INJtype               = 1: analog;                                     INJtype = 2: digital;  INJtype = 3: custom from txt file
+         INJtype:
+            INJtype            = 0:  no injection
+            INJtype            = 1:  analog
+            INJtype            = 2:  digital
+            INJtype            = 3:  analog + custom from txt file
+            INJtype            = 4:  analog + X-talk coupled pixels
+            INJtype            = 5:  analog + X-talk un-coupled pixels
          ResetMask             = 0:  do not enable masked pixels;        ResetMask             = 1: enable all pixels
          ResetTDAC             = -1: do not reset TDAC;                  ResetTDAC             >=0: reset all TDACs to value
          DoDataIntegrity       = 0:  no data integrity detection;        DoDataIntegrity       = 1: run data integrity detection
@@ -286,20 +293,30 @@
   <MonitoringSettings>
     <Monitoring type="RD53B" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElement device="RD53" register="VINA"                 enable="1"/>
-      <MonitoringElement device="RD53" register="VDDA"                 enable="1"/>
-      <MonitoringElement device="RD53" register="ANA_IN_CURR"          enable="1"/>
-      <MonitoringElement device="RD53" register="VIND"                 enable="1"/>
-      <MonitoringElement device="RD53" register="VDDD"                 enable="1"/>
-      <MonitoringElement device="RD53" register="DIG_IN_CURR"          enable="1"/>
-      <MonitoringElement device="RD53" register="Iref"                 enable="1"/>
-      <MonitoringElement device="RD53" register="POLY_TEMPSENS_TOP"    enable="1"/>
-      <MonitoringElement device="RD53" register="POLY_TEMPSENS_BOTTOM" enable="1"/>
+      <MonitoringElement device="RD53"  register="VINA"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="VDDA"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="ANA_IN_CURR"          enable="1"/>
+      <MonitoringElement device="RD53"  register="VIND"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="VDDD"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="DIG_IN_CURR"          enable="1"/>
+      <MonitoringElement device="RD53"  register="Iref"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="POLY_TEMPSENS_TOP"    enable="1"/>
+      <MonitoringElement device="RD53"  register="POLY_TEMPSENS_BOTTOM" enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_ANA_SLDO"    enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_DIG_SLDO"    enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_CENTER"      enable="1"/>
+      <MonitoringElement device="RD53"  register="INTERNAL_NTC"         enable="1"/>
 
-      <MonitoringElement device="LpGBT" register="TEMP"                enable="0"/>
-      <MonitoringElement device="LpGBT" register="VDD"                 enable="0"/>
-      <MonitoringElement device="LpGBT" register="PUSMStatus"          enable="0"/>
+      <MonitoringElement device="LpGBT" register="TEMP"                 enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDD"                  enable="0"/>
+      <MonitoringElement device="LpGBT" register="PUSMStatus"           enable="0"/>
     </Monitoring>
   </MonitoringSettings>
+
+<CommunicationSettings>
+    <DQM               ip="127.0.0.1" port="6000" enableConnection="1"/>
+    <MonitorDQM        ip="127.0.0.1" port="8000" enableConnection="1"/>
+    <PowerSupplyClient ip="127.0.0.1" port="7000" enableConnection="1"/>
+</CommunicationSettings>
 
 </HwDescription>

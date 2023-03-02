@@ -26,16 +26,17 @@
 class CalibBase : public Tool
 {
   public:
-    void chipErrorReport() const;
-    void copyMaskFromDefault(const std::string& which = "all") const;
-    void saveChipRegisters(int currentRun, bool doUpdateChip);
-    void downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::string& regName, bool checkAgainst = false, int value = 0);
-    void saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector,
-                                 int                                        theCurrentRun,
-                                 const std::vector<uint16_t>&               dacList,
-                                 size_t                                     offset,
-                                 size_t                                     nEvents,
-                                 const std::string&                         name);
+    void    chipErrorReport() const;
+    void    copyMaskFromDefault(const std::string& which = "all") const;
+    void    saveChipRegisters(int currentRun, bool doUpdateChip);
+    void    downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::string& regName, bool checkAgainst = false, int value = 0);
+    void    saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector,
+                                    int                                        theCurrentRun,
+                                    const std::vector<uint16_t>&               dacList,
+                                    size_t                                     offset,
+                                    size_t                                     nEvents,
+                                    const std::string&                         name);
+    uint8_t assignGroupType(RD53Shared::INJtype injType) const;
 
     virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) = 0;
     virtual void   run()                                                                      = 0;

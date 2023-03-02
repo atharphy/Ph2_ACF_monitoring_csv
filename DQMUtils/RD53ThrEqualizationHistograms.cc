@@ -42,7 +42,7 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
     bookImplementer(theOutputFile, theDetectorStructure, TDAC2D, hTDAC2D, "Column", "Row");
 
     auto hOcc1D = CanvasContainer<TH1F>("TDACGainScan", "TDAC Gain Scan", stopValue - startValue + 1, startValue, stopValue + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "TDAC Gain", "Efficiency Distribution (std.dev.)");
+    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "TDAC Gain", "Threshold Distribution (std.dev.)");
 
     auto hTDACGain = CanvasContainer<TH1F>("TDACGain", "TDAC Gain", stopValue - startValue + 1, startValue, stopValue + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TDACGain, hTDACGain, "TDAC Gain", "Entries");

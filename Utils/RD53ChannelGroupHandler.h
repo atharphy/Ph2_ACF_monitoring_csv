@@ -15,14 +15,20 @@
 
 namespace RD53GroupType
 {
-constexpr uint8_t AllPixels = 0;
-constexpr uint8_t Groups    = 1;
+constexpr uint8_t AllPixels      = 0;
+constexpr uint8_t Groups         = 1;
+constexpr uint8_t Custom         = 2;
+constexpr uint8_t XtalkCoupled   = 3;
+constexpr uint8_t XtalkUnCoupled = 4;
 } // namespace RD53GroupType
 
 class RD53ChannelGroup : public ChannelGroupBase
 {
   public:
-    RD53ChannelGroup(size_t nRows, size_t nCols, bool initialValue = false) : ChannelGroupBase(nRows, nCols), storage(nRows * nCols, initialValue) {}
+    RD53ChannelGroup(size_t nRows, size_t nCols, uint8_t groupType = RD53GroupType::AllPixels, bool initialValue = false)
+        : ChannelGroupBase(nRows, nCols), groupType(groupType), storage(nRows * nCols, initialValue)
+    {
+    }
 
     uint32_t getNumberOfEnabledChannels(const std::shared_ptr<ChannelGroupBase> mask) const override { return getNumberOfEnabledChannels(mask.get()); }
     bool     isChannelEnabled(uint16_t row, uint16_t col) const override { return storage[row + numberOfRows_ * col]; }
@@ -37,6 +43,16 @@ class RD53ChannelGroup : public ChannelGroupBase
     }
     void                     setCustomPattern(const ChannelGroupBase& customChannelGroupBase) {}
     const std::vector<bool>& getMask() const { return storage; }
+    std::vector<bool>        getMaskNextCol() const
+    {
+        std::vector<bool> nextCol(numberOfRows_ * numberOfCols_, false);
+        for(auto col = 0; col < numberOfCols_ - 1; col++)
+            for(auto row = 0u; row < numberOfRows_; row++)
+                if(storage[row + numberOfRows_ * col] == true) nextCol[row + numberOfRows_ * (col + 1)] = true;
+        return nextCol;
+    }
+
+    uint8_t groupType;
 
   protected:
     uint32_t getNumberOfEnabledChannels(const ChannelGroupBase* mask) const override

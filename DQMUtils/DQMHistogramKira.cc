@@ -25,8 +25,11 @@
 //========================================================================================================================
 DQMHistogramKira::DQMHistogramKira()
 {
-    fStartLatency = 999;
-    fLatencyRange = 999;
+    fStartLatency                  = 999;
+    fLatencyRange                  = 999;
+    fKiraCalibrationIntensityStart = 29000;
+    fKiraCalibrationIntensityStop  = 31000;
+    fKiraCalibrationIntensityStep  = 1000;
 }
 
 //========================================================================================================================
@@ -107,14 +110,13 @@ void DQMHistogramKira::book(TFile* theOutputFile, DetectorContainer& theDetector
     parseSettings(pSettingsMap);
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
-    LOG(INFO) << "Setting histograms with range " << fLatencyRange << " and start value " << fStartLatency;
 
     float               cBinSize = (1.0);
     HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", fLatencyRange / cBinSize, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistograms, hLatency);
 
     // hit count for latency
-    HistContainer<TH1F> hLatencyChip("LatencyChip", "Latency per Chip", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    HistContainer<TH1F> hLatencyChip("LatencyChip", "Latency per Chip", fLatencyRange / cBinSize, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyTDCHistograms, hLatencyChip);
 
     // hit count per chip during KIRA test
@@ -122,6 +124,31 @@ void DQMHistogramKira::book(TFile* theOutputFile, DetectorContainer& theDetector
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fKIRAHitsBottomSensor, hKIRAHitsBottom);
     HistContainer<TH1F> hKIRAHitsTop("KIRAHitsTop", "KIRA Hits in Top Sensor", NCHANNELS / 2, 0, NCHANNELS / 2);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fKIRAHitsTopSensor, hKIRAHitsTop);
+    // hit count per hybrid during KIRA test
+    HistContainer<TH1F> hKIRAHitsHybridTop("KIRAHitsTop", "Defect Module Channels in Top Sensor", 8 * NCHANNELS / 2, 0, 8 * NCHANNELS / 2);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fKIRAHitsHybridTopSensor, hKIRAHitsHybridTop);
+    HistContainer<TH1F> hKIRAHitsHybridBottom("KIRAHitsBottom", "Defect Module Channels in Bottom Sensor", 8 * NCHANNELS / 2, 0, 8 * NCHANNELS / 2);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fKIRAHitsHybridBottomSensor, hKIRAHitsHybridBottom);
+
+    // Hit map per chip (= LED) during KIRA Calibration
+    HistContainer<TH2F> hKIRACalibrationBottom("KIRACalibrationBottom",
+                                               "KIRA LED Hitmap per Intensity Setting in Bottom Sensor",
+                                               (fKiraCalibrationIntensityStop - fKiraCalibrationIntensityStart) / fKiraCalibrationIntensityStep + 1,
+                                               fKiraCalibrationIntensityStart - fKiraCalibrationIntensityStep / 2.,
+                                               fKiraCalibrationIntensityStop + fKiraCalibrationIntensityStep / 2.,
+                                               8 * NCHANNELS / 2,
+                                               0,
+                                               8 * NCHANNELS / 2);
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fKIRACalibrationBottomSensor, hKIRACalibrationBottom);
+    HistContainer<TH2F> hKIRACalibrationTop("KIRACalibrationTop",
+                                            "KIRA LED Hitmap per Intensity Setting in Top Sensor",
+                                            (fKiraCalibrationIntensityStop - fKiraCalibrationIntensityStart) / fKiraCalibrationIntensityStep + 1,
+                                            fKiraCalibrationIntensityStart - fKiraCalibrationIntensityStep / 2.,
+                                            fKiraCalibrationIntensityStop + fKiraCalibrationIntensityStep / 2.,
+                                            8 * NCHANNELS / 2,
+                                            0,
+                                            8 * NCHANNELS / 2);
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fKIRACalibrationTopSensor, hKIRACalibrationTop);
 }
 
 //========================================================================================================================
@@ -147,11 +174,17 @@ void DQMHistogramKira::fillLatencyPlots(uint16_t pLatency, uint16_t pTriggerId, 
                 {
                     TH1F* cLatencyTDC =
                         fLatencyTDCHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    cLatencyTDC->GetXaxis()->SetTitle("Latency");
+                    cLatencyTDC->GetYaxis()->SetTitle("Illuminated Chip Hit Occupancy");
+                    TH1F* cLatencyTDCHybrid = fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    cLatencyTDCHybrid->GetXaxis()->SetTitle("Latency");
+                    cLatencyTDCHybrid->GetYaxis()->SetTitle("Illuminated Chip Hit Occupancy");
                     int      cBin   = cLatencyTDC->FindBin((float)pLatency);
                     uint32_t cNhits = pTDCsummary.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint16_t>();
                     LOG(INFO) << BOLDMAGENTA << "\t\t..Latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid" << +hybrid->getId() << " Chip" << +chip->getId()
                               << " - on average have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
                     cLatencyTDC->SetBinContent(cBin, cNhits / 127. / pNevents);
+                    cLatencyTDCHybrid->SetBinContent(cBin, cLatencyTDCHybrid->GetBinContent(cBin) + cNhits / 127. / pNevents);
                 }
             }
         }
@@ -167,6 +200,10 @@ void DQMHistogramKira::fillBottomSensorPlots(DetectorDataContainer& pHitContaine
         {
             for(auto hybrid: *opticalGroup)
             {
+                TH1F* cKIRAHitsHybridBottomSensor =
+                    fKIRAHitsHybridBottomSensor.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                cKIRAHitsHybridBottomSensor->GetXaxis()->SetTitle("Bottom Sensor Channel");
+                cKIRAHitsHybridBottomSensor->GetYaxis()->SetTitle("1 - Channel Hit Occupancy");
                 for(auto chip: *hybrid)
                 {
                     // skip all chips that are not directly illuminated by the LED
@@ -174,8 +211,14 @@ void DQMHistogramKira::fillBottomSensorPlots(DetectorDataContainer& pHitContaine
                     if(hybrid->getIndex() % 2 == 1 && chip->getIndex() != pLED) continue;
                     TH1F* cKIRAHitsBottomSensor =
                         fKIRAHitsBottomSensor.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    cKIRAHitsBottomSensor->GetXaxis()->SetTitle("Bottom Sensor CBC Channel");
+                    cKIRAHitsBottomSensor->GetYaxis()->SetTitle("Channel Hit Occupancy");
                     auto cNhits = pHitContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<GenericDataArray<VECSIZE, float>>();
-                    for(uint32_t cIndx = 0; cIndx < 127; cIndx++) { cKIRAHitsBottomSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents)); }
+                    for(uint32_t cIndx = 0; cIndx < 127; cIndx++)
+                    {
+                        cKIRAHitsBottomSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents));
+                        cKIRAHitsHybridBottomSensor->SetBinContent(127 * chip->getIndex() + cIndx + 1, 1 - cNhits[cIndx] / (1.0 * pNevents));
+                    }
                 }
             }
         }
@@ -191,6 +234,9 @@ void DQMHistogramKira::fillTopSensorPlots(DetectorDataContainer& pHitContainer, 
         {
             for(auto hybrid: *opticalGroup)
             {
+                TH1F* cKIRAHitsHybridTopSensor = fKIRAHitsHybridTopSensor.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                cKIRAHitsHybridTopSensor->GetXaxis()->SetTitle("Top Sensor Channel");
+                cKIRAHitsHybridTopSensor->GetYaxis()->SetTitle("1 - Channel Hit Occupancy");
                 for(auto chip: *hybrid)
                 {
                     // skip all chips that are not directly illuminated by the LED
@@ -198,8 +244,57 @@ void DQMHistogramKira::fillTopSensorPlots(DetectorDataContainer& pHitContainer, 
                     if(hybrid->getIndex() % 2 == 1 && chip->getIndex() != pLED) continue;
                     TH1F* cKIRAHitsTopSensor =
                         fKIRAHitsTopSensor.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    cKIRAHitsTopSensor->GetXaxis()->SetTitle("Top Sensor CBC Channel");
+                    cKIRAHitsTopSensor->GetYaxis()->SetTitle("Channel Hit Occupancy");
                     auto cNhits = pHitContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<GenericDataArray<VECSIZE, float>>();
-                    for(uint32_t cIndx = 0; cIndx < 127; cIndx++) { cKIRAHitsTopSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents)); }
+                    for(uint32_t cIndx = 0; cIndx < 127; cIndx++)
+                    {
+                        cKIRAHitsTopSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents));
+                        cKIRAHitsHybridTopSensor->SetBinContent(127 * chip->getIndex() + cIndx + 1, 1 - cNhits[cIndx] / (1.0 * pNevents));
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DQMHistogramKira::fillSensorPlotsCalibration(DetectorDataContainer& pHitContainer, uint32_t pNevents, uint16_t pLED, uint32_t cIntensity, uint16_t pSensor)
+{
+    for(auto board: pHitContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    // skip all chips that are not directly illuminated by the LED
+                    if(hybrid->getIndex() % 2 == 0 && chip->getIndex() != 7 - pLED) continue;
+                    if(hybrid->getIndex() % 2 == 1 && chip->getIndex() != pLED) continue;
+                    TH2F* cHitMap =
+                        fKIRACalibrationTopSensor.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    cHitMap->GetXaxis()->SetTitle("LED Intensity Setting");
+                    cHitMap->GetYaxis()->SetTitle("Top Sensor CBC Channel");
+                    cHitMap->GetZaxis()->SetTitle("Channel Hit Occupancy");
+                    if(pSensor == 0)
+                    {
+                        cHitMap = fKIRACalibrationBottomSensor.at(board->getIndex())
+                                      ->at(opticalGroup->getIndex())
+                                      ->at(hybrid->getIndex())
+                                      ->at(chip->getIndex())
+                                      ->getSummary<HistContainer<TH2F>>()
+                                      .fTheHistogram;
+                        cHitMap->GetYaxis()->SetTitle("Bottom Sensor CBC Channel");
+                    }
+
+                    // Find correct bin
+                    auto cBinX = cHitMap->GetXaxis()->FindBin(cIntensity);
+                    // Loop over all chips in the DataContainer to fill hitmap
+                    for(auto cChip: *hybrid)
+                    {
+                        auto cNhits = pHitContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, float>>();
+                        for(uint32_t cIndx = 0; cIndx < 127; cIndx++) { cHitMap->SetBinContent(cBinX, 127 * cChip->getIndex() + cIndx + 1, cNhits[cIndx] / (1.0 * pNevents)); }
+                    }
                 }
             }
         }
@@ -219,4 +314,22 @@ void DQMHistogramKira::parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap
         fLatencyRange = static_cast<uint16_t>(boost::any_cast<double>(cSetting->second));
     else
         fLatencyRange = 512;
+
+    cSetting = pSettingsMap.find("KiraCalibrationIntensityStart");
+    if(cSetting != std::end(pSettingsMap))
+        fKiraCalibrationIntensityStart = static_cast<uint16_t>(boost::any_cast<double>(cSetting->second));
+    else
+        fKiraCalibrationIntensityStart = 29000;
+
+    cSetting = pSettingsMap.find("KiraCalibrationIntensityStop");
+    if(cSetting != std::end(pSettingsMap))
+        fKiraCalibrationIntensityStop = static_cast<uint16_t>(boost::any_cast<double>(cSetting->second));
+    else
+        fKiraCalibrationIntensityStop = 31000;
+
+    cSetting = pSettingsMap.find("KiraCalibrationIntensityStep");
+    if(cSetting != std::end(pSettingsMap))
+        fKiraCalibrationIntensityStep = static_cast<uint16_t>(boost::any_cast<double>(cSetting->second));
+    else
+        fKiraCalibrationIntensityStep = 1000;
 }

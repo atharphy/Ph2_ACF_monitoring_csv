@@ -53,9 +53,17 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {
-        "HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
-    static const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};                   // @CONST@
+    static const std::set<std::string> registerBlackList = {"HighGain_LIN",
+                                                            "RESISTORI2V",
+                                                            "ADC_OFFSET_VOLT",
+                                                            "ADC_MAXIMUM_VOLT",
+                                                            "TEMPSENS_IDEAL_FACTOR",
+                                                            "VREF_ADC",
+                                                            "CLK_DATA_DELAY",
+                                                            "CLK_DATA_DELAY_DATA",
+                                                            "CLK_DATA_DELAY_CLK",
+                                                            "CLK_DATA_DELAY_2INV"};                                                                                      // @CONST@
+    static const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&

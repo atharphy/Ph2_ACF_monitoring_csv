@@ -79,6 +79,7 @@ else()
              LIBRARIES
              pthread
              ${Boost_SYSTEM_LIBRARY}
+             ${Boost_SERIALIZATION_LIBRARY}
              EXCLUDE UsbUtilities.h UsbUtilities.cc
             )
 

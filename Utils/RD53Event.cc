@@ -235,6 +235,12 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
         isGood = false;
     }
 
+    if(status & RD53FWEvtEncoder::CORRUPTED)
+    {
+        LOG(ERROR) << BOLDRED << "Corrupted event " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
     if(status & RD53EvtEncoder::CHIPHEAD)
     {
         LOG(ERROR) << BOLDRED << "Invalid chip header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
@@ -352,9 +358,31 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
     // #################################
     events.reserve(events.size() + refEventStart.size() - 1);
     if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
-        RD53Event::DecodeRD53AEvents(data, events, refEventStart, eventStatus);
+    {
+        try
+        {
+            RD53Event::DecodeRD53AEvents(data, events, refEventStart, eventStatus);
+        }
+        catch(std::runtime_error& e)
+        {
+            LOG(ERROR) << BOLDRED << "Error while decoding this datastream: " << BOLDYELLOW << e.what() << RESET;
+            events.clear();
+            eventStatus = RD53FWEvtEncoder::CORRUPTED;
+        }
+    }
     else
-        RD53Event::DecodeRD53BEvents(data, events, refEventStart, eventStatus);
+    {
+        try
+        {
+            RD53Event::DecodeRD53BEvents(data, events, refEventStart, eventStatus);
+        }
+        catch(std::runtime_error& e)
+        {
+            LOG(ERROR) << BOLDRED << "Error while decoding this datastream: " << BOLDYELLOW << e.what() << RESET;
+            events.clear();
+            eventStatus = RD53FWEvtEncoder::CORRUPTED;
+        }
+    }
 }
 
 void RD53Event::ForkDecodingThreads()

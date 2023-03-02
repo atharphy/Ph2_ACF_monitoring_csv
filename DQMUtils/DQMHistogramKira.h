@@ -57,6 +57,7 @@ class DQMHistogramKira : public DQMHistogramBase
     void fillLatencyPlots(uint16_t pLatency, uint16_t pTriggerId, DetectorDataContainer& pTDCsummary, uint32_t pNevents);
     void fillBottomSensorPlots(DetectorDataContainer& pTDCsummary, uint32_t pNevents, uint16_t pLED);
     void fillTopSensorPlots(DetectorDataContainer& pTDCsummary, uint32_t pNevents, uint16_t pLED);
+    void fillSensorPlotsCalibration(DetectorDataContainer& pOccupancyContainer, uint32_t pNevents, uint16_t pLED, uint32_t cIntensity, uint16_t pSensor);
 
   private:
     void parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap);
@@ -67,6 +68,10 @@ class DQMHistogramKira : public DQMHistogramBase
     DetectorDataContainer fLatencyHistograms;
     DetectorDataContainer fKIRAHitsBottomSensor;
     DetectorDataContainer fKIRAHitsTopSensor;
+    DetectorDataContainer fKIRAHitsHybridBottomSensor;
+    DetectorDataContainer fKIRAHitsHybridTopSensor;
+    DetectorDataContainer fKIRACalibrationBottomSensor;
+    DetectorDataContainer fKIRACalibrationTopSensor;
     DetectorDataContainer fLatencyHistogramsS0;
     DetectorDataContainer fLatencyHistogramsS1;
     DetectorDataContainer fStubHistograms;
@@ -91,5 +96,8 @@ class DQMHistogramKira : public DQMHistogramBase
 
     uint32_t fStartLatency;
     uint32_t fLatencyRange;
+    uint32_t fKiraCalibrationIntensityStart;
+    uint32_t fKiraCalibrationIntensityStop;
+    uint32_t fKiraCalibrationIntensityStep;
 };
 #endif

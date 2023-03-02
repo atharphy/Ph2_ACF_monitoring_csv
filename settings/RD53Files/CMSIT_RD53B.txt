@@ -326,10 +326,11 @@ EN_INJCAP_PAR_MEAS        0x116         0b0                     0b0             
 ToT6to4Mapping            0x117         0b0                     0b0                                 1
 ToTDualEdgeCount          0x118         0b0                     0b0                                 1
 
-ADC_OFFSET_VOLT           0x1A0         0d63                    0d63                               16
-ADC_MAXIMUM_VOLT          0x1A1         0d839                   0d839                              16
-TEMPSENS_IDEAL_FACTOR     0x1A2         0d1225                  0d1225                             16
-VREF_ADC                  0x1A3         0d800                   0d800                              12
+RESISTORI2V               0x1A0         0d5000                  0d5000                             16
+ADC_OFFSET_VOLT           0x1A1         0d63                    0d63                               16
+ADC_MAXIMUM_VOLT          0x1A2         0d839                   0d839                              16
+TEMPSENS_IDEAL_FACTOR     0x1A3         0d1225                  0d1225                             16
+VREF_ADC                  0x1A4         0d800                   0d800                              12
 
 *-------------------------------------------------------------------------------------------------------
 PIXELCONFIGURATION

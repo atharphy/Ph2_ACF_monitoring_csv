@@ -23,7 +23,7 @@ void SCurve::ConfigureCalibration()
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
     nEvents        = this->findValueInSettings<double>("nEvents");
-    injType        = this->findValueInSettings<double>("INJtype");
+    injType        = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
     nSteps         = this->findValueInSettings<double>("VCalHnsteps");
@@ -39,7 +39,7 @@ void SCurve::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    auto groupType = ((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital)) ? RD53GroupType::Groups : RD53GroupType::AllPixels;
+    auto groupType = CalibBase::assignGroupType(injType);
     theChnGroupHandler =
         std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
@@ -144,8 +144,9 @@ void SCurve::run()
     detectorContainerVector.clear();
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
+    auto groupType = CalibBase::assignGroupType(injType);
     this->SetBoardBroadcast(true);
-    this->SetTestPulse((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital));
+    this->SetTestPulse(groupType != RD53GroupType::AllPixels);
     this->fMaskChannelsFromOtherGroups = true;
     this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 

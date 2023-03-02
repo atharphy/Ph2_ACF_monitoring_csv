@@ -1,5 +1,6 @@
 #include "DQMUtils/DQMInterface.h"
 #include "System/SystemController.h"
+#include "Utils/ConfigureInfo.h"
 #include "Utils/MiddlewareInterface.h"
 #include "Utils/RD53Shared.h"
 #include "Utils/argvparser.h"
@@ -95,7 +96,7 @@ int main(int argc, char** argv)
         // ######################################
 
         std::stringstream outp;
-        mySysCntr.InitializeHw(configFile, outp, false);
+        mySysCntr.InitializeHw(configFile, outp);
         mySysCntr.InitializeSettings(configFile, outp);
         if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
             static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
@@ -110,7 +111,9 @@ int main(int argc, char** argv)
         // #######################
 
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-        mySysCntr.Configure(configFile);
+        ConfigureInfo theConfigureInfo;
+        theConfigureInfo.setConfigurationFile(configFile);
+        mySysCntr.Configure(theConfigureInfo);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
 

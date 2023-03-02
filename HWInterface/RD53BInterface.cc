@@ -81,7 +81,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Programmig global registers #
     // ###############################
     static const std::set<std::string> registerBlackList = {
-        "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+        "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
     static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
                                                             "DAC_PREAMP_R_LIN",
                                                             "DAC_PREAMP_TL_LIN",
@@ -633,6 +633,7 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
     else
     {
         currentObservable   = search->second;
+        voltageObservable   = voltageMultiplexer.find("I_MUX")->second;
         isCurrentNotVoltage = true;
     }
 
@@ -645,7 +646,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
 
     const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
-    RD53Interface::WriteChipReg(pChip, "MonitorConfig", data, false); // 14 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", data, false); // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
     RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);             // Trigger Monitor Data to start conversion
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);    // Stop monitoring
     RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0xFF);        // Restore value in Global Pulse Route
@@ -697,7 +698,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // ###############################################
         // # Calculate temperature with NTC Beta formula #
         // ###############################################
-        float resistance  = 1e-3 * voltage / current;                               // [kOhm]
+        float resistance  = 1e3 * voltage / current;                                // [kOhm]
         float temperature = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
 
         return temperature;
