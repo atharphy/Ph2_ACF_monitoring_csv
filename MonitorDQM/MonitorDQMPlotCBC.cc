@@ -13,11 +13,10 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TGraph.h"
-#include "Utils/BoardContainerStream.h"
-#include "Utils/CharArray.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/ValueAndTime.h"
 
 //========================================================================================================================
 MonitorDQMPlotCBC::MonitorDQMPlotCBC() {}
@@ -32,7 +31,7 @@ void MonitorDQMPlotCBC::book(TFile* theOutputFile, const DetectorContainer& theD
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
     // make fDetectorData ready to receive the information fromm the stream
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
+    fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("CBC")) bookCBCPlots(theOutputFile, theDetectorStructure, registerName);
@@ -96,38 +95,32 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
 
     for(auto board: theThresholdContainer) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
-        // std::cout <<  __PRETTY_FUNCTION__ << boardIndex << std::endl;
+        size_t boardId = board->getId();
+        // std::cout <<  __PRETTY_FUNCTION__ << boardId << std::endl;
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getIndex();
-            // std::cout <<  __PRETTY_FUNCTION__ << opticalGroupIndex << std::endl;
+            size_t opticalGroupId = opticalGroup->getId();
+            // std::cout <<  __PRETTY_FUNCTION__ << opticalGroupId << std::endl;
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getIndex();
-                // std::cout <<  __PRETTY_FUNCTION__ << hybridIndex << std::endl;
+                size_t hybridId = hybrid->getId();
+                // std::cout <<  __PRETTY_FUNCTION__ << hybridId << std::endl;
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getIndex();
+                    size_t chipId = chip->getId();
                     // Retreive the corresponging chip histogram:
                     TGraph* chipDQMPlot =
-                        fCBCRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+                        fCBCRegisterMonitorPlotMap[registerName].getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
 
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
                     if(!chip->hasSummary()) continue;
-                    // std::cout <<  __PRETTY_FUNCTION__ << "has summary" << std::endl;
-                    // // Get channel data and fill the histogram
-                    // for(auto channel: *chip->getChannelContainer<uint32_t>())   // for on channel - begin
-                    // std::cout <<  __PRETTY_FUNCTION__ << "Filling CBC plot with " << std::get<0>(chip->getSummary<std::tuple<time_t, uint16_t>>()) << " - " <<
-                    // std::get<1>(chip->getSummary<std::tuple<time_t, uint16_t>>()) << std::endl;
-                    chipDQMPlot->SetPoint(chipDQMPlot->GetN(),
-                                          getTimeStampForRoot(std::get<0>(chip->getSummary<std::tuple<time_t, uint16_t>>())),
-                                          std::get<1>(chip->getSummary<std::tuple<time_t, uint16_t>>())); // for on channel - end
-                }                                                                                         // for on chip - end
-            }                                                                                             // for on hybrid - end
-        }                                                                                                 // for on opticalGroup - end
-    }                                                                                                     // for on boards - end
+                    auto theValueAndTime = chip->getSummary<ValueAndTime<uint16_t>>();
+                    chipDQMPlot->SetPoint(chipDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue); // for on channel - end
+                }                                                                                                                   // for on chip - end
+            }                                                                                                                       // for on hybrid - end
+        }                                                                                                                           // for on opticalGroup - end
+    }                                                                                                                               // for on boards - end
 }
 
 //========================================================================================================================
@@ -143,18 +136,14 @@ void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresho
 
     for(auto board: theThresholdContainer) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardId = board->getId();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
             if(!opticalGroup->hasSummary()) continue;
-            size_t  opticalGroupIndex = opticalGroup->getIndex();
-            TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
-            LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(),
-                                   getTimeStampForRoot(std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>())),
-                                   std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR);
-
-            // std::cout << "Filling plot " << registerName << " at time " << std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) << " with value " <<
-            // (std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR) << std::endl;
+            size_t  opticalGroupId  = opticalGroup->getId();
+            TGraph* LpGBTDQMPlot    = fLpGBTRegisterMonitorPlotMap[registerName].getObject(boardId)->getObject(opticalGroupId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+            auto    theValueAndTime = opticalGroup->getSummary<ValueAndTime<uint16_t>>();
+            LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue * CONVERSION_FACTOR);
         } // for on opticalGroup - end
     }     // for on boards - end
 }
@@ -171,46 +160,27 @@ void MonitorDQMPlotCBC::reset(void)
 //========================================================================================================================
 bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
 {
-    // SoC utilities only - BEGIN
-    // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
-    // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theCBCRegisterSerialization("CBCMonitorCBCRegister");
+    ContainerSerialization theLpGBTRegisterSerialization("CBCMonitorLpGBTRegister");
 
-    // I'm expecting to receive a data stream from an uint16_t contained from DQM "DQMExample"
-    BoardContainerStream<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer("CBCMonitorCBCRegister");
-    BoardContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
-
-    // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
-
-    if(theCBCDQMStreamer.attachBuffer(&dataBuffer))
+    if(theCBCRegisterSerialization.attachDeserializer(inputStream))
     {
-        // std::cout <<  __PRETTY_FUNCTION__ << "Matches CBC monitor" << std::endl;
-        // It matched! Decoding chip data
-        theCBCDQMStreamer.decodeData(fDetectorData);
-        // Filling the histograms
-        CharArray registerNameArray = theCBCDQMStreamer.getHeaderElement();
-        // std::cout <<  __PRETTY_FUNCTION__ << "registerNameArray = " << registerNameArray.getString() << std::endl;
-
-        fillCBCRegisterPlots(fDetectorData, registerNameArray.getString());
-        // Cleaning the data container to be ready for the next TCP string
-        fDetectorData.cleanDataStored();
+        std::cout << "Matched CBCMonitor CBCRegister!!!!!\n";
+        std::string           registerName;
+        DetectorDataContainer fDetectorData =
+            theCBCRegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
+        fillCBCRegisterPlots(fDetectorData, registerName);
         return true;
     }
-
-    if(theLpGBTDQMStreamer.attachBuffer(&dataBuffer))
+    if(theLpGBTRegisterSerialization.attachDeserializer(inputStream))
     {
-        // It matched! Decoding chip data
-        theLpGBTDQMStreamer.decodeData(fDetectorData);
-        // Filling the histograms
-        CharArray registerNameArray = theLpGBTDQMStreamer.getHeaderElement();
-
-        fillLpGBTRegisterPlots(fDetectorData, registerNameArray.getString());
-        // Cleaning the data container to be ready for the next TCP string
-        fDetectorData.cleanDataStored();
+        std::cout << "Matched CBCMonitor LpGBTRegister!!!!!\n";
+        std::string           registerName;
+        DetectorDataContainer fDetectorData =
+            theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, registerName);
+        fillLpGBTRegisterPlots(fDetectorData, registerName);
         return true;
     }
-
-    // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
-    // for this stream)
     return false;
-    // SoC utilities only - END
 }

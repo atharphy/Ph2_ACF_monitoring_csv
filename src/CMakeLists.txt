@@ -1,8 +1,8 @@
-if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
+if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}SRC${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     # Includes
@@ -66,14 +66,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       link_directories(${PH2_TCUSB_LIBRARY_DIRS})
       set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
-      if($ENV{UseTCUSBforROH})
-          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-      else($ENV{UseTCUSBforROH})
-          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
-      endif($ENV{UseTCUSBforROH})
-      if($ENV{UseTCUSBTcpServer})
-          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
-      endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
 
     # Boost also needs to be linked
@@ -166,7 +158,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}SRC${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
@@ -174,14 +166,11 @@ else()
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}SRC${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${PROJECT_SOURCE_DIR/lib})
-
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}SRC${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 

@@ -20,7 +20,6 @@ class EyeScanOptimization : public EyeDiag
     void Running();
     void Stop() override;
     void ConfigureCalibration() override;
-    void sendData() override;
 
     void localConfigure(const std::string fileRes_, int currentRun, bool is2D = false);
     void initializeFiles(const std::string fileRes_, int currentRun);

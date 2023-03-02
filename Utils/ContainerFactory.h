@@ -74,7 +74,7 @@ void print(const DetectorDataContainer& detector)
     }
 }
 
-template <typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
+template <typename T, typename SC, typename SH, typename SO, typename SB, typename SD>
 void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 {
     copy.cleanDataStored();
@@ -87,11 +87,11 @@ void copyAndInitStructure(const DetectorContainer& original, DetectorDataContain
         for(const auto opticalGroup: *board)
         {
             OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
-            copyBoard->back()->initialize<SO, SM>();
+            copyBoard->back()->initialize<SO, SH>();
             for(const auto hybrid: *opticalGroup)
             {
                 HybridDataContainer* copyHybrid = copyOpticalGroup->addHybridDataContainer(hybrid->getId());
-                copyOpticalGroup->back()->initialize<SM, SC>();
+                copyOpticalGroup->back()->initialize<SH, SC>();
                 for(const auto chip: *hybrid)
                 {
                     copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
@@ -150,8 +150,8 @@ void copyAndInitDetector(const DetectorContainer& original, DetectorDataContaine
     copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T>(original, copy);
 }
 
-template <typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
-void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy, T& channel, SC& chipSummay, SM& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
+template <typename T, typename SC, typename SH, typename SO, typename SB, typename SD>
+void copyAndInitStructure(const DetectorContainer& original, DetectorDataContainer& copy, T& channel, SC& chipSummay, SH& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
 {
     static_cast<DetectorDataContainer&>(copy).cleanDataStored();
     static_cast<DetectorDataContainer&>(copy).reset();
@@ -163,11 +163,11 @@ void copyAndInitStructure(const DetectorContainer& original, DetectorDataContain
         for(const OpticalGroupContainer* opticalGroup: *board)
         {
             OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
-            static_cast<OpticalGroupDataContainer*>(copyBoard->back())->initialize<SO, SM>(opticalGroupSummary);
+            static_cast<OpticalGroupDataContainer*>(copyBoard->back())->initialize<SO, SH>(opticalGroupSummary);
             for(const HybridContainer* hybrid: *opticalGroup)
             {
                 HybridDataContainer* copyHybrid = copyOpticalGroup->addHybridDataContainer(hybrid->getId());
-                static_cast<HybridDataContainer*>(copyOpticalGroup->back())->initialize<SM, SC>(hybridSummary);
+                static_cast<HybridDataContainer*>(copyOpticalGroup->back())->initialize<SH, SC>(hybridSummary);
                 for(const ChipContainer* chip: *hybrid)
                 {
                     copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
@@ -232,8 +232,8 @@ void copyAndInitDetector(const DetectorContainer& original, DetectorDataContaine
     copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T>(original, copy, theEmpty, theEmpty, theEmpty, theEmpty, theEmpty, detectorSummary);
 }
 
-template <typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
-void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, SC& chipSummary, SM& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
+template <typename T, typename SC, typename SH, typename SO, typename SB, typename SD>
+void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, SC& chipSummary, SH& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
 {
     theDataContainer->resetSummary<SD, SB>(detectorSummary);
     for(auto board: *theDataContainer)
@@ -241,10 +241,10 @@ void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, 
         board->resetSummary<SB, SO>(boardSummary);
         for(auto opticalGroup: *board)
         {
-            opticalGroup->resetSummary<SO, SM>(opticalGroupSummary);
+            opticalGroup->resetSummary<SO, SH>(opticalGroupSummary);
             for(auto hybrid: *opticalGroup)
             {
-                hybrid->resetSummary<SM, SC>(hybridSummary);
+                hybrid->resetSummary<SH, SC>(hybridSummary);
                 for(auto chip: *hybrid)
                 {
                     chip->resetSummary<SC, T>(chipSummary);

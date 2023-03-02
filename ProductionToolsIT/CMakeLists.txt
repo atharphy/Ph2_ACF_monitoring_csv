@@ -1,8 +1,8 @@
-if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
+if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}PRODUCTION TOOLS IT${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     # Includes
@@ -73,10 +73,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set(LIBS ${LIBS} usb ${PH2_TCUSB_LIBRARIES})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
         if($ENV{UseTCUSBforROH})
+            message(STATUS "    Building the ROH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-        else($ENV{UseTCUSBforROH})
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
+        if($ENV{UseTCUSBforSEH})
+            message(STATUS "    Building the SEH TestCards USB components")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
+        endif($ENV{UseTCUSBforSEH})
     endif(${PH2_TCUSB_FOUND})
 
     #last but not least, find root and link against it
@@ -115,7 +118,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}PRODUCTION TOOLS IT${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
@@ -123,12 +126,12 @@ else()
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}PRODUCTION TOOLS IT${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
+    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
+    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
+    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories($ENV{PH2ACF_BASE_DIR}/HWDescription)
@@ -153,7 +156,7 @@ else()
     install_source()
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}PRODUCTION TOOLS IT${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 

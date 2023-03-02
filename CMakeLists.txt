@@ -21,12 +21,12 @@ include(FetchContent)
 
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 
-if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
+if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [stand-alone]: ${BoldRed}Compilation of the PH2_ACF package${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     cmake_minimum_required(VERSION 3.4)
@@ -78,31 +78,37 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
 
-    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations")
-    #set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
-    #set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow -Wno-error=catch-value")
-    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow -Wno-error=unused-function -Wno-error=pedantic")
-    set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable")
+    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations -Wno-error=parentheses -Wno-error=misleading-indentation -Wno-error=unused-function -Wno-error=class-memaccess -Wno-error=implicit-fallthrough")
+    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=format-overflow -Wno-error=pedantic")
+    set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context")
+    set (GCC_10_NOERROR_FLAGS "-Wno-error=int-in-bool-context")
+    set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=int-in-bool-context")
 
     set(CMAKE_CXX_STANDARD $ENV{STDCXX} CACHE STRING "C++ version selection")
     set(CMAKE_CXX_STANDARD_REQUIRED ON)  # optional, ensure standard is supported
     set(CMAKE_CXX_EXTENSIONS OFF)  # optional, keep compiler extensions off
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-      EXECUTE_PROCESS( COMMAND gcc -dumpversion OUTPUT_VARIABLE GCC_VERSION )
-      if(NOT (GCC_VERSION VERSION_LESS 6))
+      EXECUTE_PROCESS( COMMAND gcc -dumpfullversion OUTPUT_VARIABLE GCC_VERSION )
+      if(GCC_VERSION VERSION_LESS 7)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_6_NOERROR_FLAGS}")
-      endif()
-      if(NOT (GCC_VERSION VERSION_LESS 7))
+      elseif(GCC_VERSION VERSION_LESS 8)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_7_NOERROR_FLAGS}")
-      endif()
-      if(NOT (GCC_VERSION VERSION_LESS 8))
+      elseif(GCC_VERSION VERSION_LESS 9)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_8_NOERROR_FLAGS}")
-      endif()
-      if(NOT (GCC_VERSION VERSION_LESS 9))
+      elseif(GCC_VERSION VERSION_LESS 10)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
+      elseif(GCC_VERSION VERSION_LESS 11)
+        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_10_NOERROR_FLAGS}")
+      elseif(GCC_VERSION VERSION_LESS 13)
+        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_12_NOERROR_FLAGS}")
       endif()
+      
+      if(GCC_VERSION VERSION_LESS 10.3)
+        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} -Wno-error=deprecated-copy")
+      endif ()
     endif ()
+
     set (CMAKE_CXX_FLAGS "-O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
     if(NoDataShipping)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
@@ -160,16 +166,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         if($ENV{UseTCUSBforROH})
             message(STATUS "    Building the ROH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-        else($ENV{UseTCUSBforROH})
+	endif($ENV{UseTCUSBforROH})
+	if($ENV{UseTCUSBforSEH})
             message(STATUS "    Building the SEH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
-        endif($ENV{UseTCUSBforROH})
-
-        if($ENV{UseTCUSBTcpServer})
-            message(STATUS "    Building the components to use the TCP Server")
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
-        endif($ENV{UseTCUSBTcpServer})
-
+        endif($ENV{UseTCUSBforSEH})
     endif($ENV{CompileWithTCUSB})
 
     # EUDAQ
@@ -205,7 +206,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # To use a local installtion of BOOST
     #set(BOOST_ROOT "" CACHE PATH "Boost library path")
     #set(Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost")
-    find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem serialization iostreams program_options)
+    find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem serialization iostreams program_options regex)
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
@@ -248,8 +249,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package done.")
+    MESSAGE(STATUS "${BoldYellow}PH2_ACF${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}PH2_ACF${Reset} [stand-alone]: ${BoldGreen}Compilation of the PH2_ACF package done.${Reset}")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
@@ -257,11 +258,13 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: ${BoldRed}Compilation of the PH2_ACF package${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}$ENV{PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
+
+    include_directories($ENV{PH2ACF_BASE_DIR})
 
     set(CompileForShep true)
     set(CompileForHerd false)
@@ -296,12 +299,11 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif(${USE_EUDAQ})
 
-    message("--     ${BoldCyan}#### Done ####${Reset}")
+    cet_set_compiler_flags(
+        EXTRA_FLAGS -DELPP_THREAD_SAFE
+    )
 
-    # All the subdirs
-    if(${CACTUS_AMC13_FOUND})
-        add_subdirectory(AMC13)
-    endif()
+    message("--     ${BoldCyan}#### Done ####${Reset}")
 
     add_subdirectory(tools)
     add_subdirectory(ProductionToolsIT)
@@ -312,16 +314,14 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWDescription)
     add_subdirectory(HWInterface)
     add_subdirectory(System)
-    add_subdirectory(miniDAQ)
     add_subdirectory(MonitorUtils)
-
-    cet_set_compiler_flags(
-        EXTRA_FLAGS -DELPP_THREAD_SAFE
-    )
+    add_subdirectory(Parser)
+    add_subdirectory(MessageUtils/cpp)
+    add_subdirectory(miniDAQ)
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package done.")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: ${BoldGreen}Compilation of the PH2_ACF package done.${Reset}")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 

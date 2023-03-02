@@ -8,6 +8,7 @@
 */
 
 #include "RD53Latency.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -63,15 +64,12 @@ void Latency::Running()
 
 void Latency::sendData()
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
-    auto theStream        = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<LatencySize>>("Occ");
-    auto theLatencyStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("Latency");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: theOccContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theLatencyContainer) theLatencyStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theOccupancySerialization("LatencyOccupancy");
+        theOccupancySerialization.streamByChipContainer(fDQMStreamer, theOccContainer);
+        ContainerSerialization theLatencySerialization("LatencyLatency");
+        theLatencySerialization.streamByChipContainer(fDQMStreamer, theLatencyContainer);
     }
 }
 

@@ -10,6 +10,7 @@
 #include "tools/SSAPhysics.h"
 
 #include "HWInterface/D19cFWInterface.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
@@ -49,13 +50,6 @@ void SSAPhysics::Running()
     SystemController::Start(fRunNumber);
 
     SSAPhysics::run();
-}
-
-void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
-{
-    auto theOccStream = prepareChannelContainerStreamer<Occupancy>("Occ");
-
-    if(fDQMStreamerEnabled == true) { theOccStream->streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fDQMStreamer); }
 }
 
 void SSAPhysics::Stop()
@@ -101,11 +95,7 @@ void SSAPhysics::run()
         for(const auto cBoard: *fDetectorContainer)
         {
             unsigned int dataSize = SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
-            if(dataSize != 0)
-            {
-                SSAPhysics::fillDataContainer(cBoard);
-                SSAPhysics::sendBoardData(cBoard);
-            }
+            if(dataSize != 0) { SSAPhysics::fillDataContainer(cBoard); }
             totalDataSize += dataSize;
         }
 
@@ -115,6 +105,12 @@ void SSAPhysics::run()
     LOG(WARNING) << BOLDBLUE << "Number of collected events = " << totalDataSize << RESET;
 
     if(totalDataSize == 0) LOG(WARNING) << BOLDBLUE << "No data collected" << RESET;
+
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("SSAPhysicsOccupancy");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, fOccContainer);
+    }
 }
 
 void SSAPhysics::draw()

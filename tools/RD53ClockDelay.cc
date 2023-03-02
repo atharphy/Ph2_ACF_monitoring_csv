@@ -8,6 +8,7 @@
 */
 
 #include "RD53ClockDelay.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -68,15 +69,12 @@ void ClockDelay::Running()
 
 void ClockDelay::sendData()
 {
-    const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
-    auto theStream           = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<ClkDelaySize>>("Occ");
-    auto theClockDelayStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("ClkDelay");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: theOccContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theClockDelayContainer) theClockDelayStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theOccupancySerialization("ClockDelayOccupancy");
+        theOccupancySerialization.streamByChipContainer(fDQMStreamer, theOccContainer);
+        ContainerSerialization theClockDelaySerialization("ClockDelayClockDelay");
+        theClockDelaySerialization.streamByChipContainer(fDQMStreamer, theClockDelayContainer);
     }
 }
 
@@ -318,10 +316,10 @@ void ClockDelay::writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard,
     // # Move data and clock phases of the same amount #
     // #################################################
     auto clk_delay = pChip->getRegItem("CLK_DATA_DELAY_CLK").fValue;
-    auto nameAndValue(static_cast<RD53Interface*>(this->fReadoutChipInterface)->SetSpecialRegister("CLK_DATA_DELAY_CLK", value % maxClkValue, RD53Shared::firstChip->getRegMap()));
+    auto nameAndValue(static_cast<RD53Interface*>(this->fReadoutChipInterface)->SetSpecialRegister("CLK_DATA_DELAY_CLK", value % maxClkValue, pChip->getRegMap()));
     pChip->getRegItem("CLK_DATA_DELAY").fValue = nameAndValue.second;
     auto data_delay                            = (pChip->getRegItem("CLK_DATA_DELAY_DATA").fValue + (value % maxClkValue) - clk_delay) % maxDataValue; // Apply to data the same shift of the clock
-    nameAndValue                               = static_cast<RD53Interface*>(this->fReadoutChipInterface)->SetSpecialRegister("CLK_DATA_DELAY_DATA", data_delay, RD53Shared::firstChip->getRegMap());
+    nameAndValue                               = static_cast<RD53Interface*>(this->fReadoutChipInterface)->SetSpecialRegister("CLK_DATA_DELAY_DATA", data_delay, pChip->getRegMap());
 
     pChip->getRegItem("CLK_DATA_DELAY_CLK").fValue  = value % maxClkValue;
     pChip->getRegItem("CLK_DATA_DELAY_DATA").fValue = data_delay;

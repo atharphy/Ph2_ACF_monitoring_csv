@@ -123,6 +123,7 @@ std::string MiddlewareInterface::status()
     }
 
     std::cout << __PRETTY_FUNCTION__ << "Status: " << status << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Message: " << theStatus.message() << std::endl;
     return status;
 }
 //========================================================================================================================

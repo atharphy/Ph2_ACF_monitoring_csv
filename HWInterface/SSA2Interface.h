@@ -26,28 +26,32 @@ class SSA2Interface : public ReadoutChipInterface
   public:
     SSA2Interface(const BeBoardFWMap& pBoardMap);
     ~SSA2Interface();
-    bool ConfigureChip(Ph2_HwDescription::Chip* pSSA2, bool pVerifLoop = false, uint32_t pBlockSize = 310) override; // FIXME
-    void DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                    // FIXME
+    bool ConfigureChip(Ph2_HwDescription::Chip* pSSA2, bool pVerify = false, uint32_t pBlockSize = 310) override; // FIXME
+    void DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                 // FIXME
 
-    void     producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override {}
-    bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;                                        // FIXME
-    bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;                                                                             // FIXME
-    bool     setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true) override;                                                        // FIXME
-    bool     maskChannelGroup(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;                                          // FIXME
-    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = true) override; // FIXME
-    bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pSSA2, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;                                                     // FIXME
-    bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pSSA2, bool mask, bool pVerifLoop = true) override;                                                                               // FIXME
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;                                                      // FIXME
-    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pSSA2, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;                                  // FIXME
-    bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pSSA2, const std::string& dacName, const ChipContainer& pValue, bool pVerifLoop = true) override;                            // FIXME
+    void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override {}
+
+    bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify = true) override;                                        // FIXME
+    bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerify = true) override;                                                                             // FIXME
+    bool setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerify = true) override;                                                        // FIXME
+    bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify = true) override;                                          // FIXME
+    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify = true) override; // FIXME
+    bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pSSA2, bool pVerify = true, uint32_t pBlockSize = 310) override;                                                     // FIXME
+    bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pSSA2, bool mask, bool pVerify = true) override;                                                                               // FIXME
+    bool WriteChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, bool pVerify = true) override;                                                      // FIXME
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pSSA2, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;                                  // FIXME
+    bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pSSA2, const std::string& dacName, const ChipContainer& pValue, bool pVerify = true) override;                            // FIXME
+
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode) override;
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pInput);
 
+    float CalculateADCLSB(Ph2_HwDescription::Chip* pSSA2, float vrefExp = 0.850);
+    uint16_t MeasureGND(Ph2_HwDescription::Chip* pSSA2);
   private:
-    uint8_t ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                                                                         // FIXME
-    bool    WriteChipRegBits(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerifLoop = false); // FIXME
-    bool    ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister, bool pVerifLoop = true);                                                                // FIXME
-    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},                                                                                                          // FIXME
+    uint8_t ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                                                                      // FIXME
+    bool    WriteChipRegBits(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false); // FIXME
+    bool    ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister, bool pVerify = true);                                                                // FIXME
+    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},                                                                                                       // FIXME
                                                {"PreampBias", 1},
                                                {"Trim", 2},
                                                {"VoltageBias", 3},

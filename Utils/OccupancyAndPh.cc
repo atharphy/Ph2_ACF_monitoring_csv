@@ -54,7 +54,7 @@ void OccupancyAndPh::makeSummaryAverage(const std::vector<OccupancyAndPh>* theOc
     if(fPhError > 0)
     {
         fPh /= fPhError;
-        fPhError /= sqrt(1. / fPhError);
+        fPhError = 1. / sqrt(fPhError);
     }
 }
 
@@ -112,6 +112,6 @@ void OccupancyAndPh::makeChannelAverage<OccupancyAndPh>(const ChipContainer*    
     if(fPhError > 0)
     {
         fPh /= fPhError;
-        fPhError /= sqrt(1. / fPhError);
+        fPhError = 1. / sqrt(fPhError);
     }
 }

@@ -1,23 +1,16 @@
 /*!
-
         \file                   Tool.h
         \brief                                   Controller of the System, overall wrapper of the framework
         \author                                  Georg AUZINGER
         \version                 1.0
         \date                                    06/02/15
         Support :                                mail to : georg.auzinger@cern.ch
-
  */
 
 #ifndef __TOOL_H__
 #define __TOOL_H__
 
 #include "System/SystemController.h"
-#include "Utils/BoardContainerStream.h"
-#include "Utils/ChannelContainerStream.h"
-#include "Utils/ChipContainerStream.h"
-#include "Utils/HybridContainerStream.h"
-#include "Utils/OpticalGroupContainerStream.h"
 
 #ifdef __USE_ROOT__
 #include "TCanvas.h"
@@ -107,6 +100,7 @@ class Tool : public Ph2_System::SystemController
     virtual bool GetRunningStatus();
 
     void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
+
     void Start(int runNumber) override;
     // void InformImDone();
     void Stop() override;
@@ -276,8 +270,7 @@ class Tool : public Ph2_System::SystemController
     // Bit wise scan per BeBoard
     void bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
     // Full scan
-    void
-    fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1, int32_t startVal = 110, float occCap = 1.0, bool mask = false);
+    void fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1, int32_t startVal = 110, bool mask = false);
     // Full scan per BeBoard
     void fullScanBeBoard(uint16_t           boardIndex,
                          const std::string& dacName,
@@ -285,7 +278,6 @@ class Tool : public Ph2_System::SystemController
                          const float&       targetOccupancy,
                          int32_t            numberOfEventsPerBurst = -1,
                          int32_t            startVal               = 110,
-                         float              occCap                 = 1.0,
                          bool               mask                   = false);
 
     // Set dac and measure data
@@ -315,48 +307,8 @@ class Tool : public Ph2_System::SystemController
     // Set same DAC list for all Chips (it is able to recognize if the dac is local or global)
     void setSameDac(const std::string& dacName, const uint16_t dacValue);
 
-    template <typename T, typename... H>
-    std::unique_ptr<ChannelContainerStream<T, H...>> prepareChannelContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<ChannelContainerStream<T, H...>>(new ChannelContainerStream<T, H...>(getCalibrationName() + appendName));
-        // ChannelContainerStream<T, H...> theContainerStreamer(getCalibrationName() + appendName);
-        return theContainerStreamer;
-    }
-
-    template <typename T, typename C, typename... H>
-    std::unique_ptr<ChipContainerStream<T, C, H...>> prepareChipContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<ChipContainerStream<T, C, H...>>(new ChipContainerStream<T, C, H...>(getCalibrationName() + appendName));
-        // ChipContainerStream<T, C, H...> theContainerStreamer(getCalibrationName() + appendName);
-        return theContainerStreamer;
-    }
-
-    template <typename T, typename C, typename M, typename... H>
-    std::unique_ptr<HybridContainerStream<T, C, M, H...>> prepareHybridContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<HybridContainerStream<T, C, M, H...>>(new HybridContainerStream<T, C, M, H...>(getCalibrationName() + appendName));
-        // HybridContainerStream<T, C, M, H...> theContainerStreamer(getCalibrationName() + appendName);
-        return theContainerStreamer;
-    }
-
-    template <typename T, typename C, typename H, typename O, typename... I>
-    std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>> prepareOpticalGroupContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>>(new OpticalGroupContainerStream<T, C, H, O, I...>(getCalibrationName() + appendName));
-        return theContainerStreamer;
-    }
-
-    template <typename T, typename C, typename H, typename O, typename B, typename... I>
-    std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>> prepareBoardContainerStreamer(std::string appendName = "")
-    {
-        auto theContainerStreamer = std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>>(new BoardContainerStream<T, C, H, O, B, I...>(getCalibrationName() + appendName));
-        return theContainerStreamer;
-    }
-
     std::string getDirectoryName() { return fDirectoryName; }
 
-    // summarize stats
-    // while removing NANs
     struct StatsSum
     {
       public:
@@ -399,7 +351,8 @@ class Tool : public Ph2_System::SystemController
   protected:
     DetectorDataContainer* fDetectorDataContainer{nullptr};
 
-    uint16_t getMaxNumberOfGroups();
+    uint16_t    getMaxNumberOfGroups();
+    std::string getCalibrationName();
 
 #ifdef __USE_ROOT__
     CanvasMap           fCanvasMap;
@@ -416,7 +369,7 @@ class Tool : public Ph2_System::SystemController
 
     std::map<int, std::vector<uint8_t>> fMaskForTestGroupChannelMap;
 
-    std::string fDirectoryName; /*< the Directoryname for the Root file with results */
+    std::string fDirectoryName{""}; /*< the Directoryname for the Root file with results */
 #ifdef __USE_ROOT__
     TFile* fResultFile; /*< the Name for the Root file with results */
 #endif
@@ -425,26 +378,28 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    int               fRunNumber;
-    std::atomic<bool> fKeepRunning;
-    std::future<void> fRunningFuture;
+    // ################################
+    // # Hanldlers for Running thread #
+    // ################################
+    static std::atomic<bool> fKeepRunning;
+    int                      fRunNumber;
+    std::future<void>        fRunningFuture;
     // bool                        doExit;
     // std::thread                 fRunningThread;
     // std::future<int>            fRunningFuture;
     // std::condition_variable_any wakeUp;
     // std::recursive_mutex        theMtx;
 
-    bool        fSkipMaskedChannels;
-    bool        fAllChan;
-    bool        fMaskChannelsFromOtherGroups;
-    bool        fTestPulse;
-    bool        fDoBoardBroadcast;
-    bool        fDoHybridBroadcast;
-    bool        fUseReadNEvents{1};
-    int         fWait_ms{100};
-    size_t      fNReadbackEvents{0};
-    uint8_t     fNormalize{1};
-    std::string getCalibrationName();
+    bool    fSkipMaskedChannels;
+    bool    fAllChan;
+    bool    fMaskChannelsFromOtherGroups;
+    bool    fTestPulse;
+    bool    fDoBoardBroadcast;
+    bool    fDoHybridBroadcast;
+    bool    fUseReadNEvents{1};
+    int     fWait_ms{100};
+    size_t  fNReadbackEvents{0};
+    uint8_t fNormalize{1};
 };
 
 #endif

@@ -8,6 +8,7 @@
 */
 
 #include "RD53PixelAlive.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -17,28 +18,29 @@ void PixelAlive::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents");
-    nEvtsBurst     = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
-    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
-    injType        = this->findValueInSettings<double>("INJtype");
-    nHITxCol       = this->findValueInSettings<double>("nHITxCol");
-    doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
-    occPerPixel    = this->findValueInSettings<double>("OccPerPixel");
-    unstuckPixels  = this->findValueInSettings<double>("UnstuckPixels");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
-    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
-    frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
+    rowStart        = this->findValueInSettings<double>("ROWstart");
+    rowStop         = this->findValueInSettings<double>("ROWstop");
+    colStart        = this->findValueInSettings<double>("COLstart");
+    colStop         = this->findValueInSettings<double>("COLstop");
+    nEvents         = this->findValueInSettings<double>("nEvents");
+    nEvtsBurst      = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
+    nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
+    injType         = this->findValueInSettings<double>("INJtype");
+    nHITxCol        = this->findValueInSettings<double>("nHITxCol");
+    doDataIntegrity = this->findValueInSettings<double>("DoDataIntegrity");
+    doOnlyNGroups   = this->findValueInSettings<double>("DoOnlyNGroups");
+    occPerPixel     = this->findValueInSettings<double>("OccPerPixel");
+    unstuckPixels   = this->findValueInSettings<double>("UnstuckPixels");
+    doDisplay       = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
+    dataOutputDir   = this->findValueInSettings<std::string>("DataOutputDir", "");
+    frontEnd        = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
     // ################################
-    auto groupType = injType != INJtype::None ? RD53GroupType::Groups : RD53GroupType::AllPixels;
+    auto groupType = ((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital)) ? RD53GroupType::Groups : RD53GroupType::AllPixels;
     theChnGroupHandler =
         std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
@@ -46,7 +48,7 @@ void PixelAlive::ConfigureCalibration()
     // ######################
     // # Set injection type #
     // ######################
-    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DIGITAL_INJ_EN", injType == INJtype::Digital);
+    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DIGITAL_INJ_EN", injType == CalibBase::INJtype::Digital);
 
     // #######################
     // # Initialize progress #
@@ -74,18 +76,16 @@ void PixelAlive::Running()
 
 void PixelAlive::sendData()
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
-
-    auto theOccStream   = this->prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
-    auto theBCIDStream  = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
-    auto theTrgIDStream = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: *theOccContainer.get()) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theBCIDContainer) theBCIDStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTrgIDContainer) theTrgIDStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theOccupancySerialization("PixelAliveOccupancy");
+        theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer.get());
+
+        ContainerSerialization theBCIDSerialization("PixelAliveBCID");
+        theBCIDSerialization.streamByChipContainer(fDQMStreamer, theBCIDContainer);
+
+        ContainerSerialization theTrgIDSerialization("PixelAliveTrgID");
+        theTrgIDSerialization.streamByChipContainer(fDQMStreamer, theTrgIDContainer);
     }
 }
 
@@ -126,11 +126,108 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
 
 void PixelAlive::run()
 {
+    if((doDataIntegrity == true) && (strcmp(frontEnd->name, "RD53B") == 0))
+    {
+        RD53RunProgress::turnOFF();
+
+        const std::string regName = "EN_CORE_COL";
+
+        std::shared_ptr<DetectorDataContainer> localOccContainer = std::make_shared<DetectorDataContainer>();
+        this->fDetectorDataContainer                             = localOccContainer.get();
+        ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
+
+        std::shared_ptr<RD53ChannelGroupHandler> localChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
+            rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups);
+        this->setChannelGroupHandler(localChnGroupHandler);
+
+        LOG(INFO) << GREEN << "[PixelAlive::run] Running detection of Core-Column data corruption" << RESET;
+
+        for(const auto cBoard: *fDetectorContainer)
+            for(const auto cOpticalGroup: *cBoard)
+            {
+                // ############################
+                // # Disable all core columns #
+                // ############################
+                for(auto suffix: {"_0", "_1", "_2", "_3"}) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName + suffix, 0);
+
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
+                    {
+                        std::map<std::string, uint16_t> regValueMap;
+
+                        for(auto suffix: {"_0", "_1", "_2", "_3"})
+                        {
+                            const auto numberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix].fBitSize;
+                            regValueMap[suffix]     = RD53Shared::setBits(numberOfBits);
+
+                            for(auto i = 0u; i < numberOfBits; i++)
+                            {
+                                // ###########################
+                                // # Download new DAC values #
+                                // ###########################
+                                this->fReadoutChipInterface->WriteChipReg(cChip, regName + suffix, 1 << i);
+
+                                // ################
+                                // # Run analysis #
+                                // ################
+                                this->SetTestPulse(false);
+                                this->measureData(1, 1);
+
+                                // #####################
+                                // # Compute next step #
+                                // #####################
+                                bool statusGood = true;
+                                for(const auto& ev: RD53Event::decodedEvents)
+                                    if(ev.eventStatus != RD53FWEvtEncoder::GOOD)
+                                    {
+                                        statusGood = false;
+                                        break;
+                                    }
+                                if((statusGood == false) || (RD53Event::decodedEvents.size() == 0)) regValueMap[suffix] ^= 1 << i;
+                            }
+                        }
+
+                        // ###########################
+                        // # Download new DAC values #
+                        // ###########################
+                        LOG(INFO) << GREEN << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                        for(auto suffix: {"_0", "_1", "_2", "_3"})
+                        {
+                            this->fReadoutChipInterface->WriteChipReg(cChip, regName + suffix, regValueMap[suffix]);
+                            const auto numberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix].fBitSize;
+                            uint16_t   mask         = RD53Shared::setBits(numberOfBits);
+                            auto       value        = (std::bitset<16>(regValueMap[suffix]) & std::bitset<16>(mask)).to_string().erase(0, 16 - numberOfBits);
+                            bool       problems     = (regValueMap[suffix] != mask);
+                            LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + suffix << (problems ? BOLDRED : BOLDBLUE) << " value = " << BOLDYELLOW << value
+                                      << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)" << RESET;
+                        }
+
+                        LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+                    }
+            }
+
+        // ############################
+        // # Reset to original values #
+        // ############################
+        this->setChannelGroupHandler(theChnGroupHandler);
+        RD53RunProgress::turnON();
+    }
+    else if((doDataIntegrity == true) && (strcmp(frontEnd->name, "RD53B") != 0))
+    {
+        throw std::runtime_error("Option -DoDataIntegrity- not available for RD53A");
+    }
+
+    PixelAlive::runPixelAlive();
+}
+
+void PixelAlive::runPixelAlive()
+{
     theOccContainer              = std::make_shared<DetectorDataContainer>();
     this->fDetectorDataContainer = theOccContainer.get();
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
 
-    this->SetTestPulse(injType != INJtype::None);
+    this->SetTestPulse((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital));
     this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nEvents, nEvtsBurst);
 
@@ -185,7 +282,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     size_t nMaskedPixelsPerCalib = 0;
-                    if(injType == INJtype::None)
+                    if(injType == CalibBase::INJtype::None)
                         theOccContainer->at(cBoard->getIndex())
                             ->at(cOpticalGroup->getIndex())
                             ->at(cHybrid->getIndex())
@@ -214,7 +311,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
                             {
-                                if(injType == INJtype::None)
+                                if(injType == CalibBase::INJtype::None)
                                     theOccContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
                                         ->at(cHybrid->getIndex())
@@ -228,7 +325,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                       ->at(cChip->getIndex())
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
-                                bool enable = (injType == INJtype::None ? occupancy <= occPerPixel : occupancy >= occPerPixel);
+                                bool enable = (injType == CalibBase::INJtype::None ? occupancy <= occPerPixel : occupancy >= occPerPixel);
                                 if(unstuckPixels == false)
                                     static_cast<RD53*>(cChip)->enablePixel(row, col, enable);
                                 else if(enable == false)

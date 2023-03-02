@@ -8,6 +8,7 @@
 */
 
 #include "RD53SCurve.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -22,6 +23,7 @@ void SCurve::ConfigureCalibration()
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
     nEvents        = this->findValueInSettings<double>("nEvents");
+    injType        = this->findValueInSettings<double>("INJtype");
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
     nSteps         = this->findValueInSettings<double>("VCalHnsteps");
@@ -37,8 +39,9 @@ void SCurve::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-        rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), RD53GroupType::Groups, nHITxCol, doOnlyNGroups);
+    auto groupType = ((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital)) ? RD53GroupType::Groups : RD53GroupType::AllPixels;
+    theChnGroupHandler =
+        std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################
@@ -78,21 +81,20 @@ void SCurve::Running()
 
 void SCurve::sendData()
 {
-    auto theOccStream         = this->prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
-    auto theThrAndNoiseStream = this->prepareChannelContainerStreamer<ThresholdAndNoise>("ThrAndNoise");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        size_t index = 0;
+        if(theThresholdAndNoiseContainer != nullptr)
+        {
+            ContainerSerialization theThresholdAndNoiseSerialization("SCurveThresholdAndNoise");
+            theThresholdAndNoiseSerialization.streamByChipContainer(fDQMStreamer, *theThresholdAndNoiseContainer.get());
+        }
+        size_t                 index = 0;
+        ContainerSerialization theOccupancySerialization("SCurveOccupancy");
         for(const auto theOccContainer: detectorContainerVector)
         {
-            theOccStream->setHeaderElement(dacList[index] - offset);
-            for(const auto cBoard: *theOccContainer) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
-            index++;
+            int deltaVacl = dacList[index++] - offset;
+            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVacl);
         }
-
-        if(theThresholdAndNoiseContainer != nullptr)
-            for(const auto cBoard: *theThresholdAndNoiseContainer.get()) theThrAndNoiseStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -143,7 +145,7 @@ void SCurve::run()
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
     this->SetBoardBroadcast(true);
-    this->SetTestPulse(true);
+    this->SetTestPulse((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital));
     this->fMaskChannelsFromOtherGroups = true;
     this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 

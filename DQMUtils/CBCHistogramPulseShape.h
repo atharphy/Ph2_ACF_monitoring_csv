@@ -66,9 +66,9 @@ class CBCHistogramPulseShape : public DQMHistogramBase
     void fillSCurvePlots(uint16_t vcthr, uint16_t latency, uint16_t delay, DetectorDataContainer& fSCurveOccupancy);
 
   private:
+    DetectorContainer*                                              fDetectorContainer;
     DetectorDataContainer                                           fDetectorChannelPulseShapeHistograms;
     DetectorDataContainer                                           fDetectorChipPulseShapeHistograms;
-    DetectorDataContainer                                           fDetectorData;
     std::map<std::tuple<uint16_t, uint16_t>, DetectorDataContainer> fDetectorSCurveHistogramMap;
     float                                                           fInitialVcth{0};
     float                                                           fInitialLatency{0};

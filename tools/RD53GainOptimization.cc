@@ -8,6 +8,7 @@
 */
 
 #include "RD53GainOptimization.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -68,10 +69,11 @@ void GainOptimization::Running()
 
 void GainOptimization::sendData()
 {
-    auto theKrumStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>();
-
-    if(fDQMStreamerEnabled == true)
-        for(const auto cBoard: theKrumCurrContainer) theKrumStream->streamAndSendBoard(cBoard, fDQMStreamer);
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("GainOptimizationKrumCurr");
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, theKrumCurrContainer);
+    }
 }
 
 void GainOptimization::Stop()

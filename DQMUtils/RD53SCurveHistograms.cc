@@ -9,12 +9,13 @@
 */
 
 #include "RD53SCurveHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     nRows = RD53Shared::firstChip->getNRows();
@@ -44,7 +45,7 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
     auto hThreshold1D = CanvasContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue - offset, stopValue - offset);
     bookImplementer(theOutputFile, theDetectorStructure, Threshold1D, hThreshold1D, "Threshold (#DeltaVCal)", "Entries");
 
-    auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", 100, 0, 50);
+    auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", 200, 0, 200);
     bookImplementer(theOutputFile, theDetectorStructure, Noise1D, hNoise1D, "Noise (#DeltaVCal)", "Entries");
 
     auto hThreshold2D = CanvasContainer<TH2F>("Threshold2D", "Threshold Map", nCols, 0, nCols, nRows, 0, nRows);
@@ -59,24 +60,25 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
 
 bool SCurveHistograms::fill(std::vector<char>& dataBuffer)
 {
-    ChannelContainerStream<OccupancyAndPh, uint16_t> theOccStreamer("SCurveOcc");
-    ChannelContainerStream<ThresholdAndNoise>        theThrAndNoiseStreamer("SCurveThrAndNoise");
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theThresholdAndNoiseSerialization("SCurveThresholdAndNoise");
+    ContainerSerialization theOccupancySerialization("SCurveOccupancy");
 
-    if(theOccStreamer.attachBuffer(&dataBuffer))
+    if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
-        theOccStreamer.decodeChipData(DetectorData);
-        SCurveHistograms::fillOccupancy(DetectorData, theOccStreamer.getHeaderElement());
-        DetectorData.cleanDataStored();
+        std::cout << "Matched SCurve ThresholdAndNoise!!!!!\n";
+        DetectorDataContainer fDetectorData = theThresholdAndNoiseSerialization.deserializeChipContainer<ThresholdAndNoise, ThresholdAndNoise>(fDetectorContainer);
+        SCurveHistograms::fillThrAndNoise(fDetectorData);
         return true;
     }
-    else if(theThrAndNoiseStreamer.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        theThrAndNoiseStreamer.decodeChipData(DetectorData);
-        SCurveHistograms::fillThrAndNoise(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched SCurve ThresholdAndNoise!!!!!\n";
+        int                   deltaVcal;
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer, deltaVcal);
+        SCurveHistograms::fillOccupancy(fDetectorData, deltaVcal);
         return true;
     }
-
     return false;
 }
 

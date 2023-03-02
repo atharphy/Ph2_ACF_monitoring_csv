@@ -1,8 +1,8 @@
-if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
+if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}SYSTEM${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     # Includes
@@ -55,13 +55,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
       if($ENV{UseTCUSBforROH})
+          message(STATUS "    Building the ROH TestCards USB components")
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-      else($ENV{UseTCUSBforROH})
-          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
       endif($ENV{UseTCUSBforROH})
-      if($ENV{UseTCUSBTcpServer})
-          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
-      endif($ENV{UseTCUSBTcpServer})
+      if($ENV{UseTCUSBforSEH})
+          message(STATUS "    Building the SEH TestCards USB components")
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
+      endif($ENV{UseTCUSBforSEH})
     endif(${PH2_TCUSB_FOUND})
 
     if(NoDataShipping)
@@ -92,7 +92,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}SYSTEM${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
@@ -100,31 +100,31 @@ else()
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}SYSTEM${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
+    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
+    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
+    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
     cet_set_compiler_flags(
                            EXTRA_FLAGS -Wno-reorder -Wl,--undefined
                           )
 
     cet_make(
-             LIBRARY_NAME Ph2_System_${Ph2_ACF_Master}
+             LIBRARY_NAME Ph2_System
              LIBRARIES
-             Ph2_Description_${Ph2_ACF_Master}
-             Ph2_Interface_${Ph2_ACF_Master}
-             Ph2_Utils_${Ph2_ACF_Master}
-             Ph2_Parser_${Ph2_ACF_Master}
+             Ph2_Description
+             Ph2_Interface
+             Ph2_Utils
+             Ph2_Parser
             )
 
     install_headers()
     install_source()
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}SYSTEM${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 

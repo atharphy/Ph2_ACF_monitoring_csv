@@ -3,12 +3,11 @@
 #include "HWInterface/D19cFWInterface.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/DataContainer.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
-
-// initialize the static member
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -81,7 +80,9 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPedestalEqualizationFullScanStart = findValueInSettings<double>("PedestalEqualizationFullScanStart", 110);
     fPedestalEqualizationFullScanCAP   = findValueInSettings<double>("PedestalEqualizationFullScanCAP", 1.0);
 
-    fTestPulseAmplitude      = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualizationPulseAmplitudePix", fTestPulseAmplitude);
+
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst         = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
@@ -203,7 +204,7 @@ void PedestalEqualization::Reset()
                 for(auto cChip: *cHybrid)
                 {
                     auto cModMap = cChip->GetModifiedRegisterMap();
-                    LOG(DEBUG) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
                     std::vector<std::pair<std::string, uint16_t>> cRegList;
                     for(auto cMapItem: cModMap)
                     {
@@ -264,8 +265,24 @@ void PedestalEqualization::FindVplus()
         this->enableTestPulse(true);
         for(auto cBoard: *fDetectorContainer)
         {
+            // Allow for different SSA and MPA injection amplitudes
+            // setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
             if(fWithSSA or fWithMPA)
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        for(auto cChip: *cHybrid)
+                        {
+                            auto cType = cChip->getFrontEndType();
+                            if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                                fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
+                            else
+                                fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
+                        }
+                    }
+                }
+
             else
                 setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
         }
@@ -289,7 +306,7 @@ void PedestalEqualization::FindVplus()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
     if(fFullScan)
-        this->fullScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst, fPedestalEqualizationFullScanStart, fPedestalEqualizationFullScanCAP);
+        this->fullScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst, fPedestalEqualizationFullScanStart);
     else
         this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
     // dumpConfigFiles();
@@ -337,6 +354,7 @@ void PedestalEqualization::FindVplus()
                     {
                         cNPixelChips += float(ENCHAN) / float(TOTCHAN);
                         cMeanPixelsValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
+                        LOG(DEBUG) << "MeanPixelsValue : " << +cMeanPixelsValue << " -- NPixelChips : " << +cNPixelChips << RESET;
                     }
 
                 } // for on chip - end
@@ -347,10 +365,10 @@ void PedestalEqualization::FindVplus()
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillVplusPlots(theVcthContainer);
 #else
-    auto theVCthStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
-    for(auto board: theVcthContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theVCthStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("PedestalEqualizationVCth");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theVcthContainer);
     }
 #endif
 
@@ -427,7 +445,7 @@ void PedestalEqualization::FindOffsets()
 
     if(fWithSSA or fWithMPA)
     {
-        if(fFullScan) { this->fullScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst, 31, fPedestalEqualizationFullScanCAP, fPedestalEqualizationMaskUntrimmed); }
+        if(fFullScan) { this->fullScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst, 31, fPedestalEqualizationMaskUntrimmed); }
         else
             this->bitWiseScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
     }
@@ -485,16 +503,12 @@ void PedestalEqualization::FindOffsets()
     fDQMHistogramPedestalEqualization.fillOccupancyPlots(theOccupancyContainer);
     fDQMHistogramPedestalEqualization.fillOffsetPlots(theOffsetsCointainer);
 #else
-    auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
-    for(auto board: theOccupancyContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theOccupancyStream->streamAndSendBoard(board, fDQMStreamer);
-    }
-
-    auto theOffsetStream = prepareChannelContainerStreamer<uint8_t>();
-    for(auto board: theOffsetsCointainer)
-    {
-        if(fDQMStreamerEnabled) theOffsetStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theOccupancyContainerSerialization("PedestalEqualizationOccupancy");
+        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theOccupancyContainer);
+        ContainerSerialization theOffsetContainerSerialization("PedestalEqualizationOffset");
+        theOffsetContainerSerialization.streamByHybridContainer(fDQMStreamer, theOffsetsCointainer);
     }
 #endif
 

@@ -279,8 +279,8 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
-        // RD53FWInterface::ResetSlowCmdFIFO(); // @TMP@ : temporary fix untill FIFO error FW fix
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+        RD53FWInterface::ResetSlowCmdFIFO();                                              // @TMP@ : temporary fix untill FIFO error FW fix
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP)); // @TMP@ : temporary fix untill FIFO error FW fix
     }
     if(nAttempts == RD53Shared::MAXATTEMPTS)
         LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
@@ -347,7 +347,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
         if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
     }
 
-    // if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIRO error FW fix
+    // if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIFO error FW fix
 
     return regReadback;
 }
@@ -662,6 +662,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
+    uint32_t status;
     do
     {
         nAttempts++;
@@ -681,7 +682,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // # Error checking #
         // ##################
         RD53Event::decodedEvents.clear();
-        uint32_t status;
+        status = 0;
         RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
         // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status);         // Decode events with a single thread
         // RD53Event::PrintEvents(RD53Event::decodedEvents, pData);                      // @TMP@
@@ -779,6 +780,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 // # injType == 0 --> None    #
 // # injType == 1 --> Analog  #
 // # injType == 2 --> Digital #
+// # injType == 3 --> Custom  #
 // ############################
 // ##################################################################################
 // # Finite state machine                                                           #
@@ -795,7 +797,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     {
         None,
         Analog,
-        Digital
+        Digital,
+        Custom
     };
     enum INJdelay
     {
@@ -829,7 +832,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
-    else if(injType == INJtype::Analog)
+    else if((injType == INJtype::Analog) || (injType == INJtype::Custom))
     {
         // ######################################
         // # Configuration for analog injection #
@@ -1276,7 +1279,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
 {
     const uint32_t nBitInClkPeriod  = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps              = 1.28e9 / nBitInClkPeriod;         // Frames per second
-    const int      n_prints         = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    const int      nPrints          = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     const double   scaleByAuroraClk = 37.5 / 40;                        // @CONST@
     double         frames2run;
     double         time2run;
@@ -1295,7 +1298,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     }
 
     // Configure number of printouts and calculate the frequency of printouts
-    double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
+    double time_per_step = std::min(std::max(time2run / nPrints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
                    {"user.ctrl_regs.PRBS_checker.chip_address", chip_lane},

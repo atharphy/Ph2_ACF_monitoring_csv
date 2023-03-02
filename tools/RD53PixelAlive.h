@@ -48,20 +48,14 @@ class PixelAlive : public CalibBase
 
   private:
     void fillHisto() override;
+    void runPixelAlive();
 
     std::shared_ptr<DetectorDataContainer> theOccContainer;
     DetectorDataContainer                  theBCIDContainer;
     DetectorDataContainer                  theTrgIDContainer;
 
   protected:
-    size_t injType;
-    enum INJtype
-    {
-        None,
-        Analog,
-        Digital
-    };
-
+    size_t                                   injType;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     size_t rowStart;
@@ -74,6 +68,7 @@ class PixelAlive : public CalibBase
     size_t nHITxCol;
     float  occPerPixel;
     bool   unstuckPixels;
+    bool   doDataIntegrity;
     size_t doOnlyNGroups;
     bool   doDisplay;
     bool   doUpdateChip;

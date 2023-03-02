@@ -18,7 +18,6 @@ struct DetectorMonitorConfig
         fMonitorElementList["SSA"]         = {};
         fMonitorElementList["CBC"]         = {};
         fMonitorElementList["RD53"]        = {};
-        fMonitorElementList["CROC"]        = {};
         fMonitorElementList["PowerSupply"] = {};
         fMonitorElementList["TestCard"]    = {};
     }

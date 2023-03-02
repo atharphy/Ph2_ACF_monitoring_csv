@@ -8,6 +8,7 @@
 */
 
 #include "RD53VoltageTuning.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -39,13 +40,13 @@ void VoltageTuning::Running()
 
 void VoltageTuning::sendData()
 {
-    auto theDigStreamer = this->prepareChipContainerStreamer<EmptyContainer, double>("VoltageDig");
-    auto theAnaStreamer = this->prepareChipContainerStreamer<EmptyContainer, double>("VoltageAna");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: theDigContainer) theDigStreamer->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theAnaContainer) theAnaStreamer->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theVoltageDigitalSerialization("VoltageTuningVoltageDigital");
+        theVoltageDigitalSerialization.streamByChipContainer(fDQMStreamer, theDigContainer);
+
+        ContainerSerialization theVoltageAnalogSerialization("VoltageTuningVoltageAnalog");
+        theVoltageAnalogSerialization.streamByChipContainer(fDQMStreamer, theAnaContainer);
     }
 }
 
@@ -272,10 +273,10 @@ void VoltageTuning::run()
                     // # Save original configuration #
                     // ###############################
 
-                    auto memCoreCol0 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_0");
-                    auto memCoreCol1 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_1");
-                    auto memCoreCol2 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_3");
-                    auto memCoreCol3 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_3");
+                    auto memCoreCol0 = cChip->getRegMap().find("EN_CORE_COL_0")->second.fValue;
+                    auto memCoreCol1 = cChip->getRegMap().find("EN_CORE_COL_1")->second.fValue;
+                    auto memCoreCol2 = cChip->getRegMap().find("EN_CORE_COL_2")->second.fValue;
+                    auto memCoreCol3 = cChip->getRegMap().find("EN_CORE_COL_3")->second.fValue;
 
                     // ########################
                     // # Disable all channels #

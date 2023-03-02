@@ -9,12 +9,13 @@
 */
 
 #include "RD53GainHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     nRows = RD53Shared::firstChip->getNRows();
@@ -30,6 +31,7 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     offset                = this->findValueInSettings<double>(settingsMap, "VCalMED");
     auto         frontEnd = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
     const size_t ToTsize  = frontEnd->maxToTvalue + 1;
+    const int    MAXCHI2  = 4; // @CONST@
 
     auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue - offset, stopValue - offset, nEvents, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "ToT");
@@ -55,7 +57,7 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     auto hSlopeLowQ1D = CanvasContainer<TH1F>("SlopeLowQ1D", "Slope low Q 1D", NBINS, 0, SLOPE_RANGE);
     bookImplementer(theOutputFile, theDetectorStructure, SlopeLowQ1D, hSlopeLowQ1D, "Slope for low charge range (ToT/VCal)", "Entries");
 
-    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", NBINS, 0, 2);
+    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", NBINS, 0, MAXCHI2);
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF1D, hChi2DoF1D, "#chi^{2}/D.o.F.", "Entries");
 
     auto hInterceptHighQ2D = CanvasContainer<TH2F>("InterceptHighQ2D", "Intercept high Q Map", nCols, 0, nCols, nRows, 0, nRows);
@@ -76,24 +78,25 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
 
 bool GainHistograms::fill(std::vector<char>& dataBuffer)
 {
-    ChannelContainerStream<OccupancyAndPh, uint16_t> theOccStreamer("GainOcc");
-    ChannelContainerStream<GainFit>                  theGainStreamer("GainGain");
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theOccupancySerialization("GainOccupancy");
+    ContainerSerialization theGainSerialization("GainGain");
 
-    if(theOccStreamer.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        theOccStreamer.decodeChipData(DetectorData);
-        GainHistograms::fillOccupancy(DetectorData, theOccStreamer.getHeaderElement());
-        DetectorData.cleanDataStored();
+        std::cout << "Matched Gain Occupancy!!!!!\n";
+        uint16_t              deltaVcal;
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer, deltaVcal);
+        GainHistograms::fillOccupancy(fDetectorData, deltaVcal);
         return true;
     }
-    else if(theGainStreamer.attachBuffer(&dataBuffer))
+    if(theGainSerialization.attachDeserializer(inputStream))
     {
-        theGainStreamer.decodeChipData(DetectorData);
-        GainHistograms::fillGain(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched Gain Gain!!!!!\n";
+        DetectorDataContainer fDetectorData = theGainSerialization.deserializeChipContainer<GainFit, GainFit>(fDetectorContainer);
+        GainHistograms::fillGain(fDetectorData);
         return true;
     }
-
     return false;
 }
 

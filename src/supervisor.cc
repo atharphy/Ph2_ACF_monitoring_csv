@@ -19,6 +19,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "TROOT.h"
 #include <TApplication.h>
 
 #include "Utils/easylogging++.h"
@@ -208,12 +209,12 @@ int main(int argc, char* argv[])
     // int main ( int argc, char* argv[] )
     // std::cout << argc << "-" << argv[2] << std::endl;
     // exit(0);
-    int   tAppArgc = 1;
-    char* tAppArgv[2];
-    tAppArgv[0] = argv[0];
-    tAppArgv[1] = (char*)"-b";
-    if(batchMode) tAppArgc = 2;
-    TApplication theApp("App", &tAppArgc, tAppArgv);
+    TApplication cApp("Root Application", &argc, argv);
+
+    if(batchMode)
+        gROOT->SetBatch(true);
+    else
+        TQObject::Connect("TCanvas", "Closed()", "TApplication", &cApp, "Terminate()");
 
     DQMInterface        theDQMInterface;
     MonitorDQMInterface theMonitorDQMInterface;
@@ -295,12 +296,19 @@ int main(int argc, char* argv[])
                     if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
                     {
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        theMiddlewareInterface.status();
+                        std::string status = theMiddlewareInterface.status();
+
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        while(theMiddlewareInterface.status() != "Done")
+                        while(status != "Done")
                         {
                             std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                             usleep(5e5);
+                            status = theMiddlewareInterface.status();
+                            if(status == "Error")
+                            {
+                                std::cout << "An error occurred, Aborting..." << std::endl;
+                                abort();
+                            }
                         }
                     }
                     else
@@ -343,7 +351,7 @@ int main(int argc, char* argv[])
     checkExitStatus(runControllerStatus, "RunController");
     // checkExitStatus(dqmControllerStatus,"DQMController");
 
-    theApp.Run();
+    if(!batchMode) cApp.Run();
 
     return EXIT_SUCCESS;
 }

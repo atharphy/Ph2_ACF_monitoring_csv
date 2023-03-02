@@ -8,6 +8,9 @@
 */
 
 #include "MonitorUtils/RD53Monitor.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/ValueAndTime.h"
+#include <array>
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
@@ -34,7 +37,7 @@ void RD53Monitor::runMonitor()
 void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
 {
     DetectorDataContainer theRegisterContainer;
-    ContainerFactory::copyAndInitChip<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
+    ContainerFactory::copyAndInitChip<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
 
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -49,11 +52,8 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                         LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                                   << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
 
-                        theRegisterContainer.getObject(cBoard->getId())
-                            ->getObject(cOpticalGroup->getId())
-                            ->getObject(cHybrid->getId())
-                            ->getObject(cChip->getId())
-                            ->getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), registerValue);
+                        theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
+                            ValueAndTime<float>(registerValue, getTimeStamp());
                     }
                     catch(...)
                     {
@@ -71,7 +71,7 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
 void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
 {
     DetectorDataContainer theRegisterContainer;
-    ContainerFactory::copyAndInitChip<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
+    ContainerFactory::copyAndInitChip<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
 
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -98,11 +98,11 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
                 else
                     registerValue = fTheSystemController->flpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
 
-                theRegisterContainer.at(cBoard->getId())->at(cOpticalGroup->getId())->getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), registerValue);
+                theRegisterContainer.at(cBoard->getId())->at(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
             }
             catch(...)
             {
-                theRegisterContainer.at(cBoard->getId())->at(cOpticalGroup->getId())->getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), -1);
+                theRegisterContainer.at(cBoard->getId())->at(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(-1., getTimeStamp());
                 return;
             }
         }
@@ -116,9 +116,9 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
 
 void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName)
 {
-    auto theRegisterStreamer = prepareChipContainerStreamer<EmptyContainer, std::tuple<time_t, float>, CharArray>("Register");
-    theRegisterStreamer->setHeaderElement(CharArray(registerName));
-
-    if(fTheSystemController->fDQMStreamerEnabled == true)
-        for(auto board: DataContainer) theRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+    if(fTheSystemController->fMonitorDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("RD53MonitorRegister");
+        theContainerSerialization.streamByChipContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
+    }
 }

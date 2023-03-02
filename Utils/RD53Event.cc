@@ -777,9 +777,9 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     theTree.Branch("RD53_frame_event_status", &RD53_frame_event_status);
     theTree.Branch("RD53_frame_event_nhits", &RD53_frame_event_nhits);
 
-    std::vector<uint8_t> RD53_hit_row;
-    std::vector<uint8_t> RD53_hit_col;
-    std::vector<uint8_t> RD53_hit_tot;
+    std::vector<uint16_t> RD53_hit_row;
+    std::vector<uint16_t> RD53_hit_col;
+    std::vector<uint8_t>  RD53_hit_tot;
 
     theTree.Branch("RD53_hit_row", &RD53_hit_row);
     theTree.Branch("RD53_hit_col", &RD53_hit_col);

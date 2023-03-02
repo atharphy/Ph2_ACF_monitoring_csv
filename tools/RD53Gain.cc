@@ -9,6 +9,7 @@
 
 #include "RD53Gain.h"
 
+#include "Utils/ContainerSerialization.h"
 #include <boost/multiprecision/number.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
@@ -27,6 +28,7 @@ void Gain::ConfigureCalibration()
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
     nEvents        = this->findValueInSettings<double>("nEvents");
+    injType        = this->findValueInSettings<double>("INJtype");
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
     targetCharge   = RD53Shared::firstChip->Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
@@ -43,8 +45,9 @@ void Gain::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-        rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), RD53GroupType::Groups, nHITxCol, doOnlyNGroups);
+    auto groupType = ((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital)) ? RD53GroupType::Groups : RD53GroupType::AllPixels;
+    theChnGroupHandler =
+        std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################
@@ -84,21 +87,20 @@ void Gain::Running()
 
 void Gain::sendData()
 {
-    auto theOccStream  = this->prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
-    auto theGainStream = this->prepareChannelContainerStreamer<GainFit>("Gain");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        size_t index = 0;
+        ContainerSerialization theOccupancySerialization("GainOccupancy");
+        size_t                 index = 0;
         for(const auto theOccContainer: detectorContainerVector)
         {
-            theOccStream->setHeaderElement(dacList[index] - offset);
-            for(const auto cBoard: *theOccContainer) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
-            index++;
+            uint16_t deltaVcal = dacList[index++] - offset;
+            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVcal);
         }
-
         if(theGainContainer != nullptr)
-            for(const auto cBoard: *theGainContainer.get()) theGainStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        {
+            ContainerSerialization theGainSerialization("GainGain");
+            theGainSerialization.streamByChipContainer(fDQMStreamer, *theGainContainer.get());
+        }
     }
 }
 
@@ -149,7 +151,7 @@ void Gain::run()
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
     this->SetBoardBroadcast(true);
-    this->SetTestPulse(true);
+    this->SetTestPulse((injType == CalibBase::INJtype::Analog) || (injType == CalibBase::INJtype::Digital));
     this->fMaskChannelsFromOtherGroups = true;
     this->scanDac("VCAL_HIGH", dacList, nEvents, detectorContainerVector);
 
@@ -290,7 +292,12 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 highQslope        = par[3];
                                 highQslopeErr     = parErr[3];
 
-                                if(chi2 != 0)
+                                if(chi2 == -1)
+                                {
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
+                                        RD53Shared::ISFITERROR;
+                                }
+                                else
                                 {
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
@@ -339,9 +346,6 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 = chi2;
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fDoF  = DoF;
                                 }
-                                else
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
-                                        RD53Shared::ISFITERROR;
                             }
 
                     index++;
@@ -439,6 +443,11 @@ void Gain::computeStats(const std::vector<float>& x,
     // ##########################################
     const int limitToT = (RD53Shared::firstChip->getUseGainDualSlope() == true ? frontEnd->splitToTvalue : frontEnd->maxToTvalue);
     chi2               = -1;
+    for(auto i = 0; i < NGAINPAR; i++)
+    {
+        par[i]    = 0;
+        parErr[i] = 0;
+    }
 
     // ############################################
     // # Struct for ordering the vectors together #
@@ -456,15 +465,21 @@ void Gain::computeStats(const std::vector<float>& x,
         if((e[i] != 0) && (o[i] == 1)) scanOutputs.push_back({x[i], y[i], e[i], o[i]});
     std::sort(scanOutputs.begin(), scanOutputs.end(), [&](ScanOutput i, ScanOutput j) { return i.y < j.y; });
 
+    // ###########################################
+    // # Check to have enough points for the fit #
+    // ###########################################
     const size_t nData = scanOutputs.size();
-    DoF                = nData - NGAINPAR;
-
-    for(auto i = 0; i < NGAINPAR; i++)
+    DoF                = nData - NGAINPAR / 2;
+    if(RD53Shared::firstChip->getUseGainDualSlope() == true)
     {
-        par[i]    = 0;
-        parErr[i] = 0;
+        const size_t nDataLowRange = std::count_if(scanOutputs.begin(), scanOutputs.end(), [&](ScanOutput val) { return val.y <= limitToT; });
+        if(((nDataLowRange - NGAINPAR) < 1) || ((nData - nDataLowRange - NGAINPAR) < 1))
+            return;
+        else
+            DoF = nData - NGAINPAR;
     }
-    if(DoF < 1) return;
+    else if(DoF < 1)
+        return;
 
     // ############################################
     // # Retreive oredered vectors for x, y and e #

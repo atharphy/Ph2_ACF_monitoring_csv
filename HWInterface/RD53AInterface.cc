@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSize)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -41,16 +41,26 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     }
     if(doWriteClkDataDelay == true) RD53AInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
+    // #############################################
+    // # Programmig global registers: pre-emphasis #
+    // #############################################
+    static const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
+
+    for(auto& cRegItem: pRD53RegMap)
+        if((cRegItem.second.fPrmptCfg == true) && (registerPreEmphasisWhiteList.find(cRegItem.first) != registerPreEmphasisWhiteList.end()))
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, false);
+
     // ###############################
     // # Programmig global registers #
     // ###############################
     static const std::set<std::string> registerBlackList = {
-        "HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"};
-
-    static const std::set<std::string> registerWhileList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"}; // @CONST@
+        "HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
+    static const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};                   // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
-        if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end())) || (registerWhileList.find(cRegItem.first) != registerWhileList.end()))
+        if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
+            (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
+           (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
         {
             if(cRegItem.first == "CDR_CONFIG")
             {
@@ -58,7 +68,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
-            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerifLoop);
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
         }
 
     // ###################################
@@ -135,14 +145,14 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53AInterface::ReadRD53Reg(ReadoutCh
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto nameAndValue(SetSpecialRegister(regName, 0, RD53Shared::firstChip->getRegMap()));
+    auto nameAndValue(SetSpecialRegister(regName, 0, pChip->getRegMap()));
     RD53Interface::SendCommand(pChip, RD53ACmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
     for(auto i = 0u; i < regReadback.size(); i++)
     {
         regReadback[i].first  = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR)); // Removing bit related to PIX_PORTAL register identification
-        regReadback[i].second = RD53AInterface::GetSpecialRegisterValue(regName, regReadback[i].second, RD53Shared::firstChip->getRegMap());
+        regReadback[i].second = RD53AInterface::GetSpecialRegisterValue(regName, regReadback[i].second, pChip->getRegMap());
     }
 
     return regReadback;
