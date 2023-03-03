@@ -1,18 +1,18 @@
-#include "DQMUtils/DQMMetadataTreeOT.h"
+#include "DQMUtils/DQMMetadataOT.h"
 #include "Utils/ContainerFactory.h"
 #include "TTree.h"
 #include "Utils/EmptyContainer.h"
 #include "RootUtils/StringContainer.h"
 #include "Utils/ContainerSerialization.h"
 
-DQMMetadataTreeOT::DQMMetadataTreeOT()
+DQMMetadataOT::DQMMetadataOT()
 : DQMHistogramBase()
 {}
 
-DQMMetadataTreeOT::~DQMMetadataTreeOT()
+DQMMetadataOT::~DQMMetadataOT()
 {}
 
-void DQMMetadataTreeOT::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
+void DQMMetadataOT::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     fDetectorContainer = &theDetectorStructure;
 
@@ -23,7 +23,7 @@ void DQMMetadataTreeOT::book(TFile* theOutputFile, DetectorContainer& theDetecto
     RootContainerFactory::bookHistogramsFromStructure<EmptyContainer,StringContainer, StringContainer, StringContainer, StringContainer, EmptyContainer>(theOutputFile, theDetectorStructure, fNameContainer, theEmpty, theNameStringContainer, theNameStringContainer, theNameStringContainer, theNameStringContainer, theEmpty);
 }
 
-void DQMMetadataTreeOT::fillObjectNames(const DetectorDataContainer& theNameContainer)
+void DQMMetadataOT::fillObjectNames(const DetectorDataContainer& theNameContainer)
 {
     for(const auto board : theNameContainer)
     {
@@ -54,9 +54,9 @@ void DQMMetadataTreeOT::fillObjectNames(const DetectorDataContainer& theNameCont
     }
 }
 
-void DQMMetadataTreeOT::process() {}
+void DQMMetadataOT::process() {}
 
-bool DQMMetadataTreeOT::fill(std::vector<char>& dataBuffer)
+bool DQMMetadataOT::fill(std::vector<char>& dataBuffer)
 {
     std::string inputStream(dataBuffer.begin(), dataBuffer.end());
 

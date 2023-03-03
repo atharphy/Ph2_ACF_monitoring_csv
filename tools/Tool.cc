@@ -17,7 +17,7 @@
 #include "Utils/SSAChannelGroupHandler.h"
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/DQMMetadataTreeOT.h"
+#include "DQMUtils/DQMMetadataOT.h"
 #endif
 
 using namespace Ph2_System;
@@ -63,7 +63,7 @@ Tool::Tool(THttpServer* pHttpServer)
     , fCanvasMap()
     , fChipHistMap()
     , fHybridHistMap()
-    , fDQMMetadataTreeOT(nullptr)
+    , fDQMMetadataOT(nullptr)
     , fType()
     , fTestGroupChannelMap()
     , fDirectoryName("")
@@ -153,9 +153,9 @@ void Tool::Start(int runNumber)
     }
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
-    fDQMMetadataTreeOT = new DQMMetadataTreeOT();
-    fDQMMetadataTreeOT->book(fResultFile, *fDetectorContainer, fSettingsMap);
-    fDQMMetadataTreeOT->fillObjectNames(*fNameContainer);
+    fDQMMetadataOT = new DQMMetadataOT();
+    fDQMMetadataOT->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    fDQMMetadataOT->fillObjectNames(*fNameContainer);
 #else
     if(fDQMStreamerEnabled)
     {
@@ -228,7 +228,7 @@ void Tool::Inherit(const Tool* pTool)
     fBeBoardHistMap       = pTool->fBeBoardHistMap;
     fSummaryTreeParameter = pTool->fSummaryTreeParameter;
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
-    fDQMMetadataTreeOT    = pTool->fDQMMetadataTreeOT;
+    fDQMMetadataOT    = pTool->fDQMMetadataOT;
 #endif
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
     fRunNumber           = pTool->fRunNumber;
@@ -321,8 +321,8 @@ void Tool::SoftDestroy()
     }
     fBeBoardHistMap.clear();
 
-    delete fDQMMetadataTreeOT;
-    fDQMMetadataTreeOT = nullptr;
+    delete fDQMMetadataOT;
+    fDQMMetadataOT = nullptr;
 #endif
     fTestGroupChannelMap.clear();
 }

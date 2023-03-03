@@ -19,22 +19,22 @@
 #include "DQMUtils/RD53SCurveHistograms.h"
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
-#include "DQMUtils/DQMMetadataTreeOT.h"
+#include "DQMUtils/DQMMetadataOT.h"
 
 using namespace MessageUtils;
 
 DQMCalibrationFactory::DQMCalibrationFactory()
 {
     // OT calibrations
-    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization>("calibration");
-    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization, DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
-    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization, DQMHistogramKira>("calibrationandkira");
-    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise, DQMHistogramKira>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    Register<DQMMetadataTreeOT, DQMHistogramPedeNoise>("pedenoise");
-    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise>("calibrationandpedenoise");
-    Register<DQMMetadataTreeOT, DQMHistogramCalibrationExample>("calibrationexample");
-    Register<DQMMetadataTreeOT, CBCHistogramPulseShape>("cbcpulseshape");
-    Register<DQMMetadataTreeOT, DQMHistogramLatencyScan>("otlatency");
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization>("calibration");
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramKira>("calibrationandkira");
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise, DQMHistogramKira>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
+    Register<DQMMetadataOT, DQMHistogramPedeNoise>("pedenoise");
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise>("calibrationandpedenoise");
+    Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
+    Register<DQMMetadataOT, CBCHistogramPulseShape>("cbcpulseshape");
+    Register<DQMMetadataOT, DQMHistogramLatencyScan>("otlatency");
 
     // IT calibrations
     Register<PixelAliveHistograms>("pixelalive");
