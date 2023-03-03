@@ -5,6 +5,7 @@
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
@@ -14,6 +15,10 @@
 #include "Utils/ConfigureInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
+
+#ifdef __USE_ROOT__
+#include "DQMUtils/DQMMetadataTreeOT.h"
+#endif
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -58,6 +63,7 @@ Tool::Tool(THttpServer* pHttpServer)
     , fCanvasMap()
     , fChipHistMap()
     , fHybridHistMap()
+    , fDQMMetadataTreeOT(nullptr)
     , fType()
     , fTestGroupChannelMap()
     , fDirectoryName("")
@@ -147,7 +153,24 @@ void Tool::Start(int runNumber)
     }
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
+    fDQMMetadataTreeOT = new DQMMetadataTreeOT();
+    fDQMMetadataTreeOT->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    fDQMMetadataTreeOT->fillObjectNames(*fNameContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        ContainerSerialization theContainerSerialization("MetadataOTObjectNames");
+
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        theContainerSerialization.streamByDetectorContainer(fDQMStreamer, *fNameContainer);
+
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    }
 #endif
+
+
     // doExit       = false;
     Tool::fKeepRunning = true;
     fRunNumber         = runNumber;
@@ -205,6 +228,7 @@ void Tool::Inherit(const Tool* pTool)
     fBeBoardHistMap       = pTool->fBeBoardHistMap;
     fSummaryTreeParameter = pTool->fSummaryTreeParameter;
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
+    fDQMMetadataTreeOT    = pTool->fDQMMetadataTreeOT;
 #endif
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
     fRunNumber           = pTool->fRunNumber;
@@ -234,7 +258,6 @@ void Tool::resetPointers() {}
 void Tool::Destroy()
 {
     LOG(INFO) << BOLDRED << "Destroying memory objects" << RESET;
-    SystemController::Destroy();
 #ifdef __HTTP__
     LOG(INFO) << BOLDRED << "Destroying HttpServer" << RESET;
     if(fHttpServer)
@@ -247,6 +270,7 @@ void Tool::Destroy()
 
     SoftDestroy();
     LOG(INFO) << BOLDRED << "Memory objects destroyed" << RESET;
+    SystemController::Destroy();
 }
 
 void Tool::SoftDestroy()
@@ -296,6 +320,9 @@ void Tool::SoftDestroy()
         }
     }
     fBeBoardHistMap.clear();
+
+    delete fDQMMetadataTreeOT;
+    fDQMMetadataTreeOT = nullptr;
 #endif
     fTestGroupChannelMap.clear();
 }

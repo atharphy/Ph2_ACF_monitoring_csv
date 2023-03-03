@@ -368,6 +368,7 @@ class SystemController
     DetectorDataContainer* fChannelGroupHandlerContainer;
 
   protected:
+    DetectorDataContainer* fNameContainer;
     bool    fSameChannelGroupForAllChannels{true};
     uint8_t fInitializeInterfaces{1};
 };

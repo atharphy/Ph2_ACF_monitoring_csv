@@ -28,6 +28,7 @@ class ChannelGroupHandler;
 class ChannelGroupBase;
 class ScanBase;
 class ConfigureInfo;
+class DQMMetadataTreeOT;
 
 #ifdef __HTTP__
 #include "THttpServer.h"
@@ -363,6 +364,7 @@ class Tool : public Ph2_System::SystemController
     TTree*              fSummaryTree; /*< TTree for summary of results*/
     static std::string  fSummaryTreeParameter;
     static double       fSummaryTreeValue;
+    DQMMetadataTreeOT*  fDQMMetadataTreeOT;
 #endif
 
     FrontEndType        fType;

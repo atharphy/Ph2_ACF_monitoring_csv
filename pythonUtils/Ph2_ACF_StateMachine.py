@@ -101,7 +101,6 @@ class StateMachine(object):
                 self.status_ = "ERROR"
                 return
             elif type == Reply.ReplyType.RUNNING:
-                print("RUNNING")
                 time.sleep(0.5)
                 continue
             elif type == Reply.ReplyType.SUCCESS:

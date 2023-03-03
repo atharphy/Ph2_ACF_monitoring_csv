@@ -2,6 +2,7 @@
 #include "MessageUtils/cpp/ReplyMessage.pb.h"
 #include "Utils/ConfigureInfo.h"
 #include <iostream>
+#include "MessageUtils/cpp/QueryMessage.pb.h"
 
 using namespace MessageUtils;
 

@@ -32,6 +32,8 @@ class ConfigureInfo
     void enableHybrid(uint16_t id, const std::string name) { enableObject(MessageUtils::ObjectType::HYBRID, id, name); }
     void enableChip(uint16_t id, const std::string name) { enableObject(MessageUtils::ObjectType::CHIP, id, name); }
 
+    std::unordered_map<uint16_t, std::string> getEnabledModulesList(bool isOT) const;
+    
   private:
     std::string fConfigurationFile{""};
     std::string fCalibrationName{""};

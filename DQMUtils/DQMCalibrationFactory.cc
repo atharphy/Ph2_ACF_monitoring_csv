@@ -19,21 +19,22 @@
 #include "DQMUtils/RD53SCurveHistograms.h"
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
+#include "DQMUtils/DQMMetadataTreeOT.h"
 
 using namespace MessageUtils;
 
 DQMCalibrationFactory::DQMCalibrationFactory()
 {
     // OT calibrations
-    Register<DQMHistogramPedestalEqualization>("calibration");
-    Register<DQMHistogramPedestalEqualization, DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
-    Register<DQMHistogramPedestalEqualization, DQMHistogramKira>("calibrationandkira");
-    Register<DQMHistogramPedestalEqualization, DQMHistogramPedeNoise, DQMHistogramKira>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    Register<DQMHistogramPedeNoise>("pedenoise");
-    Register<DQMHistogramPedestalEqualization, DQMHistogramPedeNoise>("calibrationandpedenoise");
-    Register<DQMHistogramCalibrationExample>("calibrationexample");
-    Register<CBCHistogramPulseShape>("cbcpulseshape");
-    Register<DQMHistogramLatencyScan>("otlatency");
+    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization>("calibration");
+    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization, DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
+    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization, DQMHistogramKira>("calibrationandkira");
+    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise, DQMHistogramKira>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
+    Register<DQMMetadataTreeOT, DQMHistogramPedeNoise>("pedenoise");
+    Register<DQMMetadataTreeOT, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise>("calibrationandpedenoise");
+    Register<DQMMetadataTreeOT, DQMHistogramCalibrationExample>("calibrationexample");
+    Register<DQMMetadataTreeOT, CBCHistogramPulseShape>("cbcpulseshape");
+    Register<DQMMetadataTreeOT, DQMHistogramLatencyScan>("otlatency");
 
     // IT calibrations
     Register<PixelAliveHistograms>("pixelalive");

@@ -1,7 +1,6 @@
 #ifndef _MiddlewareInterface_h_
 #define _MiddlewareInterface_h_
 
-#include "MessageUtils/cpp/QueryMessage.pb.h"
 #include "NetworkUtils/TCPClient.h"
 #include <string>
 
