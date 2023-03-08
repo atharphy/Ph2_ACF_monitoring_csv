@@ -1171,19 +1171,11 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 
 void SystemController::Configure(const ConfigureInfo theConfigureInfo)
 {
-    InitializeHw(theConfigureInfo.getConfigurationFile(), fParsedFile);
-    InitializeSettings(theConfigureInfo.getConfigurationFile(), fParsedFile);
+    fConfigurationFileName = theConfigureInfo.getConfigurationFile();
+    InitializeHw(fConfigurationFileName, fParsedFile);
+    InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
-    // auto excludeEven = [](const OpticalGroupContainer* theContainer)
-    // {
-    //     return theContainer->getId()%2 == 1;
-    // };
-    // fDetectorContainer->addOpticalGroupQueryFunction(excludeEven);
-    // auto exclude = [](const OpticalGroupContainer* theContainer)
-    // {
-    //     return theContainer->getId() != 3;
-    // };
-    // fDetectorContainer->addOpticalGroupQueryFunction(exclude);
+
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
 

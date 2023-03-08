@@ -28,7 +28,7 @@ class ChannelGroupHandler;
 class ChannelGroupBase;
 class ScanBase;
 class ConfigureInfo;
-class DQMMetadataOT;
+class DQMMetadata;
 
 #ifdef __HTTP__
 #include "THttpServer.h"
@@ -111,6 +111,7 @@ class Tool : public Ph2_System::SystemController
     void privateRunning(std::promise<int>&& thePromise);
     void SaveResults();
     void CloseResultFile();
+    void fillNameContainerWithChipIDs();
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp
@@ -364,7 +365,7 @@ class Tool : public Ph2_System::SystemController
     TTree*              fSummaryTree; /*< TTree for summary of results*/
     static std::string  fSummaryTreeParameter;
     static double       fSummaryTreeValue;
-    DQMMetadataOT*  fDQMMetadataOT;
+    DQMMetadata*  fDQMMetadata;
 #endif
 
     FrontEndType        fType;

@@ -371,6 +371,7 @@ class SystemController
     DetectorDataContainer* fNameContainer;
     bool    fSameChannelGroupForAllChannels{true};
     uint8_t fInitializeInterfaces{1};
+    std::string fConfigurationFileName {""};
 };
 
 } // namespace Ph2_System

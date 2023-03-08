@@ -17,7 +17,7 @@
 #include "Utils/SSAChannelGroupHandler.h"
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/DQMMetadataOT.h"
+#include "DQMUtils/DQMMetadata.h"
 #endif
 
 using namespace Ph2_System;
@@ -63,7 +63,7 @@ Tool::Tool(THttpServer* pHttpServer)
     , fCanvasMap()
     , fChipHistMap()
     , fHybridHistMap()
-    , fDQMMetadataOT(nullptr)
+    , fDQMMetadata(nullptr)
     , fType()
     , fTestGroupChannelMap()
     , fDirectoryName("")
@@ -151,22 +151,17 @@ void Tool::Start(int runNumber)
         std::string resultDirectory = "Results/Run_" + std::to_string(runNumber);
         CreateResultDirectory(resultDirectory, false, false);
     }
+    fillNameContainerWithChipIDs();
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
-    fDQMMetadataOT = new DQMMetadataOT();
-    fDQMMetadataOT->book(fResultFile, *fDetectorContainer, fSettingsMap);
-    fDQMMetadataOT->fillObjectNames(*fNameContainer);
+    fDQMMetadata = new DQMMetadata();
+    fDQMMetadata->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    fDQMMetadata->fillObjectNames(*fNameContainer);
 #else
     if(fDQMStreamerEnabled)
     {
-
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        ContainerSerialization theContainerSerialization("MetadataOTObjectNames");
-
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        ContainerSerialization theContainerSerialization("MetadataObjectNames");
         theContainerSerialization.streamByDetectorContainer(fDQMStreamer, *fNameContainer);
-
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     }
 #endif
 
@@ -187,6 +182,11 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 //     theGuard.unlock();
 //     wakeUp.notify_one();
 // }
+
+void Tool::fillNameContainerWithChipIDs()
+{
+    
+}
 
 void Tool::Stop()
 {
@@ -228,7 +228,7 @@ void Tool::Inherit(const Tool* pTool)
     fBeBoardHistMap       = pTool->fBeBoardHistMap;
     fSummaryTreeParameter = pTool->fSummaryTreeParameter;
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
-    fDQMMetadataOT    = pTool->fDQMMetadataOT;
+    fDQMMetadata    = pTool->fDQMMetadata;
 #endif
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
     fRunNumber           = pTool->fRunNumber;
@@ -321,8 +321,8 @@ void Tool::SoftDestroy()
     }
     fBeBoardHistMap.clear();
 
-    delete fDQMMetadataOT;
-    fDQMMetadataOT = nullptr;
+    delete fDQMMetadata;
+    fDQMMetadata = nullptr;
 #endif
     fTestGroupChannelMap.clear();
 }

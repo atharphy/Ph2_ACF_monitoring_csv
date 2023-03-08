@@ -1,18 +1,18 @@
-#include "DQMUtils/DQMMetadataOT.h"
+#include "DQMUtils/DQMMetadata.h"
 #include "Utils/ContainerFactory.h"
 #include "TTree.h"
 #include "Utils/EmptyContainer.h"
 #include "RootUtils/StringContainer.h"
 #include "Utils/ContainerSerialization.h"
 
-DQMMetadataOT::DQMMetadataOT()
+DQMMetadata::DQMMetadata()
 : DQMHistogramBase()
 {}
 
-DQMMetadataOT::~DQMMetadataOT()
+DQMMetadata::~DQMMetadata()
 {}
 
-void DQMMetadataOT::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
+void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     fDetectorContainer = &theDetectorStructure;
 
@@ -23,7 +23,7 @@ void DQMMetadataOT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
     RootContainerFactory::bookHistogramsFromStructure<EmptyContainer,StringContainer, StringContainer, StringContainer, StringContainer, EmptyContainer>(theOutputFile, theDetectorStructure, fNameContainer, theEmpty, theNameStringContainer, theNameStringContainer, theNameStringContainer, theNameStringContainer, theEmpty);
 }
 
-void DQMMetadataOT::fillObjectNames(const DetectorDataContainer& theNameContainer)
+void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
 {
     for(const auto board : theNameContainer)
     {
@@ -54,17 +54,17 @@ void DQMMetadataOT::fillObjectNames(const DetectorDataContainer& theNameContaine
     }
 }
 
-void DQMMetadataOT::process() {}
+void DQMMetadata::process() {}
 
-bool DQMMetadataOT::fill(std::vector<char>& dataBuffer)
+bool DQMMetadata::fill(std::vector<char>& dataBuffer)
 {
     std::string inputStream(dataBuffer.begin(), dataBuffer.end());
 
-    ContainerSerialization theNameSerialization("MetadataOTObjectNames");
+    ContainerSerialization theNameSerialization("MetadataObjectNames");
     
     if(theNameSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched MetadataOT ObjectNames!!!!!\n";
+        std::cout << "Matched Metadata ObjectNames!!!!!\n";
         DetectorDataContainer theDetectorData = theNameSerialization.deserializeDetectorContainer<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(fDetectorContainer);
         fillObjectNames(theDetectorData);
         return true;

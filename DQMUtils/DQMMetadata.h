@@ -5,11 +5,11 @@
 
 class TTree;
 
-class DQMMetadataOT : public DQMHistogramBase
+class DQMMetadata : public DQMHistogramBase
 {
   public:
-    DQMMetadataOT();
-    ~DQMMetadataOT();
+    DQMMetadata();
+    ~DQMMetadata();
 
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
