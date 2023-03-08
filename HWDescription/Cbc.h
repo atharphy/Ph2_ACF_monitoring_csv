@@ -58,12 +58,7 @@ class Cbc : public ReadoutChip
     // uint16_t getReg ( const std::string& pReg ) const override;
     // void setReg ( const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false) override;
 
-    /*!
-     * \brief Write the registers of the Map in a file
-     * \param fName2Add
-     * \return std::stringstream
-     */
-    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
+    std::stringstream getRegMapStream() override;
 
     uint32_t getNumberOfChannels() const override { return NCHANNELS; }
 

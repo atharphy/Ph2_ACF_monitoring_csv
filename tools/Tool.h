@@ -111,7 +111,9 @@ class Tool : public Ph2_System::SystemController
     void privateRunning(std::promise<int>&& thePromise);
     void SaveResults();
     void CloseResultFile();
+    void initMetadataAndFillInitialConditions();
     void fillNameContainerWithChipIDs();
+    void fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer);
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp

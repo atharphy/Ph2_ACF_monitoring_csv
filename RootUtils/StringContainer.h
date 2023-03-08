@@ -69,6 +69,12 @@ class StringContainer : public PlotContainer
         fTObjString->Write(fName.c_str()); 
     }
 
+    void saveString(std::string theString)
+    {
+        setString(theString);
+        write();
+    }
+
     TObjString* fTObjString;
 
     std::string fDirectoryPath {""};

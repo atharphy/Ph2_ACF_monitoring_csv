@@ -19,39 +19,40 @@
 #include "DQMUtils/RD53SCurveHistograms.h"
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
-#include "DQMUtils/DQMMetadata.h"
+#include "DQMUtils/DQMMetadataOT.h"
+#include "DQMUtils/DQMMetadataIT.h"
 
 using namespace MessageUtils;
 
 DQMCalibrationFactory::DQMCalibrationFactory()
 {
     // OT calibrations
-    Register<DQMMetadata, DQMHistogramPedestalEqualization>("calibration");
-    Register<DQMMetadata, DQMHistogramPedestalEqualization, DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
-    Register<DQMMetadata, DQMHistogramPedestalEqualization, DQMHistogramKira>("calibrationandkira");
-    Register<DQMMetadata, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise, DQMHistogramKira>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    Register<DQMMetadata, DQMHistogramPedeNoise>("pedenoise");
-    Register<DQMMetadata, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise>("calibrationandpedenoise");
-    Register<DQMMetadata, DQMHistogramCalibrationExample>("calibrationexample");
-    Register<DQMMetadata, CBCHistogramPulseShape>("cbcpulseshape");
-    Register<DQMMetadata, DQMHistogramLatencyScan>("otlatency");
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization>("calibration");
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramKira>("calibrationandkira");
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise, DQMHistogramKira>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
+    Register<DQMMetadataOT, DQMHistogramPedeNoise>("pedenoise");
+    Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise>("calibrationandpedenoise");
+    Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
+    Register<DQMMetadataOT, CBCHistogramPulseShape>("cbcpulseshape");
+    Register<DQMMetadataOT, DQMHistogramLatencyScan>("otlatency");
 
     // IT calibrations
-    Register<PixelAliveHistograms>("pixelalive");
-    Register<PixelAliveHistograms>("noise");
-    Register<SCurveHistograms>("scurve");
-    Register<GainHistograms>("gain");
-    Register<GainOptimizationHistograms>("gainopt");
-    Register<ThrEqualizationHistograms>("threqu");
-    Register<ThresholdHistograms>("thrmin");
-    Register<ThresholdHistograms>("thradj");
-    Register<LatencyHistograms>("latency");
-    Register<InjectionDelayHistograms>("injdelay");
-    Register<ClockDelayHistograms>("clockdelay");
-    Register<PhysicsHistograms>("physics");
-    Register<PSPhysicsHistograms>("psphysics");
-    Register<Physics2SHistograms>("physics2s");
-    Register<DataTransmissionTestGraphs>("datatrtest");
+    Register<DQMMetadataIT, PixelAliveHistograms>("pixelalive");
+    Register<DQMMetadataIT, PixelAliveHistograms>("noise");
+    Register<DQMMetadataIT, SCurveHistograms>("scurve");
+    Register<DQMMetadataIT, GainHistograms>("gain");
+    Register<DQMMetadataIT, GainOptimizationHistograms>("gainopt");
+    Register<DQMMetadataIT, ThrEqualizationHistograms>("threqu");
+    Register<DQMMetadataIT, ThresholdHistograms>("thrmin");
+    Register<DQMMetadataIT, ThresholdHistograms>("thradj");
+    Register<DQMMetadataIT, LatencyHistograms>("latency");
+    Register<DQMMetadataIT, InjectionDelayHistograms>("injdelay");
+    Register<DQMMetadataIT, ClockDelayHistograms>("clockdelay");
+    Register<DQMMetadataIT, PhysicsHistograms>("physics");
+    Register<DQMMetadataIT, PSPhysicsHistograms>("psphysics");
+    Register<DQMMetadataIT, Physics2SHistograms>("physics2s");
+    Register<DQMMetadataIT, DataTransmissionTestGraphs>("datatrtest");
 }
 
 DQMCalibrationFactory::~DQMCalibrationFactory()
