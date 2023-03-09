@@ -89,13 +89,21 @@ class Container
 
     T* getObject(uint16_t id)
     {
-        if(idObjectMap_.find(id) == idObjectMap_.end()) throw Exception("T* getObject(uint16_t id) : Object Id not found");
+        if(idObjectMap_.find(id) == idObjectMap_.end())
+        {
+            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: Object with Id " + std::to_string(id) + " not found";
+            throw Exception(std::move(errorMessage));
+        }
         return idObjectMap_[id];
     }
 
     const T* getObject(uint16_t id) const
     {
-        if(idObjectMap_.find(id) == idObjectMap_.end()) throw Exception("T* getObject(uint16_t id) : Object Id not found");
+        if(idObjectMap_.find(id) == idObjectMap_.end())
+        {
+            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: Object with Id " + std::to_string(id) + " not found";
+            throw Exception(std::move(errorMessage));
+        }
         return idObjectMap_.at(id);
     }
 

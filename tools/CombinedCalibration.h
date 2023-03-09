@@ -44,10 +44,6 @@ struct CombinedCalibration : public Tool
     void start_impl(std::index_sequence<Is...>)
     {
         __attribute__((unused)) auto _ = {(start_single(std::get<Is>(tools)), 0)...};
-        Tool::dumpConfigFiles();
-        Tool::SaveResults();
-        Tool::WriteRootFile();
-        Tool::CloseResultFile();
     }
 
     template <class T>

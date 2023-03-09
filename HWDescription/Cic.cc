@@ -96,47 +96,38 @@ void Cic::loadfRegMap(const std::string& filename)
     for(auto& cRegItem: fRegMap) { LOG(DEBUG) << BOLDBLUE << "CIC register : " << cRegItem.first << " --- " << +cRegItem.second.fValue << RESET; }
 }
 
-// Write RegValues in a file
-std::stringstream Cic::saveRegMap(const std::string& fName2Add)
+std::stringstream Cic::getRegMapStream()
 {
-    std::ofstream file(this->getFileName(fName2Add), std::ios::out | std::ios::trunc);
+    std::stringstream theStream;
+    std::set<CicRegPair, RegItemComparer> fSetRegItem;
+    for(auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
 
-    if(file)
+    int cLineCounter = 0;
+
+    for(const auto& v: fSetRegItem)
     {
-        std::set<CicRegPair, RegItemComparer> fSetRegItem;
-        for(auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
-
-        int cLineCounter = 0;
-
-        for(const auto& v: fSetRegItem)
+        while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
         {
-            while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
-            {
-                auto cComment = fCommentMap.find(cLineCounter);
+            auto cComment = fCommentMap.find(cLineCounter);
 
-                file << cComment->second << std::endl;
-                cLineCounter++;
-            }
-
-            file << v.first;
-
-            for(int j = 0; j < 48; j++) file << " ";
-
-            file.seekp(-v.first.size(), std::ios_base::cur);
-
-            file << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fPage) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase
-                 << int(v.second.fAddress) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fDefValue) << "\t0x" << std::setfill('0') << std::setw(2)
-                 << std::hex << std::uppercase << int(v.second.fValue) << std::endl;
-
+            theStream << cComment->second << std::endl;
             cLineCounter++;
         }
 
-        file.close();
-    }
-    else
-        LOG(ERROR) << "Error opening file";
+        theStream << v.first;
 
-    return std::stringstream("");
+        for(int j = 0; j < 48; j++) theStream << " ";
+
+        theStream.seekp(-v.first.size(), std::ios_base::cur);
+
+        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fPage) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase
+                << int(v.second.fAddress) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fDefValue) << "\t0x" << std::setfill('0') << std::setw(2)
+                << std::hex << std::uppercase << int(v.second.fValue) << std::endl;
+
+        cLineCounter++;
+    }
+
+    return theStream;
 }
 
 } // namespace Ph2_HwDescription

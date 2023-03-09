@@ -45,6 +45,7 @@ SystemController::SystemController()
     , fMonitorDQMStreamer(nullptr)
     , fDetectorMonitor(nullptr)
     , fChannelGroupHandlerContainer(nullptr)
+    , fNameContainer(nullptr)
 {
 }
 
@@ -79,6 +80,10 @@ void SystemController::Inherit(const SystemController* pController)
     fParser                         = pController->fParser;
     fSameChannelGroupForAllChannels = pController->fSameChannelGroupForAllChannels;
     fInitializeInterfaces           = pController->fInitializeInterfaces;
+    fNameContainer                  = pController->fNameContainer;
+    fBoardType                      = pController->fBoardType;
+    fConfigurationFileName          = pController->fConfigurationFileName;
+    fConfigurationFileContent       = pController->fConfigurationFileContent;
 
 #ifdef __TCP_SERVER__
     fTestcardClient = pController->fTestcardClient;
@@ -139,6 +144,9 @@ void SystemController::Destroy()
 
     delete fChannelGroupHandlerContainer;
     fChannelGroupHandlerContainer = nullptr;
+
+    delete fNameContainer;
+    fNameContainer = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -227,7 +235,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
-        if(cFirstBoard->getBoardType() != BoardType::RD53)
+        fBoardType = cFirstBoard->getBoardType();
+        if(fBoardType != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
@@ -420,6 +429,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }
     }
+
+    fNameContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
+
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }
@@ -1166,19 +1179,23 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 
 void SystemController::Configure(const ConfigureInfo theConfigureInfo)
 {
-    InitializeHw(theConfigureInfo.getConfigurationFile(), fParsedFile);
-    InitializeSettings(theConfigureInfo.getConfigurationFile(), fParsedFile);
+    fConfigurationFileName = theConfigureInfo.getConfigurationFile();
+    std::ifstream configurationFile(fConfigurationFileName);
+    std::stringstream configurationFileStream;
+    configurationFileStream << configurationFile.rdbuf();
+    fConfigurationFileContent = configurationFileStream.str();
+
+    InitializeHw(fConfigurationFileName, fParsedFile);
+    InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
-    // auto excludeEven = [](const OpticalGroupContainer* theContainer)
-    // {
-    //     return theContainer->getId()%2 == 1;
-    // };
-    // fDetectorContainer->addOpticalGroupQueryFunction(excludeEven);
-    // auto exclude = [](const OpticalGroupContainer* theContainer)
-    // {
-    //     return theContainer->getId() != 3;
-    // };
-    // fDetectorContainer->addOpticalGroupQueryFunction(exclude);
+
+    for(const auto& enabledObject : theConfigureInfo.getEnabledModulesList(fDetectorContainer->at(0)->getBoardType() == BoardType::D19C))
+    {
+        std::cout << enabledObject.first << std::endl;
+        //Assumes one board only
+        fNameContainer->at(0)->getObject(enabledObject.first)->getSummary<std::string, std::string>() = enabledObject.second;
+    }
+
     std::cout << fParsedFile.str() << std::endl;
     ConfigureHw(false, true);
 }

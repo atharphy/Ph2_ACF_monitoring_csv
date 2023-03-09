@@ -48,7 +48,8 @@ class MPA : public ReadoutChip
     uint8_t           fPartnerId;
     uint8_t           getPartid() { return fPartnerId; }
     void              loadfRegMap(const std::string& filename) override;
-    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
+
+    std::stringstream getRegMapStream() override;
 
     bool isDACLocal(const std::string& dacName) override
     {

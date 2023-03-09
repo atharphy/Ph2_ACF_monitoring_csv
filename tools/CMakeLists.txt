@@ -141,10 +141,12 @@ else()
     include_directories(${UHAL_DIR}/uhal/include)
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
+
+    include_directories(${Protobuf_INCLUDE_DIRS})
     
     cet_set_compiler_flags(
-     EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-     )
+        EXTRA_FLAGS -Wno-reorder -Wl,--undefined
+    )
 
     cet_make(LIBRARY_NAME Ph2_Tools
             LIBRARIES

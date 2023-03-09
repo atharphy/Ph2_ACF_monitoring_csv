@@ -118,9 +118,14 @@ class Chip : public FrontEndDescription
     /*!
      * \brief Write the registers of the Map in a file
      * \param fName2Add
+     */
+    void saveRegMap(const std::string& fName2Add = "");
+
+    /*!
+     * \brief Prepare a stream with the registers of the Map
      * \return std::stringstream
      */
-    virtual std::stringstream saveRegMap(const std::string& fName2Add = "") = 0;
+    virtual std::stringstream getRegMapStream() = 0;
 
     /*!
      * \brief Get the Map of the registers

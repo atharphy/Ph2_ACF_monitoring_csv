@@ -82,3 +82,11 @@ std::string ConfigureInfo::createProtobufMessage() const
     theConfigureMessage.SerializeToString(&theConfigurationMessageString);
     return theConfigurationMessageString;
 }
+
+std::unordered_map<uint16_t, std::string> ConfigureInfo::getEnabledModulesList(bool isOT) const
+{
+    auto objectType = isOT ? MessageUtils::ObjectType::OPTICALGROUP : MessageUtils::ObjectType::HYBRID;
+    if(this->fObjectList.find(objectType) != fObjectList.end())
+        return fObjectList.at((isOT ? MessageUtils::ObjectType::OPTICALGROUP : MessageUtils::ObjectType::HYBRID));
+    return std::unordered_map<uint16_t, std::string>();
+}
