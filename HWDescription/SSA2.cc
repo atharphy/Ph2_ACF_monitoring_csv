@@ -110,8 +110,7 @@ void SSA2::loadfRegMap(const std::string& filename)
 
 std::stringstream SSA2::getRegMapStream()
 {
-
-    std::stringstream theStream;
+    std::stringstream                     theStream;
     std::set<SSARegPair, RegItemComparer> fSetRegItem;
 
     for(auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
@@ -135,8 +134,8 @@ std::stringstream SSA2::getRegMapStream()
         theStream.seekp(-v.first.size(), std::ios_base::cur);
 
         theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fPage) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase
-                << int(v.second.fAddress) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fDefValue) << "\t0x" << std::setfill('0') << std::setw(2)
-                << std::hex << std::uppercase << int(v.second.fValue) << std::endl;
+                  << int(v.second.fAddress) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fDefValue) << "\t0x" << std::setfill('0') << std::setw(2)
+                  << std::hex << std::uppercase << int(v.second.fValue) << std::endl;
 
         cLineCounter++;
     }

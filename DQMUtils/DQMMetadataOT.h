@@ -12,8 +12,8 @@ class DQMMetadataOT : public DQMMetadata
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
     bool fill(std::vector<char>& dataBuffer) override;
-    void process()                           override;
-    void reset(void)                         override;
+    void process() override;
+    void reset(void) override;
 };
 
 #endif

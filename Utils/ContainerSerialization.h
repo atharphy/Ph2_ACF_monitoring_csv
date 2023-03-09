@@ -10,8 +10,8 @@
 #include "Utils/DataContainer.h"
 #include "Utils/RD53Shared.h"
 #include <boost/serialization/export.hpp>
-#include <boost/utility/identity_type.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/utility/identity_type.hpp>
 
 class Occupancy;
 class OccupancyAndPh;
@@ -251,12 +251,12 @@ class ContainerSerialization
     {
         std::ostringstream            ouputStream;
         boost::archive::text_oarchive theArchive(ouputStream);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         theArchive << fCalibrationName;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         theArchive << theInputContainer;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         serializeExtraArguments(theArchive, extraArguments...);
         return ouputStream.str();

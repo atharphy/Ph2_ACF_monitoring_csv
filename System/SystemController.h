@@ -369,11 +369,11 @@ class SystemController
 
   protected:
     DetectorDataContainer* fNameContainer;
-    bool    fSameChannelGroupForAllChannels{true};
-    uint8_t fInitializeInterfaces{1};
-    std::string fConfigurationFileName {""};
-    std::string fConfigurationFileContent {""};
-    BoardType fBoardType {BoardType::UNDEFINED};
+    bool                   fSameChannelGroupForAllChannels{true};
+    uint8_t                fInitializeInterfaces{1};
+    std::string            fConfigurationFileName{""};
+    std::string            fConfigurationFileContent{""};
+    BoardType              fBoardType{BoardType::UNDEFINED};
 };
 
 } // namespace Ph2_System

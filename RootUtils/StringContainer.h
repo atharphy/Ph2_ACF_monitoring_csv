@@ -1,19 +1,14 @@
 #ifndef __STRING_CONTAINER__
 #define __STRING_CONTAINER__
 
-#include "TObjString.h"
 #include "RootUtils/PlotContainer.h"
+#include "TObjString.h"
 #include <TDirectory.h>
 
 class StringContainer : public PlotContainer
 {
   public:
-
-    StringContainer(std::string theName = "")
-    : fName(theName)
-    {
-        fTObjString = new TObjString();
-    };
+    StringContainer(std::string theName = "") : fName(theName) { fTObjString = new TObjString(); };
 
     ~StringContainer()
     {
@@ -24,49 +19,39 @@ class StringContainer : public PlotContainer
     StringContainer(const StringContainer& container) = delete;
     StringContainer& operator=(const StringContainer& container) = delete;
 
-
     StringContainer(StringContainer&& container)
     {
-        fTObjString               = container.fTObjString;
-        container.fTObjString     = nullptr;
-        fDirectoryPath            = std::move(container.fDirectoryPath);
-        fName                     = std::move(container.fName);
+        fTObjString           = container.fTObjString;
+        container.fTObjString = nullptr;
+        fDirectoryPath        = std::move(container.fDirectoryPath);
+        fName                 = std::move(container.fName);
     }
 
     StringContainer& operator=(StringContainer&& container)
     {
-        fTObjString               = container.fTObjString;
-        container.fTObjString     = nullptr;
-        fDirectoryPath            = std::move(container.fDirectoryPath);
-        fName                     = std::move(container.fName);
+        fTObjString           = container.fTObjString;
+        container.fTObjString = nullptr;
+        fDirectoryPath        = std::move(container.fDirectoryPath);
+        fName                 = std::move(container.fName);
         return *this;
     }
 
     void initialize(std::string name, std::string title, const PlotContainer* reference) override
     {
-        fName = name;
+        fName          = name;
         fDirectoryPath = gDirectory->GetPath();
     }
 
-    void        setNameTitle(std::string histogramName, std::string histogramTitle) override {};
-    std::string getName() const                                                     override 
-    {
-        return fName;
-    };
-    std::string getTitle() const                                                    override 
-    {
-        return "";
-    };
+    void        setNameTitle(std::string histogramName, std::string histogramTitle) override{};
+    std::string getName() const override { return fName; };
+    std::string getTitle() const override { return ""; };
 
-    void setString(std::string theString)
-    {
-       fTObjString->SetString(theString.c_str()); 
-    }
+    void setString(std::string theString) { fTObjString->SetString(theString.c_str()); }
 
     void write()
     {
         gDirectory->cd(fDirectoryPath.c_str());
-        fTObjString->Write(fName.c_str()); 
+        fTObjString->Write(fName.c_str());
     }
 
     void saveString(std::string theString)
@@ -77,9 +62,8 @@ class StringContainer : public PlotContainer
 
     TObjString* fTObjString;
 
-    std::string fDirectoryPath {""};
-    std::string fName {""};
-
+    std::string fDirectoryPath{""};
+    std::string fName{""};
 };
 
 #endif
