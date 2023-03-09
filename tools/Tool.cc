@@ -191,7 +191,7 @@ void Tool::initMetadataAndFillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theUsernameContainer);
     theUsernameContainer.getSummary<std::string>() = theUsername;
 
-    std::string theHostName = std::string(std::getenv("HOSTNAME"));
+    std::string           theHostName = std::string(std::getenv("HOSTNAME"));
     DetectorDataContainer theHostNameContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theHostNameContainer);
     theHostNameContainer.getSummary<std::string>() = theHostName;
@@ -205,46 +205,43 @@ void Tool::initMetadataAndFillInitialConditions()
     fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
     bool isOriginal = true;
 
-    #ifdef __USE_ROOT__
-        InitResultFile("Hybrid");
-        if(fBoardType == BoardType::D19C)
-        {
-            fDQMMetadata = new DQMMetadataOT();
-        }
-        else if(fBoardType == BoardType::RD53)
-        {
-            fDQMMetadata = new DQMMetadataIT();
-        }
-        else
-        {
-            LOG(ERROR) << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Board type not defined!! Impossible to create DQM for metadata, aborting..." << std::endl;
-            abort();
-        }
-        fDQMMetadata->book(fResultFile, *fDetectorContainer, fSettingsMap);
-        fDQMMetadata->fillObjectNames(*fNameContainer);
-        fDQMMetadata->fillUsername(theUsernameContainer);
-        fDQMMetadata->fillHostName(theHostNameContainer);
-        fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
-        fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isOriginal);
-    #else
-        if(fDQMStreamerEnabled)
-        {
-            ContainerSerialization theObjectNameSerialization("MetadataObjectNames");
-            theObjectNameSerialization.streamByDetectorContainer(fDQMStreamer, *fNameContainer);
+#ifdef __USE_ROOT__
+    InitResultFile("Hybrid");
+    if(fBoardType == BoardType::D19C) { fDQMMetadata = new DQMMetadataOT(); }
+    else if(fBoardType == BoardType::RD53)
+    {
+        fDQMMetadata = new DQMMetadataIT();
+    }
+    else
+    {
+        LOG(ERROR) << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Board type not defined!! Impossible to create DQM for metadata, aborting..." << std::endl;
+        abort();
+    }
+    fDQMMetadata->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    fDQMMetadata->fillObjectNames(*fNameContainer);
+    fDQMMetadata->fillUsername(theUsernameContainer);
+    fDQMMetadata->fillHostName(theHostNameContainer);
+    fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
+    fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isOriginal);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theObjectNameSerialization("MetadataObjectNames");
+        theObjectNameSerialization.streamByDetectorContainer(fDQMStreamer, *fNameContainer);
 
-            ContainerSerialization theUsernameSerialization("MetadataUsername");
-            theUsernameSerialization.streamByDetectorContainer(fDQMStreamer, theUsernameContainer);
+        ContainerSerialization theUsernameSerialization("MetadataUsername");
+        theUsernameSerialization.streamByDetectorContainer(fDQMStreamer, theUsernameContainer);
 
-            ContainerSerialization theHostNameSerialization("MetadataHostName");
-            theHostNameSerialization.streamByDetectorContainer(fDQMStreamer, theHostNameContainer);
+        ContainerSerialization theHostNameSerialization("MetadataHostName");
+        theHostNameSerialization.streamByDetectorContainer(fDQMStreamer, theHostNameContainer);
 
-            ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
-            theDetectorConfigurationSerialization.streamByDetectorContainer(fDQMStreamer, theDetectorConfigurationContainer);
+        ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
+        theDetectorConfigurationSerialization.streamByDetectorContainer(fDQMStreamer, theDetectorConfigurationContainer);
 
-            ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
-            theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isOriginal);
-        }
-    #endif   
+        ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
+        theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isOriginal);
+    }
+#endif
 }
 
 void Tool::fillNameContainerWithChipIDs()
@@ -258,7 +255,8 @@ void Tool::fillNameContainerWithChipIDs()
                 for(auto cChip: *cHybrid)
                 {
                     uint32_t chipFuseId = fReadoutChipInterface->ReadChipFuseID(cChip);
-                    fNameContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
+                    fNameContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::string, EmptyContainer>() =
+                        std::to_string(chipFuseId);
                 }
             }
         }
@@ -275,7 +273,11 @@ void Tool::fillReadoutChipConfigurationContainer(DetectorDataContainer& theReado
             {
                 for(auto cChip: *cHybrid)
                 {
-                    theReadoutChipConfigurationContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::string, EmptyContainer>() = cChip->getRegMapStream().str();
+                    theReadoutChipConfigurationContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
+                        ->getSummary<std::string, EmptyContainer>() = cChip->getRegMapStream().str();
                 }
             }
         }
@@ -290,20 +292,20 @@ void Tool::Stop()
         ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
         fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
         bool isOriginal = false;
-        #ifdef __USE_ROOT__
-            fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isOriginal);
-        #else
-            if(fDQMStreamerEnabled)
-            {
-                ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
-                theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isOriginal);
-            }
-        #endif
+#ifdef __USE_ROOT__
+        fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isOriginal);
+#else
+        if(fDQMStreamerEnabled)
+        {
+            ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
+            theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isOriginal);
+        }
+#endif
 
         Tool::dumpConfigFiles();
         Tool::SaveResults();
         Tool::WriteRootFile();
-        Tool::CloseResultFile();   
+        Tool::CloseResultFile();
 
         Tool::fKeepRunning = false;
         Tool::waitForRunToBeCompleted();
@@ -341,7 +343,7 @@ void Tool::Inherit(const Tool* pTool)
     fBeBoardHistMap       = pTool->fBeBoardHistMap;
     fSummaryTreeParameter = pTool->fSummaryTreeParameter;
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
-    fDQMMetadata    = pTool->fDQMMetadata;
+    fDQMMetadata          = pTool->fDQMMetadata;
 #endif
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
     fRunNumber           = pTool->fRunNumber;

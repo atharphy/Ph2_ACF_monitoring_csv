@@ -18,10 +18,10 @@ class DQMMetadata : public DQMHistogramBase
     void fillHostName(const DetectorDataContainer& theHostNameContainer);
     void fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer);
     void fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool original);
-    
+
     virtual bool fill(std::vector<char>& dataBuffer) override;
-    virtual void process()                           override;
-    virtual void reset()                             override;
+    virtual void process() override;
+    virtual void reset() override;
 
   private:
     DetectorContainer*    fDetectorContainer;

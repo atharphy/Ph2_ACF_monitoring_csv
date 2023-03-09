@@ -24,7 +24,7 @@ class lpGBT : public Chip
   public:
     lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName);
 
-    void              loadfRegMap(const std::string& fileName) override;
+    void loadfRegMap(const std::string& fileName) override;
 
     std::stringstream getRegMapStream() override;
     uint8_t           getNumberOfBits(const std::string& dacName) override { return 0; }

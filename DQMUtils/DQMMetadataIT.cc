@@ -1,11 +1,8 @@
 #include "DQMUtils/DQMMetadataIT.h"
 
-DQMMetadataIT::DQMMetadataIT()
-: DQMMetadata()
-{}
+DQMMetadataIT::DQMMetadataIT() : DQMMetadata() {}
 
-DQMMetadataIT::~DQMMetadataIT()
-{}
+DQMMetadataIT::~DQMMetadataIT() {}
 
 void DQMMetadataIT::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
@@ -17,10 +14,7 @@ void DQMMetadataIT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
 bool DQMMetadataIT::fill(std::vector<char>& dataBuffer)
 {
     bool motherClassFillResult = DQMMetadata::fill(dataBuffer);
-    if(motherClassFillResult)
-    {
-        return true;
-    }
+    if(motherClassFillResult) { return true; }
     else
     {
         // child fill here
@@ -29,17 +23,16 @@ bool DQMMetadataIT::fill(std::vector<char>& dataBuffer)
     return false;
 }
 
-void DQMMetadataIT::process()                          
+void DQMMetadataIT::process()
 {
     DQMMetadata::process();
 
     // child process here
 }
 
-void DQMMetadataIT::reset(void)                        
+void DQMMetadataIT::reset(void)
 {
     DQMMetadata::reset();
 
     // child reset here
 }
-
