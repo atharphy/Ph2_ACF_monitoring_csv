@@ -429,6 +429,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }
     }
+
+    fNameContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
+
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }
@@ -1184,9 +1188,6 @@ void SystemController::Configure(const ConfigureInfo theConfigureInfo)
     InitializeHw(fConfigurationFileName, fParsedFile);
     InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
-
-    fNameContainer = new DetectorDataContainer();
-    ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
 
     for(const auto& enabledObject : theConfigureInfo.getEnabledModulesList(fDetectorContainer->at(0)->getBoardType() == BoardType::D19C))
     {
