@@ -42,7 +42,7 @@ class SSA2 : public ReadoutChip
     uint8_t           getPartid() { return fPartnerId; }
     virtual void      accept(HwDescriptionVisitor& pVisitor) { pVisitor.visitChip(*this); }
     void              loadfRegMap(const std::string& filename) override;
-    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
+    std::stringstream getRegMapStream() override;
     uint32_t          getNumberOfChannels() const override { return NSSACHANNELS; }
     bool              isDACLocal(const std::string& dacName) override // FIXME: what does thsi do? Ask Kevin.
     {

@@ -27,6 +27,8 @@ class DetectorDataContainer;
 class ChannelGroupHandler;
 class ChannelGroupBase;
 class ScanBase;
+class ConfigureInfo;
+class DQMMetadata;
 
 #ifdef __HTTP__
 #include "THttpServer.h"
@@ -99,7 +101,7 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
+    void Configure(const ConfigureInfo theConfigureInfo) override;
 
     void Start(int runNumber) override;
     // void InformImDone();
@@ -109,6 +111,9 @@ class Tool : public Ph2_System::SystemController
     void privateRunning(std::promise<int>&& thePromise);
     void SaveResults();
     void CloseResultFile();
+    void initMetadataAndFillInitialConditions();
+    void fillNameContainerWithChipIDs();
+    void fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer);
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp
@@ -362,6 +367,7 @@ class Tool : public Ph2_System::SystemController
     TTree*              fSummaryTree; /*< TTree for summary of results*/
     static std::string  fSummaryTreeParameter;
     static double       fSummaryTreeValue;
+    DQMMetadata*        fDQMMetadata;
 #endif
 
     FrontEndType        fType;

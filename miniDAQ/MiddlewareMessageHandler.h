@@ -33,11 +33,7 @@ class MiddlewareMessageHandler
     static std::string serializeMessage(const T& theMessage);
 
   private:
-    MiddlewareStateMachine                                                          fMiddlewareStateMachine;
-    const std::map<MessageUtils::CalibrationList::CalibrationNameEnum, std::string> getAvailableCalibrationMap() const
-    {
-        return fMiddlewareStateMachine.getCombinedCalibrationFactory().getAvailableCalibrationMap();
-    }
+    MiddlewareStateMachine fMiddlewareStateMachine;
 
     template <typename... Args>
     MessageUtils::ReplyMessage tryCatchWrapper(std::string currentStep, void (MiddlewareStateMachine::*F)(Args...), typename std::remove_reference<Args>::type&... arguments)

@@ -117,7 +117,7 @@ void ThrMinimization::localConfigure(const std::string& histoFileName, int curre
 
 void ThrMinimization::run()
 {
-    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, maxMaskedPixels, startValue, stopValue);
+    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdRegs, targetOccupancy, maxMaskedPixels, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #
@@ -128,7 +128,7 @@ void ThrMinimization::run()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                     theThrContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                        static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdReg);
+                        static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdRegs[0]);
 
     // ################
     // # Error report #
@@ -178,7 +178,7 @@ void ThrMinimization::fillHisto()
 #endif
 }
 
-void ThrMinimization::bitWiseScanGlobal(const std::string& regName, float target, float threshold, uint16_t startValue, uint16_t stopValue)
+void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, float threshold, uint16_t startValue, uint16_t stopValue)
 {
     float    tmp;
     uint16_t init;
@@ -212,7 +212,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, float target
                             (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
                              maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
                             2;
-        CalibBase::downloadNewDACvalues(midDACcontainer, regName);
+        CalibBase::downloadNewDACvalues(midDACcontainer, regNames);
 
         // ################
         // # Run analysis #
@@ -276,7 +276,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, float target
     // ###########################
     // # Download new DAC values #
     // ###########################
-    CalibBase::downloadNewDACvalues(bestDACcontainer, regName, true, 0);
+    CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, true, 0);
 
     // ################
     // # Run analysis #

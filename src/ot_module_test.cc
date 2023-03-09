@@ -185,7 +185,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkCICAlignment", "Manually scan CIC input aligner", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkLink", "Check that I can receive constant pattern from link", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("kira", "KIRA scan", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("kira", "Perform KIRA scan", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("kiraport", "Specify port of power supply package", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("kiraid", "Specify id of arduino in power supply package", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("kiracalibration", "Perform KIRA calibration", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
@@ -209,7 +212,9 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    int         cKiraPort        = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
+    int         cKiraPort        = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
+    std::string cKiraID          = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
+    bool        cKiraCalibration = cmd.foundOption("kiracalibration");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
 
@@ -1312,8 +1317,9 @@ int main(int argc, char* argv[])
         cGoodRuns.close();
         KIRA cKira;
         cKira.Inherit(&cTool);
-        cKira.Initialise(cKiraPort, "MyArduino");
+        cKira.Initialise(cKiraPort, cKiraID);
         cKira.determineLatency();
+        if(cKiraCalibration) cKira.calibrateIntensity();
         cKira.performKIRATest();
     }
 

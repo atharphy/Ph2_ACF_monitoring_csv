@@ -26,7 +26,7 @@ class MiddlewareStateMachine
     };
     // State machine commands
     void   initialize();
-    void   configure(const std::string& calibrationName, const std::string& configurationFile);
+    void   configure(const ConfigureInfo theConfigureInfo);
     void   start(int runNumber);
     void   stop();
     void   halt();
