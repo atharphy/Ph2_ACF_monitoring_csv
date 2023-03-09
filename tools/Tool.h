@@ -367,7 +367,7 @@ class Tool : public Ph2_System::SystemController
     TTree*              fSummaryTree; /*< TTree for summary of results*/
     static std::string  fSummaryTreeParameter;
     static double       fSummaryTreeValue;
-    DQMMetadata*  fDQMMetadata;
+    DQMMetadata*        fDQMMetadata;
 #endif
 
     FrontEndType        fType;

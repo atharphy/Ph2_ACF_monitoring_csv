@@ -266,13 +266,9 @@ void RD53::loadfRegMap(const std::string& fileName)
 }
 
 std::stringstream RD53::getRegMapStream()
-// #################################################################
-// # If fName2Add != STREAMON --> then data are also saved on file #
-// #################################################################
 {
     const unsigned int Nspaces = 26; // @CONST@
-
-    std::stringstream theStream;
+    std::stringstream  theStream;
 
     std::set<ChipRegPair, RegItemComparer> fSetRegItem;
     for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});

@@ -235,7 +235,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
-        fBoardType = cFirstBoard->getBoardType();
+        fBoardType                 = cFirstBoard->getBoardType();
         if(fBoardType != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
@@ -432,7 +432,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
-
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }
@@ -1180,7 +1179,7 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 void SystemController::Configure(const ConfigureInfo theConfigureInfo)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
-    std::ifstream configurationFile(fConfigurationFileName);
+    std::ifstream     configurationFile(fConfigurationFileName);
     std::stringstream configurationFileStream;
     configurationFileStream << configurationFile.rdbuf();
     fConfigurationFileContent = configurationFileStream.str();
@@ -1189,10 +1188,10 @@ void SystemController::Configure(const ConfigureInfo theConfigureInfo)
     InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
 
-    for(const auto& enabledObject : theConfigureInfo.getEnabledModulesList(fDetectorContainer->at(0)->getBoardType() == BoardType::D19C))
+    for(const auto& enabledObject: theConfigureInfo.getEnabledModulesList(fDetectorContainer->at(0)->getBoardType() == BoardType::D19C))
     {
         std::cout << enabledObject.first << std::endl;
-        //Assumes one board only
+        // Assumes one board only
         fNameContainer->at(0)->getObject(enabledObject.first)->getSummary<std::string, std::string>() = enabledObject.second;
     }
 
