@@ -1,7 +1,6 @@
 #ifndef __COMBINED_CALIBRATION_FACTORY__
 #define __COMBINED_CALIBRATION_FACTORY__
 
-#include "MessageUtils/cpp/QueryMessage.pb.h"
 #include "tools/CombinedCalibration.h"
 #include "tools/Tool.h"
 #include <iostream>
@@ -32,34 +31,22 @@ class CombinedCalibrationFactory
     ~CombinedCalibrationFactory();
 
     template <typename... Args>
-    void Register(const std::string& calibrationTag, MessageUtils::CalibrationList::CalibrationNameEnum theCalibrationEnum)
+    void Register(const std::string& calibrationTag)
     {
         if(fCalibrationMap.count(calibrationTag))
         {
             std::cerr << "calibrationTag " << calibrationTag << " already exists, aborting..." << std::endl;
             abort();
         }
-        if(fCalibrationNameToString.count(theCalibrationEnum))
-        {
-            std::cerr << "calibrationEnum for calibration tag " << calibrationTag << " already exists, aborting..." << std::endl;
-            abort();
-        }
-        fCalibrationMap[calibrationTag]              = new Creator<Args...>;
-        fCalibrationNameToString[theCalibrationEnum] = calibrationTag;
-        fStringToCalibrationName[calibrationTag]     = theCalibrationEnum;
+        fCalibrationMap[calibrationTag] = new Creator<Args...>;
     }
 
-    Tool* createCombinedCalibration(const std::string& calibrationTag) const;
+    Tool* createCombinedCalibration(const std::string& calibrationName) const;
 
-    std::vector<std::string>                                                  getAvailableCalibrations() const;
-    std::map<MessageUtils::CalibrationList::CalibrationNameEnum, std::string> getAvailableCalibrationMap() const { return fCalibrationNameToString; }
-    const std::string& getCalibrationName(MessageUtils::CalibrationList::CalibrationNameEnum theCalibrationEnum) const { return fCalibrationNameToString.at(theCalibrationEnum); }
-    const MessageUtils::CalibrationList::CalibrationNameEnum& getCalibrationEnum(std::string theCalibrationName) const { return fStringToCalibrationName.at(theCalibrationName); }
+    std::vector<std::string> getAvailableCalibrations() const;
 
   private:
-    std::map<std::string, BaseCreator*>                                       fCalibrationMap;
-    std::map<MessageUtils::CalibrationList::CalibrationNameEnum, std::string> fCalibrationNameToString;
-    std::map<std::string, MessageUtils::CalibrationList::CalibrationNameEnum> fStringToCalibrationName;
+    std::map<std::string, BaseCreator*> fCalibrationMap;
 };
 
 #endif

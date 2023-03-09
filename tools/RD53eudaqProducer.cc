@@ -20,7 +20,7 @@ void RD53eudaqProducer::DoReset()
 void RD53eudaqProducer::DoInitialise()
 {
     std::stringstream outp;
-    RD53sysCntrPhys.InitializeHw(configFile, outp, false);
+    RD53sysCntrPhys.InitializeHw(configFile, outp);
     RD53sysCntrPhys.InitializeSettings(configFile, outp);
     nTRIGxEvent = RD53sysCntrPhys.findValueInSettings<double>("nTRIGxEvent");
 }
@@ -72,7 +72,7 @@ void RD53eudaqProducer::DoStartRun()
                 for(const auto cChip: *cHybrid)
                 {
                     std::stringstream header;
-                    std::stringstream chipData = cChip->saveRegMap("STREAMON");
+                    std::stringstream chipData = cChip->getRegMapStream();
                     header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
                     ev->SetTag(header.str().c_str(), chipData.str());
                 }

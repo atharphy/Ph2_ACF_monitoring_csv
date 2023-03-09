@@ -5,14 +5,21 @@
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/Occupancy.h"
 #include <future>
 
+#include "Utils/ConfigureInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
+
+#ifdef __USE_ROOT__
+#include "DQMUtils/DQMMetadataIT.h"
+#include "DQMUtils/DQMMetadataOT.h"
+#endif
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -57,6 +64,7 @@ Tool::Tool(THttpServer* pHttpServer)
     , fCanvasMap()
     , fChipHistMap()
     , fHybridHistMap()
+    , fDQMMetadata(nullptr)
     , fType()
     , fTestGroupChannelMap()
     , fDirectoryName("")
@@ -131,9 +139,9 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
+void Tool::Configure(const ConfigureInfo theConfigureInfo)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
+    SystemController::Configure(theConfigureInfo);
     ConfigureCalibration();
 }
 
@@ -144,9 +152,8 @@ void Tool::Start(int runNumber)
         std::string resultDirectory = "Results/Run_" + std::to_string(runNumber);
         CreateResultDirectory(resultDirectory, false, false);
     }
-#ifdef __USE_ROOT__
-    InitResultFile("Hybrid");
-#endif
+    initMetadataAndFillInitialConditions();
+
     // doExit       = false;
     Tool::fKeepRunning = true;
     fRunNumber         = runNumber;
@@ -164,10 +171,140 @@ void Tool::Start(int runNumber)
 //     wakeUp.notify_one();
 // }
 
+void Tool::initMetadataAndFillInitialConditions()
+{
+    fillNameContainerWithChipIDs();
+
+    std::string theUsername;
+    try
+    {
+        theUsername = std::string(std::getenv("USER"));
+    }
+    catch(const std::exception& e)
+    {
+        LOG(WARNING) << e.what();
+        LOG(WARNING) << __PRETTY_FUNCTION__ << " Username not set, using dummy name";
+        theUsername = "user";
+    }
+
+    DetectorDataContainer theUsernameContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theUsernameContainer);
+    theUsernameContainer.getSummary<std::string>() = theUsername;
+
+    std::string theHostName = std::string(std::getenv("HOSTNAME"));
+    DetectorDataContainer theHostNameContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theHostNameContainer);
+    theHostNameContainer.getSummary<std::string>() = theHostName;
+
+    DetectorDataContainer theDetectorConfigurationContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
+    theDetectorConfigurationContainer.getSummary<std::string>() = fConfigurationFileContent;
+
+    DetectorDataContainer theReadoutChipConfigurationContainer;
+    ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
+    fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
+    bool isOriginal = true;
+
+    #ifdef __USE_ROOT__
+        InitResultFile("Hybrid");
+        if(fBoardType == BoardType::D19C)
+        {
+            fDQMMetadata = new DQMMetadataOT();
+        }
+        else if(fBoardType == BoardType::RD53)
+        {
+            fDQMMetadata = new DQMMetadataIT();
+        }
+        else
+        {
+            LOG(ERROR) << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Board type not defined!! Impossible to create DQM for metadata, aborting..." << std::endl;
+            abort();
+        }
+        fDQMMetadata->book(fResultFile, *fDetectorContainer, fSettingsMap);
+        fDQMMetadata->fillObjectNames(*fNameContainer);
+        fDQMMetadata->fillUsername(theUsernameContainer);
+        fDQMMetadata->fillHostName(theHostNameContainer);
+        fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
+        fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isOriginal);
+    #else
+        if(fDQMStreamerEnabled)
+        {
+            ContainerSerialization theObjectNameSerialization("MetadataObjectNames");
+            theObjectNameSerialization.streamByDetectorContainer(fDQMStreamer, *fNameContainer);
+
+            ContainerSerialization theUsernameSerialization("MetadataUsername");
+            theUsernameSerialization.streamByDetectorContainer(fDQMStreamer, theUsernameContainer);
+
+            ContainerSerialization theHostNameSerialization("MetadataHostName");
+            theHostNameSerialization.streamByDetectorContainer(fDQMStreamer, theHostNameContainer);
+
+            ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
+            theDetectorConfigurationSerialization.streamByDetectorContainer(fDQMStreamer, theDetectorConfigurationContainer);
+
+            ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
+            theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isOriginal);
+        }
+    #endif   
+}
+
+void Tool::fillNameContainerWithChipIDs()
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    uint32_t chipFuseId = fReadoutChipInterface->ReadChipFuseID(cChip);
+                    fNameContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
+                }
+            }
+        }
+    }
+}
+
+void Tool::fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    theReadoutChipConfigurationContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::string, EmptyContainer>() = cChip->getRegMapStream().str();
+                }
+            }
+        }
+    }
+}
+
 void Tool::Stop()
 {
     if(Tool::fKeepRunning == true)
     {
+        DetectorDataContainer theReadoutChipConfigurationContainer;
+        ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
+        fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
+        bool isOriginal = false;
+        #ifdef __USE_ROOT__
+            fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isOriginal);
+        #else
+            if(fDQMStreamerEnabled)
+            {
+                ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
+                theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isOriginal);
+            }
+        #endif
+
+        Tool::dumpConfigFiles();
+        Tool::SaveResults();
+        Tool::WriteRootFile();
+        Tool::CloseResultFile();   
+
         Tool::fKeepRunning = false;
         Tool::waitForRunToBeCompleted();
         // if(fRunningThread.joinable() == true) fRunningThread.join();
@@ -204,6 +341,7 @@ void Tool::Inherit(const Tool* pTool)
     fBeBoardHistMap       = pTool->fBeBoardHistMap;
     fSummaryTreeParameter = pTool->fSummaryTreeParameter;
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
+    fDQMMetadata    = pTool->fDQMMetadata;
 #endif
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
     fRunNumber           = pTool->fRunNumber;
@@ -233,7 +371,6 @@ void Tool::resetPointers() {}
 void Tool::Destroy()
 {
     LOG(INFO) << BOLDRED << "Destroying memory objects" << RESET;
-    SystemController::Destroy();
 #ifdef __HTTP__
     LOG(INFO) << BOLDRED << "Destroying HttpServer" << RESET;
     if(fHttpServer)
@@ -246,6 +383,7 @@ void Tool::Destroy()
 
     SoftDestroy();
     LOG(INFO) << BOLDRED << "Memory objects destroyed" << RESET;
+    SystemController::Destroy();
 }
 
 void Tool::SoftDestroy()
@@ -295,6 +433,9 @@ void Tool::SoftDestroy()
         }
     }
     fBeBoardHistMap.clear();
+
+    delete fDQMMetadata;
+    fDQMMetadata = nullptr;
 #endif
     fTestGroupChannelMap.clear();
 }

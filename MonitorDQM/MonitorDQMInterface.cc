@@ -5,6 +5,7 @@
 #include "MonitorDQM/MonitorDQMInterface.h"
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
 #include "Parser/DetectorMonitorConfig.h"
+#include "Utils/ConfigureInfo.h"
 #include "Utils/ContainerSerialization.h"
 
 #include "TFile.h"
@@ -50,13 +51,15 @@ void MonitorDQMInterface::destroyDQMs(void)
 }
 
 //========================================================================================================================
-void MonitorDQMInterface::configure(std::string const& configurationFilePath)
+void MonitorDQMInterface::configure(const ConfigureInfo& theConfigureInfo)
 {
-    LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
+    Ph2_Parser::FileParser theFileParser;
+    std::stringstream      out;
+    std::string            configurationFilePath = theConfigureInfo.getConfigurationFile();
 
-    std::string serverIP   = "127.0.0.1";
-    int         serverPort = 7000;
-    fListener              = new TCPSubscribeClient(serverIP, serverPort);
+    CommunicationSettingConfig theCommunicationSettingConfig;
+    theFileParser.parseCommunicationSettings(configurationFilePath, theCommunicationSettingConfig, out);
+    fListener = new TCPSubscribeClient(theCommunicationSettingConfig.fMonitorDQMCommunication.fIP, theCommunicationSettingConfig.fMonitorDQMCommunication.fPort);
 
     if(!fListener->connect())
     {
@@ -65,13 +68,12 @@ void MonitorDQMInterface::configure(std::string const& configurationFilePath)
     }
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
 
-    Ph2_Parser::FileParser fParser;
-    std::stringstream      out;
+    theFileParser.parseHW(configurationFilePath, &fDetectorStructure, out);
 
-    fParser.parseHW(configurationFilePath, &fDetectorStructure, out);
+    theConfigureInfo.setEnabledObjects(&fDetectorStructure);
 
     DetectorMonitorConfig theDetectorMonitorConfig;
-    std::string           monitoringType = fParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);
+    std::string           monitoringType = theFileParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);
 
     if(monitoringType == "2S") fMonitorDQMVector.push_back(new MonitorDQMPlotCBC());
 

@@ -129,22 +129,24 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}PRODUCTION TOOLS IT${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
-    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
-    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
+    include_directories(${UHAL_DIR}/uhal/include)
+    include_directories(${UHAL_DIR}/log/include)
+    include_directories(${UHAL_DIR}/grammars/include)
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    include_directories($ENV{PH2ACF_BASE_DIR}/HWDescription)
-    include_directories($ENV{PH2ACF_BASE_DIR}/HWInterface)
-    include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
-    include_directories($ENV{PH2ACF_BASE_DIR}/tools)
-    include_directories($ENV{PH2ACF_BASE_DIR}/ProductionToolsIT)
-    include_directories($ENV{PH2ACF_BASE_DIR}/DQMUtils)
-    include_directories($ENV{PH2ACF_BASE_DIR}/System)
+    include_directories(${Protobuf_INCLUDE_DIRS})
+
+#    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+#    include_directories($ENV{PH2ACF_BASE_DIR}/HWDescription)
+#    include_directories($ENV{PH2ACF_BASE_DIR}/HWInterface)
+#    include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
+#    include_directories($ENV{PH2ACF_BASE_DIR}/tools)
+#    include_directories($ENV{PH2ACF_BASE_DIR}/ProductionToolsIT)
+#    include_directories($ENV{PH2ACF_BASE_DIR}/DQMUtils)
+#    include_directories($ENV{PH2ACF_BASE_DIR}/System)
 
     cet_set_compiler_flags(
-     EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-     )
+        EXTRA_FLAGS -Wno-reorder -Wl,--undefined
+    )
 
     cet_make(LIBRARY_NAME Ph2_ProductionToolsIT_${Ph2_ACF_Master}
             LIBRARIES
