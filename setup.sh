@@ -121,33 +121,50 @@ else
   export STDCXX="14"
 fi
 
-# Stand-alone application, without data streaming
+###################################################
+# Stand-alone application, without data streaming #
+###################################################
 export CompileForHerd=false
 export CompileForShep=false
 
-# Stand-alone application, with data streaming
+################################################
+# Stand-alone application, with data streaming #
+################################################
 # export CompileForHerd=true
 # export CompileForShep=true
 
-# Herd application
+####################
+# Herd application #
+####################
 # export CompileForHerd=true
 # export CompileForShep=false
 
-# Shep application
+####################
+# Shep application #
+####################
 # export CompileForHerd=false
 # export CompileForShep=true
 
-# Compile with EUDAQ libraries
+################################
+# Compile with EUDAQ libraries #
+################################
 export CompileWithEUDAQ=false
 
-# Compile with TC_USB library
+###############################
+# Compile with TC_USB library #
+###############################
 export CompileWithTCUSB=false
-# OTHybridTester for either ROH or SEH
+
+########################################
+# OTHybridTester for either ROH or SEH #
+########################################
 export UseTCUSBforROH=false
 export UseTCUSBforSEH=false
 
 
-# Clang-format command
+########################
+# Clang-format command #
+########################
 if command -v clang-format &> /dev/null; then
  clang_command="clang-format"
 else
