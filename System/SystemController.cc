@@ -133,7 +133,7 @@ void SystemController::Destroy()
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
-    LOG(INFO) << GREEN << "Trying to shutdown DQM Server..." << RESET;
+    LOG(INFO) << GREEN << "Trying to shutdown Calibration DQM Server..." << RESET;
     delete fDQMStreamer;
     fDQMStreamer = nullptr;
     LOG(INFO) << GREEN << "Operation completed" << RESET;
