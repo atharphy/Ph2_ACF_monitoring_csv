@@ -10,6 +10,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     include_directories(${grammars})
     include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR})
+    include_directories(${PROJECT_SOURCE_DIR}/Utils)
 
     # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
@@ -23,7 +24,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Boost also needs to be linked
     include_directories(${Boost_INCLUDE_DIRS})
     link_directories(${Boost_LIBRARY_DIRS})
-    set(LIBS ${LIBS} ${Boost_ARCHIVE_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} ${Boost_MULTIPRECISION_LIBRARY})
+    set(LIBS ${LIBS} boost_serialization ${Boost_ARCHIVE_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} ${Boost_MULTIPRECISION_LIBRARY})
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -65,13 +66,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         set(LIBS ${LIBS} usb ${PH2_TCUSB_LIBRARIES})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
         if($ENV{UseTCUSBforROH})
+            message(STATUS "    Building the ROH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-        else($ENV{UseTCUSBforROH})
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
-        if($ENV{UseTCUSBTcpServer})
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
-        endif($ENV{UseTCUSBTcpServer})
+        if($ENV{UseTCUSBforSEH})
+            message(STATUS "    Building the SEH TestCards USB components")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
+        endif($ENV{UseTCUSBforSEH})
     endif(${PH2_TCUSB_FOUND})
 
     #last but not least, find root and link against it
@@ -140,10 +141,12 @@ else()
     include_directories(${UHAL_DIR}/uhal/include)
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
+
+    include_directories(${Protobuf_INCLUDE_DIRS})
     
     cet_set_compiler_flags(
-     EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-     )
+        EXTRA_FLAGS -Wno-reorder -Wl,--undefined
+    )
 
     cet_make(LIBRARY_NAME Ph2_Tools
             LIBRARIES

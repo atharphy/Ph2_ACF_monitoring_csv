@@ -337,12 +337,18 @@
             <MonitoringElement device="PowerSupply" register="MyRohdeSchwarz_LV_Module3_Current" enable="0" />
             <!-- <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Voltage" enable="1" />
             <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Current" enable="1" /> -->
-            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Rear_Voltage" enable="1" />
-            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Rear_Current" enable="1" />
+            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Voltage" enable="1" />
+            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Current" enable="1" />
             <!-- High voltage monitoring element needs to contain "_HV_" and end with "Voltage" or "Current!" -->
             <MonitoringElement device="TestCard" register="HV_meas" enable="1" />
         </Monitoring>
     </MonitoringSettings>
+
+    <CommunicationSettings>
+        <DQM               ip="127.0.0.1" port="6000" enableConnection="1"/>
+        <MonitorDQM        ip="127.0.0.1" port="8000" enableConnection="1"/>
+        <PowerSupplyClient ip="127.0.0.1" port="7000" enableConnection="1"/>
+    </CommunicationSettings>
 
     <Devices>
         <PowerSupply
@@ -361,7 +367,7 @@
             ID="MyKeithley"
             Type="HV"
         >
-            <Channel ID="HV_Rear" Channel="REAR" InUse="Yes" />
+            <Channel ID="HV_Front" Channel="FRON" InUse="Yes" />
         </PowerSupply>
     </Devices>
 </HwDescription>

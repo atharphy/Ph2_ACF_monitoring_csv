@@ -78,7 +78,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
 
-    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations -Wno-error=parentheses -Wno-error=misleading-indentation -Wno-error=unused-function -Wno-error=class-memaccess  -Wno-error=unused-variable -Wno-error=implicit-fallthrough")
+    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations -Wno-error=parentheses -Wno-error=misleading-indentation -Wno-error=unused-function -Wno-error=class-memaccess -Wno-error=implicit-fallthrough")
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=format-overflow -Wno-error=pedantic")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context")
     set (GCC_10_NOERROR_FLAGS "-Wno-error=int-in-bool-context")
@@ -166,16 +166,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         if($ENV{UseTCUSBforROH})
             message(STATUS "    Building the ROH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-        else($ENV{UseTCUSBforROH})
+	endif($ENV{UseTCUSBforROH})
+	if($ENV{UseTCUSBforSEH})
             message(STATUS "    Building the SEH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
-        endif($ENV{UseTCUSBforROH})
-
-        if($ENV{UseTCUSBTcpServer})
-            message(STATUS "    Building the components to use the TCP Server")
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
-        endif($ENV{UseTCUSBTcpServer})
-
+        endif($ENV{UseTCUSBforSEH})
     endif($ENV{CompileWithTCUSB})
 
     # EUDAQ

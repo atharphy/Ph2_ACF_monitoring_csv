@@ -9,30 +9,29 @@
 
 #include "SSAPhysicsHistograms.h"
 #include "HWDescription/Definition.h"
-#include "Utils/ChannelContainerStream.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 
 void SSAPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
-
+    fDetectorContainer                         = &theDetectorStructure;
     HistContainer<TH1F> theOcccupancyContainer = HistContainer<TH1F>("Occ2D", "Occupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fOccupancy, theOcccupancyContainer);
 }
 
 bool SSAPhysicsHistograms::fill(std::vector<char>& dataBuffer)
 {
-    ChannelContainerStream<Occupancy> theOccStreamer("SSAPhysicsOcc");
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theOccupancySerialization("SSAPhysicsOccupancy");
 
-    if(theOccStreamer.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        theOccStreamer.decodeChipData(fDetectorData);
+        std::cout << "Matched SSAPhysics Occupancy!!!!!\n";
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer);
         fillOccupancy(fDetectorData);
-        fDetectorData.cleanDataStored();
         return true;
     }
     return false;

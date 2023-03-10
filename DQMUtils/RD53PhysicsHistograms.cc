@@ -10,12 +10,13 @@
 #include "RD53PhysicsHistograms.h"
 #include "HWDescription/RD53A.h"
 #include "HWDescription/RD53B.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     nRows = RD53Shared::firstChip->getNRows();
@@ -29,10 +30,10 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
-    auto hToT1D = CanvasContainer<TH1F>("ToT1D", "ToT Distribution", ToTsize, 0, ToTsize);
+    auto hToT1D = CanvasContainer<TH1F>("ToT1D", "<ToT> Distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
 
-    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "ToT Distribution", nCols, 0, nCols, nRows, 0, nRows);
+    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "<ToT> Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 
     auto hOcc2D = CanvasContainer<TH2F>("Occ2D", "Occupancy", nCols, 0, nCols, nRows, 0, nRows);
@@ -53,32 +54,32 @@ bool PhysicsHistograms::fill(std::vector<char>& dataBuffer)
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
-    ChannelContainerStream<OccupancyAndPh>                           theOccStreamer("PhysicsOcc");
-    ChipContainerStream<EmptyContainer, GenericDataArray<BCIDsize>>  theBCIDStreamer("PhysicsBCID");
-    ChipContainerStream<EmptyContainer, GenericDataArray<TrgIDsize>> theTrgIDStreamer("PhysicsTrgID");
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theOccupancySerialization("PhysicsOccupancy");
+    ContainerSerialization theBCIDSerialization("PhysicsBCID");
+    ContainerSerialization theTrgIDSerialization("PhysicsTrgID");
 
-    if(theOccStreamer.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        theOccStreamer.decodeChipData(DetectorData);
-        PhysicsHistograms::fill(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched Physics Occupancy!!!!!\n";
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer);
+        PhysicsHistograms::fill(fDetectorData);
         return true;
     }
-    else if(theBCIDStreamer.attachBuffer(&dataBuffer))
+    if(theBCIDSerialization.attachDeserializer(inputStream))
     {
-        theBCIDStreamer.decodeChipData(DetectorData);
-        PhysicsHistograms::fillBCID(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched Physics BCID!!!!!\n";
+        DetectorDataContainer fDetectorData = theBCIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<BCIDsize>>(fDetectorContainer);
+        PhysicsHistograms::fillBCID(fDetectorData);
         return true;
     }
-    else if(theTrgIDStreamer.attachBuffer(&dataBuffer))
+    if(theTrgIDSerialization.attachDeserializer(inputStream))
     {
-        theTrgIDStreamer.decodeChipData(DetectorData);
-        PhysicsHistograms::fillTrgID(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched Physics TrgID!!!!!\n";
+        DetectorDataContainer fDetectorData = theTrgIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TrgIDsize>>(fDetectorContainer);
+        PhysicsHistograms::fillTrgID(fDetectorData);
         return true;
     }
-
     return false;
 }
 

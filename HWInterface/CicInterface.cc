@@ -990,11 +990,14 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         if(cEnableBit != 1) continue;
 
         uint8_t cChipId_onyHybrid = std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), cFeCounter));
-        auto    cCheckValue       = (pCheckValue & (0x1 << cFeCounter)) >> cFeCounter;
+        LOG(INFO) << BOLDYELLOW << "pCheckValue " << int(pCheckValue) << RESET;
+        auto cCheckValue = (pCheckValue & (0x1 << cFeCounter)) >> cFeCounter;
         for(cInputLineCounter = 0; cInputLineCounter < (1 + cNStubLines); cInputLineCounter++)
         {
-            LOG(DEBUG) << BOLDYELLOW << "FE [CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << " Line#" << +cInputLineCounter << " alignment value "
-                       << +fFeStates[cFeCounter][cInputLineCounter] << RESET;
+            LOG(INFO) << BOLDYELLOW << "FE [CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << " Line#" << +cInputLineCounter << " alignment value "
+                      << +fFeStates[cFeCounter][cInputLineCounter] << RESET;
+            LOG(INFO) << BOLDYELLOW << "cCheckValue " << cCheckValue << "  fFeStates[cFeCounter][cInputLineCounter]  " << fFeStates[cFeCounter][cInputLineCounter] << RESET;
+
             cLocked = cLocked & (fFeStates[cFeCounter][cInputLineCounter] == cCheckValue);
         }
         if(cLocked)

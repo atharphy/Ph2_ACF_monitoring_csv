@@ -9,12 +9,13 @@
 */
 
 #include "RD53LatencyHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void LatencyHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
@@ -33,26 +34,25 @@ void LatencyHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 
 bool LatencyHistograms::fill(std::vector<char>& dataBuffer)
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    const size_t           LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theOccupancySerialization("LatencyOccupancy");
+    ContainerSerialization theLatencySerialization("LatencyLatency");
 
-    ChipContainerStream<EmptyContainer, GenericDataArray<LatencySize>> theOccStreamer("LatencyOcc");
-    ChipContainerStream<EmptyContainer, uint16_t>                      theLatencyStreamer("LatencyLatency");
-
-    if(theOccStreamer.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        theOccStreamer.decodeChipData(DetectorData);
-        LatencyHistograms::fillOccupancy(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched Latency Occupancy!!!!!\n";
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<LatencySize>>(fDetectorContainer);
+        LatencyHistograms::fillOccupancy(fDetectorData);
         return true;
     }
-    else if(theLatencyStreamer.attachBuffer(&dataBuffer))
+    if(theLatencySerialization.attachDeserializer(inputStream))
     {
-        theLatencyStreamer.decodeChipData(DetectorData);
-        LatencyHistograms::fillLatency(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched Latency Latency!!!!!\n";
+        DetectorDataContainer fDetectorData = theLatencySerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        LatencyHistograms::fillLatency(fDetectorData);
         return true;
     }
-
     return false;
 }
 

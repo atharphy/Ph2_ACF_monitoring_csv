@@ -11,7 +11,6 @@
 #define RD53DataReadbackOptimizationHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
@@ -36,7 +35,7 @@ class DataReadbackOptimizationHistograms : public DQMHistogramBase
     void fillTAP2(const DetectorDataContainer& TAP2Container);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer TAP0scan;
     DetectorDataContainer TAP0;

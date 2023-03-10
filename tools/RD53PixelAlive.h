@@ -55,14 +55,7 @@ class PixelAlive : public CalibBase
     DetectorDataContainer                  theTrgIDContainer;
 
   protected:
-    size_t injType;
-    enum INJtype
-    {
-        None,
-        Analog,
-        Digital
-    };
-
+    RD53Shared::INJtype                      injType;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     size_t rowStart;

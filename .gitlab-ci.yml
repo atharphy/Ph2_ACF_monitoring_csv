@@ -104,14 +104,14 @@ build:StandAlone_wEUDAQ_c7:
     - source ./setup.sh ci
     - export CompileWithEUDAQ=true
 
-# Compile with TC_USB library
+# Compile with TC_USB library for SEH
 build:StandAlone_wTC_USB_SEH_c7:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
     - source ./setup.sh ci
     - export CompileWithTCUSB=true
-    - export UseTCUSBTcpServer=true
+    - export UseTCUSBforSEH=true
 
 
 # Compile with TC_USB library for ROH
@@ -122,8 +122,6 @@ build:StandAlone_wTC_USB_ROH_c7:
     - source ./setup.sh ci
     - export CompileWithTCUSB=true
     - export UseTCUSBforROH=true
-    - export UseTCUSBTcpServer=true
-
 
 ## BUILD AL8 ##########
 
@@ -168,7 +166,7 @@ build:StandAlone_wEUDAQ_al8:
     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
     entrypoint: ["/bin/sh","-c"]
 
-# Compile with TC_USB library
+# Compile with TC_USB library for SEH
 build:StandAlone_wTC_USB_SEH_al8:
   extends: build:StandAlone_wTC_USB_SEH_c7
   stage: build_al8
@@ -184,10 +182,7 @@ build:StandAlone_wTC_USB_ROH_al8:
     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
     entrypoint: ["/bin/sh","-c"]
 
-
-
 ## BUILD AL9 ##########
-
 
 # Stand-alone application, without data streaming
 build:StandAlone_woDS_al9:
@@ -229,7 +224,7 @@ build:StandAlone_wEUDAQ_al9:
     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
     entrypoint: ["/bin/sh","-c"]
 
-# Compile with TC_USB library
+# Compile with TC_USB library for SEH
 build:StandAlone_wTC_USB_SEH_al9:
   extends: build:StandAlone_wTC_USB_SEH_c7
   stage: build_al9
@@ -244,8 +239,6 @@ build:StandAlone_wTC_USB_ROH_al9:
   image:
     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
     entrypoint: ["/bin/sh","-c"]
-
-
 
 
 

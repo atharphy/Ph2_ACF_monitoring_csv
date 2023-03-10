@@ -3,6 +3,7 @@
 #include "HWDescription/Cbc.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
@@ -23,8 +24,8 @@ void LatencyScan::Initialize()
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    bool         cWithSSA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
-    bool         cWithMPA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
+    bool         cWithPS           = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    bool         cWithPSv2         = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2 || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
 
     if(cWithCBC)
     {
@@ -32,25 +33,33 @@ void LatencyScan::Initialize()
         theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandler);
     }
-    if(cWithSSA)
+    else if(cWithPS)
     {
-        SSAChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+        MPAChannelGroupHandler theChannelGroupHandlerMPA;
+        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA);
+
+        SSAChannelGroupHandler theChannelGroupHandlerSSA;
+        theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA);
     }
-    if(cWithMPA)
+    else if(cWithPSv2)
     {
-        MPAChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
+        MPAChannelGroupHandler theChannelGroupHandlerMPA;
+        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
+
+        SSAChannelGroupHandler theChannelGroupHandlerSSA;
+        theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA2);
     }
 
     initializeRecycleBin();
 
     fStartLatency = findValueInSettings<double>("StartLatency", 1);
     fLatencyRange = findValueInSettings<double>("LatencyRange", 1);
+    fStartPhase   = findValueInSettings<double>("StartPhase", 0);
+    fPhaseRange   = findValueInSettings<double>("PhaseRange", 15);
     fHoleMode     = findValueInSettings<double>("HoleMode", 1);
     fNevents      = findValueInSettings<double>("Nevents", 10);
     std::cout << "Going to read " << fNevents << " events" << std::endl;
@@ -113,10 +122,10 @@ void LatencyScan::MeasureTriggerTDC()
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fillTriggerTDCPlots(theTriggerTDCContainer);
 #else
-    auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>("TriggerTDC");
-    for(auto board: theTriggerTDCContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theTriggerTDCStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("LatencyScanTriggerTDC");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theTriggerTDCContainer);
     }
 #endif
 }
@@ -171,10 +180,12 @@ void LatencyScan::ScanLatency()
 
     uint16_t cLat     = fStartLatency;
     float    cMaxHits = 0;
+
     do
     {
         // setSameDac("TriggerLatency", cLat);
         // SSA latency -1 all other chips
+
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -183,8 +194,10 @@ void LatencyScan::ScanLatency()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                        if(cChip->getFrontEndType() == FrontEndType::SSA)
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat - 1);
+                        else if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat + 1);
                         else
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat);
                     }
@@ -192,7 +205,6 @@ void LatencyScan::ScanLatency()
             }
             fBeBoardInterface->ChipReSync(cBoard);
         }
-
         uint16_t cOffset = 0;
         for(auto cBoard: *fDetectorContainer)
         {
@@ -228,7 +240,6 @@ void LatencyScan::ScanLatency()
                         } // chip
                     }     // hybrid
                 }         // optical group
-
                 // start at the beginning + trigger id in burst
                 auto cEventIter = cEvents.begin() + cTriggerId;
                 // calculate occupancy for each
@@ -258,7 +269,9 @@ void LatencyScan::ScanLatency()
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+
                                     LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+
                                     cTotalHits += cHits.size();
                                     for(auto cHit: cHits)
                                     {
@@ -279,6 +292,7 @@ void LatencyScan::ScanLatency()
                                 {
                                     std::vector<PCluster> cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                     std::vector<SCluster> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
+
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
                                     if(cPclstrs.size() > 0 && cSclstrs.size() > 0)
@@ -336,6 +350,7 @@ void LatencyScan::ScanLatency()
                     cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), cNormalizationFactor);
+
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 cTotalHits = cTotalHitsS0 + cTotalHitsS1;
                 if(cTotalHits > 0)
@@ -368,13 +383,14 @@ void LatencyScan::ScanLatency()
         } // board
         cLat += cOffset;
     } while(cLat < fStartLatency + fLatencyRange);
+
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fillLatencyPlots(theLatencyContainerS0, theLatencyContainerS1);
 #else
-    auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
-    for(auto board: theLatencyContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theLatencyStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("LatencyScanData");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theLatencyContainer);
     }
 #endif
 }
@@ -559,10 +575,12 @@ void LatencyScan::StubLatencyScan()
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                                 {
-                                    auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                     auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
-                                    cNStubs += cStubs.size();
+                                    auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                    cNStubs     = cStubs.size();
+                                    LOG(DEBUG) << BOLDGREEN << "cNStubs" << cNStubs << "," << cHits.size() << " hits in this event... " << RESET;
                                 }
+
                             } // chip
                             // LOG (INFO) << BOLDMAGENTA << "\t\t.. Event#" << +cEventCount << " found " << +cNStubsThisCIC << " in CIC#" << +cHybrid->getIndex() << RESET;
                             // theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE,
@@ -732,10 +750,10 @@ void LatencyScan::StubLatencyScan()
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fillStubLatencyPlots(theStubContainer);
 #else
-    auto theStubStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
-    for(auto board: theStubContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theStubStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("LatencyScanStub");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theStubContainer);
     }
 #endif
 }
@@ -872,10 +890,10 @@ void LatencyScan::ScanLatency2D()
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.fill2DLatencyPlots(theLatencyContainer);
 #else
-    auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>("2D");
-    for(auto board: theLatencyContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theLatencyStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("LatencyScan2D");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theLatencyContainer);
     }
 #endif
 }

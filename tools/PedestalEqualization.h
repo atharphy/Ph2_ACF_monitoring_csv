@@ -46,6 +46,7 @@ class PedestalEqualization : public Tool
     // Settings
     bool     fTestPulse{false};
     uint8_t  fTestPulseAmplitude{0};
+    uint8_t  fTestPulseAmplitudePix{0};
     bool     fFullScan{false};
     uint32_t fEventsPerPoint{10};
     uint16_t fStripTargetVcth{0x0};

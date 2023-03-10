@@ -11,7 +11,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Boost also needs to be linked
     include_directories(${Boost_INCLUDE_DIRS})
     link_directories(${Boost_LIBRARY_DIRS})
-    set(LIBS ${LIBS} ${Boost_ANY_LIBRARY} ${Boost_ITERATOR_LIBRARY} Ph2_Parser)
+    set(LIBS ${LIBS} ${Boost_ANY_LIBRARY} ${Boost_ITERATOR_LIBRARY} boost_serialization Ph2_Parser Ph2_Utils)
 
     # Find root and link against it
     if(${ROOT_FOUND})
@@ -31,6 +31,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Find source files
     file(GLOB SOURCES *.cc)
     add_library(Ph2_DQMUtils STATIC ${SOURCES})
+    TARGET_LINK_LIBRARIES(Ph2_DQMUtils ${LIBS})
+
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/RootUtils *.cc)
 
@@ -52,6 +54,9 @@ else()
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS "    ${BoldYellow}DQM UTILS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/DQMUtils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
+    
+    include_directories(${Protobuf_INCLUDE_DIRS})
+        
     cet_set_compiler_flags(
         EXTRA_FLAGS -Wno-reorder -Wl,--undefined -D__OTSDAQ__
     )

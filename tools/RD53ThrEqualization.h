@@ -48,7 +48,7 @@ class ThrEqualization : public PixelAlive
     size_t getNumberIterations() override
     {
         uint16_t nIterationsVCal    = floor(log2(stopValue - startValue + 1) + 2);
-        uint16_t moreIterationsVCal = 1;
+        uint16_t moreIterationsVCal = 0;
         uint16_t nIterationsTDAC    = (doNSteps != 0 ? doNSteps + 1 : floor(log2(frontEnd->nTDACvalues) + 2));
         uint16_t moreIterationsTDAC = 1;
         return PixelAlive::getNumberIterations() * (((TDACGainNSteps == 0 ? 1 : TDACGainNSteps + 2) * ((nIterationsVCal + moreIterationsVCal) + (nIterationsTDAC + moreIterationsTDAC))));

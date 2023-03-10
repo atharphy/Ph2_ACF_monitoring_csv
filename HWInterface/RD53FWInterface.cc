@@ -279,8 +279,8 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
-        // RD53FWInterface::ResetSlowCmdFIFO(); // @TMP@ : temporary fix untill FIFO error FW fix
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+        RD53FWInterface::ResetSlowCmdFIFO();                                              // @TMP@ : temporary fix untill FIFO error FW fix
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP)); // @TMP@ : temporary fix untill FIFO error FW fix
     }
     if(nAttempts == RD53Shared::MAXATTEMPTS)
         LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
@@ -704,7 +704,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     if(retry == true)
     {
-        LOG(ERROR) << BOLDRED << "Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
+        LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
     }
 
@@ -770,16 +770,17 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
 
-void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
-                                                  const uint32_t nTRIGxEvent,
-                                                  const size_t   injType,
-                                                  const uint32_t injLatency,
-                                                  const uint32_t nClkDelays,
-                                                  const bool     enableAutozero)
+void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard*            pBoard,
+                                                  const uint32_t            nTRIGxEvent,
+                                                  const RD53Shared::INJtype injType,
+                                                  const uint32_t            injLatency,
+                                                  const uint32_t            nClkDelays,
+                                                  const bool                enableAutozero)
 // ############################
 // # injType == 0 --> None    #
 // # injType == 1 --> Analog  #
 // # injType == 2 --> Digital #
+// # injType == 3 --> Custom  #
 // ############################
 // ##################################################################################
 // # Finite state machine                                                           #
@@ -792,12 +793,6 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 // ##################################################################################
 {
     const size_t NbitsInitPrime = 10; // @CONST@
-    enum INJtype
-    {
-        None,
-        Analog,
-        Digital
-    };
     enum INJdelay
     {
         AfterInjectCal = 32,
@@ -811,7 +806,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     RD53FWInterface::localCfgFastCmd.n_triggers       = 0;
     RD53FWInterface::localCfgFastCmd.trigger_duration = nTRIGxEvent - 1;
 
-    if(injType == INJtype::Digital)
+    if(injType == RD53Shared::INJtype::Digital)
     {
         // #######################################
         // # Configuration for digital injection #
@@ -830,7 +825,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
-    else if(injType == INJtype::Analog)
+    else if(injType != RD53Shared::INJtype::None)
     {
         // ######################################
         // # Configuration for analog injection #
@@ -849,7 +844,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
-    else if(injType == INJtype::None)
+    else if(injType == RD53Shared::INJtype::None)
     {
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = 0;
@@ -866,7 +861,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
     else
-        LOG(ERROR) << BOLDRED << "Option not recognized " << BOLDYELLOW << injType << RESET;
+        LOG(ERROR) << BOLDRED << "Option not recognized " << BOLDYELLOW << +static_cast<uint8_t>(injType) << RESET;
 
     // @TMP@
     if(enableAutozero == true)
@@ -1160,6 +1155,8 @@ void RD53FWInterface::ReadClockGenerator()
 
 float RD53FWInterface::ReadHybridTemperature(int hybridId)
 {
+    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
+
     RegManager::WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     uint32_t sensor1 = RegManager::ReadReg("user.stat_regs.i2c_block_1.NTC1");
@@ -1168,13 +1165,16 @@ float RD53FWInterface::ReadHybridTemperature(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcTemperature(sensor1, sensor2);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE << " temperature: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE << " temperature: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " C"
+              << std::setprecision(-1) << RESET;
 
     return value;
 }
 
 float RD53FWInterface::ReadHybridVoltage(int hybridId)
 {
+    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
+
     RegManager::WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     uint32_t senseVDD = RegManager::ReadReg("user.stat_regs.i2c_block_2.vdd_sense");
@@ -1183,7 +1183,8 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " V"
+              << std::setprecision(-1) << RESET;
 
     return value;
 }

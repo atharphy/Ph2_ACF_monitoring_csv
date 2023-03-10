@@ -9,12 +9,13 @@
 */
 
 #include "RD53ThresholdHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
@@ -29,16 +30,16 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 
 bool ThresholdHistograms::fill(std::vector<char>& dataBuffer)
 {
-    ChipContainerStream<EmptyContainer, uint16_t> theThrStreamer("Threshold");
+    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theContainerSerialization("ThrAdjustmentThreshold");
 
-    if(theThrStreamer.attachBuffer(&dataBuffer))
+    if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        theThrStreamer.decodeChipData(DetectorData);
-        ThresholdHistograms::fill(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched ThrAdjustment Threshold!!!!!\n";
+        DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        ThresholdHistograms::fill(fDetectorData);
         return true;
     }
-
     return false;
 }
 

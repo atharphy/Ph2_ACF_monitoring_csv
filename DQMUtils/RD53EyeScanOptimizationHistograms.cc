@@ -8,7 +8,6 @@
 */
 
 #include "RD53EyeScanOptimizationHistograms.h"
-#include "Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
@@ -67,41 +66,41 @@ void EyeScanOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer
 
 bool EyeScanOptimizationHistograms::fill(std::vector<char>& dataBuffer)
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+    // const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP0scanStreamer("TAP0scan");
-    ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP1scanStreamer("TAP1scan");
-    ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP2scanStreamer("TAP2scan");
-    ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP3DscanStreamer("TAP2scan");
+    // ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP0scanStreamer("TAP0scan");
+    // ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP1scanStreamer("TAP1scan");
+    // ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP2scanStreamer("TAP2scan");
+    // ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP3DscanStreamer("TAP2scan");
 
-    if(theTAP0scanStreamer.attachBuffer(&dataBuffer))
-    {
-        theTAP0scanStreamer.decodeChipData(DetectorData);
-        EyeScanOptimizationHistograms::fillScanTAP0(DetectorData);
-        DetectorData.cleanDataStored();
-        return true;
-    }
-    else if(theTAP1scanStreamer.attachBuffer(&dataBuffer))
-    {
-        theTAP1scanStreamer.decodeChipData(DetectorData);
-        EyeScanOptimizationHistograms::fillScanTAP1(DetectorData);
-        DetectorData.cleanDataStored();
-        return true;
-    }
-    else if(theTAP2scanStreamer.attachBuffer(&dataBuffer))
-    {
-        theTAP2scanStreamer.decodeChipData(DetectorData);
-        EyeScanOptimizationHistograms::fillScanTAP2(DetectorData);
-        DetectorData.cleanDataStored();
-        return true;
-    }
-    else if(theTAP3DscanStreamer.attachBuffer(&dataBuffer))
-    {
-        theTAP3DscanStreamer.decodeChipData(DetectorData);
-        EyeScanOptimizationHistograms::fillScan3D(DetectorData);
-        DetectorData.cleanDataStored();
-        return true;
-    }
+    // if(theTAP0scanStreamer.attachBuffer(&dataBuffer))
+    // {
+    //     theTAP0scanStreamer.decodeChipData(DetectorData);
+    //     EyeScanOptimizationHistograms::fillScanTAP0(DetectorData);
+    //     DetectorData.cleanDataStored();
+    //     return true;
+    // }
+    // else if(theTAP1scanStreamer.attachBuffer(&dataBuffer))
+    // {
+    //     theTAP1scanStreamer.decodeChipData(DetectorData);
+    //     EyeScanOptimizationHistograms::fillScanTAP1(DetectorData);
+    //     DetectorData.cleanDataStored();
+    //     return true;
+    // }
+    // else if(theTAP2scanStreamer.attachBuffer(&dataBuffer))
+    // {
+    //     theTAP2scanStreamer.decodeChipData(DetectorData);
+    //     EyeScanOptimizationHistograms::fillScanTAP2(DetectorData);
+    //     DetectorData.cleanDataStored();
+    //     return true;
+    // }
+    // else if(theTAP3DscanStreamer.attachBuffer(&dataBuffer))
+    // {
+    //     theTAP3DscanStreamer.decodeChipData(DetectorData);
+    //     EyeScanOptimizationHistograms::fillScan3D(DetectorData);
+    //     DetectorData.cleanDataStored();
+    //     return true;
+    // }
 
     return false;
 }

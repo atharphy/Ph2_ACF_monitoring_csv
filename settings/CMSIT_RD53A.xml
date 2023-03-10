@@ -74,6 +74,7 @@
               MONITOR_CONFIG_ADC     =     "5"
               MONITOR_CONFIG_BG      =    "12"
 
+              RESISTORI2V            = "10000"
               ADC_OFFSET_VOLT        =    "63"
               ADC_MAXIMUM_VOLT       =   "839"
               TEMPSENS_IDEAL_FACTOR  =  "1225"
@@ -191,7 +192,13 @@
 
   <Settings>
     <!-- === Calibration parameters ===
-         INJtype               = 0:  no injection;                       INJtype               = 1: analog;                                     INJtype = 2: digital
+         INJtype:
+            INJtype            = 0:  no injection
+            INJtype            = 1:  analog
+            INJtype            = 2:  digital
+            INJtype            = 3:  analog + custom from txt file
+            INJtype            = 4:  analog + X-talk coupled pixels
+            INJtype            = 5:  analog + X-talk un-coupled pixels
          ResetMask             = 0:  do not enable masked pixels;        ResetMask             = 1: enable all pixels
          ResetTDAC             = -1: do not reset TDAC;                  ResetTDAC             >=0: reset all TDACs to value
          DoOnlyNGroups         = 0:  do not consider this option;        DoOnlyNGroups         = n: run only on the specified number of groups
@@ -305,19 +312,25 @@
   <MonitoringSettings>
     <Monitoring type="RD53A" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElement device="RD53" register="VIN_ana_ShuLDO"  enable="1"/>
-      <MonitoringElement device="RD53" register="VOUT_ana_ShuLDO" enable="1"/>
-      <MonitoringElement device="RD53" register="VIN_dig_ShuLDO"  enable="1"/>
-      <MonitoringElement device="RD53" register="VOUT_dig_ShuLDO" enable="1"/>
-      <MonitoringElement device="RD53" register="ADCbandgap"      enable="1"/>
-      <MonitoringElement device="RD53" register="Iref"            enable="1"/>
-      <MonitoringElement device="RD53" register="TEMPSENS_1"      enable="1"/>
-      <MonitoringElement device="RD53" register="TEMPSENS_4"      enable="1"/>
+      <MonitoringElement device="RD53"  register="VIN_ana_ShuLDO"  enable="1"/>
+      <MonitoringElement device="RD53"  register="VOUT_ana_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53"  register="VIN_dig_ShuLDO"  enable="1"/>
+      <MonitoringElement device="RD53"  register="VOUT_dig_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53"  register="ADCbandgap"      enable="1"/>
+      <MonitoringElement device="RD53"  register="Iref"            enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_1"      enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_4"      enable="1"/>
 
-      <MonitoringElement device="LpGBT" register="TEMP"           enable="0"/>
-      <MonitoringElement device="LpGBT" register="VDD"            enable="0"/>
-      <MonitoringElement device="LpGBT" register="PUSMStatus"     enable="0"/>
+      <MonitoringElement device="LpGBT" register="TEMP"            enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDD"             enable="0"/>
+      <MonitoringElement device="LpGBT" register="PUSMStatus"      enable="0"/>
     </Monitoring>
   </MonitoringSettings>
+
+<CommunicationSettings>
+    <DQM               ip="127.0.0.1" port="6000" enableConnection="1"/>
+    <MonitorDQM        ip="127.0.0.1" port="8000" enableConnection="1"/>
+    <PowerSupplyClient ip="127.0.0.1" port="7000" enableConnection="1"/>
+</CommunicationSettings>
 
 </HwDescription>

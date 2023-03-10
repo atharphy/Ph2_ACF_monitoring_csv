@@ -9,10 +9,17 @@ import lib.Ph2_ACF_PythonInterface as Ph2_ACF
 
 def getNewRunNumber():
     runNumberFileName = os.getenv('PH2ACF_BASE_DIR') + "/RunNumbers.dat"
-    with open(runNumberFileName, "r") as runNumberFile:
-        for line in runNumberFile:
-            pass
-        runNumber = int(line) + 1
+    
+    try:
+        file = open(runNumberFileName, "r")
+        with file as runNumberFile:
+            for line in runNumberFile:
+                pass
+            runNumber = int(line) + 1
+    except FileNotFoundError:
+        file = open(runNumberFileName, "w")
+        runNumber = 0
+    
     
     runNumberFile = open(runNumberFileName, "a")
     runNumberFile.write(str(runNumber) + "\n")
@@ -48,3 +55,4 @@ if(theStateMachine.isSuccess()):
     print("Success")
 else:
     print("Failed, Error message = " + theStateMachine.getErrorMessage())
+    sys.exit(999)

@@ -15,13 +15,13 @@ namespace Ph2_HwInterface
 {
 RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {}
 
-bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerifLoop)
+bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
 
     auto                  nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
-    PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerifLoop);
+    PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerify);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
@@ -29,7 +29,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 
     bool     status      = true;
     uint16_t actualValue = 0;
-    if(pVerifLoop == true)
+    if(pVerify == true)
     {
         if(regName == "PIX_PORTAL")
         {
@@ -54,7 +54,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
                    << ", read = " << BOLDYELLOW << actualValue << RESET;
     }
-    else if((pVerifLoop == true) && (status == true))
+    else if((pVerify == true) && (status == true))
     {
         LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
     }
@@ -92,8 +92,8 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
         if(regReadback.size() == 0)
         {
             // LOG(WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET; // @TMP@ : temporary fix untill FIFO error FW fix
-            static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@ : temporary fix untill FIFO error FW fix
-            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+            static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO();                    // @TMP@ : temporary fix untill FIFO error FW fix
+            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP)); // @TMP@ : temporary fix untill FIFO error FW fix
         }
         else
             return regReadback[0].second;
@@ -104,7 +104,7 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
     return 0;
 }
 
-bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerify, uint32_t pBlockSize)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -113,7 +113,7 @@ bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoo
     return true;
 }
 
-bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLoop)
+bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerify)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -127,17 +127,34 @@ bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLo
     return true;
 }
 
-bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
+bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify)
 {
     RD53* pRD53          = static_cast<RD53*>(pChip);
     auto& pixMaskDefault = pRD53->getPixelsMaskDefault();
     auto& pixMask        = pRD53->getPixelsMask();
+    auto  pRD53group     = std::static_pointer_cast<RD53ChannelGroup>(group);
 
+    // ##########
+    // # Enable #
+    // ##########
     if(mask == true)
-        std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), static_cast<const RD53ChannelGroup*>(group.get())->getMask().begin(), pixMask.Enable.begin(), std::logical_and<>{});
-    std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), static_cast<const RD53ChannelGroup*>(group.get())->getMask().begin(), pixMask.InjEn.begin(), std::logical_and<>{});
-    if(inject == false) std::transform(pixMask.InjEn.begin(), pixMask.InjEn.end(), pixMaskDefault.InjEn.begin(), pixMask.InjEn.begin(), std::logical_and<>{});
+    {
+        std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), pRD53group->getMask().begin(), pixMask.Enable.begin(), std::logical_and<>{});
+        std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), pRD53group->getMask().begin(), pixMask.InjEn.begin(), std::logical_and<>{});
+        if(inject == false) std::transform(pixMask.InjEn.begin(), pixMask.InjEn.end(), pixMaskDefault.InjEn.begin(), pixMask.InjEn.begin(), std::logical_and<>{});
+    }
 
+    // ##########
+    // # Inject #
+    // ##########
+    if((pRD53group->groupType == RD53GroupType::XtalkCoupled) || (pRD53group->groupType == RD53GroupType::XtalkUnCoupled))
+        pixMask.InjEn = pRD53group->getMaskNextCol();
+    else if(pRD53group->groupType == RD53GroupType::Custom)
+        pixMask.InjEn = pixMaskDefault.InjEn;
+
+    // #########
+    // # Apply #
+    // #########
     WriteRD53Mask(pRD53, true, false);
 
     return true;
@@ -191,7 +208,7 @@ uint16_t RD53Interface::GetFieldValue(uint16_t regValue, uint8_t start, uint8_t 
 void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
 void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
 
-bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerifLoop)
+bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerify)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -243,7 +260,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
 
     if((observableName.find("TEMPSENS") != std::string::npos) || (observableName.find("RADSENS") != std::string::npos) || (observableName.find("INTERNAL_NTC") != std::string::npos))
     {
-        std::string type = "CENTER";
+        std::string type;
         if(observableName.find("POLY") != std::string::npos)
             type = "POLY";
         else if(observableName.find("ANA") != std::string::npos)
@@ -281,12 +298,13 @@ float RD53Interface::convertADC2VorI(ReadoutChip* pChip, uint32_t value, bool is
 // # Current output units: micro-Ampere #
 // ######################################
 {
-    // ######################################################################
-    // # ADCoffset     =  63 [1/10 mV] Offset due to ground shift           #
-    // # actualVrefADC = 839 [mV]      Lower than VrefADC due to parasitics #
-    // ######################################################################
+    // ################################################################################
+    // # resistorI2V   = 0.01-0.005 [MOhm] resistor for current to voltage conversion #
+    // # ADCoffset     =  63 [1/10 mV] Offset due to ground shift                     #
+    // # actualVrefADC = 839 [mV]      Lower than VrefADC due to parasitics           #
+    // ################################################################################
 
-    const float resistorI2V   = 0.00499; // 0.01; // [MOhm] // @TMP@
+    const float resistorI2V   = pChip->getRegItem("RESISTORI2V").fValue / 1e6; // [MOhm]
     const float ADCoffset     = pChip->getRegItem("ADC_OFFSET_VOLT").fValue / 1e4;
     const float actualVrefADC = pChip->getRegItem("ADC_MAXIMUM_VOLT").fValue / 1e3;
 

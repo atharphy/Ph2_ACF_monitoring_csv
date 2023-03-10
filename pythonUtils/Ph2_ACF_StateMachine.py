@@ -6,7 +6,6 @@ sys.path.insert(1, os.getenv('PH2ACF_BASE_DIR'))
 sys.path.insert(1, os.getenv('PH2ACF_BASE_DIR') + "/MessageUtils/python/")
 
 import lib.Ph2_ACF_PythonInterface as Ph2_ACF
-import Common_pb2 as Common
 import QueryMessage_pb2 as Query
 import ReplyMessage_pb2 as Reply
 
@@ -20,7 +19,10 @@ class StateMachine(object):
         self.status_ = "INITIAL"
         self.calibrationResult_ = "SUCCESS"
         self.errorMessage_ = ""
-        self.mapOfCalibrations_ = {}
+        self.mapOfEnabledModules_ = {} #If empty all modules connected are enabled
+
+    def addModule(self, moduleId, moduleName = ""):
+        self.mapOfEnabledModules_[moduleId] = moduleName
 
     def setConfigurationFile(self, configurationFile):
         self.configurationFile_ = configurationFile
@@ -58,13 +60,16 @@ class StateMachine(object):
         self.status_ = "HALTED"
 
     def state_HALTED(self):
-        if not self.mapOfCalibrations_:
-            self.queryCalibrationList()
         self.resetStatus()
         configureMessage = Query.ConfigurationMessage()
         configureMessage.query_type.type = Query.QueryType.CONFIGURE
-        configureMessage.data.calibration.calibration_name = self.mapOfCalibrations_[self.calibrationName_]
+        configureMessage.data.calibration_name = self.calibrationName_
         configureMessage.data.configuration_file = self.configurationFile_
+        for id, name in self.mapOfEnabledModules_.items():
+            object = configureMessage.data.object_list.add()
+            object.object_type.type = Query.ObjectType.OPTICALGROUP
+            object.id = id
+            object.name = name
         stringMessage = configureMessage.SerializeToString()
         replyBuffer = Ph2_ACF_controller.configure(stringMessage)
         if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
@@ -96,7 +101,6 @@ class StateMachine(object):
                 self.status_ = "ERROR"
                 return
             elif type == Reply.ReplyType.RUNNING:
-                print("RUNNING")
                 time.sleep(0.5)
                 continue
             elif type == Reply.ReplyType.SUCCESS:
@@ -109,7 +113,7 @@ class StateMachine(object):
         stopMessage = Query.QueryMessage()
         stopMessage.query_type.type = Query.QueryType.STOP
         stringStopMessage = stopMessage.SerializeToString()
-        replyBuffer = Ph2_ACF_controller.halt(stringStopMessage)
+        replyBuffer = Ph2_ACF_controller.stop(stringStopMessage)
         self.status_ = "STOPPED"
         if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
             self.status_ = "ERROR"
@@ -187,9 +191,7 @@ class StateMachine(object):
     def deleteFirmware(self, configurationFile, firmwareName, boardId):
         self.queryFirmware("DELETE", configurationFile, boardId, firmwareName)
 
-    def queryCalibrationList(self):
-        print(Common.CalibrationList.calibrationandpedenoise)
-        print(Common.CalibrationList)
+    def getCalibrationList(self):
         calibrationListQuery = Query.QueryMessage()
         calibrationListQuery.query_type.type = Query.QueryType.CALIBRATION
         stringMessage = calibrationListQuery.SerializeToString()
@@ -199,13 +201,7 @@ class StateMachine(object):
             return "FAILED"
         theCalibrationListReply = Reply.CalibrationListReplyMessage()
         theCalibrationListReply.ParseFromString(replyBuffer)
-        for calibration in theCalibrationListReply.calibration:
-            self.mapOfCalibrations_[calibration.calibration_name] = calibration.calibration_tag.calibration_name
-
-    def getCalibrationList(self):
-        if not self.mapOfCalibrations_:
-            self.queryCalibrationList()
         listOfCalibrations = []
-        for key in self.mapOfCalibrations_:
-            listOfCalibrations.append(key)
+        for calibration in theCalibrationListReply.calibration:
+            listOfCalibrations.append(calibration)
         return listOfCalibrations

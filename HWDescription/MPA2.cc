@@ -27,6 +27,7 @@ MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
     : ReadoutChip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId)
 {
     fChipCode         = 2;
+    fChipAddress      = 0x40 + pChipId % 8;
     fMaxRegValue      = 255;
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
@@ -43,6 +44,7 @@ MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
 MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
 {
     fChipCode         = 2;
+    fChipAddress      = 0x40 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in MPA
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
@@ -108,50 +110,43 @@ void MPA2::loadfRegMap(const std::string& filename)
 
 } // end loadfRegMap
 
-std::stringstream MPA2::saveRegMap(const std::string& fName2Add)
-{ // start saveRegMap
-    std::ofstream file(this->getFileName(fName2Add), std::ios::out | std::ios::trunc);
+std::stringstream MPA2::getRegMapStream()
+{
+    std::stringstream                     theStream;
+    std::set<MPARegPair, RegItemComparer> fSetRegItem;
 
-    if(file)
+    for(auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
+
+    int cLineCounter = 0;
+
+    for(const auto& v: fSetRegItem)
     {
-        std::set<MPARegPair, RegItemComparer> fSetRegItem;
-
-        for(auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
-
-        int cLineCounter = 0;
-
-        for(const auto& v: fSetRegItem)
+        while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
         {
-            while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
-            {
-                auto cComment = fCommentMap.find(cLineCounter);
+            auto cComment = fCommentMap.find(cLineCounter);
 
-                file << cComment->second << std::endl;
-                cLineCounter++;
-            }
-
-            file << v.first;
-
-            for(int j = 0; j < 48; j++) file << " ";
-
-            file.seekp(-v.first.size(), std::ios_base::cur);
-
-            file << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fPage) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase
-                 << int(v.second.fAddress) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fDefValue) << "\t0x" << std::setfill('0') << std::setw(2)
-                 << std::hex << std::uppercase << int(v.second.fValue) << std::endl;
-
+            theStream << cComment->second << std::endl;
             cLineCounter++;
         }
 
-        file.close();
+        theStream << v.first;
+
+        for(int j = 0; j < 48; j++) theStream << " ";
+
+        theStream.seekp(-v.first.size(), std::ios_base::cur);
+
+        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fPage) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase
+                  << int(v.second.fAddress) << "\t0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fDefValue) << "\t0x" << std::setfill('0') << std::setw(2)
+                  << std::hex << std::uppercase << int(v.second.fValue) << std::endl;
+
+        cLineCounter++;
     }
-    else
-        LOG(ERROR) << "Error opening file";
 
-    return std::stringstream("");
-} // end saveRegMap
+    return theStream;
+}
 
-bool MPARegItemComparer::operator()(const MPARegPair& pRegItem1, const MPARegPair& pRegItem2) const
+// Irene
+bool MPA2RegItemComparer::operator()(const MPARegPair& pRegItem1, const MPARegPair& pRegItem2) const
 {
     if(pRegItem1.second.fPage != pRegItem2.second.fPage)
         return pRegItem1.second.fPage < pRegItem2.second.fPage;
