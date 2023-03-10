@@ -449,7 +449,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
                             (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
                              maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
                             2;
-        CalibBase::downloadNewDACvalues(midDACcontainer, regName);
+        CalibBase::downloadNewDACvalues(midDACcontainer, {regName.c_str()});
 
         // ################
         // # Run analysis #
@@ -504,7 +504,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
     // ###########################
     // # Download new DAC values #
     // ###########################
-    CalibBase::downloadNewDACvalues(bestDACcontainer, regName, true, 0);
+    CalibBase::downloadNewDACvalues(bestDACcontainer, {regName.c_str()}, true, 0);
 
     // #################################
     // # Reset masks to default values #

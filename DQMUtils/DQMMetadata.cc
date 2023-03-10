@@ -1,3 +1,12 @@
+/*!
+  \file                  DQMMetadataIT.cc
+  \brief                 Implementationof DQM Metadata
+  \author                Mauro DINARDO
+  \version               1.0
+  \date                  09/03/23
+  Support:               email to mauro.dinardo@cern.ch
+*/
+
 #include "DQMUtils/DQMMetadata.h"
 #include "RootUtils/StringContainer.h"
 #include "TTree.h"
@@ -121,6 +130,7 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
         DetectorDataContainer theDetectorData =
             theNameSerialization.deserializeDetectorContainer<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(fDetectorContainer);
         fillObjectNames(theDetectorData);
+
         return true;
     }
     if(theUsernameSerialization.attachDeserializer(inputStream))
@@ -129,6 +139,7 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
         DetectorDataContainer theDetectorData =
             theUsernameSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
         fillUsername(theDetectorData);
+
         return true;
     }
     if(theHostNameSerialization.attachDeserializer(inputStream))
@@ -137,6 +148,7 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
         DetectorDataContainer theDetectorData =
             theHostNameSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
         fillHostName(theDetectorData);
+
         return true;
     }
     if(theDetectorConfigurationSerialization.attachDeserializer(inputStream))
@@ -145,6 +157,7 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
         DetectorDataContainer theDetectorData =
             theDetectorConfigurationSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
         fillDetectorConfiguration(theDetectorData);
+
         return true;
     }
     if(theReadoutChipConfigurationSerialization.attachDeserializer(inputStream))
@@ -153,7 +166,9 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
         bool                  isOriginal;
         DetectorDataContainer theDetectorData = theReadoutChipConfigurationSerialization.deserializeChipContainer<EmptyContainer, std::string>(fDetectorContainer, isOriginal);
         fillReadoutChipConfiguration(theDetectorData, isOriginal);
+
         return true;
     }
+
     return false;
 }

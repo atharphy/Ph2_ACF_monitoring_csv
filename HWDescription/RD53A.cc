@@ -15,12 +15,66 @@ namespace Ph2_HwDescription
 // ########################################
 // # Support for different FrontEnd types #
 // ########################################
-constexpr size_t         RD53A::NROWS;
-constexpr size_t         RD53A::NCOLS;
-constexpr RD53::FrontEnd RD53A::SYNC;
-constexpr RD53::FrontEnd RD53A::LIN;
-constexpr RD53::FrontEnd RD53A::DIFF;
-const RD53::FrontEnd*    RD53A::frontEnds[] = {&RD53A::SYNC, &RD53A::LIN, &RD53A::DIFF};
+const size_t          RD53A::NROWS       = 192;
+const size_t          RD53A::NCOLS       = 400;
+const RD53::FrontEnd  RD53A::SYNC        = {"SYNC",
+                                    {"VTH_SYNC"},
+                                    "IBIAS_KRUM_SYNC",
+                                    "LATENCY_CONFIG",
+                                    "",
+                                    "VOUT_dig_ShuLDO",
+                                    "VOUT_ana_ShuLDO",
+                                    2,
+                                    0,
+                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
+                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
+                                    5,
+                                    5,
+                                    0,
+                                    127,
+                                    50000,
+                                    0x08};
+const RD53::FrontEnd  RD53A::LIN         = {"LIN",
+                                   {"Vthreshold_LIN"},
+                                   "KRUM_CURR_LIN",
+                                   "LATENCY_CONFIG",
+                                   "LDAC_LIN",
+                                   "VOUT_dig_ShuLDO",
+                                   "VOUT_ana_ShuLDO",
+                                   2,
+                                   16,
+                                   RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                   RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                   RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
+                                   RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
+                                   5,
+                                   5,
+                                   128,
+                                   263,
+                                   50000,
+                                   0x08};
+const RD53::FrontEnd  RD53A::DIFF        = {"DIFF",
+                                    {"VTH1_DIFF"},
+                                    "VFF_DIFF",
+                                    "LATENCY_CONFIG",
+                                    "",
+                                    "VOUT_dig_ShuLDO",
+                                    "VOUT_ana_ShuLDO",
+                                    2,
+                                    31,
+                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
+                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
+                                    5,
+                                    5,
+                                    264,
+                                    399,
+                                    50000,
+                                    0x08};
+const RD53::FrontEnd* RD53A::frontEnds[] = {&RD53A::SYNC, &RD53A::LIN, &RD53A::DIFF};
 
 RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, fileName, cfgComment)
