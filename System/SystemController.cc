@@ -133,11 +133,15 @@ void SystemController::Destroy()
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
+    LOG(INFO) << GREEN << "Trying to shutdown DQM Server..." << RESET;
     delete fDQMStreamer;
     fDQMStreamer = nullptr;
+    LOG(INFO) << GREEN << "Operation completed" << RESET;
 
+    LOG(INFO) << GREEN << "Trying to shutdown Monitor DQM Server..." << RESET;
     delete fMonitorDQMStreamer;
     fMonitorDQMStreamer = nullptr;
+    LOG(INFO) << GREEN << "Operation completed" << RESET;
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
@@ -215,20 +219,20 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     fBeBoardInterface->setBoard(0);
 
-    LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
+    LOG(INFO) << GREEN << "Trying to connect to the Power Supply Server..." << RESET;
 
     if(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fEnable)
     {
         fPowerSupplyClient = new TCPClient(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fIP, theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fPort);
         if(!fPowerSupplyClient->connect(1))
         {
-            LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
+            LOG(INFO) << GREEN << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
             delete fPowerSupplyClient;
             fPowerSupplyClient = nullptr;
         }
         else
         {
-            LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
+            LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET;
         }
     }
 
