@@ -699,7 +699,9 @@ bool OTHybridTester::LpGBTTestVTRx()
             auto clpGBT = cOpticalGroup->flpGBT;
             clpGBTInterface->ResetI2C(clpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
-            clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 8);
+
+            // Configuring I2C Master pull-ups
+            clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 1 << 4 | 1 << 6);
 
             uint8_t cMasterId = 1, cSlaveAddress = 0x50, cSlaveData = 0x15, cNbyte = 1, cFrequency = 2;
             uint8_t cMasterConfig = (cNbyte << 2) | (cFrequency << 0);

@@ -52,28 +52,9 @@ namespace Ph2_HwDescription
 class RD53B : public RD53
 {
   public:
-    static constexpr size_t NROWS = 336; // Total number of rows
-    static constexpr size_t NCOLS = 432; // Total number of columns
-
-    static constexpr FrontEnd CROC = {"RD53B",
-                                      "DAC_GDAC_M_LIN",
-                                      "DAC_KRUM_CURR_LIN",
-                                      "TriggerConfig",
-                                      "DAC_LDAC_LIN",
-                                      "VDDD",
-                                      "VDDA",
-                                      1,
-                                      32,
-                                      RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
-                                      7,
-                                      RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID),
-                                      RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID),
-                                      4,
-                                      4,
-                                      0,
-                                      RD53B::NCOLS - 1,
-                                      0,
-                                      0x01};
+    static const size_t   NROWS;
+    static const size_t   NCOLS;
+    static const FrontEnd CROC;
 
     static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const Ph2_HwInterface::FormatOptions& options = {});
 
