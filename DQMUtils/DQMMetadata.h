@@ -21,14 +21,18 @@ class DQMMetadata : public DQMHistogramBase
     void fillCalibrationName(const DetectorDataContainer& theCalibrationNameContainer);
     void fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer);
     void fillCalibrationTimestamp(const DetectorDataContainer& theCalibrationTimestampContainer, bool start);
-    void fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool original);
+    void fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool initialValue);
+    void fillLpGBTConfiguration(const DetectorDataContainer& theLpGBTConfigurationContainer, bool initialValue);
+    void fillLpGBTFuseId(const DetectorDataContainer& theLpGBTFuseIdContainer);
 
     virtual bool fill(std::vector<char>& dataBuffer) override;
     virtual void process() override;
     virtual void reset() override;
 
-  private:
+  protected:
     DetectorContainer*    fDetectorContainer;
+
+  private:
     DetectorDataContainer fNameContainer;
     DetectorDataContainer fUsernameContainer;
     DetectorDataContainer fHostNameContainer;
@@ -38,8 +42,11 @@ class DQMMetadata : public DQMHistogramBase
     DetectorDataContainer fDetectorConfigurationContainer;
     DetectorDataContainer fCalibrationStartTimestampContainer;
     DetectorDataContainer fCalibrationStopTimestampContainer;
-    DetectorDataContainer fOriginalReadoutChipConfigurationContainer;
+    DetectorDataContainer fInitialReadoutChipConfigurationContainer;
     DetectorDataContainer fFinalReadoutChipConfigurationContainer;
+    DetectorDataContainer fInitialLpGBTConfigurationContainer;
+    DetectorDataContainer fFinalLpGBTConfigurationContainer;
+    DetectorDataContainer fLpGBTFuseIdContainer;
 };
 
 #endif

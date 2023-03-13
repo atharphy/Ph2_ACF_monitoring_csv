@@ -9,7 +9,6 @@
 
 #include "DQMUtils/DQMMetadata.h"
 #include "RootUtils/StringContainer.h"
-#include "TTree.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
@@ -53,11 +52,20 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
     StringContainer theCalibrationStopTimestampStringContainer("CalibrationStopTimestamp");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fCalibrationStopTimestampContainer, theCalibrationStopTimestampStringContainer);
 
-    StringContainer theOriginalReadoutChipConfigurationStringContainer("OriginalReadoutChipConfiguration");
-    RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fOriginalReadoutChipConfigurationContainer, theOriginalReadoutChipConfigurationStringContainer);
+    StringContainer theInitialReadoutChipConfigurationStringContainer("initialReadoutChipConfiguration");
+    RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fInitialReadoutChipConfigurationContainer, theInitialReadoutChipConfigurationStringContainer);
 
     StringContainer theFinalReadoutChipConfigurationStringContainer("FinalReadoutChipConfiguration");
     RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFinalReadoutChipConfigurationContainer, theFinalReadoutChipConfigurationStringContainer);
+
+    StringContainer theInitialLpGBTConfigurationStringContainer("initialLpGBTConfiguration");
+    RootContainerFactory::bookOpticalGroupHistograms<StringContainer>(theOutputFile, theDetectorStructure, fInitialLpGBTConfigurationContainer, theInitialLpGBTConfigurationStringContainer);
+
+    StringContainer theFinalLpGBTConfigurationStringContainer("FinalLpGBTConfiguration");
+    RootContainerFactory::bookOpticalGroupHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFinalLpGBTConfigurationContainer, theFinalLpGBTConfigurationStringContainer);
+
+    StringContainer theLpGBTFuseIdStringContainer("LpGBTFuseId");
+    RootContainerFactory::bookOpticalGroupHistograms<StringContainer>(theOutputFile, theDetectorStructure, fLpGBTFuseIdContainer, theLpGBTFuseIdStringContainer);
 }
 
 void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
@@ -127,13 +135,13 @@ void DQMMetadata::fillCalibrationTimestamp(const DetectorDataContainer& theCalib
 }
 
 
-void DQMMetadata::fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool original)
+void DQMMetadata::fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool initialValue)
 {
     for(const auto board: theReadoutChipConfigurationContainer)
     {
         BoardDataContainer* theTreeContainerBoard;
-        if(original)
-            theTreeContainerBoard = fOriginalReadoutChipConfigurationContainer.getObject(board->getId());
+        if(initialValue)
+            theTreeContainerBoard = fInitialReadoutChipConfigurationContainer.getObject(board->getId());
         else
             theTreeContainerBoard = fFinalReadoutChipConfigurationContainer.getObject(board->getId());
 
@@ -156,6 +164,39 @@ void DQMMetadata::fillReadoutChipConfiguration(const DetectorDataContainer& theR
     }
 }
 
+void DQMMetadata::fillLpGBTConfiguration(const DetectorDataContainer& theLpGBTConfigurationContainer, bool initialValue)
+{
+    for(const auto board: theLpGBTConfigurationContainer)
+    {
+        BoardDataContainer* theTreeContainerBoard;
+        if(initialValue)
+            theTreeContainerBoard = fInitialLpGBTConfigurationContainer.getObject(board->getId());
+        else
+            theTreeContainerBoard = fFinalLpGBTConfigurationContainer.getObject(board->getId());
+
+        for(const auto opticalGroup: *board)
+        {
+            auto* theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
+            if(!opticalGroup->hasSummary()) continue;
+            theTreeContainerOpticalGroup->getSummary<StringContainer>().saveString(opticalGroup->getSummary<std::string>().c_str());
+        }
+    }
+}
+
+void DQMMetadata::fillLpGBTFuseId(const DetectorDataContainer& theLpGBTFuseIdContainer)
+{
+    for(const auto board: theLpGBTFuseIdContainer)
+    {
+        auto* theTreeContainerBoard = fLpGBTFuseIdContainer.getObject(board->getId());
+        for(const auto opticalGroup: *board)
+        {
+            auto* theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
+            if(!opticalGroup->hasSummary()) continue;
+            theTreeContainerOpticalGroup->getSummary<StringContainer>().saveString(opticalGroup->getSummary<std::string>().c_str());
+        }
+    }
+}
+
 void DQMMetadata::process() {}
 
 void DQMMetadata::reset() {}
@@ -173,6 +214,8 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
     ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
     ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
     ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
+    ContainerSerialization theLpGBTConfigurationSerialization("MetadataLpGBTConfiguration");
+    ContainerSerialization theLpGBTFuseIdSerialization("MetadataLpGBTFuseId");
 
     if(theNameSerialization.attachDeserializer(inputStream))
     {
@@ -231,25 +274,38 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
         DetectorDataContainer theDetectorData =
             theDetectorConfigurationSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
         fillDetectorConfiguration(theDetectorData);
-
         return true;
     }
     if(theCalibrationTimestampSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Metadata CalibrationTimestamp!!!!!\n";
-        bool                  isOriginal;
+        bool                  isInitial;
         DetectorDataContainer theDetectorData =
-            theCalibrationTimestampSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isOriginal);
-        fillCalibrationTimestamp(theDetectorData, isOriginal);
+            theCalibrationTimestampSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
+        fillCalibrationTimestamp(theDetectorData, isInitial);
         return true;
     }
     if(theReadoutChipConfigurationSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Metadata ReadoutChipConfiguration!!!!!\n";
-        bool                  isOriginal;
-        DetectorDataContainer theDetectorData = theReadoutChipConfigurationSerialization.deserializeChipContainer<EmptyContainer, std::string>(fDetectorContainer, isOriginal);
-        fillReadoutChipConfiguration(theDetectorData, isOriginal);
-
+        bool                  isInitial;
+        DetectorDataContainer theDetectorData = theReadoutChipConfigurationSerialization.deserializeChipContainer<EmptyContainer, std::string>(fDetectorContainer, isInitial);
+        fillReadoutChipConfiguration(theDetectorData, isInitial);
+        return true;
+    }
+    if(theLpGBTConfigurationSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched Metadata LpGBTConfiguration!!!!!\n";
+        bool                  isInitial;
+        DetectorDataContainer theDetectorData = theLpGBTConfigurationSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
+        fillLpGBTConfiguration(theDetectorData, isInitial);
+        return true;
+    }
+    if(theLpGBTFuseIdSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched Metadata LpGBTFuseId!!!!!\n";
+        DetectorDataContainer theDetectorData = theLpGBTFuseIdSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+        fillLpGBTFuseId(theDetectorData);
         return true;
     }
 
