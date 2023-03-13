@@ -83,6 +83,7 @@ void SystemController::Inherit(const SystemController* pController)
     fNameContainer                  = pController->fNameContainer;
     fBoardType                      = pController->fBoardType;
     fConfigurationFileName          = pController->fConfigurationFileName;
+    fCalibrationName                = pController->fCalibrationName;
     fConfigurationFileContent       = pController->fConfigurationFileContent;
 
 #ifdef __TCP_SERVER__
@@ -1179,6 +1180,7 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 void SystemController::Configure(const ConfigureInfo theConfigureInfo)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
+    fCalibrationName = theConfigureInfo.getCalibrationName();
     std::ifstream     configurationFile(fConfigurationFileName);
     std::stringstream configurationFileStream;
     configurationFileStream << configurationFile.rdbuf();

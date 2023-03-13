@@ -26,8 +26,23 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
     StringContainer theHostNameStringContainer("HostName");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fHostNameContainer, theHostNameStringContainer);
 
+    StringContainer theGitCommitHashStringContainer("GitCommitHash");
+    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fGitCommitHashContainer, theGitCommitHashStringContainer);
+
+    StringContainer theFirmwareVersionStringContainer("FirmwareVersion");
+    RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFirmwareVersionContainer, theFirmwareVersionStringContainer);
+
+    StringContainer theCalibrationNameStringContainer("CalibrationName");
+    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fCalibrationNameContainer, theCalibrationNameStringContainer);
+
     StringContainer theDetectorConfigurationStringContainer("DetectorConfiguration");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fDetectorConfigurationContainer, theDetectorConfigurationStringContainer);
+
+    StringContainer theCalibrationStartTimestampStringContainer("CalibrationStartTimestamp");
+    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fCalibrationStartTimestampContainer, theCalibrationStartTimestampStringContainer);
+
+    StringContainer theCalibrationStopTimestampStringContainer("CalibrationStopTimestamp");
+    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fCalibrationStopTimestampContainer, theCalibrationStopTimestampStringContainer);
 
     StringContainer theOriginalReadoutChipConfigurationStringContainer("OriginalReadoutChipConfiguration");
     RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fOriginalReadoutChipConfigurationContainer, theOriginalReadoutChipConfigurationStringContainer);
@@ -67,16 +82,43 @@ void DQMMetadata::fillUsername(const DetectorDataContainer& theUsernameContainer
 
 void DQMMetadata::fillHostName(const DetectorDataContainer& theHostNameContainer) { fHostNameContainer.getSummary<StringContainer>().saveString(theHostNameContainer.getSummary<std::string>()); }
 
+void DQMMetadata::fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer) { fGitCommitHashContainer.getSummary<StringContainer>().saveString(theGitCommitHashContainer.getSummary<std::string>()); }
+
+void DQMMetadata::fillFirmwareVersion(const DetectorDataContainer& theFirmwareVersionContainer)
+{
+    for(const auto board: theFirmwareVersionContainer)
+    {
+        fFirmwareVersionContainer.getObject(board->getId())->getSummary<StringContainer>().saveString(board->getSummary<std::string>().c_str());
+    }
+}
+
+void DQMMetadata::fillCalibrationName(const DetectorDataContainer& theCalibrationNameContainer) { fCalibrationNameContainer.getSummary<StringContainer>().saveString(theCalibrationNameContainer.getSummary<std::string>()); }
+
 void DQMMetadata::fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer)
 {
     fDetectorConfigurationContainer.getSummary<StringContainer>().saveString(theDetectorConfigurationContainer.getSummary<std::string>());
 }
 
+void DQMMetadata::fillCalibrationTimestamp(const DetectorDataContainer& theCalibrationTimestampContainer, bool start)
+{
+    DetectorDataContainer *theTimestampPlotContainer;
+    if(start)
+    {
+        theTimestampPlotContainer = &fCalibrationStartTimestampContainer;
+    }
+    else
+    {
+        theTimestampPlotContainer = &fCalibrationStopTimestampContainer;
+    }
+    theTimestampPlotContainer->getSummary<StringContainer>().saveString(theCalibrationTimestampContainer.getSummary<std::string>());
+}
+
+
 void DQMMetadata::fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool original)
 {
     for(const auto board: theReadoutChipConfigurationContainer)
     {
-        class BoardDataContainer* theTreeContainerBoard;
+        BoardDataContainer* theTreeContainerBoard;
         if(original)
             theTreeContainerBoard = fOriginalReadoutChipConfigurationContainer.getObject(board->getId());
         else
@@ -112,7 +154,11 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
     ContainerSerialization theNameSerialization("MetadataObjectNames");
     ContainerSerialization theUsernameSerialization("MetadataUsername");
     ContainerSerialization theHostNameSerialization("MetadataHostName");
+    ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
+    ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
+    ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
     ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
+    ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
     ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
 
     if(theNameSerialization.attachDeserializer(inputStream))
@@ -139,12 +185,45 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
         fillHostName(theDetectorData);
         return true;
     }
+    if(theGitCommitHashSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched Metadata GitCommitHash!!!!!\n";
+        DetectorDataContainer theDetectorData =
+            theGitCommitHashSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
+        fillGitCommitHash(theDetectorData);
+        return true;
+    }
+    if(theFirmwareVersionSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched Metadata FirmwareVersion!!!!!\n";
+        DetectorDataContainer theDetectorData =
+            theFirmwareVersionSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+        fillFirmwareVersion(theDetectorData);
+        return true;
+    }
+    if(theCalibrationNameSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched Metadata CalibrationName!!!!!\n";
+        DetectorDataContainer theDetectorData =
+            theCalibrationNameSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
+        fillCalibrationName(theDetectorData);
+        return true;
+    }
     if(theDetectorConfigurationSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Metadata DetectorConfiguration!!!!!\n";
         DetectorDataContainer theDetectorData =
             theDetectorConfigurationSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
         fillDetectorConfiguration(theDetectorData);
+        return true;
+    }
+    if(theCalibrationTimestampSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched Metadata CalibrationTimestamp!!!!!\n";
+        bool                  isOriginal;
+        DetectorDataContainer theDetectorData =
+            theCalibrationTimestampSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isOriginal);
+        fillCalibrationTimestamp(theDetectorData, isOriginal);
         return true;
     }
     if(theReadoutChipConfigurationSerialization.attachDeserializer(inputStream))

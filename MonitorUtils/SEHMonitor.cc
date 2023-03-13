@@ -4,6 +4,7 @@
 #include "HWInterface/D19clpGBTInterface.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ValueAndTime.h"
+#include "Utils/Utilities.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"

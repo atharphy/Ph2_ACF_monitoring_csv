@@ -57,6 +57,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // #############################
     void      setFileHandler(FileHandler* pHandler) override;
     uint32_t  getBoardInfo() override { return FWinfo; }
+    uint32_t  getBoardFirmwareVersion() override {return FWinfo;}
     BoardType getBoardType() const override { return BoardType::RD53; }
 
     void ResetSequence(const std::string& refClockRate);

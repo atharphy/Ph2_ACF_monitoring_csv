@@ -16,7 +16,11 @@ class DQMMetadata : public DQMHistogramBase
     void fillObjectNames(const DetectorDataContainer& theNameContainer);
     void fillUsername(const DetectorDataContainer& theUsernameContainer);
     void fillHostName(const DetectorDataContainer& theHostNameContainer);
+    void fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer);
+    void fillFirmwareVersion(const DetectorDataContainer& theFirmwareVersionContainer);
+    void fillCalibrationName(const DetectorDataContainer& theCalibrationNameContainer);
     void fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer);
+    void fillCalibrationTimestamp(const DetectorDataContainer& theCalibrationTimestampContainer, bool start);
     void fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool original);
 
     virtual bool fill(std::vector<char>& dataBuffer) override;
@@ -28,7 +32,12 @@ class DQMMetadata : public DQMHistogramBase
     DetectorDataContainer fNameContainer;
     DetectorDataContainer fUsernameContainer;
     DetectorDataContainer fHostNameContainer;
+    DetectorDataContainer fGitCommitHashContainer;
+    DetectorDataContainer fFirmwareVersionContainer;
+    DetectorDataContainer fCalibrationNameContainer;
     DetectorDataContainer fDetectorConfigurationContainer;
+    DetectorDataContainer fCalibrationStartTimestampContainer;
+    DetectorDataContainer fCalibrationStopTimestampContainer;
     DetectorDataContainer fOriginalReadoutChipConfigurationContainer;
     DetectorDataContainer fFinalReadoutChipConfigurationContainer;
 };

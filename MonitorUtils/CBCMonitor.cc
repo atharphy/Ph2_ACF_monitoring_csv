@@ -5,6 +5,7 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/ValueAndTime.h"
+#include "Utils/Utilities.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"

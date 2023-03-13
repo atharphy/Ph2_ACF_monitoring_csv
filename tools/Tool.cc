@@ -6,6 +6,7 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/Utilities.h"
 
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
@@ -196,9 +197,26 @@ void Tool::initMetadataAndFillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theHostNameContainer);
     theHostNameContainer.getSummary<std::string>() = theHostName;
 
+    std::string           theGitCommitHash = GIT_COMMIT_HASH;
+    DetectorDataContainer theGitCommitHashContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitCommitHashContainer);
+    theGitCommitHashContainer.getSummary<std::string>() = theGitCommitHash; 
+
+    DetectorDataContainer theCalibrationNameContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationNameContainer);
+    theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName; 
+
+    DetectorDataContainer theFirmwareVersionContainer;
+    ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
+    for(const auto board : *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
+
     DetectorDataContainer theDetectorConfigurationContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
     theDetectorConfigurationContainer.getSummary<std::string>() = fConfigurationFileContent;
+
+    DetectorDataContainer theCalibrationTimestampContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationTimestampContainer);
+    theCalibrationTimestampContainer.getSummary<std::string>() = std::to_string(getTimeStamp());
 
     DetectorDataContainer theReadoutChipConfigurationContainer;
     ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
@@ -221,7 +239,11 @@ void Tool::initMetadataAndFillInitialConditions()
     fDQMMetadata->fillObjectNames(*fNameContainer);
     fDQMMetadata->fillUsername(theUsernameContainer);
     fDQMMetadata->fillHostName(theHostNameContainer);
+    fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
+    fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
+    fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
     fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
+    fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isOriginal);
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isOriginal);
 #else
     if(fDQMStreamerEnabled)
@@ -235,8 +257,20 @@ void Tool::initMetadataAndFillInitialConditions()
         ContainerSerialization theHostNameSerialization("MetadataHostName");
         theHostNameSerialization.streamByDetectorContainer(fDQMStreamer, theHostNameContainer);
 
+        ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
+        theGitCommitHashSerialization.streamByDetectorContainer(fDQMStreamer, theGitCommitHashContainer);
+
+        ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
+        theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
+
+        ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
+        theCalibrationNameSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationNameContainer);
+
         ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
         theDetectorConfigurationSerialization.streamByDetectorContainer(fDQMStreamer, theDetectorConfigurationContainer);
+
+        ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
+        theCalibrationTimestampSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationTimestampContainer, isOriginal);
 
         ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
         theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isOriginal);
@@ -291,14 +325,23 @@ void Tool::Stop()
         DetectorDataContainer theReadoutChipConfigurationContainer;
         ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
         fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
+
+        DetectorDataContainer theCalibrationTimestampContainer;
+        ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationTimestampContainer);
+        theCalibrationTimestampContainer.getSummary<std::string>() = std::to_string(getTimeStamp());
+
         bool isOriginal = false;
 #ifdef __USE_ROOT__
         fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isOriginal);
+        fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isOriginal);
 #else
         if(fDQMStreamerEnabled)
         {
             ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
             theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isOriginal);
+
+            ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
+            theCalibrationTimestampSerialization.streamByChipContainer(fDQMStreamer, theCalibrationTimestampContainer, isOriginal);
         }
 #endif
 

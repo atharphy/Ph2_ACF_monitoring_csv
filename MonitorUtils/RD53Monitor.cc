@@ -11,6 +11,7 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/ValueAndTime.h"
 #include <array>
+#include "Utils/Utilities.h"
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
