@@ -244,9 +244,22 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             uint8_t cChipId      = theChild.attribute("Id").as_int();
             uint8_t cChipVersion = theChild.attribute("version").as_int();
             bool    cIsOptical   = theChild.attribute("optical").as_int();
-            lpGBT*  thelpGBT     = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
+
+            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
             thelpGBT->setVersion(cChipVersion);
             thelpGBT->setOptical(cIsOptical);
+            std::string         cType;
+            pugi::xml_attribute cTestcard = theChild.attribute("testcard");
+            if(cTestcard != nullptr)
+            {
+                cType = theChild.attribute("testcard").value();
+                if(cType == "SEH") { thelpGBT->setTestcard(true); }
+                else
+                {
+                    thelpGBT->setTestcard(false);
+                }
+            }
+
             theOpticalGroup->setOptical(cIsOptical);
             pBoard->setOptical(cIsOptical);
             theOpticalGroup->addlpGBT(thelpGBT);

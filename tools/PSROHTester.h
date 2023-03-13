@@ -11,7 +11,7 @@
 #ifndef PSROHTester_h__
 #define PSROHTester_h__
 
-#if defined(__TCUSB__) && defined(__ROH_USB__) && defined(__USE_ROOT__)
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
 #include "OTHybridTester.h"
 
 #include <fstream>

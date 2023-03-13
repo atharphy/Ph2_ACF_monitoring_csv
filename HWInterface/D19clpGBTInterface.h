@@ -17,11 +17,11 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pOptical) : lpGBTInterface(pBoardMap)
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pOptical, bool pTestcard) : lpGBTInterface(pBoardMap)
     {
         LOG(INFO) << BOLDRED << "Constructor D19clpGBTInterface" << RESET;
 #if defined(__TCUSB__)
-        InitializeExternalController();
+        InitializeExternalController(pTestcard);
 #endif
         // configure during constructor now when configuring chip
         SetConfigMode(pOptical);
@@ -29,12 +29,18 @@ class D19clpGBTInterface : public lpGBTInterface
     ~D19clpGBTInterface()
     {
         LOG(DEBUG) << BOLDRED << "Destructor D19clpGBTInterface" << RESET;
-#if defined(__TC_USB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
-        if(fExternalController != nullptr)
+#if defined(__TC_USB__)
+        if(fTC_PSROH != nullptr)
         {
             LOG(INFO) << BOLDRED << "Deleting pointer to external controller for D19clpGBTInterface" << RESET;
-            delete fExternalController;
-            fExternalController = nullptr;
+            delete fTC_PSROH;
+            fTC_PSROH = nullptr;
+        }
+        if(fTC_2SSEH != nullptr)
+        {
+            LOG(INFO) << BOLDRED << "Deleting pointer to external controller for D19clpGBTInterface" << RESET;
+            delete fTC_2SSEH;
+            fTC_2SSEH = nullptr;
         }
 #endif
     }
