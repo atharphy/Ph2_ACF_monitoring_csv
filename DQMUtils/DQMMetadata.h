@@ -30,7 +30,7 @@ class DQMMetadata : public DQMHistogramBase
     virtual void reset() override;
 
   protected:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
   private:
     DetectorDataContainer fNameContainer;

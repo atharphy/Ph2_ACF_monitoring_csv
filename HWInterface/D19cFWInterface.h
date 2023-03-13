@@ -168,7 +168,7 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     uint32_t getBoardInfo();
 
-    uint32_t getBoardFirmwareVersion() override {return 999;}
+    uint32_t getBoardFirmwareVersion() override { return 999; }
 
     BoardType getBoardType() const { return BoardType::D19C; }
     /*!

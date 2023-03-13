@@ -3,8 +3,8 @@
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/D19clpGBTInterface.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ValueAndTime.h"
 #include "Utils/Utilities.h"
+#include "Utils/ValueAndTime.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"

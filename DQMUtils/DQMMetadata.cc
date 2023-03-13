@@ -74,13 +74,13 @@ void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
     {
         auto* theTreeContainerBoard = fNameContainer.getObject(board->getId());
         theTreeContainerBoard->getSummary<StringContainer, StringContainer>().saveString(board->getSummary<std::string, std::string>().c_str());
-        
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] board size = " << board->size() << std::endl;
+
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] board size = " << board->size() << std::endl;
 
         for(const auto opticalGroup: *board)
         {
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] opticalGroup id = " << opticalGroup->getId() << std::endl;
-            
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] opticalGroup id = " << opticalGroup->getId() << std::endl;
+
             auto* theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
             theTreeContainerOpticalGroup->getSummary<StringContainer, StringContainer>().saveString(opticalGroup->getSummary<std::string, std::string>().c_str());
 
@@ -103,17 +103,20 @@ void DQMMetadata::fillUsername(const DetectorDataContainer& theUsernameContainer
 
 void DQMMetadata::fillHostName(const DetectorDataContainer& theHostNameContainer) { fHostNameContainer.getSummary<StringContainer>().saveString(theHostNameContainer.getSummary<std::string>()); }
 
-void DQMMetadata::fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer) { fGitCommitHashContainer.getSummary<StringContainer>().saveString(theGitCommitHashContainer.getSummary<std::string>()); }
+void DQMMetadata::fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer)
+{
+    fGitCommitHashContainer.getSummary<StringContainer>().saveString(theGitCommitHashContainer.getSummary<std::string>());
+}
 
 void DQMMetadata::fillFirmwareVersion(const DetectorDataContainer& theFirmwareVersionContainer)
 {
-    for(const auto board: theFirmwareVersionContainer)
-    {
-        fFirmwareVersionContainer.getObject(board->getId())->getSummary<StringContainer>().saveString(board->getSummary<std::string>().c_str());
-    }
+    for(const auto board: theFirmwareVersionContainer) { fFirmwareVersionContainer.getObject(board->getId())->getSummary<StringContainer>().saveString(board->getSummary<std::string>().c_str()); }
 }
 
-void DQMMetadata::fillCalibrationName(const DetectorDataContainer& theCalibrationNameContainer) { fCalibrationNameContainer.getSummary<StringContainer>().saveString(theCalibrationNameContainer.getSummary<std::string>()); }
+void DQMMetadata::fillCalibrationName(const DetectorDataContainer& theCalibrationNameContainer)
+{
+    fCalibrationNameContainer.getSummary<StringContainer>().saveString(theCalibrationNameContainer.getSummary<std::string>());
+}
 
 void DQMMetadata::fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer)
 {
@@ -122,18 +125,14 @@ void DQMMetadata::fillDetectorConfiguration(const DetectorDataContainer& theDete
 
 void DQMMetadata::fillCalibrationTimestamp(const DetectorDataContainer& theCalibrationTimestampContainer, bool start)
 {
-    DetectorDataContainer *theTimestampPlotContainer;
-    if(start)
-    {
-        theTimestampPlotContainer = &fCalibrationStartTimestampContainer;
-    }
+    DetectorDataContainer* theTimestampPlotContainer;
+    if(start) { theTimestampPlotContainer = &fCalibrationStartTimestampContainer; }
     else
     {
         theTimestampPlotContainer = &fCalibrationStopTimestampContainer;
     }
     theTimestampPlotContainer->getSummary<StringContainer>().saveString(theCalibrationTimestampContainer.getSummary<std::string>());
 }
-
 
 void DQMMetadata::fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool initialValue)
 {
@@ -281,7 +280,8 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
         std::cout << "Matched Metadata CalibrationTimestamp!!!!!\n";
         bool                  isInitial;
         DetectorDataContainer theDetectorData =
-            theCalibrationTimestampSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
+            theCalibrationTimestampSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer,
+                                                                                                                                                                           isInitial);
         fillCalibrationTimestamp(theDetectorData, isInitial);
         return true;
     }
@@ -297,7 +297,8 @@ bool DQMMetadata::fill(std::vector<char>& dataBuffer)
     {
         std::cout << "Matched Metadata LpGBTConfiguration!!!!!\n";
         bool                  isInitial;
-        DetectorDataContainer theDetectorData = theLpGBTConfigurationSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
+        DetectorDataContainer theDetectorData =
+            theLpGBTConfigurationSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
         fillLpGBTConfiguration(theDetectorData, isInitial);
         return true;
     }

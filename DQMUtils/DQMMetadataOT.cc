@@ -82,14 +82,15 @@ bool DQMMetadataOT::fill(std::vector<char>& dataBuffer)
         if(theCICFuseIdSerialization.attachDeserializer(inputStream))
         {
             std::cout << "Matched Metadata CICFuseId!!!!!\n";
-            DetectorDataContainer theDetectorData = theCICFuseIdSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
+            DetectorDataContainer theDetectorData =
+                theCICFuseIdSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
             fillCICFuseId(theDetectorData);
             return true;
         }
         if(theCICConfigurationSerialization.attachDeserializer(inputStream))
         {
             std::cout << "Matched Metadata CICConfiguration!!!!!\n";
-            bool isInitial;
+            bool                  isInitial;
             DetectorDataContainer theDetectorData = theCICConfigurationSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
             fillCICConfiguration(theDetectorData, isInitial);
             return true;

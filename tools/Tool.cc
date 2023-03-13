@@ -200,15 +200,15 @@ void Tool::initMetadataAndFillInitialConditions()
     std::string           theGitCommitHash = GIT_COMMIT_HASH;
     DetectorDataContainer theGitCommitHashContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitCommitHashContainer);
-    theGitCommitHashContainer.getSummary<std::string>() = theGitCommitHash; 
+    theGitCommitHashContainer.getSummary<std::string>() = theGitCommitHash;
 
     DetectorDataContainer theCalibrationNameContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationNameContainer);
-    theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName; 
+    theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName;
 
     DetectorDataContainer theFirmwareVersionContainer;
     ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
-    for(const auto board : *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
+    for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
 
     DetectorDataContainer theDetectorConfigurationContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
@@ -294,12 +294,15 @@ void Tool::initMetadataAndFillInitialConditions()
 #endif
 
     if(fBoardType == BoardType::D19C) { fillOTMetadataInitialConditions(); }
-    else if(fBoardType == BoardType::RD53) { fillITMetadataInitialConditions(); }
+    else if(fBoardType == BoardType::RD53)
+    {
+        fillITMetadataInitialConditions();
+    }
 }
 
 void Tool::fillOTMetadataInitialConditions()
 {
-    bool isInitialValue = true;
+    bool                  isInitialValue = true;
     DetectorDataContainer theCICFuseIdContainer;
     ContainerFactory::copyAndInitHybrid<std::string>(*fDetectorContainer, theCICFuseIdContainer);
     fillCICFuseIdContainer(theCICFuseIdContainer);
@@ -309,7 +312,7 @@ void Tool::fillOTMetadataInitialConditions()
     fillCICConfigurationContainer(theCICConfigurationContainer);
 
 #ifdef __USE_ROOT__
-    auto *theOTDQMMetadata = static_cast<DQMMetadataOT*>(fDQMMetadata);
+    auto* theOTDQMMetadata = static_cast<DQMMetadataOT*>(fDQMMetadata);
     theOTDQMMetadata->fillCICFuseId(theCICFuseIdContainer);
     theOTDQMMetadata->fillCICConfiguration(theCICConfigurationContainer, isInitialValue);
 #else
@@ -328,7 +331,7 @@ void Tool::fillITMetadataInitialConditions() {}
 
 void Tool::fillMetadataFinalConditions()
 {
-    bool isInitialValue = false;
+    bool                  isInitialValue = false;
     DetectorDataContainer theReadoutChipConfigurationContainer;
     ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
     fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
@@ -360,12 +363,15 @@ void Tool::fillMetadataFinalConditions()
 #endif
 
     if(fBoardType == BoardType::D19C) { fillOTMetadataFinalConditions(); }
-    else if(fBoardType == BoardType::RD53) { fillITMetadataFinalConditions(); }
+    else if(fBoardType == BoardType::RD53)
+    {
+        fillITMetadataFinalConditions();
+    }
 }
 
 void Tool::fillITMetadataFinalConditions() {}
 
-void Tool::fillOTMetadataFinalConditions() 
+void Tool::fillOTMetadataFinalConditions()
 {
     bool isInitialValue = false;
 
@@ -374,7 +380,7 @@ void Tool::fillOTMetadataFinalConditions()
     fillCICConfigurationContainer(theCICConfigurationContainer);
 
 #ifdef __USE_ROOT__
-    auto *theOTDQMMetadata = static_cast<DQMMetadataOT*>(fDQMMetadata);
+    auto* theOTDQMMetadata = static_cast<DQMMetadataOT*>(fDQMMetadata);
     theOTDQMMetadata->fillCICConfiguration(theCICConfigurationContainer, isInitialValue);
 #else
     if(fDQMStreamerEnabled)
@@ -435,11 +441,8 @@ void Tool::fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t chipFuseId =  fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
-                theCICFuseIdContainer.getObject(cBoard->getId())
-                    ->getObject(cOpticalGroup->getId())
-                    ->getObject(cHybrid->getId())
-                    ->getSummary<std::string>() = std::to_string(chipFuseId);
+                uint32_t chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
+                theCICFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::string>() = std::to_string(chipFuseId);
             }
         }
     }
@@ -453,10 +456,8 @@ void Tool::fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurat
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                theCICConfigurationContainer.getObject(cBoard->getId())
-                    ->getObject(cOpticalGroup->getId())
-                    ->getObject(cHybrid->getId())
-                    ->getSummary<std::string>() = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic->getRegMapStream().str();
+                theCICConfigurationContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::string>() =
+                    static_cast<OuterTrackerHybrid*>(cHybrid)->fCic->getRegMapStream().str();
             }
         }
     }
@@ -470,9 +471,7 @@ void Tool::fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfig
         {
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
-            theLpGBTConfigurationContainer.getObject(cBoard->getId())
-                ->getObject(cOpticalGroup->getId())
-                ->getSummary<std::string, EmptyContainer>() = theLpGBT->getRegMapStream().str();
+            theLpGBTConfigurationContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = theLpGBT->getRegMapStream().str();
         }
     }
 }
@@ -485,10 +484,8 @@ void Tool::fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContain
         {
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
-            uint32_t chipFuseId = flpGBTInterface->ReadChipFuseID(theLpGBT);
-            theLpGBTFuseIdContainer.getObject(cBoard->getId())
-                ->getObject(cOpticalGroup->getId())
-                ->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
+            uint32_t chipFuseId                                                                                                              = flpGBTInterface->ReadChipFuseID(theLpGBT);
+            theLpGBTFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
         }
     }
 }

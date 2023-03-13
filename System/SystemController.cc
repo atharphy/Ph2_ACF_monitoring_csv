@@ -1181,7 +1181,7 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 void SystemController::Configure(const ConfigureInfo theConfigureInfo)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
-    fCalibrationName = theConfigureInfo.getCalibrationName();
+    fCalibrationName       = theConfigureInfo.getCalibrationName();
     std::ifstream     configurationFile(fConfigurationFileName);
     std::stringstream configurationFileStream;
     configurationFileStream << configurationFile.rdbuf();
