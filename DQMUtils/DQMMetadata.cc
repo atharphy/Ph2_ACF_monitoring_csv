@@ -52,13 +52,13 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
     StringContainer theCalibrationStopTimestampStringContainer("CalibrationStopTimestamp");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fCalibrationStopTimestampContainer, theCalibrationStopTimestampStringContainer);
 
-    StringContainer theInitialReadoutChipConfigurationStringContainer("initialReadoutChipConfiguration");
+    StringContainer theInitialReadoutChipConfigurationStringContainer("InitialReadoutChipConfiguration");
     RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fInitialReadoutChipConfigurationContainer, theInitialReadoutChipConfigurationStringContainer);
 
     StringContainer theFinalReadoutChipConfigurationStringContainer("FinalReadoutChipConfiguration");
     RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFinalReadoutChipConfigurationContainer, theFinalReadoutChipConfigurationStringContainer);
 
-    StringContainer theInitialLpGBTConfigurationStringContainer("initialLpGBTConfiguration");
+    StringContainer theInitialLpGBTConfigurationStringContainer("InitialLpGBTConfiguration");
     RootContainerFactory::bookOpticalGroupHistograms<StringContainer>(theOutputFile, theDetectorStructure, fInitialLpGBTConfigurationContainer, theInitialLpGBTConfigurationStringContainer);
 
     StringContainer theFinalLpGBTConfigurationStringContainer("FinalLpGBTConfiguration");
