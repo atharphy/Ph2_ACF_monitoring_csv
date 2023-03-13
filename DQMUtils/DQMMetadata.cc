@@ -42,9 +42,13 @@ void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
     {
         auto* theTreeContainerBoard = fNameContainer.getObject(board->getId());
         theTreeContainerBoard->getSummary<StringContainer, StringContainer>().saveString(board->getSummary<std::string, std::string>().c_str());
+        
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] board size = " << board->size() << std::endl;
 
         for(const auto opticalGroup: *board)
         {
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] opticalGroup id = " << opticalGroup->getId() << std::endl;
+            
             auto* theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
             theTreeContainerOpticalGroup->getSummary<StringContainer, StringContainer>().saveString(opticalGroup->getSummary<std::string, std::string>().c_str());
 
