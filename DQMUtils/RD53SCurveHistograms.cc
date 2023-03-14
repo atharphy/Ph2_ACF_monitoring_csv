@@ -60,7 +60,6 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
 
 bool SCurveHistograms::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theThresholdAndNoiseSerialization("SCurveThresholdAndNoise");
     ContainerSerialization theOccupancySerialization("SCurveOccupancy");
 

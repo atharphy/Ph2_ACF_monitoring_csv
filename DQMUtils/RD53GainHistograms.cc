@@ -78,7 +78,6 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
 
 bool GainHistograms::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theOccupancySerialization("GainOccupancy");
     ContainerSerialization theGainSerialization("GainGain");
 

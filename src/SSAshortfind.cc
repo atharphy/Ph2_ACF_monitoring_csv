@@ -7,12 +7,12 @@
 #include "HWInterface/ReadoutChipInterface.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/ShortFinder.h"
 #include <cstring>
-#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

@@ -21,7 +21,6 @@ void BERtestHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 
 bool BERtestHistograms::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theContainerSerialization("BERtest");
 
     if(theContainerSerialization.attachDeserializer(inputStream))

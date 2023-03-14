@@ -74,7 +74,7 @@ void MiddlewareInterface::resume(void) {}
 void MiddlewareInterface::start(const StartInfo& theStartInfo)
 {
     std::string theCommandString = theStartInfo.createProtobufMessage();
-    std::string readBuffer = sendCommand(theCommandString);
+    std::string readBuffer       = sendCommand(theCommandString);
     std::cout << __PRETTY_FUNCTION__ << "DONE WITH Start-" << readBuffer << "-" << std::endl;
 }
 

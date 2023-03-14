@@ -13,6 +13,7 @@
 #define __UTILITIES_H__
 
 #include "HWDescription/Definition.h"
+#include "Utils/StartInfo.h"
 #include <algorithm>
 #include <bitset>
 #include <cstdio>
@@ -30,7 +31,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <vector>
-#include "Utils/StartInfo.h"
 
 #include <tuple> // new
 

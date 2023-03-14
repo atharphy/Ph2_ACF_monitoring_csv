@@ -7,8 +7,8 @@
 #include "HWInterface/ChipInterface.h"
 #include "MonitorDQM/MonitorDQMInterface.h"
 #include "Utils/ConfigureInfo.h"
-#include "Utils/StartInfo.h"
 #include "Utils/MiddlewareInterface.h"
+#include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
 #include "miniDAQ/CombinedCalibrationFactory.h"
 
@@ -307,12 +307,12 @@ int main(int argc, char* argv[])
                 case CONFIGURED:
                 {
                     int runNumber = returnRunNumber("RunNumbers.dat");
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
                     StartInfo theStartInfo;
                     theStartInfo.setRunNumber(runNumber);
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;

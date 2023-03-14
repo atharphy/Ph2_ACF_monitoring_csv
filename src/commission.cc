@@ -3,6 +3,7 @@
 //#include "Utils/easylogging++.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -16,7 +17,6 @@
 #include "tools/SignalScan.h"
 #include "tools/SignalScanFit.h"
 #include "tools/StubBackEndAlignment.h"
-#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

@@ -160,7 +160,6 @@ void MonitorDQMPlotCBC::reset(void)
 //========================================================================================================================
 bool MonitorDQMPlotCBC::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theCBCRegisterSerialization("CBCMonitorCBCRegister");
     ContainerSerialization theLpGBTRegisterSerialization("CBCMonitorLpGBTRegister");
 

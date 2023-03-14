@@ -27,7 +27,6 @@ void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer
 
 bool MonitorDQMPlotRD53::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theContainerSerialization("RD53MonitorRegister");
 
     if(theContainerSerialization.attachDeserializer(inputStream))

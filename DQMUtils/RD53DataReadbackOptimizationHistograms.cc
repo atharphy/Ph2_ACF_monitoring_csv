@@ -48,8 +48,8 @@ void DataReadbackOptimizationHistograms::book(TFile* theOutputFile, DetectorCont
 
 bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
 {
-    const size_t           TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-    
+    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+
     ContainerSerialization theTAP0scanSerialization("DataReadbackOptimizationTAP0scan");
     ContainerSerialization theTAP0Serialization("DataReadbackOptimizationTAP0");
 

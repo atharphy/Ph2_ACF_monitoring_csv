@@ -24,7 +24,6 @@ void SSAPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
 
 bool SSAPhysicsHistograms::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theOccupancySerialization("SSAPhysicsOccupancy");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))

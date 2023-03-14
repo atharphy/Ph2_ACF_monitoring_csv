@@ -74,7 +74,6 @@ bool DQMMetadataOT::fill(std::string& inputStream)
     else
     {
         // child fill here
-        
 
         ContainerSerialization theCICFuseIdSerialization("MetadataCICFuseId");
         ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");

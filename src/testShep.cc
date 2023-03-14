@@ -1,8 +1,8 @@
 #include "DQMUtils/DQMInterface.h"
 #include "MonitorDQM/MonitorDQMInterface.h"
 #include "Utils/ConfigureInfo.h"
-#include "Utils/StartInfo.h"
 #include "Utils/MiddlewareInterface.h"
+#include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
 #include <google/protobuf/descriptor.h>
 
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
             }
             case CONFIGURED:
             {
-                int runNumber = returnRunNumber("RunNumbers.dat");
+                int       runNumber = returnRunNumber("RunNumbers.dat");
                 StartInfo theStartInfo;
                 theStartInfo.setRunNumber(runNumber);
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;

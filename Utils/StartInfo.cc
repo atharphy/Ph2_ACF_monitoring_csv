@@ -6,7 +6,7 @@ void StartInfo::parseProtobufMessage(const std::string& theConfigureInfoString)
     MessageUtils::StartMessage theStartMessage;
     theStartMessage.ParseFromString(theConfigureInfoString);
 
-    fRunNumber = theStartMessage.data().run_number();
+    fRunNumber         = theStartMessage.data().run_number();
     fAppendInformation = theStartMessage.data().append();
 }
 

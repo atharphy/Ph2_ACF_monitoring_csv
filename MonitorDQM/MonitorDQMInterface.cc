@@ -153,7 +153,6 @@ bool MonitorDQMInterface::running()
                 break;
             }
 
-
             std::string inputStream(fDataBuffer.begin() + packerHeaderSize, fDataBuffer.begin() + packetSize);
             fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + packetSize);
 

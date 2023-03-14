@@ -9,19 +9,18 @@ class StartInfo
     StartInfo(){};
     ~StartInfo(){};
 
-    void setRunNumber(int theRunNumber) {fRunNumber = theRunNumber;}
-    int getRunNumber() const {return fRunNumber;}
+    void setRunNumber(int theRunNumber) { fRunNumber = theRunNumber; }
+    int  getRunNumber() const { return fRunNumber; }
 
-    void setAppendInformation(std::string theAppendInformation) {fAppendInformation = theAppendInformation;}
-    std::string getAppendInformation() const {return fAppendInformation;}
+    void        setAppendInformation(std::string theAppendInformation) { fAppendInformation = theAppendInformation; }
+    std::string getAppendInformation() const { return fAppendInformation; }
 
-    void parseProtobufMessage(const std::string& theConfigureInfoString);
+    void        parseProtobufMessage(const std::string& theConfigureInfoString);
     std::string createProtobufMessage() const;
 
   private:
-    int         fRunNumber {-1};
-    std::string fAppendInformation {""};
-
+    int         fRunNumber{-1};
+    std::string fAppendInformation{""};
 };
 
 #endif

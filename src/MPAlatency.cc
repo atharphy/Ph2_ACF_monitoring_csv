@@ -14,9 +14,9 @@
 #include "tools/PSAlignment.h"
 #include <cstring>
 
+#include "Utils/StartInfo.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
-#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

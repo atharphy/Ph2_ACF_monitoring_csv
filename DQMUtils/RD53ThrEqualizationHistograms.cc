@@ -52,7 +52,6 @@ bool ThrEqualizationHistograms::fill(std::string& inputStream)
 {
     const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    
     ContainerSerialization theOccupancySerialization("ThrEqualizationOccupancy");
     ContainerSerialization theTDACSerialization("ThrEqualizationTDAC");
     ContainerSerialization theOccupancyScanSerialization("ThrEqualizationOccupancyScan");

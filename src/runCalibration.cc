@@ -1,13 +1,13 @@
 #include <cstring>
 
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "Utils/easylogging++.h"
 #include "boost/format.hpp"
 #include "miniDAQ/MiddlewareStateMachine.h"
-#include "Utils/StartInfo.h"
 
 #include "TApplication.h"
 #include "TROOT.h"
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
         }
         case CONFIGURED:
         {
-            int runNumber = returnRunNumber("RunNumbers.dat");
+            int       runNumber = returnRunNumber("RunNumbers.dat");
             StartInfo theStartInfo;
             theStartInfo.setRunNumber(runNumber);
             theMiddlewareStateMachine.start(theStartInfo);

@@ -15,10 +15,10 @@
 #include "Utils/Occupancy.h"
 #include "Utils/PSSync.h"
 #include "Utils/SSAChannelGroupHandler.h"
+#include "Utils/StartInfo.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
-#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

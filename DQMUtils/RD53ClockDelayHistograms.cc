@@ -38,7 +38,6 @@ bool ClockDelayHistograms::fill(std::string& inputStream)
 {
     const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    
     ContainerSerialization theOccupancySerialization("ClockDelayOccupancy");
     ContainerSerialization theClockDelaySerialization("ClockDelayClockDelay");
 

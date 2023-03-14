@@ -3,8 +3,8 @@
 #include "NetworkUtils/TCPSubscribeClient.h"
 #include "Parser/FileParser.h"
 #include "Utils/ConfigureInfo.h"
-#include "Utils/StartInfo.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/StartInfo.h"
 
 #include "TFile.h"
 
@@ -54,8 +54,8 @@ void DQMInterface::configure(const ConfigureInfo& theConfigureInfo)
     std::string configurationFilePath = theConfigureInfo.getConfigurationFile();
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
 
-    Ph2_Parser::FileParser  theFileParser;
-    std::stringstream       out;
+    Ph2_Parser::FileParser theFileParser;
+    std::stringstream      out;
 
     CommunicationSettingConfig theCommunicationSettingConfig;
     theFileParser.parseCommunicationSettings(configurationFilePath, theCommunicationSettingConfig, out);
@@ -81,7 +81,7 @@ void DQMInterface::configure(const ConfigureInfo& theConfigureInfo)
 void DQMInterface::startProcessingData(const StartInfo& theStartInfo)
 {
     std::string resultDirectoryName = getResultDirectoryName(theStartInfo);
-    std::string cCommand = "mkdir -p " + resultDirectoryName;
+    std::string cCommand            = "mkdir -p " + resultDirectoryName;
 
     try
     {
@@ -92,7 +92,7 @@ void DQMInterface::startProcessingData(const StartInfo& theStartInfo)
         LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result Directory: " << e.what() << RESET;
     }
     std::string fileName = resultDirectoryName + "/Result.root";
-    fOutputFile = new TFile(fileName.c_str(), "RECREATE");
+    fOutputFile          = new TFile(fileName.c_str(), "RECREATE");
     for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, fSettingsMap);
     fRunning       = true;
     fRunningFuture = std::async(std::launch::async, &DQMInterface::running, this);
@@ -192,7 +192,6 @@ bool DQMInterface::running()
                     abort();
                 }
             }
-
         }
     }
 

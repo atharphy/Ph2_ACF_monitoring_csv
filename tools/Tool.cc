@@ -14,9 +14,9 @@
 #include <future>
 
 #include "Utils/ConfigureInfo.h"
-#include "Utils/StartInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
+#include "Utils/StartInfo.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMMetadataIT.h"
@@ -386,8 +386,8 @@ void Tool::fillOTMetadataFinalConditions()
 #else
     if(fDQMStreamerEnabled)
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
         ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");
         theCICConfigurationSerialization.streamByHybridContainer(fDQMStreamer, theCICConfigurationContainer, isInitialValue);
     }
@@ -515,9 +515,9 @@ void Tool::Stop()
         SystemController::Stop();
 
         fillMetadataFinalConditions();
-        if(fDQMStreamerEnabled) 
+        if(fDQMStreamerEnabled)
         {
-            std::string doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
+            std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
             PacketHeader thePacketHeader;
             thePacketHeader.addPacketHeader(doneWithRunMessage);
             fDQMStreamer->broadcast(doneWithRunMessage);

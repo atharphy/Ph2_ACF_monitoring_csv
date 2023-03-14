@@ -30,7 +30,6 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 
 bool ThresholdHistograms::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theContainerSerialization("ThrAdjustmentThreshold");
 
     if(theContainerSerialization.attachDeserializer(inputStream))

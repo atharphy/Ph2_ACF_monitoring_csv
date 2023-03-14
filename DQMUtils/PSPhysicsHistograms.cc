@@ -200,7 +200,6 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
 
 bool PSPhysicsHistograms::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theOccupancySerialization("PSPhysicsOccupancy");
     ContainerSerialization theStubSerialization("PSPhysicsStub");
 

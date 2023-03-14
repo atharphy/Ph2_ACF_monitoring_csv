@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "HWInterface/D19cDebugFWInterface.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -24,7 +25,6 @@
 #include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "Utils/StartInfo.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries

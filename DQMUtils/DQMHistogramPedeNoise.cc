@@ -211,8 +211,6 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 //========================================================================================================================
 bool DQMHistogramPedeNoise::fill(std::string& inputStream)
 {
-    
-
     ContainerSerialization theSCurveSerialization("PedeNoiseSCurve");
     ContainerSerialization theThresholdAndNoiseSerialization("PedeNoiseThresholdAndNoise");
     ContainerSerialization theValidationSerialization("PedeNoiseValidation");

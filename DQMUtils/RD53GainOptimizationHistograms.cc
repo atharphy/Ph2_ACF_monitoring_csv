@@ -30,7 +30,6 @@ void GainOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& t
 
 bool GainOptimizationHistograms::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theSCurveSerialization("GainOptimizationKrumCurr");
 
     if(theSCurveSerialization.attachDeserializer(inputStream))

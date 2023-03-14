@@ -17,6 +17,7 @@
 #include "Utils/CommonVisitors.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/D19cMPAEvent.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -28,7 +29,6 @@
 #include <fstream>
 #include <inttypes.h>
 #include <iostream>
-#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

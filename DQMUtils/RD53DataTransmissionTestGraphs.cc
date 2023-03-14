@@ -33,7 +33,6 @@ void DataTransmissionTestGraphs::book(TFile* theOutputFile, DetectorContainer& t
 
 bool DataTransmissionTestGraphs::fill(std::string& inputStream)
 {
-    
     ContainerSerialization theTAP0targetSerialization("DataTransmissionTestTAP0target");
 
     if(theTAP0targetSerialization.attachDeserializer(inputStream))

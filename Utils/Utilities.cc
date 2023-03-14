@@ -43,7 +43,7 @@ void mypause()
 std::string getResultDirectoryName(const StartInfo& theStartInfo)
 {
     std::string resultDirectory = "Results/Run_" + std::to_string(theStartInfo.getRunNumber());
-    std::string append = theStartInfo.getAppendInformation();
+    std::string append          = theStartInfo.getAppendInformation();
     if(append != "") resultDirectory = resultDirectory + "_" + append;
     return resultDirectory;
 }

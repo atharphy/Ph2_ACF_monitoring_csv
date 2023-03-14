@@ -54,7 +54,6 @@ bool PhysicsHistograms::fill(std::string& inputStream)
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
-    
     ContainerSerialization theOccupancySerialization("PhysicsOccupancy");
     ContainerSerialization theBCIDSerialization("PhysicsBCID");
     ContainerSerialization theTrgIDSerialization("PhysicsTrgID");
