@@ -326,7 +326,6 @@ int main(int argc, char* argv[])
                 }
                 case STOPPED:
                 {
-                    usleep(2e6);
                     theDQMInterface.stopProcessingData();
                     usleep(5e6);
                     theMiddlewareInterface.halt();

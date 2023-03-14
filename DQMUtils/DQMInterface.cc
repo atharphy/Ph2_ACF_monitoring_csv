@@ -92,7 +92,7 @@ void DQMInterface::stopProcessingData(void)
 {
     fRunning = false;
     std::chrono::milliseconds span(1000);
-    int                       timeout = 3; // in seconds
+    int                       timeout = 5; // in seconds
 
     fListener->disconnect();
     while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout > 0)
@@ -103,6 +103,9 @@ void DQMInterface::stopProcessingData(void)
     if(fDataBuffer.size() > 0)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Buffer should be empty, some data were not read, Aborting" << RESET;
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Buffer size:" << fDataBuffer.size() << RESET;
+        std::string inputStream(fDataBuffer.begin(), fDataBuffer.end());
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Buffer content:\n" << inputStream << RESET;
         abort();
     }
 

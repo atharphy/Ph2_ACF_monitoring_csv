@@ -355,10 +355,10 @@ void Tool::fillMetadataFinalConditions()
         theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isInitialValue);
 
         ContainerSerialization theLpGBTConfigurationSerialization("MetadataLpGBTConfiguration");
-        theLpGBTConfigurationSerialization.streamByChipContainer(fDQMStreamer, theLpGBTConfigurationContainer, isInitialValue);
+        theLpGBTConfigurationSerialization.streamByOpticalGroupContainer(fDQMStreamer, theLpGBTConfigurationContainer, isInitialValue);
 
         ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
-        theCalibrationTimestampSerialization.streamByChipContainer(fDQMStreamer, theCalibrationTimestampContainer, isInitialValue);
+        theCalibrationTimestampSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationTimestampContainer, isInitialValue);
     }
 #endif
 
@@ -385,6 +385,8 @@ void Tool::fillOTMetadataFinalConditions()
 #else
     if(fDQMStreamerEnabled)
     {
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        
         ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");
         theCICConfigurationSerialization.streamByHybridContainer(fDQMStreamer, theCICConfigurationContainer, isInitialValue);
     }
