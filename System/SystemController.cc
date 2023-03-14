@@ -84,10 +84,6 @@ void SystemController::Inherit(const SystemController* pController)
     fBoardType                      = pController->fBoardType;
     fConfigurationFileName          = pController->fConfigurationFileName;
     fConfigurationFileContent       = pController->fConfigurationFileContent;
-
-#ifdef __TCP_SERVER__
-    fTestcardClient = pController->fTestcardClient;
-#endif
 }
 
 void SystemController::StopMonitoring()
@@ -251,7 +247,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 if(cWithLpGBT)
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
-                    flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstOpticalGroup->flpGBT->isOptical(), cFirstOpticalGroup->flpGBT->isTestcard());
+                    flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstOpticalGroup->flpGBT->isOptical());
                 }
 
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;

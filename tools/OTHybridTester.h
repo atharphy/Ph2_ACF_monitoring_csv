@@ -93,7 +93,6 @@ class OTHybridTester : public Tool
     float       getMeasurement(std::string name);
     std::string getVariableValue(std::string variable, std::string buffer);
     bool        fIsSEH = false;
-    TC_2SSEH*   GetTC_2SSEH() const { return fTC_2SSEH; }
 
   protected:
     TC_2SSEH* fTC_2SSEH = nullptr;

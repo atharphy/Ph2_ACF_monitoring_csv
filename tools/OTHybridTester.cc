@@ -21,7 +21,7 @@ void OTHybridTester::InitialiseTestCard(bool cIsSEH)
         LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
         fTC_2SSEH = new TC_2SSEH();
         fIsSEH    = true;
-        fDetectorMonitor->setTestCardPointer(GetTC_2SSEH());
+        if(fDetectorMonitor != nullptr) { fDetectorMonitor->setTestCardPointer(fTC_2SSEH); }
     }
     else
     {

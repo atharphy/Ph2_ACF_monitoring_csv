@@ -248,17 +248,6 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
             thelpGBT->setVersion(cChipVersion);
             thelpGBT->setOptical(cIsOptical);
-            std::string         cType;
-            pugi::xml_attribute cTestcard = theChild.attribute("testcard");
-            if(cTestcard != nullptr)
-            {
-                cType = theChild.attribute("testcard").value();
-                if(cType == "SEH") { thelpGBT->setTestcard(true); }
-                else
-                {
-                    thelpGBT->setTestcard(false);
-                }
-            }
 
             theOpticalGroup->setOptical(cIsOptical);
             pBoard->setOptical(cIsOptical);

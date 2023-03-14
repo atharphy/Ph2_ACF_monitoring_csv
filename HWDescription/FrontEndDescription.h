@@ -74,9 +74,7 @@ class FrontEndDescription
     void setFrontEndType(FrontEndType pType) { fType = pType; }
 
     void         setOptical(bool pOptical) { fOptical = pOptical; }
-    void         setTestcard(bool cBool) { fSEHTestcard = cBool; }
     bool         isOptical() { return fOptical; }
-    bool         isTestcard() { return fSEHTestcard; }
     FrontEndType getFrontEndType() const { return fType; }
 
     void    setReset(uint8_t pReset) { fReset = pReset; }
@@ -100,7 +98,6 @@ class FrontEndDescription
     FrontEndType fType;
     // optical or electrical communication with back-end
     bool fOptical;
-    bool fSEHTestcard = false;
 };
 } // namespace Ph2_HwDescription
 
