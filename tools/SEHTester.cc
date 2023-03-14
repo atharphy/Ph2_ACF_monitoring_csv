@@ -94,8 +94,8 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
         // std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
         // U_SEH              = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
         // I_SEH              = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Current", buffer));
-        flpGBTInterface->GetTC_2SSEH()->read_supply(flpGBTInterface->GetTC_2SSEH()->I_SEH, I_SEH);
-        flpGBTInterface->GetTC_2SSEH()->read_supply(flpGBTInterface->GetTC_2SSEH()->U_SEH, U_SEH);
+        fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);
+        fTC_2SSEH->read_supply(fTC_2SSEH->U_SEH, U_SEH);
         cIinValVect.push_back(I_SEH);
         cUinValVect.push_back(U_SEH);
     }
@@ -175,7 +175,7 @@ void SEHTester::TestBiasVoltage()
     float cVHVJ7 = 0;
     float cVHVJ8 = 0;
 
-    flpGBTInterface->GetTC_2SSEH()->set_HV(false, true, true, 0);
+    fTC_2SSEH->set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     std::vector<float> cDACValVect;
@@ -191,11 +191,11 @@ void SEHTester::TestBiasVoltage()
     for(int cDACValue = 0; cDACValue <= 3500; cDACValue += 0x155)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        flpGBTInterface->GetTC_2SSEH()->set_HV(true, true, true, cDACValue); // 0x155 = 100V
+        fTC_2SSEH->set_HV(true, true, true, cDACValue); // 0x155 = 100V
         std::this_thread::sleep_for(std::chrono::milliseconds(15000));
-        flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->Mon, cUMon);
-        flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->VHVJ7, cVHVJ7);
-        flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->VHVJ8, cVHVJ8);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, cUMon);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ7, cVHVJ7);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ8, cVHVJ8);
         LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
         cDACValVect.push_back(cDACValue);
         cVHVJ7ValVect.push_back(cVHVJ7);
@@ -236,7 +236,7 @@ void SEHTester::TestBiasVoltage()
     cDACtoMonGraph->SetLineWidth(3);
     cDACtoMonGraph->SetMarkerStyle(22);
     cDACtoHVMultiGraph->Add(cDACtoMonGraph);
-    flpGBTInterface->GetTC_2SSEH()->set_HV(false, true, true, 0);
+    fTC_2SSEH->set_HV(false, true, true, 0);
     cDACtoHVMultiGraph->Draw("ALP");
     cDACtoHVMultiGraph->GetXaxis()->SetTitle("HV DAC");
     cDACtoHVMultiGraph->GetYaxis()->SetTitle("Voltage [V]");
@@ -245,14 +245,14 @@ void SEHTester::TestBiasVoltage()
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
     cBiasVoltageTree->Write();
-    flpGBTInterface->GetTC_2SSEH()->set_HV(false, false, false, 0);
+    fTC_2SSEH->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("BiasDone", 1);
 }
 
 void SEHTester::SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string powerSupplyId, std::string channelId)
 {
-    flpGBTInterface->GetTC_2SSEH()->set_HV(true, false, false, 0);
+    fTC_2SSEH->set_HV(true, false, false, 0);
     std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
@@ -261,7 +261,7 @@ void SEHTester::SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string pow
 
 void SEHTester::EndExternalTestLeakageCurrent(std::string powerSupplyId, std::string channelId)
 {
-    flpGBTInterface->GetTC_2SSEH()->set_HV(true, false, false, 0);
+    fTC_2SSEH->set_HV(true, false, false, 0);
     std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * static_cast<float>(0)) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
@@ -274,7 +274,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     struct timespec startTime, timer;
     srand(time(NULL));
     clock_gettime(CLOCK_MONOTONIC, &startTime);
-    flpGBTInterface->GetTC_2SSEH()->set_HV(true, false, false, 0);
+    fTC_2SSEH->set_HV(true, false, false, 0);
     std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
@@ -303,9 +303,9 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
         std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
         HvMea              = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
         IMea               = 1e9 * std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Current", buffer));
-        // flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->Mon, UMon);
+        // fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, UMon);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->HV_meas, ILeak);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->HV_meas, ILeak);
         cILeakValVect.push_back(double(ILeak));
         cHvMeaValVect.push_back(HvMea);
         cIMeaValVect.push_back(IMea);
@@ -366,7 +366,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-    flpGBTInterface->GetTC_2SSEH()->set_HV(false, false, false, 0);
+    fTC_2SSEH->set_HV(false, false, false, 0);
 
     fillSummaryTree("ExternalLeakDone", 1);
 }
@@ -378,11 +378,11 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     float cVHVJ8 = 0;
     if(fPowerSupplyClient == nullptr)
     {
-        LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! ExternalflpGBTInterface->GetTC_2SSEH()->Voltage cannot be executed" << RESET;
-        throw std::runtime_error("ExternalflpGBTInterface->GetTC_2SSEH()->Voltage cannot be executed");
+        LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! ExternalfTC_2SSEH->Voltage cannot be executed" << RESET;
+        throw std::runtime_error("ExternalfTC_2SSEH->Voltage cannot be executed");
     }
 
-    flpGBTInterface->GetTC_2SSEH()->set_HV(false, true, true, 0);
+    fTC_2SSEH->set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
     std::vector<float> cHvSetValVect;
@@ -403,16 +403,16 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     for(int cHvSet = 0; cHvSet <= 1000; cHvSet += 200)
     {
         // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        flpGBTInterface->GetTC_2SSEH()->set_HV(true, true, true, 0); // 0x155 = 100V
+        fTC_2SSEH->set_HV(true, true, true, 0); // 0x155 = 100V
 
         setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * cHvSet) + ",";
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
         std::this_thread::sleep_for(std::chrono::milliseconds(3500));
         std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
         cHvMea             = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
-        // flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->Mon, cUMon);
-        flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->VHVJ7, cVHVJ7);
-        flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->VHVJ8, cVHVJ8);
+        // fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, cUMon);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ7, cVHVJ7);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ8, cVHVJ8);
         LOG(INFO) << BOLDBLUE << "Set HV value = " << +cHvSet << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
         cHvSetValVect.push_back(cHvSet);
         cVHVJ7ValVect.push_back(cVHVJ7);
@@ -458,7 +458,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-    flpGBTInterface->GetTC_2SSEH()->set_HV(false, true, true, 0);
+    fTC_2SSEH->set_HV(false, true, true, 0);
     cDACtoHVMultiGraph->Draw("ALP");
     cDACtoHVMultiGraph->GetXaxis()->SetTitle("Set HV [V]");
     cDACtoHVMultiGraph->GetYaxis()->SetTitle("Voltage [V]");
@@ -468,7 +468,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
     cBiasVoltageTree->Write();
-    flpGBTInterface->GetTC_2SSEH()->set_HV(false, false, false, 0);
+    fTC_2SSEH->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("ExternalBiasDone", 1);
     int                  hv_fail       = 1;
@@ -510,8 +510,8 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 }
 void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
-    flpGBTInterface->GetTC_2SSEH()->set_load2(true, false, pLeftLoadValue);
-    flpGBTInterface->GetTC_2SSEH()->set_load1(true, false, pRightLoadValue);
+    fTC_2SSEH->set_load2(true, false, pLeftLoadValue);
+    fTC_2SSEH->set_load1(true, false, pRightLoadValue);
 }
 void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool setLoad)
 {
@@ -519,7 +519,7 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool s
 
     float T;
     // check if the critical temperature of -35C has been reached
-    flpGBTInterface->GetTC_2SSEH()->read_temperature(flpGBTInterface->GetTC_2SSEH()->Temp1, T);
+    fTC_2SSEH->read_temperature(fTC_2SSEH->Temp1, T);
 
     fillSummaryTree("StartTemperature", T);
 
@@ -531,32 +531,32 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool s
     float U_P1V2_L;
     float U_P2V5 = 0;
 
-    flpGBTInterface->GetTC_2SSEH()->set_SehSupply(flpGBTInterface->GetTC_2SSEH()->sehSupply_On);
+    fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     if(setLoad)
     {
-        flpGBTInterface->GetTC_2SSEH()->set_load2(true, false, pLeftLoadValue);
-        flpGBTInterface->GetTC_2SSEH()->set_load1(true, false, pRightLoadValue);
+        fTC_2SSEH->set_load2(true, false, pLeftLoadValue);
+        fTC_2SSEH->set_load1(true, false, pRightLoadValue);
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->I_P1V2_R, I_P1V2_R);
-        flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->I_P1V2_L, I_P1V2_L);
-        flpGBTInterface->GetTC_2SSEH()->read_supply(flpGBTInterface->GetTC_2SSEH()->I_SEH, I_SEH);
-        flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->U_P1V2_R, U_P1V2_R);
-        flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->U_P1V2_L, U_P1V2_L);
-        flpGBTInterface->GetTC_2SSEH()->read_supply(flpGBTInterface->GetTC_2SSEH()->U_SEH, U_SEH);
-        flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->P2V5_VTRx_MON, U_P2V5);
+        fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_R, I_P1V2_R);
+        fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_L, I_P1V2_L);
+        fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);
+        fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_R, U_P1V2_R);
+        fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_L, U_P1V2_L);
+        fTC_2SSEH->read_supply(fTC_2SSEH->U_SEH, U_SEH);
+        fTC_2SSEH->read_load(fTC_2SSEH->P2V5_VTRx_MON, U_P2V5);
         fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
         fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
         fillSummaryTree("SEHInputVoltage", U_SEH);
     }
 }
-void SEHTester::TurnOff() { flpGBTInterface->GetTC_2SSEH()->set_SehSupply(flpGBTInterface->GetTC_2SSEH()->sehSupply_Off); }
+void SEHTester::TurnOff() { fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_Off); }
 void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 {
     struct timespec startTime, timer;
     srand(time(NULL));
     clock_gettime(CLOCK_MONOTONIC, &startTime);
-    flpGBTInterface->GetTC_2SSEH()->set_HV(true, false, false, pHvDacValue);
+    fTC_2SSEH->set_HV(true, false, false, pHvDacValue);
     // Create TTree for leakage current
     auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
     // Create variables for TTree branches
@@ -574,9 +574,9 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         float ILeak = 0;
         float UMon  = 0;
         clock_gettime(CLOCK_MONOTONIC, &timer);
-        flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->Mon, UMon);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, UMon);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        flpGBTInterface->GetTC_2SSEH()->read_hvmon(flpGBTInterface->GetTC_2SSEH()->HV_meas, ILeak);
+        fTC_2SSEH->read_hvmon(fTC_2SSEH->HV_meas, ILeak);
         cILeakValVect.push_back(double(ILeak));
         cUMonValVect.push_back(UMon);
 
@@ -615,7 +615,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cMonGraph->GetYaxis()->SetTitle("Monitoring Voltage [V]");
     cMonCanvas->Write();
 
-    flpGBTInterface->GetTC_2SSEH()->set_HV(false, false, false, 0);
+    fTC_2SSEH->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     fillSummaryTree("LeakDone", 1);
 }
@@ -675,8 +675,8 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
     // We run three times; Only right side, only left side and load on both sides
     for(const auto& cSide: pSides)
     {
-        flpGBTInterface->GetTC_2SSEH()->set_load1(false, false, 0);
-        flpGBTInterface->GetTC_2SSEH()->set_load2(false, false, 0);
+        fTC_2SSEH->set_load1(false, false, 0);
+        fTC_2SSEH->set_load2(false, false, 0);
         cIoutRValVect.clear(), cIinValVect.clear(), cUoutRValVect.clear(), cUoutLValVect.clear();
         cEfficiencyValVect.clear(), cU2v5ValVect.clear(), cIoutLValVect.clear();
         cSideValVect.clear(), cUinValVect.clear(), cIoutValVect.clear();
@@ -697,20 +697,20 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
             float U_P2V5 = 0;
             if(cSide == "both")
             {
-                flpGBTInterface->GetTC_2SSEH()->set_load1(true, false, cLoadValue);
-                flpGBTInterface->GetTC_2SSEH()->set_load2(true, false, cLoadValue);
+                fTC_2SSEH->set_load1(true, false, cLoadValue);
+                fTC_2SSEH->set_load2(true, false, cLoadValue);
             }
-            if(cSide == "left") { flpGBTInterface->GetTC_2SSEH()->set_load2(true, false, cLoadValue); }
-            if(cSide == "right") { flpGBTInterface->GetTC_2SSEH()->set_load1(true, false, cLoadValue); }
+            if(cSide == "left") { fTC_2SSEH->set_load2(true, false, cLoadValue); }
+            if(cSide == "right") { fTC_2SSEH->set_load1(true, false, cLoadValue); }
             // Delay needs to be optimized during functional testing
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-            flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->I_P1V2_R, I_P1V2_R);
-            flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->I_P1V2_L, I_P1V2_L);
-            flpGBTInterface->GetTC_2SSEH()->read_supply(flpGBTInterface->GetTC_2SSEH()->I_SEH, I_SEH);
-            flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->U_P1V2_R, U_P1V2_R);
-            flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->U_P1V2_L, U_P1V2_L);
-            flpGBTInterface->GetTC_2SSEH()->read_supply(flpGBTInterface->GetTC_2SSEH()->U_SEH, U_SEH);
-            flpGBTInterface->GetTC_2SSEH()->read_load(flpGBTInterface->GetTC_2SSEH()->P2V5_VTRx_MON, U_P2V5);
+            fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_R, I_P1V2_R);
+            fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_L, I_P1V2_L);
+            fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);
+            fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_R, U_P1V2_R);
+            fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_L, U_P1V2_L);
+            fTC_2SSEH->read_supply(fTC_2SSEH->U_SEH, U_SEH);
+            fTC_2SSEH->read_load(fTC_2SSEH->P2V5_VTRx_MON, U_P2V5);
             // The input binning is performed in DAC values, the result is binned in the measured current
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
             cIinValVect.push_back(I_SEH);
@@ -769,8 +769,8 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
         cUouttoIoutMultiGraph->Add(cUoutLtoIoutLGraph);
         iterator++;
     }
-    flpGBTInterface->GetTC_2SSEH()->set_load1(false, false, 0);
-    flpGBTInterface->GetTC_2SSEH()->set_load2(false, false, 0);
+    fTC_2SSEH->set_load1(false, false, 0);
+    fTC_2SSEH->set_load2(false, false, 0);
     fResultFile->cd();
     cEfficiencyTree->Write();
 
@@ -804,22 +804,22 @@ void SEHTester::TestCardVoltages()
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
-        flpGBTInterface->GetTC_2SSEH()->read_supply(c2SSEHMapIterator->second, k);
+        fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
         fillSummaryTree(c2SSEHMapIterator->first, k);
         c2SSEHMapIterator++;
 
     } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    // flpGBTInterface->GetTC_2SSEH()->set_SehSupply(flpGBTInterface->GetTC_2SSEH()->sehSupply_On);
+    // fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
     {
-        flpGBTInterface->GetTC_2SSEH()->read_supply(d2SSEHMapIterator->second, k);
+        fTC_2SSEH->read_supply(d2SSEHMapIterator->second, k);
         fillSummaryTree(d2SSEHMapIterator->first, k);
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    // flpGBTInterface->GetTC_2SSEH()->set_SehSupply(flpGBTInterface->GetTC_2SSEH()->sehSupply_Off);
+    // fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_Off);
 }
 
 void SEHTester::DCDCOutputEvaluation()
@@ -845,7 +845,7 @@ void SEHTester::DCDCOutputEvaluation()
         cDCDCValueVect.clear();
         for(int cIteration = 0; cIteration < 10; ++cIteration)
         {
-            flpGBTInterface->GetTC_2SSEH()->read_load(cDCDCMapIterator->second, cDCDCValue);
+            fTC_2SSEH->read_load(cDCDCMapIterator->second, cDCDCValue);
             // cDCDCValue += gRandom->Rndm();
             cDCDCValueVect.push_back(cDCDCValue);
             cHistogramm->Fill(cDCDCValue);

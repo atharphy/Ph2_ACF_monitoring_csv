@@ -48,30 +48,7 @@ struct lpGBTClockConfig
 class lpGBTInterface : public ChipInterface
 {
   protected:
-#if defined(__TCUSB__)
-    TC_2SSEH* fTC_2SSEH = nullptr;
-    TC_PSROH* fTC_PSROH = nullptr;
-#endif
-
   public:
-#if defined(__TCUSB__)
-    void InitializeExternalController(bool pTestcard)
-    {
-        if(pTestcard)
-        {
-            LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
-            fTC_2SSEH = new TC_2SSEH();
-        }
-        else
-        {
-            LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
-            fTC_PSROH = new TC_PSROH();
-        }
-    }
-    TC_2SSEH* GetTC_2SSEH() const { return fTC_2SSEH; }
-    TC_PSROH* GetTC_PSROH() const { return fTC_PSROH; }
-#endif
-
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
     virtual ~lpGBTInterface() {}
 

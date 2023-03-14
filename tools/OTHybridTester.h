@@ -87,11 +87,18 @@ class OTHybridTester : public Tool
     void                     BackEndAlignment(std::vector<std::string> pLines);
     std::pair<bool, uint8_t> PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId);
 
+    void InitialiseTestCard(bool cIsSEH);
+
   private:
     float       getMeasurement(std::string name);
     std::string getVariableValue(std::string variable, std::string buffer);
+    bool        fIsSEH = false;
+    TC_2SSEH*   GetTC_2SSEH() const { return fTC_2SSEH; }
 
   protected:
+    TC_2SSEH* fTC_2SSEH = nullptr;
+    TC_PSROH* fTC_PSROH = nullptr;
+
     std::map<std::string, uint8_t> f2SSEHGPILines = {
         {"PG2V5", 13},
         {"PG1V25", 14},
@@ -126,22 +133,15 @@ class OTHybridTester : public Tool
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
 
-    std::map<std::string, TC_PSROH::measurement> fResetLines             = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
                                                                 {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
-    std::map<std::string, float>                 f2SSEHDefaultParameters = {{"Spannung", 2},
-                                                            {"Strom", 0.5},
-                                                            {"HV", 1},
-                                                            {"VMON_P1V25_L_Nominal", 0.806},
-                                                            {"VMIN_Nominal", 0.49},
-                                                            {"TEMPP_Nominal", 0.6},
-                                                            {"VTRX+_RSSI_ADC_Nominal", 0.6},
-                                                            {"PTAT_BPOL2V5_Nominal", 0.6},
-                                                            {"PTAT_BPOL12V_Nominal", 0.6}};
-    std::map<std::string, std::string>           f2SSEHADCInputMap =
+    std::map<std::string, float>                 f2SSEHDefaultParameters =
+        {{"VMON_P1V25_L_Nominal", 0.806}, {"VMIN_Nominal", 0.49}, {"TEMPP_Nominal", 0.6}, {"VTRX+_RSSI_ADC_Nominal", 0.6}, {"PTAT_BPOL2V5_Nominal", 0.6}, {"PTAT_BPOL12V_Nominal", 0.6}};
+    std::map<std::string, std::string> f2SSEHADCInputMap =
         {{"AMUX_L", "ADC0"}, {"VMON_P1V25_L", "ADC1"}, {"VMIN", "ADC2"}, {"AMUX_R", "ADC3"}, {"TEMPP", "ADC4"}, {"VTRX+_RSSI_ADC", "ADC5"}, {"PTAT_BPOL2V5", "ADC6"}, {"PTAT_BPOL12V", "ADC7"}};
     std::map<std::string, std::string> fPSROHADCInputMap            = {{"L_AMUX_OUT", "ADC0"},
                                                             {"1V_MONITOR", "ADC1"},
@@ -151,10 +151,7 @@ class OTHybridTester : public Tool
                                                             {"VTRX+.RSSI_ADC", "ADC5"},
                                                             {"1V25_MONITOR", "ADC6"},
                                                             {"2V55_MONITOR", "ADC7"}};
-    std::map<std::string, float>       fPSROHDefaultParameters      = {{"Spannung", 2},
-                                                            {"Strom", 0.5},
-                                                            {"HV", 1},
-                                                            {"12V_MONITOR_VD_Nominal", 0.21},
+    std::map<std::string, float>       fPSROHDefaultParameters      = {{"12V_MONITOR_VD_Nominal", 0.21},
                                                             {"TEMP_Nominal", 0.6},
                                                             {"VTRX+.RSSI_ADC_Nominal", 0.6},
                                                             {"1V25_MONITOR_Nominal", 0.806},

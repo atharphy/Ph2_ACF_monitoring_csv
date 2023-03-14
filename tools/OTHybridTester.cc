@@ -2,6 +2,7 @@
 
 #include "OTHybridTester.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "MonitorUtils/SEHMonitor.h"
 
 OTHybridTester::OTHybridTester() : Tool()
 {
@@ -12,6 +13,23 @@ OTHybridTester::OTHybridTester() : Tool()
 }
 
 OTHybridTester::~OTHybridTester() {}
+
+void OTHybridTester::InitialiseTestCard(bool cIsSEH)
+{
+    if(cIsSEH)
+    {
+        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
+        fTC_2SSEH = new TC_2SSEH();
+        fIsSEH    = true;
+        fDetectorMonitor->setTestCardPointer(GetTC_2SSEH());
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
+        fTC_PSROH = new TC_PSROH();
+        fIsSEH    = false;
+    }
+}
 
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
@@ -117,9 +135,9 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
 
-                size_t cLine  = 0;
-                uint8_t    nLines = 0;
-                if(cOpticalGroup->flpGBT->isTestcard()) { nLines = 5; }
+                size_t  cLine  = 0;
+                uint8_t nLines = 0;
+                if(fIsSEH) { nLines = 5; }
                 else
                 {
                     nLines = 6;
@@ -369,7 +387,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             cDACtoADCTree->Branch("DAC", &cDACValVect);
             cDACtoADCTree->Branch("ADC", &cADCValVect);
 
-            if(cOpticalGroup->flpGBT->isTestcard())
+            if(fIsSEH)
             {
                 cTrim = calibrateADC();
                 calibrateCurrentDAC();
@@ -401,10 +419,10 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                     // Need to confirm conversion factor for 2S-SEH
                     // fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
                     // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
-                    if(cOpticalGroup->flpGBT->isTestcard()) { flpGBTInterface->GetTC_2SSEH()->set_AMUX(cDACValue, cDACValue); }
+                    if(fIsSEH) { fTC_2SSEH->set_AMUX(cDACValue, cDACValue); }
                     else
                     {
-                        flpGBTInterface->GetTC_PSROH()->dac_output(cDACValue);
+                        fTC_PSROH->dac_output(cDACValue);
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(1200));
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
@@ -475,41 +493,32 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Branch("Id", &cADCNameString);
     cFixedADCsTree->Branch("AdcValue", &cADCValueVect);
     gStyle->SetOptStat(0);
-    for(auto cBoard: *fDetectorContainer)
+
+    if(fIsSEH)
     {
-        if(cBoard->at(0)->flpGBT == nullptr)
-        {
-            cReturn = false;
-            continue;
-        }
-        for(auto cOpticalGroup: *cBoard)
-        {
-            if(cOpticalGroup->flpGBT->isTestcard())
-            {
-                cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
-                            {"VMIN", "VMIN_Nominal"},
-                            {"TEMPP", "TEMPP_Nominal"},
-                            {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
-                            {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
-                            {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
-                cDefaultParameters   = &f2SSEHDefaultParameters;
-                cADCNametoPinMapping = &f2SSEHADCInputMap;
+        cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
+                    {"VMIN", "VMIN_Nominal"},
+                    {"TEMPP", "TEMPP_Nominal"},
+                    {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
+                    {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
+                    {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
+        cDefaultParameters   = &f2SSEHDefaultParameters;
+        cADCNametoPinMapping = &f2SSEHADCInputMap;
 
-                flpGBTInterface->GetTC_2SSEH()->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-            }
-            else
-            {
-                cADCsMap             = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
-                            {"TEMP", "TEMP_Nominal"},
-                            {"VTRX+.RSSI_ADC", "VTRX+.RSSI_ADC_Nominal"},
-
-                            {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
-                            {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
-                cDefaultParameters   = &fPSROHDefaultParameters;
-                cADCNametoPinMapping = &fPSROHADCInputMap;
-            }
-        }
+        fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
     }
+    else
+    {
+        cADCsMap             = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
+                    {"TEMP", "TEMP_Nominal"},
+                    {"VTRX+.RSSI_ADC", "VTRX+.RSSI_ADC_Nominal"},
+
+                    {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
+                    {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
+        cDefaultParameters   = &fPSROHDefaultParameters;
+        cADCNametoPinMapping = &fPSROHADCInputMap;
+    }
+
     auto cADCHistogram = new TH2I("hADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
@@ -532,7 +541,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
             fillSummaryTree("ADC offset", cOffset);
             fillSummaryTree("ADC gain", cGain);
 
-            if(cOpticalGroup->flpGBT->isTestcard()) { flpGBTInterface->GetTC_2SSEH()->set_AMUX(3500, 3500); }
+            if(fIsSEH) { fTC_2SSEH->set_AMUX(3500, 3500); }
             // else{
             // FIXME why is this here and what is cDACValue
             // flpGBTInterface->GetExternalController()->getInterface().dac_output(cDACValue);    }
@@ -610,16 +619,10 @@ bool OTHybridTester::LpGBTTestResetLines()
     bool                                         cValid  = true;
     std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
     std::vector<uint8_t>                         cGPIOs;
-    bool                                         cTestcard = false;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
-        for(auto cOpticalGroup: *cBoard) { cTestcard = cOpticalGroup->flpGBT->isTestcard(); }
-    }
 
     // lpGBTinterface now knows this .. so don't need the if statements
 
-    if(cTestcard) { cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->get2SResetGPIOs(); }
+    if(fIsSEH) { cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->get2SResetGPIOs(); }
     else
     {
         cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getPSResetGPIOs();
@@ -632,7 +635,7 @@ bool OTHybridTester::LpGBTTestResetLines()
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        if(cTestcard)
+        if(fIsSEH)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             // mu-controller is too slow
@@ -643,7 +646,7 @@ bool OTHybridTester::LpGBTTestResetLines()
             do
             {
                 float cDifference_mV = 0;
-                flpGBTInterface->GetTC_2SSEH()->read_reset(cMapIterator->second, cMeasurement);
+                fTC_2SSEH->read_reset(cMapIterator->second, cMeasurement);
                 cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
                 fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
                 cStatus = cStatus && (cDifference_mV <= 100);
@@ -676,7 +679,7 @@ bool OTHybridTester::LpGBTTestResetLines()
             do
             {
                 float cDifference_mV = 0;
-                flpGBTInterface->GetTC_PSROH()->adc_get(cMapIterator->second, cMeasurement);
+                fTC_PSROH->adc_get(cMapIterator->second, cMeasurement);
                 cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
                 fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
                 cStatus = cStatus && (cDifference_mV <= 100);
@@ -708,21 +711,13 @@ bool OTHybridTester::LpGBTTestResetLines()
 bool OTHybridTester::LpGBTTestGPILines()
 {
     std::map<std::string, uint8_t> fGPILines;
-    for(auto cBoard: *fDetectorContainer)
+
+    if(fIsSEH) { fGPILines = f2SSEHGPILines; }
+    else
     {
-        if(cBoard->at(0)->flpGBT == nullptr)
-        {
-            continue;
-        }
-        for(auto cOpticalGroup: *cBoard)
-        {
-            if(cOpticalGroup->flpGBT->isTestcard()) { fGPILines = f2SSEHGPILines; }
-            else
-            {
-                fGPILines = fPSROHGPILines;
-            }
-        }
-    } // On the TC the PWRGOOD is connected to a switch!
+        fGPILines = fPSROHGPILines;
+    }
+    // On the TC the PWRGOOD is connected to a switch!
     bool                cValid = true;
     bool                cReadGPI;
     auto                cMapIterator    = fGPILines.begin();
@@ -839,20 +834,11 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
         fBeBoardInterface->setBoard(cBoard->getId());
 
         std::map<std::string, std::string> fFCMDLines;
-        for(auto cBoard: *fDetectorContainer)
+
+        if(fIsSEH) { fFCMDLines = f2SSEHFCMDLines; }
+        else
         {
-            if(cBoard->at(0)->flpGBT == nullptr)
-            {
-                continue;
-            }
-            for(auto cOpticalGroup: *cBoard)
-            {
-                if(cOpticalGroup->flpGBT->isTestcard()) { fFCMDLines = f2SSEHFCMDLines; }
-                else
-                {
-                    fFCMDLines = fPSROHFCMDLines;
-                }
-            }
+            fFCMDLines = fPSROHFCMDLines;
         }
 
         auto cMapIterator = fFCMDLines.begin();
@@ -1010,21 +996,13 @@ bool OTHybridTester::LpGBTCheckClocks()
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x1);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x0);
         std::map<std::string, std::string> cClockMap;
-        for(auto cBoard: *fDetectorContainer)
+
+        if(fIsSEH) { cClockMap = f2SSEHClockMap; }
+        else
         {
-            if(cBoard->at(0)->flpGBT == nullptr)
-            {
-                continue;
-            }
-            for(auto cOpticalGroup: *cBoard)
-            {
-                if(cOpticalGroup->flpGBT->isTestcard()) { cClockMap = f2SSEHClockMap; }
-                else
-                {
-                    cClockMap = fPSROHClockMap;
-                }
-            }
+            cClockMap = fPSROHClockMap;
         }
+
         auto cMapIterator = cClockMap.begin();
         bool cClkTestDone = false;
         bool cClkStat     = false;
@@ -1157,9 +1135,9 @@ uint16_t OTHybridTester::calibrateADC()
     cCalibrationTree->Branch("Gain", &cGainVect);
     cCalibrationTree->Branch("Vref", &cVrefVect);
 
-    flpGBTInterface->GetTC_2SSEH()->read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
-    flpGBTInterface->GetTC_2SSEH()->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-    flpGBTInterface->GetTC_2SSEH()->set_AMUX(3303, 3303);
+    fTC_2SSEH->read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
+    fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+    fTC_2SSEH->set_AMUX(3303, 3303);
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {

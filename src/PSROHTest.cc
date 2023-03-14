@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
     // Initilaise PSROH tester
     PSROHTester cPSROHTester;
     cPSROHTester.Inherit(&cTool);
-
+    cPSROHTester.InitialiseTestCard(false);
     uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
     cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
 

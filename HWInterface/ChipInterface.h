@@ -24,13 +24,7 @@ class ChannelContainer;
 namespace Ph2_HwInterface
 {
 using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
-// #ifdef __TCUSB__
-//     #ifdef __ROH_USB__
-//         using TestCardInterface =  TCInterface<TC_PSROH>;
-//     #elif __SEH_USB__
-//         using TestCardInterface =  TCInterface<TC_2SSEH>;
-//     #endif
-// #endif
+
 /*!
  * \class ChipInterface
  * \brief Class representing the User Interface to the Chip on different boards

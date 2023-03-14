@@ -48,7 +48,7 @@ void PSROHTester::MeasureInputIV(const std::string& cTestStep)
         for(auto& cMeas: fInputIVMap)
         {
             float cVal;
-            flpGBTInterface->GetTC_PSROH()->adc_get(cMeas.second, cVal);
+            fTC_PSROH->adc_get(cMeas.second, cVal);
             LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal / 1000) << " [SI] during phase " << cTestStep << RESET;
         }
     }

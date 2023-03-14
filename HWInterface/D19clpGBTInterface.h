@@ -20,30 +20,10 @@ class D19clpGBTInterface : public lpGBTInterface
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pOptical, bool pTestcard) : lpGBTInterface(pBoardMap)
     {
         LOG(INFO) << BOLDRED << "Constructor D19clpGBTInterface" << RESET;
-#if defined(__TCUSB__)
-        InitializeExternalController(pTestcard);
-#endif
         // configure during constructor now when configuring chip
         SetConfigMode(pOptical);
     }
-    ~D19clpGBTInterface()
-    {
-        LOG(DEBUG) << BOLDRED << "Destructor D19clpGBTInterface" << RESET;
-#if defined(__TC_USB__)
-        if(fTC_PSROH != nullptr)
-        {
-            LOG(INFO) << BOLDRED << "Deleting pointer to external controller for D19clpGBTInterface" << RESET;
-            delete fTC_PSROH;
-            fTC_PSROH = nullptr;
-        }
-        if(fTC_2SSEH != nullptr)
-        {
-            LOG(INFO) << BOLDRED << "Deleting pointer to external controller for D19clpGBTInterface" << RESET;
-            delete fTC_2SSEH;
-            fTC_2SSEH = nullptr;
-        }
-#endif
-    }
+    ~D19clpGBTInterface() {}
 
     // ###################################
     // # LpGBT register access functions #

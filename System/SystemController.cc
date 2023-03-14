@@ -252,20 +252,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstOpticalGroup->flpGBT->isOptical(), cFirstOpticalGroup->flpGBT->isTestcard());
-// check link to external interface
-#ifdef __TCUSB__
-
-                    if(flpGBTInterface->GetTC_2SSEH() != nullptr) { LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is SEH" << RESET; }
-                    if(flpGBTInterface->GetTC_PSROH() != nullptr)
-                    {
-                        LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is ROH" << RESET;
-
-                        // check reading of ADC from PSROH TC
-                        float cOutput;
-                        flpGBTInterface->GetTC_PSROH()->adc_get(TC_PSROH::measurement::_1V25_REF, cOutput);
-                        LOG(INFO) << BOLDBLUE << "Checking communication with test card by reading 1V25_Ref : " << cOutput << RESET;
-                    }
-#endif
                 }
 
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;

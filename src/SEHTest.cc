@@ -284,6 +284,7 @@ int main(int argc, char* argv[])
 
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
+    cSEHTester.InitialiseTestCard(true);
 
     if(cmd.foundOption("measure-input-iv"))
     {
