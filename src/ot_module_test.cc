@@ -24,6 +24,7 @@
 #include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
+#include "Utils/StartInfo.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -278,7 +279,9 @@ int main(int argc, char* argv[])
         OTTemperature cTemperatureReader;
         cTemperatureReader.Inherit(&cTool);
         cTemperatureReader.SetGain(cGain);
-        cTemperatureReader.Start(cRunNumber);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cTemperatureReader.Start(theStartInfo);
         cTemperatureReader.waitForRunToBeCompleted();
     }
 
@@ -497,7 +500,9 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(cRunNumber);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(cRunNumber);
+            cLinkAlignment.Start(theStartInfo);
         }
         catch(const std::exception& e)
         {
@@ -517,7 +522,9 @@ int main(int argc, char* argv[])
         cCicAligner.Inherit(&cTool);
 
         // Doesnt work PSv2
-        cCicAligner.Start(cRunNumber);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cCicAligner.Start(theStartInfo);
         cCicAligner.waitForRunToBeCompleted();
         //\Doesnt work PSv2
 
@@ -552,7 +559,9 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(cRunNumber);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(cRunNumber);
+            cLinkAlignment.Start(theStartInfo);
         }
         catch(const std::exception& e)
         {
@@ -594,7 +603,9 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "1 " << RESET;
             cStubBackEndAligner.Inherit(&cTool);
             LOG(INFO) << BOLDBLUE << "2 " << RESET;
-            cStubBackEndAligner.Start(cRunNumber);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(cRunNumber);
+            cStubBackEndAligner.Start(theStartInfo);
             LOG(INFO) << BOLDBLUE << "3 " << RESET;
             cStubBackEndAligner.waitForRunToBeCompleted();
             LOG(INFO) << BOLDBLUE << "4 " << RESET;

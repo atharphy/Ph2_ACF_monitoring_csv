@@ -28,6 +28,7 @@ class ChannelGroupHandler;
 class ChannelGroupBase;
 class ScanBase;
 class ConfigureInfo;
+class StartInfo;
 class DQMMetadata;
 
 #ifdef __HTTP__
@@ -101,9 +102,9 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void Configure(const ConfigureInfo theConfigureInfo) override;
+    void Configure(const ConfigureInfo& theConfigureInfo) override;
 
-    void Start(int runNumber) override;
+    void Start(const StartInfo& theStartInfo) override;
     // void InformImDone();
     void Stop() override;
 

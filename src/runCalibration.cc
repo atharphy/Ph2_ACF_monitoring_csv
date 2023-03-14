@@ -7,6 +7,7 @@
 #include "Utils/easylogging++.h"
 #include "boost/format.hpp"
 #include "miniDAQ/MiddlewareStateMachine.h"
+#include "Utils/StartInfo.h"
 
 #include "TApplication.h"
 #include "TROOT.h"
@@ -166,7 +167,9 @@ int main(int argc, char* argv[])
         case CONFIGURED:
         {
             int runNumber = returnRunNumber("RunNumbers.dat");
-            theMiddlewareStateMachine.start(runNumber);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(runNumber);
+            theMiddlewareStateMachine.start(theStartInfo);
             stateMachineStatus = RUNNING;
             break;
         }

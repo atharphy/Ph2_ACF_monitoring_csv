@@ -12,6 +12,7 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/ShortFinder.h"
 #include <cstring>
+#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -88,7 +89,9 @@ int main(int argc, char* argv[])
     ShortFinder cShortFinder;
     cShortFinder.Inherit(&cTool);
     cShortFinder.Initialise();
-    cShortFinder.Start(0);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(0);
+    cShortFinder.Start(theStartInfo);
     cShortFinder.waitForRunToBeCompleted();
     cShortFinder.Stop();
 

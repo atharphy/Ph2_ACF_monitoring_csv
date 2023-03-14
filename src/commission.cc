@@ -16,6 +16,7 @@
 #include "tools/SignalScan.h"
 #include "tools/SignalScanFit.h"
 #include "tools/StubBackEndAlignment.h"
+#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -156,7 +157,9 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(0);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(0);
+            cLinkAlignment.Start(theStartInfo);
         }
         catch(const std::exception& e)
         {
@@ -174,7 +177,9 @@ int main(int argc, char* argv[])
         // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
-        cCicAligner.Start(0);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(0);
+        cCicAligner.Start(theStartInfo);
         cCicAligner.waitForRunToBeCompleted();
         // reset all chip and board registers
         // to what they were before this tool was called
@@ -199,7 +204,9 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(0);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(0);
+            cLinkAlignment.Start(theStartInfo);
         }
         catch(const std::exception& e)
         {

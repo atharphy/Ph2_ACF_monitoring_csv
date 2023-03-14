@@ -2,6 +2,7 @@
 #define _DQMInterface_h_
 
 #include "Utils/Container.h"
+#include "Parser/FileParser.h"
 #include <future>
 #include <vector>
 
@@ -9,6 +10,7 @@ class TCPSubscribeClient;
 class DQMHistogramBase;
 class TFile;
 class ConfigureInfo;
+class StartInfo;
 
 class DQMInterface
 {
@@ -17,7 +19,7 @@ class DQMInterface
     ~DQMInterface(void);
 
     void configure(const ConfigureInfo& theConfigureInfo);
-    void startProcessingData(int runNumber);
+    void startProcessingData(const StartInfo& theStartInfo);
     void stopProcessingData(void);
     void pauseProcessingData(void) {}
     void resumeProcessingData(void) {}
@@ -34,6 +36,7 @@ class DQMInterface
     std::future<bool>              fRunningFuture;
     TFile*                         fOutputFile;
     DetectorContainer              fDetectorStructure;
+    Ph2_Parser::SettingsMap        fSettingsMap;
 };
 
 #endif

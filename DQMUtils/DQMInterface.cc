@@ -3,6 +3,7 @@
 #include "NetworkUtils/TCPSubscribeClient.h"
 #include "Parser/FileParser.h"
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "Utils/ContainerSerialization.h"
 
 #include "TFile.h"
@@ -55,7 +56,6 @@ void DQMInterface::configure(const ConfigureInfo& theConfigureInfo)
 
     Ph2_Parser::FileParser  theFileParser;
     std::stringstream       out;
-    Ph2_Parser::SettingsMap pSettingsMap;
 
     CommunicationSettingConfig theCommunicationSettingConfig;
     theFileParser.parseCommunicationSettings(configurationFilePath, theCommunicationSettingConfig, out);
@@ -69,20 +69,31 @@ void DQMInterface::configure(const ConfigureInfo& theConfigureInfo)
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
 
     theFileParser.parseHW(configurationFilePath, &fDetectorStructure, out);
-    theFileParser.parseSettings(configurationFilePath, pSettingsMap, out);
+    theFileParser.parseSettings(configurationFilePath, fSettingsMap, out);
 
     theConfigureInfo.setEnabledObjects(&fDetectorStructure);
 
     DQMCalibrationFactory theDQMCalibrationFactory;
     fDQMHistogrammerVector = theDQMCalibrationFactory.createDQMHistogrammerVector(calibrationName);
-
-    fOutputFile = new TFile("tmp.root", "RECREATE");
-    for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);
 }
 
 //========================================================================================================================
-void DQMInterface::startProcessingData(int runNumber)
+void DQMInterface::startProcessingData(const StartInfo& theStartInfo)
 {
+    std::string resultDirectoryName = getResultDirectoryName(theStartInfo);
+    std::string cCommand = "mkdir -p " + resultDirectoryName;
+
+    try
+    {
+        system(cCommand.c_str());
+    }
+    catch(std::exception& e)
+    {
+        LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result Directory: " << e.what() << RESET;
+    }
+    std::string fileName = resultDirectoryName + "/Result.root";
+    fOutputFile = new TFile(fileName.c_str(), "RECREATE");
+    for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, fSettingsMap);
     fRunning       = true;
     fRunningFuture = std::async(std::launch::async, &DQMInterface::running, this);
 }

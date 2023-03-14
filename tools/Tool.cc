@@ -14,6 +14,7 @@
 #include <future>
 
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
 
@@ -140,24 +141,24 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(const ConfigureInfo theConfigureInfo)
+void Tool::Configure(const ConfigureInfo& theConfigureInfo)
 {
     SystemController::Configure(theConfigureInfo);
     ConfigureCalibration();
 }
 
-void Tool::Start(int runNumber)
+void Tool::Start(const StartInfo& theStartInfo)
 {
     if(fDirectoryName == "")
     {
-        std::string resultDirectory = "Results/Run_" + std::to_string(runNumber);
+        std::string resultDirectory = getResultDirectoryName(theStartInfo);
         CreateResultDirectory(resultDirectory, false, false);
     }
     initMetadataAndFillInitialConditions();
 
     // doExit       = false;
     Tool::fKeepRunning = true;
-    fRunNumber         = runNumber;
+    fRunNumber         = theStartInfo.getRunNumber();
     fRunningFuture     = std::async(std::launch::async, &Tool::Running, this);
     // std::promise<int> thePromise;
     // fRunningFuture = thePromise.get_future();

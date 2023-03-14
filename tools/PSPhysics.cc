@@ -18,6 +18,7 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
+#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -32,7 +33,9 @@ void PSPhysics::ConfigureCalibration()
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(this);
-    cCicAligner.Start(0);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(0);
+    cCicAligner.Start(theStartInfo);
     cCicAligner.waitForRunToBeCompleted();
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
@@ -122,8 +125,9 @@ void PSPhysics::Running()
     }
 
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
-
-    SystemController::Start(fRunNumber);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(fRunNumber);
+    SystemController::Start(theStartInfo);
 
     std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
     std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;

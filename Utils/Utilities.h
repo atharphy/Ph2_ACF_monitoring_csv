@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <vector>
+#include "Utils/StartInfo.h"
 
 #include <tuple> // new
 
@@ -53,6 +54,9 @@ long getTimeTook(struct timeval& pStart, bool pMili);
  * \param in : input stream
  */
 void myflush(std::istream& in);
+
+std::string getResultDirectoryName(const StartInfo& theStartInfo);
+
 /*!
  * \brief Wait for Enter key press
  */
