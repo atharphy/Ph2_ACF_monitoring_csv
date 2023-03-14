@@ -19,9 +19,9 @@ void BERtestHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
     bookImplementer(theOutputFile, theDetectorStructure, BERtest, hBERtest, "N.A.", "Bit Error Rate value");
 }
 
-bool BERtestHistograms::fill(std::vector<char>& dataBuffer)
+bool BERtestHistograms::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theContainerSerialization("BERtest");
 
     if(theContainerSerialization.attachDeserializer(inputStream))

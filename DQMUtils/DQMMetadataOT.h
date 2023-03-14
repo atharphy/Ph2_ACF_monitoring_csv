@@ -14,7 +14,7 @@ class DQMMetadataOT : public DQMMetadata
     void fillCICFuseId(const DetectorDataContainer& theCICFuseIdContainer);
     void fillCICConfiguration(const DetectorDataContainer& theCICConfigurationContainer, bool initialValue);
 
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
     void process() override;
     void reset(void) override;
 

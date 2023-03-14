@@ -31,9 +31,9 @@ void DataTransmissionTestGraphs::book(TFile* theOutputFile, DetectorContainer& t
     bookImplementer(theOutputFile, theDetectorStructure, TAP0tgt, hTAP0tgt, "TAP0 at target BER", "Value");
 }
 
-bool DataTransmissionTestGraphs::fill(std::vector<char>& dataBuffer)
+bool DataTransmissionTestGraphs::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theTAP0targetSerialization("DataTransmissionTestTAP0target");
 
     if(theTAP0targetSerialization.attachDeserializer(inputStream))

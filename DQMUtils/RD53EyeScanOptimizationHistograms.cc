@@ -64,7 +64,7 @@ void EyeScanOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer
     }
 }
 
-bool EyeScanOptimizationHistograms::fill(std::vector<char>& dataBuffer)
+bool EyeScanOptimizationHistograms::fill(std::string& inputStream)
 {
     // const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 

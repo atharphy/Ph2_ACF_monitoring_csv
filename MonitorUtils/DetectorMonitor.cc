@@ -1,4 +1,5 @@
 #include "MonitorUtils//DetectorMonitor.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/Utilities.h"
 #ifdef __USE_ROOT__
 #include <TFile.h>
@@ -33,6 +34,14 @@ DetectorMonitor::~DetectorMonitor()
     DetectorMonitor::stopRunning();
     while(fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready)
     { LOG(INFO) << GREEN << "\t--> Waiting for monitoring to be completed..." << RESET; }
+
+    if(fTheSystemController->fMonitorDQMStreamerEnabled) 
+    {
+        std::string doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
+        PacketHeader thePacketHeader;
+        thePacketHeader.addPacketHeader(doneWithRunMessage);
+        fTheSystemController->fMonitorDQMStreamer->broadcast(doneWithRunMessage);
+    }
 #ifdef __USE_ROOT__
     fOutputFile->Write();
     // fOutputFile->Close();
@@ -66,6 +75,7 @@ std::string DetectorMonitor::getMonitorName()
     }
     return className;
 }
+
 std::string DetectorMonitor::getMonitorFileName()
 {
 #ifdef __USE_ROOT__

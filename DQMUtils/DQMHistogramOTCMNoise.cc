@@ -104,9 +104,9 @@ void DQMHistogramOTCMNoise::reset(void)
 }
 
 //========================================================================================================================
-bool DQMHistogramOTCMNoise::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramOTCMNoise::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theHitSerialization("OTCMNoiseHitStream");
     ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
 

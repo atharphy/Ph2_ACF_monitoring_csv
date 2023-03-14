@@ -169,7 +169,7 @@ void MonitorDQMPlotSEH::reset(void)
 }
 
 //========================================================================================================================
-bool MonitorDQMPlotSEH::fill(std::vector<char>& dataBuffer)
+bool MonitorDQMPlotSEH::fill(std::string& inputStream)
 {
     // FILL not implemented, it will probably never need the dual process
     return false;

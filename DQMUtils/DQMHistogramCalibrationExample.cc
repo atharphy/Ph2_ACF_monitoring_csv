@@ -110,13 +110,13 @@ void DQMHistogramCalibrationExample::reset(void)
 }
 
 //========================================================================================================================
-bool DQMHistogramCalibrationExample::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramCalibrationExample::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     // I'm expecting to receive a data stream from an uint32_t contained from calibration "CalibrationExample"
     ContainerSerialization theHitSerialization("CalibrationExampleHits");
 

@@ -22,9 +22,9 @@ void SSAPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fOccupancy, theOcccupancyContainer);
 }
 
-bool SSAPhysicsHistograms::fill(std::vector<char>& dataBuffer)
+bool SSAPhysicsHistograms::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theOccupancySerialization("SSAPhysicsOccupancy");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))

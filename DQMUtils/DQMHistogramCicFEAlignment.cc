@@ -40,7 +40,7 @@ void DQMHistogramCicFEAlignment::book(TFile* theOutputFile, DetectorContainer& t
 }
 
 //========================================================================================================================
-bool DQMHistogramCicFEAlignment::fill(std::vector<char>& dataBuffer) { return false; }
+bool DQMHistogramCicFEAlignment::fill(std::string& inputStream) { return false; }
 
 //========================================================================================================================
 void DQMHistogramCicFEAlignment::process()

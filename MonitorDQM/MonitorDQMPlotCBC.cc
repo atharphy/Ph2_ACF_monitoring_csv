@@ -158,9 +158,9 @@ void MonitorDQMPlotCBC::reset(void)
 }
 
 //========================================================================================================================
-bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
+bool MonitorDQMPlotCBC::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theCBCRegisterSerialization("CBCMonitorCBCRegister");
     ContainerSerialization theLpGBTRegisterSerialization("CBCMonitorLpGBTRegister");
 

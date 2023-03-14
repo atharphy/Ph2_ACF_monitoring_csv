@@ -515,6 +515,13 @@ void Tool::Stop()
         SystemController::Stop();
 
         fillMetadataFinalConditions();
+        if(fDQMStreamerEnabled) 
+        {
+            std::string doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
+            PacketHeader thePacketHeader;
+            thePacketHeader.addPacketHeader(doneWithRunMessage);
+            fDQMStreamer->broadcast(doneWithRunMessage);
+        }
         Tool::dumpConfigFiles();
         Tool::SaveResults();
         Tool::WriteRootFile();

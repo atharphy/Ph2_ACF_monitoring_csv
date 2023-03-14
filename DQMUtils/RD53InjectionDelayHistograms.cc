@@ -34,10 +34,10 @@ void InjectionDelayHistograms::book(TFile* theOutputFile, DetectorContainer& the
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, title.str().c_str(), "Efficiency");
 }
 
-bool InjectionDelayHistograms::fill(std::vector<char>& dataBuffer)
+bool InjectionDelayHistograms::fill(std::string& inputStream)
 {
     const size_t           InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theOccupancySerialization("InjectionDelayOccupancy");
     ContainerSerialization theInjectionDelaySerialization("InjectionDelayInjectionDelay");
 

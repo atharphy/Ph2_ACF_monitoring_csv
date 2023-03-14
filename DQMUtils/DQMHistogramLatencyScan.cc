@@ -85,9 +85,9 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theD
 }
 
 //========================================================================================================================
-bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramLatencyScan::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theDataSerialization("LatencyScanData");
     ContainerSerialization theStubSerialization("LatencyScanStub");
     ContainerSerialization the2DSerialization("LatencyScan2D");

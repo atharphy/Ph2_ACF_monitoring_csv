@@ -33,7 +33,7 @@ void DQMHistogramTPCalibration::book(TFile* theOutputFile, DetectorContainer& th
 }
 
 //========================================================================================================================
-bool DQMHistogramTPCalibration::fill(std::vector<char>& dataBuffer) { return false; }
+bool DQMHistogramTPCalibration::fill(std::string& inputStream) { return false; }
 
 //========================================================================================================================
 void DQMHistogramTPCalibration::process() {}

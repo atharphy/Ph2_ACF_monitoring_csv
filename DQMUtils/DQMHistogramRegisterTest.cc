@@ -68,7 +68,7 @@ void DQMHistogramRegisterTest::book(TFile* theOutputFile, DetectorContainer& the
 }
 
 //========================================================================================================================
-bool DQMHistogramRegisterTest::fill(std::vector<char>& dataBuffer) { return false; }
+bool DQMHistogramRegisterTest::fill(std::string& inputStream) { return false; }
 
 //========================================================================================================================
 void DQMHistogramRegisterTest::process()

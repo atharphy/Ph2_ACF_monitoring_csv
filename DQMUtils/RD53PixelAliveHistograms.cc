@@ -60,12 +60,12 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     bookImplementer(theOutputFile, theDetectorStructure, TriggerID, hTriggerID, "#DeltaTrigger-ID", "Entries");
 }
 
-bool PixelAliveHistograms::fill(std::vector<char>& dataBuffer)
+bool PixelAliveHistograms::fill(std::string& inputStream)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theOccupancySerialization("PixelAliveOccupancy");
     ContainerSerialization theBCIDSerialization("PixelAliveBCID");
     ContainerSerialization theTrgIDSerialization("PixelAliveTrgID");

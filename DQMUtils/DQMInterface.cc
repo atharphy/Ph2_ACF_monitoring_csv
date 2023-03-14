@@ -101,9 +101,8 @@ void DQMInterface::startProcessingData(const StartInfo& theStartInfo)
 //========================================================================================================================
 void DQMInterface::stopProcessingData(void)
 {
-    fRunning = false;
     std::chrono::milliseconds span(1000);
-    int                       timeout = 5; // in seconds
+    int                       timeout = 10; // in seconds
 
     fListener->disconnect();
     while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout > 0)
@@ -167,11 +166,33 @@ bool DQMInterface::running()
                 break;
             }
 
-            std::vector<char> streamDataBuffer(fDataBuffer.begin() + packerHeaderSize, fDataBuffer.begin() + packetSize);
+            std::string inputStream(fDataBuffer.begin() + packerHeaderSize, fDataBuffer.begin() + packetSize);
             fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + packetSize);
 
-            for(auto dqmHistogrammer: fDQMHistogrammerVector)
-                if(dqmHistogrammer->fill(streamDataBuffer)) break;
+            if(inputStream == END_OF_TRANSMISSION_MESSAGE)
+            {
+                LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " End of transmission message received, stopping listening thread" << RESET;
+                fRunning = false;
+                break;
+            }
+            else
+            {
+                bool decodedByOneDQM = false;
+                for(auto dqmHistogrammer: fDQMHistogrammerVector)
+                {
+                    if(dqmHistogrammer->fill(inputStream))
+                    {
+                        decodedByOneDQM = true;
+                        break;
+                    }
+                }
+                if(!decodedByOneDQM)
+                {
+                    LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << "None decoded message " << inputStream << ", aborting..." << RESET;
+                    abort();
+                }
+            }
+
         }
     }
 

@@ -93,11 +93,11 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, titleX.str().c_str(), titleY.str().c_str());
 }
 
-bool GenericDacDacScanHistograms::fill(std::vector<char>& dataBuffer)
+bool GenericDacDacScanHistograms::fill(std::string& inputStream)
 {
     const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theOccupancySerialization("GenericDacDacScanOccupancy");
     ContainerSerialization theDACDACSerialization("GenericDacDacScanDACDAC");
 

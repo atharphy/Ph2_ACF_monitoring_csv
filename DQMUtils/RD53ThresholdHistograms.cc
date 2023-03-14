@@ -28,9 +28,9 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
     bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");
 }
 
-bool ThresholdHistograms::fill(std::vector<char>& dataBuffer)
+bool ThresholdHistograms::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
+    
     ContainerSerialization theContainerSerialization("ThrAdjustmentThreshold");
 
     if(theContainerSerialization.attachDeserializer(inputStream))
