@@ -372,6 +372,7 @@ class SystemController
     bool                   fSameChannelGroupForAllChannels{true};
     uint8_t                fInitializeInterfaces{1};
     std::string            fConfigurationFileName{""};
+    std::string            fCalibrationName{""};
     std::string            fConfigurationFileContent{""};
     BoardType              fBoardType{BoardType::UNDEFINED};
 };

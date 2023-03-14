@@ -92,6 +92,8 @@ class BeBoardFWInterface : public RegManager
      */
     virtual uint32_t getBoardInfo() = 0;
 
+    virtual uint32_t getBoardFirmwareVersion() = 0;
+
     virtual void ProgramCdce() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
     virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;

@@ -83,6 +83,7 @@ void SystemController::Inherit(const SystemController* pController)
     fNameContainer                  = pController->fNameContainer;
     fBoardType                      = pController->fBoardType;
     fConfigurationFileName          = pController->fConfigurationFileName;
+    fCalibrationName                = pController->fCalibrationName;
     fConfigurationFileContent       = pController->fConfigurationFileContent;
 
 #ifdef __TCP_SERVER__
@@ -433,9 +434,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }
     }
-
-    fNameContainer = new DetectorDataContainer();
-    ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }
@@ -1183,6 +1181,7 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 void SystemController::Configure(const ConfigureInfo theConfigureInfo)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
+    fCalibrationName       = theConfigureInfo.getCalibrationName();
     std::ifstream     configurationFile(fConfigurationFileName);
     std::stringstream configurationFileStream;
     configurationFileStream << configurationFile.rdbuf();
@@ -1191,6 +1190,9 @@ void SystemController::Configure(const ConfigureInfo theConfigureInfo)
     InitializeHw(fConfigurationFileName, fParsedFile);
     InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
+
+    fNameContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
 
     for(const auto& enabledObject: theConfigureInfo.getEnabledModulesList(fDetectorContainer->at(0)->getBoardType() == BoardType::D19C))
     {

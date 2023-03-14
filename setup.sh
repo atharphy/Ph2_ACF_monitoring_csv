@@ -121,15 +121,11 @@ else
   export STDCXX="14"
 fi
 
-###################################################
-# Stand-alone application, without data streaming #
-###################################################
+# Stand-alone application, without data streaming
 export CompileForHerd=false
 export CompileForShep=false
 
-################################################
-# Stand-alone application, with data streaming #
-################################################
+# Stand-alone application, with data streaming
 # export CompileForHerd=true
 # export CompileForShep=true
 

@@ -53,13 +53,6 @@ void DetectorMonitor::operator()()
 
 void DetectorMonitor::forkMonitor() { fMonitorFuture = std::async(std::launch::async, std::ref(*this)); }
 
-time_t DetectorMonitor::DetectorMonitor::getTimeStamp()
-{
-    time_t rawtime;
-    time(&rawtime);
-    return rawtime;
-}
-
 std::string DetectorMonitor::getMonitorName()
 {
     int32_t     status;

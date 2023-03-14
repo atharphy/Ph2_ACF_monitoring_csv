@@ -136,8 +136,8 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
 
             SO theOpticalGroupSummary;
             initializePlot(&theOpticalGroupSummary,
-                           Form("D_%s_OpticalGroup_(%d)", opticalGroupSummaryHistogramGenericName.data(), opticalGroup->getId()),
-                           Form("D_%s_OpticalGroup(%d)", opticalGroupSummaryHistogramGenericTitle.data(), opticalGroup->getId()),
+                           Form("D_B(%d)_%s_OpticalGroup(%d)", board->getId(), opticalGroupSummaryHistogramGenericName.data(), opticalGroup->getId()),
+                           Form("D_B(%d)_%s_OpticalGroup(%d)", board->getId(), opticalGroupSummaryHistogramGenericTitle.data(), opticalGroup->getId()),
                            &opticalGroupSummary);
             copyOpticalGroup->getSummary<SO, SM>() = std::move(theOpticalGroupSummary);
 
