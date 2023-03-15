@@ -1,30 +1,30 @@
-############################################################
-# Program to manupalte mask files (*.txt) of Ph2_ACF DAQ   #
-#                                       by Mauro Dinardo   #
-############################################################
-# Users can specify an enable/injection file of the form:  #
-# row 0 col 130 en                                         #
-# row 1 col 130 inj                                        #
-# row 2 col 130 en                                         #
+#############################################################
+# Program to manupalte mask files (*.txt) of Ph2_ACF DAQ    #
+#                                       by Mauro Dinardo    #
+#############################################################
+# Users can specify an enable/injection file of the form:   #
+# row 0 col 130 en                                          #
+# row 1 col 130 inj                                         #
+# row 2 col 130 en                                          #
 
-# row 0 col 129 en                                         #
-# row 1 col 129 en                                         #
-# row 2 col 129 en                                         #
+# row 0 col 129 en                                          #
+# row 1 col 129 en                                          #
+# row 2 col 129 en                                          #
 
-# row 0 col 131 en                                         #
-# row 1 col 131 en                                         #
-# row 2 col 131 en                                         #
-############################################################
-# Or they can specify that even column are injecte and odd #
-# columns are enabled: 'coupled'                           #
-# Or they can specify that odd column are injecte and even #
-# columns are enabled: 'decoupled'                         #
-############################################################
-# Users can also specify the group number, i.e. pattern    #
-# number among the several possible (0, NROWS - 1)         #
-############################################################
-# A png image is also saved to show the chosen pattern     #
-############################################################
+# row 0 col 131 en                                          #
+# row 1 col 131 en                                          #
+# row 2 col 131 en                                          #
+#############################################################
+# Or they can specify that even columns are injecte and odd #
+# columns are enabled: 'coupled'                            #
+# Or they can specify that even rows are injecte and odd    #
+# rows are enabled: 'decoupled'                             #
+#############################################################
+# Users can also specify the group number, i.e. pattern     #
+# number among the several possible (0, NROWS - 1)          #
+#############################################################
+# A png image is also saved to show the chosen pattern      #
+#############################################################
 
 from argparse import ArgumentParser
 from PIL      import Image
@@ -83,27 +83,47 @@ def ArgParser():
     return options
 
 
-def makeGroup(groupNumber, oddOReven):
+def makeGroup(groupNumber, patternType):
     # Definition: black = injected, grey = enabled
     newMaskEn  = []
     newMaskInj = []
 
-    for col in range(oddOReven, NCOLS, 2):
-        for i in range(HITPERCOL):
-            row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
-            row += groupNumber
-            row %= NROWS
+    if patternType == 'coupled':
+        for col in range(0, NCOLS, 2):
+            for i in range(HITPERCOL):
+                row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
+                row += groupNumber
+                row %= NROWS
 
-            ##########
-            # Enable #
-            ##########
-            newMaskEn.append([row, col])
+                ##########
+                # Enable #
+                ##########
+                newMaskEn.append([row, col])
 
-            ##########
-            # Inject #
-            ##########
-            if col + 1 < NCOLS:
-                newMaskInj.append([row, col + 1])
+                ##########
+                # Inject #
+                ##########
+                if col + 1 < NCOLS:
+                    newMaskInj.append([row, col + 1])
+    elif patternType == 'decoupled':
+        for col in range(0, NCOLS):
+            for i in range(HITPERCOL):
+                row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
+                row += groupNumber
+                row %= NROWS
+
+                ##########
+                # Enable #
+                ##########
+                newMaskEn.append([row, col])
+
+                ##########
+                # Inject #
+                ##########
+                if row + 1 < NROWS:
+                    newMaskInj.append([row + 1, col])
+    else:
+        print('Option not recognized:', patternType);
 
     return newMaskEn, newMaskInj
 
@@ -215,10 +235,7 @@ if cmd.maskFile:
     newMaskEn, newMaskInj = readMaskFile(cmd.maskFile)
     applyMask(newMaskEn, newMaskInj, mask, orgMask)
 elif cmd.patternType:
-    oddOReven = 0
-    if cmd.patternType == 'decoupled':
-        oddOReven = 1
-    newMaskEn, newMaskInj = makeGroup(cmd.groupNumber, oddOReven)
+    newMaskEn, newMaskInj = makeGroup(cmd.groupNumber, cmd.patternType)
     applyMask(newMaskEn, newMaskInj, mask, orgMask)
 
 saveCFGfile(cmd.outFile, mask)
