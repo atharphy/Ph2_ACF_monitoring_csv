@@ -74,11 +74,11 @@ quality:clang-format:
     - echo "Running code quality checks after script"
     - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
     - NUMBER_OF_LINES=$(sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE})
-    - if [ ${NUMBER_OF_LINES} = 0 ]; then
-    -   echo "No changes to be made!"
-    - else
+    - if [ ${NUMBER_OF_LINES} gt 0 ]; then
     -   echo "Patch file with changes is in ${ARTIFACTS_DIR}/${PATCHFILE}"
     -   exit 1
+    - else
+    -   echo "No changes to be made!"
     - fi
   artifacts:
     expire_in: 1 month
