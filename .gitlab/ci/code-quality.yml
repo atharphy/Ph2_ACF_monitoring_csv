@@ -1,11 +1,11 @@
 # GitLab CI -- Code Quality Checks
 
 variables:
+  ARTIFACTS_DIR: ${CI_PROJECT_DIR}/artifacts
   REPORTS_PATH: ${CI_PROJECT_DIR}/artifacts/reports
   QUALITY_CHECK_DIR: ci-quality-checks
   LCG_CLANG_VERSION: 14 # Check if true
-  ARTIFACTS_DIR: artifacts
-
+  
 # Ideally, we'd throw the warnings and errors discovered in a sensitive compilation
 # job into the code quality report so that the number of compilation warnings 
 # can be equally monitored.
@@ -16,7 +16,7 @@ quality:cpplint:
   stage: quality
   tags:
     - cvmfs
-  stage: quality
+  # stage: quality
   needs: []
   allow_failure: true
 
@@ -41,7 +41,7 @@ quality:clang-format:
   stage: quality
   tags:
     - cvmfs
-  stage: quality
+  # stage: quality
   needs: []
   allow_failure: true
 
@@ -55,8 +55,9 @@ quality:clang-format:
     - chmod +x ${CLANG_FORMAT_EXE}
     - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
     - echo ARTIFACTS_DIR/PATCHFILE is ${ARTIFACTS_DIR}/${PATCHFILE}
-    - ls -l
+    #- ls -l
     - git checkout -b patch/${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}
+    - echo ARTIFACTS_DIR/PATCHFILE is ${ARTIFACTS_DIR}/${PATCHFILE}
     - ${CLANG_FORMAT_EXE} -i -r . || true
     - ${CLANG_FORMAT_EXE} -i -r . || true
     - git config --global user.email "${GITLAB_USER_EMAIL}"
