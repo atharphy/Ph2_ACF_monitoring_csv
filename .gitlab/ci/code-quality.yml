@@ -55,6 +55,7 @@ quality:clang-format:
     - chmod +x ${CLANG_FORMAT_EXE}
     - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
     - echo ARTIFACTS_DIR/PATCHFILE is ${ARTIFACTS_DIR}/${PATCHFILE}
+    - ls ${ARTIFACTS_DIR}
     #- ls -l
     - git checkout -b patch/${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}
     - echo ARTIFACTS_DIR/PATCHFILE is ${ARTIFACTS_DIR}/${PATCHFILE}
