@@ -18,7 +18,7 @@
 # Or they can specify that even column are injecte and odd #
 # columns are enabled: 'coupled'                           #
 # Or they can specify that odd column are injecte and even #
-# columns are enabled: 'uncoupled'                         #
+# columns are enabled: 'decoupled'                         #
 ############################################################
 # Users can also specify the group number, i.e. pattern    #
 # number among the several possible (0, NROWS - 1)         #
@@ -64,7 +64,7 @@ def ArgParser():
     parser.add_argument('-f', '--inFile',      dest = 'inFile',      type = str, help = 'Chip cfg file',          required = True,  default = '')
     parser.add_argument('-o', '--outFile',     dest = 'outFile',     type = str, help = 'Output file name',       required = True,  default = '')
     parser.add_argument('-m', '--maskFile',    dest = 'maskFile',    type = str, help = 'Used defined mask file', required = False, default = '')
-    parser.add_argument('-p', '--patternType', dest = 'patternType', type = str, help = 'Pattern type: coupled or uncoupled', required = False, default = '')
+    parser.add_argument('-p', '--patternType', dest = 'patternType', type = str, help = 'Pattern type: coupled or decoupled', required = False, default = '')
     parser.add_argument('-g', '--groupNumber', dest = 'groupNumber', type = int, help = 'Group number',           required = False, default = 0)
 
     options = parser.parse_args()
@@ -216,7 +216,7 @@ if cmd.maskFile:
     applyMask(newMaskEn, newMaskInj, mask, orgMask)
 elif cmd.patternType:
     oddOReven = 0
-    if cmd.patternType == 'uncoupled':
+    if cmd.patternType == 'decoupled':
         oddOReven = 1
     newMaskEn, newMaskInj = makeGroup(cmd.groupNumber, oddOReven)
     applyMask(newMaskEn, newMaskInj, mask, orgMask)

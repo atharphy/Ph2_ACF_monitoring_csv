@@ -198,7 +198,7 @@
             INJtype            = 2:  digital
             INJtype            = 3:  analog + custom from txt file
             INJtype            = 4:  analog + X-talk coupled pixels
-            INJtype            = 5:  analog + X-talk un-coupled pixels
+            INJtype            = 5:  analog + X-talk decoupled pixels
          ResetMask             = 0:  do not enable masked pixels;        ResetMask             = 1: enable all pixels
          ResetTDAC             = -1: do not reset TDAC;                  ResetTDAC             >=0: reset all TDACs to value
          DoOnlyNGroups         = 0:  do not consider this option;        DoOnlyNGroups         = n: run only on the specified number of groups
