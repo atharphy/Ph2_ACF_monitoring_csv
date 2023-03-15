@@ -63,33 +63,23 @@ quality:clang-format:
     - ls ${ARTIFACTS_DIR}
     #- ls -l
     - git checkout -b patch/${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}
-    - echo ARTIFACTS_DIR/PATCHFILE is ${ARTIFACTS_DIR}/${PATCHFILE}
     - ${CLANG_FORMAT_EXE} -i -r . || true
     - ${CLANG_FORMAT_EXE} -i -r . || true
     - git config --global user.email "${GITLAB_USER_EMAIL}"
     - git config --global user.name "${GITLAB_USER_NAME}"
     - git commit -am "Apply clang-format for ${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}"
     - git format-patch ${CI_COMMIT_SHORT_SHA} --stdout > ${ARTIFACTS_DIR}/${PATCHFILE}
-    - ls -l ${ARTIFACTS_DIR}
-    - wc --line ${ARTIFACTS_DIR}/${PATCHFILE}
-    #- if [ -s ${ARTIFACTS_DIR}/${PATCHFILE} ]
-    #- then
-    #-   ${CMAKE_DIR}/.gitlab/ci/scripts/post_mr_note.py --fail format
-    #- else
-    #-   ${CMAKE_DIR}/.gitlab/ci/scripts/post_mr_note.py format
-    #- fi
+
   after_script:
     - echo "Running code quality checks after script"
     - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
-    #- ls ${ARTIFACTS_DIR}
-    - wc --line ${ARTIFACTS_DIR}/${PATCHFILE}
     - NUMBER_OF_LINES=$(sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE})
     - if [ ${NUMBER_OF_LINES} = 0 ]; then
     -   echo "No changes to be made!"
     - else
     -   echo "Patch file with changes is in ${ARTIFACTS_DIR}/${PATCHFILE}"
+    -   exit 1
     - fi
-    #- PATCH_HAS_CHANGES=
   artifacts:
     expire_in: 1 month
     paths:
