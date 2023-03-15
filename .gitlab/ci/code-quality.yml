@@ -70,7 +70,7 @@ quality:clang-format:
     - git config --global user.name "${GITLAB_USER_NAME}"
     - git commit -am "Apply clang-format for ${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}"
     - git format-patch ${CI_COMMIT_SHORT_SHA} --stdout > ${ARTIFACTS_DIR}/${PATCHFILE}
-    - ls ${ARTIFACTS_DIR}
+    - ls -l ${ARTIFACTS_DIR}
     - wc --line ${ARTIFACTS_DIR}/${PATCHFILE}
     #- if [ -s ${ARTIFACTS_DIR}/${PATCHFILE} ]
     #- then
@@ -80,8 +80,15 @@ quality:clang-format:
     #- fi
   after_script:
     - echo "Running code quality checks after script"
-    - ls ${ARTIFACTS_DIR}
+    - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
+    #- ls ${ARTIFACTS_DIR}
     - wc --line ${ARTIFACTS_DIR}/${PATCHFILE}
+    - sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE}
+    - if [sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE}] = 0
+    - then
+    -   echo "No changes to be made!"
+    - else
+    -   echo "Patch file with changes is in ${ARTIFACTS_DIR}/${PATCHFILE}"
     #- PATCH_HAS_CHANGES=
   artifacts:
     expire_in: 1 month
