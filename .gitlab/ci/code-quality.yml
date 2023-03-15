@@ -84,8 +84,7 @@ quality:clang-format:
     #- ls ${ARTIFACTS_DIR}
     - wc --line ${ARTIFACTS_DIR}/${PATCHFILE}
     - NUMBER_OF_LINES=$(sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE})
-    - if [${NUMBER_OF_LINES} = '0']
-    - then
+    - if [ ${NUMBER_OF_LINES} = 0 ]; then
     -   echo "No changes to be made!"
     - else
     -   echo "Patch file with changes is in ${ARTIFACTS_DIR}/${PATCHFILE}"
