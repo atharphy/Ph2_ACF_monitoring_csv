@@ -83,8 +83,8 @@ quality:clang-format:
     - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
     #- ls ${ARTIFACTS_DIR}
     - wc --line ${ARTIFACTS_DIR}/${PATCHFILE}
-    - sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE}
-    - if [sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE} = '0']
+    - NUMBER_OF_LINES=$(sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE})
+    - if [${NUMBER_OF_LINES} = '0']
     - then
     -   echo "No changes to be made!"
     - else
