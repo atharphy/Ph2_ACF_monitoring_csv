@@ -5,6 +5,10 @@ variables:
   REPORTS_PATH: ${CI_PROJECT_DIR}/artifacts/reports
   QUALITY_CHECK_DIR: ci-quality-checks
   LCG_CLANG_VERSION: 14 # Check if true
+
+.quality_setup: &quality_setup |-
+  mkdir -p ${REPORTS_PATH}
+
   
 # Ideally, we'd throw the warnings and errors discovered in a sensitive compilation
 # job into the code quality report so that the number of compilation warnings 
