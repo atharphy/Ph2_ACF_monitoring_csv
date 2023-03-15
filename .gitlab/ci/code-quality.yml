@@ -89,6 +89,7 @@ quality:clang-format:
     -   echo "No changes to be made!"
     - else
     -   echo "Patch file with changes is in ${ARTIFACTS_DIR}/${PATCHFILE}"
+    - fi
     #- PATCH_HAS_CHANGES=
   artifacts:
     expire_in: 1 month
