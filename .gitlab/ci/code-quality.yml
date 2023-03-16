@@ -80,6 +80,7 @@ quality:clang-format:
 
   after_script:
     - echo "Running code quality checks after script"
+    - ls -R
     # - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
   artifacts:
     expire_in: 1 month
