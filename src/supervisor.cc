@@ -273,7 +273,6 @@ int main(int argc, char* argv[])
                     ConfigureInfo theConfigureInfo;
                     theConfigureInfo.setConfigurationFile(configurationFile);
                     theConfigureInfo.setCalibrationName(calibrationName);
-                    theConfigureInfo.enableOpticalGroup(0, "myModule");
                     theMiddlewareInterface.configure(theConfigureInfo);
                     theDQMInterface.configure(theConfigureInfo);
                     theMonitorDQMInterface.configure(theConfigureInfo);

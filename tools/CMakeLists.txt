@@ -123,6 +123,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     endforeach(sourcefile ${BINARIES})
 
     TARGET_LINK_LIBRARIES(Ph2_Tools ${LIBS})
+    target_compile_definitions(Ph2_Tools PRIVATE
+    "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
@@ -141,10 +143,12 @@ else()
     include_directories(${UHAL_DIR}/uhal/include)
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
+
+    include_directories(${Protobuf_INCLUDE_DIRS})
     
     cet_set_compiler_flags(
-     EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-     )
+        EXTRA_FLAGS -Wno-reorder -Wl,--undefined
+    )
 
     cet_make(LIBRARY_NAME Ph2_Tools
             LIBRARIES
@@ -155,6 +159,9 @@ else()
             EXCLUDE Eudaq2Producer.h Eudaq2Producer.cc
             EXCLUDE SSAPhysics.h SSAPhysics.cc
             )
+    
+    target_compile_definitions(Ph2_Tools PRIVATE
+    "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
 
     install_headers()
     install_source()

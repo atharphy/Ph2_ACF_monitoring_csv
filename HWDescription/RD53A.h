@@ -53,67 +53,12 @@ namespace Ph2_HwDescription
 class RD53A : public RD53
 {
   public:
-    static constexpr size_t NROWS = 192; // Total number of rows
-    static constexpr size_t NCOLS = 400; // Total number of columns
-
-    static constexpr FrontEnd SYNC = {"SYNC",
-                                      "VTH_SYNC",
-                                      "IBIAS_KRUM_SYNC",
-                                      "LATENCY_CONFIG",
-                                      "",
-                                      "VOUT_dig_ShuLDO",
-                                      "VOUT_ana_ShuLDO",
-                                      2,
-                                      0,
-                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
-                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
-                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
-                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
-                                      5,
-                                      5,
-                                      0,
-                                      127,
-                                      50000,
-                                      0x08};
-    static constexpr FrontEnd LIN  = {"LIN",
-                                     "Vthreshold_LIN",
-                                     "KRUM_CURR_LIN",
-                                     "LATENCY_CONFIG",
-                                     "LDAC_LIN",
-                                     "VOUT_dig_ShuLDO",
-                                     "VOUT_ana_ShuLDO",
-                                     2,
-                                     16,
-                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
-                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
-                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
-                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
-                                     5,
-                                     5,
-                                     128,
-                                     263,
-                                     50000,
-                                     0x08};
-    static constexpr FrontEnd DIFF = {"DIFF",
-                                      "VTH1_DIFF",
-                                      "VFF_DIFF",
-                                      "LATENCY_CONFIG",
-                                      "",
-                                      "VOUT_dig_ShuLDO",
-                                      "VOUT_ana_ShuLDO",
-                                      2,
-                                      31,
-                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
-                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
-                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
-                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
-                                      5,
-                                      5,
-                                      264,
-                                      399,
-                                      50000,
-                                      0x08};
-    static const FrontEnd*    frontEnds[];
+    static const size_t    NROWS;
+    static const size_t    NCOLS;
+    static const FrontEnd  SYNC;
+    static const FrontEnd  LIN;
+    static const FrontEnd  DIFF;
+    static const FrontEnd* frontEnds[];
 
     static void decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent);
 

@@ -267,3 +267,10 @@ std::string getReadoutChipString(uint16_t boardId, uint16_t opticalGroupId, uint
 {
     return getHybridString(boardId, opticalGroupId, hybridId) + "_ReadoutChip_" + std::to_string(readoutChipId);
 }
+
+time_t getTimeStamp()
+{
+    time_t rawtime;
+    time(&rawtime);
+    return rawtime;
+}

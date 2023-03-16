@@ -45,6 +45,7 @@ SystemController::SystemController()
     , fMonitorDQMStreamer(nullptr)
     , fDetectorMonitor(nullptr)
     , fChannelGroupHandlerContainer(nullptr)
+    , fNameContainer(nullptr)
 {
 }
 
@@ -79,6 +80,11 @@ void SystemController::Inherit(const SystemController* pController)
     fParser                         = pController->fParser;
     fSameChannelGroupForAllChannels = pController->fSameChannelGroupForAllChannels;
     fInitializeInterfaces           = pController->fInitializeInterfaces;
+    fNameContainer                  = pController->fNameContainer;
+    fBoardType                      = pController->fBoardType;
+    fConfigurationFileName          = pController->fConfigurationFileName;
+    fCalibrationName                = pController->fCalibrationName;
+    fConfigurationFileContent       = pController->fConfigurationFileContent;
 
 #ifdef __TCP_SERVER__
     fTestcardClient = pController->fTestcardClient;
@@ -128,17 +134,24 @@ void SystemController::Destroy()
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
+    LOG(INFO) << GREEN << "Trying to shutdown Calibration DQM Server..." << RESET;
     delete fDQMStreamer;
     fDQMStreamer = nullptr;
+    LOG(INFO) << GREEN << "Operation completed" << RESET;
 
+    LOG(INFO) << GREEN << "Trying to shutdown Monitor DQM Server..." << RESET;
     delete fMonitorDQMStreamer;
     fMonitorDQMStreamer = nullptr;
+    LOG(INFO) << GREEN << "Operation completed" << RESET;
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
 
     delete fChannelGroupHandlerContainer;
     fChannelGroupHandlerContainer = nullptr;
+
+    delete fNameContainer;
+    fNameContainer = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -207,27 +220,28 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     fBeBoardInterface->setBoard(0);
 
-    LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
+    LOG(INFO) << GREEN << "Trying to connect to the Power Supply Server..." << RESET;
 
     if(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fEnable)
     {
         fPowerSupplyClient = new TCPClient(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fIP, theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fPort);
         if(!fPowerSupplyClient->connect(1))
         {
-            LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
+            LOG(INFO) << GREEN << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
             delete fPowerSupplyClient;
             fPowerSupplyClient = nullptr;
         }
         else
         {
-            LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
+            LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET;
         }
     }
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
-        if(cFirstBoard->getBoardType() != BoardType::RD53)
+        fBoardType                 = cFirstBoard->getBoardType();
+        if(fBoardType != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
@@ -1166,19 +1180,27 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 
 void SystemController::Configure(const ConfigureInfo theConfigureInfo)
 {
-    InitializeHw(theConfigureInfo.getConfigurationFile(), fParsedFile);
-    InitializeSettings(theConfigureInfo.getConfigurationFile(), fParsedFile);
+    fConfigurationFileName = theConfigureInfo.getConfigurationFile();
+    fCalibrationName       = theConfigureInfo.getCalibrationName();
+    std::ifstream     configurationFile(fConfigurationFileName);
+    std::stringstream configurationFileStream;
+    configurationFileStream << configurationFile.rdbuf();
+    fConfigurationFileContent = configurationFileStream.str();
+
+    InitializeHw(fConfigurationFileName, fParsedFile);
+    InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
-    // auto excludeEven = [](const OpticalGroupContainer* theContainer)
-    // {
-    //     return theContainer->getId()%2 == 1;
-    // };
-    // fDetectorContainer->addOpticalGroupQueryFunction(excludeEven);
-    // auto exclude = [](const OpticalGroupContainer* theContainer)
-    // {
-    //     return theContainer->getId() != 3;
-    // };
-    // fDetectorContainer->addOpticalGroupQueryFunction(exclude);
+
+    fNameContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
+
+    for(const auto& enabledObject: theConfigureInfo.getEnabledModulesList(fDetectorContainer->at(0)->getBoardType() == BoardType::D19C))
+    {
+        std::cout << enabledObject.first << std::endl;
+        // Assumes one board only
+        fNameContainer->at(0)->getObject(enabledObject.first)->getSummary<std::string, std::string>() = enabledObject.second;
+    }
+
     std::cout << fParsedFile.str() << std::endl;
     ConfigureHw(false, true);
 }

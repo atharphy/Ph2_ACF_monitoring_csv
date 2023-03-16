@@ -16,6 +16,7 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
         return enabledIdList;
     };
 
+    theDetectorContainer->resetBoardQueryFunction();
     auto enabledBoardIds = getIdList(MessageUtils::ObjectType::BOARD);
     if(enabledBoardIds.size() > 0)
     {
@@ -23,6 +24,7 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
         theDetectorContainer->addBoardQueryFunction(enableBoardListFunction);
     }
 
+    theDetectorContainer->resetOpticalGroupQueryFunction();
     auto enabledOpticalGroupIds = getIdList(MessageUtils::ObjectType::OPTICALGROUP);
     if(enabledOpticalGroupIds.size() > 0)
     {
@@ -32,6 +34,7 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
         theDetectorContainer->addOpticalGroupQueryFunction(enableOpticalGroupListFunction);
     }
 
+    theDetectorContainer->resetHybridQueryFunction();
     auto enabledHybridIds = getIdList(MessageUtils::ObjectType::HYBRID);
     if(enabledHybridIds.size() > 0)
     {
@@ -39,6 +42,7 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
         theDetectorContainer->addHybridQueryFunction(enableHybridListFunction);
     }
 
+    theDetectorContainer->resetReadoutChipQueryFunction();
     auto enabledReadoutChipIds = getIdList(MessageUtils::ObjectType::CHIP);
     if(enabledReadoutChipIds.size() > 0)
     {
@@ -81,4 +85,11 @@ std::string ConfigureInfo::createProtobufMessage() const
     std::string theConfigurationMessageString;
     theConfigureMessage.SerializeToString(&theConfigurationMessageString);
     return theConfigurationMessageString;
+}
+
+std::unordered_map<uint16_t, std::string> ConfigureInfo::getEnabledModulesList(bool isOT) const
+{
+    auto objectType = isOT ? MessageUtils::ObjectType::OPTICALGROUP : MessageUtils::ObjectType::HYBRID;
+    if(this->fObjectList.find(objectType) != fObjectList.end()) return fObjectList.at((isOT ? MessageUtils::ObjectType::OPTICALGROUP : MessageUtils::ObjectType::HYBRID));
+    return std::unordered_map<uint16_t, std::string>();
 }

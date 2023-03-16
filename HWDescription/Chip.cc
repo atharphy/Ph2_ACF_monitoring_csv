@@ -173,4 +173,21 @@ bool RegItemComparer::operator()(const ChipRegPair& pRegItem1, const ChipRegPair
         return pRegItem1.second.fAddress < pRegItem2.second.fAddress;
 }
 
+// Write RegValues in a file
+void Chip::saveRegMap(const std::string& fName2Add)
+{
+    std::string   fileName = this->getFileName(fName2Add);
+    std::ofstream file(fileName, std::ios::out | std::ios::trunc);
+
+    if(file)
+    {
+        auto theStream = getRegMapStream();
+        file << theStream.str();
+
+        file.close();
+    }
+    else
+        LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+}
+
 } // namespace Ph2_HwDescription

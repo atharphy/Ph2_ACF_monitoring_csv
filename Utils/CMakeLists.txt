@@ -71,6 +71,8 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}UTILS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/Utils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
+    include_directories(${Protobuf_INCLUDE_DIRS})
+
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
      )
