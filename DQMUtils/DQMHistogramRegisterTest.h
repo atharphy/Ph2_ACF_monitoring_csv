@@ -40,7 +40,7 @@ class DQMHistogramRegisterTest : public DQMHistogramBase
     /*!
      * Fill histogram
      */
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
 
     /*!
      * Save histogram

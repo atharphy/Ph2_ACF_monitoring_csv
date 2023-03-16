@@ -7,6 +7,7 @@
 #include "HWInterface/ReadoutChipInterface.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
@@ -88,7 +89,9 @@ int main(int argc, char* argv[])
     ShortFinder cShortFinder;
     cShortFinder.Inherit(&cTool);
     cShortFinder.Initialise();
-    cShortFinder.Start(0);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(0);
+    cShortFinder.Start(theStartInfo);
     cShortFinder.waitForRunToBeCompleted();
     cShortFinder.Stop();
 

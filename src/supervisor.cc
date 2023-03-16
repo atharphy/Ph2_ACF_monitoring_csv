@@ -8,6 +8,7 @@
 #include "MonitorDQM/MonitorDQMInterface.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/MiddlewareInterface.h"
+#include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
 #include "miniDAQ/CombinedCalibrationFactory.h"
 
@@ -48,6 +49,30 @@ void interruptHandler(int handler)
     exit(EXIT_FAILURE);
 
     controlC = true;
+}
+
+int returnRunNumber(std::string cFileName)
+{
+    std::string   cLine;
+    int           cRunNumber = -1;
+    std::ifstream cStream(cFileName);
+    if(cStream.is_open())
+    {
+        while(std::getline(cStream, cLine))
+        {
+            std::istringstream cIStream(cLine);
+            cIStream >> cRunNumber;
+            // LOG(INFO) << BOLDMAGENTA << cRunNumber << RESET;
+        }
+    }
+
+    cRunNumber++;
+    std::ofstream cRunLog;
+    cRunLog.open(cFileName, std::fstream::app);
+    cRunLog << cRunNumber << "\n";
+    cRunLog.close();
+
+    return cRunNumber;
 }
 
 bool checkExitStatus(int status, std::string programName)
@@ -281,14 +306,22 @@ int main(int argc, char* argv[])
                 }
                 case CONFIGURED:
                 {
+                    int runNumber = returnRunNumber("RunNumbers.dat");
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    StartInfo theStartInfo;
+                    theStartInfo.setRunNumber(runNumber);
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
-                    int runNumber = 5;
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                    theDQMInterface.startProcessingData(runNumber);
+                    theDQMInterface.startProcessingData(theStartInfo);
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                     theMonitorDQMInterface.startProcessingData();
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                    theMiddlewareInterface.start(runNumber);
+                    theMiddlewareInterface.start(theStartInfo);
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                     stateMachineStatus = RUNNING;
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;

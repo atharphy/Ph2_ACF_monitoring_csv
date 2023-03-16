@@ -33,7 +33,7 @@ void DQMHistogramSignalScanFit::book(TFile* theOutputFile, DetectorContainer& th
 }
 
 //========================================================================================================================
-bool DQMHistogramSignalScanFit::fill(std::vector<char>& dataBuffer) { return false; }
+bool DQMHistogramSignalScanFit::fill(std::string& inputStream) { return false; }
 
 //========================================================================================================================
 void DQMHistogramSignalScanFit::process() {}

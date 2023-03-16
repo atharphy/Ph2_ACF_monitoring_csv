@@ -16,6 +16,7 @@
 #include "Utils/ConfigureInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
+#include "Utils/StartInfo.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMMetadataIT.h"
@@ -140,24 +141,24 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(const ConfigureInfo theConfigureInfo)
+void Tool::Configure(const ConfigureInfo& theConfigureInfo)
 {
     SystemController::Configure(theConfigureInfo);
     ConfigureCalibration();
 }
 
-void Tool::Start(int runNumber)
+void Tool::Start(const StartInfo& theStartInfo)
 {
     if(fDirectoryName == "")
     {
-        std::string resultDirectory = "Results/Run_" + std::to_string(runNumber);
+        std::string resultDirectory = getResultDirectoryName(theStartInfo);
         CreateResultDirectory(resultDirectory, false, false);
     }
     initMetadataAndFillInitialConditions();
 
     // doExit       = false;
     Tool::fKeepRunning = true;
-    fRunNumber         = runNumber;
+    fRunNumber         = theStartInfo.getRunNumber();
     fRunningFuture     = std::async(std::launch::async, &Tool::Running, this);
     // std::promise<int> thePromise;
     // fRunningFuture = thePromise.get_future();
@@ -514,6 +515,13 @@ void Tool::Stop()
         SystemController::Stop();
 
         fillMetadataFinalConditions();
+        if(fDQMStreamerEnabled)
+        {
+            std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
+            PacketHeader thePacketHeader;
+            thePacketHeader.addPacketHeader(doneWithRunMessage);
+            fDQMStreamer->broadcast(doneWithRunMessage);
+        }
         Tool::dumpConfigFiles();
         Tool::SaveResults();
         Tool::WriteRootFile();

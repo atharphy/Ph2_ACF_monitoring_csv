@@ -9,6 +9,7 @@
 
 #include "System/SystemController.h"
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
 #include "tools/RD53BERtest.h"
 #include "tools/RD53ClockDelay.h"
@@ -524,7 +525,9 @@ int main(int argc, char** argv)
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
 
             ph.localConfigure(fileName, runNumber);
-            ph.Start(runNumber);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(runNumber);
+            ph.Start(theStartInfo);
             if(runtime == -1)
             {
                 do
