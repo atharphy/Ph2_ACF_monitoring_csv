@@ -43,7 +43,7 @@ const std::shared_ptr<ChannelGroupBase> RD53ChannelGroupHandler::getTestGroup(in
     if((groupType == RD53GroupType::AllPixels) || (groupType == RD53GroupType::Custom)) { *channelGroup = regionOfInterest; }
     else
     {
-        for(auto col = 0u; col < nCols; col += ((groupType == RD53GroupType::XtalkCoupled) ? 2u : 1u))
+        for(auto col = 0u; col < nCols; col++)
             for(auto i = 0u; i < hitPerCol; i++)
             {
                 auto row = (RD53Constants::NROW_CORE * col + i * nRows / hitPerCol) % nRows;

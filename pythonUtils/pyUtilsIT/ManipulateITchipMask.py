@@ -15,10 +15,8 @@
 # row 1 col 131 en                                           #
 # row 2 col 131 en                                           #
 ##############################################################
-# Or they can specify that even columns are enabled and odd  #
-# columns are injected: 'coupleddx'                          #
-# Or they can specify that even columns are injected and odd #
-# columns are enabled: 'coupledsx'                           #
+# Or they can specify that even(odd) columns are enabled and #
+# odd(even) columns are injected: 'coupled'                  #
 # Or they can specify that even rows are enabled and odd     #
 # rows are injected: 'decoupled'                             #
 ##############################################################
@@ -66,7 +64,7 @@ def ArgParser():
     parser.add_argument('-f', '--inFile',      dest = 'inFile',      type = str, help = 'Chip cfg file',          required = True,  default = '')
     parser.add_argument('-o', '--outFile',     dest = 'outFile',     type = str, help = 'Output file name',       required = True,  default = '')
     parser.add_argument('-m', '--maskFile',    dest = 'maskFile',    type = str, help = 'Used defined mask file', required = False, default = '')
-    parser.add_argument('-p', '--patternType', dest = 'patternType', type = str, help = 'Pattern type: coupleddx/coupledsx or decoupled', required = False, default = '')
+    parser.add_argument('-p', '--patternType', dest = 'patternType', type = str, help = 'Pattern type: coupled or decoupled', required = False, default = '')
     parser.add_argument('-g', '--groupNumber', dest = 'groupNumber', type = int, help = 'Group number',           required = False, default = 0)
 
     options = parser.parse_args()
@@ -90,59 +88,31 @@ def makeGroup(groupNumber, patternType):
     newMaskEn  = []
     newMaskInj = []
 
-    if patternType == 'coupleddx':
-        for col in range(0, NCOLS, 2):
-            for i in range(HITPERCOL):
-                row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
-                row += groupNumber
-                row %= NROWS
+    for col in range(0, NCOLS):
+        for i in range(HITPERCOL):
+            row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
+            row += groupNumber
+            row %= NROWS
 
-                ##########
-                # Enable #
-                ##########
-                newMaskEn.append([row, col])
+            ##########
+            # Enable #
+            ##########
+            newMaskEn.append([row, col])
 
-                ##########
-                # Inject #
-                ##########
-                if col + 1 < NCOLS:
+            ##########
+            # Inject #
+            ##########
+            if patternType == 'coupled':
+                if col % 2 == 0 and col + 1 < NCOLS:
                     newMaskInj.append([row, col + 1])
-    elif patternType == 'coupledsx':
-        for col in range(0, NCOLS, 2):
-            for i in range(HITPERCOL):
-                row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
-                row += groupNumber
-                row %= NROWS
-
-                ##########
-                # Enable #
-                ##########
-                if col + 1 < NCOLS:
-                    newMaskEn.append([row, col + 1])
-
-                ##########
-                # Inject #
-                ##########
-                newMaskInj.append([row, col])
-    elif patternType == 'decoupled':
-        for col in range(0, NCOLS):
-            for i in range(HITPERCOL):
-                row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
-                row += groupNumber
-                row %= NROWS
-
-                ##########
-                # Enable #
-                ##########
-                newMaskEn.append([row, col])
-
-                ##########
-                # Inject #
-                ##########
+                elif col % 2 == 1 and col - 1 > 0:
+                    newMaskInj.append([row, col - 1])
+            elif patternType == 'decoupled':
                 if row + 1 < NROWS:
                     newMaskInj.append([row + 1, col])
-    else:
-        print('Option not recognized:', patternType);
+            else:
+                print('Option not recognized:', patternType)
+                return [], []
 
     return newMaskEn, newMaskInj
 
