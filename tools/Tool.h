@@ -359,7 +359,7 @@ class Tool : public Ph2_System::SystemController
     void    setNReadbackEvents(size_t pNEvents) { fNReadbackEvents = pNEvents; }
     void    setNormalization(uint8_t pNorm) { fNormalize = pNorm; }
     uint8_t getNormalization() { return fNormalize; }
-    void    resetOutputDirectoryName() {fDirectoryName = "";}
+    void    resetOutputDirectoryName() { fDirectoryName = ""; }
 
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
