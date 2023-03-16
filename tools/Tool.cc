@@ -385,8 +385,8 @@ void Tool::fillOTMetadataFinalConditions()
 #else
     if(fDQMStreamerEnabled)
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
         ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");
         theCICConfigurationSerialization.streamByHybridContainer(fDQMStreamer, theCICConfigurationContainer, isInitialValue);
     }
