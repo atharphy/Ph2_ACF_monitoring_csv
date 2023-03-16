@@ -1,30 +1,32 @@
-#############################################################
-# Program to manupalte mask files (*.txt) of Ph2_ACF DAQ    #
-#                                       by Mauro Dinardo    #
-#############################################################
-# Users can specify an enable/injection file of the form:   #
-# row 0 col 130 en                                          #
-# row 1 col 130 inj                                         #
-# row 2 col 130 en                                          #
+##############################################################
+# Program to manupalte mask files (*.txt) of Ph2_ACF DAQ     #
+#                                       by Mauro Dinardo     #
+##############################################################
+# Users can specify an enable/injection file of the form:    #
+# row 0 col 130 en                                           #
+# row 1 col 130 inj                                          #
+# row 2 col 130 en                                           #
 
-# row 0 col 129 en                                          #
-# row 1 col 129 en                                          #
-# row 2 col 129 en                                          #
+# row 0 col 129 en                                           #
+# row 1 col 129 en                                           #
+# row 2 col 129 en                                           #
 
-# row 0 col 131 en                                          #
-# row 1 col 131 en                                          #
-# row 2 col 131 en                                          #
-#############################################################
-# Or they can specify that even columns are injecte and odd #
-# columns are enabled: 'coupled'                            #
-# Or they can specify that even rows are injecte and odd    #
-# rows are enabled: 'decoupled'                             #
-#############################################################
-# Users can also specify the group number, i.e. pattern     #
-# number among the several possible (0, NROWS - 1)          #
-#############################################################
-# A png image is also saved to show the chosen pattern      #
-#############################################################
+# row 0 col 131 en                                           #
+# row 1 col 131 en                                           #
+# row 2 col 131 en                                           #
+##############################################################
+# Or they can specify that even columns are enabled and odd  #
+# columns are injected: 'coupleddx'                          #
+# Or they can specify that even columns are injected and odd #
+# columns are enabled: 'coupledsx'                           #
+# Or they can specify that even rows are enabled and odd     #
+# rows are injected: 'decoupled'                             #
+##############################################################
+# Users can also specify the group number, i.e. pattern      #
+# number among the several possible (0, NROWS - 1)           #
+##############################################################
+# A png image is also saved to show the chosen pattern       #
+##############################################################
 
 from argparse import ArgumentParser
 from PIL      import Image
@@ -64,7 +66,7 @@ def ArgParser():
     parser.add_argument('-f', '--inFile',      dest = 'inFile',      type = str, help = 'Chip cfg file',          required = True,  default = '')
     parser.add_argument('-o', '--outFile',     dest = 'outFile',     type = str, help = 'Output file name',       required = True,  default = '')
     parser.add_argument('-m', '--maskFile',    dest = 'maskFile',    type = str, help = 'Used defined mask file', required = False, default = '')
-    parser.add_argument('-p', '--patternType', dest = 'patternType', type = str, help = 'Pattern type: coupled or decoupled', required = False, default = '')
+    parser.add_argument('-p', '--patternType', dest = 'patternType', type = str, help = 'Pattern type: coupleddx/coupledsx or decoupled', required = False, default = '')
     parser.add_argument('-g', '--groupNumber', dest = 'groupNumber', type = int, help = 'Group number',           required = False, default = 0)
 
     options = parser.parse_args()
@@ -88,7 +90,7 @@ def makeGroup(groupNumber, patternType):
     newMaskEn  = []
     newMaskInj = []
 
-    if patternType == 'coupled':
+    if patternType == 'coupleddx':
         for col in range(0, NCOLS, 2):
             for i in range(HITPERCOL):
                 row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
@@ -105,6 +107,23 @@ def makeGroup(groupNumber, patternType):
                 ##########
                 if col + 1 < NCOLS:
                     newMaskInj.append([row, col + 1])
+    elif patternType == 'coupledsx':
+        for col in range(0, NCOLS, 2):
+            for i in range(HITPERCOL):
+                row  = (NROW_CORE * col + i * NROWS//HITPERCOL)%NROWS
+                row += groupNumber
+                row %= NROWS
+
+                ##########
+                # Enable #
+                ##########
+                if col + 1 < NCOLS:
+                    newMaskEn.append([row, col + 1])
+
+                ##########
+                # Inject #
+                ##########
+                newMaskInj.append([row, col])
     elif patternType == 'decoupled':
         for col in range(0, NCOLS):
             for i in range(HITPERCOL):
