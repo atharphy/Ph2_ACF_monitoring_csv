@@ -41,6 +41,7 @@ void MiddlewareStateMachine::configure(const ConfigureInfo theConfigureInfo)
 void MiddlewareStateMachine::start(const StartInfo theStartInfo)
 {
     currentRun_ = theStartInfo.getRunNumber();
+    fTheTool->resetOutputDirectoryName();
     fTheTool->Start(theStartInfo);
     LOG(INFO) << "Run " << currentRun_ << " started" << RESET;
     return;

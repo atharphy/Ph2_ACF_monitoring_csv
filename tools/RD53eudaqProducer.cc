@@ -84,7 +84,9 @@ void RD53eudaqProducer::DoStartRun()
     // ###################################################
     std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
     RD53sysCntrPhys.initializeFiles<PhysicsHistograms>(fileName, "Physics", RD53sysCntrPhys.histos, theRunNumber);
-    RD53sysCntrPhys.Start(theRunNumber);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(theRunNumber);
+    RD53sysCntrPhys.Start(theStartInfo);
 
     doExit = false;
 }
