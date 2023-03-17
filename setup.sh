@@ -55,7 +55,7 @@ export AMC13DIR=$CACTUSINCLUDE/amc13
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 # These are git references for the dependencies that are included via CMake ExternalProjects
-export PH2_TCUSB_REF=a60e057b2c4f4603cdc6b42e300ad07de132cd81
+export PH2_TCUSB_REF=889b673e9d9582dab64cfeb60990800970ee47af
 export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
 export PYBIND11_REF=v2.9.2
 
