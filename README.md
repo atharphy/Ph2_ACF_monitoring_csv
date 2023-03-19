@@ -136,6 +136,7 @@ For more information on the firmware, please check the doc directory of https://
     i. from `settings > CI/CD` expand the `Runners` section
     ii. click the `Allow shared Runners` button
 
+
 ### Setup on CentOs7
 1. Install devtoolset 10
 ```bash
@@ -312,12 +313,12 @@ The following procedure will install (in order):
 3. `root` with all its needed libraries
 4. `cmake`, tools for clang, including `clang-format` and `git-extras`
 
-# Libraries needed by Ph2_ACF
+#### Libraries needed by Ph2_ACF
 ```bash
 sudo yum install -y boost-devel pugixml-devel json-devel
 ```
 
-# uHAL libraries (cactus)
+#### uHAL libraries (cactus)
 ```bash
 sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
   -o /etc/yum.repos.d/ipbus-sw.repo
@@ -326,13 +327,13 @@ sudo yum clean all
 sudo yum groupinstall uhal
 ```
 
-# ROOT
+#### ROOT
 ```bash
 sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
   root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 ```
 
-# Build tools and some nice git extras
+#### Build tools and some nice git extras
 ```bash
 sudo yum install -y cmake3
 sudo yum install -y clang-tools-extra
@@ -365,12 +366,12 @@ tar zxvf v2.9.2.tar.gz
 
 ### Setup on RHEL 9.1 or AlmaLinux 9.1
 The following procedure will install (in order):
-0. complete the `cern` installation
-1. the `boost` and `pugixml` libraries
-2. `erlang` (using [these instructions](https://www.rabbitmq.com/install-rpm.html))
-3. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
-4. `root` with all its needed libraries
-5. `cmake`, tools for clang, including `clang-format` and `git-extras`
+1. complete the `cern` installation
+2. the `boost` and `pugixml` libraries
+3. `erlang` (using [these instructions](https://www.rabbitmq.com/install-rpm.html))
+4. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+5. `root` with all its needed libraries
+6. `cmake`, tools for clang, including `clang-format` and `git-extras`
 
 #### Complete the CERN installation
 Make sure that the CERN installation is complete by running
@@ -429,6 +430,7 @@ https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
 tar zxvf v2.9.2.tar.gz
 ```
+
 
 ### Nota Bene
 When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
