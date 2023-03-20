@@ -68,6 +68,7 @@ void Physics::Running()
                 for(const auto cChip: *cHybrid) fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ChipReSync();
+
     StartInfo theStartInfo;
     theStartInfo.setRunNumber(theCurrentRun);
     SystemController::Start(theStartInfo);

@@ -177,8 +177,8 @@ uint8_t CalibBase::assignGroupType(RD53Shared::INJtype injType) const
 
     if(injType == RD53Shared::INJtype::XtalkCoupled)
         groupType = RD53GroupType::XtalkCoupled;
-    else if(injType == RD53Shared::INJtype::XtalkUnCoupled)
-        groupType = RD53GroupType::XtalkUnCoupled;
+    else if(injType == RD53Shared::INJtype::XtalkDeCoupled)
+        groupType = RD53GroupType::XtalkDeCoupled;
     else if(injType == RD53Shared::INJtype::Custom)
         groupType = RD53GroupType::Custom;
 
