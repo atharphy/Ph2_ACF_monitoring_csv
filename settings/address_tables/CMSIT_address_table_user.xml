@@ -56,7 +56,7 @@
       <node id="tp_fsm_inject_pulse_en" mask="0x00100000"     permission="rw"      description="Enables Cal command (inject) for the Test-Pulse FSM (Trigger Source = 2) " />
       <node id="tp_fsm_trigger_en"     mask="0x00200000"      permission="rw"      description="Enables trigger command for the Test-Pulse FSM (Trigger Source= 2)" />
       <node id="trigger_duration"      mask="0x07C00000"      permission="rw"      description="Duration of Trigger command" />
-      <node id="HitOr_enable_l12"      mask="0x78000000"      permission="rw"      description="Enable HitOr signals" />
+      <node id="HitOr_enable_l12"      mask="0x60000000"      permission="rw"      description="Enable HitOr signals" />
     </node>
 
     <node id="fast_cmd_reg_3"       address="0x00000003"      permission="rw"      description="Configuration registers associated with fast commands block">

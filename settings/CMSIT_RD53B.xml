@@ -135,7 +135,10 @@
           <Register name="trigger_source"> 2 </Register>
           <!-- 1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency -->
           <Register name="HitOr_enable_l12"> 0 </Register>
-          <!-- Enable HitOr port: set trigger_source to proper value then this register, 0b0001 enable HitOr from left-most connector, 0b1000 enable HitOr from right-most connector -->
+          <!-- HitOr port enable: set trigger_source to proper value then this register,
+               0b01 enables HitOr for the first (left-most) miniDP connector,
+               0b10 enables HitOr for the second miniDP connector
+          -->
         </Register>
 
         <Register name="ext_tlu_reg1">
