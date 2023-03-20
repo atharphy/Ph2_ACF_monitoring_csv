@@ -33,7 +33,6 @@ class DetectorMonitor
     MonitorDQMPlotBase* fMonitorPlotDQM{nullptr};
     std::string         fMonitorFileName = "";
 #endif
-    time_t      getTimeStamp();
     std::string getMonitorName();
 
   private:

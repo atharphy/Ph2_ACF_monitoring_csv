@@ -15,6 +15,7 @@
 #include "TROOT.h"
 #include "Utils/CommonVisitors.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -74,7 +75,9 @@ int main(int argc, char* argv[])
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(0);
+    cBackEndAligner.Start(theStartInfo);
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
 

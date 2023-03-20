@@ -46,10 +46,8 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContai
 }
 
 //========================================================================================================================
-bool DQMHistogramPedestalEqualization::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramPedestalEqualization::fill(std::string& inputStream)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
-
     ContainerSerialization theVCthSerialization("PedestalEqualizationVCth");
     ContainerSerialization theOccupancySerialization("PedestalEqualizationOccupancy");
     ContainerSerialization theOffsetSerialization("PedestalEqualizationOffset");

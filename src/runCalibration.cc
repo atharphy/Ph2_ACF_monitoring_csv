@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -165,8 +166,10 @@ int main(int argc, char* argv[])
         }
         case CONFIGURED:
         {
-            int runNumber = returnRunNumber("RunNumbers.dat");
-            theMiddlewareStateMachine.start(runNumber);
+            int       runNumber = returnRunNumber("RunNumbers.dat");
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(runNumber);
+            theMiddlewareStateMachine.start(theStartInfo);
             stateMachineStatus = RUNNING;
             break;
         }

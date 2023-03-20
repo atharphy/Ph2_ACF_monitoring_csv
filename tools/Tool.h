@@ -28,6 +28,7 @@ class ChannelGroupHandler;
 class ChannelGroupBase;
 class ScanBase;
 class ConfigureInfo;
+class StartInfo;
 class DQMMetadata;
 
 #ifdef __HTTP__
@@ -101,9 +102,9 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void Configure(const ConfigureInfo theConfigureInfo) override;
+    void Configure(const ConfigureInfo& theConfigureInfo) override;
 
-    void Start(int runNumber) override;
+    void Start(const StartInfo& theStartInfo) override;
     // void InformImDone();
     void Stop() override;
 
@@ -112,8 +113,17 @@ class Tool : public Ph2_System::SystemController
     void SaveResults();
     void CloseResultFile();
     void initMetadataAndFillInitialConditions();
+    void fillOTMetadataInitialConditions();
+    void fillITMetadataInitialConditions();
+    void fillMetadataFinalConditions();
+    void fillOTMetadataFinalConditions();
+    void fillITMetadataFinalConditions();
     void fillNameContainerWithChipIDs();
     void fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer);
+    void fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer);
+    void fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContainer);
+    void fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer);
+    void fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurationContainer);
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp
@@ -349,6 +359,7 @@ class Tool : public Ph2_System::SystemController
     void    setNReadbackEvents(size_t pNEvents) { fNReadbackEvents = pNEvents; }
     void    setNormalization(uint8_t pNorm) { fNormalize = pNorm; }
     uint8_t getNormalization() { return fNormalize; }
+    void    resetOutputDirectoryName() { fDirectoryName = ""; }
 
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);

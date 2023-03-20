@@ -51,7 +51,7 @@ class StringContainer : public PlotContainer
     void write()
     {
         gDirectory->cd(fDirectoryPath.c_str());
-        fTObjString->Write(fName.c_str());
+        fTObjString->Write(fName.c_str(), TObject::kOverwrite);
     }
 
     void saveString(std::string theString)

@@ -40,6 +40,14 @@ void mypause()
     std::cin.get();
 }
 
+std::string getResultDirectoryName(const StartInfo& theStartInfo)
+{
+    std::string resultDirectory = "Results/Run_" + std::to_string(theStartInfo.getRunNumber());
+    std::string append          = theStartInfo.getAppendInformation();
+    if(append != "") resultDirectory = resultDirectory + "_" + append;
+    return resultDirectory;
+}
+
 const std::string currentDateTime()
 {
     time_t    now = time(0);
@@ -266,4 +274,11 @@ std::string getHybridString(uint16_t boardId, uint16_t opticalGroupId, uint16_t 
 std::string getReadoutChipString(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t readoutChipId)
 {
     return getHybridString(boardId, opticalGroupId, hybridId) + "_ReadoutChip_" + std::to_string(readoutChipId);
+}
+
+time_t getTimeStamp()
+{
+    time_t rawtime;
+    time(&rawtime);
+    return rawtime;
 }

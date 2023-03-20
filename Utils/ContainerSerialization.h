@@ -71,6 +71,8 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<RD53Shared:
 #include <arpa/inet.h>
 #include <iostream>
 
+#define END_OF_TRANSMISSION_MESSAGE "DoneWithRun"
+
 class PacketHeader
 {
   public:

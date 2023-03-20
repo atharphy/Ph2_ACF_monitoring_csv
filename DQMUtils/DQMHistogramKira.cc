@@ -152,7 +152,7 @@ void DQMHistogramKira::book(TFile* theOutputFile, DetectorContainer& theDetector
 }
 
 //========================================================================================================================
-bool DQMHistogramKira::fill(std::vector<char>& dataBuffer) { return false; }
+bool DQMHistogramKira::fill(std::string& inputStream) { return false; }
 
 //========================================================================================================================
 void DQMHistogramKira::process() {}

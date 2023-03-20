@@ -1,5 +1,6 @@
 #include "miniDAQ/MiddlewareMessageHandler.h"
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "miniDAQ/CombinedCalibrationFactory.h"
 
 MiddlewareMessageHandler::MiddlewareMessageHandler() {}
@@ -23,11 +24,10 @@ std::string MiddlewareMessageHandler::configure(const std::string& message)
 
 std::string MiddlewareMessageHandler::start(const std::string& message)
 {
-    MessageUtils::StartMessage theStartMessage;
-    theStartMessage.ParseFromString(message);
-    int runNumber = theStartMessage.data().run_number();
+    StartInfo theStartInfo;
+    theStartInfo.parseProtobufMessage(message);
 
-    MessageUtils::ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::start, runNumber);
+    MessageUtils::ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::start, theStartInfo);
     return serializeMessage(theReplyMessage);
 }
 

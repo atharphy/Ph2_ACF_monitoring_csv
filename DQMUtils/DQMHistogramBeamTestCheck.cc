@@ -180,7 +180,7 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
 }
 
 //========================================================================================================================
-bool DQMHistogramBeamTestCheck::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramBeamTestCheck::fill(std::string& inputStream)
 {
     // HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>                            theLatencyStream("LatencyScan");
     // HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>                            theStubStream("LatencyScanStub");

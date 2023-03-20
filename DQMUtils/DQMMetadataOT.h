@@ -11,9 +11,17 @@ class DQMMetadataOT : public DQMMetadata
 
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
-    bool fill(std::vector<char>& dataBuffer) override;
+    void fillCICFuseId(const DetectorDataContainer& theCICFuseIdContainer);
+    void fillCICConfiguration(const DetectorDataContainer& theCICConfigurationContainer, bool initialValue);
+
+    bool fill(std::string& inputStream) override;
     void process() override;
     void reset(void) override;
+
+  private:
+    DetectorDataContainer fCICFuseIdContainer;
+    DetectorDataContainer fInitialCICConfigurationContainer;
+    DetectorDataContainer fFinalCICConfigurationContainer;
 };
 
 #endif

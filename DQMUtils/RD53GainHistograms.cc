@@ -76,9 +76,8 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF2D, hChi2DoF2D, "Column", "Row");
 }
 
-bool GainHistograms::fill(std::vector<char>& dataBuffer)
+bool GainHistograms::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("GainOccupancy");
     ContainerSerialization theGainSerialization("GainGain");
 

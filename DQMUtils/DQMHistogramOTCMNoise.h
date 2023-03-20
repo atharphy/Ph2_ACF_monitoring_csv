@@ -43,7 +43,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
      * \brief fill : fill histograms from TCP stream, need to be overwritten to avoid compilation errors, but it is not
      * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
 
     bool fillHitPlots(DetectorDataContainer& theHitData);
     bool fill2DHitPlots(DetectorDataContainer& theHitData);
