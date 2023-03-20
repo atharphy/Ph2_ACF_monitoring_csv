@@ -31,12 +31,12 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 
 # =x= Middleware for the Inner-Tracker (IT) system  =x=
 ```diff
-+ Last change made to this section: 21/11/2022
++ Last change made to this section: 20/03/2023
 ```
 
 ### Suggested software and firmware versions:
-- Software git branch / tag : `Dev` / `v4-11`
-- Firmware tag: `4.5`
+- Software git branch / tag : `Dev` / `v4-12`
+- Firmware tag: `4.6`
 
 ### Important webpages:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
