@@ -90,7 +90,7 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 1. Latency scan
 2. PixelAlive
 3. Noise scan
-4. SCurve scan
+4. SCurve and cross-talk scan
 5. Gain scan
 6. Threshold equalization
 7. Gain optimization
