@@ -110,7 +110,7 @@ class DQMHistogramBase
      * \brief Book histograms
      * \param configurationFileName : xml configuration file
      */
-    virtual bool fill(std::vector<char>& dataBuffer) = 0;
+    virtual bool fill(std::string& inputStream) = 0;
 
     /*!
      * \brief SAve histograms

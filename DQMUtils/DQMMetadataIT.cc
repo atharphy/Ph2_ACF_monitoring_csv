@@ -11,9 +11,9 @@ void DQMMetadataIT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
     // child book here
 }
 
-bool DQMMetadataIT::fill(std::vector<char>& dataBuffer)
+bool DQMMetadataIT::fill(std::string& inputStream)
 {
-    bool motherClassFillResult = DQMMetadata::fill(dataBuffer);
+    bool motherClassFillResult = DQMMetadata::fill(inputStream);
     if(motherClassFillResult) { return true; }
     else
     {

@@ -203,9 +203,8 @@ void CBCHistogramPulseShape::reset(void)
 }
 
 //========================================================================================================================
-bool CBCHistogramPulseShape::fill(std::vector<char>& dataBuffer)
+bool CBCHistogramPulseShape::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theThresholdAndNoiseSerialization("CBCPulseShapeThresholdAndNoise");
     ContainerSerialization theSCurveSerialization("CBCPulseShapeSCurve");
 

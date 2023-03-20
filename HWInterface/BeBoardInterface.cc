@@ -126,6 +126,14 @@ uint32_t BeBoardInterface::getBoardInfo(const BeBoard* pBoard)
     return fBoardFW->getBoardInfo();
 }
 
+uint32_t BeBoardInterface::getBoardFirmwareVersion(const BeBoard* pBoard)
+{
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
+
+    setBoard(pBoard->getId());
+    return fBoardFW->getBoardFirmwareVersion();
+}
+
 BoardType BeBoardInterface::getBoardType(const BeBoard* pBoard)
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);

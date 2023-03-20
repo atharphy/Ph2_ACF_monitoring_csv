@@ -20,7 +20,7 @@ class DQMMetadataIT : public DQMMetadata
 
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
     void process() override;
     void reset(void) override;
 };

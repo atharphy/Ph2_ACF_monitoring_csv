@@ -4,6 +4,7 @@
 #include "Parser/FileParser.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/StartInfo.h"
 
 #include "TFile.h"
 
@@ -53,9 +54,8 @@ void DQMInterface::configure(const ConfigureInfo& theConfigureInfo)
     std::string configurationFilePath = theConfigureInfo.getConfigurationFile();
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
 
-    Ph2_Parser::FileParser  theFileParser;
-    std::stringstream       out;
-    Ph2_Parser::SettingsMap pSettingsMap;
+    Ph2_Parser::FileParser theFileParser;
+    std::stringstream      out;
 
     CommunicationSettingConfig theCommunicationSettingConfig;
     theFileParser.parseCommunicationSettings(configurationFilePath, theCommunicationSettingConfig, out);
@@ -69,20 +69,31 @@ void DQMInterface::configure(const ConfigureInfo& theConfigureInfo)
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
 
     theFileParser.parseHW(configurationFilePath, &fDetectorStructure, out);
-    theFileParser.parseSettings(configurationFilePath, pSettingsMap, out);
+    theFileParser.parseSettings(configurationFilePath, fSettingsMap, out);
 
     theConfigureInfo.setEnabledObjects(&fDetectorStructure);
 
     DQMCalibrationFactory theDQMCalibrationFactory;
     fDQMHistogrammerVector = theDQMCalibrationFactory.createDQMHistogrammerVector(calibrationName);
-
-    fOutputFile = new TFile("tmp.root", "RECREATE");
-    for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);
 }
 
 //========================================================================================================================
-void DQMInterface::startProcessingData(int runNumber)
+void DQMInterface::startProcessingData(const StartInfo& theStartInfo)
 {
+    std::string resultDirectoryName = getResultDirectoryName(theStartInfo);
+    std::string cCommand            = "mkdir -p " + resultDirectoryName;
+
+    try
+    {
+        system(cCommand.c_str());
+    }
+    catch(std::exception& e)
+    {
+        LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result Directory: " << e.what() << RESET;
+    }
+    std::string fileName = resultDirectoryName + "/Result.root";
+    fOutputFile          = new TFile(fileName.c_str(), "RECREATE");
+    for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, fSettingsMap);
     fRunning       = true;
     fRunningFuture = std::async(std::launch::async, &DQMInterface::running, this);
 }
@@ -90,9 +101,8 @@ void DQMInterface::startProcessingData(int runNumber)
 //========================================================================================================================
 void DQMInterface::stopProcessingData(void)
 {
-    fRunning = false;
     std::chrono::milliseconds span(1000);
-    int                       timeout = 3; // in seconds
+    int                       timeout = 10; // in seconds
 
     fListener->disconnect();
     while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout > 0)
@@ -103,6 +113,9 @@ void DQMInterface::stopProcessingData(void)
     if(fDataBuffer.size() > 0)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Buffer should be empty, some data were not read, Aborting" << RESET;
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Buffer size:" << fDataBuffer.size() << RESET;
+        std::string inputStream(fDataBuffer.begin(), fDataBuffer.end());
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Buffer content:\n" << inputStream << RESET;
         abort();
     }
 
@@ -153,11 +166,32 @@ bool DQMInterface::running()
                 break;
             }
 
-            std::vector<char> streamDataBuffer(fDataBuffer.begin() + packerHeaderSize, fDataBuffer.begin() + packetSize);
+            std::string inputStream(fDataBuffer.begin() + packerHeaderSize, fDataBuffer.begin() + packetSize);
             fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + packetSize);
 
-            for(auto dqmHistogrammer: fDQMHistogrammerVector)
-                if(dqmHistogrammer->fill(streamDataBuffer)) break;
+            if(inputStream == END_OF_TRANSMISSION_MESSAGE)
+            {
+                LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " End of transmission message received, stopping listening thread" << RESET;
+                fRunning = false;
+                break;
+            }
+            else
+            {
+                bool decodedByOneDQM = false;
+                for(auto dqmHistogrammer: fDQMHistogrammerVector)
+                {
+                    if(dqmHistogrammer->fill(inputStream))
+                    {
+                        decodedByOneDQM = true;
+                        break;
+                    }
+                }
+                if(!decodedByOneDQM)
+                {
+                    LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << "None decoded message " << inputStream << ", aborting..." << RESET;
+                    abort();
+                }
+            }
         }
     }
 

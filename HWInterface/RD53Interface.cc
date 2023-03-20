@@ -147,8 +147,8 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     // ##########
     // # Inject #
     // ##########
-    if((pRD53group->groupType == RD53GroupType::XtalkCoupled) || (pRD53group->groupType == RD53GroupType::XtalkUnCoupled))
-        pixMask.InjEn = pRD53group->getMaskNextCol();
+    if((pRD53group->groupType == RD53GroupType::XtalkCoupled) || (pRD53group->groupType == RD53GroupType::XtalkDeCoupled))
+        pixMask.InjEn = pRD53group->getMaskNext(pRD53group->groupType);
     else if(pRD53group->groupType == RD53GroupType::Custom)
         pixMask.InjEn = pixMaskDefault.InjEn;
 

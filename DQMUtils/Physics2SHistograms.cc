@@ -142,9 +142,8 @@ void Physics2SHistograms::fillStub(const DetectorDataContainer& DataContainer)
     }
 }
 
-bool Physics2SHistograms::fill(std::vector<char>& dataBuffer)
+bool Physics2SHistograms::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("Physics2SOccupancy");
     ContainerSerialization theStubSerialization("Physics2SStub");
 

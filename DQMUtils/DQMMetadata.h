@@ -16,21 +16,37 @@ class DQMMetadata : public DQMHistogramBase
     void fillObjectNames(const DetectorDataContainer& theNameContainer);
     void fillUsername(const DetectorDataContainer& theUsernameContainer);
     void fillHostName(const DetectorDataContainer& theHostNameContainer);
+    void fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer);
+    void fillFirmwareVersion(const DetectorDataContainer& theFirmwareVersionContainer);
+    void fillCalibrationName(const DetectorDataContainer& theCalibrationNameContainer);
     void fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer);
-    void fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool original);
+    void fillCalibrationTimestamp(const DetectorDataContainer& theCalibrationTimestampContainer, bool start);
+    void fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool initialValue);
+    void fillLpGBTConfiguration(const DetectorDataContainer& theLpGBTConfigurationContainer, bool initialValue);
+    void fillLpGBTFuseId(const DetectorDataContainer& theLpGBTFuseIdContainer);
 
-    virtual bool fill(std::vector<char>& dataBuffer) override;
+    virtual bool fill(std::string& inputStream) override;
     virtual void process() override;
     virtual void reset() override;
 
+  protected:
+    DetectorContainer* fDetectorContainer;
+
   private:
-    DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fNameContainer;
     DetectorDataContainer fUsernameContainer;
     DetectorDataContainer fHostNameContainer;
+    DetectorDataContainer fGitCommitHashContainer;
+    DetectorDataContainer fFirmwareVersionContainer;
+    DetectorDataContainer fCalibrationNameContainer;
     DetectorDataContainer fDetectorConfigurationContainer;
-    DetectorDataContainer fOriginalReadoutChipConfigurationContainer;
+    DetectorDataContainer fCalibrationStartTimestampContainer;
+    DetectorDataContainer fCalibrationStopTimestampContainer;
+    DetectorDataContainer fInitialReadoutChipConfigurationContainer;
     DetectorDataContainer fFinalReadoutChipConfigurationContainer;
+    DetectorDataContainer fInitialLpGBTConfigurationContainer;
+    DetectorDataContainer fFinalLpGBTConfigurationContainer;
+    DetectorDataContainer fLpGBTFuseIdContainer;
 };
 
 #endif

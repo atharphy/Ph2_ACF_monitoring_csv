@@ -25,9 +25,8 @@ void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer
     bookImplementer(theOutputFile, theDetectorStructure, fRegisterMonitorPlotMap[registerName], graphContainer, "Time", registerName.c_str());
 }
 
-bool MonitorDQMPlotRD53::fill(std::vector<char>& dataBuffer)
+bool MonitorDQMPlotRD53::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theContainerSerialization("RD53MonitorRegister");
 
     if(theContainerSerialization.attachDeserializer(inputStream))

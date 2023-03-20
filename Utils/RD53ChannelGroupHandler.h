@@ -19,7 +19,7 @@ constexpr uint8_t AllPixels      = 0;
 constexpr uint8_t Groups         = 1;
 constexpr uint8_t Custom         = 2;
 constexpr uint8_t XtalkCoupled   = 3;
-constexpr uint8_t XtalkUnCoupled = 4;
+constexpr uint8_t XtalkDeCoupled = 4;
 } // namespace RD53GroupType
 
 class RD53ChannelGroup : public ChannelGroupBase
@@ -43,12 +43,23 @@ class RD53ChannelGroup : public ChannelGroupBase
     }
     void                     setCustomPattern(const ChannelGroupBase& customChannelGroupBase) {}
     const std::vector<bool>& getMask() const { return storage; }
-    std::vector<bool>        getMaskNextCol() const
+    std::vector<bool>        getMaskNext(uint8_t groupType) const
     {
         std::vector<bool> nextCol(numberOfRows_ * numberOfCols_, false);
-        for(auto col = 0; col < numberOfCols_ - 1; col++)
+
+        for(auto col = 0u; col < numberOfCols_; col++)
             for(auto row = 0u; row < numberOfRows_; row++)
-                if(storage[row + numberOfRows_ * col] == true) nextCol[row + numberOfRows_ * (col + 1)] = true;
+                if(storage[row + numberOfRows_ * col] == true)
+                {
+                    if(groupType == RD53GroupType::XtalkCoupled)
+                    {
+                        if((col % 2 == 0) && (col + 1 < numberOfCols_)) nextCol[row + numberOfRows_ * (col + 1)] = true;
+                        if((col % 2 == 1) && (col - 1 > 0)) nextCol[row + numberOfRows_ * (col - 1)] = true;
+                    }
+                    else if((groupType == RD53GroupType::XtalkDeCoupled) && (row + 1 < numberOfRows_))
+                        nextCol[row + 1 + numberOfRows_ * col] = true;
+                }
+
         return nextCol;
     }
 

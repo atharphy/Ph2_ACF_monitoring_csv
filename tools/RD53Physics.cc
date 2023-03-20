@@ -9,6 +9,7 @@
 
 #include "RD53Physics.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -67,7 +68,10 @@ void Physics::Running()
                 for(const auto cChip: *cHybrid) fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ChipReSync();
-    SystemController::Start(theCurrentRun);
+
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(theCurrentRun);
+    SystemController::Start(theStartInfo);
 
     numberOfEventsPerRun = 0;
     errors               = 0;
