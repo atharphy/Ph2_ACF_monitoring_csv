@@ -27,6 +27,8 @@ class ConfigureInfo
 
     std::string createProtobufMessage() const;
 
+    std::string getQueryFunctionName() { return fQueryName; };
+
     void enableBoard(uint16_t id, const std::string name) { enableObject(MessageUtils::ObjectType::BOARD, id, name); }
     void enableOpticalGroup(uint16_t id, const std::string name) { enableObject(MessageUtils::ObjectType::OPTICALGROUP, id, name); }
     void enableHybrid(uint16_t id, const std::string name) { enableObject(MessageUtils::ObjectType::HYBRID, id, name); }
@@ -37,6 +39,7 @@ class ConfigureInfo
   private:
     std::string fConfigurationFile{""};
     std::string fCalibrationName{""};
+    const std::string fQueryName {"ConfigurationQueryFunction"};
 
     std::unordered_map<MessageUtils::ObjectType::ObjectTypeEnum, std::unordered_map<uint16_t, std::string>> fObjectList;
 

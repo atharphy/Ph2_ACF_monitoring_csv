@@ -399,6 +399,7 @@ class DataContainer
             uint32_t numberOfContainerEnabledChannels = 0;
             if(container != nullptr)
             {
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Object Id = " << container->getId() << std::endl;
                 numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(
                     theContainer->getElement(index++), static_cast<const DataContainer<T>*>(theChannelGroupContainer)->getObject(container->getId()), numberOfEvents);
             }

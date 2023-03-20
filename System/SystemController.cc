@@ -1192,6 +1192,9 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
 
+    // auto chipSubset = [](const ChipContainer* theChip) { return (theChip->getId() % 2 == 0); };
+    // fDetectorContainer->at(0)->at(0)->at(0)->addQueryFunction(chipSubset, "TEST");
+
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
 

@@ -7,6 +7,8 @@ ConfigureInfo::~ConfigureInfo() {}
 
 void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) const
 {
+    std::string functionName = "ConfigureInfoEnabledFunction";
+
     auto getIdList = [this](const MessageUtils::ObjectType::ObjectTypeEnum theObjectType) -> std::set<int16_t> {
         std::set<int16_t> enabledIdList;
         if(this->fObjectList.find(theObjectType) != fObjectList.end())
@@ -21,7 +23,7 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
     if(enabledBoardIds.size() > 0)
     {
         auto enableBoardListFunction = [enabledBoardIds](const BoardContainer* theBoard) { return enabledBoardIds.find(theBoard->getId()) != enabledBoardIds.end(); };
-        theDetectorContainer->addBoardQueryFunction(enableBoardListFunction);
+        theDetectorContainer->addBoardQueryFunction(enableBoardListFunction, functionName);
     }
 
     theDetectorContainer->resetOpticalGroupQueryFunction();
@@ -31,7 +33,7 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
         auto enableOpticalGroupListFunction = [enabledOpticalGroupIds](const OpticalGroupContainer* theOpticalGroup) {
             return enabledOpticalGroupIds.find(theOpticalGroup->getId()) != enabledOpticalGroupIds.end();
         };
-        theDetectorContainer->addOpticalGroupQueryFunction(enableOpticalGroupListFunction);
+        theDetectorContainer->addOpticalGroupQueryFunction(enableOpticalGroupListFunction, functionName);
     }
 
     theDetectorContainer->resetHybridQueryFunction();
@@ -39,7 +41,7 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
     if(enabledHybridIds.size() > 0)
     {
         auto enableHybridListFunction = [enabledHybridIds](const HybridContainer* theHybrid) { return enabledHybridIds.find(theHybrid->getId()) != enabledHybridIds.end(); };
-        theDetectorContainer->addHybridQueryFunction(enableHybridListFunction);
+        theDetectorContainer->addHybridQueryFunction(enableHybridListFunction, functionName);
     }
 
     theDetectorContainer->resetReadoutChipQueryFunction();
@@ -49,7 +51,7 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
         auto enableReadoutChipListFunction = [enabledReadoutChipIds](const ChipContainer* theReadoutChip) {
             return enabledReadoutChipIds.find(theReadoutChip->getId()) != enabledReadoutChipIds.end();
         };
-        theDetectorContainer->addReadoutChipQueryFunction(enableReadoutChipListFunction);
+        theDetectorContainer->addReadoutChipQueryFunction(enableReadoutChipListFunction, functionName);
     }
 }
 
