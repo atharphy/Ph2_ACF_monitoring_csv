@@ -8,13 +8,13 @@
 */
 
 #include "RD53GenericDacDacScanHistograms.h"
-#include "Utils/ChipContainerStream.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
@@ -93,28 +93,27 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, titleX.str().c_str(), titleY.str().c_str());
 }
 
-bool GenericDacDacScanHistograms::fill(std::vector<char>& dataBuffer)
+bool GenericDacDacScanHistograms::fill(std::string& inputStream)
 {
     const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    ChipContainerStream<EmptyContainer, GenericDataArray<GenericDacDacScanSize>> theOccStreamer("GenericDacDacScanOcc");
-    ChipContainerStream<EmptyContainer, std::pair<uint16_t, uint16_t>>           theGenericDacDacScanStreamer("GenericDacDacScanDACDAC");
+    ContainerSerialization theOccupancySerialization("GenericDacDacScanOccupancy");
+    ContainerSerialization theDACDACSerialization("GenericDacDacScanDACDAC");
 
-    if(theOccStreamer.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        theOccStreamer.decodeChipData(DetectorData);
-        GenericDacDacScanHistograms::fillOccupancy(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched GenericDacDacScan Occupancy!!!!!\n";
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>(fDetectorContainer);
+        GenericDacDacScanHistograms::fillOccupancy(fDetectorData);
         return true;
     }
-    else if(theGenericDacDacScanStreamer.attachBuffer(&dataBuffer))
+    if(theDACDACSerialization.attachDeserializer(inputStream))
     {
-        theGenericDacDacScanStreamer.decodeChipData(DetectorData);
-        GenericDacDacScanHistograms::fillGenericDacDacScan(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched GenericDacDacScan DACDAC!!!!!\n";
+        DetectorDataContainer fDetectorData = theDACDACSerialization.deserializeChipContainer<EmptyContainer, std::pair<uint16_t, uint16_t>>(fDetectorContainer);
+        GenericDacDacScanHistograms::fillGenericDacDacScan(fDetectorData);
         return true;
     }
-
     return false;
 }
 

@@ -1,6 +1,8 @@
 #include "miniDAQ/MiddlewareStateMachine.h"
 #include "HWInterface/FC7FpgaConfig.h"
 #include "Parser/FileParser.h"
+#include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "tools/Tool.h"
 
 using namespace Ph2_Parser;
@@ -23,25 +25,24 @@ void MiddlewareStateMachine::initialize()
     return;
 }
 
-void MiddlewareStateMachine::configure(const std::string& calibrationName, const std::string& configurationFile)
+void MiddlewareStateMachine::configure(const ConfigureInfo theConfigureInfo)
 {
-    fTheTool = fCombinedCalibrationFactory.createCombinedCalibration(calibrationName);
+    fTheTool = fCombinedCalibrationFactory.createCombinedCalibration(theConfigureInfo.getCalibrationName());
 
     LOG(INFO) << BOLDBLUE << "Tool created" << RESET;
 
-    LOG(INFO) << "Configuration file: " << configurationFile << RESET;
-
-    fTheTool->Configure(configurationFile, true);
+    fTheTool->Configure(theConfigureInfo);
 
     LOG(INFO) << "Configured" << RESET;
 
     return;
 }
 
-void MiddlewareStateMachine::start(int runNumber)
+void MiddlewareStateMachine::start(const StartInfo theStartInfo)
 {
-    currentRun_ = runNumber;
-    fTheTool->Start(currentRun_);
+    currentRun_ = theStartInfo.getRunNumber();
+    fTheTool->resetOutputDirectoryName();
+    fTheTool->Start(theStartInfo);
     LOG(INFO) << "Run " << currentRun_ << " started" << RESET;
     return;
 }

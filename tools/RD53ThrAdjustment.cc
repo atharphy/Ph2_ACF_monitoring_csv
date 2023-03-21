@@ -8,6 +8,7 @@
 */
 
 #include "RD53ThrAdjustment.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -69,10 +70,11 @@ void ThrAdjustment::Running()
 
 void ThrAdjustment::sendData()
 {
-    auto theThrStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>();
-
-    if(fDQMStreamerEnabled == true)
-        for(const auto cBoard: theThrContainer) theThrStream->streamAndSendBoard(cBoard, fDQMStreamer);
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("ThrAdjustmentThreshold");
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, theThrContainer);
+    }
 }
 
 void ThrAdjustment::Stop()
@@ -114,7 +116,7 @@ void ThrAdjustment::localConfigure(const std::string& histoFileName, int current
 
 void ThrAdjustment::run()
 {
-    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, targetThreshold, startValue, stopValue);
+    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #
@@ -125,7 +127,7 @@ void ThrAdjustment::run()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                     theThrContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                        static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdReg);
+                        static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdRegs[0]);
 
     // ################
     // # Error report #
@@ -175,7 +177,7 @@ void ThrAdjustment::fillHisto()
 #endif
 }
 
-void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue)
+void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, uint16_t startValue, uint16_t stopValue)
 {
     float    tmp;
     uint16_t init;
@@ -226,7 +228,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                             (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
                              maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
                             2;
-        CalibBase::downloadNewDACvalues(midDACcontainer, regName);
+        CalibBase::downloadNewDACvalues(midDACcontainer, regNames);
 
         // ################
         // # Run analysis #
@@ -280,7 +282,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
     // ###########################
     // # Download new DAC values #
     // ###########################
-    CalibBase::downloadNewDACvalues(bestDACcontainer, regName, true, 0);
+    CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, true, 0);
 
     // ################
     // # Run analysis #

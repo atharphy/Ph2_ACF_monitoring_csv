@@ -9,12 +9,13 @@
 */
 
 #include "RD53GainOptimizationHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void GainOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
@@ -27,18 +28,17 @@ void GainOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& t
     bookImplementer(theOutputFile, theDetectorStructure, KrumCurr, hKrumCurr, "Krummenacher Current", "Entries");
 }
 
-bool GainOptimizationHistograms::fill(std::vector<char>& dataBuffer)
+bool GainOptimizationHistograms::fill(std::string& inputStream)
 {
-    ChipContainerStream<EmptyContainer, uint16_t> theKrumStreamer("GainOptimization");
+    ContainerSerialization theSCurveSerialization("GainOptimizationKrumCurr");
 
-    if(theKrumStreamer.attachBuffer(&dataBuffer))
+    if(theSCurveSerialization.attachDeserializer(inputStream))
     {
-        theKrumStreamer.decodeChipData(DetectorData);
-        GainOptimizationHistograms::fill(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched GainOptimization KrumCurr!!!!!\n";
+        DetectorDataContainer fDetectorData = theSCurveSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        GainOptimizationHistograms::fill(fDetectorData);
         return true;
     }
-
     return false;
 }
 

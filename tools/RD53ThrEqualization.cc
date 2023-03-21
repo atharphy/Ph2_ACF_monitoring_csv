@@ -9,6 +9,7 @@
 
 #include "RD53ThrEqualization.h"
 #include "HWDescription/RD53A.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -85,19 +86,19 @@ void ThrEqualization::Running()
 
 void ThrEqualization::sendData()
 {
-    const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
-    auto theOccStream      = this->prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
-    auto theTDACStream     = this->prepareChannelContainerStreamer<uint16_t>("TDAC");
-    auto theOccScanStream  = this->prepareChannelContainerStreamer<OccupancyAndPh, GenericDataArray<TDACGainSize>>("OccScan");
-    auto theTDACGainStream = this->prepareChannelContainerStreamer<uint16_t>("TDACGain");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: *theOccContainer.get()) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTDACContainer) theTDACStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theContainer) theOccScanStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTDACGainContainer) theTDACGainStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theOccupancySerialization("ThrEqualizationOccupancy");
+        theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer.get());
+
+        ContainerSerialization theTDACSerialization("ThrEqualizationTDAC");
+        theTDACSerialization.streamByChipContainer(fDQMStreamer, theTDACContainer);
+
+        ContainerSerialization theOccupancyScanSerialization("ThrEqualizationOccupancyScan");
+        theOccupancyScanSerialization.streamByChipContainer(fDQMStreamer, theContainer);
+
+        ContainerSerialization theTDACGainSerialization("ThrEqualizationTDACGain");
+        theTDACGainSerialization.streamByChipContainer(fDQMStreamer, theTDACGainContainer);
     }
 }
 
@@ -448,7 +449,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
                             (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
                              maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
                             2;
-        CalibBase::downloadNewDACvalues(midDACcontainer, regName);
+        CalibBase::downloadNewDACvalues(midDACcontainer, {regName.c_str()});
 
         // ################
         // # Run analysis #
@@ -503,7 +504,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
     // ###########################
     // # Download new DAC values #
     // ###########################
-    CalibBase::downloadNewDACvalues(bestDACcontainer, regName, true, 0);
+    CalibBase::downloadNewDACvalues(bestDACcontainer, {regName.c_str()}, true, 0);
 
     // #################################
     // # Reset masks to default values #

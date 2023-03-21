@@ -16,12 +16,10 @@
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
-#include "Utils/ChannelContainerStream.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
-#include "Utils/HybridContainerStream.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
@@ -90,12 +88,10 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     if(fFitSCurves) fPlotSCurves = true;
 
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
-
     if(fWithCBC || fWithSSA)
     {
         // Set query function to only include strip chips in the data container
-        fDetectorContainer->setReadoutChipQueryFunction(selectStripChipFunction);
+        fDetectorContainer->addReadoutChipQueryFunction(selectStripChipFunction);
 
         if(fPlotSCurves)
         {
@@ -158,7 +154,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     if(fWithMPA)
     {
         // Set query function to only include strip chips in the data container
-        fDetectorContainer->setReadoutChipQueryFunction(selectPixelChipFunction);
+        fDetectorContainer->addReadoutChipQueryFunction(selectPixelChipFunction);
 
         if(fPlotSCurves)
         {
@@ -213,37 +209,32 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 }
 
 //========================================================================================================================
-bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramPedeNoise::fill(std::string& inputStream)
 {
-    HybridContainerStream<Occupancy, Occupancy, Occupancy> theOccupancy("PedeNoise");
-    ChannelContainerStream<Occupancy, uint16_t, uint16_t>  theSCurve("PedeNoiseSCurve");
-    ChannelContainerStream<ThresholdAndNoise>              theThresholdAndNoiseStream("PedeNoise");
+    ContainerSerialization theSCurveSerialization("PedeNoiseSCurve");
+    ContainerSerialization theThresholdAndNoiseSerialization("PedeNoiseThresholdAndNoise");
+    ContainerSerialization theValidationSerialization("PedeNoiseValidation");
 
-    if(theOccupancy.attachBuffer(&dataBuffer))
-    {
-        std::cout << "Matched PedeNoise Occupancy!!!!!\n";
-        theOccupancy.decodeData(fDetectorData);
-        fillValidationPlots(fDetectorData);
-
-        fDetectorData.cleanDataStored();
-        return true;
-    }
-    else if(theSCurve.attachBuffer(&dataBuffer))
+    if(theSCurveSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PedeNoise SCurve!!!!!\n";
-        theSCurve.decodeChipData(fDetectorData);
-        fillSCurvePlots(theSCurve.getHeaderElement<0>(), theSCurve.getHeaderElement<1>(), fDetectorData);
-
-        fDetectorData.cleanDataStored();
+        uint16_t              cStripValue, cPixelValue;
+        DetectorDataContainer theDetectorData = theSCurveSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer, cStripValue, cPixelValue);
+        fillSCurvePlots(cStripValue, cPixelValue, theDetectorData);
         return true;
     }
-    else if(theThresholdAndNoiseStream.attachBuffer(&dataBuffer))
+    if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PedeNoise ThresholdAndNoise!!!!!\n";
-        theThresholdAndNoiseStream.decodeChipData(fDetectorData);
-        fillPedestalAndNoisePlots(fDetectorData);
-
-        fDetectorData.cleanDataStored();
+        std::cout << "Matched PedeNoise Threshold And Noise!!!!!\n";
+        DetectorDataContainer theDetectorData = theThresholdAndNoiseSerialization.deserializeHybridContainer<ThresholdAndNoise, ThresholdAndNoise, ThresholdAndNoise>(fDetectorContainer);
+        fillPedestalAndNoisePlots(theDetectorData);
+        return true;
+    }
+    if(theValidationSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched PedeNoise Validation!!!!!\n";
+        DetectorDataContainer theDetectorData = theValidationSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer);
+        fillValidationPlots(theDetectorData);
         return true;
     }
 
@@ -818,6 +809,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                                                      ->getChannel<HistContainer<TH1F>>(cChannelNumber)
                                                      .fTheHistogram;
                             }
+                            // std::cout << "Threshold = " << cTh + 1 << " - Occupancy = " <<  tmpOccupancy << std::endl;
                             cChannelSCurve->SetBinContent(cTh + 1, tmpOccupancy);
                             cChannelSCurve->SetBinError(cTh + 1, tmpOccupancyError);
                         }

@@ -32,8 +32,8 @@ export CACTUSINCLUDE=$CACTUSROOT/include
 ##########
 # PYTHON #
 ##########
-alias PythonController.py="python pythonUtils/PythonController.py"
-alias fpgaconfig.py="python pythonUtils/fpgaconfig.py"
+alias PythonController.py="python3 ${PH2ACF_BASE_DIR}/pythonUtils/PythonController.py"
+alias fpgaconfig.py="python3 ${PH2ACF_BASE_DIR}/pythonUtils/fpgaconfig.py"
 
 ########
 # ROOT #
@@ -55,7 +55,7 @@ export AMC13DIR=$CACTUSINCLUDE/amc13
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 # These are git references for the dependencies that are included via CMake ExternalProjects
-export PH2_TCUSB_REF=9c39f0f4082f8db6a6788baf3567f55631b53f16
+export PH2_TCUSB_REF=889b673e9d9582dab64cfeb60990800970ee47af
 export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
 export PYBIND11_REF=v2.9.2
 
@@ -105,7 +105,6 @@ export Amc13Flag='-D__AMC13__'
 export TCUSBFlag='-D__TCUSB__'
 export TCUSBforROHFlag='-D__ROH_USB__'
 export TCUSBforSEHFlag='-D__SEH_USB__'
-export TCUSBTcpServerFlag='-D__TCP_SERVER__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
@@ -130,24 +129,38 @@ export CompileForShep=false
 # export CompileForHerd=true
 # export CompileForShep=true
 
-# Herd application
+####################
+# Herd application #
+####################
 # export CompileForHerd=true
 # export CompileForShep=false
 
-# Shep application
+####################
+# Shep application #
+####################
 # export CompileForHerd=false
 # export CompileForShep=true
 
-# Compile with EUDAQ libraries
+################################
+# Compile with EUDAQ libraries #
+################################
 export CompileWithEUDAQ=false
 
-# Compile with TC_USB library
+###############################
+# Compile with TC_USB library #
+###############################
 export CompileWithTCUSB=false
+
+########################################
+# OTHybridTester for either ROH or SEH #
+########################################
 export UseTCUSBforROH=false
-export UseTCUSBTcpServer=false
+export UseTCUSBforSEH=false
 
 
-# Clang-format command
+########################
+# Clang-format command #
+########################
 if command -v clang-format &> /dev/null; then
  clang_command="clang-format"
 else
@@ -162,7 +175,7 @@ if [[ $1 == "ci" ]]; then
     export CompileWithEUDAQ=false
     export CompileWithTCUSB=false
     export UseTCUSBforROH=false
-    export UseTCUSBTcpServer=false
+    export UseTCUSBforSEH=false
 fi
 
 echo "=== DONE: you can now run cmake ==="

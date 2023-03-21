@@ -40,7 +40,7 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
     /*!
      * Fill histogram
      */
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
 
     /*!
      * Save histogram
@@ -60,8 +60,8 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
     void fillOccupancyPlots(DetectorDataContainer& theOccupancy);
 
   private:
+    DetectorContainer*    fDetectorContainer;
     uint32_t              NCH = 0;
-    DetectorDataContainer fDetectorData;
     DetectorDataContainer fDetectorVplusHistograms;
     DetectorDataContainer fDetectorOffsetHistograms;
     DetectorDataContainer fDetectorOccupancyHistograms;

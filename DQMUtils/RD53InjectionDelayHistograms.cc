@@ -8,12 +8,13 @@
 */
 
 #include "RD53InjectionDelayHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void InjectionDelayHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
@@ -33,28 +34,27 @@ void InjectionDelayHistograms::book(TFile* theOutputFile, DetectorContainer& the
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, title.str().c_str(), "Efficiency");
 }
 
-bool InjectionDelayHistograms::fill(std::vector<char>& dataBuffer)
+bool InjectionDelayHistograms::fill(std::string& inputStream)
 {
     const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    ChipContainerStream<EmptyContainer, GenericDataArray<InjDelaySize>> theOccStreamer("InjectionDelayOcc");
-    ChipContainerStream<EmptyContainer, uint16_t>                       theInjectionDelayStreamer("InjectionDelayInjDelay");
+    ContainerSerialization theOccupancySerialization("InjectionDelayOccupancy");
+    ContainerSerialization theInjectionDelaySerialization("InjectionDelayInjectionDelay");
 
-    if(theOccStreamer.attachBuffer(&dataBuffer))
+    if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        theOccStreamer.decodeChipData(DetectorData);
-        InjectionDelayHistograms::fillOccupancy(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched InjectionDelay Occupancy!!!!!\n";
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<InjDelaySize>>(fDetectorContainer);
+        InjectionDelayHistograms::fillOccupancy(fDetectorData);
         return true;
     }
-    else if(theInjectionDelayStreamer.attachBuffer(&dataBuffer))
+    if(theInjectionDelaySerialization.attachDeserializer(inputStream))
     {
-        theInjectionDelayStreamer.decodeChipData(DetectorData);
-        InjectionDelayHistograms::fillInjectionDelay(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched InjectionDelay InjectionDelay!!!!!\n";
+        DetectorDataContainer fDetectorData = theInjectionDelaySerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        InjectionDelayHistograms::fillInjectionDelay(fDetectorData);
         return true;
     }
-
     return false;
 }
 

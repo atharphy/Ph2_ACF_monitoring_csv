@@ -36,13 +36,23 @@ const uint8_t  ISGOOD                 = 0;                                      
 const uint8_t  ISMASKED               = 1;                                               // Encoding masked channels
 const uint8_t  ISDISABLED             = 2;                                               // Encoding disabled channels
 const float    ISFITERROR             = -3;                                              // Encoding fit errors
-const uint8_t  MAXBITCHIPREG          = 16;                                              // Maximum number of bits of a chp register
+const uint8_t  MAXBITCHIPREG          = 16;                                              // Maximum number of bits of a chip register
 const size_t   NTHREADS               = round(std::thread::hardware_concurrency() / 2.); // Number of potential threads for the current CPU (removing hyper-threading)
 const uint32_t DEEPSLEEP              = 100000;                                          // [microseconds]
 const uint8_t  READOUTSLEEP           = 50;                                              // [microseconds]
 const uint8_t  MAXATTEMPTS            = 10;                                              // Maximum number of attempts
 const uint16_t MAXATTEMPTSCMDDISPATCH = 100;                                             // Maximum number of attempts to dispatch a command
 const uint8_t  MAXSTEPS               = 10;                                              // Maximum number of steps for a scan
+
+enum class INJtype : uint8_t
+{
+    None,
+    Analog,
+    Digital,
+    Custom,
+    XtalkCoupled,
+    XtalkDeCoupled
+};
 
 std::string fromInt2Str(int val);
 std::string composeFileName(const std::string& configFileName, const std::string& fName2Add);

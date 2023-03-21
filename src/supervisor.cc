@@ -6,7 +6,9 @@
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/ChipInterface.h"
 #include "MonitorDQM/MonitorDQMInterface.h"
+#include "Utils/ConfigureInfo.h"
 #include "Utils/MiddlewareInterface.h"
+#include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
 #include "miniDAQ/CombinedCalibrationFactory.h"
 
@@ -19,6 +21,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "TROOT.h"
 #include <TApplication.h>
 
 #include "Utils/easylogging++.h"
@@ -46,6 +49,30 @@ void interruptHandler(int handler)
     exit(EXIT_FAILURE);
 
     controlC = true;
+}
+
+int returnRunNumber(std::string cFileName)
+{
+    std::string   cLine;
+    int           cRunNumber = -1;
+    std::ifstream cStream(cFileName);
+    if(cStream.is_open())
+    {
+        while(std::getline(cStream, cLine))
+        {
+            std::istringstream cIStream(cLine);
+            cIStream >> cRunNumber;
+            // LOG(INFO) << BOLDMAGENTA << cRunNumber << RESET;
+        }
+    }
+
+    cRunNumber++;
+    std::ofstream cRunLog;
+    cRunLog.open(cFileName, std::fstream::app);
+    cRunLog << cRunNumber << "\n";
+    cRunLog.close();
+
+    return cRunNumber;
 }
 
 bool checkExitStatus(int status, std::string programName)
@@ -208,12 +235,12 @@ int main(int argc, char* argv[])
     // int main ( int argc, char* argv[] )
     // std::cout << argc << "-" << argv[2] << std::endl;
     // exit(0);
-    int   tAppArgc = 1;
-    char* tAppArgv[2];
-    tAppArgv[0] = argv[0];
-    tAppArgv[1] = (char*)"-b";
-    if(batchMode) tAppArgc = 2;
-    TApplication theApp("App", &tAppArgc, tAppArgv);
+    TApplication cApp("Root Application", &argc, argv);
+
+    if(batchMode)
+        gROOT->SetBatch(true);
+    else
+        TQObject::Connect("TCanvas", "Closed()", "TApplication", &cApp, "Terminate()");
 
     DQMInterface        theDQMInterface;
     MonitorDQMInterface theMonitorDQMInterface;
@@ -266,24 +293,35 @@ int main(int argc, char* argv[])
                 case HALTED:
                 {
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                    std::string calibrationName   = cmd.optionValue("calibration");
-                    std::string configurationFile = cmd.optionValue("file");
-                    theMiddlewareInterface.configure(calibrationName, configurationFile);
-                    theDQMInterface.configure(calibrationName, configurationFile);
-                    theMonitorDQMInterface.configure(configurationFile);
+                    std::string   calibrationName   = cmd.optionValue("calibration");
+                    std::string   configurationFile = cmd.optionValue("file");
+                    ConfigureInfo theConfigureInfo;
+                    theConfigureInfo.setConfigurationFile(configurationFile);
+                    theConfigureInfo.setCalibrationName(calibrationName);
+                    theMiddlewareInterface.configure(theConfigureInfo);
+                    theDQMInterface.configure(theConfigureInfo);
+                    theMonitorDQMInterface.configure(theConfigureInfo);
                     stateMachineStatus = CONFIGURED;
                     break;
                 }
                 case CONFIGURED:
                 {
+                    int runNumber = returnRunNumber("RunNumbers.dat");
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
+                    StartInfo theStartInfo;
+                    theStartInfo.setRunNumber(runNumber);
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
-                    int runNumber = 5;
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                    theDQMInterface.startProcessingData(runNumber);
+                    theDQMInterface.startProcessingData(theStartInfo);
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                     theMonitorDQMInterface.startProcessingData();
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                    theMiddlewareInterface.start(runNumber);
+                    theMiddlewareInterface.start(theStartInfo);
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                     stateMachineStatus = RUNNING;
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
@@ -295,12 +333,19 @@ int main(int argc, char* argv[])
                     if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
                     {
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        theMiddlewareInterface.status();
+                        std::string status = theMiddlewareInterface.status();
+
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        while(theMiddlewareInterface.status() != "Done")
+                        while(status != "Done")
                         {
                             std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                             usleep(5e5);
+                            status = theMiddlewareInterface.status();
+                            if(status == "Error")
+                            {
+                                std::cout << "An error occurred, Aborting..." << std::endl;
+                                abort();
+                            }
                         }
                     }
                     else
@@ -343,7 +388,7 @@ int main(int argc, char* argv[])
     checkExitStatus(runControllerStatus, "RunController");
     // checkExitStatus(dqmControllerStatus,"DQMController");
 
-    theApp.Run();
+    if(!batchMode) cApp.Run();
 
     return EXIT_SUCCESS;
 }

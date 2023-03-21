@@ -29,20 +29,21 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 
-## Middleware for the Inner-Tracker (IT) system
+# =x= Middleware for the Inner-Tracker (IT) system  =x=
 ```diff
-+ Last change made to this section: 21/11/2022
++ Last change made to this section: 20/03/2023
 ```
 
-**Suggested software and firmware versions:**
-- Software git branch / tag : `Dev` / `v4-08`
-- Firmware tag: `4.5`
+### Suggested software and firmware versions:
+- Software git branch / tag : `Dev` / `v4-12`
+- Firmware tag: `4.6`
 
-**Important webpages:**
+### Important webpages:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 - Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
-- Mask converter from `Ph2_ACF` to `Alki's` code: https://cernbox.cern.ch/index.php/s/1kiut5EPAFpXZg1
+- Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
+- Mask converter from `Ph2_ACF` to `Alki's` code: `pyUtilsIT/ConvertPh2ACFMask2Alkis.py`
 
 **FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
@@ -68,19 +69,19 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 **IT-DAQ setup and run:**
 1. Folow instructions below to install all needed software packages (like `pugixml`, `boost`, `python`. etc ...)
 2. `mkdir choose_a_name`
-3. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
-4. `cp settings/CMSIT.xml choose_a_name`
+3. `cp settings/RD53Files/CMSIT_RD53A/B.txt choose_a_name`
+4. `cp settings/CMSIT_RD53A/B.xml choose_a_name`
 5. `cd choose_a_name`
-6. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-7. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
-8. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
+6. Edit the file `CMSIT_RD53A/B.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
+7. Run the command: `CMSITminiDAQ -f CMSIT_RD53A/B.xml -r` to reset the FC7 (just once)
+8. Run the command: `CMSITminiDAQ -f CMSIT_RD53A/B.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
 
 **N.B.:** to speed up the `IPbus` communication you can implement [this](https://ipbus.web.cern.ch/doc/user/html/performance.html) trick
 
 **Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):**
-- Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
-- Run the command: `fpgaconfig -c CMSIT.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
-- Run the command: `fpgaconfig -c CMSIT.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
+- Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -l` to check which firmware is on the microSD card
+- Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
+- Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
 
 The program `CMSITminiDAQ` is the portal for all calibrations and for data taking.
@@ -105,7 +106,7 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 ```
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations, for instance `noise`, `gain`, and "the rest".
-### ~=-=~ End of Inner-Tracker section ~=-=~
+## =x= End of Inner-Tracker section =x=
 
 
 ### Setup
@@ -134,6 +135,7 @@ For more information on the firmware, please check the doc directory of https://
 3. Enable shared Runners (if not enabled)
     i. from `settings > CI/CD` expand the `Runners` section
     ii. click the `Allow shared Runners` button
+
 
 ### Setup on CentOs7
 1. Install devtoolset 10
@@ -304,19 +306,19 @@ miniDQM --help
 to run the DQM code from the June '15 beamtest
 
 
-### Setup on CentOs8
+### Setup on CentOs8 (deprecated)
 The following procedure will install (in order):
 1. the `boost` and `pugixml` libraries
 2. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
 3. `root` with all its needed libraries
 4. `cmake`, tools for clang, including `clang-format` and `git-extras`
 
-# Libraries needed by Ph2_ACF
+#### Libraries needed by Ph2_ACF
 ```bash
 sudo yum install -y boost-devel pugixml-devel json-devel
 ```
 
-# uHAL libraries (cactus)
+#### uHAL libraries (cactus)
 ```bash
 sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
   -o /etc/yum.repos.d/ipbus-sw.repo
@@ -325,13 +327,13 @@ sudo yum clean all
 sudo yum groupinstall uhal
 ```
 
-# ROOT
+#### ROOT
 ```bash
 sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
   root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 ```
 
-# Build tools and some nice git extras
+#### Build tools and some nice git extras
 ```bash
 sudo yum install -y cmake3
 sudo yum install -y clang-tools-extra
@@ -352,11 +354,78 @@ sudo yum install -y python3 python3-devel
 
 Install protobuf:
 
-        Follow instructions to install protobuf from (Just install section is needed)
-        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+Follow instructions to install protobuf from (Just install section is needed)
+https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
-Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+Install `pybind11` (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
 
+```bash
+wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+tar zxvf v2.9.2.tar.gz
+```
+
+### Setup on RHEL 9.1 or AlmaLinux 9.1
+The following procedure will install (in order):
+1. complete the `cern` installation
+2. the `boost` and `pugixml` libraries
+3. `erlang` (using [these instructions](https://www.rabbitmq.com/install-rpm.html))
+4. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+5. `root` with all its needed libraries
+6. `cmake`, tools for clang, including `clang-format` and `git-extras`
+
+#### Complete the CERN installation
+Make sure that the CERN installation is complete by running
+```bash
+sudo dnf --repofrompath=cern9el,http://linuxsoft.cern.ch/internal/repos/cern9el-stable/x86_64/os --repo=cern9el install cern-release
+```
+
+#### Libraries needed by Ph2_ACF
+```bash
+sudo yum install -y boost-devel pugixml-devel json-devel
+```
+
+#### Erlang (needed by uHAL)
+This installs `erlang` from a specific rpm. It would be nice if in the future, the correct version
+of `erlang` could be made available via the CERN repository
+```bash
+wget https://github.com/rabbitmq/erlang-rpm/releases/download/v25.1.2/erlang-25.1.2-1.el9.x86_64.rpm
+sudo yum -y install erlang-25.1.2-1.el9.x86_64.rpm
+```
+
+#### uHAL libraries (cactus)
+```bash
+sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.el9.repo -o /etc/yum.repos.d/ipbus-sw.repo
+sudo yum clean all
+sudo yum groupinstall -y uhal controlhub
+```
+
+#### ROOT
+```bash
+sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
+  root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+```
+
+#### Build tools and some nice git extras
+```bash
+sudo yum install -y cmake3 clang-tools-extra git-extras
+```
+
+**devtoolset 12**
+```bash
+sudo yum makecache --refresh
+sudo yum -y install gcc-toolset-12-gcc
+```
+
+**python3**
+```bash
+sudo yum install -y python3 python3-devel
+```
+
+**protobuf**
+Follow instructions to install protobuf from (Just install section is needed)
+https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+
+**pybind11** (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
 ```bash
 wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
 tar zxvf v2.9.2.tar.gz

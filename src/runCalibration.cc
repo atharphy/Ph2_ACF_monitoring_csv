@@ -1,5 +1,7 @@
 #include <cstring>
 
+#include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -153,16 +155,21 @@ int main(int argc, char* argv[])
         {
         case HALTED:
         {
-            std::string calibrationName   = cmd.optionValue("calibration");
-            std::string configurationFile = cmd.optionValue("file");
-            theMiddlewareStateMachine.configure(calibrationName, configurationFile);
+            std::string   configurationFile = cmd.optionValue("file");
+            std::string   calibrationName   = cmd.optionValue("calibration");
+            ConfigureInfo theConfigureInfo;
+            theConfigureInfo.setConfigurationFile(configurationFile);
+            theConfigureInfo.setCalibrationName(calibrationName);
+            theMiddlewareStateMachine.configure(theConfigureInfo);
             stateMachineStatus = CONFIGURED;
             break;
         }
         case CONFIGURED:
         {
-            int runNumber = returnRunNumber("RunNumbers.dat");
-            theMiddlewareStateMachine.start(runNumber);
+            int       runNumber = returnRunNumber("RunNumbers.dat");
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(runNumber);
+            theMiddlewareStateMachine.start(theStartInfo);
             stateMachineStatus = RUNNING;
             break;
         }
@@ -191,7 +198,7 @@ int main(int argc, char* argv[])
     signal(SIGINT, SIG_DFL);
     runCompleted = 1;
 
-    theApp.Run();
+    if(!batchMode) theApp.Run();
 
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");

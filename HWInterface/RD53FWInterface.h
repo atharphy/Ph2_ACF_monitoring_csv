@@ -57,6 +57,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // #############################
     void      setFileHandler(FileHandler* pHandler) override;
     uint32_t  getBoardInfo() override { return FWinfo; }
+    uint32_t  getBoardFirmwareVersion() override { return FWinfo; }
     BoardType getBoardType() const override { return BoardType::RD53; }
 
     void ResetSequence(const std::string& refClockRate);
@@ -163,7 +164,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void ConfigureFromXML(const Ph2_HwDescription::BeBoard* pBoard);
     void SetAndConfigureFastCommands(const Ph2_HwDescription::BeBoard* pBoard,
                                      const uint32_t                    nTRIGxEvent,
-                                     const size_t                      injType,
+                                     const RD53Shared::INJtype         injType,
                                      const uint32_t                    injLatency     = 0,
                                      const uint32_t                    nClkDelays     = 0,
                                      const bool                        enableAutozero = false);

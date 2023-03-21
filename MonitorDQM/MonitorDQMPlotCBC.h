@@ -44,7 +44,7 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
      * \brief fill : fill Plots from TCP stream, need to be overwritten to avoid compilation errors, but it is not
      * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
 
     /*!
      * \brief process : do something with the Plot like colors, fit, drawing canvases, etc
@@ -67,7 +67,7 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
   private:
     std::map<std::string, DetectorDataContainer> fCBCRegisterMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
-    DetectorDataContainer                        fDetectorData;
+    const DetectorContainer*                     fDetectorContainer;
 
     void bookCBCPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
     void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);

@@ -20,7 +20,7 @@ class PSPhysicsHistograms : public DQMHistogramBase
   public:
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
     void reset() override{};
 
     // void fillSync(const DetectorDataContainer& DataContainer);
@@ -28,9 +28,8 @@ class PSPhysicsHistograms : public DQMHistogramBase
     void fillStub(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer fDetectorData;
-    DetectorDataContainer fIsMPAContainer;
     DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fIsMPAContainer;
     // DetectorDataContainer fSClusterHistograms;
     // DetectorDataContainer fPClusterHistograms;
     // DetectorDataContainer fStubHistograms;

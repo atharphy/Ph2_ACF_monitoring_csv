@@ -8,12 +8,13 @@
 */
 
 #include "RD53VoltageTuningHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void VoltageTuningHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     auto hVoltageDig = CanvasContainer<TH1F>("VoltageDig", "Digital Voltage", 32, 0, 32);
@@ -23,26 +24,25 @@ void VoltageTuningHistograms::book(TFile* theOutputFile, DetectorContainer& theD
     bookImplementer(theOutputFile, theDetectorStructure, VoltageAna, hVoltageAna, "VoltageAna", "Entries");
 }
 
-bool VoltageTuningHistograms::fill(std::vector<char>& dataBuffer)
+bool VoltageTuningHistograms::fill(std::string& inputStream)
 {
-    ChipContainerStream<EmptyContainer, uint16_t> theDigiStreamer("VoltageDig");
-    ChipContainerStream<EmptyContainer, uint16_t> theAnaStreamer("VoltageAna");
+    ContainerSerialization theVoltageDigitalSerialization("VoltageTuningVoltageDigital");
+    ContainerSerialization theVoltageAnalogSerialization("VoltageTuningVoltageAnalog");
 
-    if(theDigiStreamer.attachBuffer(&dataBuffer))
+    if(theVoltageDigitalSerialization.attachDeserializer(inputStream))
     {
-        theDigiStreamer.decodeChipData(DetectorData);
-        VoltageTuningHistograms::fillDig(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched VoltageTuning VoltageDigital!!!!!\n";
+        DetectorDataContainer fDetectorData = theVoltageDigitalSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        VoltageTuningHistograms::fillDig(fDetectorData);
         return true;
     }
-    else if(theAnaStreamer.attachBuffer(&dataBuffer))
+    if(theVoltageAnalogSerialization.attachDeserializer(inputStream))
     {
-        theAnaStreamer.decodeChipData(DetectorData);
-        VoltageTuningHistograms::fillDig(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched VoltageTuning VoltageAnalog!!!!!\n";
+        DetectorDataContainer fDetectorData = theVoltageAnalogSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        VoltageTuningHistograms::fillAna(fDetectorData);
         return true;
     }
-
     return false;
 }
 

@@ -13,6 +13,7 @@
 #include "HWDescription/Chip.h"
 #include "HWDescription/Definition.h"
 #include "HWDescription/OpticalGroup.h"
+#include "Parser/CommunicationSettingConfig.h"
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConditionDataSet.h"
 #include "Utils/ConsoleColor.h"
@@ -52,10 +53,11 @@ class FileParser
     FileParser() {}
     ~FileParser() {}
 
-    void                                                                  parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void                                                                  parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
-    std::string                                                           parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
-    void                                                                  openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
+    void        parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
+    void        parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
+    std::string parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
+    void        parseCommunicationSettings(const std::string& pFilename, CommunicationSettingConfig& theCommunicationSettingConfig, std::ostream& os);
+    void        openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
     std::map<uint16_t, std::tuple<std::string, std::string, std::string>> getRegManagerInfoList(const std::string& pFilename);
 
   protected:
@@ -90,6 +92,8 @@ class FileParser
     //
     void parseMPAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
     void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
+    // Irene
+    void parseMPA2Container(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
     //
     void parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os);
 

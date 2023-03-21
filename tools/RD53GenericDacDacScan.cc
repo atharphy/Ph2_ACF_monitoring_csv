@@ -8,6 +8,7 @@
 */
 
 #include "RD53GenericDacDacScan.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -76,15 +77,13 @@ void GenericDacDacScan::Running()
 
 void GenericDacDacScan::sendData()
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
-    auto theStream                  = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>("Occ");
-    auto theGenericDacDacScanStream = this->prepareChipContainerStreamer<EmptyContainer, std::pair<uint16_t, uint16_t>>("DACDAC");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: theOccContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theGenericDacDacScanContainer) theGenericDacDacScanStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theOccupancySerialization("GenericDacDacScanOccupancy");
+        theOccupancySerialization.streamByChipContainer(fDQMStreamer, theOccContainer);
+
+        ContainerSerialization theDACDACSerialization("GenericDacDacScanDACDAC");
+        theDACDACSerialization.streamByChipContainer(fDQMStreamer, theGenericDacDacScanContainer);
     }
 }
 

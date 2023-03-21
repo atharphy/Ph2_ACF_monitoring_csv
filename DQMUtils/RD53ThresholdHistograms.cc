@@ -9,36 +9,36 @@
 */
 
 #include "RD53ThresholdHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
     // # Retrieve parameters #
     // #######################
     auto           frontEnd       = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2);
-    const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->thresholdReg)) + 1;
+    const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->thresholdRegs[0])) + 1;
 
     auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
     bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");
 }
 
-bool ThresholdHistograms::fill(std::vector<char>& dataBuffer)
+bool ThresholdHistograms::fill(std::string& inputStream)
 {
-    ChipContainerStream<EmptyContainer, uint16_t> theThrStreamer("Threshold");
+    ContainerSerialization theContainerSerialization("ThrAdjustmentThreshold");
 
-    if(theThrStreamer.attachBuffer(&dataBuffer))
+    if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        theThrStreamer.decodeChipData(DetectorData);
-        ThresholdHistograms::fill(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched ThrAdjustment Threshold!!!!!\n";
+        DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        ThresholdHistograms::fill(fDetectorData);
         return true;
     }
-
     return false;
 }
 

@@ -7,30 +7,29 @@
 */
 
 #include "RD53BERtestHistograms.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
 void BERtestHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
-    ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
     RD53Shared::setFirstChip(theDetectorStructure);
 
     auto hBERtest = CanvasContainer<TH1F>("BERtest", "BERtest", 1, 0, 1);
     bookImplementer(theOutputFile, theDetectorStructure, BERtest, hBERtest, "N.A.", "Bit Error Rate value");
 }
 
-bool BERtestHistograms::fill(std::vector<char>& dataBuffer)
+bool BERtestHistograms::fill(std::string& inputStream)
 {
-    ChipContainerStream<EmptyContainer, double> theStreamer("BERtest");
+    ContainerSerialization theContainerSerialization("BERtest");
 
-    if(theStreamer.attachBuffer(&dataBuffer))
+    if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        theStreamer.decodeChipData(DetectorData);
-        BERtestHistograms::fillBERtest(DetectorData);
-        DetectorData.cleanDataStored();
+        std::cout << "Matched BERtest!!!!!\n";
+        DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, double>(fDetectorContainer);
+        BERtestHistograms::fillBERtest(fDetectorData);
         return true;
     }
-
     return false;
 }
 

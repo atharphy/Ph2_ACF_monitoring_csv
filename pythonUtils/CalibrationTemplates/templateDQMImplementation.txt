@@ -2,7 +2,7 @@
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+
 #include "TFile.h"
 
 //========================================================================================================================
@@ -38,7 +38,7 @@ void DQMHistogramCLASS_NAME_TEMPLATE::reset(void)
 }
 
 //========================================================================================================================
-bool DQMHistogramCLASS_NAME_TEMPLATE::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramCLASS_NAME_TEMPLATE::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC

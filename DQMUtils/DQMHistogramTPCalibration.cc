@@ -14,7 +14,7 @@
 #include "TFile.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+
 #include "Utils/EmptyContainer.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
@@ -33,7 +33,7 @@ void DQMHistogramTPCalibration::book(TFile* theOutputFile, DetectorContainer& th
 }
 
 //========================================================================================================================
-bool DQMHistogramTPCalibration::fill(std::vector<char>& dataBuffer) { return false; }
+bool DQMHistogramTPCalibration::fill(std::string& inputStream) { return false; }
 
 //========================================================================================================================
 void DQMHistogramTPCalibration::process() {}

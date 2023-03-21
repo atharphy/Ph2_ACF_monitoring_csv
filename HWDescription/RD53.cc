@@ -265,16 +265,10 @@ void RD53::loadfRegMap(const std::string& fileName)
         throw Exception("[RD53::loadfRegMapd] The RD53 file settings does not exist");
 }
 
-std::stringstream RD53::saveRegMap(const std::string& fName2Add)
-// #################################################################
-// # If fName2Add != STREAMON --> then data are also saved on file #
-// #################################################################
+std::stringstream RD53::getRegMapStream()
 {
-    const int Nspaces = 26; // @CONST@
-
-    std::stringstream theStream;
-    std::ofstream     file;
-    std::string       fileName = this->getFileName(fName2Add);
+    const unsigned int Nspaces = 26; // @CONST@
+    std::stringstream  theStream;
 
     std::set<ChipRegPair, RegItemComparer> fSetRegItem;
     for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
@@ -291,11 +285,15 @@ std::stringstream RD53::saveRegMap(const std::string& fName2Add)
         }
 
         theStream << v.first;
-        for(auto j = 0; j < Nspaces; j++) theStream << " ";
-        theStream.seekp(-v.first.size(), std::ios_base::cur);
-        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(4) << std::hex
-                  << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue)
-                  << "                             " << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
+        for(auto j = 0u; j < Nspaces; j++) theStream << " ";
+        theStream.seekp(-(v.first.size() < Nspaces ? v.first.size() : Nspaces - 2), std::ios_base::cur);
+        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress);
+        for(auto j = 0u; j < 10 - (v.first.size() < Nspaces ? 0 : v.first.size() - Nspaces + 2); j++) theStream << " ";
+        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fDefValue);
+        for(auto j = 0u; j < 18; j++) theStream << " ";
+        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue);
+        for(auto j = 0u; j < 29; j++) theStream << " ";
+        theStream << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
 
         cLineCounter++;
     }
@@ -329,19 +327,6 @@ std::stringstream RD53::saveRegMap(const std::string& fName2Add)
         theStream << std::endl;
 
         theStream << std::endl;
-    }
-
-    if(fName2Add != "STREAMON")
-    {
-        file.open(fileName.c_str(), std::ios::out | std::ios::trunc);
-
-        if(file)
-        {
-            file << theStream.str();
-            file.close();
-        }
-        else
-            LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
     }
 
     return theStream;

@@ -9,11 +9,13 @@
 
 #include "tools/PSPhysics.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
 #include "Utils/PSSync.h"
 #include "Utils/SSAChannelGroupHandler.h"
+#include "Utils/StartInfo.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
@@ -31,7 +33,9 @@ void PSPhysics::ConfigureCalibration()
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(this);
-    cCicAligner.Start(0);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(0);
+    cCicAligner.Start(theStartInfo);
     cCicAligner.waitForRunToBeCompleted();
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
@@ -121,8 +125,9 @@ void PSPhysics::Running()
     }
 
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
-
-    SystemController::Start(fRunNumber);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(fRunNumber);
+    SystemController::Start(theStartInfo);
 
     std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
     std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
@@ -136,41 +141,6 @@ void PSPhysics::Running()
     std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
 
     PSPhysics::run();
-}
-
-// void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
-// {
-//     auto thePSSyncStream = prepareChipContainerStreamer<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
-
-//     if(fDQMStreamerEnabled == true) { thePSSyncStream->streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fDQMStreamer); }
-// }
-
-void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
-{
-    auto theOccupancyStream = prepareChannelContainerStreamer<float>("Occupancy");
-    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
-
-    // for(const auto board : fOccupancyContainer)
-    // {
-    //     for(const auto opticalGroup : *board)
-    //     {
-    //         for(const auto hybrid : *opticalGroup)
-    //         {
-    //             for(const auto chip : *hybrid)
-    //             {
-    //                 for(const auto channel : *chip->getChannelContainer<float>()) std::cout<< channel << " ";
-    //                 std::cout<<std::endl;
-    //             }
-    //         }
-
-    //     }
-    // }
-
-    if(fDQMStreamerEnabled == true)
-    {
-        theOccupancyStream->streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theStubStream->streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
-    }
 }
 
 void PSPhysics::Stop()
@@ -228,13 +198,22 @@ unsigned int PSPhysics::getDataFromBoards()
             // std::cout<<__LINE__<<std::endl;
             PSPhysics::fillDataContainer(cBoard, events);
             // std::cout<<__LINE__<<std::endl;
-            PSPhysics::sendBoardData(cBoard);
             // std::cout<<__LINE__<<std::endl;
         }
         // std::cout<<__LINE__<<std::endl;
         // std::cout<<__LINE__<<std::endl;
     }
     std::cout << "Readout " << dataSize << " events" << std::endl;
+
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theOccupancySerialization("PSPhysicsOccupancy");
+        theOccupancySerialization.streamByHybridContainer(fDQMStreamer, fOccupancyContainer);
+
+        ContainerSerialization theStubSerialization("PSPhysicsStub");
+        theStubSerialization.streamByHybridContainer(fDQMStreamer, fStubContainer);
+    }
+
     return dataSize;
 }
 

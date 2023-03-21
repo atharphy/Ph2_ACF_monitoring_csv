@@ -2,8 +2,9 @@
 #include "HWDescription/Definition.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/D19clpGBTInterface.h"
-#include "Utils/CharArray.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/Utilities.h"
+#include "Utils/ValueAndTime.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -66,32 +67,31 @@ void SEHMonitor::runMonitor()
 void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
 {
     DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<std::tuple<time_t, uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
         if(board->at(0)->flpGBT == nullptr)
         {
             for(const auto& opticalGroup: *board)
-                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), -1);
+                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(0, getTimeStamp());
             continue;
         }
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
+            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
         }
     }
 
 #ifdef __USE_ROOT__
     fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
 #else
-    auto theLpGBTRegisterStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray>("LpGBTRegister");
-    theLpGBTRegisterStreamer->setHeaderElement(CharArray(registerName));
-    if(fTheSystemController->fDQMStreamerEnabled)
+    if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        for(auto board: theLpGBTRegisterContainer) theLpGBTRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        ContainerSerialization theContainerSerialization("SEHMonitorLpGBTRegister");
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theLpGBTRegisterContainer, registerName);
     }
 #endif
 }
@@ -110,17 +110,16 @@ void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
     LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
     if((registerName.find("HV") != std::string::npos) & (registerName.find("Current") != std::string::npos)) { cValue *= 1e9; }
     DetectorDataContainer thePowerSupplyContainer;
-    ContainerFactory::copyAndInitDetector<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, thePowerSupplyContainer);
-    thePowerSupplyContainer.getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), cValue);
+    ContainerFactory::copyAndInitDetector<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, thePowerSupplyContainer);
+    thePowerSupplyContainer.getSummary<ValueAndTime<float>>() = ValueAndTime<float>(cValue, getTimeStamp());
 
 #ifdef __USE_ROOT__
     fMonitorPlotDQMSEH->fillPowerSupplyPlots(thePowerSupplyContainer, registerName);
 #else
-    auto thePowerSupplyStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, float>, EmptyContainer, CharArray>("PowerSupply");
-    thePowerSupplyStreamer->setHeaderElement(CharArray(registerName));
-    if(fTheSystemController->fDQMStreamerEnabled)
+    if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        for(auto board: thePowerSupplyContainer) thePowerSupplyStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        ContainerSerialization theContainerSerialization("SEHMonitorPowerSupply");
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, thePowerSupplyContainer, registerName);
     }
 #endif
 }
@@ -130,25 +129,20 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName << RESET;
     float cValue = 0;
 #if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
-#ifdef __TCP_SERVER__
-    fTheSystemController->fTestcardClient->sendAndReceivePacket("read_hvmon:HV_meas");
-#else
     fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().HV_meas, cValue);
-#endif
     LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
 #endif
     DetectorDataContainer theTestCardContainer;
-    ContainerFactory::copyAndInitDetector<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, theTestCardContainer);
-    theTestCardContainer.getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), cValue);
+    ContainerFactory::copyAndInitDetector<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theTestCardContainer);
+    theTestCardContainer.getSummary<ValueAndTime<float>>() = ValueAndTime<float>(cValue, getTimeStamp());
 
 #ifdef __USE_ROOT__
     fMonitorPlotDQMSEH->fillTestCardPlots(theTestCardContainer, registerName);
 #else
-    auto theTestCardStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, float>, EmptyContainer, CharArray>("TestCard");
-    theTestCardStreamer->setHeaderElement(CharArray(registerName));
-    if(fTheSystemController->fDQMStreamerEnabled)
+    if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        for(auto board: theTestCardContainer) theTestCardStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        ContainerSerialization theContainerSerialization("SEHMonitorTestCard");
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theTestCardContainer, registerName);
     }
 #endif
 }
@@ -158,7 +152,7 @@ void SEHMonitor::runInputCurrentMonitor(std::string registerName)
     LOG(INFO) << BOLDMAGENTA << "Running Input Current Monitor" << RESET;
 
     DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<std::tuple<time_t, uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
@@ -169,7 +163,7 @@ void SEHMonitor::runInputCurrentMonitor(std::string registerName)
             LOG(INFO) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - "
                       << "ADC1"
                       << " = " << registerValue << RESET;
-            // theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
+            // theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
         }
     }
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;

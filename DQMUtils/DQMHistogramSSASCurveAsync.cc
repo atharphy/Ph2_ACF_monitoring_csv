@@ -8,10 +8,8 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TH2F.h"
-#include "Utils/ChannelContainerStream.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
 
 //========================================================================================================================
 DQMHistogramSSASCurveAsync::DQMHistogramSSASCurveAsync() {}
@@ -130,28 +128,28 @@ void DQMHistogramSSASCurveAsync::reset(void)
 }
 
 //========================================================================================================================
-bool DQMHistogramSSASCurveAsync::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramSSASCurveAsync::fill(std::string& inputStream)
 {
-    // SoC utilities only - BEGIN
-    // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
-    // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
+    // // SoC utilities only - BEGIN
+    // // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
+    // // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
-    // I'm expecting to receive a data stream from an uint32_t contained from calibration "SSASCurveAsync"
-    ChannelContainerStream<std::pair<std::array<uint32_t, 2>, float>> theHitStreamer("SSASCurveAsync");
+    // // I'm expecting to receive a data stream from an uint32_t contained from calibration "SSASCurveAsync"
+    // ChannelContainerStream<std::pair<std::array<uint32_t, 2>, float>> theHitStreamer("SSASCurveAsync");
 
-    // Try to see if the char buffer matched what I'm expection (container of uint32_t from SSASCurveAsync procedure)
-    if(theHitStreamer.attachBuffer(&dataBuffer))
-    {
-        // It matched! Decoding chip data
-        theHitStreamer.decodeChipData(fDetectorData);
-        // Filling the histograms
-        // fillSSASCurveAsyncPlots(fDetectorData);
-        // Cleaning the data container to be ready for the next TCP string
-        fDetectorData.cleanDataStored();
-        return true;
-    }
-    // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
-    // for this stream)
+    // // Try to see if the char buffer matched what I'm expection (container of uint32_t from SSASCurveAsync procedure)
+    // if(theHitStreamer.attachBuffer(&dataBuffer))
+    // {
+    //     // It matched! Decoding chip data
+    //     theHitStreamer.decodeChipData(fDetectorData);
+    //     // Filling the histograms
+    //     // fillSSASCurveAsyncPlots(fDetectorData);
+    //     // Cleaning the data container to be ready for the next TCP string
+    //     fDetectorData.cleanDataStored();
+    //     return true;
+    // }
+    // // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
+    // // for this stream)
     return false;
-    // SoC utilities only - END
+    // // SoC utilities only - END
 }

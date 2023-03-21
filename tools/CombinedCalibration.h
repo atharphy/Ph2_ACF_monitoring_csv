@@ -39,14 +39,6 @@ struct CombinedCalibration : public Tool
 
     void Running() { start_impl(std::make_index_sequence<size>()); }
 
-    void Stop() override
-    {
-        Tool::dumpConfigFiles();
-        Tool::SaveResults();
-        Tool::WriteRootFile();
-        Tool::CloseResultFile();
-    }
-
   private:
     template <size_t... Is>
     void start_impl(std::index_sequence<Is...>)

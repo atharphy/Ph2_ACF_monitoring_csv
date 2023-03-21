@@ -29,7 +29,6 @@
 #include "HWInterface/lpGBTInterface.h"
 #include "NetworkUtils/TCPClient.h"
 #include "NetworkUtils/TCPPublishServer.h"
-#include "Parser/DetectorMonitorConfig.h"
 #include "Parser/FileParser.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
@@ -61,11 +60,13 @@
 // # Librariries for communicating with Hybrid Test Cards #
 // ########################################################
 #ifdef __TCUSB__
-#include "TCInterface.h"
+#include "HWInterface/TCInterface.h"
 #endif
 
 class DetectorMonitor;
 class ChannelGroupHandler;
+class ConfigureInfo;
+class StartInfo;
 
 /*!
  * \namespace Ph2_System
@@ -101,9 +102,6 @@ class SystemController
     TCPPublishServer*       fMonitorDQMStreamer;
     DetectorMonitor*        fDetectorMonitor;
     TCPClient*              fPowerSupplyClient{nullptr};
-#ifdef __TCP_SERVER__
-    TCPClient* fTestcardClient{nullptr};
-#endif
     /*!
      * \brief Constructor of the SystemController class
      */
@@ -166,7 +164,7 @@ class SystemController
      * \param pFilename : HW Description file
      * \param os        : ostream to dump output
      */
-    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool streamData = false, uint16_t DQMportNumber = 6000, uint16_t monitorDQMportNumber = 7000);
+    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout);
 
     /*!
      * \brief Initialize the settings
@@ -235,11 +233,11 @@ class SystemController
      */
     void ReadData(bool pWait = true);
 
-    virtual void Start(int runNumber);
+    virtual void Start(const StartInfo& theStartInfo);
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000);
+    virtual void Configure(const ConfigureInfo& theConfigureInfo);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);
@@ -371,8 +369,13 @@ class SystemController
     DetectorDataContainer* fChannelGroupHandlerContainer;
 
   protected:
-    bool    fSameChannelGroupForAllChannels{true};
-    uint8_t fInitializeInterfaces{1};
+    DetectorDataContainer* fNameContainer;
+    bool                   fSameChannelGroupForAllChannels{true};
+    uint8_t                fInitializeInterfaces{1};
+    std::string            fConfigurationFileName{""};
+    std::string            fCalibrationName{""};
+    std::string            fConfigurationFileContent{""};
+    BoardType              fBoardType{BoardType::UNDEFINED};
 };
 
 } // namespace Ph2_System

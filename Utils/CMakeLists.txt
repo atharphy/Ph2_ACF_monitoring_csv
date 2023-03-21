@@ -16,7 +16,7 @@
 
     # Add the library
     add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} pugixml boost_thread boost_date_time boost_iostreams boost_filesystem rt MessageUtils)
+    set(LIBS ${LIBS} pugixml boost_serialization boost_thread boost_date_time boost_iostreams boost_filesystem rt MessageUtils)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
 
     # Boost also needs to be linked
@@ -71,6 +71,8 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}UTILS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/Utils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
+    include_directories(${Protobuf_INCLUDE_DIRS})
+
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
      )
@@ -79,6 +81,7 @@ else()
              LIBRARIES
              pthread
              ${Boost_SYSTEM_LIBRARY}
+             ${Boost_SERIALIZATION_LIBRARY}
              EXCLUDE UsbUtilities.h UsbUtilities.cc
             )
 

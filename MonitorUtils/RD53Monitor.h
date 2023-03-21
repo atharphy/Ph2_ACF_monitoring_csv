@@ -11,8 +11,6 @@
 #define RD53Monitor_H
 
 #include "MonitorUtils/DetectorMonitor.h"
-#include "Utils/CharArray.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 
 #ifdef __USE_ROOT__

@@ -12,7 +12,6 @@
 #define RD53GainOptimizationHistograms_H
 
 #include "DQMHistogramBase.h"
-#include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 
 #include <TH1F.h>
@@ -22,13 +21,13 @@ class GainOptimizationHistograms : public DQMHistogramBase
   public:
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
     void reset() override{};
 
     void fill(const DetectorDataContainer& DataContainer);
 
   private:
-    DetectorDataContainer DetectorData;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer KrumCurr;
 };

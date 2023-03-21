@@ -16,7 +16,7 @@
 #include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+
 #include "Utils/EmptyContainer.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/Utilities.h"
@@ -40,7 +40,7 @@ void DQMHistogramCicFEAlignment::book(TFile* theOutputFile, DetectorContainer& t
 }
 
 //========================================================================================================================
-bool DQMHistogramCicFEAlignment::fill(std::vector<char>& dataBuffer) { return false; }
+bool DQMHistogramCicFEAlignment::fill(std::string& inputStream) { return false; }
 
 //========================================================================================================================
 void DQMHistogramCicFEAlignment::process()

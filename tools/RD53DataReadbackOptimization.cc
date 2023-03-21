@@ -8,6 +8,7 @@
 */
 
 #include "RD53DataReadbackOptimization.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -60,27 +61,22 @@ void DataReadbackOptimization::Running()
 
 void DataReadbackOptimization::sendData()
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
-    auto theStreamTAP0scan = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP0scan");
-    auto theStreamTAP0     = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP0");
-
-    auto theStreamTAP1scan = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP1scan");
-    auto theStreamTAP1     = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP1");
-
-    auto theStreamTAP2scan = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP2scan");
-    auto theStreamTAP2     = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP2");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP0Container) theStreamTAP0->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theTAP0scanSerialization("DataReadbackOptimizationTAP0scan");
+        theTAP0scanSerialization.streamByChipContainer(fDQMStreamer, theTAP0scanContainer);
+        ContainerSerialization theTAP0Serialization("DataReadbackOptimizationTAP0");
+        theTAP0Serialization.streamByChipContainer(fDQMStreamer, theTAP0Container);
 
-        for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP1Container) theStreamTAP1->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theTAP1scanSerialization("DataReadbackOptimizationTAP1scan");
+        theTAP1scanSerialization.streamByChipContainer(fDQMStreamer, theTAP1scanContainer);
+        ContainerSerialization theTAP1Serialization("DataReadbackOptimizationTAP1");
+        theTAP1Serialization.streamByChipContainer(fDQMStreamer, theTAP1Container);
 
-        for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP2Container) theStreamTAP2->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theTAP2scanSerialization("DataReadbackOptimizationTAP2scan");
+        theTAP2scanSerialization.streamByChipContainer(fDQMStreamer, theTAP2scanContainer);
+        ContainerSerialization theTAP2Serialization("DataReadbackOptimizationTAP2");
+        theTAP2Serialization.streamByChipContainer(fDQMStreamer, theTAP2Container);
     }
 }
 

@@ -8,6 +8,7 @@
 */
 
 #include "RD53GainOptimization.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -68,10 +69,11 @@ void GainOptimization::Running()
 
 void GainOptimization::sendData()
 {
-    auto theKrumStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>();
-
-    if(fDQMStreamerEnabled == true)
-        for(const auto cBoard: theKrumCurrContainer) theKrumStream->streamAndSendBoard(cBoard, fDQMStreamer);
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("GainOptimizationKrumCurr");
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, theKrumCurrContainer);
+    }
 }
 
 void GainOptimization::Stop()
@@ -207,7 +209,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
                             (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
                              maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
                             2;
-        CalibBase::downloadNewDACvalues(midDACcontainer, regName);
+        CalibBase::downloadNewDACvalues(midDACcontainer, {regName.c_str()});
 
         // ################
         // # Run analysis #
@@ -280,7 +282,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
     // ###########################
     // # Download new DAC values #
     // ###########################
-    CalibBase::downloadNewDACvalues(bestDACcontainer, regName, true, 0);
+    CalibBase::downloadNewDACvalues(bestDACcontainer, {regName.c_str()}, true, 0);
 
     // ################
     // # Run analysis #

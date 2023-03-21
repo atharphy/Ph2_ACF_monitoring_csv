@@ -13,11 +13,10 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TGraph.h"
-#include "Utils/BoardContainerStream.h"
-#include "Utils/CharArray.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/ValueAndTime.h"
 
 //========================================================================================================================
 MonitorDQMPlotSEH::MonitorDQMPlotSEH() {}
@@ -32,7 +31,7 @@ void MonitorDQMPlotSEH::book(TFile* theOutputFile, const DetectorContainer& theD
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
     // make fDetectorData ready to receive the information fromm the stream
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
+    fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
     // for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT")) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName);
@@ -123,12 +122,8 @@ void MonitorDQMPlotSEH::bookTestCardPlots(TFile* theOutputFile, const DetectorCo
 //             if(!opticalGroup->hasSummary()) continue;
 //             size_t  opticalGroupIndex = opticalGroup->getIndex();
 //             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
-//             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(),
-//                                    getTimeStampForRoot(std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>())),
-//                                    std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR);
-
-//             // std::cout << "Filling plot " << registerName << " at time " << std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) << " with value " <<
-//             // (std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR) << std::endl;
+//             auto theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
+//             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue * CONVERSION_FACTOR);
 //         } // for on opticalGroup - end
 //     }     // for on boards - end
 // }
@@ -144,9 +139,8 @@ void MonitorDQMPlotSEH::fillPowerSupplyPlots(DetectorDataContainer& theThreshold
     }
 
     TGraph* PowerSupplyDQMPlot = fPowerSupplyMonitorPlotMap[registerName].getSummary<GraphContainer<TGraph>>().fTheGraph;
-    PowerSupplyDQMPlot->SetPoint(PowerSupplyDQMPlot->GetN(),
-                                 getTimeStampForRoot(std::get<0>(theThresholdContainer.getSummary<std::tuple<time_t, float>>())),
-                                 std::get<1>(theThresholdContainer.getSummary<std::tuple<time_t, float>>()));
+    auto    theValueAndTime    = theThresholdContainer.getSummary<ValueAndTime<float>>();
+    PowerSupplyDQMPlot->SetPoint(PowerSupplyDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue);
 }
 
 //========================================================================================================================
@@ -161,9 +155,8 @@ void MonitorDQMPlotSEH::fillTestCardPlots(DetectorDataContainer& theThresholdCon
     }
 
     TGraph* TestCardDQMPlot = fTestCardMonitorPlotMap[registerName].getSummary<GraphContainer<TGraph>>().fTheGraph;
-    TestCardDQMPlot->SetPoint(TestCardDQMPlot->GetN(),
-                              getTimeStampForRoot(std::get<0>(theThresholdContainer.getSummary<std::tuple<time_t, float>>())),
-                              std::get<1>(theThresholdContainer.getSummary<std::tuple<time_t, float>>()));
+    auto    theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
+    TestCardDQMPlot->SetPoint(TestCardDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue);
 }
 
 //========================================================================================================================
@@ -176,48 +169,8 @@ void MonitorDQMPlotSEH::reset(void)
 }
 
 //========================================================================================================================
-bool MonitorDQMPlotSEH::fill(std::vector<char>& dataBuffer)
+bool MonitorDQMPlotSEH::fill(std::string& inputStream)
 {
-    // SoC utilities only - BEGIN
-    // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
-    // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
-
-    // I'm expecting to receive a data stream from an uint16_t contained from DQM "DQMExample"
-    BoardContainerStream<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer("CBCMonitorCBCRegister");
-    BoardContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
-
-    // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
-
-    // if(theCBCDQMStreamer.attachBuffer(&dataBuffer))
-    // {
-    //     // std::cout <<  __PRETTY_FUNCTION__ << "Matches CBC monitor" << std::endl;
-    //     // It matched! Decoding chip data
-    //     theCBCDQMStreamer.decodeData(fDetectorData);
-    //     // Filling the histograms
-    //     CharArray registerNameArray = theCBCDQMStreamer.getHeaderElement();
-    //     // std::cout <<  __PRETTY_FUNCTION__ << "registerNameArray = " << registerNameArray.getString() << std::endl;
-
-    //     fillCBCRegisterPlots(fDetectorData, registerNameArray.getString());
-    //     // Cleaning the data container to be ready for the next TCP string
-    //     fDetectorData.cleanDataStored();
-    //     return true;
-    // }
-
-    // if(theLpGBTDQMStreamer.attachBuffer(&dataBuffer))
-    // {
-    //     // It matched! Decoding chip data
-    //     theLpGBTDQMStreamer.decodeData(fDetectorData);
-    //     // Filling the histograms
-    //     CharArray registerNameArray = theLpGBTDQMStreamer.getHeaderElement();
-
-    //     fillLpGBTRegisterPlots(fDetectorData, registerNameArray.getString());
-    //     // Cleaning the data container to be ready for the next TCP string
-    //     fDetectorData.cleanDataStored();
-    //     return true;
-    // }
-
-    // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
-    // for this stream)
+    // FILL not implemented, it will probably never need the dual process
     return false;
-    // SoC utilities only - END
 }

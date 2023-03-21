@@ -41,7 +41,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     /*!
      * Fill histogram
      */
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
 
     /*!
      * Save histogram
@@ -110,8 +110,6 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
 
     DetectorDataContainer fDetectorChannelStripNoiseEvenHistograms;
     DetectorDataContainer fDetectorChannelStripNoiseOddHistograms;
-
-    DetectorDataContainer fDetectorData;
 
     bool fWithCBC = false;
     bool fWithSSA = false;

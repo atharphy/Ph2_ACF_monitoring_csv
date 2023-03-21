@@ -17,6 +17,7 @@
 #include "Utils/CommonVisitors.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/D19cMPAEvent.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -62,14 +63,16 @@ int main(int argc, char* argv[])
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(&cTool);
-    cCicAligner.Start(0);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(0);
+    cCicAligner.Start(theStartInfo);
     cCicAligner.waitForRunToBeCompleted();
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
 
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
+    cBackEndAligner.Start(theStartInfo);
     cBackEndAligner.waitForRunToBeCompleted();
     cBackEndAligner.Reset();
 

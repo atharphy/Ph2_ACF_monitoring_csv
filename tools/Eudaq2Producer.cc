@@ -12,6 +12,7 @@
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/Occupancy.h"
+#include "Utils/StartInfo.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/Channel.h"
 #include "tools/CicFEAlignment.h"
@@ -92,7 +93,9 @@ void Eudaq2Producer::DoInitialise()
         cLinkAlignment.Inherit(this);
         try
         {
-            cLinkAlignment.Start(0);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(0);
+            cLinkAlignment.Start(theStartInfo);
         }
         catch(const std::exception& e)
         {
@@ -110,7 +113,9 @@ void Eudaq2Producer::DoInitialise()
         // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(this);
-        cCicAligner.Start(0);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(0);
+        cCicAligner.Start(theStartInfo);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
 
@@ -453,9 +458,9 @@ void Eudaq2Producer::DoTerminate()
 {
     LOG(INFO) << "[CMS-OT Producer] Terminating Run..." << RESET;
     fExitRun = true, fConfigured = false;
-    if(fThreadRun.joinable()) { fThreadRun.join(); }
     LOG(INFO) << "[CMS-OT Producer] Terminated Run" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Terminated Run");
+    if(fThreadRun.joinable()) { fThreadRun.join(); }
 }
 
 // ReadoutLoop has been modified in order to allow for the acquisition of multiple events by a single trigger signal.

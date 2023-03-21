@@ -7,6 +7,7 @@
 class TCPSubscribeClient;
 class MonitorDQMPlotBase;
 class TFile;
+class ConfigureInfo;
 
 class MonitorDQMInterface
 {
@@ -14,7 +15,7 @@ class MonitorDQMInterface
     MonitorDQMInterface();
     ~MonitorDQMInterface(void);
 
-    void configure(std::string const& configurationFilePath);
+    void configure(const ConfigureInfo& theConfigureInfo);
     void startProcessingData();
     void stopProcessingData(void);
     void pauseProcessingData(void){};
@@ -23,6 +24,7 @@ class MonitorDQMInterface
     bool running(void);
 
   private:
+    DetectorContainer                fDetectorStructure;
     void                             destroy(void);
     void                             destroyDQMs(void);
     TCPSubscribeClient*              fListener;

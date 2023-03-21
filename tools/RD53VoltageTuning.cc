@@ -8,6 +8,7 @@
 */
 
 #include "RD53VoltageTuning.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -39,13 +40,13 @@ void VoltageTuning::Running()
 
 void VoltageTuning::sendData()
 {
-    auto theDigStreamer = this->prepareChipContainerStreamer<EmptyContainer, double>("VoltageDig");
-    auto theAnaStreamer = this->prepareChipContainerStreamer<EmptyContainer, double>("VoltageAna");
-
-    if(fDQMStreamerEnabled == true)
+    if(fDQMStreamerEnabled)
     {
-        for(const auto cBoard: theDigContainer) theDigStreamer->streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theAnaContainer) theAnaStreamer->streamAndSendBoard(cBoard, fDQMStreamer);
+        ContainerSerialization theVoltageDigitalSerialization("VoltageTuningVoltageDigital");
+        theVoltageDigitalSerialization.streamByChipContainer(fDQMStreamer, theDigContainer);
+
+        ContainerSerialization theVoltageAnalogSerialization("VoltageTuningVoltageAnalog");
+        theVoltageAnalogSerialization.streamByChipContainer(fDQMStreamer, theAnaContainer);
     }
 }
 
@@ -101,7 +102,7 @@ void VoltageTuning::run()
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
     auto chipSubset = [](const ChipContainer* theChip) { return theChip->isEnabled(); };
-    fDetectorContainer->setReadoutChipQueryFunction(chipSubset);
+    fDetectorContainer->addReadoutChipQueryFunction(chipSubset);
     fDetectorContainer->setEnabledAll(true);
 
     for(auto nAttempt = 0; nAttempt < RD53Shared::MAXATTEMPTS; nAttempt++)
@@ -127,7 +128,7 @@ void VoltageTuning::run()
                         std::vector<float> trimVoltageDig;
                         std::vector<int>   trimVoltageDigIndex;
 
-                        auto defaultDig = ((RD53Shared::setBits(nBitsAna) / 2) << nBitsDig) | (RD53Shared::setBits(nBitsDig) / 2);
+                        auto defaultDig = (static_cast<size_t>(RD53Shared::setBits(nBitsAna) * STARTfraction) << nBitsDig) | static_cast<size_t>(RD53Shared::setBits(nBitsDig) * STARTfraction);
                         RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultDig);
                         float initDig = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg) * CONVERSIONfactor;
 
@@ -138,7 +139,7 @@ void VoltageTuning::run()
 
                         for(it = 0; it < scanrangeDig.size(); it++)
                         {
-                            auto vTrimDecimal = bits::pack<5, 5>(16, scanrangeDig[it]);
+                            auto vTrimDecimal = (((RD53Shared::setBits(nBitsAna) + 1) / 2) << nBitsDig) | scanrangeDig[it];
 
                             RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
                             float readingDig = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg) * CONVERSIONfactor;
@@ -177,7 +178,7 @@ void VoltageTuning::run()
                         std::vector<float> trimVoltageAna;
                         std::vector<int>   trimVoltageAnaIndex;
 
-                        auto defaultAna = ((RD53Shared::setBits(nBitsAna) / 2) << nBitsDig) | vdddNewSetting;
+                        auto defaultAna = (static_cast<size_t>(RD53Shared::setBits(nBitsAna) * STARTfraction) << nBitsDig) | vdddNewSetting;
                         RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultAna);
                         float initAna = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg) * CONVERSIONfactor;
 
@@ -188,7 +189,7 @@ void VoltageTuning::run()
 
                         for(it = 0; it < scanrangeAna.size(); it++)
                         {
-                            auto vTrimDecimal = bits::pack<5, 5>(scanrangeAna[it], vdddNewSetting);
+                            auto vTrimDecimal = (scanrangeAna[it] << nBitsDig) | vdddNewSetting;
 
                             RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
                             float readingAna = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg) * CONVERSIONfactor;
@@ -220,7 +221,7 @@ void VoltageTuning::run()
                         // # Final values #
                         // ################
 
-                        auto finalDecimal = bits::pack<5, 5>(vddaNewSetting, vdddNewSetting);
+                        auto finalDecimal = (vddaNewSetting << nBitsDig) | vdddNewSetting;
 
                         RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", finalDecimal);
 

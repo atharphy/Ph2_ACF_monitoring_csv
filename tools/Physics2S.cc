@@ -10,9 +10,11 @@
 #include "tools/Physics2S.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/Data2S.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/Occupancy.h"
+#include "Utils/StartInfo.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 
@@ -40,7 +42,9 @@ void Physics2S::ConfigureCalibration()
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(this);
-    cCicAligner.Start(0);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(0);
+    cCicAligner.Start(theStartInfo);
     cCicAligner.waitForRunToBeCompleted();
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
@@ -71,21 +75,11 @@ void Physics2S::Running()
     }
 
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
-    SystemController::Start(fRunNumber);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(fRunNumber);
+    SystemController::Start(theStartInfo);
 
     Physics2S::run();
-}
-
-void Physics2S::sendBoardData(BoardContainer* const& cBoard)
-{
-    auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>("Occupancy");
-    auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
-
-    if(fDQMStreamerEnabled == true)
-    {
-        theOccupancyStream->streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theStubStream->streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
-    }
 }
 
 void Physics2S::Stop()
@@ -140,9 +134,18 @@ unsigned int Physics2S::getDataFromBoards()
             // for(const auto& event : events)
             //     std::cout<<"L1 id = " << std::dec<<static_cast<D19cCic2Event*>(event)->L1Id(1,0)<<std::endl;
             fillDataContainer(cBoard, events);
-            sendBoardData(cBoard);
         }
     }
+
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theOccupancySerialization("Physics2SOccupancy");
+        theOccupancySerialization.streamByHybridContainer(fDQMStreamer, fOccupancyContainer);
+
+        ContainerSerialization theStubSerialization("Physics2SStub");
+        theStubSerialization.streamByHybridContainer(fDQMStreamer, fStubContainer);
+    }
+
     return dataSize;
 }
 

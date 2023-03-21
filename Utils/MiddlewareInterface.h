@@ -1,9 +1,11 @@
 #ifndef _MiddlewareInterface_h_
 #define _MiddlewareInterface_h_
 
-#include "MessageUtils/cpp/QueryMessage.pb.h"
 #include "NetworkUtils/TCPClient.h"
 #include <string>
+
+class ConfigureInfo;
+class StartInfo;
 
 class MiddlewareInterface : public TCPClient
 {
@@ -11,11 +13,11 @@ class MiddlewareInterface : public TCPClient
     MiddlewareInterface(std::string serverIP, int serverPort);
     virtual ~MiddlewareInterface(void);
     void        initialize(void);
-    void        configure(std::string const& calibrationName, std::string const& configurationFilePath);
+    void        configure(const ConfigureInfo& theConfigureInfo);
     void        halt(void);
     void        pause(void);
     void        resume(void);
-    void        start(int runNumber);
+    void        start(const StartInfo& theStartInfo);
     void        stop(void);
     std::string status(void);
 

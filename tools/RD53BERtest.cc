@@ -8,6 +8,7 @@
 */
 
 #include "RD53BERtest.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -40,10 +41,11 @@ void BERtest::Running()
 
 void BERtest::sendData()
 {
-    auto theStream = this->prepareChipContainerStreamer<EmptyContainer, double>("BERtest");
-
-    if(fDQMStreamerEnabled == true)
-        for(const auto cBoard: theBERtestContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("BERtest");
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, theBERtestContainer);
+    }
 }
 
 void BERtest::Stop()

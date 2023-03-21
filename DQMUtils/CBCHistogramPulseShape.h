@@ -44,7 +44,7 @@ class CBCHistogramPulseShape : public DQMHistogramBase
      * \brief fill : fill histograms from TCP stream, need to be overwritten to avoid compilation errors, but it is not
      * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
 
     /*!
      * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
@@ -66,9 +66,9 @@ class CBCHistogramPulseShape : public DQMHistogramBase
     void fillSCurvePlots(uint16_t vcthr, uint16_t latency, uint16_t delay, DetectorDataContainer& fSCurveOccupancy);
 
   private:
+    DetectorContainer*                                              fDetectorContainer;
     DetectorDataContainer                                           fDetectorChannelPulseShapeHistograms;
     DetectorDataContainer                                           fDetectorChipPulseShapeHistograms;
-    DetectorDataContainer                                           fDetectorData;
     std::map<std::tuple<uint16_t, uint16_t>, DetectorDataContainer> fDetectorSCurveHistogramMap;
     float                                                           fInitialVcth{0};
     float                                                           fInitialLatency{0};

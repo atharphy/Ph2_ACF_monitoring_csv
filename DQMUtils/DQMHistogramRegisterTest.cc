@@ -16,7 +16,7 @@
 #include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
+
 #include "Utils/EmptyContainer.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/Utilities.h"
@@ -68,7 +68,7 @@ void DQMHistogramRegisterTest::book(TFile* theOutputFile, DetectorContainer& the
 }
 
 //========================================================================================================================
-bool DQMHistogramRegisterTest::fill(std::vector<char>& dataBuffer) { return false; }
+bool DQMHistogramRegisterTest::fill(std::string& inputStream) { return false; }
 
 //========================================================================================================================
 void DQMHistogramRegisterTest::process()
