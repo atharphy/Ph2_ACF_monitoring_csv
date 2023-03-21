@@ -15,7 +15,6 @@
 #include "RD53BCommands.h"
 #include "Utils/BitMaster/BitVector.h"
 #include "Utils/RD53ChannelGroupHandler.h"
-#include "Utils/RD53Event.h"
 
 // ############################
 // # Chip event configuration #
