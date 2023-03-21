@@ -103,6 +103,10 @@ const RD53A::FrontEnd* RD53A::getFEtype(const size_t colStart, const size_t colS
     });
 }
 
+// ###########################################
+// # Functions needed for decoding chip data #
+// ###########################################
+
 void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent)
 {
     uint32_t header;
