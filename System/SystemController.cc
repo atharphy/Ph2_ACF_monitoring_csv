@@ -15,6 +15,7 @@
 #include "HWInterface/RD53BInterface.h"
 #include "HWInterface/RD53FWInterface.h"
 #include "MonitorUtils/CBCMonitor.h"
+#include "MonitorUtils/PSMonitor.h"
 #include "MonitorUtils/DetectorMonitor.h"
 #include "MonitorUtils/RD53Monitor.h"
 #include "MonitorUtils/SEHMonitor.h"
@@ -375,6 +376,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "2SSEH")
             fDetectorMonitor = new SEHMonitor(this, theDetectorMonitorConfig);
+        else if(monitoringType == "PS")
+        {
+            LOG(INFO) << BOLDRED << "PS monitoring!" << RESET;
+            fDetectorMonitor = new PSMonitor(this, theDetectorMonitorConfig);
+        }
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
