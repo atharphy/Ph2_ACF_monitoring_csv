@@ -213,7 +213,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
                         for(const auto& cChip: *cHybrid)
                             if((cHybrid->getId() == event.hybrid_id) && (cChip->getId() == event.chip_id)) chipType = static_cast<Ph2_HwDescription::RD53*>(cChip)->getComment();
 
-                    theEvent.chipData.push_back({chipType, event.chip_id, event.chip_lane, event.hybrid_id, event.trigger_id, event.trigger_tag, event.bc_id, {}});
+                    theEvent.chipData.push_back({chipType, event.chip_id, event.chip_id_mod4, event.event.chip_lane, event.hybrid_id, event.trigger_id, event.trigger_tag, event.bc_id, {}});
                     for(const auto& hit: event.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
                 }
 
