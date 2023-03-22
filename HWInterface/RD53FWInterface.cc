@@ -512,9 +512,9 @@ uint32_t RD53FWInterface::GetBoardEnabledHybrids(const BeBoard* pBoard)
 
 void RD53FWInterface::Start()
 {
+    RD53FWInterface::ResetReadoutBlk();
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
-    RD53FWInterface::ResetReadoutBlk();
 
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
 }
