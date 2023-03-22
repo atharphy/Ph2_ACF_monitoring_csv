@@ -26,19 +26,19 @@
             
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-           <SSA2 Id="0" configfile="SSA2.txt" />
-          <!-- <SSA2 Id="2" configfile="SSA2.txt" />
-              <SSA2 Id="2" configfile="SSA2.txt" />
-             <SSA2 Id="4" configfile="SSA2.txt" />
+            <SSA2 Id="0" configfile="SSA2.txt" />
+            <SSA2 Id="1" configfile="SSA2.txt" />
+            <SSA2 Id="2" configfile="SSA2.txt" />
+            <SSA2 Id="4" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
-            <SSA2 Id="7" configfile="SSA2.txt" />-->
+            <SSA2 Id="7" configfile="SSA2.txt" />
 
-             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-              <MPA2 Id="8" configfile="MPA2.txt" />
-         <!--  <MPA2 Id="9" configfile="MPA2.txt" />
+            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
+            <!-- <MPA2 Id="8" configfile="MPA2.txt" /> -->
+            <!--  <MPA2 Id="9" configfile="MPA2.txt" />
             <MPA2 Id="10" configfile="MPA2.txt" />
-             <MPA2 Id="12" configfile="MPA2.txt" />
+            <MPA2 Id="12" configfile="MPA2.txt" />
             <MPA2 Id="13" configfile="MPA2.txt" />
             <MPA2 Id="14" configfile="MPA2.txt" />
             <MPA2 Id="15" configfile="MPA2.txt" /> -->
@@ -61,20 +61,20 @@
             
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-           <SSA2 Id="0" configfile="SSA2.txt" />
-          <!-- <SSA2 Id="2" configfile="SSA2.txt" />
-              <SSA2 Id="2" configfile="SSA2.txt" />
+            <SSA2 Id="0" configfile="SSA2.txt" />
+            <SSA2 Id="1" configfile="SSA2.txt" />
+            <SSA2 Id="2" configfile="SSA2.txt" />
             <SSA2 Id="3" configfile="SSA2.txt" />
-             <SSA2 Id="4" configfile="SSA2.txt" />
+            <SSA2 Id="4" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
-            <SSA2 Id="7" configfile="SSA2.txt" />-->
+            <SSA2 Id="7" configfile="SSA2.txt" />
 
-             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-              <MPA2 Id="8" configfile="MPA2.txt" />
-         <!--  <MPA2 Id="9" configfile="MPA2.txt" />
+            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
+            <!-- <MPA2 Id="8" configfile="MPA2.txt" /> -->
+            <!--  <MPA2 Id="9" configfile="MPA2.txt" />
             <MPA2 Id="10" configfile="MPA2.txt" />
-             <MPA2 Id="12" configfile="MPA2.txt" />
+            <MPA2 Id="12" configfile="MPA2.txt" />
             <MPA2 Id="13" configfile="MPA2.txt" />
             <MPA2 Id="14" configfile="MPA2.txt" />
             <MPA2 Id="15" configfile="MPA2.txt" /> -->
@@ -319,10 +319,14 @@
     <!--<Setting name="PedeNoiseUntrimmedLimit">3.9</Setting>Aligned to +/- one trimdac unit-->
     <Setting name="PedeNoiseUntrimmedLimit">4.95</Setting><!--Aligned to ~5sigma sigma~=0.98-->
 
-    <Setting name="PedeNoiseUseFixRange">1</Setting>
+    <!-- <Setting name="PedeNoiseUseFixRange">1</Setting>
     <Setting name="PedeNoiseMinThreshold">0</Setting>
-    <Setting name="PedeNoiseMaxThreshold">220</Setting>
-
+    <Setting name="PedeNoiseMaxThreshold">220</Setting> -->
+    <Setting name="FullScan">0</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">70</Setting>
+    <Setting name="PedeNoisePulseAmplitude">70</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitudePix">70</Setting>
+    <Setting name="PedeNoisePulseAmplitudePix">70</Setting>
 
     <Setting name="StartPhase">0</Setting>
     <Setting name="PhaseRange">7</Setting>
@@ -372,9 +376,12 @@
 
 
 <MonitoringSettings>
-<Monitoring type="PS" enable="0">
+<Monitoring type="PS" enable="1">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    <MonitoringElement device="SSA"   register="VCth" enable="1"/>
+    <MonitoringElement device="SSA2"  register="AVDD" enable="1"/>
+    <MonitoringElement device="SSA2"  register="DVDD" enable="1"/>
+    <MonitoringElement device="SSA2"  register="VBG" enable="1"/>
+    <MonitoringElement device="SSA2"  register="ADC_VREF" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC1" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC3" enable="1"/>
@@ -385,9 +392,9 @@
 </MonitoringSettings>
 
 <CommunicationSettings>
-    <DQM               ip="127.0.0.1" port="6000" enableConnection="1"/>
+    <DQM               ip="127.0.0.1" port="6002" enableConnection="1"/>
     <MonitorDQM        ip="127.0.0.1" port="8002" enableConnection="1"/>
-    <PowerSupplyClient ip="127.0.0.1" port="7000" enableConnection="1"/>
+    <PowerSupplyClient ip="127.0.0.1" port="7002" enableConnection="1"/>
 </CommunicationSettings>
 
 </HwDescription>
