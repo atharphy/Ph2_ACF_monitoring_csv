@@ -34,11 +34,10 @@ void ClockDelayHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, title.str().c_str(), "Efficiency");
 }
 
-bool ClockDelayHistograms::fill(std::vector<char>& dataBuffer)
+bool ClockDelayHistograms::fill(std::string& inputStream)
 {
     const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("ClockDelayOccupancy");
     ContainerSerialization theClockDelaySerialization("ClockDelayClockDelay");
 

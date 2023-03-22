@@ -21,6 +21,7 @@
 #include "Parser/CommunicationSettingConfig.h"
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -1178,7 +1179,7 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(const ConfigureInfo theConfigureInfo)
+void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
     fCalibrationName       = theConfigureInfo.getCalibrationName();
@@ -1205,7 +1206,7 @@ void SystemController::Configure(const ConfigureInfo theConfigureInfo)
     ConfigureHw(false, true);
 }
 
-void SystemController::Start(int runNumber)
+void SystemController::Start(const StartInfo& theStartInfo)
 {
     for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Start(cBoard);
 }

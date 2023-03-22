@@ -51,7 +51,7 @@ enum class INJtype : uint8_t
     Digital,
     Custom,
     XtalkCoupled,
-    XtalkUnCoupled
+    XtalkDeCoupled
 };
 
 std::string fromInt2Str(int val);

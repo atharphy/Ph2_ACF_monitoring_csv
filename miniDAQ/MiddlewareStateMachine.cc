@@ -2,6 +2,7 @@
 #include "HWInterface/FC7FpgaConfig.h"
 #include "Parser/FileParser.h"
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "tools/Tool.h"
 
 using namespace Ph2_Parser;
@@ -37,10 +38,11 @@ void MiddlewareStateMachine::configure(const ConfigureInfo theConfigureInfo)
     return;
 }
 
-void MiddlewareStateMachine::start(int runNumber)
+void MiddlewareStateMachine::start(const StartInfo theStartInfo)
 {
-    currentRun_ = runNumber;
-    fTheTool->Start(currentRun_);
+    currentRun_ = theStartInfo.getRunNumber();
+    fTheTool->resetOutputDirectoryName();
+    fTheTool->Start(theStartInfo);
     LOG(INFO) << "Run " << currentRun_ << " started" << RESET;
     return;
 }

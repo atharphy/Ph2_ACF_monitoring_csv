@@ -13,6 +13,7 @@
 #define __UTILITIES_H__
 
 #include "HWDescription/Definition.h"
+#include "Utils/StartInfo.h"
 #include <algorithm>
 #include <bitset>
 #include <cstdio>
@@ -53,6 +54,9 @@ long getTimeTook(struct timeval& pStart, bool pMili);
  * \param in : input stream
  */
 void myflush(std::istream& in);
+
+std::string getResultDirectoryName(const StartInfo& theStartInfo);
+
 /*!
  * \brief Wait for Enter key press
  */

@@ -12,6 +12,7 @@
 #include "HWInterface/D19cFWInterface.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/Occupancy.h"
+#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -47,7 +48,9 @@ void SSAPhysics::Running()
     }
 
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
-    SystemController::Start(fRunNumber);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(fRunNumber);
+    SystemController::Start(theStartInfo);
 
     SSAPhysics::run();
 }

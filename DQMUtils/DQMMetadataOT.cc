@@ -67,14 +67,13 @@ void DQMMetadataOT::fillCICConfiguration(const DetectorDataContainer& theCICConf
     }
 }
 
-bool DQMMetadataOT::fill(std::vector<char>& dataBuffer)
+bool DQMMetadataOT::fill(std::string& inputStream)
 {
-    bool motherClassFillResult = DQMMetadata::fill(dataBuffer);
+    bool motherClassFillResult = DQMMetadata::fill(inputStream);
     if(motherClassFillResult) { return true; }
     else
     {
         // child fill here
-        std::string inputStream(dataBuffer.begin(), dataBuffer.end());
 
         ContainerSerialization theCICFuseIdSerialization("MetadataCICFuseId");
         ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");

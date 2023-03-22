@@ -200,10 +200,8 @@ void DQMMetadata::process() {}
 
 void DQMMetadata::reset() {}
 
-bool DQMMetadata::fill(std::vector<char>& dataBuffer)
+bool DQMMetadata::fill(std::string& inputStream)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
-
     ContainerSerialization theNameSerialization("MetadataObjectNames");
     ContainerSerialization theUsernameSerialization("MetadataUsername");
     ContainerSerialization theHostNameSerialization("MetadataHostName");

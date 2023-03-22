@@ -27,7 +27,7 @@ class MiddlewareStateMachine
     // State machine commands
     void   initialize();
     void   configure(const ConfigureInfo theConfigureInfo);
-    void   start(int runNumber);
+    void   start(const StartInfo theStartInfo);
     void   stop();
     void   halt();
     void   pause();

@@ -25,7 +25,7 @@ class DQMMetadata : public DQMHistogramBase
     void fillLpGBTConfiguration(const DetectorDataContainer& theLpGBTConfigurationContainer, bool initialValue);
     void fillLpGBTFuseId(const DetectorDataContainer& theLpGBTFuseIdContainer);
 
-    virtual bool fill(std::vector<char>& dataBuffer) override;
+    virtual bool fill(std::string& inputStream) override;
     virtual void process() override;
     virtual void reset() override;
 
