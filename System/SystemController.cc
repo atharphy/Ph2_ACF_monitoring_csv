@@ -1463,8 +1463,6 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
                 {
                     if(!theQueryFunction(chip)) continue;
 
-                    if( chip->getFrontEndType() == FrontEndType::SSA2) LOG (INFO) << "SSA2 channel group handler " << +chip->getId() << RESET;
-                    if( chip->getFrontEndType() == FrontEndType::MPA2) LOG (INFO) << "MPA2 channel group handler " << +chip->getId() << RESET;
                     fChannelGroupHandlerContainer->getObject(board->getId())
                         ->getObject(opticalGroup->getId())
                         ->getObject(hybrid->getId())
