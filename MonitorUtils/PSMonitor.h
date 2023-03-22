@@ -16,6 +16,7 @@ class PSMonitor : public DetectorMonitor
 
   private:
     void runPSRegisterMonitor(std::string registerName);
+    void runSSA2RegisterMonitor(std::string registerName);
     void runLpGBTRegisterMonitor(std::string registerName);
 
 #ifdef __USE_ROOT__

@@ -26,14 +26,14 @@ void PSMonitor::runMonitor()
 {
     std::recursive_mutex                  theMutex;
     std::lock_guard<std::recursive_mutex> theGuard(theMutex);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("PS")) runPSRegisterMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("SSA2")) runSSA2RegisterMonitor(registerName);
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
 }
 
-void PSMonitor::runPSRegisterMonitor(std::string registerName)
+void PSMonitor::runSSA2RegisterMonitor(std::string registerName)
 {
-    DetectorDataContainer thePSRegisterContainer;
-    ContainerFactory::copyAndInitChip<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, thePSRegisterContainer);
+    DetectorDataContainer theSSA2RegisterContainer;
+    ContainerFactory::copyAndInitChip<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theSSA2RegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
@@ -43,23 +43,27 @@ void PSMonitor::runPSRegisterMonitor(std::string registerName)
             {
                 for(const auto& chip: *hybrid)
                 {
-                    uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(chip, registerName); // just to read something
-                    LOG(INFO) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip "<< chip->getId() << " " << registerName << " = " << registerValue << RESET;
-                    ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-                    thePSRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ValueAndTime<uint16_t>>() =
+                    if(chip->getFrontEndType() == FrontEndType::SSA2) 
+                    {
+                        auto SSA2ReadoutChipInterface = fTheSystemController->fReadoutChipInterface;
+                        uint16_t registerValue = static_cast<SSA2Interface*>(SSA2ReadoutChipInterface)->ReadADC(chip,registerName);
+                        LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip "<< chip->getId() << " " << registerName << " = " << registerValue << RESET;
+                        ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
+                        theSSA2RegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ValueAndTime<uint16_t>>() =
                         theRegisterAndTime;
+                    }
                 }
             }
         }
     }
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotPS->fillPSRegisterPlots(thePSRegisterContainer, registerName);
+    fMonitorDQMPlotPS->fillSSA2RegisterPlots(theSSA2RegisterContainer, registerName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        ContainerSerialization theContainerSerialization("PSMonitorPSRegister");
-        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, thePSRegisterContainer, registerName);
+        ContainerSerialization theContainerSerialization("PSMonitorSSA2Register");
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theSSA2RegisterContainer, registerName);
     }
 #endif
 }

@@ -62,14 +62,17 @@ class MonitorDQMPlotPS : public MonitorDQMPlotBase
      * \param timeStamp : timeStamp
      */
     void fillPSRegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
+    void fillSSA2RegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
     void fillLpGBTRegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
 
   private:
     std::map<std::string, DetectorDataContainer> fPSRegisterMonitorPlotMap;
+    std::map<std::string, DetectorDataContainer> fSSA2RegisterMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
     const DetectorContainer*                     fDetectorContainer;
 
     void bookPSPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
+    void bookSSA2Plots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
     void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
 };
 #endif
