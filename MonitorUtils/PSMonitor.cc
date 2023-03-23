@@ -46,7 +46,6 @@ void PSMonitor::runSSA2RegisterMonitor(std::string registerName)
                 {
                     if(chip->getFrontEndType() == FrontEndType::SSA2) 
                     {
-                        std::cout << " SSA2 monitoring "<<registerName <<std::endl;
                         auto SSA2ReadoutChipInterface = fTheSystemController->fReadoutChipInterface;
                         uint16_t registerValue = static_cast<SSA2Interface*>(SSA2ReadoutChipInterface)->ReadADC(chip,registerName);
                         LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip "<< chip->getId() << " " << registerName << " = " << registerValue << RESET;
@@ -85,7 +84,6 @@ void PSMonitor::runMPA2RegisterMonitor(std::string registerName)
                 {
                     if(chip->getFrontEndType() == FrontEndType::MPA2) 
                     {
-                        std::cout << " MPA2 monitoring "<<registerName <<std::endl;
                         auto MPA2ReadoutChipInterface = fTheSystemController->fReadoutChipInterface;
                         uint16_t registerValue = static_cast<MPA2Interface*>(MPA2ReadoutChipInterface)->ReadADC(chip,registerName);
                         LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip "<< chip->getId() << " " << registerName << " = " << registerValue << RESET;
