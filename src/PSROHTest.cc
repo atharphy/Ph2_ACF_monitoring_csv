@@ -201,6 +201,11 @@ int main(int argc, char* argv[])
         gui::progress(0 / 10.0);
     }
 
+    // Initialize TC_PSROH interface with selected USB Bus/Dev
+    if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { 
+        TC_PSROH cTC_PSROH(cUsbBus, cUsbDev); 
+    };
+    
     // Initialize and Configure Back-End (Optical) FC7
     Tool cTool;
 
@@ -213,8 +218,6 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
-
-    if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_PSROH cTC_PSROH(cUsbBus, cUsbDev); }
 
     // Initilaise PSROH tester
     PSROHTester cPSROHTester;
