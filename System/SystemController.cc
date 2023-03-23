@@ -1192,15 +1192,12 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
 
+    // auto chipSubset = [](const ChipContainer* theChip) { return (theChip->getId() % 2 == 0); };
+    // fDetectorContainer->at(0)->at(0)->at(0)->addQueryFunction(chipSubset, "TEST");
+
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
-
-    for(const auto& enabledObject: theConfigureInfo.getEnabledModulesList(fDetectorContainer->at(0)->getBoardType() == BoardType::D19C))
-    {
-        std::cout << enabledObject.first << std::endl;
-        // Assumes one board only
-        fNameContainer->at(0)->getObject(enabledObject.first)->getSummary<std::string, std::string>() = enabledObject.second;
-    }
+    theConfigureInfo.extractObjectNames(fNameContainer);
 
     std::cout << fParsedFile.str() << std::endl;
     ConfigureHw(false, true);
@@ -1432,14 +1429,15 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
-    uint16_t totalNumberOfChips = 0;
+    uint16_t totalNumberOfChips        = 0;
     uint16_t totalNumberOfQueriedChips = 0;
     for(const auto board: *fDetectorContainer)
     {
         for(const auto opticalGroup: *board)
         {
-            for(const auto hybrid: *opticalGroup) { 
-                totalNumberOfChips += hybrid->size(); 
+            for(const auto hybrid: *opticalGroup)
+            {
+                totalNumberOfChips += hybrid->size();
                 for(const auto chip: *hybrid)
                 {
                     if(theQueryFunction(chip)) totalNumberOfQueriedChips++;
@@ -1449,7 +1447,8 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
     }
     fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
 
-    if(fChannelGroupHandlerContainer == nullptr) { 
+    if(fChannelGroupHandlerContainer == nullptr)
+    {
         fChannelGroupHandlerContainer = new DetectorDataContainer();
         ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
     }
