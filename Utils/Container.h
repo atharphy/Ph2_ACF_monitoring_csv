@@ -429,6 +429,7 @@ class HWDescriptionContainer : public Container<T>
     {
         fQueryFunctionMap.erase(functionName);
         updateQueryFunction();
+        updateSubcontainerIndex();
     }
 
   protected:
