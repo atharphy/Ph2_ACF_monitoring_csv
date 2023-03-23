@@ -34,6 +34,7 @@ void MonitorDQMPlotPS::book(TFile* theOutputFile, const DetectorContainer& theDe
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("MPA2")) bookMPA2Plots(theOutputFile, theDetectorStructure, registerName);
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("SSA2")) bookSSA2Plots(theOutputFile, theDetectorStructure, registerName);
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT")) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName);
 }
@@ -77,6 +78,26 @@ void MonitorDQMPlotPS::bookSSA2Plots(TFile* theOutputFile, const DetectorContain
     // create Histograms for all the chips, they will be automatically accosiated to the output file, no need to save
     // them, change the name for every chip or set their directory
     RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fSSA2RegisterMonitorPlotMap[registerName], theTGraphPedestalContainer);
+}
+//========================================================================================================================
+void MonitorDQMPlotPS::bookMPA2Plots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
+{
+    // creating the histograms for all the chips:
+    // create the GraphContainer<TGraph> as you would create a TGraph (it implements some feature needed to avoid memory
+    // leaks in copying histograms like the move constructor)
+    GraphContainer<TGraph> theTGraphPedestalContainer(0);
+    theTGraphPedestalContainer.setNameTitle("MPA2_DQM_" + registerName, "MPA2_DQM_" + registerName);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
+    theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle(registerName.c_str());
+    theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
+    theTGraphPedestalContainer.fTheGraph->SetMarkerSize(0.4);
+    // create Histograms for all the chips, they will be automatically accosiated to the output file, no need to save
+    // them, change the name for every chip or set their directory
+    RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fMPA2RegisterMonitorPlotMap[registerName], theTGraphPedestalContainer);
 }
 //========================================================================================================================
 void MonitorDQMPlotPS::bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
@@ -145,7 +166,7 @@ void MonitorDQMPlotPS::fillPSRegisterPlots(DetectorDataContainer& theThresholdCo
 //========================================================================================================================
 void MonitorDQMPlotPS::fillSSA2RegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
-    //std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+    std::cout <<  __PRETTY_FUNCTION__ << " register "<< registerName  << std::endl;
     if(fSSA2RegisterMonitorPlotMap.find(registerName) == fSSA2RegisterMonitorPlotMap.end())
     {
         LOG(ERROR) << BOLDRED << "No plots for SSA2 register " << registerName << RESET;
@@ -183,7 +204,47 @@ void MonitorDQMPlotPS::fillSSA2RegisterPlots(DetectorDataContainer& theThreshold
         }                                                                                                                           // for on opticalGroup - end
     }                                                                                                                               // for on boards - end
 }
+//========================================================================================================================
+void MonitorDQMPlotPS::fillMPA2RegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
+{
+    std::cout <<  __PRETTY_FUNCTION__ << " register "<< registerName  << std::endl;
+    if(fSSA2RegisterMonitorPlotMap.find(registerName) == fMPA2RegisterMonitorPlotMap.end())
+    {
+        LOG(ERROR) << BOLDRED << "No plots for MPA2 register " << registerName << RESET;
+        LOG(ERROR) << BOLDRED << "Check that DQM and Monitor register names matches" << RESET;
+        std::string errorMePSge = "No plots for MPA2 register " + registerName + " - Check that DQM and Monitor register names matches";
+        throw std::runtime_error(errorMePSge);
+    }
 
+    for(auto board: theThresholdContainer) // for on boards - begin
+    {
+        size_t boardId = board->getId();
+        // std::cout <<  __PRETTY_FUNCTION__ << boardId << std::endl;
+        for(auto opticalGroup: *board) // for on opticalGroup - begin
+        {
+            size_t opticalGroupId = opticalGroup->getId();
+            // std::cout <<  __PRETTY_FUNCTION__ << opticalGroupId << std::endl;
+            for(auto hybrid: *opticalGroup) // for on hybrid - begin
+            {
+                size_t hybridId = hybrid->getId();
+                // std::cout <<  __PRETTY_FUNCTION__ << hybridId << std::endl;
+                for(auto chip: *hybrid) // for on chip - begin
+                {
+                    size_t chipId = chip->getId();
+                    // Retreive the corresponging chip histogram:
+                    TGraph* chipDQMPlot =
+                        fMPA2RegisterMonitorPlotMap[registerName].getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+
+                    // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
+                    // by chip and not in one shot)
+                    if(!chip->hasSummary()) continue;
+                    auto theValueAndTime = chip->getSummary<ValueAndTime<uint16_t>>();
+                    chipDQMPlot->SetPoint(chipDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue); // for on channel - end
+                }                                                                                                                   // for on chip - end
+            }                                                                                                                       // for on hybrid - end
+        }                                                                                                                           // for on opticalGroup - end
+    }                                                                                                                               // for on boards - end
+}
 //========================================================================================================================
 void MonitorDQMPlotPS::fillLpGBTRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
@@ -224,6 +285,7 @@ bool MonitorDQMPlotPS::fill(std::string& inputStream)
 {
     //ContainerSerialization thePSRegisterSerialization("PSMonitorPSRegister");
     ContainerSerialization theSSA2RegisterSerialization("PSMonitorSSA2Register");
+    ContainerSerialization theMPA2RegisterSerialization("PSMonitorMPA2Register");
     ContainerSerialization theLpGBTRegisterSerialization("PSMonitorLpGBTRegister");
 
     if(theSSA2RegisterSerialization.attachDeserializer(inputStream))
@@ -233,6 +295,15 @@ bool MonitorDQMPlotPS::fill(std::string& inputStream)
         DetectorDataContainer fDetectorData =
             theSSA2RegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
         fillSSA2RegisterPlots(fDetectorData, registerName);
+        return true;
+    }
+    if(theMPA2RegisterSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched PSMonitor MPA2Register!!!!!\n";
+        std::string           registerName;
+        DetectorDataContainer fDetectorData =
+            theMPA2RegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
+        fillMPA2RegisterPlots(fDetectorData, registerName);
         return true;
     }
     if(theLpGBTRegisterSerialization.attachDeserializer(inputStream))

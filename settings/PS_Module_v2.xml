@@ -26,16 +26,16 @@
             
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA2 Id="0" configfile="SSA2.txt" />
-            <SSA2 Id="1" configfile="SSA2.txt" />
+             <SSA2 Id="0" configfile="SSA2.txt" />
+            <!--<SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
             <SSA2 Id="4" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
-            <SSA2 Id="7" configfile="SSA2.txt" />
+            <SSA2 Id="7" configfile="SSA2.txt" /> -->
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <!-- <MPA2 Id="8" configfile="MPA2.txt" /> -->
+            <MPA2 Id="8" configfile="MPA2.txt" />
             <!--  <MPA2 Id="9" configfile="MPA2.txt" />
             <MPA2 Id="10" configfile="MPA2.txt" />
             <MPA2 Id="12" configfile="MPA2.txt" />
@@ -48,7 +48,7 @@
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
         
-        <Hybrid Id="1" enable="1" reset="1">
+        <Hybrid Id="1" enable="0" reset="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -378,6 +378,10 @@
 <MonitoringSettings>
 <Monitoring type="PS" enable="1">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
+    <MonitoringElement device="MPA2"  register="CalDAC7" enable="1"/>
+    <MonitoringElement device="MPA2"  register="bandgap" enable="1"/>
+    <MonitoringElement device="MPA2"  register="avdd" enable="1"/> 
+    <MonitoringElement device="MPA2"  register="dvdd" enable="1"/>    
     <MonitoringElement device="SSA2"  register="AVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="DVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="VBG" enable="1"/>
