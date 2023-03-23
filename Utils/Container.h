@@ -351,14 +351,16 @@ class HWDescriptionContainer : public Container<T>
         }
         std::function<bool(const T*)> fQueryFunction;
     };
-    
 
     typedef boost::filter_iterator<QueryFunction, typename std::vector<T*>::iterator> FilterIter;
 
     class MyIterator : public FilterIter
     {
       public:
-        MyIterator(HWDescriptionContainer<T, HW>* theHWDescriptionContainer, typename std::vector<T*>::iterator theIterator, typename std::vector<T*>::iterator theIteratorEnd) : FilterIter(theHWDescriptionContainer->fQueryFunction, theIterator, theIteratorEnd) {}
+        MyIterator(HWDescriptionContainer<T, HW>* theHWDescriptionContainer, typename std::vector<T*>::iterator theIterator, typename std::vector<T*>::iterator theIteratorEnd)
+            : FilterIter(theHWDescriptionContainer->fQueryFunction, theIterator, theIteratorEnd)
+        {
+        }
         HW* operator*() { return static_cast<HW*>(FilterIter::operator*()); }
     };
 
@@ -367,7 +369,8 @@ class HWDescriptionContainer : public Container<T>
     class MyConstIterator : public ConstFilterIter
     {
       public:
-        MyConstIterator(const HWDescriptionContainer<T, HW>* theHWDescriptionContainer, typename std::vector<T*>::const_iterator theIterator, typename std::vector<T*>::const_iterator theIteratorEnd) : ConstFilterIter(theHWDescriptionContainer->fQueryFunction, theIterator, theIteratorEnd)
+        MyConstIterator(const HWDescriptionContainer<T, HW>* theHWDescriptionContainer, typename std::vector<T*>::const_iterator theIterator, typename std::vector<T*>::const_iterator theIteratorEnd)
+            : ConstFilterIter(theHWDescriptionContainer->fQueryFunction, theIterator, theIteratorEnd)
         {
         }
         HW* const operator*() const { return static_cast<HW* const>(ConstFilterIter::operator*()); }
@@ -438,7 +441,7 @@ class HWDescriptionContainer : public Container<T>
         uint16_t theNewSubcontainerIndex = 0;
         for(uint16_t subcontainerIndex = 0; subcontainerIndex < this->std::vector<T*>::size(); ++subcontainerIndex)
         {
-            auto                           theSubContainer = (*this)[subcontainerIndex];
+            auto theSubContainer = (*this)[subcontainerIndex];
             if(fQueryFunction(theSubContainer))
             {
                 // std::cout << "Matched... index " << chipIndex << " new index " << theNewSubcontainerIndex << "\n";
@@ -455,22 +458,25 @@ class HWDescriptionContainer : public Container<T>
     QueryFunction fQueryFunction;
 
   private:
-    uint16_t size_;
-    T*&      operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
-    const T& operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
+    uint16_t                                             size_;
+    T*&                                                  operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
+    const T&                                             operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
     std::map<std::string, std::function<bool(const T*)>> fQueryFunctionMap;
 
     void updateQueryFunction()
     {
-        if(fQueryFunctionMap.size() == 0) fQueryFunction.fQueryFunction = 0;
+        if(fQueryFunctionMap.size() == 0)
+            fQueryFunction.fQueryFunction = 0;
         else
         {
-            for(auto nameAndFunction : fQueryFunctionMap)
+            for(auto nameAndFunction: fQueryFunctionMap)
             {
                 if(fQueryFunction.fQueryFunction != 0)
                 {
                     auto theCurrentQueryFunction  = fQueryFunction.fQueryFunction;
-                    fQueryFunction.fQueryFunction = [theCurrentQueryFunction, nameAndFunction](const T* container) { return (theCurrentQueryFunction(container) && nameAndFunction.second(container)); };
+                    fQueryFunction.fQueryFunction = [theCurrentQueryFunction, nameAndFunction](const T* container) {
+                        return (theCurrentQueryFunction(container) && nameAndFunction.second(container));
+                    };
                 }
                 else
                     fQueryFunction.fQueryFunction = nameAndFunction.second;
@@ -528,10 +534,7 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
         return static_cast<T*>(HWDescriptionContainer<BoardContainer, Ph2_HwDescription::BeBoard>::addObject(id, board));
     }
 
-    void resetBoardQueryFunction()
-    {
-        this->resetQueryFunction();
-    }
+    void resetBoardQueryFunction() { this->resetQueryFunction(); }
     void resetOpticalGroupQueryFunction()
     {
         for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
@@ -562,7 +565,7 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                 auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
                 for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
                 {
-                    auto     theHybrid       = (*theOpticalGroup)[hybridIndex];
+                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
                     theHybrid->resetQueryFunction();
                 }
             }
@@ -581,18 +584,14 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                 theOpticalGroup->resetQueryFunction();
                 for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
                 {
-                    auto     theHybrid       = (*theOpticalGroup)[hybridIndex];
+                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
                     theHybrid->resetQueryFunction();
                 }
             }
         }
     }
 
-
-    void addBoardQueryFunction(std::function<bool(const BoardContainer*)> theQueryFunction, const std::string& functionName)
-    {
-        this->addQueryFunction(theQueryFunction, functionName);
-    }
+    void addBoardQueryFunction(std::function<bool(const BoardContainer*)> theQueryFunction, const std::string& functionName) { this->addQueryFunction(theQueryFunction, functionName); }
     void addOpticalGroupQueryFunction(std::function<bool(const OpticalGroupContainer*)> theQueryFunction, const std::string& functionName)
     {
         for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
@@ -623,17 +622,14 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                 auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
                 for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
                 {
-                    auto     theHybrid       = (*theOpticalGroup)[hybridIndex];
+                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
                     theHybrid->addQueryFunction(theQueryFunction, functionName);
                 }
             }
         }
     }
 
-    void removeBoardQueryFunction(const std::string& functionName)
-    {
-        this->removeQueryFunction(functionName);
-    }
+    void removeBoardQueryFunction(const std::string& functionName) { this->removeQueryFunction(functionName); }
     void removeOpticalGroupQueryFunction(const std::string& functionName)
     {
         for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
@@ -664,7 +660,7 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                 auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
                 for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
                 {
-                    auto     theHybrid       = (*theOpticalGroup)[hybridIndex];
+                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
                     theHybrid->removeQueryFunction(functionName);
                 }
             }

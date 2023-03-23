@@ -202,10 +202,8 @@ int main(int argc, char* argv[])
     }
 
     // Initialize TC_PSROH interface with selected USB Bus/Dev
-    if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { 
-        TC_PSROH cTC_PSROH(cUsbBus, cUsbDev); 
-    };
-    
+    if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_PSROH cTC_PSROH(cUsbBus, cUsbDev); };
+
     // Initialize and Configure Back-End (Optical) FC7
     Tool cTool;
 

@@ -1429,14 +1429,15 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
-    uint16_t totalNumberOfChips = 0;
+    uint16_t totalNumberOfChips        = 0;
     uint16_t totalNumberOfQueriedChips = 0;
     for(const auto board: *fDetectorContainer)
     {
         for(const auto opticalGroup: *board)
         {
-            for(const auto hybrid: *opticalGroup) { 
-                totalNumberOfChips += hybrid->size(); 
+            for(const auto hybrid: *opticalGroup)
+            {
+                totalNumberOfChips += hybrid->size();
                 for(const auto chip: *hybrid)
                 {
                     if(theQueryFunction(chip)) totalNumberOfQueriedChips++;
@@ -1446,7 +1447,8 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
     }
     fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
 
-    if(fChannelGroupHandlerContainer == nullptr) { 
+    if(fChannelGroupHandlerContainer == nullptr)
+    {
         fChannelGroupHandlerContainer = new DetectorDataContainer();
         ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
     }

@@ -102,7 +102,7 @@ void VoltageTuning::run()
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
     std::string queryFunctionName = "chipSubset";
-    auto chipSubset = [](const ChipContainer* theChip) { return theChip->isEnabled(); };
+    auto        chipSubset        = [](const ChipContainer* theChip) { return theChip->isEnabled(); };
     fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryFunctionName);
     fDetectorContainer->setEnabledAll(true);
 

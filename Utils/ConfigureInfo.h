@@ -31,34 +31,32 @@ class ConfigureInfo
     std::string getQueryFunctionName() { return fQueryName; };
 
     void enableBoard(uint16_t boardId, const std::string boardName);
-    void enableOpticalGroup(uint16_t boardId, uint16_t opticalGroupId,  const std::string opticalGroupName);
+    void enableOpticalGroup(uint16_t boardId, uint16_t opticalGroupId, const std::string opticalGroupName);
     void enableHybrid(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, const std::string hybridName);
     void enableReadoutChip(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t readoutChipId, const std::string readoutChipName);
 
     void extractObjectNames(DetectorDataContainer* theNameContainer) const;
 
   private:
-    std::string fConfigurationFile{""};
-    std::string fCalibrationName{""};
-    const std::string fQueryName {"ConfigurationQueryFunction"};
+    std::string       fConfigurationFile{""};
+    std::string       fCalibrationName{""};
+    const std::string fQueryName{"ConfigurationQueryFunction"};
 
-    typedef std::unordered_map<uint16_t, std::string> ChipMap;
-    typedef std::unordered_map<uint16_t, std::pair<std::string, ChipMap>>  HybridMap;
-    typedef std::unordered_map<uint16_t, std::pair<std::string, HybridMap>>  OpticalGroupMap;
-    typedef std::unordered_map<uint16_t, std::pair<std::string, OpticalGroupMap>>  BoardMap;
+    typedef std::unordered_map<uint16_t, std::string>                             ChipMap;
+    typedef std::unordered_map<uint16_t, std::pair<std::string, ChipMap>>         HybridMap;
+    typedef std::unordered_map<uint16_t, std::pair<std::string, HybridMap>>       OpticalGroupMap;
+    typedef std::unordered_map<uint16_t, std::pair<std::string, OpticalGroupMap>> BoardMap;
 
     BoardMap fEnabledObjectStructure;
 
-    template<typename Content, typename Container>
+    template <typename Content, typename Container>
     void addQueryFunction(Container* theContainer, const std::set<uint16_t>& theEnabledSet) const
     {
         std::string functionName = "ConfigureInfoEnabledFunction";
 
         if(theEnabledSet.size() > 0)
         {
-            auto enabledListFunction = [theEnabledSet](const Content* theContainer) {
-                return theEnabledSet.find(theContainer->getId()) != theEnabledSet.end();
-            };
+            auto enabledListFunction = [theEnabledSet](const Content* theContainer) { return theEnabledSet.find(theContainer->getId()) != theEnabledSet.end(); };
             theContainer->addQueryFunction(enabledListFunction, functionName);
         }
     }
