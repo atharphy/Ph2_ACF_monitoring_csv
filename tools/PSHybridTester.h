@@ -104,19 +104,29 @@ class PSHybridTester : public LinkAlignmentOT
 
 #if defined(__TCUSB__)
     // Maps for electrical measurements on the hybrid:
-    std::map<std::string, TC_PSFE::measurement> fHybridVoltageMap = {
-        {"TC_GND", TC_PSFE::measurement::GROUND},           {"ROH_GND", TC_PSFE::measurement::ROH_GND},             {"Hybrid1V00", TC_PSFE::measurement::_1V},
-        {"Hybrid1V25", TC_PSFE::measurement::_1V25},        {"Hybrid1V25_out", TC_PSFE::measurement::_1V25_OUT},    {"Hybrid3V3", TC_PSFE::measurement::_3V3},
-        {"HybridLoadV", TC_PSFE::measurement::_3V3_OUT},    {"VDrop2V55", TC_PSFE::measurement::_3V3_AMP},          {"ADC", TC_PSFE::measurement::AMUX},
-        {"VDrop1V25", TC_PSFE::measurement::_1V25_AMP},     {"MPA1V_3", TC_PSFE::measurement::MPA_1V_3},            {"MPA_1V25A_3", TC_PSFE::measurement::MPA_1V25A_3},  
-        {"ROH_GND_AMP", TC_PSFE::measurement::ROH_GND_AMP}, {"MPA_1V25A_4", TC_PSFE::measurement::MPA_1V25A_4},     {"MPA_1V_4", TC_PSFE::measurement::MPA_1V_4},        
-        {"Hybrid2V5", TC_PSFE::measurement::_2V5},          {"Ref1V25", TC_PSFE::measurement::_1V25_REF},           {"RefV625", TC_PSFE::measurement::_625mV_REF},       
-        {"AntennaPullUp", TC_PSFE::measurement::ANT_PULL}};
+    std::map<std::string, TC_PSFE::measurement> fHybridVoltageMap = {{"TC_GND", TC_PSFE::measurement::GROUND},
+                                                                     {"ROH_GND", TC_PSFE::measurement::ROH_GND},
+                                                                     {"Hybrid1V00", TC_PSFE::measurement::_1V},
+                                                                     {"Hybrid1V25", TC_PSFE::measurement::_1V25},
+                                                                     {"Hybrid1V25_out", TC_PSFE::measurement::_1V25_OUT},
+                                                                     {"Hybrid3V3", TC_PSFE::measurement::_3V3},
+                                                                     {"HybridLoadV", TC_PSFE::measurement::_3V3_OUT},
+                                                                     {"VDrop2V55", TC_PSFE::measurement::_3V3_AMP},
+                                                                     {"ADC", TC_PSFE::measurement::AMUX},
+                                                                     {"VDrop1V25", TC_PSFE::measurement::_1V25_AMP},
+                                                                     {"MPA1V_3", TC_PSFE::measurement::MPA_1V_3},
+                                                                     {"MPA_1V25A_3", TC_PSFE::measurement::MPA_1V25A_3},
+                                                                     {"ROH_GND_AMP", TC_PSFE::measurement::ROH_GND_AMP},
+                                                                     {"MPA_1V25A_4", TC_PSFE::measurement::MPA_1V25A_4},
+                                                                     {"MPA_1V_4", TC_PSFE::measurement::MPA_1V_4},
+                                                                     {"Hybrid2V5", TC_PSFE::measurement::_2V5},
+                                                                     {"Ref1V25", TC_PSFE::measurement::_1V25_REF},
+                                                                     {"RefV625", TC_PSFE::measurement::_625mV_REF},
+                                                                     {"AntennaPullUp", TC_PSFE::measurement::ANT_PULL}};
     std::map<std::string, TC_PSFE::measurement> fHybridCurrentMap = {{"Hybrid1V00_current", TC_PSFE::measurement::ISEN_1V},
                                                                      {"Hybrid1V25_current", TC_PSFE::measurement::ISEN_1V25},
                                                                      {"Hybrid3V30_current", TC_PSFE::measurement::ISEN_3V3}};
-    std::map<std::string, TC_PSFE::measurement> fHybridOtherMap   = {{"Temperature", TC_PSFE::measurement::THERM_SENSE},
-                                                                   {"MPAContinuity", TC_PSFE::measurement::MPA_RST_TEST}};
+    std::map<std::string, TC_PSFE::measurement> fHybridOtherMap   = {{"Temperature", TC_PSFE::measurement::THERM_SENSE}, {"MPAContinuity", TC_PSFE::measurement::MPA_RST_TEST}};
 #endif
     // 0 means there is no nominal value and it does not have to be checked
     std::map<std::string, int> fHybridNominalValues = {{"TC_GND", 0},

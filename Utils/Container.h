@@ -349,7 +349,7 @@ class HWDescriptionContainer : public Container<T>
             if(!fQueryFunction) return true;
             return fQueryFunction(x);
         }
-        static std::function<bool(const T*)> fQueryFunction;
+        std::function<bool(const T*)> fQueryFunction;
     };
 
     typedef boost::filter_iterator<QueryFunction, typename std::vector<T*>::iterator> FilterIter;
@@ -357,7 +357,10 @@ class HWDescriptionContainer : public Container<T>
     class MyIterator : public FilterIter
     {
       public:
-        MyIterator(typename std::vector<T*>::iterator theIterator, typename std::vector<T*>::iterator theIteratorEnd) : FilterIter(QueryFunction(), theIterator, theIteratorEnd) {}
+        MyIterator(HWDescriptionContainer<T, HW>* theHWDescriptionContainer, typename std::vector<T*>::iterator theIterator, typename std::vector<T*>::iterator theIteratorEnd)
+            : FilterIter(theHWDescriptionContainer->fQueryFunction, theIterator, theIteratorEnd)
+        {
+        }
         HW* operator*() { return static_cast<HW*>(FilterIter::operator*()); }
     };
 
@@ -366,25 +369,26 @@ class HWDescriptionContainer : public Container<T>
     class MyConstIterator : public ConstFilterIter
     {
       public:
-        MyConstIterator(typename std::vector<T*>::const_iterator theIterator, typename std::vector<T*>::const_iterator theIteratorEnd) : ConstFilterIter(QueryFunction(), theIterator, theIteratorEnd)
+        MyConstIterator(const HWDescriptionContainer<T, HW>* theHWDescriptionContainer, typename std::vector<T*>::const_iterator theIterator, typename std::vector<T*>::const_iterator theIteratorEnd)
+            : ConstFilterIter(theHWDescriptionContainer->fQueryFunction, theIterator, theIteratorEnd)
         {
         }
         HW* const operator*() const { return static_cast<HW* const>(ConstFilterIter::operator*()); }
     };
 
-    virtual MyIterator begin() { return MyIterator(std::vector<T*>::begin(), std::vector<T*>::end()); }
+    virtual MyIterator begin() { return MyIterator(this, std::vector<T*>::begin(), std::vector<T*>::end()); }
 
-    virtual MyIterator end() { return MyIterator(std::vector<T*>::end(), std::vector<T*>::end()); }
+    virtual MyIterator end() { return MyIterator(this, std::vector<T*>::end(), std::vector<T*>::end()); }
 
-    virtual MyConstIterator begin() const { return MyConstIterator(std::vector<T*>::begin(), std::vector<T*>::end()); }
+    virtual MyConstIterator begin() const { return MyConstIterator(this, std::vector<T*>::begin(), std::vector<T*>::end()); }
 
-    virtual MyConstIterator end() const { return MyConstIterator(std::vector<T*>::end(), std::vector<T*>::end()); }
+    virtual MyConstIterator end() const { return MyConstIterator(this, std::vector<T*>::end(), std::vector<T*>::end()); }
 
     template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
                                    // is defined
     theHW* at(size_t index)
     {
-        if(!QueryFunction::fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
+        if(!fQueryFunction.fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
         for(auto element: *this)
         {
             if(element->getIndex() == index) return static_cast<theHW*>(element);
@@ -396,7 +400,7 @@ class HWDescriptionContainer : public Container<T>
                                    // is defined
     theHW* at(size_t index) const
     {
-        if(!QueryFunction::fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
+        if(!fQueryFunction.fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
         for(const auto element: *this)
         {
             if(element->getIndex() == index) return static_cast<theHW*>(element);
@@ -406,44 +410,80 @@ class HWDescriptionContainer : public Container<T>
 
     uint16_t size() const
     {
-        // std::cout<<__PRETTY_FUNCTION__<<std::endl;
-        if(!QueryFunction::fQueryFunction) return std::vector<T*>::size();
-        // std::cout<<__PRETTY_FUNCTION__<<" " << size_ <<std::endl;
+        if(!fQueryFunction.fQueryFunction) return std::vector<T*>::size();
         return size_;
     }
 
     uint16_t fullSize() const { return std::vector<T*>::size(); }
 
+    void resetQueryFunction()
+    {
+        fQueryFunctionMap.clear();
+        fQueryFunction.fQueryFunction = 0;
+        updateSubcontainerIndex();
+    }
+    void addQueryFunction(std::function<bool(const T*)> theInputQueryFunction, const std::string& functionName)
+    {
+        fQueryFunctionMap[functionName] = theInputQueryFunction;
+        updateQueryFunction();
+        updateSubcontainerIndex();
+    }
+    void removeQueryFunction(const std::string& functionName)
+    {
+        fQueryFunctionMap.erase(functionName);
+        updateQueryFunction();
+        updateSubcontainerIndex();
+    }
+
   protected:
-    static void resetQueryFunction();
-    static void addQueryFunction(std::function<bool(const T*)> theQueryFunction);
+    void updateSubcontainerIndex()
+    {
+        uint16_t theNewSubcontainerIndex = 0;
+        for(uint16_t subcontainerIndex = 0; subcontainerIndex < this->std::vector<T*>::size(); ++subcontainerIndex)
+        {
+            auto theSubContainer = (*this)[subcontainerIndex];
+            if(fQueryFunction(theSubContainer))
+            {
+                // std::cout << "Matched... index " << chipIndex << " new index " << theNewSubcontainerIndex << "\n";
+                theSubContainer->setIndex(theNewSubcontainerIndex++);
+            }
+            else
+            {
+                // std::cout << "Did not match...\n";
+                theSubContainer->setIndex(0xFFFF);
+            }
+        }
+        this->size_ = theNewSubcontainerIndex;
+    }
+    QueryFunction fQueryFunction;
 
   private:
-    uint16_t size_;
-    T*&      operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
-    const T& operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
-};
+    uint16_t                                             size_;
+    T*&                                                  operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
+    const T&                                             operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
+    std::map<std::string, std::function<bool(const T*)>> fQueryFunctionMap;
 
-template <typename T, typename HW>
-void HWDescriptionContainer<T, HW>::resetQueryFunction()
-{
-    QueryFunction::fQueryFunction = 0;
-}
-
-template <typename T, typename HW>
-void HWDescriptionContainer<T, HW>::addQueryFunction(std::function<bool(const T*)> theInputQueryFunction)
-{
-    if(QueryFunction::fQueryFunction != 0)
+    void updateQueryFunction()
     {
-        auto theCurrentQueryFunction  = QueryFunction::fQueryFunction;
-        QueryFunction::fQueryFunction = [theCurrentQueryFunction, theInputQueryFunction](const T* container) { return (theCurrentQueryFunction(container) && theInputQueryFunction(container)); };
+        if(fQueryFunctionMap.size() == 0)
+            fQueryFunction.fQueryFunction = 0;
+        else
+        {
+            for(auto nameAndFunction: fQueryFunctionMap)
+            {
+                if(fQueryFunction.fQueryFunction != 0)
+                {
+                    auto theCurrentQueryFunction  = fQueryFunction.fQueryFunction;
+                    fQueryFunction.fQueryFunction = [theCurrentQueryFunction, nameAndFunction](const T* container) {
+                        return (theCurrentQueryFunction(container) && nameAndFunction.second(container));
+                    };
+                }
+                else
+                    fQueryFunction.fQueryFunction = nameAndFunction.second;
+            }
+        }
     }
-    else
-        QueryFunction::fQueryFunction = theInputQueryFunction;
-}
-
-template <typename T, typename HW>
-std::function<bool(const T*)> HWDescriptionContainer<T, HW>::QueryFunction::fQueryFunction = 0;
+};
 
 class HybridContainer : public HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>
 {
@@ -494,7 +534,28 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
         return static_cast<T*>(HWDescriptionContainer<BoardContainer, Ph2_HwDescription::BeBoard>::addObject(id, board));
     }
 
-    void updateChipIndex()
+    void resetBoardQueryFunction() { this->resetQueryFunction(); }
+    void resetOpticalGroupQueryFunction()
+    {
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
+        {
+            auto theBoard = (*this)[boardIndex];
+            theBoard->resetQueryFunction();
+        }
+    }
+    void resetHybridQueryFunction()
+    {
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
+        {
+            auto theBoard = (*this)[boardIndex];
+            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
+            {
+                auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
+                theOpticalGroup->resetQueryFunction();
+            }
+        }
+    }
+    void resetReadoutChipQueryFunction()
     {
         for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
         {
@@ -504,126 +565,106 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                 auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
                 for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
                 {
-                    auto     theHybrid       = (*theOpticalGroup)[hybridIndex];
-                    uint16_t theNewChipIndex = 0;
-                    for(uint16_t chipIndex = 0; chipIndex < theHybrid->std::vector<ChipContainer*>::size(); ++chipIndex)
-                    {
-                        auto                           theChip = (*theHybrid)[chipIndex];
-                        HybridContainer::QueryFunction theQueryFunctor;
-                        if(theQueryFunctor(theChip))
-                        {
-                            // std::cout << "Matched... index " << chipIndex << " new index " << theNewChipIndex << "\n";
-                            theChip->setIndex(theNewChipIndex++);
-                        }
-                        else
-                        {
-                            // std::cout << "Did not match...\n";
-                            theChip->setIndex(0xFFFF);
-                        }
-                    }
-                    theHybrid->size_ = theNewChipIndex;
+                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
+                    theHybrid->resetQueryFunction();
+                }
+            }
+        }
+    }
+    void resetAllQueryFunction()
+    {
+        this->resetQueryFunction();
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
+        {
+            auto theBoard = (*this)[boardIndex];
+            theBoard->resetQueryFunction();
+            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
+            {
+                auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
+                theOpticalGroup->resetQueryFunction();
+                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
+                {
+                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
+                    theHybrid->resetQueryFunction();
                 }
             }
         }
     }
 
-    void updateHybridIndex()
+    void addBoardQueryFunction(std::function<bool(const BoardContainer*)> theQueryFunction, const std::string& functionName) { this->addQueryFunction(theQueryFunction, functionName); }
+    void addOpticalGroupQueryFunction(std::function<bool(const OpticalGroupContainer*)> theQueryFunction, const std::string& functionName)
+    {
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
+        {
+            auto theBoard = (*this)[boardIndex];
+            theBoard->addQueryFunction(theQueryFunction, functionName);
+        }
+    }
+    void addHybridQueryFunction(std::function<bool(const HybridContainer*)> theQueryFunction, const std::string& functionName)
     {
         for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
         {
             auto theBoard = (*this)[boardIndex];
             for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
             {
-                auto     theOpticalGroup   = (*theBoard)[opticalGroupIndex];
-                uint16_t theNewHybridIndex = 0;
-                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
-                {
-                    auto                                 theHybrid = (*theOpticalGroup)[hybridIndex];
-                    OpticalGroupContainer::QueryFunction theQueryFunctor;
-                    if(theQueryFunctor(theHybrid))
-                        theHybrid->setIndex(theNewHybridIndex++);
-                    else
-                        theHybrid->setIndex(0xFFFF);
-                }
-                theOpticalGroup->size_ = theNewHybridIndex;
+                auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
+                theOpticalGroup->addQueryFunction(theQueryFunction, functionName);
             }
         }
     }
-
-    void updateOpticalGroupIndex()
+    void addReadoutChipQueryFunction(std::function<bool(const ChipContainer*)> theQueryFunction, const std::string& functionName)
     {
         for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
         {
-            auto     theBoard                = (*this)[boardIndex];
-            uint16_t theNewOpticalGroupIndex = 0;
+            auto theBoard = (*this)[boardIndex];
             for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
             {
-                auto                          theOpticalGroup = (*theBoard)[opticalGroupIndex];
-                BoardContainer::QueryFunction theQueryFunctor;
-                if(theQueryFunctor(theOpticalGroup))
-                    theOpticalGroup->setIndex(theNewOpticalGroupIndex++);
-                else
-                    theOpticalGroup->setIndex(0xFFFF);
+                auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
+                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
+                {
+                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
+                    theHybrid->addQueryFunction(theQueryFunction, functionName);
+                }
             }
-            theBoard->size_ = theNewOpticalGroupIndex;
         }
     }
 
-    void updateBoardIndex()
+    void removeBoardQueryFunction(const std::string& functionName) { this->removeQueryFunction(functionName); }
+    void removeOpticalGroupQueryFunction(const std::string& functionName)
     {
-        uint16_t theNewBoardGroupIndex = 0;
         for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
         {
-            auto                             theBoard = (*this)[boardIndex];
-            DetectorContainer::QueryFunction theQueryFunctor;
-            if(theQueryFunctor(theBoard))
-                theBoard->setIndex(theNewBoardGroupIndex++);
-            else
-                theBoard->setIndex(0xFFFF);
+            auto theBoard = (*this)[boardIndex];
+            theBoard->removeQueryFunction(functionName);
         }
-        this->size_ = theNewBoardGroupIndex;
     }
-
-    void resetBoardQueryFunction()
+    void removeHybridQueryFunction(const std::string& functionName)
     {
-        DetectorContainer ::resetQueryFunction();
-        updateBoardIndex();
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
+        {
+            auto theBoard = (*this)[boardIndex];
+            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
+            {
+                auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
+                theOpticalGroup->removeQueryFunction(functionName);
+            }
+        }
     }
-    void resetOpticalGroupQueryFunction()
+    void removeReadoutChipQueryFunction(const std::string& functionName)
     {
-        BoardContainer ::resetQueryFunction();
-        updateOpticalGroupIndex();
-    }
-    void resetHybridQueryFunction()
-    {
-        OpticalGroupContainer::resetQueryFunction();
-        updateHybridIndex();
-    }
-    void resetReadoutChipQueryFunction()
-    {
-        HybridContainer ::resetQueryFunction();
-        updateChipIndex();
-    }
-
-    void addBoardQueryFunction(std::function<bool(const BoardContainer*)> theQueryFunction)
-    {
-        DetectorContainer ::addQueryFunction(theQueryFunction);
-        updateBoardIndex();
-    }
-    void addOpticalGroupQueryFunction(std::function<bool(const OpticalGroupContainer*)> theQueryFunction)
-    {
-        BoardContainer ::addQueryFunction(theQueryFunction);
-        updateOpticalGroupIndex();
-    }
-    void addHybridQueryFunction(std::function<bool(const HybridContainer*)> theQueryFunction)
-    {
-        OpticalGroupContainer::addQueryFunction(theQueryFunction);
-        updateHybridIndex();
-    }
-    void addReadoutChipQueryFunction(std::function<bool(const ChipContainer*)> theQueryFunction)
-    {
-        HybridContainer ::addQueryFunction(theQueryFunction);
-        updateChipIndex();
+        for(uint16_t boardIndex = 0; boardIndex < this->std::vector<BoardContainer*>::size(); ++boardIndex)
+        {
+            auto theBoard = (*this)[boardIndex];
+            for(uint16_t opticalGroupIndex = 0; opticalGroupIndex < theBoard->std::vector<OpticalGroupContainer*>::size(); ++opticalGroupIndex)
+            {
+                auto theOpticalGroup = (*theBoard)[opticalGroupIndex];
+                for(uint16_t hybridIndex = 0; hybridIndex < theOpticalGroup->std::vector<HybridContainer*>::size(); ++hybridIndex)
+                {
+                    auto theHybrid = (*theOpticalGroup)[hybridIndex];
+                    theHybrid->removeQueryFunction(functionName);
+                }
+            }
+        }
     }
 
   private:

@@ -217,7 +217,9 @@ void Tool::initMetadataAndFillInitialConditions()
 
     DetectorDataContainer theCalibrationTimestampContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationTimestampContainer);
-    theCalibrationTimestampContainer.getSummary<std::string>() = std::to_string(getTimeStamp());
+    std::stringstream timestampStream; // for come reason std::to_string does not work with python
+    timestampStream << getTimeStamp();
+    theCalibrationTimestampContainer.getSummary<std::string>() = timestampStream.str();
 
     DetectorDataContainer theReadoutChipConfigurationContainer;
     ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
@@ -343,7 +345,9 @@ void Tool::fillMetadataFinalConditions()
 
     DetectorDataContainer theCalibrationTimestampContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationTimestampContainer);
-    theCalibrationTimestampContainer.getSummary<std::string>() = std::to_string(getTimeStamp());
+    std::stringstream timestampStream; // for come reason std::to_string does not work with python
+    timestampStream << getTimeStamp();
+    theCalibrationTimestampContainer.getSummary<std::string>() = timestampStream.str();
 
 #ifdef __USE_ROOT__
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
