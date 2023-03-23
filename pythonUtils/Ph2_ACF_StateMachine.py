@@ -19,10 +19,75 @@ class StateMachine(object):
         self.status_ = "INITIAL"
         self.calibrationResult_ = "SUCCESS"
         self.errorMessage_ = ""
-        self.mapOfEnabledModules_ = {} #If empty all modules connected are enabled
+        self.mapOfEnabledObjects_ = {} #If empty all modules connected are enabled
 
-    def addModule(self, moduleId, moduleName = ""):
-        self.mapOfEnabledModules_[moduleId] = moduleName
+    def addBoard(self, boardId, boardName = ""):
+        if boardId in self.mapOfEnabledObjects_:
+            self.mapOfEnabledObjects_[boardId][0] = boardName
+        else:
+            self.mapOfEnabledObjects_.update({boardId : [boardName, {}]})
+
+    def addOpticalGroup(self, boardId, opticalGroupId, opticalGroupName = ""):
+        if boardId not in self.mapOfEnabledObjects_:
+            self.addBoard(boardId)
+        enabledOpticalGroups = self.mapOfEnabledObjects_[boardId][1]
+        if opticalGroupId in enabledOpticalGroups:
+            enabledOpticalGroups[opticalGroupId][0] = opticalGroupName
+        else:
+            enabledOpticalGroups.update({opticalGroupId : [opticalGroupName, {}]})
+
+    def addHybrid(self, boardId, opticalGroupId, hybridId, hybridName = ""):
+        if boardId not in self.mapOfEnabledObjects_:
+            self.addBoard(boardId)
+        enabledOpticalGroups = self.mapOfEnabledObjects_[boardId][1]
+        if opticalGroupId not in enabledOpticalGroups:
+            self.addOpticalGroup(boardId, opticalGroupId)
+        enabledHybrids = enabledOpticalGroups[opticalGroupId][1]
+        if hybridId in enabledHybrids:
+            enabledHybrids[hybridId][0] = hybridName
+        else:
+            enabledHybrids.update({hybridId : [hybridName, {}]})
+
+    def addReadoutChip(self, boardId, opticalGroupId, hybridId, readoutChipId, readoutChipName = ""):
+        if boardId not in self.mapOfEnabledObjects_:
+            self.addBoard(boardId)
+        enabledOpticalGroups = self.mapOfEnabledObjects_[boardId][1]
+        if opticalGroupId not in enabledOpticalGroups:
+            self.addOpticalGroup(boardId, opticalGroupId)
+        enabledHybrids = enabledOpticalGroups[opticalGroupId][1]
+        if hybridId not in enabledHybrids:
+            self.addHybrid(boardId, opticalGroupId, hybridId)
+        enabledReadoutChips = enabledHybrids[hybridId][1]
+        enabledReadoutChips.update({readoutChipId : readoutChipName})
+    
+    def createConfigureMessage(self):
+        configureMessage = Query.ConfigurationMessage()
+        configureMessage.query_type.type = Query.QueryType.CONFIGURE
+        configureMessage.data.calibration_name = self.calibrationName_
+        configureMessage.data.configuration_file = self.configurationFile_
+        for boardId, boardNameAndContent in self.mapOfEnabledObjects_.items():
+            boardMessage = configureMessage.data.object_list.add()
+            boardMessage.object_type.type = Query.ObjectType.BOARD
+            boardMessage.id = boardId
+            boardMessage.name = boardNameAndContent[0]
+            for opticalGroupId, opticalGroupNameAndContent in boardNameAndContent[1].items():
+                opticalGroupMessage = boardMessage.object_list.add()
+                opticalGroupMessage.object_type.type = Query.ObjectType.OPTICALGROUP
+                opticalGroupMessage.id = opticalGroupId
+                opticalGroupMessage.name = opticalGroupNameAndContent[0]      
+                for hybridId, hybridNameAndContent in opticalGroupNameAndContent[1].items():
+                    hybridMessage = opticalGroupMessage.object_list.add()
+                    hybridMessage.object_type.type = Query.ObjectType.HYBRID
+                    hybridMessage.id = hybridId
+                    hybridMessage.name = hybridNameAndContent[0]
+                    print(hybridNameAndContent[1])
+                    for readoutChipId, readoutChipName in hybridNameAndContent[1].items():
+                        readoutChipMessage = hybridMessage.object_list.add()
+                        readoutChipMessage.object_type.type = Query.ObjectType.CHIP
+                        readoutChipMessage.id = readoutChipId
+                        readoutChipMessage.name = readoutChipName    
+        stringMessage = configureMessage.SerializeToString()
+        return stringMessage
 
     def setConfigurationFile(self, configurationFile):
         self.configurationFile_ = configurationFile
@@ -61,16 +126,7 @@ class StateMachine(object):
 
     def state_HALTED(self):
         self.resetStatus()
-        configureMessage = Query.ConfigurationMessage()
-        configureMessage.query_type.type = Query.QueryType.CONFIGURE
-        configureMessage.data.calibration_name = self.calibrationName_
-        configureMessage.data.configuration_file = self.configurationFile_
-        for id, name in self.mapOfEnabledModules_.items():
-            object = configureMessage.data.object_list.add()
-            object.object_type.type = Query.ObjectType.OPTICALGROUP
-            object.id = id
-            object.name = name
-        stringMessage = configureMessage.SerializeToString()
+        stringMessage = self.createConfigureMessage()
         replyBuffer = Ph2_ACF_controller.configure(stringMessage)
         if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
             self.status_ = "ERROR"

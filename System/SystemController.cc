@@ -1197,13 +1197,7 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
 
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
-
-    for(const auto& enabledObject: theConfigureInfo.getEnabledModulesList(fDetectorContainer->at(0)->getBoardType() == BoardType::D19C))
-    {
-        std::cout << enabledObject.first << std::endl;
-        // Assumes one board only
-        fNameContainer->at(0)->getObject(enabledObject.first)->getSummary<std::string, std::string>() = enabledObject.second;
-    }
+    theConfigureInfo.extractObjectNames(fNameContainer);
 
     std::cout << fParsedFile.str() << std::endl;
     ConfigureHw(false, true);
