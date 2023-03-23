@@ -95,11 +95,11 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // # Resets #
     // ##########
     RD53FWInterface::ChipReset();
-    RD53FWInterface::ChipReSync();
     RD53FWInterface::ResetFastCmdBlk();
     RD53FWInterface::ResetSlowCmdFIFO();
     RD53FWInterface::ResetReadBkFIFO();
     RD53FWInterface::ResetReadoutBlk();
+    RD53FWInterface::ChipReSync();
 
     // ###############################################
     // # FW register initialization from config file #
@@ -512,8 +512,8 @@ uint32_t RD53FWInterface::GetBoardEnabledHybrids(const BeBoard* pBoard)
 
 void RD53FWInterface::Start()
 {
-    RD53FWInterface::ResetReadoutBlk();
     RD53FWInterface::ChipReset();
+    RD53FWInterface::ResetReadoutBlk();
     RD53FWInterface::ChipReSync();
 
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
