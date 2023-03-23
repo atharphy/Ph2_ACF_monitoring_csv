@@ -36,7 +36,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 
 ### Suggested software and firmware versions:
 - Software git branch / tag : `Dev` / `v4-12`
-- Firmware tag: `4.06`
+- Firmware tag: `v4-06`
 
 ### Important webpages:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
