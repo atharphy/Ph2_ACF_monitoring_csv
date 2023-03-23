@@ -49,7 +49,7 @@
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
         
-        <Hybrid Id="1" enable="1" reset="1">
+        <Hybrid Id="1" enable="0" reset="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -378,7 +378,7 @@
 
 
 <MonitoringSettings>
-<Monitoring type="PS" enable="1">
+<Monitoring type="PS" enable="0">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
     <MonitoringElement device="MPA2"  register="CalDAC7" enable="1"/>
     <MonitoringElement device="MPA2"  register="bandgap" enable="1"/>
