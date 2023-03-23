@@ -1167,7 +1167,7 @@ uint16_t MPA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
                                                                          {"io_vdd"      , std::make_pair( 13, 0)},
                                                                          {"dvdd"        , std::make_pair( 14, 0)}
                                                                         };
-    std::cout << " register " << pRegName << " block " << +ADCcontrol[pRegName].first << " shift "<< +ADCcontrol[pRegName].second << std::endl;
+    LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +ADCcontrol[pRegName].first << " shift "<< +ADCcontrol[pRegName].second << RESET;
     this->selectBlock(static_cast<ReadoutChip*>(pChip), ADCcontrol[pRegName].first, ADCcontrol[pRegName].second);
     return this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
 

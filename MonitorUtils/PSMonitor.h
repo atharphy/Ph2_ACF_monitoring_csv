@@ -9,7 +9,7 @@
 class PSMonitor : public DetectorMonitor
 {
   public:
-    PSMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
+    PSMonitor( Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
 
   protected:
     void runMonitor() override;

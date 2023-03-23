@@ -13,7 +13,7 @@
 
 using namespace Ph2_HwInterface;
 
-PSMonitor::PSMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
+PSMonitor::PSMonitor(Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
     fMonitorPlotDQM    = new MonitorDQMPlotPS();
@@ -88,7 +88,7 @@ void PSMonitor::runMPA2RegisterMonitor(std::string registerName)
                         std::cout << " MPA2 monitoring "<<registerName <<std::endl;
                         auto MPA2ReadoutChipInterface = fTheSystemController->fReadoutChipInterface;
                         uint16_t registerValue = static_cast<MPA2Interface*>(MPA2ReadoutChipInterface)->ReadADC(chip,registerName);
-                        LOG(INFO) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip "<< chip->getId() << " " << registerName << " = " << registerValue << RESET;
+                        LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip "<< chip->getId() << " " << registerName << " = " << registerValue << RESET;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
                         theMPA2RegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ValueAndTime<uint16_t>>() =
                         theRegisterAndTime;
