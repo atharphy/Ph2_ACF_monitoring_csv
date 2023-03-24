@@ -249,7 +249,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", fwInterface->ReadReg("user.ctrl_regs.Aurora_block.active_lane"));
     if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
     {
-        LOG(INFO) << GREEN << "Optimizing TAP0 setting for chip ID " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW << pRD53->getChipLane() << RESET;
+        LOG(INFO) << GREEN << "Optimizing TAP0 setting for chip ID " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW << +pRD53->getChipLane() << RESET;
 
         const auto            maxTAP0value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_CML_BIAS_0"));
         const int             nSteps       = 100; // @CONST@

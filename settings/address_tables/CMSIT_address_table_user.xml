@@ -183,9 +183,6 @@
       <node id="ic_nb_of_words_to_read" mask="0xFFFF0000"     permission="rw"      description="nb of words to read through lpgbt sc" />
     </node>
 
-    <node id="aurora_frame_cntr"       address="0x0000001D"   permission="r"       description="Aurora Frame Counter for DM Tests"> </node>
-    <node id="aurora_service_blk_cntr" address="0x0000001E"   permission="r"       description="Aurora Service Block Counter for DM Tests"> </node>
-
     <node id="lpgbt_mapping"         address="0x00000018"     permission="rw"      description="Configuration lpGBT link mapping">
       <node id="update_downlink"        mask="0x00000001"     permission="rw"      description="Update mapping for downlink groups/channels" />
       <node id="update_uplink"          mask="0x00000002"     permission="rw"      description="Update mapping for downlink groups/channels" />
@@ -354,6 +351,9 @@
       <node id="reg_addr_rx"           mask="0x0000FFFF"      permission="r"       description="Returned Register addres from Slow Control Read Command" />
       <node id="nb_of_words_rx"        mask="0xFFFF0000"      permission="r"       description="Nb of received words from Slow Control Read Command" />
     </node>
+
+    <node id="aurora_frame_cntr"       address="0x0000001D"   permission="r"       description="Aurora Frame Counter for DM Tests"> </node>
+    <node id="aurora_service_blk_cntr" address="0x0000001E"   permission="r"       description="Aurora Service Block Counter for DM Tests"> </node>
 
   </node>
 
