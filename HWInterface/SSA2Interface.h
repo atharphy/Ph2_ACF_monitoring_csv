@@ -46,14 +46,14 @@ class SSA2Interface : public ReadoutChipInterface
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pInput);
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
 
-    float    CalculateADCLSB(Ph2_HwDescription::Chip* pSSA2, float vrefExp = 0.850);
+    float    CalculateADCLSB(Ph2_HwDescription::Chip* pSSA2, float vrefExp = SSA2_VREF_EXPECTED);
     uint16_t MeasureGND(Ph2_HwDescription::Chip* pSSA2);
 
   private:
     uint8_t ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                                                                      // FIXME
     bool    WriteChipRegBits(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false); // FIXME
     bool    ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister, bool pVerify = true);                                                                // FIXME
-    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},                                                                                                       // FIXME
+    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},      // FIXME EEE this map is wrong!! the one in ReadADC is correct                                                  // FIXME
                                                {"PreampBias", 1},
                                                {"Trim", 2},
                                                {"VoltageBias", 3},

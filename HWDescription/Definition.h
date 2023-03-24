@@ -95,10 +95,21 @@
 #define D19C_EVENT_HEADER1_SIZE_32_SSA 4
 #define D19C_EVENT_SIZE_32_SSA 12 // FIXME??
 
+// SSA2 
+// in float
+#define SSA2_VBG_EXPECTED 0.275
+#define SSA2_VREF_EXPECTED 0.850
+
 // MPA
 // in uint32_t words
 #define D19C_EVENT_HEADER1_SIZE_32_MPA 4
 #define D19C_EVENT_SIZE_32_MPA 32 // FIXME??
+
+// MPA2 
+// in float
+#define MPA2_VBG_EXPECTED 0.280
+#define MPA2_VREF_EXPECTED 0.850
+
 
 // points to bufferoverlow
 #define D19C_OFFSET_ERROR_CBC3 2 * 32 + 0

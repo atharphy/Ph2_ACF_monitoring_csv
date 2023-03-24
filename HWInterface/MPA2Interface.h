@@ -110,7 +110,7 @@ class MPA2Interface : public ReadoutChipInterface
     float                measureBg(Ph2_HwDescription::Chip* pMPA2);
     uint16_t             ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
 
-    float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = 0.850);
+    float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
 
   private:
     // pixelEnable bits
