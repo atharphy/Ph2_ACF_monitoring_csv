@@ -355,8 +355,8 @@ void VoltageTuning::analyze()
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                    LOG(INFO) << GREEN << "VDDD and VDDA for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << RESET << GREEN << "] are: VDDD = " << BOLDYELLOW
+                    LOG(INFO) << BOLDYELLOW << "VDDD" << RESET << GREEN << " and " << BOLDYELLOW << "VDDA" << RESET << GREEN << " for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW
+                              << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "] are: VDDD = " << BOLDYELLOW
                               << theDigContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET << GREEN
                               << ", VDDA = " << BOLDYELLOW
                               << theAnaContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
