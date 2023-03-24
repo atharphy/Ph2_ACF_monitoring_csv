@@ -247,7 +247,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #################################
     auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
     fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", fwInterface->ReadReg("user.ctrl_regs.Aurora_block.active_lane"));
-    if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
+    // if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
     {
         LOG(INFO) << GREEN << "Optimizing TAP0 setting for chip ID " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW << +pRD53->getChipLane() << RESET;
 
@@ -259,7 +259,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
         std::vector<uint16_t> vecTAP0Values(nSteps);
         uint16_t              value = 0;
         std::generate(vecTAP0Values.begin(), vecTAP0Values.end(), [&value, &step]() { return value += step; });
-        for(auto TAP0: vecTAP0Values)
+        for(auto& TAP0: vecTAP0Values)
         {
             RD53Interface::WriteChipReg(pChip, "DAC_CML_BIAS_0", TAP0, false);
 
@@ -276,13 +276,13 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
         // ########################
         // # Find best TAP0 value #
         // ########################
-        auto it        = std::max_element(vecFrameCounter.begin(), vecFrameCounter.end());
-        auto max_range = std::equal_range(it, vecFrameCounter.end(), *it);
-        it += (max_range.second - max_range.first) / 2;
+        auto it       = std::max_element(vecFrameCounter.begin(), vecFrameCounter.end());
+        auto maxRange = std::equal_range(it, vecFrameCounter.end(), *it);
+        it += (maxRange.second - maxRange.first) / 2;
         auto bestTAP0 = vecTAP0Values[it - vecFrameCounter.begin()];
 
         RD53Interface::WriteChipReg(pChip, "DAC_CML_BIAS_0", bestTAP0);
-        LOG(INFO) << GREEN << "Best TAP0 setting is " << BOLDYELLOW << +bestTAP0 << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> Best TAP0 setting is " << BOLDYELLOW << +bestTAP0 << RESET;
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
