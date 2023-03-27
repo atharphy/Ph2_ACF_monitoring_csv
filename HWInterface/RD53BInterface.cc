@@ -247,7 +247,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #################################
     auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
     fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", fwInterface->ReadReg("user.ctrl_regs.Aurora_block.active_lane"));
-    // if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
+    if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
     {
         LOG(INFO) << GREEN << "Optimizing TAP0 setting for chip ID " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW << +pRD53->getChipLane() << RESET;
 
