@@ -142,7 +142,7 @@ void ThrEqualizationHistograms::fillOccupancyScan(const DetectorDataContainer& O
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<TDACGainSize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -163,7 +163,7 @@ void ThrEqualizationHistograms::fillTDACGain(const DetectorDataContainer& TDACGa
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TDACGainHist = TDACGain.getObject(cBoard->getId())
                                              ->getObject(cOpticalGroup->getId())

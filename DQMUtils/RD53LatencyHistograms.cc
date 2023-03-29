@@ -63,7 +63,7 @@ void LatencyHistograms::fillOccupancy(const DetectorDataContainer& OccupancyCont
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -84,7 +84,7 @@ void LatencyHistograms::fillLatency(const DetectorDataContainer& LatencyContaine
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* LatencyHist = Latency.getObject(cBoard->getId())
                                             ->getObject(cOpticalGroup->getId())

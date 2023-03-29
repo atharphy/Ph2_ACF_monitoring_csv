@@ -65,7 +65,7 @@ void InjectionDelayHistograms::fillOccupancy(const DetectorDataContainer& Occupa
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<InjDelaySize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -86,7 +86,7 @@ void InjectionDelayHistograms::fillInjectionDelay(const DetectorDataContainer& I
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* InjectionDelayHist = InjectionDelay.getObject(cBoard->getId())
                                                    ->getObject(cOpticalGroup->getId())

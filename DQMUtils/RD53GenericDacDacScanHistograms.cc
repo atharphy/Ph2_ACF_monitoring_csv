@@ -124,7 +124,7 @@ void GenericDacDacScanHistograms::fillOccupancy(const DetectorDataContainer& Occ
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<GenericDacDacScanSize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* Occupancy2DHist = Occupancy2D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -146,7 +146,7 @@ void GenericDacDacScanHistograms::fillGenericDacDacScan(const DetectorDataContai
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* GenericDac1ScanHist = GenericDac1Scan.getObject(cBoard->getId())
                                                     ->getObject(cOpticalGroup->getId())

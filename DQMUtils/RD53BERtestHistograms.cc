@@ -39,7 +39,7 @@ void BERtestHistograms::fillBERtest(const DetectorDataContainer& BERtestContaine
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* BERtestHist = BERtest.getObject(cBoard->getId())
                                             ->getObject(cOpticalGroup->getId())

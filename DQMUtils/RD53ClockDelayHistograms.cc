@@ -65,7 +65,7 @@ void ClockDelayHistograms::fillOccupancy(const DetectorDataContainer& OccupancyC
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<ClkDelaySize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -86,7 +86,7 @@ void ClockDelayHistograms::fillClockDelay(const DetectorDataContainer& ClockDela
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* ClockDelayHist = ClockDelay.getObject(cBoard->getId())
                                                ->getObject(cOpticalGroup->getId())

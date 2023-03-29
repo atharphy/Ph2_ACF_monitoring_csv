@@ -107,7 +107,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP0(const DetectorDataContaine
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<TAPsize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TAP0scanHist = TAP0scan.getObject(cBoard->getId())
                                              ->getObject(cOpticalGroup->getId())
@@ -127,7 +127,7 @@ void DataReadbackOptimizationHistograms::fillTAP0(const DetectorDataContainer& T
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TAP0Hist =
                         TAP0.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
@@ -145,7 +145,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP1(const DetectorDataContaine
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<TAPsize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TAP1scanHist = TAP1scan.getObject(cBoard->getId())
                                              ->getObject(cOpticalGroup->getId())
@@ -165,7 +165,7 @@ void DataReadbackOptimizationHistograms::fillTAP1(const DetectorDataContainer& T
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TAP1Hist =
                         TAP1.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
@@ -183,7 +183,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP2(const DetectorDataContaine
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<TAPsize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TAP2scanHist = TAP2scan.getObject(cBoard->getId())
                                              ->getObject(cOpticalGroup->getId())
@@ -203,7 +203,7 @@ void DataReadbackOptimizationHistograms::fillTAP2(const DetectorDataContainer& T
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TAP2Hist =
                         TAP2.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;

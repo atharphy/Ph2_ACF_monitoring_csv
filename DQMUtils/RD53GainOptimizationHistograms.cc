@@ -48,7 +48,7 @@ void GainOptimizationHistograms::fill(const DetectorDataContainer& DataContainer
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* hKrumCurr = KrumCurr.getObject(cBoard->getId())
                                           ->getObject(cOpticalGroup->getId())
