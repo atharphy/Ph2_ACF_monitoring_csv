@@ -298,10 +298,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
 void Physics::clearContainers(BeBoard& theBoard)
 {
     RD53Event::clearEventContainer(theBoard, theOccContainer);
-
-    const size_t BCIDsize  = frontEnd->maxBCIDvalue + 1;
-    const size_t TrgIDsize = frontEnd->maxTRIGIDvalue + 1;
-    const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
+    const auto cBoard = theOccContainer.at(theBoard.getIndex());
 
     // ####################
     // # Clear containers #
@@ -313,9 +310,9 @@ void Physics::clearContainers(BeBoard& theBoard)
                 theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().clear();
                 theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().clear();
 
-                for(size_t i = 0; i < BCIDsize; i++)
+                for(auto i = 0u; i < (frontEnd->maxBCIDvalue + 1); i++)
                     theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().push_back(0);
-                for(size_t i = 0; i < TrgIDsize; i++)
+                for(auto i = 0u; i < (frontEnd->maxTRIGIDvalue + 1); i++)
                     theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().push_back(0);
             }
 }

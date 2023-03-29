@@ -269,9 +269,6 @@ void PixelAlive::draw(bool saveData)
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 {
-    const size_t BCIDsize  = frontEnd->maxBCIDvalue + 1;
-    const size_t TrgIDsize = frontEnd->maxTRIGIDvalue + 1;
-
     theBCIDContainer.reset();
     theTrgIDContainer.reset();
     ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theBCIDContainer);
@@ -354,16 +351,20 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                     else
                         LOG(INFO) << BOLDBLUE << "\t--> Number of potentially " << BOLDYELLOW << "unstuck" << BOLDBLUE << " pixels in this iteration: " << BOLDYELLOW << nMaskedPixelsPerCalib << RESET;
 
-                    // ######################################
-                    // # Copy register values for streaming #
-                    // ######################################
+                    // ####################
+                    // # Clear containers #
+                    // ####################
                     theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().clear();
                     theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().clear();
 
-                    for(size_t i = 0; i < BCIDsize; i++)
+                    for(auto i = 0u; i < (frontEnd->maxBCIDvalue + 1); i++)
                         theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().push_back(0);
-                    for(size_t i = 0; i < TrgIDsize; i++)
+                    for(auto i = 0u; i < (frontEnd->maxTRIGIDvalue + 1); i++)
                         theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().push_back(0);
+
+                    // ######################################
+                    // # Copy register values for streaming #
+                    // ######################################
 
                     for(auto i = 1u; i < theOccContainer->at(cBoard->getIndex())
                                              ->at(cOpticalGroup->getIndex())
