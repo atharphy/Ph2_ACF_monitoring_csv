@@ -102,14 +102,12 @@ bool GenericDacDacScanHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched GenericDacDacScan Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>(fDetectorContainer);
         GenericDacDacScanHistograms::fillOccupancy(fDetectorData);
         return true;
     }
     if(theDACDACSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched GenericDacDacScan DACDAC!!!!!\n";
         DetectorDataContainer fDetectorData = theDACDACSerialization.deserializeChipContainer<EmptyContainer, std::pair<uint16_t, uint16_t>>(fDetectorContainer);
         GenericDacDacScanHistograms::fillGenericDacDacScan(fDetectorData);
         return true;

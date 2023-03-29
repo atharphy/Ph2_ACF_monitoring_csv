@@ -25,7 +25,6 @@ bool BERtestHistograms::fill(std::string& inputStream)
 
     if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched BERtest!!!!!\n";
         DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, double>(fDetectorContainer);
         BERtestHistograms::fillBERtest(fDetectorData);
         return true;

@@ -71,21 +71,18 @@ bool PixelAliveHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PixelAlive Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer);
         PixelAliveHistograms::fill(fDetectorData);
         return true;
     }
     if(theBCIDSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PixelAlive BCID!!!!!\n";
         DetectorDataContainer fDetectorData = theBCIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<BCIDsize>>(fDetectorContainer);
         PixelAliveHistograms::fillBCID(fDetectorData);
         return true;
     }
     if(theTrgIDSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PixelAlive TrgID!!!!!\n";
         DetectorDataContainer fDetectorData = theTrgIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TrgIDsize>>(fDetectorContainer);
         PixelAliveHistograms::fillTrgID(fDetectorData);
         return true;

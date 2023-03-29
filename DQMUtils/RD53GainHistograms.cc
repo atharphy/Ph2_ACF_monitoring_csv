@@ -83,7 +83,6 @@ bool GainHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Gain Occupancy!!!!!\n";
         uint16_t              deltaVcal;
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer, deltaVcal);
         GainHistograms::fillOccupancy(fDetectorData, deltaVcal);
@@ -91,7 +90,6 @@ bool GainHistograms::fill(std::string& inputStream)
     }
     if(theGainSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Gain Gain!!!!!\n";
         DetectorDataContainer fDetectorData = theGainSerialization.deserializeChipContainer<GainFit, GainFit>(fDetectorContainer);
         GainHistograms::fillGain(fDetectorData);
         return true;

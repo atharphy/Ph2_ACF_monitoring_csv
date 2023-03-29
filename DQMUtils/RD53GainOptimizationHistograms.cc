@@ -34,7 +34,6 @@ bool GainOptimizationHistograms::fill(std::string& inputStream)
 
     if(theSCurveSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched GainOptimization KrumCurr!!!!!\n";
         DetectorDataContainer fDetectorData = theSCurveSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         GainOptimizationHistograms::fill(fDetectorData);
         return true;

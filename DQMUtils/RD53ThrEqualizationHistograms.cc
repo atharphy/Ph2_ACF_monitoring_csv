@@ -59,28 +59,24 @@ bool ThrEqualizationHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrEqualization Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, GenericDataVector>(fDetectorContainer);
         ThrEqualizationHistograms::fillOccupancy(fDetectorData);
         return true;
     }
     if(theTDACSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrEqualization TDAC!!!!!\n";
         DetectorDataContainer fDetectorData = theTDACSerialization.deserializeChipContainer<uint16_t, EmptyContainer>(fDetectorContainer);
         ThrEqualizationHistograms::fillTDAC(fDetectorData);
         return true;
     }
     if(theOccupancyScanSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrEqualization OccupancyScan!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancyScanSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TDACGainSize>>(fDetectorContainer);
         ThrEqualizationHistograms::fillOccupancyScan(fDetectorData);
         return true;
     }
     if(theTDACGainSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrEqualization TDACGain!!!!!\n";
         DetectorDataContainer fDetectorData = theTDACGainSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         ThrEqualizationHistograms::fillTDACGain(fDetectorData);
         return true;

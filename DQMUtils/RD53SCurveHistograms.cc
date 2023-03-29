@@ -65,14 +65,12 @@ bool SCurveHistograms::fill(std::string& inputStream)
 
     if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched SCurve ThresholdAndNoise!!!!!\n";
         DetectorDataContainer fDetectorData = theThresholdAndNoiseSerialization.deserializeChipContainer<ThresholdAndNoise, ThresholdAndNoise>(fDetectorContainer);
         SCurveHistograms::fillThrAndNoise(fDetectorData);
         return true;
     }
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched SCurve ThresholdAndNoise!!!!!\n";
         int                   deltaVcal;
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer, deltaVcal);
         SCurveHistograms::fillOccupancy(fDetectorData, deltaVcal);

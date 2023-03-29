@@ -60,21 +60,18 @@ bool PhysicsHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Physics Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer);
         PhysicsHistograms::fill(fDetectorData);
         return true;
     }
     if(theBCIDSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Physics BCID!!!!!\n";
         DetectorDataContainer fDetectorData = theBCIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<BCIDsize>>(fDetectorContainer);
         PhysicsHistograms::fillBCID(fDetectorData);
         return true;
     }
     if(theTrgIDSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Physics TrgID!!!!!\n";
         DetectorDataContainer fDetectorData = theTrgIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TrgIDsize>>(fDetectorContainer);
         PhysicsHistograms::fillTrgID(fDetectorData);
         return true;

@@ -43,14 +43,12 @@ bool InjectionDelayHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched InjectionDelay Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<InjDelaySize>>(fDetectorContainer);
         InjectionDelayHistograms::fillOccupancy(fDetectorData);
         return true;
     }
     if(theInjectionDelaySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched InjectionDelay InjectionDelay!!!!!\n";
         DetectorDataContainer fDetectorData = theInjectionDelaySerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         InjectionDelayHistograms::fillInjectionDelay(fDetectorData);
         return true;

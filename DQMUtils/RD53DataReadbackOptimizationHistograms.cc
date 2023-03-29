@@ -61,42 +61,36 @@ bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
 
     if(theTAP0scanSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched DataReadbackOptimization TAP0scan!!!!!\n";
         DetectorDataContainer fDetectorData = theTAP0scanSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TAPsize>>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillScanTAP0(fDetectorData);
         return true;
     }
     if(theTAP0Serialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched DataReadbackOptimization TAP0!!!!!\n";
         DetectorDataContainer fDetectorData = theTAP0Serialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillTAP0(fDetectorData);
         return true;
     }
     if(theTAP1scanSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched DataReadbackOptimization TAP1scan!!!!!\n";
         DetectorDataContainer fDetectorData = theTAP1scanSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TAPsize>>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillScanTAP1(fDetectorData);
         return true;
     }
     if(theTAP1Serialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched DataReadbackOptimization TAP1!!!!!\n";
         DetectorDataContainer fDetectorData = theTAP1Serialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillTAP1(fDetectorData);
         return true;
     }
     if(theTAP2scanSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched DataReadbackOptimization TAP2scan!!!!!\n";
         DetectorDataContainer fDetectorData = theTAP2scanSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TAPsize>>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillScanTAP2(fDetectorData);
         return true;
     }
     if(theTAP2Serialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched DataReadbackOptimization TAP2!!!!!\n";
         DetectorDataContainer fDetectorData = theTAP2Serialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillTAP2(fDetectorData);
         return true;

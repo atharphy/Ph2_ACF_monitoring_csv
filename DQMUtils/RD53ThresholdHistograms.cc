@@ -34,7 +34,6 @@ bool ThresholdHistograms::fill(std::string& inputStream)
 
     if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrAdjustment Threshold!!!!!\n";
         DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         ThresholdHistograms::fill(fDetectorData);
         return true;

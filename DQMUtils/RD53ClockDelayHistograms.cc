@@ -43,14 +43,12 @@ bool ClockDelayHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ClockDelay Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<ClkDelaySize>>(fDetectorContainer);
         ClockDelayHistograms::fillOccupancy(fDetectorData);
         return true;
     }
     if(theClockDelaySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ClockDelay ClockDelay!!!!!\n";
         DetectorDataContainer fDetectorData = theClockDelaySerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         ClockDelayHistograms::fillClockDelay(fDetectorData);
         return true;

@@ -41,14 +41,12 @@ bool LatencyHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Latency Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<LatencySize>>(fDetectorContainer);
         LatencyHistograms::fillOccupancy(fDetectorData);
         return true;
     }
     if(theLatencySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Latency Latency!!!!!\n";
         DetectorDataContainer fDetectorData = theLatencySerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         LatencyHistograms::fillLatency(fDetectorData);
         return true;

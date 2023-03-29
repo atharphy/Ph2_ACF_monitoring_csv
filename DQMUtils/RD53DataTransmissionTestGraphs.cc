@@ -37,7 +37,6 @@ bool DataTransmissionTestGraphs::fill(std::string& inputStream)
 
     if(theTAP0targetSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched DataTransmissionTest TAP0target!!!!!\n";
         DetectorDataContainer fDetectorData = theTAP0targetSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         DataTransmissionTestGraphs::fillTAP0tgt(fDetectorData);
         return true;
