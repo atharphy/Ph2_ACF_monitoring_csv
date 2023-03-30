@@ -198,6 +198,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fDQMStreamer->startAccept();
     }
 
+    LOG(INFO) << GREEN << "Bootstrapping TCP Server..." << RESET;
+
     fMonitorDQMStreamerEnabled = theCommunicationSettingConfig.fMonitorDQMCommunication.fEnable;
     if(fMonitorDQMStreamerEnabled)
     {
@@ -237,6 +239,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET;
         }
     }
+
+    LOG(INFO) << GREEN << "Operation completed" << RESET;
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
