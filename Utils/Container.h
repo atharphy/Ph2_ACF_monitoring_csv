@@ -386,7 +386,7 @@ class HWDescriptionContainer : public Container<T>
 
     template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
                                    // is defined
-    theHW* at(size_t index)
+    theHW* topoGigio(size_t index)
     {
         if(!fQueryFunction.fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
         for(auto element: *this)
@@ -398,7 +398,7 @@ class HWDescriptionContainer : public Container<T>
 
     template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
                                    // is defined
-    theHW* at(size_t index) const
+    theHW* topoGigio(size_t index) const
     {
         if(!fQueryFunction.fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
         for(const auto element: *this)
@@ -462,6 +462,9 @@ class HWDescriptionContainer : public Container<T>
     T*&                                                  operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
     const T&                                             operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
     std::map<std::string, std::function<bool(const T*)>> fQueryFunctionMap;
+
+    T* at(size_t index) {return this->std::vector<T*>::at(index);}
+    T* at(size_t index)const {return this->std::vector<T*>::at(index);}
 
     void updateQueryFunction()
     {

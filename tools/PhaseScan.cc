@@ -21,7 +21,7 @@ void PhaseScan::Initialize()
         cBoard->setSparsification(cSparsified);
     }
 
-    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->topoGigio(0)->topoGigio(0)->topoGigio(0)->topoGigio(0));
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     bool         cWithPS           = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
     bool         cWithPSv2         = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2 || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
@@ -128,10 +128,10 @@ void PhaseScan::ScanPhase()
                                         {
                                             for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
                                             {
-                                                cHitContainer.at(cBoard->getIndex())
-                                                    ->at(cOpticalGroup->getIndex())
-                                                    ->at(cHybrid->getIndex())
-                                                    ->at(cChip->getIndex())
+                                                cHitContainer.topoGigio(cBoard->getIndex())
+                                                    ->topoGigio(cOpticalGroup->getIndex())
+                                                    ->topoGigio(cHybrid->getIndex())
+                                                    ->topoGigio(cChip->getIndex())
                                                     ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
                                                 NPclus += 1;
                                             }
@@ -143,10 +143,10 @@ void PhaseScan::ScanPhase()
                                         {
                                             for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
                                             {
-                                                cHitContainer.at(cBoard->getIndex())
-                                                    ->at(cOpticalGroup->getIndex())
-                                                    ->at(cHybrid->getIndex())
-                                                    ->at(cChip->getIndex())
+                                                cHitContainer.topoGigio(cBoard->getIndex())
+                                                    ->topoGigio(cOpticalGroup->getIndex())
+                                                    ->topoGigio(cHybrid->getIndex())
+                                                    ->topoGigio(cChip->getIndex())
                                                     ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
                                                 NSclus += 1;
                                             }

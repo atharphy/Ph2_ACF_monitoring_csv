@@ -23,24 +23,24 @@ void ShortFinder::Reset()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                                         cBeRegMap = fBoardRegContainer.topoGigio(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        auto& cRegMapThisBoard = fRegMapContainer.topoGigio(cBoard->getIndex());
 
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->topoGigio(cHybrid->getIndex());
                 LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
-                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->topoGigio(cChip->getIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
                     for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
@@ -55,16 +55,16 @@ void ShortFinder::Print()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cShorts = fShorts.at(cBoard->getIndex());
+        auto& cShorts = fShorts.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cShortsThisOpticalGroup = cShorts->at(cOpticalGroup->getIndex());
+            auto& cShortsThisOpticalGroup = cShorts->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cShortsHybrid = cShortsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cShortsHybrid = cShortsThisOpticalGroup->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cShortsReadoutChip = cShortsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
+                    auto& cShortsReadoutChip = cShortsHybrid->topoGigio(cChip->getIndex())->getSummary<ChannelList>();
                     if(cShortsReadoutChip.size() == 0)
                         LOG(INFO) << BOLDGREEN << "No shorts found in readout chip" << +cChip->getId() << " on FE hybrid " << +cHybrid->getId() << RESET;
                     else
@@ -79,7 +79,7 @@ void ShortFinder::Print()
 }
 void ShortFinder::Initialise()
 {
-    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->topoGigio(0)->topoGigio(0)->topoGigio(0)->topoGigio(0));
     fWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     fWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
     LOG(INFO) << "With SSA set to " << ((fWithSSA) ? 1 : 0) << RESET;
@@ -127,26 +127,26 @@ void ShortFinder::Initialise()
     ContainerFactory::copyAndInitStructure<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-        auto& cRegMapThisBoard                                                 = fRegMapContainer.at(cBoard->getIndex());
-        auto& cShorts                                                          = fShorts.at(cBoard->getIndex());
-        auto& cInjections                                                      = fInjections.at(cBoard->getIndex());
+        fBoardRegContainer.topoGigio(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
+        auto& cRegMapThisBoard                                                 = fRegMapContainer.topoGigio(cBoard->getIndex());
+        auto& cShorts                                                          = fShorts.topoGigio(cBoard->getIndex());
+        auto& cInjections                                                      = fInjections.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cShortsOpticalGroup     = cShorts->at(cOpticalGroup->getIndex());
-            auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cShortsOpticalGroup     = cShorts->topoGigio(cOpticalGroup->getIndex());
+            auto& cInjectionsOpticalGroup = cInjections->topoGigio(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->topoGigio(cOpticalGroup->getIndex());
 
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cShortsHybrid     = cShortsOpticalGroup->at(cHybrid->getIndex());
-                auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cShortsHybrid     = cShortsOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cInjectionsHybrid = cInjectionsOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    cInjectionsHybrid->at(cChip->getIndex())->getSummary<ChannelList>().clear();
-                    cShortsHybrid->at(cChip->getIndex())->getSummary<ChannelList>().clear();
-                    cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
+                    cInjectionsHybrid->topoGigio(cChip->getIndex())->getSummary<ChannelList>().clear();
+                    cShortsHybrid->topoGigio(cChip->getIndex())->getSummary<ChannelList>().clear();
+                    cRegMapThisHybrid->topoGigio(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
                 }
             }
         }
@@ -156,30 +156,30 @@ void ShortFinder::Stop() { this->Reset(); }
 void ShortFinder::Count(BeBoard* pBoard, const std::shared_ptr<ChannelGroupBase> pGroup)
 {
     auto  cBitset              = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(pGroup)->getBitset());
-    auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
-    auto& cThisHitsContainer   = fHitsContainer.at(pBoard->getIndex());
-    auto& cShorts              = fShorts.at(pBoard->getIndex());
-    auto& cInjections          = fInjections.at(pBoard->getIndex());
+    auto& cThisShortsContainer = fShortsContainer.topoGigio(pBoard->getIndex());
+    auto& cThisHitsContainer   = fHitsContainer.topoGigio(pBoard->getIndex());
+    auto& cShorts              = fShorts.topoGigio(pBoard->getIndex());
+    auto& cInjections          = fInjections.topoGigio(pBoard->getIndex());
 
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cOpticalGroupShorts     = cThisShortsContainer->at(cOpticalGroup->getIndex());
-        auto& cOpticalGroupHits       = cThisHitsContainer->at(cOpticalGroup->getIndex());
-        auto& cShortsOpticalGroup     = cShorts->at(cOpticalGroup->getIndex());
-        auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
+        auto& cOpticalGroupShorts     = cThisShortsContainer->topoGigio(cOpticalGroup->getIndex());
+        auto& cOpticalGroupHits       = cThisHitsContainer->topoGigio(cOpticalGroup->getIndex());
+        auto& cShortsOpticalGroup     = cShorts->topoGigio(cOpticalGroup->getIndex());
+        auto& cInjectionsOpticalGroup = cInjections->topoGigio(cOpticalGroup->getIndex());
 
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cHybridShorts     = cOpticalGroupShorts->at(cHybrid->getIndex());
-            auto& cHybridHits       = cOpticalGroupHits->at(cHybrid->getIndex());
-            auto& cShortsHybrid     = cShortsOpticalGroup->at(cHybrid->getIndex());
-            auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
+            auto& cHybridShorts     = cOpticalGroupShorts->topoGigio(cHybrid->getIndex());
+            auto& cHybridHits       = cOpticalGroupHits->topoGigio(cHybrid->getIndex());
+            auto& cShortsHybrid     = cShortsOpticalGroup->topoGigio(cHybrid->getIndex());
+            auto& cInjectionsHybrid = cInjectionsOpticalGroup->topoGigio(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
-                auto& cReadoutChipShorts     = cHybridShorts->at(cChip->getIndex());
-                auto& cReadoutChipHits       = cHybridHits->at(cChip->getIndex());
-                auto& cShortsReadoutChip     = cShortsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
-                auto& cInjectionsReadoutChip = cInjectionsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
+                auto& cReadoutChipShorts     = cHybridShorts->topoGigio(cChip->getIndex());
+                auto& cReadoutChipHits       = cHybridHits->topoGigio(cChip->getIndex());
+                auto& cShortsReadoutChip     = cShortsHybrid->topoGigio(cChip->getIndex())->getSummary<ChannelList>();
+                auto& cInjectionsReadoutChip = cInjectionsHybrid->topoGigio(cChip->getIndex())->getSummary<ChannelList>();
                 for(size_t cIndex = 0; cIndex < cBitset.size(); cIndex++)
                 {
                     if(cBitset[cIndex] == 0 && cReadoutChipShorts->getChannelContainer<uint16_t>()->at(cIndex) > THRESHOLD_SHORT * fEventsPerPoint)
@@ -205,31 +205,31 @@ void ShortFinder::Count(BeBoard* pBoard, const std::shared_ptr<ChannelGroupBase>
 // {
 
 //     auto cBitset = std::bitset<NSSACHANNELS>( pGroup->getBitset() );
-//     auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
-//     auto& cThisHitsContainer = fHitsContainer.at(pBoard->getIndex());
-//     auto& cShorts = fShorts.at(pBoard->getIndex());
-//     auto& cInjections = fInjections.at(pBoard->getIndex());
+//     auto& cThisShortsContainer = fShortsContainer.topoGigio(pBoard->getIndex());
+//     auto& cThisHitsContainer = fHitsContainer.topoGigio(pBoard->getIndex());
+//     auto& cShorts = fShorts.topoGigio(pBoard->getIndex());
+//     auto& cInjections = fInjections.topoGigio(pBoard->getIndex());
 
 //     for(auto cOpticalGroup : *pBoard)
 //     {
-//         auto& cOpticalGroupShorts = cThisShortsContainer->at(cOpticalGroup->getIndex());
-//         auto& cOpticalGroupHits = cThisHitsContainer->at(cOpticalGroup->getIndex());
-//         auto& cShortsOpticalGroup = cShorts->at(cOpticalGroup->getIndex());
-//         auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
+//         auto& cOpticalGroupShorts = cThisShortsContainer->topoGigio(cOpticalGroup->getIndex());
+//         auto& cOpticalGroupHits = cThisHitsContainer->topoGigio(cOpticalGroup->getIndex());
+//         auto& cShortsOpticalGroup = cShorts->topoGigio(cOpticalGroup->getIndex());
+//         auto& cInjectionsOpticalGroup = cInjections->topoGigio(cOpticalGroup->getIndex());
 
 //         for (auto cHybrid : *cOpticalGroup)
 //         {
-//             auto& cHybridShorts = cOpticalGroupShorts->at(cHybrid->getIndex());
-//             auto& cHybridHits = cOpticalGroupHits->at(cHybrid->getIndex());
-//             auto& cShortsHybrid = cShortsOpticalGroup->at(cHybrid->getIndex());
-//             auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
+//             auto& cHybridShorts = cOpticalGroupShorts->topoGigio(cHybrid->getIndex());
+//             auto& cHybridHits = cOpticalGroupHits->topoGigio(cHybrid->getIndex());
+//             auto& cShortsHybrid = cShortsOpticalGroup->topoGigio(cHybrid->getIndex());
+//             auto& cInjectionsHybrid = cInjectionsOpticalGroup->topoGigio(cHybrid->getIndex());
 //             for (auto cChip : *cHybrid)
 //             {
 
-//                 auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
-//                 auto& cReadoutChipHits = cHybridHits->at(cChip->getIndex());
-//                 auto& cShortsReadoutChip = cShortsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
-//                 auto& cInjectionsReadoutChip = cInjectionsHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
+//                 auto& cReadoutChipShorts = cHybridShorts->topoGigio(cChip->getIndex());
+//                 auto& cReadoutChipHits = cHybridHits->topoGigio(cChip->getIndex());
+//                 auto& cShortsReadoutChip = cShortsHybrid->topoGigio(cChip->getIndex())->getSummary<ChannelList>();
+//                 auto& cInjectionsReadoutChip = cInjectionsHybrid->topoGigio(cChip->getIndex())->getSummary<ChannelList>();
 
 //                 for( size_t cIndex=0; cIndex < cBitset.size(); cIndex++ )
 //                 {
@@ -310,7 +310,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 for(auto cChipData: *cHybridData) // for on chip - begin
                 {
                     ReadoutChip* cChip =
-                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cChipData->getIndex()));
+                        static_cast<ReadoutChip*>(fDetectorContainer->topoGigio(cBoardData->getIndex())->topoGigio(cOpticalGroupData->getIndex())->topoGigio(cHybridData->getIndex())->topoGigio(cChipData->getIndex()));
                     auto cThreshold                   = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                     cChipData->getSummary<uint16_t>() = cThreshold;
                     cMeanValue += cThreshold;
@@ -347,7 +347,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cShortsContainer);
     // going to inject in every Nth chnannel at a time
     int cInjectionPeriod = 4;
-    // std::vector< std::vector< std::vector<uint8_t> > > cAllShorts (4, cOpticalReadout->at(0)->at(0)->size(),0);
+    // std::vector< std::vector< std::vector<uint8_t> > > cAllShorts (4, cOpticalReadout->topoGigio(0)->topoGigio(0)->size(),0);
     // std::vector< std::vector< std::vector<uint8_t> > > cAllShorts (cInjectionPeriod, std::vector< std::vector<uint8_t> >(8, std::vector<uint8_t>(0) ) );
     std::vector<std::vector<uint8_t>> cAllShorts(8, std::vector<uint8_t>(0));
     for(int cInject = 0; cInject < cInjectionPeriod; cInject++)
@@ -433,7 +433,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                                 else
                                     LOG(DEBUG) << BOLDGREEN << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
                             } // chnl
-                            auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
+                            auto& cShortsData = cShortsContainer.topoGigio(pBoard->getIndex())->topoGigio(cOpticalReadout->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cReadoutChip->getIndex());
                             // first time .. set to 0
                             if(cInject == 0) cShortsData->getSummary<uint16_t>() = 0;
                             cShortsData->getSummary<uint16_t>() += (uint16_t)cShorts.size();
@@ -459,11 +459,11 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     // std::vector<uint8_t> cShorts(0)
     // for(int i = 0; i < 8; i++){
     //     for(int cInject = 0 < cInject < cInjectionPeriod; cInject++){
-    //         cAllShorts.at(cInject).at((int)cReadoutChip->getId()) = cShorts;
+    //         cAllShorts.at(cInject).topoGigio((int)cReadoutChip->getId()) = cShorts;
     //     }
     // }
 #ifdef __USE_ROOT__
-    for(auto cReadoutChip: *pBoard->at(0)->at(0))
+    for(auto cReadoutChip: *pBoard->topoGigio(0)->topoGigio(0))
     {
         fShortsTreeParameter.Clear();
         fShortsTreeParameter = "Chip_" + std::to_string(cReadoutChip->getId());
@@ -483,7 +483,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 // add check for SSA
                 if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
-                auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
+                auto& cShortsData = cShortsContainer.topoGigio(pBoard->getIndex())->topoGigio(cOpticalReadout->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cReadoutChip->getIndex());
                 if(cShortsData->getSummary<uint16_t>() == 0)
                     LOG(INFO) << BOLDGREEN << "SSA" << +cReadoutChip->getId() << " found " << +cShortsData->getSummary<uint16_t>() << " shorts in total when injecting in every " << +cInjectionPeriod
                               << "th channel " << RESET;
@@ -519,8 +519,8 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET;
         LOG(DEBUG) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
 
-        auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
-        auto& cThisHitsContainer   = fHitsContainer.at(pBoard->getIndex());
+        auto& cThisShortsContainer = fShortsContainer.topoGigio(pBoard->getIndex());
+        auto& cThisHitsContainer   = fHitsContainer.topoGigio(pBoard->getIndex());
 
         this->ReadNEvents(pBoard, fEventsPerPoint);
         const std::vector<Event*>& cEvents = this->GetEvents();
@@ -529,17 +529,17 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
             auto cEventCount = cEvent->GetEventCount();
             for(auto cOpticalGroup: *pBoard)
             {
-                auto& cShortsContainer = cThisShortsContainer->at(cOpticalGroup->getIndex());
-                auto& cHitsContainer   = cThisHitsContainer->at(cOpticalGroup->getIndex());
+                auto& cShortsContainer = cThisShortsContainer->topoGigio(cOpticalGroup->getIndex());
+                auto& cHitsContainer   = cThisHitsContainer->topoGigio(cOpticalGroup->getIndex());
 
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cHybridShorts = cShortsContainer->at(cHybrid->getIndex());
-                    auto& cHybridHits   = cHitsContainer->at(cHybrid->getIndex());
+                    auto& cHybridShorts = cShortsContainer->topoGigio(cHybrid->getIndex());
+                    auto& cHybridHits   = cHitsContainer->topoGigio(cHybrid->getIndex());
                     for(auto cChip: *cHybrid)
                     {
-                        auto& cReadoutChipShorts = cHybridShorts->at(cChip->getIndex());
-                        auto& cReadoutChipHits   = cHybridHits->at(cChip->getIndex());
+                        auto& cReadoutChipShorts = cHybridShorts->topoGigio(cChip->getIndex());
+                        auto& cReadoutChipHits   = cHybridHits->topoGigio(cChip->getIndex());
 
                         auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                         LOG(DEBUG) << BOLDBLUE << "\t\tGroup " << +cTestGroup << " FE" << +cHybrid->getId() << " .. CBC" << +cChip->getId() << ".. Event " << +cEventCount << " - " << +cHits.size()

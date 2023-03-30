@@ -93,22 +93,22 @@ void DQMHistogramCicFEAlignment::fillManualPhaseScan(uint8_t pPhase, uint8_t pLi
 {
     for(auto board: pErrors)
     {
-        auto& cBrdData = pData.at(board->getIndex());
-        auto& cBrdHist = fManualPhaseScan.at(board->getIndex());
+        auto& cBrdData = pData.topoGigio(board->getIndex());
+        auto& cBrdHist = fManualPhaseScan.topoGigio(board->getIndex());
         for(auto opticalGroup: *board)
         {
-            auto& cOGData = cBrdData->at(opticalGroup->getIndex());
-            auto& cOGHist = cBrdHist->at(opticalGroup->getIndex());
+            auto& cOGData = cBrdData->topoGigio(opticalGroup->getIndex());
+            auto& cOGHist = cBrdHist->topoGigio(opticalGroup->getIndex());
             for(auto hybrid: *opticalGroup)
             {
-                auto& cHybrdData = cOGData->at(hybrid->getIndex());
-                auto& cHybrdHist = cOGHist->at(hybrid->getIndex());
+                auto& cHybrdData = cOGData->topoGigio(hybrid->getIndex());
+                auto& cHybrdHist = cOGHist->topoGigio(hybrid->getIndex());
                 for(auto chip: *hybrid)
                 {
-                    auto& cChipData   = cHybrdData->at(chip->getIndex());
+                    auto& cChipData   = cHybrdData->topoGigio(chip->getIndex());
                     auto& cInputData  = cChipData->getSummary<std::string>();
                     auto& cErrors     = chip->getSummary<uint32_t>();
-                    TH2F* cChipHist   = cHybrdHist->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cChipHist   = cHybrdHist->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     auto  cBin        = cChipHist->FindBin(pPhase, pLine);
                     auto  cBinContent = cChipHist->GetBinContent(cBin);
                     cChipHist->SetBinContent(cBin, cBinContent + cInputData.length() - cErrors);

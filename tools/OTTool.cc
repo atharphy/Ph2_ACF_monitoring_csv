@@ -44,7 +44,7 @@ void OTTool::Reset()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         LOG(INFO) << BOLDBLUE << fMyName << ":Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                                         cBeRegMap = fBoardRegContainer.topoGigio(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap)
@@ -62,18 +62,18 @@ void OTTool::Reset()
 
     for(auto cBoard: *fDetectorContainer) // now reset Chip registers
     {
-        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.at(cBoard->getIndex());
+        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->at(cOpticalGroup->getIndex());
+            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
                 LOG(INFO) << BOLDYELLOW << fMyName << ":Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->at(cHybrid->getIndex());
+                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     std::vector<std::string> cRegsToSkip{"mask_strip", "mask_peri_A", "mask_peri_D"};
-                    auto&                    cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
+                    auto&                    cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->topoGigio(cChip->getIndex());
                     auto&                    cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     // reset registers
                     auto cModMap = cChip->GetModifiedRegisterMap();
@@ -123,7 +123,7 @@ void OTTool::Prepare()
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto&                cBoardRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                cBoardRegMap = fBoardRegContainer.topoGigio(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
         cBoardRegMap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
@@ -132,7 +132,7 @@ void OTTool::Prepare()
     for(auto cBoard: *fDetectorContainer)
     {
 #ifdef __TCUSB__
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
 #endif
         uint32_t cSparsified = cBoard->getSparsification(); // this is set in the file parser .. so check using that
         LOG(INFO) << BOLDYELLOW << +cSparsified << RESET;
@@ -229,18 +229,18 @@ void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> 
     LOG(INFO) << BOLDBLUE << fMyName << " setting registers to store on Chips." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.at(cBoard->getIndex());
+        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->at(cOpticalGroup->getIndex());
+            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->at(cHybrid->getIndex());
+                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != pType) continue;
 
-                    auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
+                    auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->topoGigio(cChip->getIndex());
                     auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     cRegsToPerserve.clear();
                     for(const auto& cRegName: pListOfRegs)
@@ -370,7 +370,7 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
         ContainerFactory::copyAndInitBoard<std::vector<uint32_t>>(*fDetectorContainer, cTrigCounters);
         for(auto cBoard: *fDetectorContainer)
         {
-            auto& cCounterThisBrd = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
+            auto& cCounterThisBrd = cTrigCounters.topoGigio(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
             cCounterThisBrd.clear();
         }
         auto cTime0 = startTimeUTC_us;
@@ -386,7 +386,7 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
                 auto  cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
                 auto  cTriggerInterface = cInterface->getTriggerInterface();
                 auto  cTriggerState     = cTriggerInterface->GetTriggerState();
-                auto& cCounterThisBrd   = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
+                auto& cCounterThisBrd   = cTrigCounters.topoGigio(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
                 cCounterThisBrd.push_back(fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter"));
                 auto cDeltaTriggers   = (cCounterThisBrd.size() == 1) ? cCounterThisBrd[0] : cCounterThisBrd[cCounterThisBrd.size() - 1] - cCounterThisBrd[cCounterThisBrd.size() - 2];
                 auto cTriggerSource   = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");

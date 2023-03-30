@@ -176,22 +176,22 @@ void ThrEqualization::run()
                 for(const auto cChip: *cHybrid)
                 {
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
-                        static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                        static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex()));
 
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
-                                                                                                                     ->at(cBoard->getIndex())
-                                                                                                                     ->at(cOpticalGroup->getIndex())
-                                                                                                                     ->at(cHybrid->getIndex())
-                                                                                                                     ->at(cChip->getIndex())
+                                                                                                                     ->topoGigio(cBoard->getIndex())
+                                                                                                                     ->topoGigio(cOpticalGroup->getIndex())
+                                                                                                                     ->topoGigio(cHybrid->getIndex())
+                                                                                                                     ->topoGigio(cChip->getIndex())
                                                                                                                      ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                      ->allChannelGroup()
                                                                                                                      ->isChannelEnabled(row, col))
                             {
-                                theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fStatus =
+                                theOccContainer->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fStatus =
                                     RD53Shared::ISDISABLED;
-                                theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+                                theTDACContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col) =
                                     frontEnd->nTDACvalues;
                             }
                 }
@@ -244,25 +244,25 @@ void ThrEqualization::analyze()
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->at(cBoard->getIndex())
-                                                                                                                   ->at(cOpticalGroup->getIndex())
-                                                                                                                   ->at(cHybrid->getIndex())
-                                                                                                                   ->at(cChip->getIndex())
+                                                                                                                   ->topoGigio(cBoard->getIndex())
+                                                                                                                   ->topoGigio(cOpticalGroup->getIndex())
+                                                                                                                   ->topoGigio(cHybrid->getIndex())
+                                                                                                                   ->topoGigio(cChip->getIndex())
                                                                                                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
                             {
                                 static_cast<RD53*>(cChip)->setTDAC(
-                                    row, col, theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col));
+                                    row, col, theTDACContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col));
 
-                                avgTDAC += theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                avgTDAC += theTDACContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col);
                                 counter++;
 
                                 counterMinBin +=
-                                    (theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) == 0 ? 1
+                                    (theTDACContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col) == 0 ? 1
                                                                                                                                                                                                  : 0);
                                 counterMaxBin +=
-                                    (theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) ==
+                                    (theTDACContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col) ==
                                              frontEnd->nTDACvalues - 1
                                          ? 1
                                          : 0);
@@ -307,10 +307,10 @@ void ThrEqualization::analyzeDuringRun()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current = round(theContainer.at(cBoard->getIndex())
-                                                 ->at(cOpticalGroup->getIndex())
-                                                 ->at(cHybrid->getIndex())
-                                                 ->at(cChip->getIndex())
+                        auto current = round(theContainer.topoGigio(cBoard->getIndex())
+                                                 ->topoGigio(cOpticalGroup->getIndex())
+                                                 ->topoGigio(cHybrid->getIndex())
+                                                 ->topoGigio(cChip->getIndex())
                                                  ->getSummary<GenericDataArray<TDACGainSize>>()
                                                  .data[i] /
                                              RD53Shared::PRECISION) *
@@ -328,7 +328,7 @@ void ThrEqualization::analyzeDuringRun()
                     // ########################################################
                     // # Fill TDAC gain container and download new DAC values #
                     // ########################################################
-                    theTDACGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
+                    theTDACGainContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->TDACGainReg, regVal);
                 }
 }
@@ -380,17 +380,17 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         size_t cnt    = 0;
                         for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                             for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                if(fDetectorContainer->at(cBoard->getIndex())
-                                       ->at(cOpticalGroup->getIndex())
-                                       ->at(cHybrid->getIndex())
-                                       ->at(cChip->getIndex())
+                                if(fDetectorContainer->topoGigio(cBoard->getIndex())
+                                       ->topoGigio(cOpticalGroup->getIndex())
+                                       ->topoGigio(cHybrid->getIndex())
+                                       ->topoGigio(cChip->getIndex())
                                        ->getChipOriginalMask()
                                        ->isChannelEnabled(row, col) &&
                                    this->getChannelGroupHandlerContainer()
-                                       ->at(cBoard->getIndex())
-                                       ->at(cOpticalGroup->getIndex())
-                                       ->at(cHybrid->getIndex())
-                                       ->at(cChip->getIndex())
+                                       ->topoGigio(cBoard->getIndex())
+                                       ->topoGigio(cOpticalGroup->getIndex())
+                                       ->topoGigio(cHybrid->getIndex())
+                                       ->topoGigio(cChip->getIndex())
                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                        ->allChannelGroup()
                                        ->isChannelEnabled(row, col) &&
@@ -405,7 +405,7 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // ###############
                         // # Save output #
                         // ###############
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TDACGainSize>>().data[i] =
+                        theContainer->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<GenericDataArray<TDACGainSize>>().data[i] =
                             stdDev;
 
                         // ##############################################
@@ -445,9 +445,9 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                            (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
-                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
+                        midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
+                            (minDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() +
+                             maxDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>()) /
                             2;
         CalibBase::downloadNewDACvalues(midDACcontainer, {regName.c_str()});
 
@@ -479,25 +479,25 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
                         // ########################
                         // # Save best DAC values #
                         // ########################
-                        float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>();
+                        float oldValue = bestContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<float>();
 
                         if(fabs(newValue - target) < fabs(oldValue - target))
                         {
-                            bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = newValue;
+                            bestContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<float>() = newValue;
 
-                            bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            bestDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
+                                midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
                         }
 
                         if(newValue > target)
 
-                            maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            maxDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
+                                midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
 
                         else
 
-                            minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            minDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
+                                midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
                     }
     }
 
@@ -540,7 +540,7 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
-                        static_cast<RD53*>(cChip), "", *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                        static_cast<RD53*>(cChip), "", *midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex()));
 
     for(auto i = 0u; i <= (doNSteps != 0 ? doNSteps : numberOfBits); i++)
     {
@@ -552,7 +552,7 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                         this->fReadoutChipInterface->WriteChipAllLocalReg(
-                            static_cast<RD53*>(cChip), "", *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                            static_cast<RD53*>(cChip), "", *midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex()));
 
         // ################
         // # Run analysis #
@@ -574,17 +574,17 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
                     for(const auto cChip: *cHybrid)
                         for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                             for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                if(fDetectorContainer->at(cBoard->getIndex())
-                                       ->at(cOpticalGroup->getIndex())
-                                       ->at(cHybrid->getIndex())
-                                       ->at(cChip->getIndex())
+                                if(fDetectorContainer->topoGigio(cBoard->getIndex())
+                                       ->topoGigio(cOpticalGroup->getIndex())
+                                       ->topoGigio(cHybrid->getIndex())
+                                       ->topoGigio(cChip->getIndex())
                                        ->getChipOriginalMask()
                                        ->isChannelEnabled(row, col) &&
                                    this->getChannelGroupHandlerContainer()
-                                       ->at(cBoard->getIndex())
-                                       ->at(cOpticalGroup->getIndex())
-                                       ->at(cHybrid->getIndex())
-                                       ->at(cChip->getIndex())
+                                       ->topoGigio(cBoard->getIndex())
+                                       ->topoGigio(cOpticalGroup->getIndex())
+                                       ->topoGigio(cHybrid->getIndex())
+                                       ->topoGigio(cChip->getIndex())
                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                        ->allChannelGroup()
                                        ->isChannelEnabled(row, col))
@@ -597,34 +597,34 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
                                     // ########################
                                     // # Save best DAC values #
                                     // ########################
-                                    float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col);
+                                    float oldValue = bestContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<float>(row, col);
 
                                     if(fabs(newValue - target) <= fabs(oldValue - target))
                                     {
-                                        bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col) = newValue;
-                                        bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                        bestContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<float>(row, col) = newValue;
+                                        bestDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+                                            midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col);
                                     }
 
                                     if(newValue < target)
 
-                                        minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                        minDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+                                            midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col);
 
                                     else
 
-                                        maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                        maxDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+                                            midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col);
 
                                     if(doNSteps == 0)
-                                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                            (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
-                                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col)) /
+                                        midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+                                            (minDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col) +
+                                             maxDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col)) /
                                             2;
                                     else
                                     {
                                         auto& midDAC =
-                                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                            midDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(row, col);
                                         if(newValue < target)
                                         {
                                             midDAC += 1;
@@ -647,7 +647,7 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
                 for(const auto cChip: *cHybrid)
                 {
                     this->fReadoutChipInterface->WriteChipAllLocalReg(
-                        static_cast<RD53*>(cChip), "", *bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                        static_cast<RD53*>(cChip), "", *bestDACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex()));
                     if(updateDACs == true) static_cast<RD53*>(cChip)->copyMaskToDefault("td");
                 }
 

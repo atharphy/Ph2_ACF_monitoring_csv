@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     } while(cIter < 100);
 #endif
 
-    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->topoGigio(0));
     cTool.fBeBoardInterface->getBoardInfo(pBoard);
 
     bool cTestPulse = (cmd.foundOption("testpulse")) ? true : false;
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
             uint32_t cNEventsToCollect = (cmd.foundOption("events")) ? convertAnyInt(cmd.optionValue("events").c_str()) : 10000;
 
             // be careful works only for one hybrid
-            HybridContainer* cCbcVector = pBoard->at(0)->at(0);
+            HybridContainer* cCbcVector = pBoard->topoGigio(0)->topoGigio(0);
             /*for( auto cCbc : cCbcVector )
             {
                 static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->enableHipSuppression( cCbc, false, true,0);
@@ -270,7 +270,7 @@ int main(int argc, char** argv)
             // init threshold visitior
             ThresholdVisitor cThresholdVisitor(cTool.fReadoutChipInterface, 0);
             cTool.accept(cThresholdVisitor);
-            auto cHybrid0 = pBoard->at(0)->at(0);
+            auto cHybrid0 = pBoard->topoGigio(0)->topoGigio(0);
 
             // hybrid mask
             uint32_t cHybridMask = (cmd.foundOption("mask")) ? convertAnyInt(cmd.optionValue("mask").c_str()) : 0xFFFFFFFF;

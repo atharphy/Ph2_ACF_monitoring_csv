@@ -167,7 +167,7 @@ void Latency::analyze()
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
                         auto current =
-                            theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
+                            theOccContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
                         if(current > best)
                         {
                             regVal = dacList[i];
@@ -187,7 +187,7 @@ void Latency::analyze()
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
+                    theLatencyContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg, regVal);
                 }
 }
@@ -225,7 +225,7 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] =
+                        theContainer->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] =
                             cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
         // ##############################################

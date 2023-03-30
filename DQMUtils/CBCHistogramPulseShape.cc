@@ -35,7 +35,7 @@ void CBCHistogramPulseShape::book(TFile* theOutputFile, DetectorContainer& theDe
     fDelayStep             = findValueInSettings<double>(pSettingsMap, "PulseShapeDelayStep", 1);
     fPlotPulseShapeSCurves = findValueInSettings<double>(pSettingsMap, "PlotPulseShapeSCurves", 0);
 
-    uint32_t numberOfChannels = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
+    uint32_t numberOfChannels = theDetectorStructure.topoGigio(0)->topoGigio(0)->topoGigio(0)->topoGigio(0)->size();
     int      delayNbins       = (fFinalDelay - fInitialDelay) / fDelayStep + 1;
     fEffectiveFinalDelay      = (delayNbins - 1) * fDelayStep + fInitialDelay;
 
@@ -100,7 +100,7 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
                     // Retreive the corresponging chip histogram:
                     if(chip->getSummaryContainer<ThresholdAndNoise, ThresholdAndNoise>() == nullptr) continue;
                     TH1F* chipPulseShapeHistogram =
-                        fDetectorChipPulseShapeHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        fDetectorChipPulseShapeHistograms.topoGigio(boardIndex)->topoGigio(opticalGroupIndex)->topoGigio(hybridIndex)->topoGigio(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     int currentBin = chipPulseShapeHistogram->FindBin(binCenterValue);
                     chipPulseShapeHistogram->SetBinContent(currentBin, chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold);
                     chipPulseShapeHistogram->SetBinError(currentBin, chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThresholdError);
@@ -110,7 +110,7 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
                     for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>()) // for on channel - begin
                     {
                         TH1F* channelPulseShapeHistogram =
-                            fDetectorChannelPulseShapeHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getChannel<HistContainer<TH1F>>(channelNumber).fTheHistogram;
+                            fDetectorChannelPulseShapeHistograms.topoGigio(boardIndex)->topoGigio(opticalGroupIndex)->topoGigio(hybridIndex)->topoGigio(chipIndex)->getChannel<HistContainer<TH1F>>(channelNumber).fTheHistogram;
                         int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
                         channelPulseShapeHistogram->SetBinContent(currentBin, channel.fThreshold);
                         channelPulseShapeHistogram->SetBinError(currentBin, channel.fNoise);
@@ -134,10 +134,10 @@ void CBCHistogramPulseShape::fillSCurvePlots(uint16_t vcthr, uint16_t latency, u
                 for(auto chip: *hybrid)
                 {
                     TH2F* chipSCurve = fDetectorSCurveHistogramMap.at(std::make_tuple(latency, delay))
-                                           .at(board->getIndex())
-                                           ->at(opticalGroup->getIndex())
-                                           ->at(hybrid->getIndex())
-                                           ->at(chip->getIndex())
+                                           .topoGigio(board->getIndex())
+                                           ->topoGigio(opticalGroup->getIndex())
+                                           ->topoGigio(hybrid->getIndex())
+                                           ->topoGigio(chip->getIndex())
                                            ->getSummary<HistContainer<TH2F>>()
                                            .fTheHistogram;
 

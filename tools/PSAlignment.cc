@@ -52,29 +52,29 @@ void PSAlignment::Initialise()
 
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cAlParsThisBoard     = fAlParsContainer.at(cBoard->getIndex());
-        auto& cL1AlParsThisBoard   = fL1AlParsContainer.at(cBoard->getIndex());
-        auto& cStubAlParsThisBoard = fStubAlParsContainer.at(cBoard->getIndex());
+        auto& cAlParsThisBoard     = fAlParsContainer.topoGigio(cBoard->getIndex());
+        auto& cL1AlParsThisBoard   = fL1AlParsContainer.topoGigio(cBoard->getIndex());
+        auto& cStubAlParsThisBoard = fStubAlParsContainer.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cAlParsThisOG     = cAlParsThisBoard->at(cOpticalGroup->getIndex());
-            auto& cL1AlParsThisOG   = cL1AlParsThisBoard->at(cOpticalGroup->getIndex());
-            auto& cStubAlParsThisOG = cStubAlParsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cAlParsThisOG     = cAlParsThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cL1AlParsThisOG   = cL1AlParsThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cStubAlParsThisOG = cStubAlParsThisBoard->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cAlParsThisHybrd     = cAlParsThisOG->at(cHybrid->getIndex());
-                auto& cL1AlParsThisHybrd   = cL1AlParsThisOG->at(cHybrid->getIndex());
-                auto& cStubAlParsThisHybrd = cStubAlParsThisOG->at(cHybrid->getIndex());
+                auto& cAlParsThisHybrd     = cAlParsThisOG->topoGigio(cHybrid->getIndex());
+                auto& cL1AlParsThisHybrd   = cL1AlParsThisOG->topoGigio(cHybrid->getIndex());
+                auto& cStubAlParsThisHybrd = cStubAlParsThisOG->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::MPA2) PSv2 = true;
                     if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
-                        auto& cAlParsThisChip = cAlParsThisHybrd->at(cChip->getIndex());
+                        auto& cAlParsThisChip = cAlParsThisHybrd->topoGigio(cChip->getIndex());
                         cAlParsThisChip->getSummary<std::vector<MPAInputAlignment>>().clear();
-                        auto& cL1AlParsThisChip = cL1AlParsThisHybrd->at(cChip->getIndex());
+                        auto& cL1AlParsThisChip = cL1AlParsThisHybrd->topoGigio(cChip->getIndex());
                         cL1AlParsThisChip->getSummary<std::vector<MPAInputAlignment>>().clear();
-                        auto& cStubAlParsThisChip = cStubAlParsThisHybrd->at(cChip->getIndex());
+                        auto& cStubAlParsThisChip = cStubAlParsThisHybrd->topoGigio(cChip->getIndex());
                         cStubAlParsThisChip->getSummary<std::vector<MPAInputAlignment>>().clear();
                     }
                 }
@@ -1154,7 +1154,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     // scan alignment parameters - first L1A
     std::vector<uint8_t> cEdgeSelsRaw{0, 1}; //,0};
     // first scan the edge select for the T1 commands
-    auto&   cL1AlParsThisBoard = fL1AlParsContainer.at(pBoard->getIndex());
+    auto&   cL1AlParsThisBoard = fL1AlParsContainer.topoGigio(pBoard->getIndex());
     auto    cOriginlStubOffset = pBoard->getStubOffset();
     bool    cScanEdgeT1        = true;
     uint8_t cEdgeSelT1         = 1;
@@ -1197,10 +1197,10 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
 
             for(auto cOpticalReadout: *pBoard)
             {
-                auto& cL1AlParsThisOG = cL1AlParsThisBoard->at(cOpticalReadout->getIndex());
+                auto& cL1AlParsThisOG = cL1AlParsThisBoard->topoGigio(cOpticalReadout->getIndex());
                 for(auto cHybrid: *cOpticalReadout)
                 {
-                    auto& cL1AlParsThisHybrid = cL1AlParsThisOG->at(cHybrid->getIndex());
+                    auto& cL1AlParsThisHybrid = cL1AlParsThisOG->topoGigio(cHybrid->getIndex());
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
@@ -1212,7 +1212,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
                         else
                             LOG(INFO) << BOLDYELLOW << "\t\t no alignment parameters found for L1 data from SSA" << RESET;
 
-                        auto& cL1AlParsThisChip = cL1AlParsThisHybrid->at(cChip->getIndex());
+                        auto& cL1AlParsThisChip = cL1AlParsThisHybrid->topoGigio(cChip->getIndex());
                         auto& cMPAInL1Pars      = cL1AlParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
                         for(auto cPar: cL1AlignmentPars)
                         {
@@ -1237,16 +1237,16 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     bool cOneFoundForAll = true;
     for(auto cOpticalReadout: *pBoard)
     {
-        auto& cL1AlParsThisOG = cL1AlParsThisBoard->at(cOpticalReadout->getIndex());
+        auto& cL1AlParsThisOG = cL1AlParsThisBoard->topoGigio(cOpticalReadout->getIndex());
         for(auto cHybrid: *cOpticalReadout)
         {
-            auto& cL1AlParsThisHybrid = cL1AlParsThisOG->at(cHybrid->getIndex());
+            auto& cL1AlParsThisHybrid = cL1AlParsThisOG->topoGigio(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 if(cChip->getId() % 8 != pChipId) continue;
 
-                auto& cL1AlParsThisChip = cL1AlParsThisHybrid->at(cChip->getIndex());
+                auto& cL1AlParsThisChip = cL1AlParsThisHybrid->topoGigio(cChip->getIndex());
                 auto& cMPAInL1Pars      = cL1AlParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
                 cOneFoundForAll         = cOneFoundForAll && cMPAInL1Pars.size() > 0;
             }
@@ -1257,23 +1257,23 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     // now scan stub alignment parameters
     // for this.. enough to have L1 alignment pars
     // set to 'first good'
-    auto& cStubAlParsThisBoard = fStubAlParsContainer.at(pBoard->getIndex());
+    auto& cStubAlParsThisBoard = fStubAlParsContainer.topoGigio(pBoard->getIndex());
     for(auto cOpticalReadout: *pBoard)
     {
-        auto& cAlParsThisOG   = cStubAlParsThisBoard->at(cOpticalReadout->getIndex());
-        auto& cL1AlParsThisOG = cL1AlParsThisBoard->at(cOpticalReadout->getIndex());
+        auto& cAlParsThisOG   = cStubAlParsThisBoard->topoGigio(cOpticalReadout->getIndex());
+        auto& cL1AlParsThisOG = cL1AlParsThisBoard->topoGigio(cOpticalReadout->getIndex());
         for(auto cHybrid: *cOpticalReadout)
         {
-            auto& cAlParsThisHybrid   = cAlParsThisOG->at(cHybrid->getIndex());
-            auto& cL1AlParsThisHybrid = cL1AlParsThisOG->at(cHybrid->getIndex());
+            auto& cAlParsThisHybrid   = cAlParsThisOG->topoGigio(cHybrid->getIndex());
+            auto& cL1AlParsThisHybrid = cL1AlParsThisOG->topoGigio(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 if(cChip->getId() % 8 != pChipId) continue;
 
-                auto& cAlParsThisChip = cAlParsThisHybrid->at(cChip->getIndex());
+                auto& cAlParsThisChip = cAlParsThisHybrid->topoGigio(cChip->getIndex());
                 auto& cMPAPars        = cAlParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
 
-                auto& cL1AlParsThisChip = cL1AlParsThisHybrid->at(cChip->getIndex());
+                auto& cL1AlParsThisChip = cL1AlParsThisHybrid->topoGigio(cChip->getIndex());
                 auto& cMPAParsL1        = cL1AlParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
                 // assume all lines must use the same edge
                 size_t cL1ParIndx = 0;
@@ -1347,16 +1347,16 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     // check that at least one stub alignment parameter was found for each chip
     for(auto cOpticalReadout: *pBoard)
     {
-        auto& cAlParsThisOG = cStubAlParsThisBoard->at(cOpticalReadout->getIndex());
+        auto& cAlParsThisOG = cStubAlParsThisBoard->topoGigio(cOpticalReadout->getIndex());
         for(auto cHybrid: *cOpticalReadout)
         {
-            auto& cAlParsThisHybrid = cAlParsThisOG->at(cHybrid->getIndex());
+            auto& cAlParsThisHybrid = cAlParsThisOG->topoGigio(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 if(cChip->getId() % 8 != pChipId) continue;
 
-                auto& cAlParsThisChip = cAlParsThisHybrid->at(cChip->getIndex());
+                auto& cAlParsThisChip = cAlParsThisHybrid->topoGigio(cChip->getIndex());
                 auto& cMPAPars        = cAlParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
                 cOneFoundForAll       = cOneFoundForAll && cMPAPars.size() > 0;
             }
@@ -1366,29 +1366,29 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     fBeBoardInterface->ChipReSync(pBoard);
 
     // now push back all valid alignment parameters for all
-    auto& cAlParsThisBoard = fAlParsContainer.at(pBoard->getIndex());
+    auto& cAlParsThisBoard = fAlParsContainer.topoGigio(pBoard->getIndex());
     for(auto cOpticalReadout: *pBoard)
     {
-        auto& cStubAlParsThisOG = cStubAlParsThisBoard->at(cOpticalReadout->getIndex());
-        auto& cL1AlParsThisOG   = cL1AlParsThisBoard->at(cOpticalReadout->getIndex());
-        auto& cAlParsThisOG     = cAlParsThisBoard->at(cOpticalReadout->getIndex());
+        auto& cStubAlParsThisOG = cStubAlParsThisBoard->topoGigio(cOpticalReadout->getIndex());
+        auto& cL1AlParsThisOG   = cL1AlParsThisBoard->topoGigio(cOpticalReadout->getIndex());
+        auto& cAlParsThisOG     = cAlParsThisBoard->topoGigio(cOpticalReadout->getIndex());
         for(auto cHybrid: *cOpticalReadout)
         {
-            auto& cStubAlParsThisHybrid = cStubAlParsThisOG->at(cHybrid->getIndex());
-            auto& cL1AlParsThisHybrid   = cL1AlParsThisOG->at(cHybrid->getIndex());
-            auto& cAlParsThisHybrid     = cAlParsThisOG->at(cHybrid->getIndex());
+            auto& cStubAlParsThisHybrid = cStubAlParsThisOG->topoGigio(cHybrid->getIndex());
+            auto& cL1AlParsThisHybrid   = cL1AlParsThisOG->topoGigio(cHybrid->getIndex());
+            auto& cAlParsThisHybrid     = cAlParsThisOG->topoGigio(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 if(cChip->getId() % 8 != pChipId) continue;
 
-                auto& cL1lParsThisChip = cL1AlParsThisHybrid->at(cChip->getIndex());
+                auto& cL1lParsThisChip = cL1AlParsThisHybrid->topoGigio(cChip->getIndex());
                 auto& cL1MPAPars       = cL1lParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
 
-                auto& cStubParsThisChip = cStubAlParsThisHybrid->at(cChip->getIndex());
+                auto& cStubParsThisChip = cStubAlParsThisHybrid->topoGigio(cChip->getIndex());
                 auto& cStubMPAPars      = cStubParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
 
-                auto& cParsThisChip = cAlParsThisHybrid->at(cChip->getIndex());
+                auto& cParsThisChip = cAlParsThisHybrid->topoGigio(cChip->getIndex());
                 auto& cPars         = cParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
 
                 for(auto cL1Par: cL1MPAPars)
@@ -1751,17 +1751,17 @@ bool PSAlignment::Align()
     bool cAllAligned = true;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cAlParsThisBoard = fAlParsContainer.at(cBoard->getIndex());
+        auto& cAlParsThisBoard = fAlParsContainer.topoGigio(cBoard->getIndex());
         for(auto cOpticalReadout: *cBoard)
         {
-            auto& cAlParsThisOG = cAlParsThisBoard->at(cOpticalReadout->getIndex());
+            auto& cAlParsThisOG = cAlParsThisBoard->topoGigio(cOpticalReadout->getIndex());
             for(auto cHybrid: *cOpticalReadout)
             {
-                auto& cAlParsThisHybrid = cAlParsThisOG->at(cHybrid->getIndex());
+                auto& cAlParsThisHybrid = cAlParsThisOG->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
-                    auto& cParsThisChip = cAlParsThisHybrid->at(cChip->getIndex());
+                    auto& cParsThisChip = cAlParsThisHybrid->topoGigio(cChip->getIndex());
                     auto& cPars         = cParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
                     if(cPars.size() == 0)
                     {

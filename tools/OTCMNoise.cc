@@ -71,7 +71,7 @@ void OTCMNoise::TakeData()
     for(auto cBoard: theHitContainer)
     {
         // BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
+        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->topoGigio(cBoard->getIndex()));
 
         uint32_t cN = 0;
 
@@ -123,8 +123,8 @@ void OTCMNoise::TakeData()
                     {
                         for(size_t iCh2 = 0; iCh2 < hit_channels.size(); iCh2++)
                         {
-                            the2DHitContainer.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
+                            the2DHitContainer.topoGigio(cBoard->getIndex())
+                                ->topoGigio(cOpticalGroup->getIndex())
                                 ->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(hit_channels[iCh1], hit_channels[iCh2]) += 1;
                         }
                     }

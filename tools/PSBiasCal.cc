@@ -18,22 +18,22 @@ void PSBiasCal::Reset()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                                         cBeRegMap = fBoardRegContainer.topoGigio(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        auto& cRegMapThisBoard = fRegMapContainer.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->topoGigio(cHybrid->getIndex());
                 LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
-                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->topoGigio(cChip->getIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
                     for(auto cReg: cRegMapThisChip)
@@ -64,14 +64,14 @@ void PSBiasCal::Initialise()
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-        auto& cRegMapThisBoard                                                 = fRegMapContainer.at(cBoard->getIndex());
+        fBoardRegContainer.topoGigio(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
+        auto& cRegMapThisBoard                                                 = fRegMapContainer.topoGigio(cBoard->getIndex());
         for(auto cOpticalReadout: *cBoard)
         {
             for(auto cHybrid: *cOpticalReadout)
             {
-                auto& cRegMapThisHybrid = cRegMapThisBoard->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex());
-                for(auto cChip: *cHybrid) { cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap(); }
+                auto& cRegMapThisHybrid = cRegMapThisBoard->topoGigio(cOpticalReadout->getIndex())->topoGigio(cHybrid->getIndex());
+                for(auto cChip: *cHybrid) { cRegMapThisHybrid->topoGigio(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap(); }
             }
         }
     }

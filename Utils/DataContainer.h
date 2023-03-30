@@ -427,6 +427,10 @@ class DataContainer
         for(auto container: *this) { container->cleanDataStored(); }
     }
 
+
+    T*& topoGigio(size_t index) {return std::vector<T*>::at(index);}
+    const T* const& topoGigio(size_t index) const {return std::vector<T*>::at(index);}
+
   private:
     friend class boost::serialization::access;
     template <class Archive>
@@ -436,6 +440,9 @@ class DataContainer
         theArchive& boost::serialization::base_object<BaseDataContainer>(*this);
         theArchive& boost::serialization::base_object<Container<T>>(*this);
     }
+
+    T*& at(size_t index) {return this->std::vector<T*>::at(index);}
+    const T* const& at(size_t index)const {return this->std::vector<T*>::at(index);}
 };
 
 template <typename T>

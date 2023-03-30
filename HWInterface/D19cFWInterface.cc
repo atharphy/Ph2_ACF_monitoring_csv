@@ -798,7 +798,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 cVecReg.push_back({"fc7_daq_cnfg.ddr3_debug.stub_enable", 0});
                 std::string cFwRegName = "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable";
                 std::string cRegName   = (cCic->getFrontEndType() == FrontEndType::CIC) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
-                ChipRegItem cRegItem   = static_cast<OuterTrackerHybrid*>(pBoard->at(0)->at(0))->fCic->getRegItem(cRegName);
+                ChipRegItem cRegItem   = static_cast<OuterTrackerHybrid*>(pBoard->topoGigio(0)->topoGigio(0))->fCic->getRegItem(cRegName);
                 uint8_t     cRegValue  = (cCic->getFrontEndType() == FrontEndType::CIC) ? cRegItem.fValue : (cRegItem.fValue & 0x10) >> 4;
                 LOG(INFO) << BOLDBLUE << "Sparsification set to " << +cRegValue << RESET;
                 cVecReg.push_back({cFwRegName, (cCic->getFrontEndType() == FrontEndType::CIC) ? cRegItem.fValue : (cRegItem.fValue & 0x10) >> 4});

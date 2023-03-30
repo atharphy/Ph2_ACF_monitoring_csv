@@ -51,36 +51,36 @@ void DataChecker::Initialise()
     // ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fBxIdsMismatches);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cInjections = fInjections.at(cBoard->getIndex());
-        auto& cMismatches = fDataMismatches.at(cBoard->getIndex());
-        auto& cBadEvents  = fBadEvents.at(cBoard->getIndex());
-        auto& cGoodEvents = fGoodEvents.at(cBoard->getIndex());
+        auto& cInjections = fInjections.topoGigio(cBoard->getIndex());
+        auto& cMismatches = fDataMismatches.topoGigio(cBoard->getIndex());
+        auto& cBadEvents  = fBadEvents.topoGigio(cBoard->getIndex());
+        auto& cGoodEvents = fGoodEvents.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
-            auto& cMismatchesOpticalGroup = cMismatches->at(cOpticalGroup->getIndex());
-            auto& cBadEventsOpticalGroup  = cBadEvents->at(cBoard->getIndex());
-            auto& cGoodEventsOpticalGroup = cGoodEvents->at(cBoard->getIndex());
+            auto& cInjectionsOpticalGroup = cInjections->topoGigio(cOpticalGroup->getIndex());
+            auto& cMismatchesOpticalGroup = cMismatches->topoGigio(cOpticalGroup->getIndex());
+            auto& cBadEventsOpticalGroup  = cBadEvents->topoGigio(cBoard->getIndex());
+            auto& cGoodEventsOpticalGroup = cGoodEvents->topoGigio(cBoard->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
-                auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getIndex());
-                auto& cBadEventsHybrid  = cBadEventsOpticalGroup->at(cHybrid->getIndex());
-                auto& cGoodEventsHybrid = cGoodEventsOpticalGroup->at(cHybrid->getIndex());
+                auto& cInjectionsHybrid = cInjectionsOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cMismatchesHybrid = cMismatchesOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cBadEventsHybrid  = cBadEventsOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cGoodEventsHybrid = cGoodEventsOpticalGroup->topoGigio(cHybrid->getIndex());
                 // cBxIdsMatchesHybrid->getSummary<std::vector<uint32_t>().clear();
 
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
-                    auto& cMismatchesChip = cMismatchesHybrid->at(cChip->getIndex());
-                    auto& cBadEventsChip  = cBadEventsHybrid->at(cChip->getIndex());
-                    auto& cGoodEventsChip = cGoodEventsHybrid->at(cChip->getIndex());
+                    auto& cInjectionsChip = cInjectionsHybrid->topoGigio(cChip->getIndex());
+                    auto& cMismatchesChip = cMismatchesHybrid->topoGigio(cChip->getIndex());
+                    auto& cBadEventsChip  = cBadEventsHybrid->topoGigio(cChip->getIndex());
+                    auto& cGoodEventsChip = cGoodEventsHybrid->topoGigio(cChip->getIndex());
                     //
                     cBadEventsChip->getSummary<EventsList>().clear();
                     cGoodEventsChip->getSummary<EventsList>().clear();
                     cInjectionsChip->getSummary<ChannelList>().clear();
                     cMismatchesChip->getSummary<uint32_t>() = 0;
-                    fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>() =
+                    fRegMapContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<ChipRegMap>() =
                         static_cast<ReadoutChip*>(cChip)->getRegMap();
                 }
             }
@@ -233,11 +233,11 @@ void DataChecker::Initialise()
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
                         ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
-                        fThresholds.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                        fThresholds.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
                             static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(theChip, "VCth");
-                        fLogic.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                        fLogic.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
                             static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(theChip, "Pipe&StubInpSel&Ptwidth");
-                        fHIPs.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                        fHIPs.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
                             static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(theChip, "HIP&TestMode");
                     }
                 }
@@ -585,8 +585,8 @@ void DataChecker::zeroContainers()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    fHitCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()  = 0;
-                    fStubCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
+                    fHitCheckContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>()  = 0;
+                    fStubCheckContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() = 0;
                 }
             }
         }
@@ -605,7 +605,7 @@ void DataChecker::print(std::vector<uint8_t> pChipIds)
                     auto cChipId = cChip->getId();
                     if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end()) continue;
                     auto cHitCheck  = cChip->getSummary<uint16_t>();
-                    auto cStubCheck = fStubCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    auto cStubCheck = fStubCheckContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
                     LOG(INFO) << BOLDBLUE << "\t\t...Found " << +cHitCheck << " matched hits and " << +cStubCheck << " matched stubs in readout chip" << +cChipId << RESET;
                 }
             }
@@ -736,21 +736,21 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
             {
                 uint16_t cDelay        = cCalPulseDelay;
                 int      cReTimeValue  = -1;
-                auto&    cChipLatency  = cLatencyPerChip.at(cBoard->getIndex());
-                auto&    cBrdLatency   = cStubLatencyPerBoard.at(cBoard->getIndex());
-                auto&    cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
+                auto&    cChipLatency  = cLatencyPerChip.topoGigio(cBoard->getIndex());
+                auto&    cBrdLatency   = cStubLatencyPerBoard.topoGigio(cBoard->getIndex());
+                auto&    cBrdDelay     = cPackageDelayPerBoard.topoGigio(cBoard->getIndex());
                 auto&    cPackageDelay = cBrdDelay->getSummary<uint16_t>();
                 cPackageDelay          = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
                 auto cInitStubOffset   = cBoard->getStubOffset();
                 for(auto cOpticalReadout: *cBoard)
                 {
-                    auto& cChipLatencyOG = cChipLatency->at(cOpticalReadout->getIndex());
+                    auto& cChipLatencyOG = cChipLatency->topoGigio(cOpticalReadout->getIndex());
                     for(auto cHybrid: *cOpticalReadout)
                     {
-                        auto& cChipLatencyHybrid = cChipLatencyOG->at(cHybrid->getIndex());
+                        auto& cChipLatencyHybrid = cChipLatencyOG->topoGigio(cHybrid->getIndex());
                         for(auto cChip: *cHybrid) // for each chip (makes sense)
                         {
-                            auto& cChipLatencyChip = cChipLatencyHybrid->at(cChip->getIndex());
+                            auto& cChipLatencyChip = cChipLatencyHybrid->topoGigio(cChip->getIndex());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
                             if(cChip->getFrontEndType() != FrontEndType::SSA)
                             {
@@ -784,7 +784,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
             ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cTriggersPerBoard);
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cTrgCntBrd = cTriggersPerBoard.at(cBoard->getIndex());
+                auto& cTrgCntBrd = cTriggersPerBoard.topoGigio(cBoard->getIndex());
                 auto& cNtriggers = cTrgCntBrd->getSummary<uint32_t>();
                 cNtriggers       = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             }
@@ -819,13 +819,13 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 this->FastCommandInjections(cNEventsPerAttempt);
                 for(auto cBoard: *fDetectorContainer)
                 {
-                    // auto& cInjectionsBrd = cInjections.at(cBoard->getIndex());
+                    // auto& cInjectionsBrd = cInjections.topoGigio(cBoard->getIndex());
                     for(auto cOpticalReadout: *cBoard)
                     {
-                        // auto& cInjectionsOG = cInjectionsBrd->at(cOpticalReadout->getIndex());
+                        // auto& cInjectionsOG = cInjectionsBrd->topoGigio(cOpticalReadout->getIndex());
                         for(auto cHybrid: *cOpticalReadout)
                         {
-                            // auto& cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
+                            // auto& cInjectionsHybrid = cInjectionsOG->topoGigio(cHybrid->getIndex());
                             // auto& cInjs             = cInjectionsHybrid->getSummary<std::vector<Injection>>();
                             std::vector<uint8_t> cIds(0);
                             for(auto cChip: *cHybrid)
@@ -880,7 +880,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                     // stop generic  - ctrl signal low
                     fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.fast_command_block.control.start_generic", 0x0);
                     std::this_thread::sleep_for(std::chrono::microseconds(100));
-                    auto&  cTrgCntBrd     = cTriggersPerBoard.at(cBoard->getIndex());
+                    auto&  cTrgCntBrd     = cTriggersPerBoard.topoGigio(cBoard->getIndex());
                     auto&  cNtriggersInit = cTrgCntBrd->getSummary<uint32_t>();
                     auto   cNtriggers     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                     size_t cIter          = 0;
@@ -901,13 +901,13 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
             for(auto cBoard: *fDetectorContainer)
             {
                 //
-                auto& cBrdLatency  = cStubLatencyPerBoard.at(cBoard->getIndex());
+                auto& cBrdLatency  = cStubLatencyPerBoard.topoGigio(cBoard->getIndex());
                 auto& cStubLatency = cBrdLatency->getSummary<uint16_t>();
                 //
-                auto& cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
+                auto& cBrdDelay     = cPackageDelayPerBoard.topoGigio(cBoard->getIndex());
                 auto& cPackageDelay = cBrdDelay->getSummary<uint16_t>();
                 //
-                // auto&                 cChipLatency = cLatencyPerChip.at(cBoard->getIndex());
+                // auto&                 cChipLatency = cLatencyPerChip.topoGigio(cBoard->getIndex());
                 std::vector<uint32_t> cData(0);
                 uint32_t              cNevents = ReadData(cBoard, cData, false);
                 DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
@@ -1184,21 +1184,21 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
             {
                 uint16_t cDelay        = cCalPulseDelay;
                 int      cReTimeValue  = -1;
-                auto&    cChipLatency  = cLatencyPerChip.at(cBoard->getIndex());
-                auto&    cBrdLatency   = cStubLatencyPerBoard.at(cBoard->getIndex());
-                auto&    cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
+                auto&    cChipLatency  = cLatencyPerChip.topoGigio(cBoard->getIndex());
+                auto&    cBrdLatency   = cStubLatencyPerBoard.topoGigio(cBoard->getIndex());
+                auto&    cBrdDelay     = cPackageDelayPerBoard.topoGigio(cBoard->getIndex());
                 auto&    cPackageDelay = cBrdDelay->getSummary<uint16_t>();
                 cPackageDelay          = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
                 auto cInitStubOffset   = cBoard->getStubOffset();
                 for(auto cOpticalReadout: *cBoard)
                 {
-                    auto& cChipLatencyOG = cChipLatency->at(cOpticalReadout->getIndex());
+                    auto& cChipLatencyOG = cChipLatency->topoGigio(cOpticalReadout->getIndex());
                     for(auto cHybrid: *cOpticalReadout)
                     {
-                        auto& cChipLatencyHybrid = cChipLatencyOG->at(cHybrid->getIndex());
+                        auto& cChipLatencyHybrid = cChipLatencyOG->topoGigio(cHybrid->getIndex());
                         for(auto cChip: *cHybrid) // for each chip (makes sense)
                         {
-                            auto& cChipLatencyChip = cChipLatencyHybrid->at(cChip->getIndex());
+                            auto& cChipLatencyChip = cChipLatencyHybrid->topoGigio(cChip->getIndex());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
                             if(cChip->getFrontEndType() != FrontEndType::SSA)
                             {
@@ -1232,7 +1232,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
             ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cTriggersPerBoard);
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cTrgCntBrd = cTriggersPerBoard.at(cBoard->getIndex());
+                auto& cTrgCntBrd = cTriggersPerBoard.topoGigio(cBoard->getIndex());
                 auto& cNtriggers = cTrgCntBrd->getSummary<uint32_t>();
                 cNtriggers       = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             }
@@ -1279,13 +1279,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 // ContainerFactory::copyAndInitHybrid<std::vector<Injection>>(*fDetectorContainer, cInjections);
                 for(auto cBoard: *fDetectorContainer)
                 {
-                    // auto& cInjectionsBrd = cInjections.at(cBoard->getIndex());
+                    // auto& cInjectionsBrd = cInjections.topoGigio(cBoard->getIndex());
                     for(auto cOpticalReadout: *cBoard)
                     {
-                        // auto& cInjectionsOG = cInjectionsBrd->at(cOpticalReadout->getIndex());
+                        // auto& cInjectionsOG = cInjectionsBrd->topoGigio(cOpticalReadout->getIndex());
                         for(auto cHybrid: *cOpticalReadout)
                         {
-                            // auto& cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
+                            // auto& cInjectionsHybrid = cInjectionsOG->topoGigio(cHybrid->getIndex());
                             // auto& cInjs             = cInjectionsHybrid->getSummary<std::vector<Injection>>();
                             std::vector<uint8_t> cIds(0);
                             for(auto cChip: *cHybrid)
@@ -1339,7 +1339,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                     // stop generic  - ctrl signal low
                     fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.fast_command_block.control.start_generic", 0x0);
                     std::this_thread::sleep_for(std::chrono::microseconds(100));
-                    auto&  cTrgCntBrd     = cTriggersPerBoard.at(cBoard->getIndex());
+                    auto&  cTrgCntBrd     = cTriggersPerBoard.topoGigio(cBoard->getIndex());
                     auto&  cNtriggersInit = cTrgCntBrd->getSummary<uint32_t>();
                     auto   cNtriggers     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                     size_t cIter          = 0;
@@ -1360,13 +1360,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
             for(auto cBoard: *fDetectorContainer)
             {
                 //
-                auto& cBrdLatency  = cStubLatencyPerBoard.at(cBoard->getIndex());
+                auto& cBrdLatency  = cStubLatencyPerBoard.topoGigio(cBoard->getIndex());
                 auto& cStubLatency = cBrdLatency->getSummary<uint16_t>();
                 //
-                auto& cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
+                auto& cBrdDelay     = cPackageDelayPerBoard.topoGigio(cBoard->getIndex());
                 auto& cPackageDelay = cBrdDelay->getSummary<uint16_t>();
                 //
-                // auto&                 cChipLatency = cLatencyPerChip.at(cBoard->getIndex());
+                // auto&                 cChipLatency = cLatencyPerChip.topoGigio(cBoard->getIndex());
                 std::vector<uint32_t> cData(0);
                 uint32_t              cNevents = ReadData(cBoard, cData, false);
                 DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
@@ -1595,21 +1595,21 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
     uint8_t cSeed = pExpectedStub.first;
     int     cBend = pExpectedStub.second;
 
-    auto& cThisHitCheckContainer  = fHitCheckContainer.at(pBoard->getIndex());
-    auto& cThisStubCheckContainer = fStubCheckContainer.at(pBoard->getIndex());
+    auto& cThisHitCheckContainer  = fHitCheckContainer.topoGigio(pBoard->getIndex());
+    auto& cThisStubCheckContainer = fStubCheckContainer.topoGigio(pBoard->getIndex());
 
     const std::vector<Event*>& cEvents = this->GetEvents();
     LOG(DEBUG) << BOLDMAGENTA << "Read back " << +cEvents.size() << " events from board." << RESET;
 
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cThisOpticalGroupHitCheck  = cThisHitCheckContainer->at(cOpticalGroup->getIndex());
-        auto& cThisOpticalGroupStubCheck = cThisStubCheckContainer->at(cOpticalGroup->getIndex());
+        auto& cThisOpticalGroupHitCheck  = cThisHitCheckContainer->topoGigio(cOpticalGroup->getIndex());
+        auto& cThisOpticalGroupStubCheck = cThisStubCheckContainer->topoGigio(cOpticalGroup->getIndex());
 
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cHybridHitCheck  = cThisOpticalGroupHitCheck->at(cHybrid->getIndex());
-            auto& cHybridStubCheck = cThisOpticalGroupStubCheck->at(cHybrid->getIndex());
+            auto& cHybridHitCheck  = cThisOpticalGroupHitCheck->topoGigio(cHybrid->getIndex());
+            auto& cHybridStubCheck = cThisOpticalGroupStubCheck->topoGigio(cHybrid->getIndex());
 
             auto  cHybridId     = cHybrid->getId();
             TH2D* cMatchedStubs = static_cast<TH2D*>(getHist(cHybrid, "MatchedStubs"));
@@ -1630,8 +1630,8 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
                 TH1D* cFlaggedEvents = static_cast<TH1D*>(getHist(cChip, "FlaggedEvents"));
 
                 // container for this chip
-                auto& cReadoutChipHitCheck  = cHybridHitCheck->at(cChip->getIndex());
-                auto& cReadoutChipStubCheck = cHybridStubCheck->at(cChip->getIndex());
+                auto& cReadoutChipHitCheck  = cHybridHitCheck->topoGigio(cChip->getIndex());
+                auto& cReadoutChipStubCheck = cHybridStubCheck->topoGigio(cChip->getIndex());
 
                 std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(theChip);
                 // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
@@ -1982,8 +1982,8 @@ void DataChecker::CollectEvents()
 
 void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjections)
 {
-    auto& cBadEvents  = fBadEvents.at(pBoard->getIndex());
-    auto& cGoodEvents = fGoodEvents.at(pBoard->getIndex());
+    auto& cBadEvents  = fBadEvents.topoGigio(pBoard->getIndex());
+    auto& cGoodEvents = fGoodEvents.topoGigio(pBoard->getIndex());
 
     auto     cSetting = fSettingsMap.find("Nevents");
     int      cScale   = 1000;
@@ -2019,12 +2019,12 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
 
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cBadEventsOpticalGroup = cBadEvents->at(cOpticalGroup->getIndex());
-            auto& cGdEventsOpticalGroup  = cGoodEvents->at(cOpticalGroup->getIndex());
+            auto& cBadEventsOpticalGroup = cBadEvents->topoGigio(cOpticalGroup->getIndex());
+            auto& cGdEventsOpticalGroup  = cGoodEvents->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cBadEventsHybrid = cBadEventsOpticalGroup->at(cHybrid->getIndex());
-                auto& cGdEventsHybrid  = cGdEventsOpticalGroup->at(cOpticalGroup->getIndex());
+                auto& cBadEventsHybrid = cBadEventsOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cGdEventsHybrid  = cGdEventsOpticalGroup->topoGigio(cOpticalGroup->getIndex());
 
                 // for now I'm only checking one CIC
                 // if(cHybrid->getIndex() > 0) continue;
@@ -2043,8 +2043,8 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                 // now loop over chips and compare data
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cBadEventsChip = cBadEventsHybrid->at(cHybrid->getIndex());
-                    auto& cGdEventsChip  = cGdEventsHybrid->at(cOpticalGroup->getIndex());
+                    auto& cBadEventsChip = cBadEventsHybrid->topoGigio(cHybrid->getIndex());
+                    auto& cGdEventsChip  = cGdEventsHybrid->topoGigio(cOpticalGroup->getIndex());
 
                     auto&    cBadEventsList  = cBadEventsChip->getSummary<EventsList>();
                     auto&    cGoodEventsList = cGdEventsChip->getSummary<EventsList>();
@@ -2268,19 +2268,19 @@ void DataChecker::PrepareDigitalInjection(DetectorDataContainer& pInjectionSchem
     // set-up MPA for injection
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cInjections = pInjectionScheme.at(cBoard->getIndex());
+        auto& cInjections = pInjectionScheme.topoGigio(cBoard->getIndex());
         for(auto cOpticalReadout: *cBoard)
         {
-            auto& cInjectionsOG = cInjections->at(cOpticalReadout->getIndex());
+            auto& cInjectionsOG = cInjections->topoGigio(cOpticalReadout->getIndex());
             for(auto cHybrid: *cOpticalReadout)
             {
-                auto& cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
+                auto& cInjectionsHybrid = cInjectionsOG->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
                     if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
+                        auto& cInjectionsChip = cInjectionsHybrid->topoGigio(cChip->getIndex());
                         auto& cSummaryInj     = cInjectionsChip->getSummary<std::vector<Injection>>();
                         // activate stub mode
                         fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
@@ -2790,20 +2790,20 @@ void DataChecker::PreparePSInjection(DetectorDataContainer& pInjectionScheme)
     // set-up MPA for injection
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cInjections = pInjectionScheme.at(cBoard->getIndex());
+        auto& cInjections = pInjectionScheme.topoGigio(cBoard->getIndex());
         for(auto cOpticalReadout: *cBoard)
         {
-            auto& cInjectionsOG = cInjections->at(cOpticalReadout->getIndex());
+            auto& cInjectionsOG = cInjections->topoGigio(cOpticalReadout->getIndex());
             for(auto cHybrid: *cOpticalReadout)
             {
-                auto&                                   cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
+                auto&                                   cInjectionsHybrid = cInjectionsOG->topoGigio(cHybrid->getIndex());
                 std::map<uint8_t, std::vector<uint8_t>> cInjectionsPerChip;
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
                     if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
-                    auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
+                    auto& cInjectionsChip = cInjectionsHybrid->topoGigio(cChip->getIndex());
                     auto& cSummaryInj     = cInjectionsChip->getSummary<std::vector<Injection>>();
                     // activate stub mode
                     fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
@@ -2923,17 +2923,17 @@ void DataChecker::PSTriggerTest()
     // as the number of stubs
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cInjections = cInjectionScheme.at(cBoard->getIndex());
-        auto& cCicInjc    = cCicInjections.at(cBoard->getIndex());
+        auto& cInjections = cInjectionScheme.topoGigio(cBoard->getIndex());
+        auto& cCicInjc    = cCicInjections.topoGigio(cBoard->getIndex());
         for(auto cOpticalReadout: *cBoard)
         {
-            auto& cInjectionsOG = cInjections->at(cOpticalReadout->getIndex());
-            auto& cCicInjcOG    = cCicInjc->at(cOpticalReadout->getIndex());
+            auto& cInjectionsOG = cInjections->topoGigio(cOpticalReadout->getIndex());
+            auto& cCicInjcOG    = cCicInjc->topoGigio(cOpticalReadout->getIndex());
             for(auto cHybrid: *cOpticalReadout)
             {
-                auto& cInjectionsHybrid = cInjectionsOG->at(cHybrid->getIndex());
+                auto& cInjectionsHybrid = cInjectionsOG->topoGigio(cHybrid->getIndex());
                 //
-                auto& cCicInjHybrid  = cCicInjcOG->at(cHybrid->getIndex());
+                auto& cCicInjHybrid  = cCicInjcOG->topoGigio(cHybrid->getIndex());
                 auto& cCicInjSummary = cCicInjHybrid->getSummary<uint32_t>();
                 cCicInjSummary       = 0;
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
@@ -2946,7 +2946,7 @@ void DataChecker::PSTriggerTest()
                     LOG(INFO) << BOLDMAGENTA << "Injecting in SSA-MPA pair#" << +cChip->getId() << RESET;
                     auto cInjections = GeneratePSInjections(cMaxClustersPerMPA);
                     // auto cInjections = GenerateInjections(cMaxClustersPerMPA);
-                    auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
+                    auto& cInjectionsChip = cInjectionsHybrid->topoGigio(cChip->getIndex());
                     auto& cSummaryInj     = cInjectionsChip->getSummary<std::vector<Injection>>();
                     cSummaryInj.clear();
                     for(auto cInjection: cInjections)
@@ -3006,17 +3006,17 @@ void DataChecker::PSTriggerTest()
             {
                 uint16_t cDelay       = cCalPulseDelay;
                 int      cReTimeValue = -1;
-                auto&    cChipLatency = cLatencyPerChip.at(cBoard->getIndex());
-                auto&    cBrdLatency  = cStubLatencyPerBoard.at(cBoard->getIndex());
+                auto&    cChipLatency = cLatencyPerChip.topoGigio(cBoard->getIndex());
+                auto&    cBrdLatency  = cStubLatencyPerBoard.topoGigio(cBoard->getIndex());
                 for(auto cOpticalReadout: *cBoard)
                 {
-                    auto& cChipLatencyOG = cChipLatency->at(cOpticalReadout->getIndex());
+                    auto& cChipLatencyOG = cChipLatency->topoGigio(cOpticalReadout->getIndex());
                     for(auto cHybrid: *cOpticalReadout)
                     {
-                        auto& cChipLatencyHybrid = cChipLatencyOG->at(cHybrid->getIndex());
+                        auto& cChipLatencyHybrid = cChipLatencyOG->topoGigio(cHybrid->getIndex());
                         for(auto cChip: *cHybrid) // for each chip (makes sense)
                         {
-                            auto& cChipLatencyChip = cChipLatencyHybrid->at(cChip->getIndex());
+                            auto& cChipLatencyChip = cChipLatencyHybrid->topoGigio(cChip->getIndex());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
                             if(cChip->getFrontEndType() != FrontEndType::SSA)
                             {
@@ -3063,13 +3063,13 @@ void DataChecker::PSTriggerTest()
                 // how many clusters were injected
                 for(auto cBoard: *fDetectorContainer)
                 {
-                    auto& cCicInjc = cCicInjections.at(cBoard->getIndex());
+                    auto& cCicInjc = cCicInjections.topoGigio(cBoard->getIndex());
                     for(auto cOpticalGroup: *cBoard)
                     {
-                        auto& cInjections0G = cCicInjc->at(cOpticalGroup->getIndex());
+                        auto& cInjections0G = cCicInjc->topoGigio(cOpticalGroup->getIndex());
                         for(auto cHybrid: *cOpticalGroup)
                         {
-                            auto& cInjectionsHybrid = cInjections0G->at(cHybrid->getIndex());
+                            auto& cInjectionsHybrid = cInjections0G->topoGigio(cHybrid->getIndex());
                             auto& cInjCIC           = cInjectionsHybrid->getSummary<uint32_t>();
 #ifdef __USE_ROOT__
                             // found
@@ -3158,13 +3158,13 @@ void DataChecker::PSTriggerTest()
 #ifdef __USE_ROOT__
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cCicInjc = cCicInjections.at(cBoard->getIndex());
+                auto& cCicInjc = cCicInjections.topoGigio(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& cInjections0G = cCicInjc->at(cOpticalGroup->getIndex());
+                    auto& cInjections0G = cCicInjc->topoGigio(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cInjectionsHybrid = cInjections0G->at(cHybrid->getIndex());
+                        auto& cInjectionsHybrid = cInjections0G->topoGigio(cHybrid->getIndex());
                         auto& cInjCIC           = cInjectionsHybrid->getSummary<uint32_t>();
                         // found
                         TH1D* cEvCounterHist = static_cast<TH1D*>(getHist(cHybrid, "EventCounter"));
@@ -3196,15 +3196,15 @@ void DataChecker::PSTriggerTest()
 
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cReadoutStubs   = cStubsInReadout.at(cBoard->getIndex());
-                auto& cBxIds          = cBxIdsInReadout.at(cBoard->getIndex());
-                auto& cL1Status       = cL1StatusCic.at(cBoard->getIndex());
-                auto& cL1Ids          = cL1IdsCIC.at(cBoard->getIndex());
-                auto& cChipStubs      = cStubsPerChip.at(cBoard->getIndex());
-                auto& cChipHits       = cHitsPerChip.at(cBoard->getIndex());
-                auto& cChipClusters   = cClustersPerChip.at(cBoard->getIndex());
-                auto& cChipStbs       = cStbsPerChip.at(cBoard->getIndex());
-                auto& cChipL1Counters = cL1Cntr.at(cBoard->getIndex());
+                auto& cReadoutStubs   = cStubsInReadout.topoGigio(cBoard->getIndex());
+                auto& cBxIds          = cBxIdsInReadout.topoGigio(cBoard->getIndex());
+                auto& cL1Status       = cL1StatusCic.topoGigio(cBoard->getIndex());
+                auto& cL1Ids          = cL1IdsCIC.topoGigio(cBoard->getIndex());
+                auto& cChipStubs      = cStubsPerChip.topoGigio(cBoard->getIndex());
+                auto& cChipHits       = cHitsPerChip.topoGigio(cBoard->getIndex());
+                auto& cChipClusters   = cClustersPerChip.topoGigio(cBoard->getIndex());
+                auto& cChipStbs       = cStbsPerChip.topoGigio(cBoard->getIndex());
+                auto& cChipL1Counters = cL1Cntr.topoGigio(cBoard->getIndex());
                 for(auto cEvent: cNewEvents)
                 {
                     // skip the last event since I know its
@@ -3214,32 +3214,32 @@ void DataChecker::PSTriggerTest()
                     LOG(DEBUG) << BOLDMAGENTA << "\t..Event#" << +cEvent->GetEventCount() << RESET;
                     for(auto cOpticalGroup: *cBoard)
                     {
-                        auto& cL1StatusOG       = cL1Status->at(cOpticalGroup->getIndex());
-                        auto& cL1IdsOG          = cL1Ids->at(cOpticalGroup->getIndex());
-                        auto& cReadoutStubsOG   = cReadoutStubs->at(cOpticalGroup->getIndex());
-                        auto& cBxIdsOG          = cBxIds->at(cOpticalGroup->getIndex());
-                        auto& cChipStubsOG      = cChipStubs->at(cOpticalGroup->getIndex());
-                        auto& cChipHitsOG       = cChipHits->at(cOpticalGroup->getIndex());
-                        auto& cChipClustersOG   = cChipClusters->at(cOpticalGroup->getIndex());
-                        auto& cChipStbsOG       = cChipStbs->at(cOpticalGroup->getIndex());
-                        auto& cChipL1CountersOG = cChipL1Counters->at(cOpticalGroup->getIndex());
+                        auto& cL1StatusOG       = cL1Status->topoGigio(cOpticalGroup->getIndex());
+                        auto& cL1IdsOG          = cL1Ids->topoGigio(cOpticalGroup->getIndex());
+                        auto& cReadoutStubsOG   = cReadoutStubs->topoGigio(cOpticalGroup->getIndex());
+                        auto& cBxIdsOG          = cBxIds->topoGigio(cOpticalGroup->getIndex());
+                        auto& cChipStubsOG      = cChipStubs->topoGigio(cOpticalGroup->getIndex());
+                        auto& cChipHitsOG       = cChipHits->topoGigio(cOpticalGroup->getIndex());
+                        auto& cChipClustersOG   = cChipClusters->topoGigio(cOpticalGroup->getIndex());
+                        auto& cChipStbsOG       = cChipStbs->topoGigio(cOpticalGroup->getIndex());
+                        auto& cChipL1CountersOG = cChipL1Counters->topoGigio(cOpticalGroup->getIndex());
                         for(auto cHybrid: *cOpticalGroup)
                         {
                             //
-                            auto& cL1IdsHybrid = cL1IdsOG->at(cHybrid->getIndex());
+                            auto& cL1IdsHybrid = cL1IdsOG->topoGigio(cHybrid->getIndex());
                             auto& cL1IdsSmry   = cL1IdsHybrid->getSummary<std::vector<uint16_t>>();
                             //
-                            auto& cL1StatusHybrid = cL1StatusOG->at(cHybrid->getIndex());
+                            auto& cL1StatusHybrid = cL1StatusOG->topoGigio(cHybrid->getIndex());
                             auto& cL1StatusSmry   = cL1StatusHybrid->getSummary<std::vector<uint16_t>>();
                             //
-                            auto& cReadoutStubsHybrid = cReadoutStubsOG->at(cHybrid->getIndex());
+                            auto& cReadoutStubsHybrid = cReadoutStubsOG->topoGigio(cHybrid->getIndex());
                             auto& cReadoutStubsSmry   = cReadoutStubsHybrid->getSummary<std::vector<float>>();
                             //
-                            auto& cBxIdsHybrid = cBxIdsOG->at(cHybrid->getIndex());
+                            auto& cBxIdsHybrid = cBxIdsOG->topoGigio(cHybrid->getIndex());
                             auto& cBxIdsSmry   = cBxIdsHybrid->getSummary<std::vector<float>>();
                             //
-                            auto& cChipClustersHybrid = cChipClustersOG->at(cHybrid->getIndex());
-                            auto& cChipStbsHybrid     = cChipStbsOG->at(cHybrid->getIndex());
+                            auto& cChipClustersHybrid = cChipClustersOG->topoGigio(cHybrid->getIndex());
+                            auto& cChipStbsHybrid     = cChipStbsOG->topoGigio(cHybrid->getIndex());
                             // clear vector if
                             // this is the first event
                             if(cEvent->GetEventCount() == 0)
@@ -3251,9 +3251,9 @@ void DataChecker::PSTriggerTest()
                             }
 
                             size_t cNstubsInReadout      = 0;
-                            auto&  cChipStubsHybrid      = cChipStubsOG->at(cHybrid->getIndex());
-                            auto&  cChipHitsHybrid       = cChipHitsOG->at(cHybrid->getIndex());
-                            auto&  cChipL1CountersHybrid = cChipL1CountersOG->at(cHybrid->getIndex());
+                            auto&  cChipStubsHybrid      = cChipStubsOG->topoGigio(cHybrid->getIndex());
+                            auto&  cChipHitsHybrid       = cChipHitsOG->topoGigio(cHybrid->getIndex());
+                            auto&  cChipL1CountersHybrid = cChipL1CountersOG->topoGigio(cHybrid->getIndex());
 
                             auto cL1Id = cEvent->L1Id(cHybrid->getId(), 0);
                             for(auto cChip: *cHybrid)
@@ -3262,15 +3262,15 @@ void DataChecker::PSTriggerTest()
 
                                 // auto cMPAL1Error = fReadoutChipInterface->ReadChipReg(cChip, "ErrorL1");
                                 // auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
-                                auto& cChipStubsChip     = cChipStubsHybrid->at(cChip->getIndex());
+                                auto& cChipStubsChip     = cChipStubsHybrid->topoGigio(cChip->getIndex());
                                 auto& cChipStubsSmry     = cChipStubsChip->getSummary<std::vector<float>>();
-                                auto& cChipHitsChip      = cChipHitsHybrid->at(cChip->getIndex());
+                                auto& cChipHitsChip      = cChipHitsHybrid->topoGigio(cChip->getIndex());
                                 auto& cChipHitsSmry      = cChipHitsChip->getSummary<std::vector<float>>();
-                                auto& cChipClustersChip  = cChipClustersHybrid->at(cChip->getIndex());
+                                auto& cChipClustersChip  = cChipClustersHybrid->topoGigio(cChip->getIndex());
                                 auto& cChipClusterSmry   = cChipClustersChip->getSummary<std::vector<Injection>>();
-                                auto& cChipStbsChip      = cChipStbsHybrid->at(cChip->getIndex());
+                                auto& cChipStbsChip      = cChipStbsHybrid->topoGigio(cChip->getIndex());
                                 auto& cChipStbsSmry      = cChipStbsChip->getSummary<std::vector<Stub>>();
-                                auto& cChipL1CounterChip = cChipL1CountersHybrid->at(cChip->getIndex());
+                                auto& cChipL1CounterChip = cChipL1CountersHybrid->topoGigio(cChip->getIndex());
                                 auto& cChipL1CounterSmry = cChipL1CounterChip->getSummary<std::vector<uint16_t>>();
                                 if(cEvent->GetEventCount() == 0)
                                 {
@@ -3363,57 +3363,57 @@ void DataChecker::PSTriggerTest()
             // print out loop
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cBrdLatency        = cStubLatencyPerBoard.at(cBoard->getIndex());
+                auto& cBrdLatency        = cStubLatencyPerBoard.topoGigio(cBoard->getIndex());
                 auto& cStubLatency       = cBrdLatency->getSummary<uint16_t>();
-                auto& cClusterInjections = cInjectionScheme.at(cBoard->getIndex());
-                auto& cReadoutStubs      = cStubsInReadout.at(cBoard->getIndex());
-                auto& cCicInjc           = cCicInjections.at(cBoard->getIndex());
-                auto& cL1Status          = cL1StatusCic.at(cBoard->getIndex());
-                auto& cBxReadout         = cBxIdsInReadout.at(cBoard->getIndex());
-                auto& cChipStubs         = cStubsPerChip.at(cBoard->getIndex());
-                auto& cChipLatency       = cLatencyPerChip.at(cBoard->getIndex());
-                auto& cChipHits          = cHitsPerChip.at(cBoard->getIndex());
-                auto& cChipClusters      = cClustersPerChip.at(cBoard->getIndex());
-                auto& cChipStbs          = cStbsPerChip.at(cBoard->getIndex());
-                auto& cL1Ids             = cL1IdsCIC.at(cBoard->getIndex());
-                auto& cChipL1Counters    = cL1Cntr.at(cBoard->getIndex());
+                auto& cClusterInjections = cInjectionScheme.topoGigio(cBoard->getIndex());
+                auto& cReadoutStubs      = cStubsInReadout.topoGigio(cBoard->getIndex());
+                auto& cCicInjc           = cCicInjections.topoGigio(cBoard->getIndex());
+                auto& cL1Status          = cL1StatusCic.topoGigio(cBoard->getIndex());
+                auto& cBxReadout         = cBxIdsInReadout.topoGigio(cBoard->getIndex());
+                auto& cChipStubs         = cStubsPerChip.topoGigio(cBoard->getIndex());
+                auto& cChipLatency       = cLatencyPerChip.topoGigio(cBoard->getIndex());
+                auto& cChipHits          = cHitsPerChip.topoGigio(cBoard->getIndex());
+                auto& cChipClusters      = cClustersPerChip.topoGigio(cBoard->getIndex());
+                auto& cChipStbs          = cStbsPerChip.topoGigio(cBoard->getIndex());
+                auto& cL1Ids             = cL1IdsCIC.topoGigio(cBoard->getIndex());
+                auto& cChipL1Counters    = cL1Cntr.topoGigio(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& cL1IdsOG             = cL1Ids->at(cOpticalGroup->getIndex());
-                    auto& cClusterInjectionsOG = cClusterInjections->at(cOpticalGroup->getIndex());
-                    auto& cCicInjcOG           = cCicInjc->at(cOpticalGroup->getIndex());
-                    auto& cReadoutStubsOG      = cReadoutStubs->at(cOpticalGroup->getIndex());
-                    auto& cBxOG                = cBxReadout->at(cOpticalGroup->getIndex());
-                    auto& cChipStubsOG         = cChipStubs->at(cOpticalGroup->getIndex());
-                    auto& cChipLatencyOG       = cChipLatency->at(cOpticalGroup->getIndex());
-                    auto& cChipHitsOG          = cChipHits->at(cOpticalGroup->getIndex());
-                    auto& cChipClustersOG      = cChipClusters->at(cOpticalGroup->getIndex());
-                    auto& cChipStbsOG          = cChipStbs->at(cOpticalGroup->getIndex());
-                    auto& cL1StatusOG          = cL1Status->at(cOpticalGroup->getIndex());
-                    auto& cChipL1CountersOG    = cChipL1Counters->at(cOpticalGroup->getIndex());
+                    auto& cL1IdsOG             = cL1Ids->topoGigio(cOpticalGroup->getIndex());
+                    auto& cClusterInjectionsOG = cClusterInjections->topoGigio(cOpticalGroup->getIndex());
+                    auto& cCicInjcOG           = cCicInjc->topoGigio(cOpticalGroup->getIndex());
+                    auto& cReadoutStubsOG      = cReadoutStubs->topoGigio(cOpticalGroup->getIndex());
+                    auto& cBxOG                = cBxReadout->topoGigio(cOpticalGroup->getIndex());
+                    auto& cChipStubsOG         = cChipStubs->topoGigio(cOpticalGroup->getIndex());
+                    auto& cChipLatencyOG       = cChipLatency->topoGigio(cOpticalGroup->getIndex());
+                    auto& cChipHitsOG          = cChipHits->topoGigio(cOpticalGroup->getIndex());
+                    auto& cChipClustersOG      = cChipClusters->topoGigio(cOpticalGroup->getIndex());
+                    auto& cChipStbsOG          = cChipStbs->topoGigio(cOpticalGroup->getIndex());
+                    auto& cL1StatusOG          = cL1Status->topoGigio(cOpticalGroup->getIndex());
+                    auto& cChipL1CountersOG    = cChipL1Counters->topoGigio(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cL1IdsHybrid            = cL1IdsOG->at(cHybrid->getIndex());
+                        auto& cL1IdsHybrid            = cL1IdsOG->topoGigio(cHybrid->getIndex());
                         auto& cL1IdsSmry              = cL1IdsHybrid->getSummary<std::vector<uint16_t>>();
-                        auto& cChipL1CountersHybrid   = cChipL1CountersOG->at(cHybrid->getIndex());
-                        auto& cChipLatencyHybrid      = cChipLatencyOG->at(cHybrid->getIndex());
-                        auto& cChipHitsHybrid         = cChipHitsOG->at(cHybrid->getIndex());
-                        auto& cChipClustersHybrid     = cChipClustersOG->at(cHybrid->getIndex());
-                        auto& cClusterInjectionHybrid = cClusterInjectionsOG->at(cHybrid->getIndex());
-                        auto& cChipStubsHybrid        = cChipStubsOG->at(cHybrid->getIndex());
-                        auto& cReadoutStubsHybrid     = cReadoutStubsOG->at(cHybrid->getIndex());
+                        auto& cChipL1CountersHybrid   = cChipL1CountersOG->topoGigio(cHybrid->getIndex());
+                        auto& cChipLatencyHybrid      = cChipLatencyOG->topoGigio(cHybrid->getIndex());
+                        auto& cChipHitsHybrid         = cChipHitsOG->topoGigio(cHybrid->getIndex());
+                        auto& cChipClustersHybrid     = cChipClustersOG->topoGigio(cHybrid->getIndex());
+                        auto& cClusterInjectionHybrid = cClusterInjectionsOG->topoGigio(cHybrid->getIndex());
+                        auto& cChipStubsHybrid        = cChipStubsOG->topoGigio(cHybrid->getIndex());
+                        auto& cReadoutStubsHybrid     = cReadoutStubsOG->topoGigio(cHybrid->getIndex());
                         auto& cReadoutStubsSmry       = cReadoutStubsHybrid->getSummary<std::vector<float>>();
-                        auto& cCicInjHybrid           = cCicInjcOG->at(cHybrid->getIndex());
+                        auto& cCicInjHybrid           = cCicInjcOG->topoGigio(cHybrid->getIndex());
                         auto& cCicInjSummary          = cCicInjHybrid->getSummary<uint32_t>();
-                        auto& cChipStbsHybrid         = cChipStbsOG->at(cHybrid->getIndex());
-                        auto& cCicL1Status            = cL1StatusOG->at(cHybrid->getIndex());
+                        auto& cChipStbsHybrid         = cChipStbsOG->topoGigio(cHybrid->getIndex());
+                        auto& cCicL1Status            = cL1StatusOG->topoGigio(cHybrid->getIndex());
                         auto& cCicL1Stat              = cCicL1Status->getSummary<std::vector<uint16_t>>();
                         // counter clusters
                         size_t cNClusters = 0;
 
                         for(int cIndx = 0; cIndx < cHybrid->size(); cIndx++)
                         {
-                            auto& cInjSmryChip = cClusterInjectionHybrid->at(cIndx);
+                            auto& cInjSmryChip = cClusterInjectionHybrid->topoGigio(cIndx);
                             auto& cSmry        = cInjSmryChip->getSummary<std::vector<Injection>>();
                             cNClusters += cSmry.size();
                         }
@@ -3456,7 +3456,7 @@ void DataChecker::PSTriggerTest()
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                                auto&   cInjSmryChip = cClusterInjectionHybrid->at(cChip->getIndex());
+                                auto&   cInjSmryChip = cClusterInjectionHybrid->topoGigio(cChip->getIndex());
                                 auto&   cSmry        = cInjSmryChip->getSummary<std::vector<Injection>>();
                                 int     cErrorBit    = (cCicL1 & (0x1 << (1 + cChip->getIndex()))) >> (1 + cChip->getIndex());
                                 uint8_t cErrorCode   = 0;
@@ -3513,7 +3513,7 @@ void DataChecker::PSTriggerTest()
                             cEventCount++;
                         }
                         //
-                        auto& cBxHybrid         = cBxOG->at(cHybrid->getIndex());
+                        auto& cBxHybrid         = cBxOG->topoGigio(cHybrid->getIndex());
                         auto& cBxSummary        = cBxHybrid->getSummary<std::vector<float>>();
                         auto  cBxDifferences    = GetBxIds(cBxSummary);
                         auto  cStubReadoutStats = getStats(cReadoutStubsSmry);
@@ -3544,26 +3544,26 @@ void DataChecker::PSTriggerTest()
                             if(std::find(cIds.begin(), cIds.end(), cChip->getId()) == cIds.end()) continue;
 
                             // stubs per FE chip
-                            auto&  cChipStbsChip = cChipStbsHybrid->at(cChip->getIndex());
+                            auto&  cChipStbsChip = cChipStbsHybrid->topoGigio(cChip->getIndex());
                             auto&  cChipStbsSmry = cChipStbsChip->getSummary<std::vector<Stub>>();
                             size_t cNstubsTtl    = cChipStbsSmry.size();
                             LOG(DEBUG) << "In total have " << +cNstubsTtl << " stubs." << RESET;
 
                             // N stubs per FE chip
-                            auto& cChipStubsChip = cChipStubsHybrid->at(cChip->getIndex());
+                            auto& cChipStubsChip = cChipStubsHybrid->topoGigio(cChip->getIndex());
                             auto& cChipStubsSmry = cChipStubsChip->getSummary<std::vector<float>>();
                             float cTotalNstubs   = std::accumulate(cChipStubsSmry.begin(), cChipStubsSmry.end(), 0.);
 
                             // Latencies per FE chip
-                            auto& cChipLatencyChip = cChipLatencyHybrid->at(cChip->getIndex());
+                            auto& cChipLatencyChip = cChipLatencyHybrid->topoGigio(cChip->getIndex());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
                             // N clusters per FE chip
-                            auto& cChipHitsChip = cChipHitsHybrid->at(cChip->getIndex());
+                            auto& cChipHitsChip = cChipHitsHybrid->topoGigio(cChip->getIndex());
                             auto& cChipHitsSmry = cChipHitsChip->getSummary<std::vector<float>>();
                             // float cTotalNHits = std::accumulate( cChipHitsSmry.begin(), cChipHitsSmry.end() , 0.);
                             auto cNHitsStats = getStats(cChipHitsSmry);
                             // Clusters per FE chip
-                            auto&       cChipClusterChip = cChipClustersHybrid->at(cChip->getIndex());
+                            auto&       cChipClusterChip = cChipClustersHybrid->topoGigio(cChip->getIndex());
                             auto&       cChipClusterSmry = cChipClusterChip->getSummary<std::vector<Injection>>();
                             std::string cType            = (cChip->getFrontEndType() == FrontEndType::SSA) ? "SSA" : "MPA";
                             std::string cClusterType     = (cChip->getFrontEndType() == FrontEndType::SSA) ? "S-cluster" : "P-cluster";
@@ -3578,7 +3578,7 @@ void DataChecker::PSTriggerTest()
                             size_t                                          cExpectedNHits = 0;
                             for(size_t cIndx = 0; cIndx < cClusterInjectionHybrid->size(); cIndx++)
                             {
-                                auto& cInjSmryChip = cClusterInjectionHybrid->at(cIndx);
+                                auto& cInjSmryChip = cClusterInjectionHybrid->topoGigio(cIndx);
                                 auto& cInjSmry     = cInjSmryChip->getSummary<std::vector<Injection>>();
                                 for(auto cClusterInj: cInjSmry)
                                 {
@@ -3618,11 +3618,11 @@ void DataChecker::PSTriggerTest()
 
                             // check match for all the clusters
                             // readout
-                            auto& cL1SmryChip = cChipL1CountersHybrid->at(cChip->getIndex());
+                            auto& cL1SmryChip = cChipL1CountersHybrid->topoGigio(cChip->getIndex());
                             auto& cL1s        = cL1SmryChip->getSummary<std::vector<uint16_t>>();
                             for(size_t cIndx = 0; cIndx < cClusterInjectionHybrid->size(); cIndx++)
                             {
-                                auto&  cInjSmryChip = cClusterInjectionHybrid->at(cIndx);
+                                auto&  cInjSmryChip = cClusterInjectionHybrid->topoGigio(cIndx);
                                 auto&  cInjSmry     = cInjSmryChip->getSummary<std::vector<Injection>>();
                                 size_t cInjCounter  = 0;
                                 for(auto cClusterInj: cInjSmry)
@@ -3776,7 +3776,7 @@ void DataChecker::PSTriggerTest()
 
 #ifdef __USE_ROOT__
                             // Injections per FE chip
-                            auto&       cClusterInjChip = cClusterInjectionHybrid->at(cChip->getIndex());
+                            auto&       cClusterInjChip = cClusterInjectionHybrid->topoGigio(cChip->getIndex());
                             auto&       cClusterInjSmry = cClusterInjChip->getSummary<std::vector<Injection>>();
                             TProfile2D* cStubCounterId  = static_cast<TProfile2D*>(getHist(cHybrid, "StubCounterIds"));
                             TProfile2D* cStubCounter    = static_cast<TProfile2D*>(getHist(cChip, "StubCounter"));
@@ -3925,13 +3925,13 @@ void DataChecker::PSNominal()
     ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fOriginalPhaseTaps);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& fTapsOrig = fOriginalPhaseTaps.at(cBoard->getIndex());
+        auto& fTapsOrig = fOriginalPhaseTaps.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& fTapsOrigOG = fTapsOrig->at(cOpticalGroup->getIndex());
+            auto& fTapsOrigOG = fTapsOrig->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& fTapsOrigHybrid = fTapsOrigOG->at(cHybrid->getIndex());
+                auto& fTapsOrigHybrid = fTapsOrigOG->topoGigio(cHybrid->getIndex());
                 auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 // auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
                 // size_t cPhyPort=0;
@@ -3954,7 +3954,7 @@ void DataChecker::PSNominal()
                     // then the L1 line
                     size_t cPhyPortL1                    = (cChip->getId() > 3) ? 11 : 10;
                     size_t cPhyPortChnlL1                = (cChip->getId() % 4);
-                    auto&  fTapsOrigChip                 = fTapsOrigHybrid->at(cChip->getIndex());
+                    auto&  fTapsOrigChip                 = fTapsOrigHybrid->topoGigio(cChip->getIndex());
                     auto   cOptimalTaps                  = fCicInterface->GetOptimalTaps(cCic);
                     fTapsOrigChip->getSummary<uint8_t>() = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
                     sprintf(cBuffer, "%.2d ", fTapsOrigChip->getSummary<uint8_t>());
@@ -3984,16 +3984,16 @@ void DataChecker::PSNominal()
         ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fPhaseTaps);
         for(auto cBoard: *fDetectorContainer)
         {
-            auto& fTaps     = fPhaseTaps.at(cBoard->getIndex());
-            auto& fTapsOrig = fOriginalPhaseTaps.at(cBoard->getIndex());
+            auto& fTaps     = fPhaseTaps.topoGigio(cBoard->getIndex());
+            auto& fTapsOrig = fOriginalPhaseTaps.topoGigio(cBoard->getIndex());
             for(auto cOpticalGroup: *cBoard)
             {
-                auto& fTapsOG     = fTaps->at(cOpticalGroup->getIndex());
-                auto& fTapsOrigOG = fTapsOrig->at(cOpticalGroup->getIndex());
+                auto& fTapsOG     = fTaps->topoGigio(cOpticalGroup->getIndex());
+                auto& fTapsOrigOG = fTapsOrig->topoGigio(cOpticalGroup->getIndex());
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& fTapsHybrid     = fTapsOG->at(cHybrid->getIndex());
-                    auto& fTapsOrigHybrid = fTapsOrigOG->at(cHybrid->getIndex());
+                    auto& fTapsHybrid     = fTapsOG->topoGigio(cHybrid->getIndex());
+                    auto& fTapsOrigHybrid = fTapsOrigOG->topoGigio(cHybrid->getIndex());
                     auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     // auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
                     // size_t cPhyPort=0;
@@ -4015,8 +4015,8 @@ void DataChecker::PSNominal()
                         // then the L1 line
                         size_t cPhyPortL1     = (cChip->getId() > 3) ? 11 : 10;
                         size_t cPhyPortChnlL1 = (cChip->getId() % 4);
-                        auto&  fTapsChip      = fTapsHybrid->at(cChip->getIndex());
-                        auto&  fTapsOrigChip  = fTapsOrigHybrid->at(cChip->getIndex());
+                        auto&  fTapsChip      = fTapsHybrid->topoGigio(cChip->getIndex());
+                        auto&  fTapsOrigChip  = fTapsOrigHybrid->topoGigio(cChip->getIndex());
                         int    cPhase         = fTapsOrigChip->getSummary<uint8_t>();
                         int    cPhaseMod      = cPhase + cOffset;
                         fCicInterface->SetOptimalTap(cCic, cPhyPortL1, cPhyPortChnlL1, cOffset);
@@ -4045,43 +4045,43 @@ void DataChecker::PSNominal()
             ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, fPixelExpected);
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cBxIds      = fBxIds.at(cBoard->getIndex());
-                auto& cInjections = fInjectedPClusters.at(cBoard->getIndex());
-                auto& cMatched    = fReadoutPClusters.at(cBoard->getIndex());
-                auto& cInj        = fPixelInjections.at(cBoard->getIndex());
-                auto& cExp        = fPixelExpected.at(cBoard->getIndex());
-                auto& cCicInj     = fCicInjections.at(cBoard->getIndex());
+                auto& cBxIds      = fBxIds.topoGigio(cBoard->getIndex());
+                auto& cInjections = fInjectedPClusters.topoGigio(cBoard->getIndex());
+                auto& cMatched    = fReadoutPClusters.topoGigio(cBoard->getIndex());
+                auto& cInj        = fPixelInjections.topoGigio(cBoard->getIndex());
+                auto& cExp        = fPixelExpected.topoGigio(cBoard->getIndex());
+                auto& cCicInj     = fCicInjections.topoGigio(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
-                    auto& cMatchedOGs             = cMatched->at(cOpticalGroup->getIndex());
-                    auto& cInjOG                  = cInj->at(cOpticalGroup->getIndex());
-                    auto& cExpOG                  = cExp->at(cOpticalGroup->getIndex());
-                    auto& cBxIdsOG                = cBxIds->at(cOpticalGroup->getIndex());
-                    auto& cCicInjOG               = cCicInj->at(cOpticalGroup->getIndex());
+                    auto& cInjectionsOpticalGroup = cInjections->topoGigio(cOpticalGroup->getIndex());
+                    auto& cMatchedOGs             = cMatched->topoGigio(cOpticalGroup->getIndex());
+                    auto& cInjOG                  = cInj->topoGigio(cOpticalGroup->getIndex());
+                    auto& cExpOG                  = cExp->topoGigio(cOpticalGroup->getIndex());
+                    auto& cBxIdsOG                = cBxIds->topoGigio(cOpticalGroup->getIndex());
+                    auto& cCicInjOG               = cCicInj->topoGigio(cOpticalGroup->getIndex());
 
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cExpHybrid        = cExpOG->at(cHybrid->getIndex());
-                        auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
-                        auto& cMatchedHybrid    = cMatchedOGs->at(cHybrid->getIndex());
-                        auto& cInjHybrid        = cInjOG->at(cHybrid->getIndex());
-                        auto& cBxIdsHybrid      = cBxIdsOG->at(cHybrid->getIndex());
+                        auto& cExpHybrid        = cExpOG->topoGigio(cHybrid->getIndex());
+                        auto& cInjectionsHybrid = cInjectionsOpticalGroup->topoGigio(cHybrid->getIndex());
+                        auto& cMatchedHybrid    = cMatchedOGs->topoGigio(cHybrid->getIndex());
+                        auto& cInjHybrid        = cInjOG->topoGigio(cHybrid->getIndex());
+                        auto& cBxIdsHybrid      = cBxIdsOG->topoGigio(cHybrid->getIndex());
                         auto& cSummaryBxIds     = cBxIdsHybrid->getSummary<std::vector<uint32_t>>();
                         cSummaryBxIds.clear();
-                        auto& cCicInjHybrid                   = cCicInjOG->at(cHybrid->getIndex());
+                        auto& cCicInjHybrid                   = cCicInjOG->topoGigio(cHybrid->getIndex());
                         cCicInjHybrid->getSummary<uint32_t>() = 0;
                         for(auto cChip: *cHybrid)
                         {
-                            auto& cInjectionsChip                   = cInjectionsHybrid->at(cChip->getIndex());
+                            auto& cInjectionsChip                   = cInjectionsHybrid->topoGigio(cChip->getIndex());
                             cInjectionsChip->getSummary<uint32_t>() = 0;
-                            auto& cMatchedChip                      = cMatchedHybrid->at(cChip->getIndex());
+                            auto& cMatchedChip                      = cMatchedHybrid->topoGigio(cChip->getIndex());
                             auto& cSummary                          = cMatchedChip->getSummary<std::vector<uint32_t>>();
                             cSummary.clear();
-                            auto& cInjChip    = cInjHybrid->at(cChip->getIndex());
+                            auto& cInjChip    = cInjHybrid->topoGigio(cChip->getIndex());
                             auto& cSummaryInj = cInjChip->getSummary<std::vector<Injection>>();
                             cSummaryInj.clear();
-                            auto& cExpChip    = cExpHybrid->at(cChip->getIndex());
+                            auto& cExpChip    = cExpHybrid->topoGigio(cChip->getIndex());
                             auto& cSummaryExp = cExpChip->getSummary<std::vector<Injection>>();
                             cSummaryExp.clear();
                         }
@@ -4093,19 +4093,19 @@ void DataChecker::PSNominal()
             size_t cTotalNumberOfClusters = 0;
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cInjections = fInjectedPClusters.at(cBoard->getIndex());
-                auto& cInj        = fPixelInjections.at(cBoard->getIndex());
-                auto& cCicInj     = fCicInjections.at(cBoard->getIndex());
+                auto& cInjections = fInjectedPClusters.topoGigio(cBoard->getIndex());
+                auto& cInj        = fPixelInjections.topoGigio(cBoard->getIndex());
+                auto& cCicInj     = fCicInjections.topoGigio(cBoard->getIndex());
                 for(auto cOpticalReadout: *cBoard)
                 {
-                    auto& cInjectionsOpticalGroup = cInjections->at(cOpticalReadout->getIndex());
-                    auto& cInjOG                  = cInj->at(cOpticalReadout->getIndex());
-                    auto& cCicInjOG               = cCicInj->at(cOpticalReadout->getIndex());
+                    auto& cInjectionsOpticalGroup = cInjections->topoGigio(cOpticalReadout->getIndex());
+                    auto& cInjOG                  = cInj->topoGigio(cOpticalReadout->getIndex());
+                    auto& cCicInjOG               = cCicInj->topoGigio(cOpticalReadout->getIndex());
                     for(auto cHybrid: *cOpticalReadout)
                     {
-                        auto&            cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
-                        auto&            cInjHybrid        = cInjOG->at(cHybrid->getIndex());
-                        auto&            cCicInjHybrid     = cCicInjOG->at(cHybrid->getIndex());
+                        auto&            cInjectionsHybrid = cInjectionsOpticalGroup->topoGigio(cHybrid->getIndex());
+                        auto&            cInjHybrid        = cInjOG->topoGigio(cHybrid->getIndex());
+                        auto&            cCicInjHybrid     = cCicInjOG->topoGigio(cHybrid->getIndex());
                         auto&            cCicInjSummary    = cCicInjHybrid->getSummary<uint32_t>();
                         size_t           cNMPAs            = cMPAsDist(cGen);
                         std::vector<int> cMPAs;
@@ -4126,8 +4126,8 @@ void DataChecker::PSNominal()
                             {
                                 if(std::find(cMPAs.begin(), cMPAs.end(), cChip->getId()) == cMPAs.end()) continue;
 
-                                auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
-                                auto& cInjChp         = cInjHybrid->at(cChip->getIndex());
+                                auto& cInjectionsChip = cInjectionsHybrid->topoGigio(cChip->getIndex());
+                                auto& cInjChp         = cInjHybrid->topoGigio(cChip->getIndex());
                                 // activate stub mode
                                 fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
                                 fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
@@ -4193,15 +4193,15 @@ void DataChecker::PSNominal()
             ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, fPClusters);
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cExp        = fPixelExpected.at(cBoard->getIndex());
-                auto& cPClusters  = fPClusters.at(cBoard->getIndex());
-                auto& cBxIds      = fBxIds.at(cBoard->getIndex());
-                auto& cInjections = fReadoutPClusters.at(cBoard->getIndex());
+                auto& cExp        = fPixelExpected.topoGigio(cBoard->getIndex());
+                auto& cPClusters  = fPClusters.topoGigio(cBoard->getIndex());
+                auto& cBxIds      = fBxIds.topoGigio(cBoard->getIndex());
+                auto& cInjections = fReadoutPClusters.topoGigio(cBoard->getIndex());
                 LOG(DEBUG) << BOLDMAGENTA << "Requesting " << +cNevents << " events from the board " << RESET;
                 ReadNEvents(cBoard, cNevents);
                 const std::vector<Event*>& cEventsWithStubs = this->GetEvents();
                 LOG(DEBUG) << BOLDBLUE << "Read back " << +cEventsWithStubs.size() << " events from the FC7 ..." << RESET;
-                auto& cInj = fPixelInjections.at(cBoard->getIndex());
+                auto& cInj = fPixelInjections.topoGigio(cBoard->getIndex());
                 for(auto cEvent: cEventsWithStubs)
                 {
                     // skip the last event since I know its
@@ -4210,21 +4210,21 @@ void DataChecker::PSNominal()
 
                     for(auto cOpticalGroup: *cBoard)
                     {
-                        auto& cExpOG                  = cExp->at(cOpticalGroup->getIndex());
-                        auto& cPClustersOG            = cPClusters->at(cOpticalGroup->getIndex());
-                        auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
-                        auto& cInjOG                  = cInj->at(cOpticalGroup->getIndex());
-                        auto& cBxIdsOG                = cBxIds->at(cOpticalGroup->getIndex());
+                        auto& cExpOG                  = cExp->topoGigio(cOpticalGroup->getIndex());
+                        auto& cPClustersOG            = cPClusters->topoGigio(cOpticalGroup->getIndex());
+                        auto& cInjectionsOpticalGroup = cInjections->topoGigio(cOpticalGroup->getIndex());
+                        auto& cInjOG                  = cInj->topoGigio(cOpticalGroup->getIndex());
+                        auto& cBxIdsOG                = cBxIds->topoGigio(cOpticalGroup->getIndex());
 
                         for(auto cHybrid: *cOpticalGroup)
                         {
-                            auto& cExpHybrid        = cExpOG->at(cHybrid->getIndex());
-                            auto& cPClustersHybrid  = cPClustersOG->at(cHybrid->getIndex());
-                            auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
-                            auto& cInjHybrid        = cInjOG->at(cHybrid->getIndex());
+                            auto& cExpHybrid        = cExpOG->topoGigio(cHybrid->getIndex());
+                            auto& cPClustersHybrid  = cPClustersOG->topoGigio(cHybrid->getIndex());
+                            auto& cInjectionsHybrid = cInjectionsOpticalGroup->topoGigio(cHybrid->getIndex());
+                            auto& cInjHybrid        = cInjOG->topoGigio(cHybrid->getIndex());
                             auto  cL1Status         = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
                             auto  cErrorBitCic      = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), 8);
-                            auto& cBxIdsHybrid      = cBxIdsOG->at(cHybrid->getIndex());
+                            auto& cBxIdsHybrid      = cBxIdsOG->topoGigio(cHybrid->getIndex());
                             auto& cSummaryBxIds     = cBxIdsHybrid->getSummary<std::vector<uint32_t>>();
                             auto  cBxId             = cEvent->BxId(cHybrid->getId());
                             cSummaryBxIds.push_back(cBxId);
@@ -4232,11 +4232,11 @@ void DataChecker::PSNominal()
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                                auto& cPClustersChip   = cPClustersHybrid->at(cChip->getIndex());
+                                auto& cPClustersChip   = cPClustersHybrid->topoGigio(cChip->getIndex());
                                 auto& cPClustersSmry   = cPClustersChip->getSummary<std::vector<Injection>>();
-                                auto& cInjChp          = cInjHybrid->at(cChip->getIndex());
+                                auto& cInjChp          = cInjHybrid->topoGigio(cChip->getIndex());
                                 auto& cSummaryInj      = cInjChp->getSummary<std::vector<Injection>>();
-                                auto& cExpChip         = cExpHybrid->at(cChip->getIndex());
+                                auto& cExpChip         = cExpHybrid->topoGigio(cChip->getIndex());
                                 auto& cExpPClusterSmry = cExpChip->getSummary<std::vector<Injection>>();
 
                                 // don't bother checking when I havne't injected
@@ -4290,7 +4290,7 @@ void DataChecker::PSNominal()
                                 //     << +cNmatched
                                 //     << " match."
                                 //     << RESET;
-                                auto& cInjectionsThisChip = cInjectionsHybrid->at(cChip->getIndex());
+                                auto& cInjectionsThisChip = cInjectionsHybrid->topoGigio(cChip->getIndex());
                                 auto& cSummary            = cInjectionsThisChip->getSummary<std::vector<uint32_t>>();
                                 cSummary.push_back(cNmatched);
                                 // if( (1+cEvent->GetEventCount())%100 ==  0 )
@@ -4334,24 +4334,24 @@ void DataChecker::PSNominal()
             // readout - fPClusters
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cInjected = fPixelExpected.at(cBoard->getIndex());
-                auto& cReadout  = fPClusters.at(cBoard->getIndex());
+                auto& cInjected = fPixelExpected.topoGigio(cBoard->getIndex());
+                auto& cReadout  = fPClusters.topoGigio(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& cInjOG     = cInjected->at(cOpticalGroup->getIndex());
-                    auto& cReadoutOG = cReadout->at(cOpticalGroup->getIndex());
+                    auto& cInjOG     = cInjected->topoGigio(cOpticalGroup->getIndex());
+                    auto& cReadoutOG = cReadout->topoGigio(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cInjHybrid     = cInjOG->at(cHybrid->getIndex());
-                        auto& cReadoutHybrid = cReadoutOG->at(cHybrid->getIndex());
+                        auto& cInjHybrid     = cInjOG->topoGigio(cHybrid->getIndex());
+                        auto& cReadoutHybrid = cReadoutOG->topoGigio(cHybrid->getIndex());
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                            auto& cInjChip = cInjHybrid->at(cChip->getIndex());
+                            auto& cInjChip = cInjHybrid->topoGigio(cChip->getIndex());
                             auto& cExpInjs = cInjChip->getSummary<std::vector<Injection>>();
 
-                            auto& cReadoutChip = cReadoutHybrid->at(cChip->getIndex());
+                            auto& cReadoutChip = cReadoutHybrid->topoGigio(cChip->getIndex());
                             auto& cReadoutInjs = cReadoutChip->getSummary<std::vector<Injection>>();
 
                             LOG(DEBUG) << BOLDMAGENTA << "MPA#" << +cChip->getId() << " found " << +cExpInjs.size() << " in injection log "
@@ -4383,13 +4383,13 @@ void DataChecker::PSNominal()
             // bx Id
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cBxIds = fBxIds.at(cBoard->getIndex());
+                auto& cBxIds = fBxIds.topoGigio(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& cBxIdsOG = cBxIds->at(cOpticalGroup->getIndex());
+                    auto& cBxIdsOG = cBxIds->topoGigio(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto&    cBxIdsHybrid  = cBxIdsOG->at(cHybrid->getIndex());
+                        auto&    cBxIdsHybrid  = cBxIdsOG->topoGigio(cHybrid->getIndex());
                         auto&    cSummaryBxIds = cBxIdsHybrid->getSummary<std::vector<uint32_t>>();
                         int      cNRollOvers   = 0;
                         uint16_t cMaxBxCounter = 3564;
@@ -4410,45 +4410,45 @@ void DataChecker::PSNominal()
 
             for(auto cBoard: *fDetectorContainer)
             {
-                auto& cCicInj   = fCicInjections.at(cBoard->getIndex());
-                auto& cInjected = fPixelExpected.at(cBoard->getIndex());
-                auto& cReadout  = fPClusters.at(cBoard->getIndex());
-                auto& cTaps     = fPhaseTaps.at(cBoard->getIndex());
-                auto& cTapsOrig = fOriginalPhaseTaps.at(cBoard->getIndex());
-                auto& cClusters = fInjectedPClusters.at(cBoard->getIndex());
+                auto& cCicInj   = fCicInjections.topoGigio(cBoard->getIndex());
+                auto& cInjected = fPixelExpected.topoGigio(cBoard->getIndex());
+                auto& cReadout  = fPClusters.topoGigio(cBoard->getIndex());
+                auto& cTaps     = fPhaseTaps.topoGigio(cBoard->getIndex());
+                auto& cTapsOrig = fOriginalPhaseTaps.topoGigio(cBoard->getIndex());
+                auto& cClusters = fInjectedPClusters.topoGigio(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& cCicInjOG             = cCicInj->at(cOpticalGroup->getIndex());
-                    auto& cInjOG                = cInjected->at(cOpticalGroup->getIndex());
-                    auto& cReadoutOG            = cReadout->at(cOpticalGroup->getIndex());
-                    auto& cTapsOpticalGroup     = cTaps->at(cOpticalGroup->getIndex());
-                    auto& cTapsOrigOpticalGroup = cTapsOrig->at(cOpticalGroup->getIndex());
-                    auto& cClustersOpticalGroup = cClusters->at(cOpticalGroup->getIndex());
+                    auto& cCicInjOG             = cCicInj->topoGigio(cOpticalGroup->getIndex());
+                    auto& cInjOG                = cInjected->topoGigio(cOpticalGroup->getIndex());
+                    auto& cReadoutOG            = cReadout->topoGigio(cOpticalGroup->getIndex());
+                    auto& cTapsOpticalGroup     = cTaps->topoGigio(cOpticalGroup->getIndex());
+                    auto& cTapsOrigOpticalGroup = cTapsOrig->topoGigio(cOpticalGroup->getIndex());
+                    auto& cClustersOpticalGroup = cClusters->topoGigio(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cCicInjHybrid  = cCicInjOG->at(cHybrid->getIndex());
+                        auto& cCicInjHybrid  = cCicInjOG->topoGigio(cHybrid->getIndex());
                         auto& cCicInjSummary = cCicInjHybrid->getSummary<uint32_t>();
                         LOG(DEBUG) << BOLDMAGENTA << "Injecting " << +cCicInjSummary << " clusters in CIC#" << +cHybrid->getId() << RESET;
-                        auto& cInjHybrid      = cInjOG->at(cHybrid->getIndex());
-                        auto& cReadoutHybrid  = cReadoutOG->at(cHybrid->getIndex());
-                        auto& cTapsHybrid     = cTapsOpticalGroup->at(cHybrid->getIndex());
-                        auto& cTapsOrigHybrid = cTapsOrigOpticalGroup->at(cHybrid->getIndex());
-                        auto& cClustersHybrid = cClustersOpticalGroup->at(cHybrid->getIndex());
+                        auto& cInjHybrid      = cInjOG->topoGigio(cHybrid->getIndex());
+                        auto& cReadoutHybrid  = cReadoutOG->topoGigio(cHybrid->getIndex());
+                        auto& cTapsHybrid     = cTapsOpticalGroup->topoGigio(cHybrid->getIndex());
+                        auto& cTapsOrigHybrid = cTapsOrigOpticalGroup->topoGigio(cHybrid->getIndex());
+                        auto& cClustersHybrid = cClustersOpticalGroup->topoGigio(cHybrid->getIndex());
 
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-                            auto& cInjChip = cInjHybrid->at(cChip->getIndex());
+                            auto& cInjChip = cInjHybrid->topoGigio(cChip->getIndex());
                             auto& cExpInjs = cInjChip->getSummary<std::vector<Injection>>();
 
-                            auto& cReadoutChip = cReadoutHybrid->at(cChip->getIndex());
+                            auto& cReadoutChip = cReadoutHybrid->topoGigio(cChip->getIndex());
                             auto& cReadoutInjs = cReadoutChip->getSummary<std::vector<Injection>>();
 
-                            auto& cTapsChip     = cTapsHybrid->at(cChip->getIndex());
-                            auto& cTapsOrigChip = cTapsOrigHybrid->at(cChip->getIndex());
+                            auto& cTapsChip     = cTapsHybrid->topoGigio(cChip->getIndex());
+                            auto& cTapsOrigChip = cTapsOrigHybrid->topoGigio(cChip->getIndex());
 
-                            auto&  cClustersChip      = cClustersHybrid->at(cChip->getIndex());
+                            auto&  cClustersChip      = cClustersHybrid->topoGigio(cChip->getIndex());
                             size_t cExpectedNClusters = cClustersChip->getSummary<uint32_t>();
                             if(cExpInjs.size() == 0) continue;
 
@@ -4495,35 +4495,35 @@ void DataChecker::PSNominal()
 
             // for(auto cBoard: *fDetectorContainer)
             // {
-            //     auto& cExp = fPixelExpected.at(cBoard->getIndex());
-            //     auto& cInjPxls = fPixelInjections.at(cBoard->getIndex());
-            //     auto& cInjections = fReadoutPClusters.at(cBoard->getIndex());
-            //     auto& cExpected = fInjectedPClusters.at(cBoard->getIndex());
-            //     auto& cTaps = fPhaseTaps.at(cBoard->getIndex());
-            //     auto& cTapsOrig = fOriginalPhaseTaps.at(cBoard->getIndex());
-            //     auto& cBxIds = fBxIds.at(cBoard->getIndex());
-            //     auto& cCicInj = fCicInjections.at(cBoard->getIndex());
+            //     auto& cExp = fPixelExpected.topoGigio(cBoard->getIndex());
+            //     auto& cInjPxls = fPixelInjections.topoGigio(cBoard->getIndex());
+            //     auto& cInjections = fReadoutPClusters.topoGigio(cBoard->getIndex());
+            //     auto& cExpected = fInjectedPClusters.topoGigio(cBoard->getIndex());
+            //     auto& cTaps = fPhaseTaps.topoGigio(cBoard->getIndex());
+            //     auto& cTapsOrig = fOriginalPhaseTaps.topoGigio(cBoard->getIndex());
+            //     auto& cBxIds = fBxIds.topoGigio(cBoard->getIndex());
+            //     auto& cCicInj = fCicInjections.topoGigio(cBoard->getIndex());
             //     for(auto cOpticalGroup: *cBoard)
             //     {
-            //         auto& cExpOG = cExp->at(cOpticalGroup->getIndex());
-            //         auto& cInjPxlOGs = cInjPxls->at(cOpticalGroup->getIndex());
-            //         auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
-            //         auto& cExpectedOpticalGroup = cExpected->at(cOpticalGroup->getIndex());
-            //         auto& cTapsOpticalGroup = cTaps->at(cOpticalGroup->getIndex());
-            //         auto& cTapsOrigOpticalGroup = cTapsOrig->at(cOpticalGroup->getIndex());
-            //         auto& cBxIdsOG = cBxIds->at(cOpticalGroup->getIndex());
-            //         auto& cCicInjOG = cCicInj->at(cOpticalGroup->getIndex());
+            //         auto& cExpOG = cExp->topoGigio(cOpticalGroup->getIndex());
+            //         auto& cInjPxlOGs = cInjPxls->topoGigio(cOpticalGroup->getIndex());
+            //         auto& cInjectionsOpticalGroup = cInjections->topoGigio(cOpticalGroup->getIndex());
+            //         auto& cExpectedOpticalGroup = cExpected->topoGigio(cOpticalGroup->getIndex());
+            //         auto& cTapsOpticalGroup = cTaps->topoGigio(cOpticalGroup->getIndex());
+            //         auto& cTapsOrigOpticalGroup = cTapsOrig->topoGigio(cOpticalGroup->getIndex());
+            //         auto& cBxIdsOG = cBxIds->topoGigio(cOpticalGroup->getIndex());
+            //         auto& cCicInjOG = cCicInj->topoGigio(cOpticalGroup->getIndex());
             //         for(auto cHybrid: *cOpticalGroup)
             //         {
-            //             auto& cExpHybrid = cExpOG->at(cHybrid->getIndex());
-            //             auto& cInjPxlHybrid = cInjPxlOGs->at(cHybrid->getIndex());
-            //             auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
-            //             auto& cExpectedHybrid = cExpectedOpticalGroup->at(cHybrid->getIndex());
-            //             auto& cTapsHybrid = cTapsOpticalGroup->at(cHybrid->getIndex());
-            //             auto& cTapsOrigHybrid = cTapsOrigOpticalGroup->at(cHybrid->getIndex());
-            //             auto& cBxIdsHybrid = cBxIdsOG->at(cHybrid->getIndex());
+            //             auto& cExpHybrid = cExpOG->topoGigio(cHybrid->getIndex());
+            //             auto& cInjPxlHybrid = cInjPxlOGs->topoGigio(cHybrid->getIndex());
+            //             auto& cInjectionsHybrid = cInjectionsOpticalGroup->topoGigio(cHybrid->getIndex());
+            //             auto& cExpectedHybrid = cExpectedOpticalGroup->topoGigio(cHybrid->getIndex());
+            //             auto& cTapsHybrid = cTapsOpticalGroup->topoGigio(cHybrid->getIndex());
+            //             auto& cTapsOrigHybrid = cTapsOrigOpticalGroup->topoGigio(cHybrid->getIndex());
+            //             auto& cBxIdsHybrid = cBxIdsOG->topoGigio(cHybrid->getIndex());
             //             auto& cSummaryBxIds = cBxIdsHybrid->getSummary<std::vector<uint32_t>>();
-            //             auto& cCicInjHybrid = cCicInjOG->at(cHybrid->getIndex());
+            //             auto& cCicInjHybrid = cCicInjOG->topoGigio(cHybrid->getIndex());
             //             auto& cCicInjSummary = cCicInjHybrid->getSummary<uint32_t>();
             //             int              cNRollOvers = 0;
             //             uint16_t cMaxBxCounter = 3564;
@@ -4542,18 +4542,18 @@ void DataChecker::PSNominal()
             //             {
             //                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
 
-            //                 auto& cExpChip = cExpHybrid->at(cChip->getIndex());
+            //                 auto& cExpChip = cExpHybrid->topoGigio(cChip->getIndex());
             //                 auto& cExpPClusterSmry = cExpChip->getSummary<std::vector<Injection>>();
             //                 //
-            //                 auto& cInjectionsThisChip = cInjectionsHybrid->at(cChip->getIndex());
+            //                 auto& cInjectionsThisChip = cInjectionsHybrid->topoGigio(cChip->getIndex());
             //                 auto cSummary = cInjectionsThisChip->getSummary<std::vector<uint32_t>>();
             //                 //
-            //                 auto& cExpectedClstrsThisChip = cExpectedHybrid->at(cChip->getIndex());
+            //                 auto& cExpectedClstrsThisChip = cExpectedHybrid->topoGigio(cChip->getIndex());
             //                 //
-            //                 auto& cTapsChip = cTapsHybrid->at(cChip->getIndex());
-            //                 auto& cTapsOrigChip = cTapsOrigHybrid->at(cChip->getIndex());
+            //                 auto& cTapsChip = cTapsHybrid->topoGigio(cChip->getIndex());
+            //                 auto& cTapsOrigChip = cTapsOrigHybrid->topoGigio(cChip->getIndex());
             //                 //
-            //                 auto& cInjPxlThisChip = cInjPxlHybrid->at(cChip->getIndex());
+            //                 auto& cInjPxlThisChip = cInjPxlHybrid->topoGigio(cChip->getIndex());
             //                 auto cPxlInjections = cInjPxlThisChip->getSummary<std::vector<Injection>>();
             //                 float cExpected = (float)(cExpectedClstrsThisChip->getSummary<uint32_t>());
             //                 if( cExpected ==0 ) continue;
@@ -4742,22 +4742,22 @@ void DataChecker::Eye_CIC()
         for(auto cBoard: *fDetectorContainer)
         {
             this->CheckPSData(cBoard, cInjections);
-            auto& cBadEvents  = fBadEvents.at(cBoard->getIndex());
-            auto& cGoodEvents = fGoodEvents.at(cBoard->getIndex());
+            auto& cBadEvents  = fBadEvents.topoGigio(cBoard->getIndex());
+            auto& cGoodEvents = fGoodEvents.topoGigio(cBoard->getIndex());
             for(auto cOpticalGroup: *cBoard)
             {
-                auto& cBadEventsOG = cBadEvents->at(cOpticalGroup->getIndex());
-                auto& cGdEventsOG  = cGoodEvents->at(cOpticalGroup->getIndex());
+                auto& cBadEventsOG = cBadEvents->topoGigio(cOpticalGroup->getIndex());
+                auto& cGdEventsOG  = cGoodEvents->topoGigio(cOpticalGroup->getIndex());
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cBadEventsHybrid = cBadEventsOG->at(cHybrid->getIndex());
-                    auto& cGdEventsHybrid  = cGdEventsOG->at(cHybrid->getIndex());
+                    auto& cBadEventsHybrid = cBadEventsOG->topoGigio(cHybrid->getIndex());
+                    auto& cGdEventsHybrid  = cGdEventsOG->topoGigio(cHybrid->getIndex());
                     for(auto cChip: *cHybrid)
                     {
-                        auto& cBadEventsChip = cBadEventsHybrid->at(cChip->getIndex());
+                        auto& cBadEventsChip = cBadEventsHybrid->topoGigio(cChip->getIndex());
                         auto& cBadEventsList = cBadEventsChip->getSummary<EventsList>();
 
-                        auto& cGdEventsChip = cGdEventsHybrid->at(cChip->getIndex());
+                        auto& cGdEventsChip = cGdEventsHybrid->topoGigio(cChip->getIndex());
                         auto& cGdEventsList = cGdEventsChip->getSummary<EventsList>();
 
                         LOG(INFO) << BOLDBLUE << "Found " << +cBadEventsList.size() << " bad events and " << +cGdEventsList.size() << " good events." << RESET;
@@ -5022,22 +5022,22 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
     //             uint16_t cCalPulseDelay        = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
     //             uint16_t cTimeBetweenCalPulses = cCalPulseDelay + cDelay;
     //             LOG(INFO) << BOLDBLUE << "An L1A/CalPulse is sent once every  " << (cTimeBetweenCalPulses) << " Bx." << RESET;
-    //             auto& cBadEvents  = fBadEvents.at(cBoard->getIndex());
-    //             auto& cGoodEvents = fGoodEvents.at(cBoard->getIndex());
+    //             auto& cBadEvents  = fBadEvents.topoGigio(cBoard->getIndex());
+    //             auto& cGoodEvents = fGoodEvents.topoGigio(cBoard->getIndex());
     //             for(auto cOpticalGroup: *cBoard)
     //             {
-    //                 auto& cBadEventsOG = cBadEvents->at(cOpticalGroup->getIndex());
-    //                 auto& cGdEventsOG  = cGoodEvents->at(cOpticalGroup->getIndex());
+    //                 auto& cBadEventsOG = cBadEvents->topoGigio(cOpticalGroup->getIndex());
+    //                 auto& cGdEventsOG  = cGoodEvents->topoGigio(cOpticalGroup->getIndex());
     //                 for(auto cHybrid: *cOpticalGroup)
     //                 {
-    //                     auto& cBadEventsHybrid = cBadEventsOG->at(cHybrid->getIndex());
-    //                     auto& cGdEventsHybrid  = cGdEventsOG->at(cHybrid->getIndex());
+    //                     auto& cBadEventsHybrid = cBadEventsOG->topoGigio(cHybrid->getIndex());
+    //                     auto& cGdEventsHybrid  = cGdEventsOG->topoGigio(cHybrid->getIndex());
     //                     for(auto cChip: *cHybrid)
     //                     {
-    //                         auto& cBadEventsChip = cBadEventsHybrid->at(cChip->getIndex());
+    //                         auto& cBadEventsChip = cBadEventsHybrid->topoGigio(cChip->getIndex());
     //                         auto& cBadEventsList = cBadEventsChip->getSummary<EventsList>();
 
-    //                         auto& cGdEventsChip = cGdEventsHybrid->at(cChip->getIndex());
+    //                         auto& cGdEventsChip = cGdEventsHybrid->topoGigio(cChip->getIndex());
     //                         auto& cGdEventsList = cGdEventsChip->getSummary<EventsList>();
 
     //                         LOG(INFO) << BOLDBLUE << "Found " << +cBadEventsList.size() << " bad events and " << +cGdEventsList.size() << " good events." << RESET;
@@ -6051,20 +6051,20 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
     // and re-load configuration of fast command block from register map loaded from xml file
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cThresholdsThisBoard = fThresholds.at(cBoard->getIndex());
-        auto& cLogicThisBoard      = fLogic.at(cBoard->getIndex());
-        auto& cHIPsThisBoard       = fHIPs.at(cBoard->getIndex());
+        auto& cThresholdsThisBoard = fThresholds.topoGigio(cBoard->getIndex());
+        auto& cLogicThisBoard      = fLogic.topoGigio(cBoard->getIndex());
+        auto& cHIPsThisBoard       = fHIPs.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cThresholdsThisOpticalGroup = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
-            auto& cLogicThisOpticalGroup      = cLogicThisBoard->at(cOpticalGroup->getIndex());
-            auto& cHIPsThisOpticalGroup       = cHIPsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cThresholdsThisOpticalGroup = cThresholdsThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cLogicThisOpticalGroup      = cLogicThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cHIPsThisOpticalGroup       = cHIPsThisBoard->topoGigio(cOpticalGroup->getIndex());
 
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cLogicThisHybrid      = cLogicThisOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->topoGigio(cHybrid->getIndex());
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getOpticalGroupId());
                 for(auto cChip: *cHybrid)
                 {
@@ -6074,10 +6074,10 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                     fReadoutChipInterface->WriteChipReg(theChip, "CoincWind&Offset12", (0 << 4) | (0 << 0));
                     fReadoutChipInterface->WriteChipReg(theChip, "CoincWind&Offset34", (0 << 4) | (0 << 0));
 
-                    LOG(DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "VCth", cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Pipe&StubInpSel&Ptwidth", cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "HIP&TestMode", cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
+                    LOG(DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getId() << " back to " << +cThresholdsThisHybrid->topoGigio(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "VCth", cThresholdsThisHybrid->topoGigio(cChip->getIndex())->getSummary<uint16_t>());
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Pipe&StubInpSel&Ptwidth", cLogicThisHybrid->topoGigio(cChip->getIndex())->getSummary<uint16_t>());
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "HIP&TestMode", cHIPsThisHybrid->topoGigio(cChip->getIndex())->getSummary<uint16_t>());
                 }
             }
         }
@@ -6336,19 +6336,19 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
     // and re-load configuration of fast command block from register map loaded from xml file
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cThresholdsThisBoard = fThresholds.at(cBoard->getIndex());
-        auto& cLogicThisBoard      = fLogic.at(cBoard->getIndex());
-        auto& cHIPsThisBoard       = fHIPs.at(cBoard->getIndex());
+        auto& cThresholdsThisBoard = fThresholds.topoGigio(cBoard->getIndex());
+        auto& cLogicThisBoard      = fLogic.topoGigio(cBoard->getIndex());
+        auto& cHIPsThisBoard       = fHIPs.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cThresholdsThisOpticalGroup = cThresholdsThisBoard->at(cOpticalGroup->getIndex());
-            auto& cLogicThisOpticalGroup      = cLogicThisBoard->at(cOpticalGroup->getIndex());
-            auto& cHIPsThisOpticalGroup       = cHIPsThisBoard->at(cOpticalGroup->getIndex());
+            auto& cThresholdsThisOpticalGroup = cThresholdsThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cLogicThisOpticalGroup      = cLogicThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cHIPsThisOpticalGroup       = cHIPsThisBoard->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cOpticalGroup->getIndex());
-                auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cOpticalGroup->getIndex());
-                auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cOpticalGroup->getIndex());
+                auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->topoGigio(cOpticalGroup->getIndex());
+                auto& cLogicThisHybrid      = cLogicThisOpticalGroup->topoGigio(cOpticalGroup->getIndex());
+                auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->topoGigio(cOpticalGroup->getIndex());
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getOpticalGroupId());
                 for(auto cChip: *cHybrid)
                 {
@@ -6358,10 +6358,10 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
                     fReadoutChipInterface->WriteChipReg(theChip, "CoincWind&Offset12", (0 << 4) | (0 << 0));
                     fReadoutChipInterface->WriteChipReg(theChip, "CoincWind&Offset34", (0 << 4) | (0 << 0));
 
-                    LOG(DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getId() << " back to " << +cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "VCth", cThresholdsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Pipe&StubInpSel&Ptwidth", cLogicThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
-                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "HIP&TestMode", cHIPsThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>());
+                    LOG(DEBUG) << BOLDBLUE << "Setting threshold on CBC" << +cChip->getId() << " back to " << +cThresholdsThisHybrid->topoGigio(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "VCth", cThresholdsThisHybrid->topoGigio(cChip->getIndex())->getSummary<uint16_t>());
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "Pipe&StubInpSel&Ptwidth", cLogicThisHybrid->topoGigio(cChip->getIndex())->getSummary<uint16_t>());
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->WriteChipReg(theChip, "HIP&TestMode", cHIPsThisHybrid->topoGigio(cChip->getIndex())->getSummary<uint16_t>());
                 }
             }
         }
@@ -6674,18 +6674,18 @@ void DataChecker::MaskForStubs(BeBoard* pBoard, uint16_t pSeed, bool pSeedLayer)
         auto cChipId    = cSeed / 127;
         auto cChannelId = 2 * (cSeed % 127) + !pSeedLayer;
         LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask strip " << +cSeed << " -- so channel " << +cChannelId << " of CBC " << +cChipId << RESET;
-        auto& cInjThisBoard = fInjections.at(pBoard->getIndex());
+        auto& cInjThisBoard = fInjections.topoGigio(pBoard->getIndex());
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisOpticalGroup = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup = cInjThisBoard->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid = cInjThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cInjThisHybrid = cInjThisOpticalGroup->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getId() != cChipId) continue;
 
-                    auto& cInjThisChip   = cInjThisHybrid->at(cChip->getIndex());
+                    auto& cInjThisChip   = cInjThisHybrid->topoGigio(cChip->getIndex());
                     auto& cInjectedSeeds = cInjThisChip->getSummary<ChannelList>();
                     cInjectedSeeds.push_back(cChannelId);
                 }
@@ -6701,9 +6701,9 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
     // in half strips
     const size_t NCHNLS               = 254;
     int          cBend                = 0;
-    auto&        cInjThisBoard        = fInjections.at(pBoard->getIndex());
-    auto&        cThThisBoard         = fThresholds.at(pBoard->getIndex());
-    auto&        cMismatchesThisBoard = fDataMismatches.at(pBoard->getIndex());
+    auto&        cInjThisBoard        = fInjections.topoGigio(pBoard->getIndex());
+    auto&        cThThisBoard         = fThresholds.topoGigio(pBoard->getIndex());
+    auto&        cMismatchesThisBoard = fDataMismatches.topoGigio(pBoard->getIndex());
 
     // get number of events from xml
     auto     cSetting        = fSettingsMap.find("Nevents");
@@ -6756,13 +6756,13 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
         // lower threshold and mask
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisOpticalGroup = cInjThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup = cInjThisBoard->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid = cInjThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cInjThisHybrid = cInjThisOpticalGroup->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cInjThisChip = cInjThisHybrid->at(cChip->getIndex());
+                    auto& cInjThisChip = cInjThisHybrid->topoGigio(cChip->getIndex());
                     auto& cChannels    = cInjThisChip->getSummary<ChannelList>();
                     if(cChannels.size() > 0)
                     {
@@ -6791,16 +6791,16 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
         // check for matches
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisOpticalGroup        = cInjThisBoard->at(cOpticalGroup->getIndex());
-            auto& cMismatchesThisOpticalGroup = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup        = cInjThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cMismatchesThisOpticalGroup = cMismatchesThisBoard->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid        = cInjThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cMismatchesThisHybrid = cMismatchesThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cInjThisHybrid        = cInjThisOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cMismatchesThisHybrid = cMismatchesThisOpticalGroup->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cInjThisChip        = cInjThisHybrid->at(cChip->getIndex());
-                    auto& cMismatchesThisChip = cMismatchesThisHybrid->at(cChip->getIndex());
+                    auto& cInjThisChip        = cInjThisHybrid->topoGigio(cChip->getIndex());
+                    auto& cMismatchesThisChip = cMismatchesThisHybrid->topoGigio(cChip->getIndex());
                     auto& cChannels           = cInjThisChip->getSummary<ChannelList>();
                     auto& cMismatched         = cMismatchesThisChip->getSummary<uint32_t>();
                     if(cChannels.size() == 0) continue;
@@ -6868,16 +6868,16 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
         // return threshold to normal
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cInjThisOpticalGroup = cInjThisBoard->at(cOpticalGroup->getIndex());
-            auto& cThThisOpticalGroup  = cThThisBoard->at(cOpticalGroup->getIndex());
+            auto& cInjThisOpticalGroup = cInjThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cThThisOpticalGroup  = cThThisBoard->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjThisHybrid = cInjThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cThThisHybrid  = cThThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cInjThisHybrid = cInjThisOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cThThisHybrid  = cThThisOpticalGroup->topoGigio(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cInjThisChip = cInjThisHybrid->at(cChip->getIndex());
-                    auto& cThThisChip  = cThThisHybrid->at(cChip->getIndex());
+                    auto& cInjThisChip = cInjThisHybrid->topoGigio(cChip->getIndex());
+                    auto& cThThisChip  = cThThisHybrid->topoGigio(cChip->getIndex());
                     auto& cChannels    = cInjThisChip->getSummary<ChannelList>();
                     if(cChannels.size() > 0)
                     {
@@ -6899,13 +6899,13 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
     // summary
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cMismatchesOpticalGroup = cMismatchesThisBoard->at(cOpticalGroup->getIndex());
+        auto& cMismatchesOpticalGroup = cMismatchesThisBoard->topoGigio(cOpticalGroup->getIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getIndex());
+            auto& cMismatchesHybrid = cMismatchesOpticalGroup->topoGigio(cHybrid->getIndex());
             for(auto cChip: *cHybrid)
             {
-                auto& cMismatchesChip = cMismatchesHybrid->at(cChip->getIndex());
+                auto& cMismatchesChip = cMismatchesHybrid->topoGigio(cChip->getIndex());
                 if(cMismatchesChip->getSummary<uint32_t>() > 0)
                 {
                     LOG(INFO) << BOLDRED << "Data mismatch in chip " << +cChip->getId() << " ... STOPPING TEST." << RESET;
@@ -6921,11 +6921,11 @@ void DataChecker::HitCheck()
     {
         auto cBeBoard = static_cast<BeBoard*>(cBoard);
 
-        OuterTrackerHybrid* cFirstHybrid = static_cast<OuterTrackerHybrid*>(cBoard->at(0)->at(0));
+        OuterTrackerHybrid* cFirstHybrid = static_cast<OuterTrackerHybrid*>(cBoard->topoGigio(0)->topoGigio(0));
         // bool cWithCIC = cFirstHybrid->fCic != NULL;
         // if( cWithCIC )
         //     cAligned = this->CICAlignment(theBoard);
-        ReadoutChip* theFirstReadoutChip = static_cast<ReadoutChip*>(cFirstHybrid->at(0));
+        ReadoutChip* theFirstReadoutChip = static_cast<ReadoutChip*>(cFirstHybrid->topoGigio(0));
         bool         cWithCBC            = (theFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
         if(cWithCBC) this->HitCheck2S(cBeBoard);
     }

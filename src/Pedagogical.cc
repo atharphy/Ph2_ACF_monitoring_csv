@@ -62,8 +62,8 @@ int main(int argc, char* argv[])
     cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
 
-    BeBoard*         pBoard           = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    HybridContainer* ChipVec          = pBoard->at(0)->at(0);
+    BeBoard*         pBoard           = static_cast<BeBoard*>(cTool.fDetectorContainer->topoGigio(0));
+    HybridContainer* ChipVec          = pBoard->topoGigio(0)->topoGigio(0);
     TH2I*            strip_v_thdac_31 = new TH2I("strip_v_thdac_31", "All TRIMDACs = 31;strip # ; THDAC (lsb)", 360, -60, 300, 25, 0, 25);
     strip_v_thdac_31->SetStats(0);
     for(auto cSSA: *ChipVec)

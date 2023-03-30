@@ -65,7 +65,7 @@ void DQMHistogramSSASCurveAsync::fillSSASCurveAsyncPlots(DetectorDataContainer& 
                     size_t chipIndex = chip->getIndex();
                     // Retreive the corresponging chip histogram:
 
-                    TH2F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* chipHitHistogram = fDetectorHitHistograms.topoGigio(boardIndex)->topoGigio(opticalGroupIndex)->topoGigio(hybridIndex)->topoGigio(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     uint  channelBin       = 1;
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
@@ -109,7 +109,7 @@ void DQMHistogramSSASCurveAsync::process()
                     size_t chipIndex = chip->getIndex();
                     cValidation->cd(chipIndex + 1);
                     // Retreive the corresponging chip histogram:
-                    TH2F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* chipHitHistogram = fDetectorHitHistograms.topoGigio(boardIndex)->topoGigio(opticalGroupIndex)->topoGigio(hybridIndex)->topoGigio(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     // Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you
                     // need)
                     chipHitHistogram->SetStats(false);

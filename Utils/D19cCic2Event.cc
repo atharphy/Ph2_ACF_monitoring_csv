@@ -380,7 +380,7 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
 void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list)
 {
     // get the first CIC
-    auto theFirstCIC = static_cast<OuterTrackerHybrid*>(pBoard->at(0)->at(0))->fCic;
+    auto theFirstCIC = static_cast<const OuterTrackerHybrid*>(pBoard->topoGigio(0)->topoGigio(0))->fCic;
     bool cWithCIC2   = (theFirstCIC->getFrontEndType() == FrontEndType::CIC2);
 
     fIsSparsified = pBoard->getSparsification();
@@ -490,7 +490,7 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
                 }
             }
 
-            auto   cReadoutChips = pBoard->at(cOpticalGroupIndex)->at(cHybridIndex);
+            auto   cReadoutChips = pBoard->topoGigio(cOpticalGroupIndex)->topoGigio(cHybridIndex);
             size_t cL1Offset     = cOffset + 2 + cWithCIC2;
             if(cWithCIC2)
             {

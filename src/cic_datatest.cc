@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(&cTool);
     cCicAligner.Initialise();
-    BeBoard* pBoard = static_cast<BeBoard*>(cCicAligner.fDetectorContainer->at(0));
+    BeBoard* pBoard = static_cast<BeBoard*>(cCicAligner.fDetectorContainer->topoGigio(0));
 
     bool cPhaseAligned = cCicAligner.PhaseAlignment();
     if(cPhaseAligned)

@@ -39,22 +39,22 @@ void Physics2SHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 // 			{
 //                 for(const auto chip: *hybrid)
 //                 {
-//                     TH1F* topClusterHistograms = fTopClusterHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH1F* topClusterHistograms = fTopClusterHistograms.topoGigio(board->getIndex())
+//                                                         ->topoGigio(opticalGroup->getIndex())
+//                                                         ->topoGigio(hybrid->getIndex())
+//                                                         ->topoGigio(chip->getIndex())
 //                                                         ->getSummary<HistContainer<TH1F>>()
 //                                                         .fTheHistogram;
-//                     TH1F* bottomClusterHistograms = fBottomClusterHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH1F* bottomClusterHistograms = fBottomClusterHistograms.topoGigio(board->getIndex())
+//                                                         ->topoGigio(opticalGroup->getIndex())
+//                                                         ->topoGigio(hybrid->getIndex())
+//                                                         ->topoGigio(chip->getIndex())
 //                                                         ->getSummary<HistContainer<TH1F>>()
 //                                                         .fTheHistogram;
-//                     TH1F* stubHistograms = fStubPositionHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH1F* stubHistograms = fStubPositionHistograms.topoGigio(board->getIndex())
+//                                                         ->topoGigio(opticalGroup->getIndex())
+//                                                         ->topoGigio(hybrid->getIndex())
+//                                                         ->topoGigio(chip->getIndex())
 //                                                         ->getSummary<HistContainer<TH1F>>()
 //                                                         .fTheHistogram;
 // 					auto data2S = chip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
@@ -88,12 +88,12 @@ void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                     if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
 
                     TH1F* topSensorHistogram =
-                        fTopSensorHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        fTopSensorHistogramContainer.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
-                    TH1F* bottomSensorHistogram = fBottomSensorHistogramContainer.at(board->getIndex())
-                                                      ->at(opticalGroup->getIndex())
-                                                      ->at(hybrid->getIndex())
-                                                      ->at(chip->getIndex())
+                    TH1F* bottomSensorHistogram = fBottomSensorHistogramContainer.topoGigio(board->getIndex())
+                                                      ->topoGigio(opticalGroup->getIndex())
+                                                      ->topoGigio(hybrid->getIndex())
+                                                      ->topoGigio(chip->getIndex())
                                                       ->getSummary<HistContainer<TH1F>>()
                                                       .fTheHistogram;
 
@@ -126,7 +126,7 @@ void Physics2SHistograms::fillStub(const DetectorDataContainer& DataContainer)
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
                     TH2F* stubHistogram =
-                        fStubHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                        fStubHistogramContainer.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<float>())

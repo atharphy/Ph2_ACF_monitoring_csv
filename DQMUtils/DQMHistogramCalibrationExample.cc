@@ -51,7 +51,7 @@ void DQMHistogramCalibrationExample::fillCalibrationExamplePlots(DetectorDataCon
                 {
                     size_t chipIndex = chip->getIndex();
                     // Retreive the corresponging chip histogram:
-                    TH1F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* chipHitHistogram = fDetectorHitHistograms.topoGigio(boardIndex)->topoGigio(opticalGroupIndex)->topoGigio(hybridIndex)->topoGigio(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     uint  channelBin       = 1;
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
@@ -90,7 +90,7 @@ void DQMHistogramCalibrationExample::process()
                     size_t chipIndex = chip->getIndex();
                     cValidation->cd(chipIndex + 1);
                     // Retreive the corresponging chip histogram:
-                    TH1F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* chipHitHistogram = fDetectorHitHistograms.topoGigio(boardIndex)->topoGigio(opticalGroupIndex)->topoGigio(hybridIndex)->topoGigio(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                     // Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you
                     // need)

@@ -58,22 +58,22 @@ void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 // 			{
 //                 for(const auto chip: *hybrid)
 //                 {
-//                     TH1F* SClusterHistograms = fSClusterHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH1F* SClusterHistograms = fSClusterHistograms.topoGigio(board->getIndex())
+//                                                         ->topoGigio(opticalGroup->getIndex())
+//                                                         ->topoGigio(hybrid->getIndex())
+//                                                         ->topoGigio(chip->getIndex())
 //                                                         ->getSummary<HistContainer<TH1F>>()
 //                                                         .fTheHistogram;
-//                     TH2F* PClusterHistograms = fPClusterHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH2F* PClusterHistograms = fPClusterHistograms.topoGigio(board->getIndex())
+//                                                         ->topoGigio(opticalGroup->getIndex())
+//                                                         ->topoGigio(hybrid->getIndex())
+//                                                         ->topoGigio(chip->getIndex())
 //                                                         ->getSummary<HistContainer<TH2F>>()
 //                                                         .fTheHistogram;
-//                     TH2F* StubHistograms = fStubHistogramContainer.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH2F* StubHistograms = fStubHistogramContainer.topoGigio(board->getIndex())
+//                                                         ->topoGigio(opticalGroup->getIndex())
+//                                                         ->topoGigio(hybrid->getIndex())
+//                                                         ->topoGigio(chip->getIndex())
 //                                                         ->getSummary<HistContainer<TH2F>>()
 //                                                         .fTheHistogram;
 //                     if(!chip->hasSummary()) continue;
@@ -123,15 +123,15 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                     // std::cout<<"opticalGroup = "<<opticalGroup->getIndex()<<std::endl;
                     // std::cout<<"hybrid = "<<hybrid->getIndex()<<std::endl;
                     // std::cout<<"chip = "<<chip->getIndex()<<std::endl;
-                    FrontEndType theFrontEndType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
+                    FrontEndType theFrontEndType = fDetectorContainer->topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getFrontEndType();
                     // std::cout<<__LINE__<<std::endl;
                     if(theFrontEndType == FrontEndType::MPA || theFrontEndType == FrontEndType::MPA2)
                     {
                         // std::cout<<__LINE__<<std::endl;
-                        TH2F* pixelClusterHistogram = fOccupancyHistogramContainer.at(board->getIndex())
-                                                          ->at(opticalGroup->getIndex())
-                                                          ->at(hybrid->getIndex())
-                                                          ->at(chip->getIndex())
+                        TH2F* pixelClusterHistogram = fOccupancyHistogramContainer.topoGigio(board->getIndex())
+                                                          ->topoGigio(opticalGroup->getIndex())
+                                                          ->topoGigio(hybrid->getIndex())
+                                                          ->topoGigio(chip->getIndex())
                                                           ->getSummary<HistContainer<TH2F>>()
                                                           .fTheHistogram;
 
@@ -154,10 +154,10 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                         // std::cout<<chip->getIndex()<<std::endl;
                         // std::cout<<hybrid->size()<<std::endl;
 
-                        TH1F* stripClusterHistogram = fStripOccupancyHistogramContainer.at(board->getIndex())
-                                                          ->at(opticalGroup->getIndex())
-                                                          ->at(hybrid->getIndex())
-                                                          ->at(chip->getIndex())
+                        TH1F* stripClusterHistogram = fStripOccupancyHistogramContainer.topoGigio(board->getIndex())
+                                                          ->topoGigio(opticalGroup->getIndex())
+                                                          ->topoGigio(hybrid->getIndex())
+                                                          ->topoGigio(chip->getIndex())
                                                           ->getSummary<HistContainer<TH1F>>()
                                                           .fTheHistogram;
                         // std::cout<<__LINE__<<std::endl;
@@ -182,11 +182,11 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
                 {
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
-                    FrontEndType theFrontEndType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
+                    FrontEndType theFrontEndType = fDetectorContainer->topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getFrontEndType();
                     if(theFrontEndType != FrontEndType::MPA && theFrontEndType != FrontEndType::MPA2) continue;
 
                     TH2F* stubHistogram =
-                        fStubHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                        fStubHistogramContainer.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                     for(int row = 0; row < NMPACHANNELS / NSSACHANNELS; ++row)
                     {

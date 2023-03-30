@@ -121,7 +121,7 @@ void MonitorDQMPlotSEH::bookTestCardPlots(TFile* theOutputFile, const DetectorCo
 //         {
 //             if(!opticalGroup->hasSummary()) continue;
 //             size_t  opticalGroupIndex = opticalGroup->getIndex();
-//             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+//             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->topoGigio(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
 //             auto theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
 //             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue * CONVERSION_FACTOR);
 //         } // for on opticalGroup - end

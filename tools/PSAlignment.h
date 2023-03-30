@@ -59,19 +59,19 @@ class PSAlignment : public OTTool
         //
         auto cOGId             = pChip->getOpticalGroupId();
         auto cOpticalGroupIter = std::find_if(
-            fDetectorContainer->at(cBoard->getIndex())->begin(), fDetectorContainer->at(cBoard->getIndex())->end(), [&cOGId](Ph2_HwDescription::OpticalGroup* x) { return x->getId() == cOGId; });
+            fDetectorContainer->topoGigio(cBoard->getIndex())->begin(), fDetectorContainer->topoGigio(cBoard->getIndex())->end(), [&cOGId](Ph2_HwDescription::OpticalGroup* x) { return x->getId() == cOGId; });
         auto cOG = (*cOpticalGroupIter);
         //
         auto cHybridId   = pChip->getHybridId();
-        auto cHybridIter = std::find_if(fDetectorContainer->at(cBoard->getIndex())->at(cOG->getIndex())->begin(),
-                                        fDetectorContainer->at(cBoard->getIndex())->at(cOG->getIndex())->end(),
+        auto cHybridIter = std::find_if(fDetectorContainer->topoGigio(cBoard->getIndex())->topoGigio(cOG->getIndex())->begin(),
+                                        fDetectorContainer->topoGigio(cBoard->getIndex())->topoGigio(cOG->getIndex())->end(),
                                         [&cHybridId](Ph2_HwDescription::Hybrid* x) { return x->getId() == cHybridId; });
         auto cHybrid     = (*cHybridIter);
         //
-        auto& cAlParsThisBoard = fAlParsContainer.at(cBoard->getIndex());
-        auto& cAlParsThisOG    = cAlParsThisBoard->at(cOG->getIndex());
-        auto& cAlParsThisHybrd = cAlParsThisOG->at(cHybrid->getIndex());
-        auto& cAlParsThisChip  = cAlParsThisHybrd->at(pChip->getIndex());
+        auto& cAlParsThisBoard = fAlParsContainer.topoGigio(cBoard->getIndex());
+        auto& cAlParsThisOG    = cAlParsThisBoard->topoGigio(cOG->getIndex());
+        auto& cAlParsThisHybrd = cAlParsThisOG->topoGigio(cHybrid->getIndex());
+        auto& cAlParsThisChip  = cAlParsThisHybrd->topoGigio(pChip->getIndex());
         return cAlParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
     }
 

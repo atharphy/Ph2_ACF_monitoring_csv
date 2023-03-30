@@ -481,10 +481,10 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     double xval, yval, y_allowed_min, y_allowed_max, yvalConvert = 0;
     for(int n = 0; n < 2; n++)
     {
-        for(int i = 0; i < myGraphs_vec4->at(n).GetN(); i++)
+        for(int i = 0; i < myGraphs_vec4->topoGigio(n).GetN(); i++)
         { // check that every point is within the allowed min/max curves
-            xval          = myGraphs_vec4->at(n).GetX()[i];
-            yval          = myGraphs_vec4->at(n).GetY()[i];
+            xval          = myGraphs_vec4->topoGigio(n).GetX()[i];
+            yval          = myGraphs_vec4->topoGigio(n).GetY()[i];
             yvalConvert   = (yval - 1.) * 1000.;
             y_allowed_min = fit_grading_HV_test->Eval(xval) * 0.99 - 25.; // Offset, da bei kleinen Werten der relative Fehler größer sein kann
             y_allowed_max = fit_grading_HV_test->Eval(xval) * 1.01 + 50.;
@@ -939,7 +939,7 @@ void SEHTester::ClearBRAM(const std::string& sBramToReset)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         this->ClearBRAM(cBoard, sBramToReset);
     }
 }
@@ -1056,7 +1056,7 @@ void SEHTester::WritePatternToBRAM(const std::string& sFileName = "fcmd_file.txt
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         this->WritePatternToBRAM(cBoard, sFileName);
     }
 }
@@ -1097,7 +1097,7 @@ void SEHTester::CheckFastCommandsBRAM(const std::string& sFCMDLine)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         this->CheckFastCommandsBRAM(cBoard, sFCMDLine);
     }
 }
@@ -1208,7 +1208,7 @@ void SEHTester::CheckFastCommands(const std::string& sFastCommand, const std::st
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         this->CheckFastCommands(cBoard, sFastCommand, filename);
     }
 }
@@ -1233,7 +1233,7 @@ void SEHTester::ReadRefAddrBRAM(int iRefBRAMAddr)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         this->ReadRefAddrBRAM(cBoard, iRefBRAMAddr);
     }
 }
@@ -1260,7 +1260,7 @@ void SEHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr);
     }
 }
@@ -1340,7 +1340,7 @@ void SEHTester::FastCommandScope()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         this->FastCommandScope(cBoard);
     }
 }
@@ -1349,7 +1349,7 @@ bool SEHTester::FastCommandChecker(uint8_t pPattern)
     bool re = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         re = this->FastCommandChecker(cBoard, pPattern);
     }
     return re;
@@ -1394,7 +1394,7 @@ void SEHTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vector<
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         this->CheckHybridInputs(cBoard, pInputs, pCounters);
     }
 }
@@ -1506,7 +1506,7 @@ void SEHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
         this->CheckHybridOutputs(cBoard, pInputs, pCounters);
     }
 }

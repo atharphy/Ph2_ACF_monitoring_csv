@@ -36,13 +36,13 @@ void BackEndAlignment::Initialise()
     ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, fEnabledFEs);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cEnabledFEs = fEnabledFEs.at(cBoard->getIndex());
+        auto& cEnabledFEs = fEnabledFEs.topoGigio(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cEnabledFEsOG = cEnabledFEs->at(cOpticalGroup->getIndex());
+            auto& cEnabledFEsOG = cEnabledFEs->topoGigio(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cEnabledFEsHybrid = cEnabledFEsOG->at(cHybrid->getIndex());
+                auto& cEnabledFEsHybrid = cEnabledFEsOG->topoGigio(cHybrid->getIndex());
                 auto& cEnabled          = cEnabledFEsHybrid->getSummary<uint8_t>();
                 cEnabled                = 0;
                 for(auto cChip: *cHybrid)

@@ -143,12 +143,12 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
     {
         for(auto opticalGroup: *board)
         {
-            TH2F* moduleHitHistogram          = f2DModuleHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-            TH2F* moduleHitHistogramEven      = f2DModuleHitHistogramsEven.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-            TH2F* moduleHitHistogramOdd       = f2DModuleHitHistogramsOdd.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-            TH2F* moduleHitHistogram_chip     = f2DModuleHitHistograms_chip.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-            TH2F* moduleHitHistogramEven_chip = f2DModuleHitHistogramsEven_chip.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-            TH2F* moduleHitHistogramOdd_chip  = f2DModuleHitHistogramsOdd_chip.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+            TH2F* moduleHitHistogram          = f2DModuleHitHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+            TH2F* moduleHitHistogramEven      = f2DModuleHitHistogramsEven.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+            TH2F* moduleHitHistogramOdd       = f2DModuleHitHistogramsOdd.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+            TH2F* moduleHitHistogram_chip     = f2DModuleHitHistograms_chip.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+            TH2F* moduleHitHistogramEven_chip = f2DModuleHitHistogramsEven_chip.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+            TH2F* moduleHitHistogramOdd_chip  = f2DModuleHitHistogramsOdd_chip.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
             for(size_t iCh1 = 0; iCh1 < TOTAL_CHANNELS_OT; iCh1++)
             {
@@ -184,9 +184,9 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
 
             for(auto hybrid: *opticalGroup)
             {
-                TH2F* hybridHitHistogram = f2DHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH2F* hybridHitHistogram = f2DHybridHitHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 TH2F* hybridHitHistogram_chip =
-                    f2DHybridHitHistograms_chip.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    f2DHybridHitHistograms_chip.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 uint32_t hybridOffset = HYBRID_CHANNELS_OT + 1;
 
                 for(size_t iCh1 = 0; iCh1 < TOTAL_CHANNELS_OT; iCh1++)
@@ -221,7 +221,7 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
                 for(auto chip: *hybrid)
                 {
                     TH2F* chipHitHistogram =
-                        f2DChipHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                        f2DChipHitHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     uint16_t iChan_high = chip->getIndex() + 1 + (hybrid->getIndex() * NCHIPS_OT);
                     uint16_t iChan_low  = chip->getIndex() + (hybrid->getIndex() * NCHIPS_OT);
 
@@ -255,7 +255,7 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
                 for(auto chip: *hybrid)
                 {
                     TH1F* cChipHitHistogram =
-                        fChipHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        fChipHitHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                     // fill the histogram from the vector
                     for(uint16_t iChan = 0; iChan < NCHANNELS + 1; iChan++) { cChipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<NCHANNELS + 1, uint32_t>>()[iChan]); }
@@ -265,7 +265,7 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
                     LOG(INFO) << BOLDRED << "FE " << hybrid->getIndex() << " CBC " << chip->getIndex() << " CM is " << fabs(cChipFit->GetParameter(1)) << "+/-" << fabs(cChipFit->GetParError(1)) << "%"
                               << RESET;
                 }
-                TH1F* cHybridHitHistogram = fHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* cHybridHitHistogram = fHybridHitHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint16_t iChan = 0; iChan < HYBRID_CHANNELS_OT + 1; iChan++)
                 { cHybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>>()[iChan]); }
 
@@ -276,9 +276,9 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
                 */
             }
 
-            TH1F* cModuleHitHistogram     = fModuleHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-            TH1F* cModuleHitHistogramEven = fModuleHitHistogramsEven.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-            TH1F* cModuleHitHistogramOdd  = fModuleHitHistogramsOdd.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            TH1F* cModuleHitHistogram     = fModuleHitHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            TH1F* cModuleHitHistogramEven = fModuleHitHistogramsEven.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            TH1F* cModuleHitHistogramOdd  = fModuleHitHistogramsOdd.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
             for(uint16_t iChan = 0; iChan < (NCHANNELS + 1) * NCHIPS_OT * 2; iChan++)
             {

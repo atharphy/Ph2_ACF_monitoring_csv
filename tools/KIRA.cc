@@ -67,7 +67,7 @@ void KIRA::Initialise(int pKiraPort, std::string pKiraId)
     fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
-    PrepareForExternal(fDetectorContainer->at(0));
+    PrepareForExternal(fDetectorContainer->topoGigio(0));
 }
 
 void KIRA::PrepareForExternal(BeBoard* pBoard)
@@ -110,7 +110,7 @@ void KIRA::PrepareForExternal(BeBoard* pBoard)
 
 void KIRA::determineLatency()
 {
-    auto cBoard = fDetectorContainer->at(0);
+    auto cBoard = fDetectorContainer->topoGigio(0);
     // initialize latency scan range
     uint16_t cLatencyStart     = findValueInSettings<double>("StartLatency", 85);
     uint16_t cLatencyRange     = findValueInSettings<double>("LatencyRange", 15);
@@ -155,7 +155,7 @@ void KIRA::determineLatency()
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     for(auto cChip: *cHybrid)
-                    { cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0; } // chip
+                    { cHitContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() = 0; } // chip
                 }                                                                                                                                                        // hybrid
             }                                                                                                                                                            // optical group
 
@@ -182,7 +182,7 @@ void KIRA::determineLatency()
                             {
                                 // monitor only specified sensor channels
                                 if(cHit % 2 == cLatencySensor)
-                                { cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() += 1; }
+                                { cHitContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() += 1; }
                             }
                         } // chip vector
                     }     // hybrid vector
@@ -205,7 +205,7 @@ void KIRA::determineLatency()
                         if(cHybrid->getIndex() % 2 == 0 && cChip->getIndex() != 7 - cLatencyLED) continue;
                         if(cHybrid->getIndex() % 2 == 1 && cChip->getIndex() != cLatencyLED) continue;
                         double cTmpHits =
-                            cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() / (1.0 * fNReadbackEvents);
+                            cHitContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() / (1.0 * fNReadbackEvents);
                         cTmpHitsSum += cTmpHits;
 
                         if(cTmpHitsSum >= cHitMaximum)
@@ -239,7 +239,7 @@ void KIRA::determineLatency()
 void KIRA::performKIRATest()
 {
     LOG(INFO) << BOLDRED << "Starting KIRA Test" << RESET;
-    auto     cBoard     = fDetectorContainer->at(0);
+    auto     cBoard     = fDetectorContainer->topoGigio(0);
     uint16_t cIntensity = findValueInSettings<double>("KiraIntensity", 30000);
     if(fTargetIntensity != 0) cIntensity = fTargetIntensity;
 
@@ -281,7 +281,7 @@ void KIRA::performKIRATest()
 void KIRA::calibrateIntensity()
 {
     LOG(INFO) << BOLDRED << "Performing LED intensity calibration " << RESET;
-    auto     cBoard          = fDetectorContainer->at(0);
+    auto     cBoard          = fDetectorContainer->topoGigio(0);
     uint32_t cIntensityStart = findValueInSettings<double>("KiraCalibrationIntensityStart", 29000);
     uint32_t cIntensityStop  = findValueInSettings<double>("KiraCalibrationIntensityStop", 31000);
     uint16_t cIntensityStep  = findValueInSettings<double>("KiraCalibrationIntensityStep", 1000);
@@ -362,7 +362,7 @@ bool KIRA::check_channel_illumination(BeBoard* pBoard, DetectorDataContainer& pC
                 if(cHybrid->getIndex() % 2 == 0 && cChip->getIndex() != 7 - pLED) continue;
                 if(cHybrid->getIndex() % 2 == 1 && cChip->getIndex() != pLED) continue;
                 // count occupancy in all channels
-                auto cContainer = pContainer.at(pBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, float>>();
+                auto cContainer = pContainer.topoGigio(pBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<GenericDataArray<VECSIZE, float>>();
                 for(uint16_t cIndx = 0; cIndx < 127; cIndx++) { cSum += cContainer[cIndx]; }
             }
         }
@@ -405,10 +405,10 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
                         // Fill hits in Data Container for bottom sensor
                         if(cHit % 2 == pSensor)
                         {
-                            cHitContainer.at(pBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
+                            cHitContainer.topoGigio(pBoard->getIndex())
+                                ->topoGigio(cOpticalGroup->getIndex())
+                                ->topoGigio(cHybrid->getIndex())
+                                ->topoGigio(cChip->getIndex())
                                 ->getSummary<GenericDataArray<VECSIZE, float>>()[int(cHit / 2)] += 1;
                         }
                     }

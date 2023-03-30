@@ -281,7 +281,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
         // ###################
         // # Fill containers #
         // ###################
-        for(const auto cOpticalGroup: *fOccupancyContainer.at(cBoard->getIndex()))
+        for(const auto cOpticalGroup: *fOccupancyContainer.topoGigio(cBoard->getIndex()))
         {
             for(const auto cHybrid: *cOpticalGroup)
             {
@@ -291,7 +291,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                 for(const auto cChip: *cHybrid)
                 {
                     // std::cout<<__LINE__<<std::endl;
-                    auto currentChip = fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
+                    auto currentChip = fDetectorContainer->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex());
                     if(currentChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                     // std::cout<<__LINE__<<std::endl;
@@ -310,7 +310,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     }
 
                     // std::cout<<__LINE__<<std::endl;
-                    ChipDataContainer* theStubChipContainer = fStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
+                    ChipDataContainer* theStubChipContainer = fStubContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex());
                     // std::cout<<__LINE__<<std::endl;
                     for(auto& stub: stubList)
                     {
@@ -343,7 +343,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
 
                     // std::cout<<__LINE__<<std::endl;
                     uint16_t theCorrespondingSSAIndex = 9999;
-                    for(auto theCorrespondingSSA: *fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))
+                    for(auto theCorrespondingSSA: *fDetectorContainer->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex()))
                     {
                         if(theCorrespondingSSA->getFrontEndType() != FrontEndType::SSA) continue;
                         if(theCorrespondingSSA->getId() == currentChip->getId())
@@ -355,7 +355,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
 
                     // std::cout<<__LINE__<<std::endl;
 
-                    ChipDataContainer* theSSAContainer = cHybrid->at(theCorrespondingSSAIndex);
+                    ChipDataContainer* theSSAContainer = cHybrid->topoGigio(theCorrespondingSSAIndex);
 
                     for(auto& stripCluster: stripClusterList)
                     {
@@ -379,7 +379,7 @@ void PSPhysics::clearContainers(BoardContainer* theBoard)
     // ####################
     // # Clear containers #
     // ####################
-    for(const auto cOpticalGroup: *fOccupancyContainer.at(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fOccupancyContainer.topoGigio(theBoard->getIndex()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {
@@ -390,7 +390,7 @@ void PSPhysics::clearContainers(BoardContainer* theBoard)
         }
     }
 
-    for(const auto cOpticalGroup: *fStubContainer.at(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fStubContainer.topoGigio(theBoard->getIndex()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {

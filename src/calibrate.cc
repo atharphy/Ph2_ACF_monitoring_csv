@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
     //{
     t.start();
 
-    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cTool.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cTool.fDetectorContainer->topoGigio(0)->topoGigio(0)->topoGigio(0)->topoGigio(0));
     bool         fDisableStubLogic = true;
     if(cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA) fDisableStubLogic = false;
 

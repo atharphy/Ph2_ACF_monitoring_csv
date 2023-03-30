@@ -268,7 +268,7 @@ class SystemController
      */
     void ReadNEvents(uint32_t pNEvents);
 
-    const Ph2_HwDescription::BeBoard* getBoard(int index) const { return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->at(index) : nullptr); }
+    const Ph2_HwDescription::BeBoard* getBoard(int index) const { return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->topoGigio(index) : nullptr); }
 
     const std::vector<Ph2_HwInterface::Event*>& GetEvents()
     {
@@ -350,7 +350,7 @@ class SystemController
 
     inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber)
     {
-        return fChannelGroupHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
+        return fChannelGroupHandlerContainer->topoGigio(0)->topoGigio(0)->topoGigio(0)->topoGigio(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
     }
 
     void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }

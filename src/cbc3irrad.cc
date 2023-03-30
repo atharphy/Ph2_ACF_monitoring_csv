@@ -336,7 +336,7 @@ int main(int argc, char* argv[])
             cTool.addFileHandler(cBinaryDataFileName, 'w');
             cTool.initializeWriteFileHandler();
             cTool.ConfigureHw();
-            BeBoard* pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+            BeBoard* pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->topoGigio(0));
             uint32_t cN      = 1;
             uint32_t cNthAcq = 0;
             uint32_t count   = 0;

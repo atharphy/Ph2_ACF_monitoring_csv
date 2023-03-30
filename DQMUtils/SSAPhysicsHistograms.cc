@@ -46,7 +46,7 @@ void SSAPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContai
                     if(cChip->getChannelContainer<Occupancy>() == nullptr) continue;
 
                     auto* chipOccupancy =
-                        fOccupancy.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        fOccupancy.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     uint channelBin = 1;
 
                     // Get channel data and fill the histogram
@@ -80,7 +80,7 @@ void SSAPhysicsHistograms::process()
                     size_t chipIndex = chip->getIndex();
                     cOccupancy->cd(chipIndex + 1);
                     // Retreive the corresponging chip histogram:
-                    TH1F* chipHitHistogram = fOccupancy.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* chipHitHistogram = fOccupancy.topoGigio(boardIndex)->topoGigio(opticalGroupIndex)->topoGigio(hybridIndex)->topoGigio(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                     // Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you
                     // need)

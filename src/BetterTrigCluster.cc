@@ -60,8 +60,8 @@ int main(int argc, char* argv[])
     cBackEndAligner.Reset();
     cBackEndAligner.resetPointers();
 
-    BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    HybridContainer* ChipVec = pBoard->at(0)->at(0);
+    BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->topoGigio(0));
+    HybridContainer* ChipVec = pBoard->topoGigio(0)->topoGigio(0);
     for(auto cSSA: *ChipVec)
     {
         ReadoutChip* iSSA = static_cast<ReadoutChip*>(cSSA);

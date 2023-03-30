@@ -33,7 +33,7 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContai
 {
     fDetectorContainer = &theDetectorStructure;
 
-    NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
+    NCH = theDetectorStructure.topoGigio(0)->topoGigio(0)->topoGigio(0)->topoGigio(0)->size();
 
     HistContainer<TH1I> hVplus("VplusValue", "Vplus Value", 1, 0, 1);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorVplusHistograms, hVplus);
@@ -105,7 +105,7 @@ void DQMHistogramPedestalEqualization::process()
 
                     occupancyCanvas->cd(chip->getIndex() + 1);
                     TH1F* occupancyHistogram =
-                        fDetectorOccupancyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        fDetectorOccupancyHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     occupancyHistogram->GetXaxis()->SetTitle("Channel");
                     occupancyHistogram->GetYaxis()->SetTitle("Occupancy");
                     occupancyHistogram->DrawCopy();
