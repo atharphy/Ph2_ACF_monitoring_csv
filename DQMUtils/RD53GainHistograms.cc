@@ -104,7 +104,12 @@ void GainHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContain
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+                    if(OccupancyContainer.getObject(cBoard->getId())
+                           ->getObject(cOpticalGroup->getId())
+                           ->getObject(cHybrid->getId())
+                           ->getObject(cChip->getId())
+                           ->getChannelContainer<OccupancyAndPh>() == nullptr)
+                        continue;
 
                     auto* hOcc2D = Occupancy2D.getObject(cBoard->getId())
                                        ->getObject(cOpticalGroup->getId())
@@ -145,7 +150,8 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<GainFit>() == nullptr) continue;
+                    if(GainContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<GainFit>() == nullptr)
+                        continue;
 
                     auto* InterceptHighQ1DHist = InterceptHighQ1D.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
