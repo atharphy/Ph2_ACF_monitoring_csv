@@ -58,8 +58,8 @@ class RD53ChannelGroup : public ChannelGroupBase
                     }
                     else if(groupType == RD53GroupType::XtalkDeCoupled)
                     {
-                        if((col % 2 == 0) && (col + 1 < numberOfCols_) && (row + 1 < numberOfRows_)) nextCol[row + 1 + numberOfRows_ * (col + 1)] = true;
-                        if((col % 2 == 1) && (col - 1 > 0) && (row - 1 > 0)) nextCol[row - 1 + numberOfRows_ * (col - 1)] = true;
+                        if((col % 2 == 0) && (col + 1 < numberOfCols_) && (row - 1 > 0)) nextCol[row - 1 + numberOfRows_ * (col + 1)] = true;
+                        if((col % 2 == 1) && (col - 1 > 0) && (row + 1 < numberOfRows_)) nextCol[row + 1 + numberOfRows_ * (col - 1)] = true;
                     }
                 }
 
