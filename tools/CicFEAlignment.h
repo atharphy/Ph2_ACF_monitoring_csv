@@ -79,11 +79,11 @@ class CicFEAlignment : public OTTool
     // get alignment results
     uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine)
     {
-        return fPhaseAlignmentValues.topoGigio(pBoard->getIndex())->topoGigio(pGroup->getIndex())->topoGigio(pFe->getIndex())->topoGigio(pChip->getIndex())->getSummary<AlignmentValues>()[pLine];
+        return fPhaseAlignmentValues.getObject(pBoard->getId())->getObject(pGroup->getId())->getObject(pFe->getId())->getObject(pChip->getId())->getSummary<AlignmentValues>()[pLine];
     }
     uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine)
     {
-        return fWordAlignmentValues.topoGigio(pBoard->getIndex())->topoGigio(pGroup->getIndex())->topoGigio(pFe->getIndex())->topoGigio(pChip->getIndex())->getSummary<AlignmentValues>()[pLine];
+        return fWordAlignmentValues.getObject(pBoard->getId())->getObject(pGroup->getId())->getObject(pFe->getId())->getObject(pChip->getId())->getSummary<AlignmentValues>()[pLine];
     }
     bool getStatus() const { return fSuccess; }
 

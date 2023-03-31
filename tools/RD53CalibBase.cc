@@ -83,20 +83,20 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
                     for(const auto& regName: regNames)
                     {
                         if(((checkAgainst == true) &&
-                            (DACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() != value)) ||
+                            (DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() != value)) ||
                            (checkAgainst == false))
                         {
                             static_cast<RD53Interface*>(this->fReadoutChipInterface)
                                 ->PackWriteCommand(cChip,
                                                    regName,
-                                                   DACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>(),
+                                                   DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>(),
                                                    chipCommandList,
                                                    true);
 
                             LOG(INFO) << BOLDMAGENTA << ">>> " << (checkAgainst == true ? "Best " : "") << BOLDYELLOW << regName << BOLDMAGENTA
                                       << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                       << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
-                                      << DACcontainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA
+                                      << DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << BOLDMAGENTA
                                       << " <<<" << RESET;
                         }
                         else
@@ -141,28 +141,28 @@ void CalibBase::saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*
                         for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                             for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                                 if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                       ->topoGigio(cBoard->getIndex())
-                                                                                                                       ->topoGigio(cOpticalGroup->getIndex())
-                                                                                                                       ->topoGigio(cHybrid->getIndex())
-                                                                                                                       ->topoGigio(cChip->getIndex())
+                                                                                                                       ->getObject(cBoard->getId())
+                                                                                                                       ->getObject(cOpticalGroup->getId())
+                                                                                                                       ->getObject(cHybrid->getId())
+                                                                                                                       ->getObject(cChip->getId())
                                                                                                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                        ->allChannelGroup()
                                                                                                                        ->isChannelEnabled(row, col))
                                     fileOutID << "r " << row << " c " << col << " h "
                                               << detectorContainerVector[i]
-                                                         ->topoGigio(cBoard->getIndex())
-                                                         ->topoGigio(cOpticalGroup->getIndex())
-                                                         ->topoGigio(cHybrid->getIndex())
-                                                         ->topoGigio(cChip->getIndex())
+                                                         ->getObject(cBoard->getId())
+                                                         ->getObject(cOpticalGroup->getId())
+                                                         ->getObject(cHybrid->getId())
+                                                         ->getObject(cChip->getId())
                                                          ->getChannel<OccupancyAndPh>(row, col)
                                                          .fOccupancy *
                                                      nEvents
                                               << " a "
                                               << detectorContainerVector[i]
-                                                     ->topoGigio(cBoard->getIndex())
-                                                     ->topoGigio(cOpticalGroup->getIndex())
-                                                     ->topoGigio(cHybrid->getIndex())
-                                                     ->topoGigio(cChip->getIndex())
+                                                     ->getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
                                                      ->getChannel<OccupancyAndPh>(row, col)
                                                      .fPh
                                               << std::endl;

@@ -146,10 +146,10 @@ void EyeDiag::run(std::string runName)
                             value[kMeasurementMap[measurements.at(i)]] = obs_result;
                         }
                     }
-                    theEyeDiagContainer.topoGigio(cBoard->getIndex())
-                        ->topoGigio(cOpticalGroup->getIndex())
-                        ->topoGigio(cHybrid->getIndex())
-                        ->topoGigio(cChip->getIndex())
+                    theEyeDiagContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
                         ->getSummary<std::unordered_map<std::string, std::array<float, 7>>>() = value;
                     for(auto& obs: observables)
                     {

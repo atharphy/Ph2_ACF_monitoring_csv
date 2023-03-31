@@ -59,7 +59,7 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
 
     for(uint8_t cHybrid = 0; cHybrid < fNHybrid_software; cHybrid++)
     {
-        uint8_t cHybridId = pBoard->topoGigio(0)->topoGigio(cHybrid)->getId();
+        uint8_t cHybridId = pBoard->getFirstObject()->getObject(cHybrid)->getId();
         fFeMask_software |= 1 << cHybridId;
     }
 
@@ -79,7 +79,7 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
 
     for(uint8_t cHybrid = 0; cHybrid < fNHybrid_software; cHybrid++)
     {
-        uint8_t cHybridId = pBoard->topoGigio(0)->topoGigio(cHybrid)->getId();
+        uint8_t cHybridId = pBoard->getFirstObject()->getObject(cHybrid)->getId();
         if(((fFeMask_software >> cHybridId) & 1) && ((fFeMask_event >> cHybridId) & 1))
         {
             // uint8_t chip_data_mask = static_cast<uint8_t> ( ( (0xFF000000) & list.at (address_offset + 0) ) >> 24);
@@ -819,7 +819,7 @@ SLinkEvent D19cCbc3EventZS::GetSLinkEvent(BeBoard* pBoard) const
     GenericPayload cPayload;
     GenericPayload cStubPayload;
 
-    for(auto cHybrid: *pBoard->topoGigio(0))
+    for(auto cHybrid: *pBoard->getFirstObject())
     {
         uint8_t cHybridId = cHybrid->getId();
 

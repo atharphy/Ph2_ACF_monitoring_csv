@@ -706,12 +706,12 @@ void BiasSweep::DAQloop()
     // while (fDAQrunning.load() )
     //{
     // std::unique_lock<std::mutex> cLock (fHWMutex);
-    // this->ReadData (static_cast<BeBoard*>(fDetectorContainer->topoGigio(0)));
+    // this->ReadData (static_cast<BeBoard*>(fDetectorContainer->getFirstObject()));
     // cLock.unlock();
 
     // if (!fDAQrunning.load() )
     //{
-    // this->Stop (static_cast<BeBoard*>(fDetectorContainer->topoGigio(0)));
+    // this->Stop (static_cast<BeBoard*>(fDetectorContainer->getFirstObject()));
     // break;
     //}
     // else
@@ -722,14 +722,14 @@ void BiasSweep::DAQloop()
 void BiasSweep::StartDAQ()
 {
     // 1st method
-    this->fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(fDetectorContainer->topoGigio(0)), "cbc_system_cnfg.global.misc.trigger_master_external", 0x1);
-    SystemController::StartBoard(static_cast<BeBoard*>(fDetectorContainer->topoGigio(0)));
+    this->fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(fDetectorContainer->getFirstObject()), "cbc_system_cnfg.global.misc.trigger_master_external", 0x1);
+    SystemController::StartBoard(static_cast<BeBoard*>(fDetectorContainer->getFirstObject()));
 
     // 2nd method
     // if (!fDAQrunning.load() )
     //{
     // std::unique_lock<std::mutex> cLock (fHWMutex);
-    // this->Start (static_cast<BeBoard*>(fDetectorContainer->topoGigio(0)));
+    // this->Start (static_cast<BeBoard*>(fDetectorContainer->getFirstObject()));
     // fDAQrunning = true;
     // cLock.unlock();
     // fThread = std::thread (&BiasSweep::DAQloop, this);
@@ -739,8 +739,8 @@ void BiasSweep::StartDAQ()
 void BiasSweep::StopDAQ()
 {
     // 1st method
-    SystemController::StopBoard(static_cast<BeBoard*>(fDetectorContainer->topoGigio(0)));
-    this->fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(fDetectorContainer->topoGigio(0)), "cbc_system_cnfg.global.misc.trigger_master_external", 0x0);
+    SystemController::StopBoard(static_cast<BeBoard*>(fDetectorContainer->getFirstObject()));
+    this->fBeBoardInterface->WriteBoardReg(static_cast<BeBoard*>(fDetectorContainer->getFirstObject()), "cbc_system_cnfg.global.misc.trigger_master_external", 0x0);
 
     // 2nd method
     // if (fDAQrunning.load() )

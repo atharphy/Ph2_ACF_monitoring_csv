@@ -1,6 +1,7 @@
 #include "Utils/ConfigureInfo.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
+#include "HWDescription/BeBoard.h"
 
 ConfigureInfo::ConfigureInfo() {}
 

@@ -98,10 +98,10 @@ int main(int argc, char** argv)
         std::stringstream outp;
         mySysCntr.InitializeHw(configFile, outp);
         mySysCntr.InitializeSettings(configFile, outp);
-        if(mySysCntr.fDetectorContainer->topoGigio(0)->topoGigio(0)->flpGBT == nullptr)
-            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->topoGigio(0)->getId()])->ResetSequence("160");
+        if(mySysCntr.fDetectorContainer->getFirstObject()->getFirstObject()->flpGBT == nullptr)
+            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->getFirstObject()->getId()])->ResetSequence("160");
         else
-            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->topoGigio(0)->getId()])->ResetSequence("320");
+            static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->getFirstObject()->getId()])->ResetSequence("320");
         exit(EXIT_SUCCESS);
     }
     else

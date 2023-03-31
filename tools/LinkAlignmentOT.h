@@ -36,16 +36,16 @@ class LinkAlignmentOT : public OTTool
     bool    PhaseAlignBEdata(const Ph2_HwDescription::BeBoard* pBoard);
     uint8_t getBeSamplingDelay(uint8_t pBoardIndx, uint8_t pOGIndx, uint8_t pHybridIndx, uint8_t pLineIndx)
     {
-        auto cBeSamplingDelay      = fBeSamplingDelay.topoGigio(pBoardIndx);
-        auto cBeSamplingDelayOG    = cBeSamplingDelay->topoGigio(pOGIndx);
-        auto cBeSamplingDelayHybrd = cBeSamplingDelayOG->topoGigio(pHybridIndx);
+        auto cBeSamplingDelay      = fBeSamplingDelay.getObject(pBoardIndx);
+        auto cBeSamplingDelayOG    = cBeSamplingDelay->getObject(pOGIndx);
+        auto cBeSamplingDelayHybrd = cBeSamplingDelayOG->getObject(pHybridIndx);
         return cBeSamplingDelayHybrd->getSummary<std::vector<uint8_t>>()[pLineIndx];
     }
     uint8_t getBeBitSlip(uint8_t pBoardIndx, uint8_t pOGIndx, uint8_t pHybridIndx, uint8_t pLineIndx)
     {
-        auto cBeBitSlip      = fBeBitSlip.topoGigio(pBoardIndx);
-        auto cBeBitSlipOG    = cBeBitSlip->topoGigio(pOGIndx);
-        auto cBeBitSlipHybrd = cBeBitSlipOG->topoGigio(pHybridIndx);
+        auto cBeBitSlip      = fBeBitSlip.getObject(pBoardIndx);
+        auto cBeBitSlipOG    = cBeBitSlip->getObject(pOGIndx);
+        auto cBeBitSlipHybrd = cBeBitSlipOG->getObject(pHybridIndx);
         return cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>()[pLineIndx];
     }
     void    AlignStubPackage();
@@ -53,7 +53,7 @@ class LinkAlignmentOT : public OTTool
     {
         auto cBoardId   = pOpticalGroup->getBeBoardId();
         auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-        return fLpGBTSamplingDelay.topoGigio((*cBoardIter)->getIndex())->topoGigio(pOpticalGroup->getIndex())->topoGigio(0)->getSummary<uint8_t>();
+        return fLpGBTSamplingDelay.getObject((*cBoardIter)->getId())->getObject(pOpticalGroup->getId())->getFirstObject()->getSummary<uint8_t>();
     }
     std::pair<bool, uint8_t> PhaseTuneLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId);                                             // generic
     std::pair<bool, uint8_t> WordAlignLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod); // generic

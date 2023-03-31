@@ -39,22 +39,22 @@ void CicFEAlignment::Initialise()
     ContainerFactory::copyAndInitChip<AlignmentValues>(*fDetectorContainer, fWordAlignmentValues);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.topoGigio(cBoard->getIndex());
-        auto& cWordAlignmentThisBoard  = fWordAlignmentValues.topoGigio(cBoard->getIndex());
+        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.getObject(cBoard->getId());
+        auto& cWordAlignmentThisBoard  = fWordAlignmentValues.getObject(cBoard->getId());
 
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->topoGigio(cOpticalGroup->getIndex());
-            auto& cWordAlignmentThisOpticalGroup  = cWordAlignmentThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->getObject(cOpticalGroup->getId());
+            auto& cWordAlignmentThisOpticalGroup  = cWordAlignmentThisBoard->getObject(cOpticalGroup->getId());
 
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->topoGigio(cHybrid->getIndex());
-                auto& cWordAlignmentThisHybrid  = cWordAlignmentThisOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->getObject(cHybrid->getId());
+                auto& cWordAlignmentThisHybrid  = cWordAlignmentThisOpticalGroup->getObject(cHybrid->getId());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cPhaseAlignmentThisChip = cPhaseAlignmentThisHybrid->topoGigio(cChip->getIndex());
-                    auto& cWordAlignmentThisChip  = cWordAlignmentThisHybrid->topoGigio(cChip->getIndex());
+                    auto& cPhaseAlignmentThisChip = cPhaseAlignmentThisHybrid->getObject(cChip->getId());
+                    auto& cWordAlignmentThisChip  = cWordAlignmentThisHybrid->getObject(cChip->getId());
 
                     auto& cPhaseAlVals = cPhaseAlignmentThisChip->getSummary<AlignmentValues>();
                     cPhaseAlVals.clear();
@@ -259,24 +259,24 @@ DetectorDataContainer CicFEAlignment::CheckCicInput(uint8_t pOutLine, uint8_t pP
     CheckOutLine(pOutLine, pPattern, pPhase, cStubData, cLineErrors);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cStubDataThisBrd = cStubData.topoGigio(cBoard->getIndex());
-        auto& cErrorsThisBrd   = cLineErrors.topoGigio(cBoard->getIndex());
-        auto& cErrRateThisBrd  = cErrorRate.topoGigio(cBoard->getIndex());
+        auto& cStubDataThisBrd = cStubData.getObject(cBoard->getId());
+        auto& cErrorsThisBrd   = cLineErrors.getObject(cBoard->getId());
+        auto& cErrRateThisBrd  = cErrorRate.getObject(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cStubDataThisOpticalGroup   = cStubDataThisBrd->topoGigio(cOpticalGroup->getIndex());
-            auto& cLineErrorsThisOpticalGroup = cErrorsThisBrd->topoGigio(cOpticalGroup->getIndex());
-            auto& cErrRateThisOpticalGroup    = cErrRateThisBrd->topoGigio(cOpticalGroup->getIndex());
+            auto& cStubDataThisOpticalGroup   = cStubDataThisBrd->getObject(cOpticalGroup->getId());
+            auto& cLineErrorsThisOpticalGroup = cErrorsThisBrd->getObject(cOpticalGroup->getId());
+            auto& cErrRateThisOpticalGroup    = cErrRateThisBrd->getObject(cOpticalGroup->getId());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cStubDataThisHybrid   = cStubDataThisOpticalGroup->topoGigio(cHybrid->getIndex());
-                auto& cLineErrorsThisHybrid = cLineErrorsThisOpticalGroup->topoGigio(cHybrid->getIndex());
-                auto& cErrRateThisHybrid    = cErrRateThisOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cStubDataThisHybrid   = cStubDataThisOpticalGroup->getObject(cHybrid->getId());
+                auto& cLineErrorsThisHybrid = cLineErrorsThisOpticalGroup->getObject(cHybrid->getId());
+                auto& cErrRateThisHybrid    = cErrRateThisOpticalGroup->getObject(cHybrid->getId());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cStubDataThisChip   = cStubDataThisHybrid->topoGigio(cChip->getIndex());
-                    auto& cLineErrorsThisChip = cLineErrorsThisHybrid->topoGigio(cChip->getIndex());
-                    auto& cErrRateThisChip    = cErrRateThisHybrid->topoGigio(cChip->getIndex());
+                    auto& cStubDataThisChip   = cStubDataThisHybrid->getObject(cChip->getId());
+                    auto& cLineErrorsThisChip = cLineErrorsThisHybrid->getObject(cChip->getId());
+                    auto& cErrRateThisChip    = cErrRateThisHybrid->getObject(cChip->getId());
                     auto& cData               = cStubDataThisChip->getSummary<std::string>();
                     auto& cErrorCount         = cLineErrorsThisChip->getSummary<uint32_t>();
                     auto& cErrRate            = cErrRateThisChip->getSummary<float>();
@@ -352,22 +352,22 @@ void CicFEAlignment::CheckOutLine(uint8_t pOutLine, uint8_t pPattern, uint8_t pP
     // const unsigned int cNStubLinesFromFE=5;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cStubDataThisBrd = pLineData.topoGigio(cBoard->getIndex());
-        auto& cErrorsThisBrd   = pErrorCounter.topoGigio(cBoard->getIndex());
+        auto& cStubDataThisBrd = pLineData.getObject(cBoard->getId());
+        auto& cErrorsThisBrd   = pErrorCounter.getObject(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cStubDataThisOpticalGroup   = cStubDataThisBrd->topoGigio(cOpticalGroup->getIndex());
-            auto& cLineErrorsThisOpticalGroup = cErrorsThisBrd->topoGigio(cOpticalGroup->getIndex());
+            auto& cStubDataThisOpticalGroup   = cStubDataThisBrd->getObject(cOpticalGroup->getId());
+            auto& cLineErrorsThisOpticalGroup = cErrorsThisBrd->getObject(cOpticalGroup->getId());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cStubDataThisHybrid   = cStubDataThisOpticalGroup->topoGigio(cHybrid->getIndex());
-                auto& cLineErrorsThisHybrid = cLineErrorsThisOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cStubDataThisHybrid   = cStubDataThisOpticalGroup->getObject(cHybrid->getId());
+                auto& cLineErrorsThisHybrid = cLineErrorsThisOpticalGroup->getObject(cHybrid->getId());
                 auto& cCic                  = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
 
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cStubDataThisChip   = cStubDataThisHybrid->topoGigio(cChip->getIndex());
-                    auto& cLineErrorsThisChip = cLineErrorsThisHybrid->topoGigio(cChip->getIndex());
+                    auto& cStubDataThisChip   = cStubDataThisHybrid->getObject(cChip->getId());
+                    auto& cLineErrorsThisChip = cLineErrorsThisHybrid->getObject(cChip->getId());
                     auto& cData               = cStubDataThisChip->getSummary<std::string>();
                     auto& cErrorCount         = cLineErrorsThisChip->getSummary<uint32_t>();
 
@@ -385,20 +385,20 @@ void CicFEAlignment::SetStaticPhaseAlignment()
     LOG(INFO) << BOLDBLUE << "Setting CIC phase to static mode.." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.topoGigio(cBoard->getIndex());
+        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.getObject(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->getObject(cOpticalGroup->getId());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->getObject(cHybrid->getId());
 
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->GetOptimalTaps(cCic);
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
-                    auto& cPhaseAlignmentThisChip = cPhaseAlignmentThisHybrid->topoGigio(cChip->getIndex());
+                    auto& cPhaseAlignmentThisChip = cPhaseAlignmentThisHybrid->getObject(cChip->getId());
                     auto& cPhaseAlignmentVals     = cPhaseAlignmentThisChip->getSummary<AlignmentValues>();
 
                     auto              cPhaseTapsThisFE = fCicInterface->GetOptimalTaps(cCic, cChip->getId() % 8);
@@ -622,10 +622,10 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
     bool cAligned = true;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cWordAlignmentThisBoard = fWordAlignmentValues.topoGigio(cBoard->getIndex());
+        auto& cWordAlignmentThisBoard = fWordAlignmentValues.getObject(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto&                cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->topoGigio(cOpticalGroup->getIndex());
+            auto&                cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->getObject(cOpticalGroup->getId());
             std::vector<uint8_t> cWordAligned(0);
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -643,7 +643,7 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
             size_t cIndx = 0;
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->topoGigio(cHybrid->getIndex());
+                auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->getObject(cHybrid->getId());
                 auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
@@ -660,7 +660,7 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-                        auto& cWordAlignmentThisChip = cWordAlignmentThisHybrid->topoGigio(cChip->getIndex());
+                        auto& cWordAlignmentThisChip = cWordAlignmentThisHybrid->getObject(cChip->getId());
                         auto& cWordAlignmentVals     = cWordAlignmentThisChip->getSummary<AlignmentValues>();
 
                         std::stringstream cOutput;
@@ -679,7 +679,7 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-                        auto& cWordAlignmentThisChip = cWordAlignmentThisHybrid->topoGigio(cChip->getIndex());
+                        auto& cWordAlignmentThisChip = cWordAlignmentThisHybrid->getObject(cChip->getId());
                         auto& cWordAlignmentVals     = cWordAlignmentThisChip->getSummary<AlignmentValues>();
 
                         std::stringstream cOutput;

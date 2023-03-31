@@ -175,10 +175,10 @@ void EyeScanOptimization::scanDac(const std::string& regName, const std::vector<
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                         cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i] =
-                            EyeDiag::theEyeDiagContainer.topoGigio(cBoard->getIndex())
-                                ->topoGigio(cOpticalGroup->getIndex())
-                                ->topoGigio(cHybrid->getIndex())
-                                ->topoGigio(cChip->getIndex())
+                            EyeDiag::theEyeDiagContainer.getObject(cBoard->getId())
+                                ->getObject(cOpticalGroup->getId())
+                                ->getObject(cHybrid->getId())
+                                ->getObject(cChip->getId())
                                 ->getSummary<std::unordered_map<std::string, std::array<float, 7>>>();
     }
 }
@@ -219,10 +219,10 @@ void EyeScanOptimization::scanDac3D(const std::string&           regName1,
                         for(const auto cHybrid: *cOpticalGroup)
                             for(const auto cChip: *cHybrid)
                                 cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>()
-                                    .data[i + j * dacList1.size() + k * dacList1.size() * dacList2.size()] = EyeDiag::theEyeDiagContainer.topoGigio(cBoard->getIndex())
-                                                                                                                 ->topoGigio(cOpticalGroup->getIndex())
-                                                                                                                 ->topoGigio(cHybrid->getIndex())
-                                                                                                                 ->topoGigio(cChip->getIndex())
+                                    .data[i + j * dacList1.size() + k * dacList1.size() * dacList2.size()] = EyeDiag::theEyeDiagContainer.getObject(cBoard->getId())
+                                                                                                                 ->getObject(cOpticalGroup->getId())
+                                                                                                                 ->getObject(cHybrid->getId())
+                                                                                                                 ->getObject(cChip->getId())
                                                                                                                  ->getSummary<std::unordered_map<std::string, std::array<float, 7>>>();
             }
         }

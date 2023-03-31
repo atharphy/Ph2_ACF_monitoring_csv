@@ -71,17 +71,17 @@ void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
-        if(board->topoGigio(0)->flpGBT == nullptr)
+        if(board->getFirstObject()->flpGBT == nullptr)
         {
             for(const auto& opticalGroup: *board)
-                theLpGBTRegisterContainer.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(0, getTimeStamp());
+                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(0, getTimeStamp());
             continue;
         }
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
+            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
         }
     }
 
@@ -156,14 +156,14 @@ void SEHMonitor::runInputCurrentMonitor(std::string registerName)
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
-        if(board->topoGigio(0)->flpGBT == nullptr) continue;
+        if(board->getFirstObject()->flpGBT == nullptr) continue;
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = (fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, "ADC1");
             LOG(INFO) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - "
                       << "ADC1"
                       << " = " << registerValue << RESET;
-            // theLpGBTRegisterContainer.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
+            // theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
         }
     }
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;

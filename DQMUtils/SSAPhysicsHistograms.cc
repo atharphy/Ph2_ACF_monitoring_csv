@@ -46,7 +46,7 @@ void SSAPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContai
                     if(cChip->getChannelContainer<Occupancy>() == nullptr) continue;
 
                     auto* chipOccupancy =
-                        fOccupancy.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        fOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     uint channelBin = 1;
 
                     // Get channel data and fill the histogram
@@ -61,14 +61,14 @@ void SSAPhysicsHistograms::process()
     // otherwise they will be automatically saved
     for(auto board: fOccupancy) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardId = board->getId();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getIndex();
+            size_t opticalGroupId = opticalGroup->getId();
 
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getIndex();
+                size_t hybridId = hybrid->getId();
 
                 // Create a canvas do draw the plots
                 std::string occupancyCanvasName = "Occupancy_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
@@ -77,10 +77,10 @@ void SSAPhysicsHistograms::process()
 
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getIndex();
-                    cOccupancy->cd(chipIndex + 1);
+                    size_t chipId = chip->getId();
+                    cOccupancy->cd(chipId + 1);
                     // Retreive the corresponging chip histogram:
-                    TH1F* chipHitHistogram = fOccupancy.topoGigio(boardIndex)->topoGigio(opticalGroupIndex)->topoGigio(hybridIndex)->topoGigio(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* chipHitHistogram = fOccupancy.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                     // Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you
                     // need)

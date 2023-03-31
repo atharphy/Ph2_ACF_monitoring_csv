@@ -177,10 +177,10 @@ void GenericDacDacScan::analyze()
                     for(auto i = 0u; i < dac1List.size(); i++)
                         for(auto j = 0u; j < dac2List.size(); j++)
                         {
-                            auto current = theOccContainer.topoGigio(cBoard->getIndex())
-                                               ->topoGigio(cOpticalGroup->getIndex())
-                                               ->topoGigio(cHybrid->getIndex())
-                                               ->topoGigio(cChip->getIndex())
+                            auto current = theOccContainer.getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
                                                ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
                                                .data[i * dac2List.size() + j];
                             if(current > best)
@@ -198,7 +198,7 @@ void GenericDacDacScan::analyze()
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theGenericDacDacScanContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<std::pair<uint16_t, uint16_t>>() =
+                    theGenericDacDacScanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::pair<uint16_t, uint16_t>>() =
                         std::pair<uint16_t, uint16_t>(regVal1, regVal2);
                 }
 }
@@ -260,10 +260,10 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
                         for(const auto cChip: *cHybrid)
                         {
                             float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                            theContainer->topoGigio(cBoard->getIndex())
-                                ->topoGigio(cOpticalGroup->getIndex())
-                                ->topoGigio(cHybrid->getIndex())
-                                ->topoGigio(cChip->getIndex())
+                            theContainer->getObject(cBoard->getId())
+                                ->getObject(cOpticalGroup->getId())
+                                ->getObject(cHybrid->getId())
+                                ->getObject(cChip->getId())
                                 ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
                                 .data[i * dac2List.size() + j] = occ;
                         }

@@ -99,11 +99,11 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
                 else
                     registerValue = fTheSystemController->flpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
 
-                theRegisterContainer.topoGigio(cBoard->getId())->topoGigio(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
+                theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
             }
             catch(...)
             {
-                theRegisterContainer.topoGigio(cBoard->getId())->topoGigio(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(-1., getTimeStamp());
+                theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(-1., getTimeStamp());
                 return;
             }
         }

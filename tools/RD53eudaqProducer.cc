@@ -209,7 +209,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
                 for(const auto& event: RD53EvtList[it].chip_events)
                 {
                     std::string chipType = "unknown";
-                    for(const auto& cHybrid: *(eudaqProducer->RD53sysCntrPhys.fDetectorContainer->topoGigio(0)->topoGigio(0)))
+                    for(const auto& cHybrid: *(eudaqProducer->RD53sysCntrPhys.fDetectorContainer->getFirstObject()->getFirstObject()))
                         for(const auto& cChip: *cHybrid)
                             if((cHybrid->getId() == event.hybrid_id) && (cChip->getId() == event.chip_id)) chipType = static_cast<Ph2_HwDescription::RD53*>(cChip)->getComment();
 

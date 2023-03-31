@@ -240,14 +240,14 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
-        const BeBoard* cFirstBoard = fDetectorContainer->topoGigio(0);
+        const BeBoard* cFirstBoard = fDetectorContainer->getFirstObject();
         fBoardType                 = cFirstBoard->getBoardType();
         if(fBoardType != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
             {
-                auto cFirstOpticalGroup = cFirstBoard->topoGigio(0);
+                auto cFirstOpticalGroup = cFirstBoard->getFirstObject();
                 LOG(INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." << +cFirstBoard->size() << " optical group(s) found ..." << RESET;
                 bool cWithLpGBT = (cFirstOpticalGroup->flpGBT != nullptr);
                 if(cWithLpGBT)
@@ -275,7 +275,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." << +cFirstOpticalGroup->size() << " hybrid(s) found ..." << RESET;
-                    auto cFirstHybrid = cFirstOpticalGroup->topoGigio(0);
+                    auto cFirstHybrid = cFirstOpticalGroup->getFirstObject();
                     auto cType        = FrontEndType::CBC3;
                     bool cWithCBC  = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     cType          = FrontEndType::SSA;
@@ -1096,7 +1096,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     }
                 }
             }
-            if(!cBoard->isOptical() && cBoard->topoGigio(0)->flpGBT != nullptr)
+            if(!cBoard->isOptical() && cBoard->getFirstObject()->flpGBT != nullptr)
             {
                 LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
                 auto cLinkInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getLinkInterface();
@@ -1193,7 +1193,7 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
 
     // auto chipSubset = [](const ChipContainer* theChip) { return (theChip->getId() % 2 == 0); };
-    // fDetectorContainer->topoGigio(0)->topoGigio(0)->topoGigio(0)->addQueryFunction(chipSubset, "TEST");
+    // fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->addQueryFunction(chipSubset, "TEST");
 
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
@@ -1299,8 +1299,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     else if(pType == BoardType::D19C && pBoard->getEventType() != EventType::PSAS)
     {
         bool cTLUconfig = 2;
-        // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->topoGigio(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
-        //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->topoGigio(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
+        // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
+        //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
         // for (auto L : pData) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();

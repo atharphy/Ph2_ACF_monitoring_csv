@@ -125,7 +125,7 @@ class ChipInterface
         fWithlpGBT = false;
         for(auto cOpticalGroup: *pBoard)
         {
-            if(cOpticalGroup->getIndex() > 0) break;
+            if(cOpticalGroup->getId() > 0) break;
 
             auto& clpGBT = cOpticalGroup->flpGBT;
             fWithlpGBT   = (clpGBT != nullptr);

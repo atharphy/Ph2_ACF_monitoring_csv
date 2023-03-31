@@ -18,7 +18,7 @@ void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
@@ -35,7 +35,7 @@ void OTHybridTester::LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern)
     DPInterface cDPInterfacer;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         if(pStart)
         {
@@ -87,7 +87,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     // {
     //     for(auto cBoard: *fDetectorContainer)
     //     {
-    //         if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+    //         if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
 
     //         for(auto cOpticalGroup: *cBoard)
     //         {
@@ -100,7 +100,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     //     }
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
 
         fBeBoardInterface->setBoard(cBoard->getId());
         D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
@@ -231,7 +231,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             uint8_t cSource = 3;
@@ -249,7 +249,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     }
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 0); // 0 --> link data, 3 --> constant pattern
@@ -263,7 +263,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.data_player.i2c_slave_reset", 0x01);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         LOG(DEBUG) << BOLDBLUE << "Reset I2C slave in electrical FC7" << RESET;
@@ -273,7 +273,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
     std::vector<std::vector<uint8_t>> cI2CStatusVectVect;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         D19cOpticalInterface* cOpticalInterface = static_cast<D19cOpticalInterface*>(pInterface->getFEConfigurationInterface());
 
@@ -353,7 +353,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
     int                 cTrim           = -1;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             // Create TTree for DAC to ADC conversion in lpGBT
@@ -503,7 +503,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr)
+        if(cBoard->getFirstObject()->flpGBT == nullptr)
         {
             cReturn = false;
             continue;
@@ -580,7 +580,7 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             // LOG(INFO) << BOLDBLUE << "Set levels to " << +pLevel << RESET;
@@ -664,7 +664,7 @@ bool OTHybridTester::LpGBTTestGPILines()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             while(cMapIterator != fGPILines.end())
@@ -691,7 +691,7 @@ bool OTHybridTester::LpGBTTestVTRx()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         D19cOpticalInterface* cOpticalInterface = static_cast<D19cOpticalInterface*>(pInterface->getFEConfigurationInterface());
         for(auto cOpticalGroup: *cBoard)
@@ -749,7 +749,7 @@ bool OTHybridTester::LpGBTGetLinkLock()
     bool cStatus = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         fBeBoardInterface->setBoard(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
@@ -770,7 +770,7 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
 
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         fBeBoardInterface->setBoard(cBoard->getId());
 
         std::map<std::string, std::string> fFCMDLines;
@@ -826,7 +826,7 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             LOG(INFO) << MAGENTA << "VDDRX read value = " << +clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDDRX") << RESET;
@@ -896,7 +896,7 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
     // Run Bit Error Rate Test
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             // Configure BERT Pattern for comparision
@@ -930,7 +930,7 @@ bool OTHybridTester::LpGBTCheckClocks()
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
-        if(cBoard->topoGigio(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         // clk test
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x1);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x0);
@@ -1079,7 +1079,7 @@ uint16_t OTHybridTester::calibrateADC()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             cGain   = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, false);
@@ -1149,7 +1149,7 @@ void OTHybridTester::calibrateCurrentDAC()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->topoGigio(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             // clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE", 132); // optimal tune

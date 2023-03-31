@@ -309,7 +309,7 @@ int main(int argc, char* argv[])
     // establishes an optical link and configures the lpgbt over the optical cable
     uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
     cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->topoGigio(0));
+    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->getFirstObject());
     cTool.fBeBoardInterface->getBoardInfo(pBoard);
     // try
     // {

@@ -219,35 +219,35 @@ void DQMHistogramRegisterTest::fillRegisterWriteMismatches(DetectorDataContainer
 {
     for(auto board: pWrites)
     {
-        auto& cBrdHistPg0  = fWriteMismatchesPg0.topoGigio(board->getIndex());
-        auto& cBrdHistPg1  = fWriteMismatchesPg1.topoGigio(board->getIndex());
-        auto& cHistToggles = fWrMismatchesPg1.topoGigio(board->getIndex());
-        auto& cHistValues  = fWrValsMismatchesPg1.topoGigio(board->getIndex());
-        auto& cPageToggles = pToggles.topoGigio(board->getIndex());
-        auto& cVals        = pVals.topoGigio(board->getIndex());
+        auto& cBrdHistPg0  = fWriteMismatchesPg0.getObject(board->getId());
+        auto& cBrdHistPg1  = fWriteMismatchesPg1.getObject(board->getId());
+        auto& cHistToggles = fWrMismatchesPg1.getObject(board->getId());
+        auto& cHistValues  = fWrValsMismatchesPg1.getObject(board->getId());
+        auto& cPageToggles = pToggles.getObject(board->getId());
+        auto& cVals        = pVals.getObject(board->getId());
         for(auto opticalGroup: *board)
         {
-            auto& cOGHistPg0     = cBrdHistPg0->topoGigio(opticalGroup->getIndex());
-            auto& cOGHistPg1     = cBrdHistPg1->topoGigio(opticalGroup->getIndex());
-            auto& cOGHist        = cHistToggles->topoGigio(opticalGroup->getIndex());
-            auto& cValsOGHist    = cHistValues->topoGigio(opticalGroup->getIndex());
-            auto& cPageTogglesOG = cPageToggles->topoGigio(opticalGroup->getIndex());
-            auto& cValsOG        = cVals->topoGigio(opticalGroup->getIndex());
+            auto& cOGHistPg0     = cBrdHistPg0->getObject(opticalGroup->getId());
+            auto& cOGHistPg1     = cBrdHistPg1->getObject(opticalGroup->getId());
+            auto& cOGHist        = cHistToggles->getObject(opticalGroup->getId());
+            auto& cValsOGHist    = cHistValues->getObject(opticalGroup->getId());
+            auto& cPageTogglesOG = cPageToggles->getObject(opticalGroup->getId());
+            auto& cValsOG        = cVals->getObject(opticalGroup->getId());
             for(auto hybrid: *opticalGroup)
             {
-                auto& cValsHybrdHist    = cValsOGHist->topoGigio(hybrid->getIndex());
-                auto& cHybrdHistPg0     = cOGHistPg0->topoGigio(hybrid->getIndex());
-                auto& cHybrdHistPg1     = cOGHistPg1->topoGigio(hybrid->getIndex());
-                auto& cHybrdHist        = cOGHist->topoGigio(hybrid->getIndex());
-                auto& cPageTogglesHybrd = cPageTogglesOG->topoGigio(hybrid->getIndex());
-                auto& cValsHybrd        = cValsOG->topoGigio(hybrid->getIndex());
+                auto& cValsHybrdHist    = cValsOGHist->getObject(hybrid->getId());
+                auto& cHybrdHistPg0     = cOGHistPg0->getObject(hybrid->getId());
+                auto& cHybrdHistPg1     = cOGHistPg1->getObject(hybrid->getId());
+                auto& cHybrdHist        = cOGHist->getObject(hybrid->getId());
+                auto& cPageTogglesHybrd = cPageTogglesOG->getObject(hybrid->getId());
+                auto& cValsHybrd        = cValsOG->getObject(hybrid->getId());
                 for(auto chip: *hybrid)
                 {
                     auto& cComparisons     = chip->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cPageTogglesChip = cPageTogglesHybrd->topoGigio(chip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    TH2F* cChipHistPg0     = cHybrdHistPg0->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                    TH2F* cChipHistPg1     = cHybrdHistPg1->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                    TH2F* cChipHistToggles = cHybrdHist->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    auto& cPageTogglesChip = cPageTogglesHybrd->getObject(chip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    TH2F* cChipHistPg0     = cHybrdHistPg0->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cChipHistPg1     = cHybrdHistPg1->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cChipHistToggles = cHybrdHist->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     for(auto cItem: cComparisons)
                     {
                         uint8_t cRegisterAddress = cItem.first & 0xFF;
@@ -270,8 +270,8 @@ void DQMHistogramRegisterTest::fillRegisterWriteMismatches(DetectorDataContainer
                         }
                     }
 
-                    auto& cValsChip       = cValsHybrd->topoGigio(chip->getIndex())->getSummary<std::map<uint8_t, uint8_t>>();
-                    TH2F* cChipHistValues = cValsHybrdHist->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    auto& cValsChip       = cValsHybrd->getObject(chip->getId())->getSummary<std::map<uint8_t, uint8_t>>();
+                    TH2F* cChipHistValues = cValsHybrdHist->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     for(auto cItem: cValsChip)
                     {
                         auto cBin        = cChipHistValues->FindBin(cItem.first, cItem.second);
@@ -286,21 +286,21 @@ void DQMHistogramRegisterTest::fillRegisterWriteMismatches(DetectorDataContainer
 
     // for(auto board: pWrites)
     // {
-    //     auto& cBrdHistPg0 = fWriteMismatchesPg0.topoGigio(board->getIndex());
-    //     auto& cBrdHistPg1 = fWriteMismatchesPg1.topoGigio(board->getIndex());
+    //     auto& cBrdHistPg0 = fWriteMismatchesPg0.getObject(board->getId());
+    //     auto& cBrdHistPg1 = fWriteMismatchesPg1.getObject(board->getId());
     //     for(auto opticalGroup: *board)
     //     {
-    //         auto& cOGHistPg0 = cBrdHistPg0->topoGigio(opticalGroup->getIndex());
-    //         auto& cOGHistPg1 = cBrdHistPg1->topoGigio(opticalGroup->getIndex());
+    //         auto& cOGHistPg0 = cBrdHistPg0->getObject(opticalGroup->getId());
+    //         auto& cOGHistPg1 = cBrdHistPg1->getObject(opticalGroup->getId());
     //         for(auto hybrid: *opticalGroup)
     //         {
-    //             auto& cHybrdHistPg0 = cOGHistPg0->topoGigio(hybrid->getIndex());
-    //             auto& cHybrdHistPg1 = cOGHistPg1->topoGigio(hybrid->getIndex());
+    //             auto& cHybrdHistPg0 = cOGHistPg0->getObject(hybrid->getId());
+    //             auto& cHybrdHistPg1 = cOGHistPg1->getObject(hybrid->getId());
     //             for(auto chip: *hybrid)
     //             {
     //                 auto&  cComparisons = chip->getSummary<std::map<uint32_t,uint32_t>>();
-    //                 TH2F* cChipHistPg0 = cHybrdHistPg0->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-    //                 TH2F* cChipHistPg1 = cHybrdHistPg1->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+    //                 TH2F* cChipHistPg0 = cHybrdHistPg0->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+    //                 TH2F* cChipHistPg1 = cHybrdHistPg1->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
     //                 for( auto cItem : cComparisons)
     //                 {
     //                     uint8_t cRegisterAddress = cItem.first & 0xFF;
@@ -321,35 +321,35 @@ void DQMHistogramRegisterTest::fillRegisterReadMismatches(DetectorDataContainer&
 {
     for(auto board: pReads)
     {
-        auto& cBrdHistPg0  = fReadMismatchesPg0.topoGigio(board->getIndex());
-        auto& cBrdHistPg1  = fReadMismatchesPg1.topoGigio(board->getIndex());
-        auto& cHistToggles = fRdMismatchesPg1.topoGigio(board->getIndex());
-        auto& cHistValues  = fRdValsMismatchesPg1.topoGigio(board->getIndex());
-        auto& cPageToggles = pToggles.topoGigio(board->getIndex());
-        auto& cVals        = pVals.topoGigio(board->getIndex());
+        auto& cBrdHistPg0  = fReadMismatchesPg0.getObject(board->getId());
+        auto& cBrdHistPg1  = fReadMismatchesPg1.getObject(board->getId());
+        auto& cHistToggles = fRdMismatchesPg1.getObject(board->getId());
+        auto& cHistValues  = fRdValsMismatchesPg1.getObject(board->getId());
+        auto& cPageToggles = pToggles.getObject(board->getId());
+        auto& cVals        = pVals.getObject(board->getId());
         for(auto opticalGroup: *board)
         {
-            auto& cOGHistPg0     = cBrdHistPg0->topoGigio(opticalGroup->getIndex());
-            auto& cOGHistPg1     = cBrdHistPg1->topoGigio(opticalGroup->getIndex());
-            auto& cOGHist        = cHistToggles->topoGigio(opticalGroup->getIndex());
-            auto& cValsOGHist    = cHistValues->topoGigio(opticalGroup->getIndex());
-            auto& cPageTogglesOG = cPageToggles->topoGigio(opticalGroup->getIndex());
-            auto& cValsOG        = cVals->topoGigio(opticalGroup->getIndex());
+            auto& cOGHistPg0     = cBrdHistPg0->getObject(opticalGroup->getId());
+            auto& cOGHistPg1     = cBrdHistPg1->getObject(opticalGroup->getId());
+            auto& cOGHist        = cHistToggles->getObject(opticalGroup->getId());
+            auto& cValsOGHist    = cHistValues->getObject(opticalGroup->getId());
+            auto& cPageTogglesOG = cPageToggles->getObject(opticalGroup->getId());
+            auto& cValsOG        = cVals->getObject(opticalGroup->getId());
             for(auto hybrid: *opticalGroup)
             {
-                auto& cValsHybrdHist    = cValsOGHist->topoGigio(hybrid->getIndex());
-                auto& cHybrdHistPg0     = cOGHistPg0->topoGigio(hybrid->getIndex());
-                auto& cHybrdHistPg1     = cOGHistPg1->topoGigio(hybrid->getIndex());
-                auto& cHybrdHist        = cOGHist->topoGigio(hybrid->getIndex());
-                auto& cPageTogglesHybrd = cPageTogglesOG->topoGigio(hybrid->getIndex());
-                auto& cValsHybrd        = cValsOG->topoGigio(hybrid->getIndex());
+                auto& cValsHybrdHist    = cValsOGHist->getObject(hybrid->getId());
+                auto& cHybrdHistPg0     = cOGHistPg0->getObject(hybrid->getId());
+                auto& cHybrdHistPg1     = cOGHistPg1->getObject(hybrid->getId());
+                auto& cHybrdHist        = cOGHist->getObject(hybrid->getId());
+                auto& cPageTogglesHybrd = cPageTogglesOG->getObject(hybrid->getId());
+                auto& cValsHybrd        = cValsOG->getObject(hybrid->getId());
                 for(auto chip: *hybrid)
                 {
                     auto& cComparisons     = chip->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cPageTogglesChip = cPageTogglesHybrd->topoGigio(chip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    TH2F* cChipHistPg0     = cHybrdHistPg0->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                    TH2F* cChipHistPg1     = cHybrdHistPg1->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                    TH2F* cChipHistToggles = cHybrdHist->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    auto& cPageTogglesChip = cPageTogglesHybrd->getObject(chip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    TH2F* cChipHistPg0     = cHybrdHistPg0->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cChipHistPg1     = cHybrdHistPg1->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cChipHistToggles = cHybrdHist->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     for(auto cItem: cComparisons)
                     {
                         uint8_t cRegisterAddress = cItem.first & 0xFF;
@@ -372,8 +372,8 @@ void DQMHistogramRegisterTest::fillRegisterReadMismatches(DetectorDataContainer&
                         }
                     }
 
-                    auto& cValsChip       = cValsHybrd->topoGigio(chip->getIndex())->getSummary<std::map<uint8_t, uint8_t>>();
-                    TH2F* cChipHistValues = cValsHybrdHist->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    auto& cValsChip       = cValsHybrd->getObject(chip->getId())->getSummary<std::map<uint8_t, uint8_t>>();
+                    TH2F* cChipHistValues = cValsHybrdHist->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     for(auto cItem: cValsChip)
                     {
                         auto cBin        = cChipHistValues->FindBin(cItem.first, cItem.second);
@@ -390,21 +390,21 @@ void DQMHistogramRegisterTest::fillRegisterReadCounts(DetectorDataContainer& pRe
 {
     for(auto board: pReads)
     {
-        auto& cBrdHist     = fRdCnts.topoGigio(board->getIndex());
-        auto& cPageToggles = pToggles.topoGigio(board->getIndex());
+        auto& cBrdHist     = fRdCnts.getObject(board->getId());
+        auto& cPageToggles = pToggles.getObject(board->getId());
         for(auto opticalGroup: *board)
         {
-            auto& cOGHist        = cBrdHist->topoGigio(opticalGroup->getIndex());
-            auto& cPageTogglesOG = cPageToggles->topoGigio(opticalGroup->getIndex());
+            auto& cOGHist        = cBrdHist->getObject(opticalGroup->getId());
+            auto& cPageTogglesOG = cPageToggles->getObject(opticalGroup->getId());
             for(auto hybrid: *opticalGroup)
             {
-                auto& cHybrdHist        = cOGHist->topoGigio(hybrid->getIndex());
-                auto& cPageTogglesHybrd = cPageTogglesOG->topoGigio(hybrid->getIndex());
+                auto& cHybrdHist        = cOGHist->getObject(hybrid->getId());
+                auto& cPageTogglesHybrd = cPageTogglesOG->getObject(hybrid->getId());
                 for(auto chip: *hybrid)
                 {
                     auto& cReads           = chip->getSummary<size_t>();
-                    auto& cPageTogglesChip = cPageTogglesHybrd->topoGigio(chip->getIndex())->getSummary<size_t>();
-                    TH1F* cChipHist        = cHybrdHist->topoGigio(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    auto& cPageTogglesChip = cPageTogglesHybrd->getObject(chip->getId())->getSummary<size_t>();
+                    TH1F* cChipHist        = cHybrdHist->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     LOG(INFO) << BOLDYELLOW << "Chip#" << +chip->getId() << " " << cReads << " reads; " << cPageTogglesChip << " page toggles " << RESET;
                     // number of read transactions
                     auto cBin        = cChipHist->FindBin(1.);
@@ -423,25 +423,25 @@ void DQMHistogramRegisterTest::fillRegisterWriteCounts(DetectorDataContainer& pW
 {
     for(auto board: pWrites)
     {
-        auto& cBrdHist     = fWrCnts.topoGigio(board->getIndex());
-        auto& cPageToggles = pToggles.topoGigio(board->getIndex());
-        auto& cReads       = pReads.topoGigio(board->getIndex());
+        auto& cBrdHist     = fWrCnts.getObject(board->getId());
+        auto& cPageToggles = pToggles.getObject(board->getId());
+        auto& cReads       = pReads.getObject(board->getId());
         for(auto opticalGroup: *board)
         {
-            auto& cOGHist        = cBrdHist->topoGigio(opticalGroup->getIndex());
-            auto& cPageTogglesOG = cPageToggles->topoGigio(opticalGroup->getIndex());
-            auto& cReadsOG       = cReads->topoGigio(opticalGroup->getIndex());
+            auto& cOGHist        = cBrdHist->getObject(opticalGroup->getId());
+            auto& cPageTogglesOG = cPageToggles->getObject(opticalGroup->getId());
+            auto& cReadsOG       = cReads->getObject(opticalGroup->getId());
             for(auto hybrid: *opticalGroup)
             {
-                auto& cHybrdHist        = cOGHist->topoGigio(hybrid->getIndex());
-                auto& cPageTogglesHybrd = cPageTogglesOG->topoGigio(hybrid->getIndex());
-                auto& cReadsHybrd       = cReadsOG->topoGigio(hybrid->getIndex());
+                auto& cHybrdHist        = cOGHist->getObject(hybrid->getId());
+                auto& cPageTogglesHybrd = cPageTogglesOG->getObject(hybrid->getId());
+                auto& cReadsHybrd       = cReadsOG->getObject(hybrid->getId());
                 for(auto chip: *hybrid)
                 {
                     auto& cWrites          = chip->getSummary<size_t>();
-                    auto& cPageTogglesChip = cPageTogglesHybrd->topoGigio(chip->getIndex())->getSummary<size_t>();
-                    auto& cReadsChip       = cReadsHybrd->topoGigio(chip->getIndex())->getSummary<size_t>();
-                    TH1F* cChipHist        = cHybrdHist->topoGigio(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    auto& cPageTogglesChip = cPageTogglesHybrd->getObject(chip->getId())->getSummary<size_t>();
+                    auto& cReadsChip       = cReadsHybrd->getObject(chip->getId())->getSummary<size_t>();
+                    TH1F* cChipHist        = cHybrdHist->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     LOG(INFO) << BOLDYELLOW << "Chip#" << +chip->getId() << " " << cWrites << " writes; " << cReadsChip << " reads and " << cPageTogglesChip << " page toggles " << RESET;
                     // number of write transactions
                     auto cBin        = cChipHist->FindBin(0.);

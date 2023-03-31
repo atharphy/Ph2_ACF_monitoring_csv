@@ -1348,12 +1348,12 @@ void Tool::unmaskPair(Chip* cChip, std::pair<uint8_t, uint8_t> pPair)
     cMaskedChannels.clear();
     cMaskedChannels.push_back(pPair.first);
 
-    uint8_t     cRegisterIndex = pPair.first >> 3;
-    std::string cMaskRegName   = fChannelMaskMapCBC3[cRegisterIndex];
+    uint8_t     cRegisterId = pPair.first >> 3;
+    std::string cMaskRegName   = fChannelMaskMapCBC3[cRegisterId];
     cMaskedList.insert(std::pair<std::string, MaskedChannels>(cMaskRegName.c_str(), cMaskedChannels));
 
-    cRegisterIndex = pPair.second >> 3;
-    cMaskRegName   = fChannelMaskMapCBC3[cRegisterIndex];
+    cRegisterId = pPair.second >> 3;
+    cMaskRegName   = fChannelMaskMapCBC3[cRegisterId];
     auto it        = cMaskedList.find(cMaskRegName.c_str());
     if(it != cMaskedList.end()) { (it->second).push_back(pPair.second); }
     else
@@ -1418,14 +1418,14 @@ void Tool::scanDacDac(const std::string&                               dac1Name,
                       std::vector<std::vector<DetectorDataContainer*>> detectorContainerVectorOfVector,
                       int32_t                                          numberOfEventsPerBurst)
 {
-    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    { scanBeBoardDacDac(boardIndex, dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector, numberOfEventsPerBurst); }
+    for(auto board : *fDetectorContainer)
+    { scanBeBoardDacDac(board->getId(), dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector, numberOfEventsPerBurst); }
 
     return;
 }
 
 // Two dimensional dac scan per BeBoard
-void Tool::scanBeBoardDacDac(uint16_t                                         boardIndex,
+void Tool::scanBeBoardDacDac(uint16_t                                         boardId,
                              const std::string&                               dac1Name,
                              const std::vector<uint16_t>&                     dac1List,
                              const std::string&                               dac2Name,
@@ -1443,10 +1443,10 @@ void Tool::scanBeBoardDacDac(uint16_t                                         bo
     for(size_t dacIt = 0; dacIt < dac1List.size(); ++dacIt)
     {
         // el::LoggingFlag::NewLineForContainer (0);
-        if(boardIndex == 0) LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List[dacIt] << " vs " << dac2Name << RESET;
+        if(boardId == 0) LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List[dacIt] << " vs " << dac2Name << RESET;
         // el::LoggingFlag::NewLineForContainer (1);
-        setSameDacBeBoard(fDetectorContainer->topoGigio(boardIndex), dac1Name, dac1List[dacIt]);
-        scanBeBoardDac(boardIndex, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt], numberOfEventsPerBurst);
+        setSameDacBeBoard(fDetectorContainer->getObject(boardId), dac1Name, dac1List[dacIt]);
+        scanBeBoardDac(boardId, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt], numberOfEventsPerBurst);
     }
 
     return;
@@ -1459,21 +1459,21 @@ void Tool::scanDac(const std::string&                  dacName,
                    std::vector<DetectorDataContainer*> detectorContainerVector,
                    int32_t                             numberOfEventsPerBurst)
 {
-    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    { scanBeBoardDac(boardIndex, dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst); }
+    for(auto board : *fDetectorContainer)
+    { scanBeBoardDac(board->getId(), dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst); }
 }
 
 // bit wise scan
 void Tool::bitWiseScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst)
 {
-    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) { bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst); }
+    for(auto board : *fDetectorContainer) { bitWiseScanBeBoard(board->getId(), dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst); }
 }
 
 // bit wise scan per BeBoard
-void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst)
+void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst)
 {
     DetectorDataContainer* outputDataContainer = fDetectorDataContainer;
-    ReadoutChip*           cReadoutChip        = fDetectorContainer->topoGigio(boardIndex)->topoGigio(0)->topoGigio(0)->topoGigio(0); // assumption: one BeBoard has only one type of chip;
+    ReadoutChip*           cReadoutChip        = fDetectorContainer->getObject(boardId)->getFirstObject()->getFirstObject()->getFirstObject(); // assumption: one BeBoard has only one type of chip;
     bool                   localDAC            = cReadoutChip->isDACLocal(dacName);
     uint8_t                numberOfBits        = cReadoutChip->getNumberOfBits(dacName);
     LOG(INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
@@ -1500,27 +1500,27 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
     }
     LOG(INFO) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allZeroRegister << RESET;
     if(localDAC)
-        setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList);
+        setAllLocalDacBeBoard(boardId, dacName, *previousDacList);
     else
-        setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
+        setAllGlobalDacBeBoard(boardId, dacName, *previousDacList);
 
     fDetectorDataContainer = previousStepOccupancyContainer;
     LOG(INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
-    measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 
     LOG(INFO) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allOneRegister << RESET;
     if(localDAC)
-        setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
+        setAllLocalDacBeBoard(boardId, dacName, *currentDacList);
     else
-        setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
+        setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
     fDetectorDataContainer = currentStepOccupancyContainer;
     LOG(INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
-    measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 
     // This fails sometimes depending on settings, need to make it an option...
     occupanyDirectlyProportionalToDAC =
-        currentStepOccupancyContainer->topoGigio(boardIndex)->getSummary<Occupancy, Occupancy>().fOccupancy > previousStepOccupancyContainer->topoGigio(boardIndex)->getSummary<Occupancy, Occupancy>().fOccupancy;
+        currentStepOccupancyContainer->getObject(boardId)->getSummary<Occupancy, Occupancy>().fOccupancy > previousStepOccupancyContainer->getObject(boardId)->getSummary<Occupancy, Occupancy>().fOccupancy;
 
     // Hacked solution for PS
     if((cReadoutChip->getFrontEndType() == FrontEndType::MPA) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA) or (cReadoutChip->getFrontEndType() == FrontEndType::MPA2) or
@@ -1543,7 +1543,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
     for(int iBit = numberOfBits - 1; iBit >= 0; --iBit)
     {
         LOG(INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
-        for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+        for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
         {
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -1554,53 +1554,53 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
                             if(occupanyDirectlyProportionalToDAC)
-                                currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel) =
-                                    previousDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel) + (1 << iBit);
+                                currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel) =
+                                    previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel) + (1 << iBit);
                             else
-                                currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel) =
-                                    previousDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel) &
+                                currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel) =
+                                    previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel) &
                                     (0xFFFF - (1 << iBit));
                         }
                     }
                     else
                     {
                         if(occupanyDirectlyProportionalToDAC)
-                            currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
-                                previousDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() + (1 << iBit);
+                            currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() + (1 << iBit);
                         else
-                            currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
-                                previousDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1 << iBit));
+                            currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() & (0xFFFF - (1 << iBit));
 
                         LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
-                                   << currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                                   << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET;
                     }
                 }
             }
         }
 
         if(localDAC)
-            setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
+            setAllLocalDacBeBoard(boardId, dacName, *currentDacList);
         else
-            setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
+            setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
         Occupancy noOccupancy;
         ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
-        measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+        measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
         // TO-DO.. generalize so that I don't need the MPA/SSA
         if(fNormalize == 0)
         {
             float cMaxOcc               = 1.0;
-            auto& cDataContainerThisBrd = fDetectorDataContainer->topoGigio(boardIndex);
-            for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+            auto& cDataContainerThisBrd = fDetectorDataContainer->getObject(boardId);
+            for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
             {
-                auto& cDataContainerThisOG = cDataContainerThisBrd->topoGigio(cOpticalGroup->getIndex());
+                auto& cDataContainerThisOG = cDataContainerThisBrd->getObject(cOpticalGroup->getId());
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cDataContainerThisFE = cDataContainerThisOG->topoGigio(cHybrid->getIndex());
+                    auto& cDataContainerThisFE = cDataContainerThisOG->getObject(cHybrid->getId());
                     for(auto cChip: *cHybrid)
                     {
-                        auto&                cDataContainerThisChip = cDataContainerThisFE->topoGigio(cChip->getIndex());
+                        auto&                cDataContainerThisChip = cDataContainerThisFE->getObject(cChip->getId());
                         auto&                cSummary               = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
                         ChannelGroupHandler* cHandler;
                         if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
@@ -1636,7 +1636,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         }
 
         // Determine if it is better or not
-        for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+        for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
         {
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -1648,32 +1648,32 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
                             cOut << BOLDBLUE << "localocc "
-                                 << currentStepOccupancyContainer->topoGigio(boardIndex)
-                                        ->topoGigio(cOpticalGroup->getIndex())
-                                        ->topoGigio(cHybrid->getIndex())
-                                        ->topoGigio(cChip->getIndex())
+                                 << currentStepOccupancyContainer->getObject(boardId)
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<Occupancy>(iChannel)
                                         .fOccupancy
                                  << "\n";
 
-                            if(currentStepOccupancyContainer->topoGigio(boardIndex)
-                                   ->topoGigio(cOpticalGroup->getIndex())
-                                   ->topoGigio(cHybrid->getIndex())
-                                   ->topoGigio(cChip->getIndex())
+                            if(currentStepOccupancyContainer->getObject(boardId)
+                                   ->getObject(cOpticalGroup->getId())
+                                   ->getObject(cHybrid->getId())
+                                   ->getObject(cChip->getId())
                                    ->getChannel<Occupancy>(iChannel)
                                    .fOccupancy <= targetOccupancy)
                             {
-                                previousDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel) =
-                                    currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel);
-                                previousStepOccupancyContainer->topoGigio(boardIndex)
-                                    ->topoGigio(cOpticalGroup->getIndex())
-                                    ->topoGigio(cHybrid->getIndex())
-                                    ->topoGigio(cChip->getIndex())
+                                previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel) =
+                                    currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel);
+                                previousStepOccupancyContainer->getObject(boardId)
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
                                     ->getChannel<Occupancy>(iChannel)
-                                    .fOccupancy = currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                      ->topoGigio(cOpticalGroup->getIndex())
-                                                      ->topoGigio(cHybrid->getIndex())
-                                                      ->topoGigio(cChip->getIndex())
+                                    .fOccupancy = currentStepOccupancyContainer->getObject(boardId)
+                                                      ->getObject(cOpticalGroup->getId())
+                                                      ->getObject(cHybrid->getId())
+                                                      ->getObject(cChip->getId())
                                                       ->getChannel<Occupancy>(iChannel)
                                                       .fOccupancy;
                             }
@@ -1681,34 +1681,34 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     }
                     else
                     {
-                        auto& cCurrentDAC = currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
+                        auto& cCurrentDAC = currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                         cOut << "Occupancy Chip#" << +cChip->getId() << "\t[ global] "
-                             << currentStepOccupancyContainer->topoGigio(boardIndex)
-                                    ->topoGigio(cOpticalGroup->getIndex())
-                                    ->topoGigio(cHybrid->getIndex())
-                                    ->topoGigio(cChip->getIndex())
+                             << currentStepOccupancyContainer->getObject(boardId)
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
                                     ->getSummary<Occupancy, Occupancy>()
                                     .fOccupancy
                              << " for a DAC value of " << cCurrentDAC;
 
-                        if(currentStepOccupancyContainer->topoGigio(boardIndex)
-                               ->topoGigio(cOpticalGroup->getIndex())
-                               ->topoGigio(cHybrid->getIndex())
-                               ->topoGigio(cChip->getIndex())
+                        if(currentStepOccupancyContainer->getObject(boardId)
+                               ->getObject(cOpticalGroup->getId())
+                               ->getObject(cHybrid->getId())
+                               ->getObject(cChip->getId())
                                ->getSummary<Occupancy, Occupancy>()
                                .fOccupancy <= targetOccupancy)
                         {
-                            previousDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() =
-                                currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
-                            previousStepOccupancyContainer->topoGigio(boardIndex)
-                                ->topoGigio(cOpticalGroup->getIndex())
-                                ->topoGigio(cHybrid->getIndex())
-                                ->topoGigio(cChip->getIndex())
+                            previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                            previousStepOccupancyContainer->getObject(boardId)
+                                ->getObject(cOpticalGroup->getId())
+                                ->getObject(cHybrid->getId())
+                                ->getObject(cChip->getId())
                                 ->getSummary<Occupancy, Occupancy>()
-                                .fOccupancy = currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                  ->topoGigio(cOpticalGroup->getIndex())
-                                                  ->topoGigio(cHybrid->getIndex())
-                                                  ->topoGigio(cChip->getIndex())
+                                .fOccupancy = currentStepOccupancyContainer->getObject(boardId)
+                                                  ->getObject(cOpticalGroup->getId())
+                                                  ->getObject(cHybrid->getId())
+                                                  ->getObject(cChip->getId())
                                                   ->getSummary<Occupancy, Occupancy>()
                                                   .fOccupancy;
                         }
@@ -1719,12 +1719,12 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         }
     }
 
-    if(localDAC) { setAllLocalDacBeBoard(boardIndex, dacName, *previousDacList); }
+    if(localDAC) { setAllLocalDacBeBoard(boardId, dacName, *previousDacList); }
     else
-        setAllGlobalDacBeBoard(boardIndex, dacName, *previousDacList);
+        setAllGlobalDacBeBoard(boardId, dacName, *previousDacList);
 
     fDetectorDataContainer = outputDataContainer;
-    measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 
     delete previousStepOccupancyContainer;
     delete currentStepOccupancyContainer;
@@ -1737,15 +1737,15 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 // full scan, eed a way to traport
 void Tool::fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst, int32_t startVal, bool mask)
 {
-    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    { fullScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst, startVal, mask); }
+    for(auto board : *fDetectorContainer)
+    { fullScanBeBoard(board->getId(), dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst, startVal, mask); }
 }
 
 // full scan per BeBoard. Returns untrimmed objects list (channels/chips)
-void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst, int32_t startVal, bool mask)
+void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst, int32_t startVal, bool mask)
 {
     DetectorDataContainer* outputDataContainer            = fDetectorDataContainer;
-    ReadoutChip*           cReadoutChip                   = fDetectorContainer->topoGigio(boardIndex)->topoGigio(0)->topoGigio(0)->topoGigio(0); // assumption: one BeBoard has only one type of chip;
+    ReadoutChip*           cReadoutChip                   = fDetectorContainer->getObject(boardId)->getFirstObject()->getFirstObject()->getFirstObject(); // assumption: one BeBoard has only one type of chip;
     bool                   localDAC                       = cReadoutChip->isDACLocal(dacName);
     DetectorDataContainer* previousStepOccupancyContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
@@ -1789,7 +1789,7 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
         returnVec.clear();
 
         LOG(INFO) << BOLDBLUE << "Threshold set to " << int(threshToSet) << " for " << dacName << RESET;
-        for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+        for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
         {
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -1797,20 +1797,20 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                 {
                     if(localDAC)
                     {
-                        currentMaskList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<std::vector<uint16_t>>().clear();
+                        currentMaskList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<uint16_t>>().clear();
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
-                            if(not currentDoneList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel))
-                            { currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel) = threshToSet; }
+                            if(not currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel))
+                            { currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel) = threshToSet; }
                         }
                     }
                     else
                     {
-                        if(not currentDoneList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>())
+                        if(not currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>())
                         {
-                            currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() = threshToSet;
+                            currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = threshToSet;
                             LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
-                                       << currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                                       << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET;
                         }
                     }
                 }
@@ -1818,17 +1818,17 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
         }
 
         if(localDAC)
-            setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
+            setAllLocalDacBeBoard(boardId, dacName, *currentDacList);
         else
-            setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
+            setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
         Occupancy noOccupancy;
         ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
-        measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+        measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 
         // Determine if it is better or not
-        for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+        for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
         {
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -1840,69 +1840,69 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
                             cOut << BOLDBLUE << "localocc "
-                                 << currentStepOccupancyContainer->topoGigio(boardIndex)
-                                        ->topoGigio(cOpticalGroup->getIndex())
-                                        ->topoGigio(cHybrid->getIndex())
-                                        ->topoGigio(cChip->getIndex())
+                                 << currentStepOccupancyContainer->getObject(boardId)
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<Occupancy>(iChannel)
                                         .fOccupancy
                                  << "\n";
-                            if(not currentDoneList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel))
+                            if(not currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel))
                             {
                                 // if (cChip->size()<500 and iChannel<10)std::cout<<"PRE occDiff
-                                // "<<iChannel<<":"<<currentStepOccupancyContainer->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<std::endl;
-                                currentStepOccupancyContainer->topoGigio(boardIndex)
-                                    ->topoGigio(cOpticalGroup->getIndex())
-                                    ->topoGigio(cHybrid->getIndex())
-                                    ->topoGigio(cChip->getIndex())
+                                // "<<iChannel<<":"<<currentStepOccupancyContainer->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy<<std::endl;
+                                currentStepOccupancyContainer->getObject(boardId)
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
                                     ->getChannel<Occupancy>(iChannel)
-                                    .fOccupancy = std::max(currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                               ->topoGigio(cOpticalGroup->getIndex())
-                                                               ->topoGigio(cHybrid->getIndex())
-                                                               ->topoGigio(cChip->getIndex())
+                                    .fOccupancy = std::max(currentStepOccupancyContainer->getObject(boardId)
+                                                               ->getObject(cOpticalGroup->getId())
+                                                               ->getObject(cHybrid->getId())
+                                                               ->getObject(cChip->getId())
                                                                ->getChannel<Occupancy>(iChannel)
                                                                .fOccupancy,
-                                                           previousStepOccupancyContainer->topoGigio(boardIndex)
-                                                               ->topoGigio(cOpticalGroup->getIndex())
-                                                               ->topoGigio(cHybrid->getIndex())
-                                                               ->topoGigio(cChip->getIndex())
+                                                           previousStepOccupancyContainer->getObject(boardId)
+                                                               ->getObject(cOpticalGroup->getId())
+                                                               ->getObject(cHybrid->getId())
+                                                               ->getObject(cChip->getId())
                                                                ->getChannel<Occupancy>(iChannel)
                                                                .fOccupancy);
-                                if((currentStepOccupancyContainer->topoGigio(boardIndex)
-                                        ->topoGigio(cOpticalGroup->getIndex())
-                                        ->topoGigio(cHybrid->getIndex())
-                                        ->topoGigio(cChip->getIndex())
+                                if((currentStepOccupancyContainer->getObject(boardId)
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<Occupancy>(iChannel)
                                         .fOccupancy >= targetOccupancy) and
-                                   (previousStepOccupancyContainer->topoGigio(boardIndex)
-                                        ->topoGigio(cOpticalGroup->getIndex())
-                                        ->topoGigio(cHybrid->getIndex())
-                                        ->topoGigio(cChip->getIndex())
+                                   (previousStepOccupancyContainer->getObject(boardId)
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<Occupancy>(iChannel)
                                         .fOccupancy < targetOccupancy) and
                                    (not first))
                                 {
                                     // std::cout<<"occDiff "<<occDiff<<" NoccDiff "<<NoccDiff<<std::endl;
 
-                                    if(std::fabs(currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                     ->topoGigio(cOpticalGroup->getIndex())
-                                                     ->topoGigio(cHybrid->getIndex())
-                                                     ->topoGigio(cChip->getIndex())
+                                    if(std::fabs(currentStepOccupancyContainer->getObject(boardId)
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
                                                      ->getChannel<Occupancy>(iChannel)
                                                      .fOccupancy -
-                                                 targetOccupancy) > std::fabs(previousStepOccupancyContainer->topoGigio(boardIndex)
-                                                                                  ->topoGigio(cOpticalGroup->getIndex())
-                                                                                  ->topoGigio(cHybrid->getIndex())
-                                                                                  ->topoGigio(cChip->getIndex())
+                                                 targetOccupancy) > std::fabs(previousStepOccupancyContainer->getObject(boardId)
+                                                                                  ->getObject(cOpticalGroup->getId())
+                                                                                  ->getObject(cHybrid->getId())
+                                                                                  ->getObject(cChip->getId())
                                                                                   ->getChannel<Occupancy>(iChannel)
                                                                                   .fOccupancy -
                                                                               targetOccupancy))
                                     {
-                                        currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel) -= 1;
-                                        occDiff.first += previousStepOccupancyContainer->topoGigio(boardIndex)
-                                                             ->topoGigio(cOpticalGroup->getIndex())
-                                                             ->topoGigio(cHybrid->getIndex())
-                                                             ->topoGigio(cChip->getIndex())
+                                        currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel) -= 1;
+                                        occDiff.first += previousStepOccupancyContainer->getObject(boardId)
+                                                             ->getObject(cOpticalGroup->getId())
+                                                             ->getObject(cHybrid->getId())
+                                                             ->getObject(cChip->getId())
                                                              ->getChannel<Occupancy>(iChannel)
                                                              .fOccupancy -
                                                          targetOccupancy;
@@ -1911,38 +1911,38 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                                     }
                                     else
                                     {
-                                        occDiff.second += currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                              ->topoGigio(cOpticalGroup->getIndex())
-                                                              ->topoGigio(cHybrid->getIndex())
-                                                              ->topoGigio(cChip->getIndex())
+                                        occDiff.second += currentStepOccupancyContainer->getObject(boardId)
+                                                              ->getObject(cOpticalGroup->getId())
+                                                              ->getObject(cHybrid->getId())
+                                                              ->getObject(cChip->getId())
                                                               ->getChannel<Occupancy>(iChannel)
                                                               .fOccupancy -
                                                           targetOccupancy;
                                         NoccDiff.second += 1;
                                     }
 
-                                    currentDoneList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(iChannel) = 1;
+                                    currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(iChannel) = 1;
                                 }
 
                                 else
                                 {
-                                    currentMaskList->topoGigio(boardIndex)
-                                        ->topoGigio(cOpticalGroup->getIndex())
-                                        ->topoGigio(cHybrid->getIndex())
-                                        ->topoGigio(cChip->getIndex())
+                                    currentMaskList->getObject(boardId)
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getSummary<std::vector<uint16_t>>()
                                         .push_back(iChannel);
 
                                     returnVec.push_back(iChannel);
-                                    previousStepOccupancyContainer->topoGigio(boardIndex)
-                                        ->topoGigio(cOpticalGroup->getIndex())
-                                        ->topoGigio(cHybrid->getIndex())
-                                        ->topoGigio(cChip->getIndex())
+                                    previousStepOccupancyContainer->getObject(boardId)
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<Occupancy>(iChannel)
-                                        .fOccupancy = currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                          ->topoGigio(cOpticalGroup->getIndex())
-                                                          ->topoGigio(cHybrid->getIndex())
-                                                          ->topoGigio(cChip->getIndex())
+                                        .fOccupancy = currentStepOccupancyContainer->getObject(boardId)
+                                                          ->getObject(cOpticalGroup->getId())
+                                                          ->getObject(cHybrid->getId())
+                                                          ->getObject(cChip->getId())
                                                           ->getChannel<Occupancy>(iChannel)
                                                           .fOccupancy;
                                 }
@@ -1951,12 +1951,12 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                     }
                     else
                     {
-                        auto& cCurrentDAC = currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
+                        auto& cCurrentDAC = currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                         cOut << "Occupancy Chip#" << +cChip->getId() << "\t[ global] "
-                             << currentStepOccupancyContainer->topoGigio(boardIndex)
-                                    ->topoGigio(cOpticalGroup->getIndex())
-                                    ->topoGigio(cHybrid->getIndex())
-                                    ->topoGigio(cChip->getIndex())
+                             << currentStepOccupancyContainer->getObject(boardId)
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
                                     ->getSummary<Occupancy, Occupancy>()
                                     .fOccupancy
                              << " for a DAC value of " << cCurrentDAC;
@@ -1964,98 +1964,98 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                         float chanavg = 0.0;
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
-                            currentStepOccupancyContainer->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy =
-                                std::max(currentStepOccupancyContainer->topoGigio(boardIndex)
-                                             ->topoGigio(cOpticalGroup->getIndex())
-                                             ->topoGigio(cHybrid->getIndex())
-                                             ->topoGigio(cChip->getIndex())
+                            currentStepOccupancyContainer->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(iChannel).fOccupancy =
+                                std::max(currentStepOccupancyContainer->getObject(boardId)
+                                             ->getObject(cOpticalGroup->getId())
+                                             ->getObject(cHybrid->getId())
+                                             ->getObject(cChip->getId())
                                              ->getChannel<Occupancy>(iChannel)
                                              .fOccupancy,
-                                         previousStepOccupancyContainer->topoGigio(boardIndex)
-                                             ->topoGigio(cOpticalGroup->getIndex())
-                                             ->topoGigio(cHybrid->getIndex())
-                                             ->topoGigio(cChip->getIndex())
+                                         previousStepOccupancyContainer->getObject(boardId)
+                                             ->getObject(cOpticalGroup->getId())
+                                             ->getObject(cHybrid->getId())
+                                             ->getObject(cChip->getId())
                                              ->getChannel<Occupancy>(iChannel)
                                              .fOccupancy);
 
-                            chanavg += float(currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                 ->topoGigio(cOpticalGroup->getIndex())
-                                                 ->topoGigio(cHybrid->getIndex())
-                                                 ->topoGigio(cChip->getIndex())
+                            chanavg += float(currentStepOccupancyContainer->getObject(boardId)
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
                                                  ->getChannel<Occupancy>(iChannel)
                                                  .fOccupancy >= targetOccupancy); // counts number found instead
                         }
                         chanavg /= float(cChip->size());
-                        currentStepOccupancyContainer->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<Occupancy, Occupancy>().fOccupancy =
+                        currentStepOccupancyContainer->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Occupancy, Occupancy>().fOccupancy =
                             chanavg;
 
-                        if(not currentDoneList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>())
+                        if(not currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>())
                         {
                             LOG(INFO) << BOLDBLUE << "currentStepOccupancyContainer "
-                                      << currentStepOccupancyContainer->topoGigio(boardIndex)
-                                             ->topoGigio(cOpticalGroup->getIndex())
-                                             ->topoGigio(cHybrid->getIndex())
-                                             ->topoGigio(cChip->getIndex())
+                                      << currentStepOccupancyContainer->getObject(boardId)
+                                             ->getObject(cOpticalGroup->getId())
+                                             ->getObject(cHybrid->getId())
+                                             ->getObject(cChip->getId())
                                              ->getSummary<Occupancy, Occupancy>()
                                              .fOccupancy
                                       << RESET;
 
-                            if(currentStepOccupancyContainer->topoGigio(boardIndex)
-                                       ->topoGigio(cOpticalGroup->getIndex())
-                                       ->topoGigio(cHybrid->getIndex())
-                                       ->topoGigio(cChip->getIndex())
+                            if(currentStepOccupancyContainer->getObject(boardId)
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
                                        ->getSummary<Occupancy, Occupancy>()
                                        .fOccupancy >= 0.5 and
-                               previousStepOccupancyContainer->topoGigio(boardIndex)
-                                       ->topoGigio(cOpticalGroup->getIndex())
-                                       ->topoGigio(cHybrid->getIndex())
-                                       ->topoGigio(cChip->getIndex())
+                               previousStepOccupancyContainer->getObject(boardId)
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
                                        ->getSummary<Occupancy, Occupancy>()
                                        .fOccupancy < 0.5)
                             {
-                                if(std::fabs(currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                 ->topoGigio(cOpticalGroup->getIndex())
-                                                 ->topoGigio(cHybrid->getIndex())
-                                                 ->topoGigio(cChip->getIndex())
+                                if(std::fabs(currentStepOccupancyContainer->getObject(boardId)
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
                                                  ->getSummary<Occupancy, Occupancy>()
                                                  .fOccupancy -
-                                             0.5) > std::fabs(previousStepOccupancyContainer->topoGigio(boardIndex)
-                                                                  ->topoGigio(cOpticalGroup->getIndex())
-                                                                  ->topoGigio(cHybrid->getIndex())
-                                                                  ->topoGigio(cChip->getIndex())
+                                             0.5) > std::fabs(previousStepOccupancyContainer->getObject(boardId)
+                                                                  ->getObject(cOpticalGroup->getId())
+                                                                  ->getObject(cHybrid->getId())
+                                                                  ->getObject(cChip->getId())
                                                                   ->getSummary<Occupancy, Occupancy>()
                                                                   .fOccupancy -
                                                               0.5))
-                                { currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() += 1; }
-                                currentDoneList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() = 1;
+                                { currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() += 1; }
+                                currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = 1;
                             }
                             else
                             {
-                                returnVec.push_back(cChip->getIndex());
+                                returnVec.push_back(cChip->getId());
 
-                                previousStepOccupancyContainer->topoGigio(boardIndex)
-                                    ->topoGigio(cOpticalGroup->getIndex())
-                                    ->topoGigio(cHybrid->getIndex())
-                                    ->topoGigio(cChip->getIndex())
+                                previousStepOccupancyContainer->getObject(boardId)
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
                                     ->getSummary<Occupancy, Occupancy>()
-                                    .fOccupancy = currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                      ->topoGigio(cOpticalGroup->getIndex())
-                                                      ->topoGigio(cHybrid->getIndex())
-                                                      ->topoGigio(cChip->getIndex())
+                                    .fOccupancy = currentStepOccupancyContainer->getObject(boardId)
+                                                      ->getObject(cOpticalGroup->getId())
+                                                      ->getObject(cHybrid->getId())
+                                                      ->getObject(cChip->getId())
                                                       ->getSummary<Occupancy, Occupancy>()
                                                       .fOccupancy;
 
                                 for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                                 {
-                                    previousStepOccupancyContainer->topoGigio(boardIndex)
-                                        ->topoGigio(cOpticalGroup->getIndex())
-                                        ->topoGigio(cHybrid->getIndex())
-                                        ->topoGigio(cChip->getIndex())
+                                    previousStepOccupancyContainer->getObject(boardId)
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<Occupancy>(iChannel)
-                                        .fOccupancy = currentStepOccupancyContainer->topoGigio(boardIndex)
-                                                          ->topoGigio(cOpticalGroup->getIndex())
-                                                          ->topoGigio(cHybrid->getIndex())
-                                                          ->topoGigio(cChip->getIndex())
+                                        .fOccupancy = currentStepOccupancyContainer->getObject(boardId)
+                                                          ->getObject(cOpticalGroup->getId())
+                                                          ->getObject(cHybrid->getId())
+                                                          ->getObject(cChip->getId())
                                                           ->getChannel<Occupancy>(iChannel)
                                                           .fOccupancy;
                                 }
@@ -2071,7 +2071,7 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
         if(nRunning == 0) break;
     }
     fDetectorDataContainer = outputDataContainer;
-    measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
     if(localDAC)
     {
         occDiff.first  = (occDiff.first) / float(NoccDiff.first);
@@ -2084,7 +2084,7 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
 
         // LOG(INFO) << BOLDYELLOW << "maxDiff:  " <<maxDiff<<RESET;
 
-        for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+        for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
         {
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -2094,28 +2094,28 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                     if(localDAC)
                     {
                         std::vector<uint16_t> tempMaskList =
-                            currentMaskList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<std::vector<uint16_t>>();
+                            currentMaskList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<uint16_t>>();
 
                         for(uint32_t iChannel = 0; iChannel < tempMaskList.size(); ++iChannel)
                         {
                             // LOG(INFO) << BOLDYELLOW << "occDiff.first  "<< occDiff.first << " occDiff.second  "<< occDiff.second  <<RESET;
                             // LOG(INFO) << BOLDYELLOW << "SUM.first  "<< occDiff.first+targetOccupancy << " SUM.second  "<< occDiff.second +targetOccupancy <<RESET;
 
-                            if(currentStepOccupancyContainer->topoGigio(boardIndex)
-                                   ->topoGigio(cOpticalGroup->getIndex())
-                                   ->topoGigio(cHybrid->getIndex())
-                                   ->topoGigio(cChip->getIndex())
+                            if(currentStepOccupancyContainer->getObject(boardId)
+                                   ->getObject(cOpticalGroup->getId())
+                                   ->getObject(cHybrid->getId())
+                                   ->getObject(cChip->getId())
                                    ->getChannel<Occupancy>(tempMaskList[iChannel])
                                    .fOccupancy > targetOccupancy)
                             {
-                                currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(tempMaskList[iChannel]) = 0;
+                                currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(tempMaskList[iChannel]) = 0;
 
                                 if(mask)
                                 {
-                                    if((currentStepOccupancyContainer->topoGigio(boardIndex)
-                                            ->topoGigio(cOpticalGroup->getIndex())
-                                            ->topoGigio(cHybrid->getIndex())
-                                            ->topoGigio(cChip->getIndex())
+                                    if((currentStepOccupancyContainer->getObject(boardId)
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
                                             ->getChannel<Occupancy>(tempMaskList[iChannel])
                                             .fOccupancy) > (targetOccupancy + 2.0 * occDiff.second))
                                     {
@@ -2127,13 +2127,13 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                             }
                             else
                             {
-                                currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(tempMaskList[iChannel]) = 31;
+                                currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(tempMaskList[iChannel]) = 31;
                                 if(mask)
                                 {
-                                    if((currentStepOccupancyContainer->topoGigio(boardIndex)
-                                            ->topoGigio(cOpticalGroup->getIndex())
-                                            ->topoGigio(cHybrid->getIndex())
-                                            ->topoGigio(cChip->getIndex())
+                                    if((currentStepOccupancyContainer->getObject(boardId)
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
                                             ->getChannel<Occupancy>(tempMaskList[iChannel])
                                             .fOccupancy) < (targetOccupancy + 2.0 * occDiff.first))
                                     {
@@ -2144,7 +2144,7 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                                 }
                             }
                             // LOG(INFO) << BOLDYELLOW << "DACL:  "<<
-                            // currentDacList->topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getChannel<uint16_t>(returnVec[iChannel])<<RESET;
+                            // currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(returnVec[iChannel])<<RESET;
                         }
                     }
                     // else -> probably wont be masking chips
@@ -2155,9 +2155,9 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
         }
     }
     if(localDAC)
-        setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
+        setAllLocalDacBeBoard(boardId, dacName, *currentDacList);
     else
-        setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
+        setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
     delete previousStepOccupancyContainer;
     delete currentStepOccupancyContainer;
@@ -2167,20 +2167,20 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
 // set dac and measure occupancy
 void Tool::setDacAndMeasureData(const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
-    for(uint16_t boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) { setDacAndMeasureBeBoardData(boardIndex, dacName, dacValue, numberOfEvents, numberOfEventsPerBurst); }
+    for(auto board : *fDetectorContainer) { setDacAndMeasureBeBoardData(board->getId(), dacName, dacValue, numberOfEvents, numberOfEventsPerBurst); }
 }
 
 // Set dac and measure occupancy per BeBoard
-void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+void Tool::setDacAndMeasureBeBoardData(uint16_t boardId, const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
-    setSameDacBeBoard(fDetectorContainer->topoGigio(boardIndex), dacName, dacValue);
-    measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    setSameDacBeBoard(fDetectorContainer->getObject(boardId), dacName, dacValue);
+    measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 }
 
 // Measure occupancy
 void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
-    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    for(auto board : *fDetectorContainer) measureBeBoardData(board->getId(), numberOfEvents, numberOfEventsPerBurst);
 }
 
 class ScanBase
@@ -2197,7 +2197,7 @@ class ScanBase
     }
     void setGroup(int groupNumber) { fGroupNumber = groupNumber; }
     // void         setGroup(const ChannelGroupBase* cTestChannelGroup) { fTestChannelGroup = cTestChannelGroup; }
-    void setBoardId(uint16_t boardIndex) { fBoardIndex = boardIndex; }
+    void setBoardId(uint16_t boardId) { fBoardId = boardId; }
     void setNumberOfEvents(uint32_t numberOfEvents) { fNumberOfEvents = numberOfEvents; }
     void setNumberOfEventsPerBurst(int32_t numberOfEventsPerBurst) { fNumberOfEventsPerBurst = numberOfEventsPerBurst; }
 
@@ -2207,7 +2207,7 @@ class ScanBase
     uint32_t                     fNumberOfEvents;
     int32_t                      fNumberOfEventsPerBurst{-1};
     uint32_t                     fNumberOfMSec;
-    uint32_t                     fBoardIndex;
+    uint32_t                     fBoardId;
     const DetectorDataContainer* fChannelHandlerContainer;
     uint                         fGroupNumber;
     Tool*                        fTool;
@@ -2228,13 +2228,13 @@ class ScanBase
     {
         // LOG (INFO) << BOLDYELLOW << "Get channel group ScanBase group#" << groupNumber << RESET;
 
-        return fChannelHandlerContainer->topoGigio(0)->topoGigio(0)->topoGigio(0)->topoGigio(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
+        return fChannelHandlerContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
     }
 };
 
-void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* groupScan)
+void Tool::doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* groupScan)
 {
-    groupScan->setBoardId(boardIndex);
+    groupScan->setBoardId(boardId);
     groupScan->setNumberOfEvents(numberOfEvents);
     groupScan->setDetectorContainer(fDetectorContainer);
     groupScan->setNumberOfEventsPerBurst(numberOfEventsPerBurst);
@@ -2246,14 +2246,14 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
         {
             if(fMaskChannelsFromOtherGroups || fTestPulse)
             {
-                for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+                for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         for(auto cChip: *cHybrid)
                         {
                             if(groupNumber > getChannelGroupHandlerContainer()
-                                                 ->getObject(fDetectorContainer->getObject(boardIndex)->getId())
+                                                 ->getObject(fDetectorContainer->getObject(boardId)->getId())
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
@@ -2262,7 +2262,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                                 continue;
                             fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
                                                                                      getChannelGroupHandlerContainer()
-                                                                                         ->getObject(fDetectorContainer->topoGigio(boardIndex)->getId())
+                                                                                         ->getObject(fDetectorContainer->getObject(boardId)->getId())
                                                                                          ->getObject(cOpticalGroup->getId())
                                                                                          ->getObject(cHybrid->getId())
                                                                                          ->getObject(cChip->getId())
@@ -2281,7 +2281,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 
         if(fMaskChannelsFromOtherGroups) // Re-enable all the channels and evaluate
         {
-            for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+            for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
@@ -2305,6 +2305,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
 
     void operator()() override
     {
+ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         uint32_t burstNumbers;
         uint32_t lastBurstNumberOfEvents;
         if(fNumberOfEventsPerBurst <= 0)
@@ -2322,48 +2323,54 @@ class MeasureBeBoardDataPerGroup : public ScanBase
                 lastBurstNumberOfEvents = fNumberOfEvents % fNumberOfEventsPerBurst;
             }
         }
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         while(burstNumbers > 0)
         {
+  std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
             // LOG (INFO) << BOLDYELLOW << "Tool::ReadNEvents : number of events requested is " << +currentNumberOfEvents << RESET;
             if(fTool->ifUseReadNEvents())
-                fTool->ReadNEvents(fDetectorContainer->topoGigio(fBoardIndex), currentNumberOfEvents);
+                fTool->ReadNEvents(fDetectorContainer->getObject(fBoardId), currentNumberOfEvents);
             else
             {
                 LOG(INFO) << BOLDYELLOW << "Will use measureBeBoardData with ReadData " << RESET;
-                fTool->fBeBoardInterface->Start(fDetectorContainer->topoGigio(fBoardIndex));
+                fTool->fBeBoardInterface->Start(fDetectorContainer->getObject(fBoardId));
                 std::this_thread::sleep_for(std::chrono::milliseconds(fTool->getWait()));
-                fTool->fBeBoardInterface->Stop(fDetectorContainer->topoGigio(fBoardIndex));
-                fTool->ReadData(fDetectorContainer->topoGigio(fBoardIndex), false);
+                fTool->fBeBoardInterface->Stop(fDetectorContainer->getObject(fBoardId));
+                fTool->ReadData(fDetectorContainer->getObject(fBoardId), false);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
             // Loop over Events from this Acquisition
             const std::vector<Event*>& events = fTool->GetEvents();
             fTool->setNReadbackEvents(events.size());
             // Assuming all chip will have all channels enabled:
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             if(fSameChannelGroupForAllChannels)
             {
+   std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                 // LOG (INFO) << BOLDYELLOW << "MeasureBeBoardDataPerGroup fSameChannelGroupForAllChannels read-back " << events.size() << " event." << RESET;
                 auto channelGroup = this->getChannelGroup(fGroupNumber);
                 if(channelGroup == nullptr)
                     LOG(ERROR) << BOLDRED << "Channel group does not exist..." << RESET;
                 else
                 {
-                    for(auto& event: events) event->fillDataContainer(fDetectorDataContainer->topoGigio(fBoardIndex), channelGroup);
+                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+                    for(auto& event: events) event->fillDataContainer(fDetectorDataContainer->getObject(fBoardId), channelGroup);
                 }
             }
             else
             {
                 LOG(DEBUG) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
-                for(auto cOpticalGroup: *fDetectorDataContainer->topoGigio(fBoardIndex))
+                for(auto cOpticalGroup: *fDetectorDataContainer->getObject(fBoardId))
                 {
                     for(const auto cHybrid: *cOpticalGroup)
                     {
                         for(const auto cChip: *cHybrid)
                         {
-                            auto channelGroup = this->getChannelGroup(fGroupNumber, fDetectorDataContainer->topoGigio(fBoardIndex)->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
+                            
+                            auto channelGroup = this->getChannelGroup(fGroupNumber, fDetectorDataContainer->getObject(fBoardId)->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
                             for(auto& event: events) event->fillChipDataContainer(cChip, channelGroup, cHybrid->getId());
                         }
                     }
@@ -2379,13 +2386,15 @@ class MeasureBeBoardDataPerGroup : public ScanBase
     DetectorDataContainer* fDetectorDataContainer;
 };
 
-void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
+void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    
     MeasureBeBoardDataPerGroup theScan(this);
     theScan.setDataContainer(fDetectorDataContainer);
     // make sure async mode uses ReadNEvents
     bool cUseReadNEvents = fUseReadNEvents;
-    if(fDetectorContainer->topoGigio(boardIndex)->getEventType() == EventType::PSAS)
+    if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
     {
         this->setSameGlobalDac("AnalogueAsync", 1);
         //#FIXME the commented block bellow throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
@@ -2404,24 +2413,24 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
         */
         fUseReadNEvents = true;
     }
-    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
+    doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
     // If in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
-    // if(fDetectorContainer->topoGigio(boardIndex)->getEventType() == EventType::PSAS)
+    // if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
     // {
-    //     numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->topoGigio(boardIndex), "fc7_daq_stat.fast_command_block.trigger_in_counter");
+    //     numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_stat.fast_command_block.trigger_in_counter");
     //     // LOG (INFO) << BOLDYELLOW << "Tool::measureBeBoardData number of events with PSAS " << numberOfEvents << RESET;
     //     fNReadbackEvents = numberOfEvents;
     // }
 
-    if(fDetectorContainer->topoGigio(boardIndex)->getBoardType() == BoardType::D19C)
-    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->topoGigio(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
+    if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
+    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;
 
     if(fNormalize)
     {
-        auto cTmp = fDetectorDataContainer->topoGigio(boardIndex)->normalizeAndAverageContainers(fDetectorContainer->topoGigio(boardIndex), getChannelGroupHandlerContainer()->topoGigio(boardIndex), numberOfEvents);
+        auto cTmp = fDetectorDataContainer->getObject(boardId)->normalizeAndAverageContainers(fDetectorContainer->getObject(boardId), getChannelGroupHandlerContainer()->getObject(boardId), numberOfEvents);
         LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << cTmp << RESET;
     }
     fUseReadNEvents = cUseReadNEvents;
@@ -2437,7 +2446,7 @@ class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
     {
         for(size_t dacIt = 0; dacIt < fDacList->size(); ++dacIt)
         {
-            fTool->setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->topoGigio(fBoardIndex)), fDacName, fDacList->at(dacIt));
+            fTool->setSameDacBeBoard(static_cast<BeBoard*>(fDetectorContainer->getObject(fBoardId)), fDacName, fDacList->at(dacIt));
             setDataContainer(fDetectorDataContainerVector->at(dacIt));
             MeasureBeBoardDataPerGroup::operator()();
         }
@@ -2454,7 +2463,7 @@ class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
 };
 
 // One dimensional dac scan per BeBoard
-void Tool::scanBeBoardDac(uint16_t                             boardIndex,
+void Tool::scanBeBoardDac(uint16_t                             boardId,
                           const std::string&                   dacName,
                           const std::vector<uint16_t>&         dacList,
                           uint32_t                             numberOfEvents,
@@ -2477,7 +2486,7 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
         for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
         {
             fDetectorDataContainer = detectorContainerVector[dacIt];
-            setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents, numberOfEventsPerBurst);
+            setDacAndMeasureBeBoardData(boardId, dacName, dacList[dacIt], numberOfEvents, numberOfEventsPerBurst);
             this->sendData();
         }
     }
@@ -2493,36 +2502,36 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
         theScan.setDacName(dacName);
         theScan.setDacList(&dacList);
 
-        doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
-        if(fDetectorContainer->topoGigio(boardIndex)->getBoardType() == BoardType::D19C)
-        { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->topoGigio(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
+        doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
+        if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
+        { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
         for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
     }
 }
 
 // Set global DAC for all CBCs in the BeBoard
-void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer)
+void Tool::setAllGlobalDacBeBoard(uint16_t boardId, const std::string& dacName, DetectorDataContainer& globalDACContainer)
 {
-    for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+    for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
     {
         for(auto cHybrid: *cOpticalGroup)
         {
             for(auto cChip: *cHybrid)
             {
                 fReadoutChipInterface->WriteChipReg(
-                    cChip, dacName, globalDACContainer.topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>());
+                    cChip, dacName, globalDACContainer.getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>());
             }
         }
     }
 }
 
 // Set local dac per BeBoard
-void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer)
+void Tool::setAllLocalDacBeBoard(uint16_t boardId, const std::string& dacName, DetectorDataContainer& globalDACContainer)
 {
-    for(auto cOpticalGroup: *(fDetectorContainer->topoGigio(boardIndex)))
+    for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
         for(auto cHybrid: *cOpticalGroup)
             for(auto cChip: *cHybrid)
-                fReadoutChipInterface->WriteChipAllLocalReg(cChip, dacName, *globalDACContainer.topoGigio(boardIndex)->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex()));
+                fReadoutChipInterface->WriteChipAllLocalReg(cChip, dacName, *globalDACContainer.getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
 }
 
 // Set same global DAC for all chips
@@ -2564,7 +2573,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string& dacName, c
             for(auto cChip: *cHybrid)
             {
                 ChannelContainer<uint16_t>* dacVector = new ChannelContainer<uint16_t>(cChip->getNumberOfChannels(), dacValue);
-                ChipContainer               theChipContainer(cChip->getIndex(), cChip->getNumberOfRows(), cChip->getNumberOfCols());
+                ChipContainer               theChipContainer(cChip->getId(), cChip->getNumberOfRows(), cChip->getNumberOfCols());
                 theChipContainer.setChannelContainer(dacVector);
 
                 fReadoutChipInterface->WriteChipAllLocalReg(cChip, dacName, theChipContainer);
@@ -2576,7 +2585,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string& dacName, c
 void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
     // Assumption: 1 BeBoard has only 1 chip flavor
-    if(static_cast<ReadoutChip*>(pBoard->topoGigio(0)->topoGigio(0)->topoGigio(0))->isDACLocal(dacName)) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
+    if(static_cast<ReadoutChip*>(pBoard->getFirstObject()->getFirstObject()->getFirstObject())->isDACLocal(dacName)) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
     else
     {
         setSameGlobalDacBeBoard(pBoard, dacName, dacValue);

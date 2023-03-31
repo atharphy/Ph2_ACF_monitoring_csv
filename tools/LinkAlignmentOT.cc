@@ -62,23 +62,23 @@ void LinkAlignmentOT::Initialise()
     ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, fLpGBTSamplingDelay);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cBeSamplingDelay = fBeSamplingDelay.topoGigio(cBoard->getIndex());
-        auto& cBeBitSlip       = fBeBitSlip.topoGigio(cBoard->getIndex());
-        auto& cLinkSampling    = fLpGBTSamplingDelay.topoGigio(cBoard->getIndex());
+        auto& cBeSamplingDelay = fBeSamplingDelay.getObject(cBoard->getId());
+        auto& cBeBitSlip       = fBeBitSlip.getObject(cBoard->getId());
+        auto& cLinkSampling    = fLpGBTSamplingDelay.getObject(cBoard->getId());
 
         for(auto cOpticalGroup: *cBoard)
         {
-            auto&  cBeSamplingDelayOG = cBeSamplingDelay->topoGigio(cOpticalGroup->getIndex());
-            auto&  cBeBitSlipOG       = cBeBitSlip->topoGigio(cOpticalGroup->getIndex());
-            auto&  cLinkDelayOG       = cLinkSampling->topoGigio(cOpticalGroup->getIndex());
+            auto&  cBeSamplingDelayOG = cBeSamplingDelay->getObject(cOpticalGroup->getId());
+            auto&  cBeBitSlipOG       = cBeBitSlip->getObject(cOpticalGroup->getId());
+            auto&  cLinkDelayOG       = cLinkSampling->getObject(cOpticalGroup->getId());
             size_t cNlines            = (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cBeSamplingDelayHybrd = cBeSamplingDelayOG->topoGigio(cHybrid->getIndex());
-                auto& cBeBitSlipHybrd       = cBeBitSlipOG->topoGigio(cHybrid->getIndex());
+                auto& cBeSamplingDelayHybrd = cBeSamplingDelayOG->getObject(cHybrid->getId());
+                auto& cBeBitSlipHybrd       = cBeBitSlipOG->getObject(cHybrid->getId());
                 auto& cThisBeSamplingDelay  = cBeSamplingDelayHybrd->getSummary<std::vector<uint8_t>>();
                 auto& cThisBeBitSlip        = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
-                auto& cLinkDelay            = cLinkDelayOG->topoGigio(cHybrid->getIndex())->getSummary<uint8_t>();
+                auto& cLinkDelay            = cLinkDelayOG->getObject(cHybrid->getId())->getSummary<uint8_t>();
                 cLinkDelay                  = 0;
                 for(size_t cLineId = 0; cLineId < cNlines; cLineId++)
                 {
@@ -164,7 +164,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
 
-        auto& cLinkSampling = fLpGBTSamplingDelay.topoGigio((*cBoardIter)->getIndex())->topoGigio(pOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->getSummary<uint8_t>();
+        auto& cLinkSampling = fLpGBTSamplingDelay.getObject((*cBoardIter)->getId())->getObject(pOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<uint8_t>();
         cLinkSampling       = cMode;
     }
     return cAligned;
@@ -267,8 +267,8 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
     cAlignerInterface->InitializeAlignerObject();
     LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::WordAlignBEdata after debug interface " << RESET;
 
-    auto& cBeBitSlip   = fBeBitSlip.topoGigio((*cBoardIter)->getIndex());
-    auto& cBeBitSlipOG = cBeBitSlip->topoGigio(pOpticalGroup->getIndex());
+    auto& cBeBitSlip   = fBeBitSlip.getObject((*cBoardIter)->getId());
+    auto& cBeBitSlipOG = cBeBitSlip->getObject(pOpticalGroup->getId());
 
     // configure CICs to output alignment pattern on L1 lines
     std::vector<uint8_t> cFeEnableRegs(0);
@@ -290,7 +290,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
     {
         for(auto cHybrid: *pOpticalGroup)
         {
-            auto& cBeBitSlipHybrd = cBeBitSlipOG->topoGigio(cHybrid->getIndex());
+            auto& cBeBitSlipHybrd = cBeBitSlipOG->getObject(cHybrid->getId());
             auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
 
             LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
@@ -334,7 +334,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
     // check for 0 bit slips
     for(auto cHybrid: *pOpticalGroup)
     {
-        auto&                cBeBitSlipHybrd = cBeBitSlipOG->topoGigio(cHybrid->getIndex());
+        auto&                cBeBitSlipHybrd = cBeBitSlipOG->getObject(cHybrid->getId());
         auto&                cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
         std::vector<uint8_t> cBitSlipHist(15, 0);
         for(auto cItem: cThisBeBitSlip) cBitSlipHist[cItem]++;
@@ -421,8 +421,8 @@ bool LinkAlignmentOT::PhaseAlignBEdata(const OpticalGroup* pOpticalGroup)
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
 
-    auto& cBeSamplingDelay   = fBeSamplingDelay.topoGigio((*cBoardIter)->getIndex());
-    auto& cBeSamplingDelayOG = cBeSamplingDelay->topoGigio(pOpticalGroup->getIndex());
+    auto& cBeSamplingDelay   = fBeSamplingDelay.getObject((*cBoardIter)->getId());
+    auto& cBeSamplingDelayOG = cBeSamplingDelay->getObject(pOpticalGroup->getId());
 
     // configure CICs to output alignment pattern on L1 lines
     std::vector<uint8_t> cFeEnableRegs(0);
@@ -444,7 +444,7 @@ bool LinkAlignmentOT::PhaseAlignBEdata(const OpticalGroup* pOpticalGroup)
     {
         for(auto cHybrid: *pOpticalGroup)
         {
-            auto& cBeSamplingDelayHybrd = cBeSamplingDelayOG->topoGigio(cHybrid->getIndex());
+            auto& cBeSamplingDelayHybrd = cBeSamplingDelayOG->getObject(cHybrid->getId());
             auto& cThisBeSamplingDelay  = cBeSamplingDelayHybrd->getSummary<std::vector<uint8_t>>();
 
             if(cLineId > 0)
@@ -742,8 +742,8 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
     cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(*cBoardIter, cVecReg);
 
-    auto& cBeBitSlip   = fBeBitSlip.topoGigio((*cBoardIter)->getIndex());
-    auto& cBeBitSlipOG = cBeBitSlip->topoGigio(pOpticalGroup->getIndex());
+    auto& cBeBitSlip   = fBeBitSlip.getObject((*cBoardIter)->getId());
+    auto& cBeBitSlipOG = cBeBitSlip->getObject(pOpticalGroup->getId());
 
     bool cAllowZeroBitslip = true;
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
@@ -762,7 +762,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
             continue;
         }
 
-        auto& cBeBitSlipHybrd = cBeBitSlipOG->topoGigio(cHybrid->getIndex());
+        auto& cBeBitSlipHybrd = cBeBitSlipOG->getObject(cHybrid->getId());
         auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
 
         int     cChipId = cCic->getId();
@@ -1257,7 +1257,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
         {
             for(auto cHybrid: *pOpticalGroup)
             {
-                if(cHybrid->getIndex() > 0) continue;
+                if(cHybrid->getId() > 0) continue;
 
                 auto cBx = (int)cEvent->BxId(cHybrid->getId());
                 if(cBxIds.size() > 0)

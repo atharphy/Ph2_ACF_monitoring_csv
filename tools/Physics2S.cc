@@ -204,14 +204,14 @@ void Physics2S::display()
 //     const std::vector<Event*>& events = SystemController::GetEvents();
 //     for(const auto& event: events)
 // 	{
-// 		for(const auto cOpticalGroup: *f2SDataContainer.topoGigio(cBoard->getIndex()))
+// 		for(const auto cOpticalGroup: *f2SDataContainer.getObject(cBoard->getId()))
 // 		{
 // 		    for(const auto cHybrid: *cOpticalGroup)
 // 			{
 // 		        for(const auto cChip: *cHybrid)
 // 				{
 
-//     				auto curchip = cBoard->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex());;
+//     				auto curchip = cBoard->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());;
 //                     if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
 
 // 					auto data2S = cChip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
@@ -236,11 +236,11 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
 
     for(auto event: eventList)
     {
-        event->fillDataContainer(fOccupancyContainer.topoGigio(cBoard->getIndex()), allChannelGroup);
+        event->fillDataContainer(fOccupancyContainer.getObject(cBoard->getId()), allChannelGroup);
         // ###################
         // # Fill containers #
         // ###################
-        for(const auto cOpticalGroup: *fStubContainer.topoGigio(cBoard->getIndex()))
+        for(const auto cOpticalGroup: *fStubContainer.getObject(cBoard->getId()))
         {
             for(const auto cHybrid: *cOpticalGroup)
             {
@@ -280,7 +280,7 @@ void Physics2S::clearContainers(BoardContainer* theBoard)
     // ####################
     // # Clear containers #
     // ####################
-    for(const auto cOpticalGroup: *fOccupancyContainer.topoGigio(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fOccupancyContainer.getObject(theBoard->getId()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {
@@ -291,7 +291,7 @@ void Physics2S::clearContainers(BoardContainer* theBoard)
         }
     }
 
-    for(const auto cOpticalGroup: *fStubContainer.topoGigio(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fStubContainer.getObject(theBoard->getId()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {

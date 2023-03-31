@@ -1094,7 +1094,7 @@ int main(int argc, char* argv[])
         //                 cTool.ReadNEvents(cBoard, 42);
         //                 //const std::vector<Event*>& cEvents = cTool.GetEvents();
         //                 //LOG (INFO) << BOLDYELLOW << "Read-back " << +cEvents.size() << " events from the FC7 when 42 were requested" << RESET;
-        //                 //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->topoGigio(fBoardIndex)), fTestChannelGroup);
+        //                 //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->getObject(fBoardIndex)), fTestChannelGroup);
 
         //             //}
         //         // for( size_t cAttempt = 0 ; cAttempt < 1; cAttempt++ )

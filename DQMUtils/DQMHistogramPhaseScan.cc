@@ -109,11 +109,11 @@ void DQMHistogramPhaseScan::fillPhasePlots(uint16_t pLatency, uint16_t pPhase, D
                 for(auto chip: *hybrid)
                 {
                     TH2F* cTDCVsPhase =
-                        fTDCVsPhaseHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                        fTDCVsPhaseHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     TH2F* cLatencyVsPhase =
-                        fLatencyVsPhaseHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                    TH1F* cPhase = fPhaseHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                    // TH1F* cPhase   = fPhaseHistograms.topoGigio(board->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        fLatencyVsPhaseHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH1F* cPhase = fPhaseHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    // TH1F* cPhase   = fPhaseHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                     for(uint32_t i = 0; i < TDCBINS; i++)
                     {

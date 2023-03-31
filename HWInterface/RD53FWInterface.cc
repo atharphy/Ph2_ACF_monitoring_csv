@@ -165,7 +165,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
 
     if(enableDataMerging == true)
     {
-        for(const auto cChip: *pBoard->topoGigio(0)->topoGigio(0)) WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(static_cast<RD53*>(cChip)->getChipLane()) + "_id", cChip->getId() & 3);
+        for(const auto cChip: *pBoard->getFirstObject()->getFirstObject()) WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(static_cast<RD53*>(cChip)->getChipLane()) + "_id", cChip->getId() & 3);
         RegManager::WriteReg("user.ctrl_regs.Aurora_block.active_lane", primaryLane);
     }
 

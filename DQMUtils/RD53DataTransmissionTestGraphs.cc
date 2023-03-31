@@ -55,7 +55,7 @@ void DataTransmissionTestGraphs::fillTAP0scan(const DetectorDataContainer& TAP0s
                 {
                     if(cChip->getSummaryContainer<std::array<std::tuple<uint16_t, double, double, double>, 11>>() == nullptr) continue;
                     auto* TAP0scanGraph =
-                        TAP0scan.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<CanvasContainer<TGraphAsymmErrors>>().fTheHistogram;
+                        TAP0scan.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TGraphAsymmErrors>>().fTheHistogram;
 
                     for(auto i = 0u; i < 11u; i++) // set bin errors manually
                     {
@@ -83,7 +83,7 @@ void DataTransmissionTestGraphs::fillTAP0tgt(const DetectorDataContainer& TAP0tg
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
                     auto* TAP0tgtHist =
-                        TAP0tgt.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                        TAP0tgt.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
                     TAP0tgtHist->SetBinContent(TAP0tgtHist->GetBin(cChip->getSummary<uint16_t>()), 1);
                     TAP0tgtHist->SetBinError(TAP0tgtHist->GetBin(cChip->getSummary<uint16_t>()), 0);

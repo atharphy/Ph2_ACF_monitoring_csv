@@ -119,7 +119,7 @@ void EyeScanOptimizationHistograms::fillScanTAP0(const DetectorDataContainer& TA
                         if(cChip->getSummaryContainer<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>() == nullptr) continue;
 
                         auto* TAP0scanHist =
-                            TAP0scan[obs]->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                            TAP0scan[obs]->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
                         for(auto i = 0; i < TAP0scanHist->GetNbinsX(); i++)
                         {
@@ -144,7 +144,7 @@ void EyeScanOptimizationHistograms::fillScanTAP1(const DetectorDataContainer& TA
                         if(cChip->getSummaryContainer<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>() == nullptr) continue;
 
                         auto* TAP1scanHist =
-                            TAP1scan[obs]->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                            TAP1scan[obs]->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
                         for(auto i = 0; i < TAP1scanHist->GetNbinsX(); i++)
                         {
@@ -169,7 +169,7 @@ void EyeScanOptimizationHistograms::fillScanTAP2(const DetectorDataContainer& TA
                         if(cChip->getSummaryContainer<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>() == nullptr) continue;
 
                         auto* TAP2scanHist =
-                            TAP2scan[obs]->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                            TAP2scan[obs]->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
                         for(auto i = 0; i < TAP2scanHist->GetNbinsX(); i++)
                         {
@@ -196,7 +196,7 @@ void EyeScanOptimizationHistograms::fillScan3D(const DetectorDataContainer& the3
                         if(cChip->getSummaryContainer<GenericDataArray<TAPsize * TAPsize * TAPsize>>() == nullptr) continue;
 
                         auto* TAP3DscanHist =
-                            ThreeDscan[obs]->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<CanvasContainer<TH3F>>().fTheHistogram;
+                            ThreeDscan[obs]->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH3F>>().fTheHistogram;
 
                         for(auto i = 0; i < TAP3DscanHist->GetNbinsX(); i++)
                         {

@@ -151,7 +151,7 @@ void ClockDelay::run()
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg, latency - 1);
 
                     for(auto i = 0u; i < ClkDelaySize; i++)
-                        theOccContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<GenericDataArray<ClkDelaySize>>().data[i] = 0;
+                        theOccContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<ClkDelaySize>>().data[i] = 0;
                 }
 
     // ###############################
@@ -222,10 +222,10 @@ void ClockDelay::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current = round(theOccContainer.topoGigio(cBoard->getIndex())
-                                                 ->topoGigio(cOpticalGroup->getIndex())
-                                                 ->topoGigio(cHybrid->getIndex())
-                                                 ->topoGigio(cChip->getIndex())
+                        auto current = round(theOccContainer.getObject(cBoard->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
                                                  ->getSummary<GenericDataArray<ClkDelaySize>>()
                                                  .data[i] /
                                              RD53Shared::PRECISION) *
@@ -292,7 +292,7 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        theContainer->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<GenericDataArray<ClkDelaySize>>().data[i] =
+                        theContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<ClkDelaySize>>().data[i] =
                             cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
         // ##############################################

@@ -36,7 +36,7 @@ void SSASCurve::Initialise(void)
 }
 void SSASCurve::run(void)
 {
-    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->topoGigio(0)->topoGigio(0)->topoGigio(0)->topoGigio(0));
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
 
     cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
     cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
@@ -46,7 +46,7 @@ void SSASCurve::run(void)
 
     for(auto cBoard: theHitContainer)
     {
-        BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->topoGigio(cBoard->getIndex()));
+        BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->getObject(cBoard->getId()));
 
         if(SyncDebug)
             LOG(INFO) << BOLDBLUE << "SYNC DEBUG!" << RESET;
@@ -141,7 +141,7 @@ void SSASCurve::run(void)
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex()));
+                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
                             if(cWithSSA) { this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", thd); }
                             if(cWithMPA)
                             {
@@ -253,7 +253,7 @@ void SSASCurve::run(void)
                         for(auto& channel: *cChip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>()) // for on channel -
                                                                                                                      // begin
                         {
-                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->topoGigio(cBoard->getIndex())->topoGigio(opticalGroup->getIndex())->topoGigio(hybrid->getIndex())->topoGigio(cChip->getIndex()));
+                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoard->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(cChip->getId()));
                             rms += (channel.second - mean) * (channel.second - mean);
 
                             int32_t cr      = fReadoutChipInterface->ReadChipReg(theChip, prestr + std::to_string(istrip));

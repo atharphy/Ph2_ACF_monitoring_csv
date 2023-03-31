@@ -267,7 +267,7 @@ void DQMHistogramPedeNoise::process()
                     auto cType = cChip->getFrontEndType();
                     if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                     {
-                        cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
+                        cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 0);
                         TH1F* validationHistogram = fDetectorStripValidationHistograms.getObject(cBoard->getId())
                                                         ->getObject(cOpticalGroup->getId())
                                                         ->getObject(cHybrid->getId())
@@ -278,7 +278,7 @@ void DQMHistogramPedeNoise::process()
                         validationHistogram->DrawCopy();
                         gPad->SetLogy();
 
-                        cPedeNoise->cd(cChip->getIndex() + 1 + cHybrid->size() * 1);
+                        cPedeNoise->cd(cChip->getId() + 1 + cHybrid->size() * 1);
                         fDetectorChipStripPedestalHistograms.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
@@ -286,7 +286,7 @@ void DQMHistogramPedeNoise::process()
                             ->getSummary<HistContainer<TH1F>>()
                             .fTheHistogram->DrawCopy();
 
-                        cPedeNoise->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
+                        cPedeNoise->cd(cChip->getId() + 1 + cHybrid->size() * 0);
                         fDetectorChipStripNoiseHistograms.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
@@ -296,7 +296,7 @@ void DQMHistogramPedeNoise::process()
 
                         if(fWithCBC)
                         {
-                            cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 1);
+                            cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 1);
                             TH1F* cChannelStripNoiseEvenHistogram = fDetectorChannelStripNoiseEvenHistograms.getObject(cBoard->getId())
                                                                         ->getObject(cOpticalGroup->getId())
                                                                         ->getObject(cHybrid->getId())
@@ -338,7 +338,7 @@ void DQMHistogramPedeNoise::process()
                     }
                     else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                     {
-                        cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
+                        cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 0);
                         TH1F* validationHistogram = fDetectorPixelValidationHistograms.getObject(cBoard->getId())
                                                         ->getObject(cOpticalGroup->getId())
                                                         ->getObject(cHybrid->getId())
@@ -349,7 +349,7 @@ void DQMHistogramPedeNoise::process()
                         validationHistogram->DrawCopy();
                         gPad->SetLogy();
 
-                        cPedeNoise->cd(cChip->getIndex() + 1 + cHybrid->size() * 1);
+                        cPedeNoise->cd(cChip->getId() + 1 + cHybrid->size() * 1);
                         fDetectorChipPixelPedestalHistograms.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
@@ -357,7 +357,7 @@ void DQMHistogramPedeNoise::process()
                             ->getSummary<HistContainer<TH1F>>()
                             .fTheHistogram->DrawCopy();
 
-                        cPedeNoise->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
+                        cPedeNoise->cd(cChip->getId() + 1 + cHybrid->size() * 0);
                         fDetectorChipPixelNoiseHistograms.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
@@ -381,7 +381,7 @@ void DQMHistogramPedeNoise::process()
                             cChipStripSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
                             // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
                             delete cTmp;
-                            cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 2);
+                            cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);
                             cChipStripSCurveHist->SetStats(false);
                             cChipStripSCurveHist->DrawCopy("colz");
 
@@ -406,7 +406,7 @@ void DQMHistogramPedeNoise::process()
                             cChipPixelSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
                             // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
                             delete cTmp;
-                            cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 2);
+                            cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);
                             cChipPixelSCurveHist->SetStats(false);
                             cChipPixelSCurveHist->DrawCopy("colz");
 

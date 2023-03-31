@@ -153,8 +153,8 @@ void Eudaq2Producer::DoConfigure()
     uint8_t cTLUTriggerIdDelay = std::stoi(cEudaqConf->Get("TLUTriggerIdDelay", "2"));
 
     // Check if Handshake mode is enabled and get trigger multiplicity value
-    this->fBeBoardInterface->WriteBoardReg(fDetectorContainer->topoGigio(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", std::stoi(cEudaqConf->Get("TriggerMultiplicity", "0")));
-    fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->topoGigio(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    this->fBeBoardInterface->WriteBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", std::stoi(cEudaqConf->Get("TriggerMultiplicity", "0")));
+    fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
 
     // check if first event needs to be skipped (was necessary at several beam tests at DESY to get correlations)
@@ -201,7 +201,7 @@ void Eudaq2Producer::DoStartRun()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cRegister = fChipThreshContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
+                    auto& cRegister = fChipThreshContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                     // Fill chip threshold with current value
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         cRegister = cChip->getReg("VCth2") << 8 | cChip->getReg("VCth1");
@@ -255,8 +255,8 @@ void Eudaq2Producer::DoStartRun()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        auto& cRegister = fChipThreshContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
-                        LOG(INFO) << "Set Threshold on FE" << cHybrid->getIndex() << " Chip" << cChip->getIndex() << " to " << int(cRegister) + fRelativeThreshold << RESET;
+                        auto& cRegister = fChipThreshContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                        LOG(INFO) << "Set Threshold on FE" << cHybrid->getId() << " Chip" << cChip->getId() << " to " << int(cRegister) + fRelativeThreshold << RESET;
                         this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", int(cRegister) + fRelativeThreshold);
                     }
                 }
@@ -312,7 +312,7 @@ void Eudaq2Producer::DoStartRun()
     fPathToRawPh2ACF = cEudaqConf->Get("RawDataDirectory", "/tmp/") + "Run_" + std::to_string(cRunNumber) + ".raw";
     LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Writing Raw Ph2_ACF data to " << fPathToRawPh2ACF << RESET;
     // Prepare Ph2_ACF Raw data and SLink data file header information
-    BeBoard* cBoard = static_cast<BeBoard*>(fDetectorContainer->topoGigio(0));
+    BeBoard* cBoard = static_cast<BeBoard*>(fDetectorContainer->getFirstObject());
     uint32_t cBeId  = cBoard->getId();
     uint32_t cNChip = 0;
     // FIXME this is hard coded now .. should figure out how to calculate this
@@ -414,8 +414,8 @@ void Eudaq2Producer::DoStopRun()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cRegister = fChipThreshContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>();
-                    LOG(INFO) << "Reset Threshold on FE" << cHybrid->getIndex() << " Chip" << cChip->getIndex() << " to " << int(cRegister) << RESET;
+                    auto& cRegister = fChipThreshContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                    LOG(INFO) << "Reset Threshold on FE" << cHybrid->getId() << " Chip" << cChip->getId() << " to " << int(cRegister) << RESET;
                     this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", int(cRegister));
                 }
             }

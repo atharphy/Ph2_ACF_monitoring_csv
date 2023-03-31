@@ -1312,7 +1312,7 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
             cNchips += cHybridData->size();
             for(auto cChipData: *cHybridData) // for on chip - begin
             {
-                ReadoutChip* cChip = static_cast<ReadoutChip*>(fDetectorContainer->topoGigio(pBoard->getIndex())->topoGigio(cOpticalGroupData->getIndex())->topoGigio(cHybridData->getIndex())->topoGigio(cChipData->getIndex()));
+                ReadoutChip* cChip = static_cast<ReadoutChip*>(fDetectorContainer->getObject(pBoard->getId())->getObject(cOpticalGroupData->getId())->getObject(cHybridData->getId())->getObject(cChipData->getId()));
                 auto         cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                 // set threshold a little bit lower than 90% level
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
@@ -1399,8 +1399,8 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
                     }
                     else
                         LOG(INFO) << BOLDGREEN << "Event number " << +event_loop
-                                  << " is not \'empty\'. Occupancy is: " << ((float)(cTotalCountInjectedChnls * 100) / (fEventsPerPoint * 6 * cHybrid->topoGigio(0)->size())) << "%." << RESET;
-                    LOG(DEBUG) << fEventsPerPoint * 6 * cHybrid->topoGigio(0)->size() << RESET;
+                                  << " is not \'empty\'. Occupancy is: " << ((float)(cTotalCountInjectedChnls * 100) / (fEventsPerPoint * 6 * cHybrid->getFirstObject()->size())) << "%." << RESET;
+                    LOG(DEBUG) << fEventsPerPoint * 6 * cHybrid->getFirstObject()->size() << RESET;
                     LOG(DEBUG) << cTotalCountInjectedChnls << RESET;
                     event_loop++;
                 } // hybrid

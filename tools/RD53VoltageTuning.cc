@@ -233,8 +233,8 @@ void VoltageTuning::run()
                         LOG(INFO) << BOLDBLUE << "\t--> Final VDDD reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDD << BOLDBLUE << " V" << RESET;
                         LOG(INFO) << BOLDBLUE << "\t--> Final VDDA reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDA << BOLDBLUE << " V" << RESET;
 
-                        theDigContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() = vdddNewSetting;
-                        theAnaContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() = vddaNewSetting;
+                        theDigContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = vdddNewSetting;
+                        theAnaContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = vddaNewSetting;
                     }
 
         if((doRepeatDig == false) && (doRepeatAna == false))
@@ -354,9 +354,9 @@ void VoltageTuning::analyze()
                 for(const auto cChip: *cHybrid)
                     LOG(INFO) << GREEN << "VDDD and VDDA for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET << GREEN << "] are: VDDD = " << BOLDYELLOW
-                              << theDigContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() << RESET << GREEN
+                              << theDigContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET << GREEN
                               << ", VDDA = " << BOLDYELLOW
-                              << theAnaContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                              << theAnaContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET;
 }
 
 void VoltageTuning::fillHisto()

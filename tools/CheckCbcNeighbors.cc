@@ -69,7 +69,7 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
                             LOG(INFO) << RED << "FAILED hybrid " << +cHybrid->getId() << " chip1 " << +cChip1->getId() << " chip2 " << +cChip2->getId() << std::endl << RESET;
                         else
                             LOG(INFO) << GREEN << "PASSED hybrid " << +cHybrid->getId() << " chip1 " << +cChip1->getId() << " chip2 " << +cChip2->getId() << std::endl << RESET;
-                        // theStubContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip1->getIndex())->getSummary<bool>() = result;
+                        // theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip1->getId())->getSummary<bool>() = result;
 
                         //-------------------------------------
                         // check stubs from 2->1 -- all of these will be read out as if they are on chip2

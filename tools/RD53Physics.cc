@@ -235,7 +235,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
-    const auto   cBoard    = theOccContainer.topoGigio(theBoard.getIndex());
+    const auto   cBoard    = theOccContainer.getObject(theBoard.getId());
 
     // ###################
     // # Clear container #
@@ -275,10 +275,10 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                     if(deltaBCID >= int(frontEnd->maxBCIDvalue))
                         LOG(DEBUG) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                     else
-                        theBCIDContainer.topoGigio(cBoard->getIndex())
-                            ->topoGigio(cOpticalGroup->getIndex())
-                            ->topoGigio(cHybrid->getIndex())
-                            ->topoGigio(cChip->getIndex())
+                        theBCIDContainer.getObject(cBoard->getId())
+                            ->getObject(cOpticalGroup->getId())
+                            ->getObject(cHybrid->getId())
+                            ->getObject(cChip->getId())
                             ->getSummary<GenericDataArray<BCIDsize>>()
                             .data[deltaBCID]++;
                 }
@@ -290,10 +290,10 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                     if(deltaTrgID >= int(frontEnd->maxTRIGIDvalue))
                         LOG(DEBUG) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                     else
-                        theTrgIDContainer.topoGigio(cBoard->getIndex())
-                            ->topoGigio(cOpticalGroup->getIndex())
-                            ->topoGigio(cHybrid->getIndex())
-                            ->topoGigio(cChip->getIndex())
+                        theTrgIDContainer.getObject(cBoard->getId())
+                            ->getObject(cOpticalGroup->getId())
+                            ->getObject(cHybrid->getId())
+                            ->getObject(cChip->getId())
                             ->getSummary<GenericDataArray<TrgIDsize>>()
                             .data[deltaTrgID]++;
                 }
@@ -315,7 +315,7 @@ void Physics::clearContainers(BeBoard& theBoard)
 
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
-    const auto   cBoard    = theOccContainer.topoGigio(theBoard.getIndex());
+    const auto   cBoard    = theOccContainer.getObject(theBoard.getId());
 
     // ####################
     // # Clear containers #
@@ -325,8 +325,8 @@ void Physics::clearContainers(BeBoard& theBoard)
             for(const auto cChip: *cHybrid)
             {
                 for(auto i = 0u; i < BCIDsize; i++)
-                    theBCIDContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
+                    theBCIDContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
                 for(auto i = 0u; i < TrgIDsize; i++)
-                    theTrgIDContainer.topoGigio(cBoard->getIndex())->topoGigio(cOpticalGroup->getIndex())->topoGigio(cHybrid->getIndex())->topoGigio(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
+                    theTrgIDContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
             }
 }
