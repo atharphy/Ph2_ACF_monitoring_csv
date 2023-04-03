@@ -55,7 +55,7 @@ void killProcessFunction(Tool* theTool)
 
 int main(int argc, char* argv[])
 {
-#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -247,9 +247,6 @@ int main(int argc, char* argv[])
     std::string cResultfile = "Hybrid";
     // Timer t;
 
-    // Choose USB interface by Dev and Bus, actually (only) works because of (evil) global variables in the tcusb
-    // ¯\_(ツ)_/¯
-    if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_2SSEH cTC_2SSEH(cUsbBus, cUsbDev); }
     if(cGui)
     {
         // Initialize gui communication with named pipe
@@ -284,6 +281,10 @@ int main(int argc, char* argv[])
 
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
+    // Choose USB interface by Dev and Bus, actually (only) works because of (evil) global variables in the tcusb
+    // ¯\_(ツ)_/¯
+    if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_2SSEH cTC_2SSEH(cUsbBus, cUsbDev); }
+    cSEHTester.InitialiseTestCard(true);
 
     if(cmd.foundOption("measure-input-iv"))
     {

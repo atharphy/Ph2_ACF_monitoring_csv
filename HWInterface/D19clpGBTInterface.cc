@@ -84,9 +84,9 @@ void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
     if(pOptical)
     {
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
-#if defined(__TC_USB__) && defined(__ROH_USB__)
+#if defined(__TC_USB__)
         LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
-        if(pToggleTC && fExternalController != nullptr) fExternalController->getInterface().toggle_SCI2C();
+        if(pToggleTC && fTC_PSROH != nullptr) fTC_PSROH->toggle_SCI2C();
 #endif
         fOptical = true;
     }
