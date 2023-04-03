@@ -55,9 +55,9 @@ void killProcessFunction(Tool* theTool)
 
 int main(int argc, char* argv[])
 {
-#ifdef(__TCUSB__)
+#ifdef __TCUSB__
 trival error 
-#ifdef(__USE_ROOT__)
+#ifdef __USE_ROOT__
     //trival error
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
