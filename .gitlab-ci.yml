@@ -156,7 +156,7 @@ build:StandAlone_wEUDAQ_al8:
     entrypoint: ["/bin/sh","-c"]
 
 # Compile with TC_USB library
-build:StandAlone_wTC_USB_SEH_al8:
+build:StandAlone_wTC_USB_al8:
   extends: build:StandAlone_wTC_USB_c7
   stage: build_al8
   image:
