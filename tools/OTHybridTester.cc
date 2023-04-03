@@ -563,11 +563,11 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
                 float mean          = sum / cADCValueVect.size();
-                float result        = (mean - cOffset * (1 - cGain / 2.)) / cGain / 512.;
+                float result        = (mean - cOffset * (1 - cGain / 2.)) / cGain / 512.; // ADC master formula
                 float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - result);
                 fillSummaryTree(cADCsMapIterator->first.c_str(), result);
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
-                if(cDifference_V > 0.1)
+                if(cDifference_V > fGradingThreshold)
                 {
                     LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << result << " V, nominal value is "
                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
@@ -647,14 +647,14 @@ bool OTHybridTester::LpGBTTestResetLines()
             {
                 float cDifference_mV = 0;
                 fTC_2SSEH->read_reset(cMapIterator->second, cMeasurement);
-                cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
+                cDifference_mV = std::fabs((cLevel.second * fNominalOutputbpol2v5) - cMeasurement) * 1000.; // 1300
                 fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
-                cStatus = cStatus && (cDifference_mV <= 100);
+                cStatus = cStatus && (cDifference_mV <= fGradingThreshold * 1000);
 
                 cValid = cValid && cStatus;
                 // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);
                 // cValues.push_back(cMeasurement);
-                if(cDifference_mV > 200)
+                if(cDifference_mV > fGradingThreshold * 1000)
                 {
                     LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
                     fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 0);
@@ -680,14 +680,14 @@ bool OTHybridTester::LpGBTTestResetLines()
             {
                 float cDifference_mV = 0;
                 fTC_PSROH->adc_get(cMapIterator->second, cMeasurement);
-                cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
+                cDifference_mV = std::fabs((cLevel.second * fNominalOutputbpol2v5) - cMeasurement) * 1000.; // 1300
                 fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
-                cStatus = cStatus && (cDifference_mV <= 100);
+                cStatus = cStatus && (cDifference_mV <= fGradingThreshold * 1000);
 
                 cValid = cValid && cStatus;
                 // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);
                 // cValues.push_back(cMeasurement);
-                if(cDifference_mV > 200)
+                if(cDifference_mV > fGradingThreshold * 1000)
                 {
                     LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
                     fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 0);

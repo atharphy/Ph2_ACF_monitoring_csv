@@ -92,8 +92,9 @@ class OTHybridTester : public Tool
   private:
     float       getMeasurement(std::string name);
     std::string getVariableValue(std::string variable, std::string buffer);
-    bool        fIsSEH = false;
-
+    bool        fIsSEH                = false;
+    float       fNominalOutputbpol2v5 = 1.200; // [V] the GPIO high voltage depends on the bpol2v5 voltage
+    float       fGradingThreshold     = 0.1;   // [V]
   protected:
     TC_2SSEH* fTC_2SSEH = nullptr;
     TC_PSROH* fTC_PSROH = nullptr;
