@@ -164,8 +164,6 @@ if [[ $1 == "ci" ]]; then
     export CompileForShep=false
     export CompileWithEUDAQ=false
     export CompileWithTCUSB=false
-    export UseTCUSBforROH=false
-    export UseTCUSBforSEH=false
 fi
 
 echo "=== DONE: you can now run cmake ==="

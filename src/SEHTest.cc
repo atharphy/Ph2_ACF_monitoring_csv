@@ -55,8 +55,10 @@ void killProcessFunction(Tool* theTool)
 
 int main(int argc, char* argv[])
 {
-#if defined(__TCUSB__) && defined(__USE_ROOT__)
-    trival error
+#ifdef(__TCUSB__)
+trival error 
+#ifdef(__USE_ROOT__)
+    //trival error
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -751,6 +753,7 @@ int main(int argc, char* argv[])
     runCompleted = 1;
 
     if(!batchMode) cApp.Run();
+#endif
 #endif
     return 0;
 }
