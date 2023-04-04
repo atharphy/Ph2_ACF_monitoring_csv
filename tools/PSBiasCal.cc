@@ -166,7 +166,7 @@ void PSBiasCal::CalibrateADC()
     }
 }
 
-bool PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, float VBGexpected, float VREFexpected)
+float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, float VBGexpected, float VREFexpected)
 {
 
     bool cSuccess = false;
@@ -325,15 +325,16 @@ bool PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstr
 
 
     LOG(INFO) << BOLDRED << "New VBG val: " << (ADC_VBG*ADCLSB - gnd_corr) << " Expected val: " << VBGexpected << "+/-" << LSB*ADCLSB << RESET;
+    float VREFobtained = ADCMAX*ADCLSB - gnd_corr;
+    LOG(INFO) << BOLDRED << "New VREF val: " << VREFobtained << " Expected val: " << VREFexpected << "+/-" << LSB*ADCLSB << RESET;
 
 
-
-    return cSuccess;
+    return VREFobtained;
 }
 
 
 
-uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr, std::string dac_str)
+uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr, std::string dac_str, float VREFmeasured)
 {
     // float VREF_LPGBT        = 1.0;
     // float cConversionFactor = VREF_LPGBT / 1024.;
@@ -346,7 +347,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     if(cChip->getFrontEndType() == FrontEndType::MPA2) { ADCLSB = (static_cast<MPA2Interface*>(fReadoutChipInterface)->calculateADCLSB(cChip)); }
     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
     {
-        ADCLSB = (static_cast<SSA2Interface*>(fReadoutChipInterface)->CalculateADCLSB(cChip));
+        ADCLSB = (static_cast<SSA2Interface*>(fReadoutChipInterface)->CalculateADCLSB(cChip, VREFmeasured));
     }
     else
     {
@@ -636,7 +637,7 @@ void PSBiasCal::CalibrateBias()
                 {
                     std::string dac_str = "ADC3";
                     if(cHybrid->getId() == 1) dac_str = "ADC0";
-
+                    float VREFmeasured = SSA2_VREF_EXPECTED;
                     float gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
                     if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
@@ -645,7 +646,7 @@ void PSBiasCal::CalibrateBias()
 
                         LOG(INFO) << BOLDMAGENTA << " Calibrate VREF "<< RESET;
 
-                        CalibrateVREF(cChip,"VBG","ADC_VREF",SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED);
+                        VREFmeasured = CalibrateVREF(cChip,"VBG","ADC_VREF",SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED);
 
 
 
@@ -654,7 +655,7 @@ void PSBiasCal::CalibrateBias()
                         for(int ipoint = 0; ipoint <= 5; ipoint++)
                         {
                             LOG(INFO) << BOLDRED << "SSA point " << ipoint << RESET;
-                            LOG(DEBUG) << BOLDRED << CalibrateChipBias(cChip, cOpticalReadout->flpGBT, ipoint, 0, DAC_val[ipoint], exp_val[ipoint], gndval, dac_str) << RESET;
+                            LOG(DEBUG) << BOLDRED << CalibrateChipBias(cChip, cOpticalReadout->flpGBT, ipoint, 0, DAC_val[ipoint], exp_val[ipoint], gndval, dac_str, VREFmeasured) << RESET;
                         }
                         // LOG(DEBUG) << BOLDRED << " done with above SSA" << RESET;
                     }
