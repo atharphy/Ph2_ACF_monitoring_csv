@@ -175,9 +175,7 @@ uint8_t D19clpGBTSlowControlWorkerInterface::GetTryCounter(uint8_t pFunctionId)
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint8_t                               cCntr = 255;
     if((pFunctionId == LpGBTSlowControlWorker::READ_IC) || (pFunctionId == LpGBTSlowControlWorker::WRITE_IC))
-    {
-        cCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.ic_tool");
-    }
+    { cCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.ic_tool"); }
     else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C) || (pFunctionId == LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C))
     {
         cCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.i2c_tool");

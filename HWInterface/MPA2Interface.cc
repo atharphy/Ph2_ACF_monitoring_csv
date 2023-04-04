@@ -108,7 +108,10 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     {
         return this->readPeri(pMPA2, pRegNode);
     }
-    else if(pRegNode == "Threshold") { return this->ReadChipReg(pMPA2, "ThDAC0"); }
+    else if(pRegNode == "Threshold")
+    {
+        return this->ReadChipReg(pMPA2, "ThDAC0");
+    }
     else if(pRegNode == "ADC_output")
     {
         // std::cout<<(this->ReadChipReg(pMPA2, "ADC_output_LSB")&0xFF)<<","<<((this->ReadChipReg(pMPA2, "ADC_output_MSB")&0xF)<<8)<<std::endl;
@@ -308,7 +311,10 @@ bool MPA2Interface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t p
             cRegItem.fValue     = pValue;
             pChip->appendToRegMap(cReg, cRegItem);
         }
-        else { pChip->getRegMap().find(cReg)->second.fValue = pValue; }
+        else
+        {
+            pChip->getRegMap().find(cReg)->second.fValue = pValue;
+        }
     }
 
     // if global register don't readback
@@ -504,8 +510,14 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         this->Set_threshold(pMPA2, pValue);
         return true;
     }
-    else if(pRegName == "Offsets") { return this->WriteChipSingleReg(pMPA2, "TrimDAC_ALL", pValue, false); }
-    else if(pRegName == "ReadoutMode") { return this->configPeri(pMPA2, "ReadoutMode", pValue); }
+    else if(pRegName == "Offsets")
+    {
+        return this->WriteChipSingleReg(pMPA2, "TrimDAC_ALL", pValue, false);
+    }
+    else if(pRegName == "ReadoutMode")
+    {
+        return this->configPeri(pMPA2, "ReadoutMode", pValue);
+    }
 
     else if(pRegName == "RetimePix")
     {
@@ -648,7 +660,10 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
 
         return MPA2Interface::WriteReg(pMPA2, cRegAddress, cValue, pVerify);
     }
-    else if(PERI_CONFIG_TABLE.find(pRegName) != PERI_CONFIG_TABLE.end()) { return this->configPeri(pMPA2, pRegName, pValue); }
+    else if(PERI_CONFIG_TABLE.find(pRegName) != PERI_CONFIG_TABLE.end())
+    {
+        return this->configPeri(pMPA2, pRegName, pValue);
+    }
     else if(pRegName == "TriggerLatency")
     {
         uint8_t cBitShift = 0;
@@ -746,7 +761,10 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
             cPixelNumber = std::stoi(pRegName.substr(pRegName.find("P") + 1, pRegName.length()));
             cReadValue   = this->readPixel(pMPA2, "ENFLAGS", cPixelNumber);
         }
-        else { cReadValue = this->ReadChipReg(pMPA2, "ENFLAGS_ALL"); }
+        else
+        {
+            cReadValue = this->ReadChipReg(pMPA2, "ENFLAGS_ALL");
+        }
         auto cRegValue = (cReadValue & cRegMask) | cValue;
         LOG(DEBUG) << BOLDBLUE << "Register mask " << pRegName << " 0x" << std::hex << +cRegMask << std::dec << " readback value is 0x" << std::hex << +cReadValue << std::dec << " will write value 0x"
                    << std::hex << +cValue << std::dec << " register value is 0x" << std::hex << +cRegValue << std::dec << RESET;

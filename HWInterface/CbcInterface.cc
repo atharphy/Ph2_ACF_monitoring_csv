@@ -720,7 +720,10 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         uint16_t cLatency        = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
         return cLatency;
     }
-    else { return ReadChipSingleReg(pCbc, pRegNode) & 0xFF; }
+    else
+    {
+        return ReadChipSingleReg(pCbc, pRegNode) & 0xFF;
+    }
 }
 
 void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)

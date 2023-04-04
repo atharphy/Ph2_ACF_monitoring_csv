@@ -37,7 +37,10 @@ void OTCMNoise::SetThresholds()
                     cVisitor.setThreshold(fManualVcth);
                     static_cast<OuterTrackerHybrid*>(cHybrid)->accept(cVisitor);
                 }
-                else { LOG(INFO) << BOLDCYAN << "Not resetting threshold! Running with values in config files." << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDCYAN << "Not resetting threshold! Running with values in config files." << RESET;
+                }
             }
         }
     }

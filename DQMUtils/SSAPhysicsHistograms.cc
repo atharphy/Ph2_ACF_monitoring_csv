@@ -51,9 +51,7 @@ void SSAPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContai
 
                     // Get channel data and fill the histogram
                     for(auto channel: *cChip->getChannelContainer<Occupancy>()) // for on channel - begin
-                    {
-                        chipOccupancy->Fill(channelBin++, channel.fOccupancy);
-                    }
+                    { chipOccupancy->Fill(channelBin++, channel.fOccupancy); }
                 }
 }
 

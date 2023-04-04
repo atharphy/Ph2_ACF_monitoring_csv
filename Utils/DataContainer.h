@@ -432,7 +432,7 @@ class DataContainer
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive& this->id_;
+        theArchive & this->id_;
         theArchive& boost::serialization::base_object<BaseDataContainer>(*this);
         theArchive& boost::serialization::base_object<Container<T>>(*this);
     }

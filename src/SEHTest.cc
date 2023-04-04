@@ -364,7 +364,10 @@ int main(int argc, char* argv[])
         cSEHTester.readTestParameters(cTestParameterFileName);
         LOG(INFO) << BOLDYELLOW << "You are using the parameters from " << cTestParameterFileName << " if provided there" << RESET;
     }
-    else { LOG(INFO) << BOLDYELLOW << "You are using the default parameter set stored in fDefaultParameters" << RESET; }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "You are using the default parameter set stored in fDefaultParameters" << RESET;
+    }
     /*******************/
     /*   TEST UPLINK   */
     /* E-links CIC_OUT */
@@ -402,7 +405,10 @@ int main(int argc, char* argv[])
             cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
 #endif
             if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
-            else { LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET; }
+            else
+            {
+                LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
+            }
         }
     }
     /****************************/
@@ -422,13 +428,19 @@ int main(int argc, char* argv[])
         cTool.fillSummaryTree("status_ResetTest", (cStatus) ? 1 : 0);
 #endif
         if(cStatus) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
-        else { LOG(INFO) << BOLDRED << "Reset test failed." << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+        }
         cStatus = cSEHTester.LpGBTTestGPILines();
 #ifdef __USE_ROOT__
         cTool.fillSummaryTree("status_PowerGoodTest", (cStatus) ? 1 : 0);
 #endif
         if(cStatus) { LOG(INFO) << BOLDGREEN << "Power Good test passed." << RESET; }
-        else { LOG(INFO) << BOLDRED << "Power Good test failed." << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Power Good test failed." << RESET;
+        }
     }
 
     /****************************/
@@ -471,7 +483,10 @@ int main(int argc, char* argv[])
 #endif
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
-        else { LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
+        }
     }
 
     /**********************************/
@@ -531,7 +546,10 @@ int main(int argc, char* argv[])
         bool cStatus = cSEHTester.LpGBTCheckClocks();
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "Clock test " << BOLDGREEN << " passed" << RESET;
-        else { LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET;
+        }
 #ifdef __USE_ROOT__
         cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
 #endif

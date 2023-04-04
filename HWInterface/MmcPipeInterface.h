@@ -37,7 +37,7 @@ class MmcPipeInterface : public uhal::Node
   public:
     // PUBLIC METHODS
     MmcPipeInterface(const uhal::Node&);
-    MmcPipeInterface(const MmcPipeInterface& mmc)            = default;
+    MmcPipeInterface(const MmcPipeInterface& mmc) = default;
     MmcPipeInterface& operator=(const MmcPipeInterface& mmc) = default;
     virtual ~MmcPipeInterface();
     using uhal::Node::operator=; // avoid overloading od Node assign operator

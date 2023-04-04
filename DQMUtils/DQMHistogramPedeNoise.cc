@@ -51,10 +51,12 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 
     std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA, FrontEndType::SSA2};
     std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA, FrontEndType::MPA2};
-    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
-    { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
-    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip)
-    { return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end()); };
+    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip) {
+        return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end());
+    };
+    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip) {
+        return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end());
+    };
 
     // find maximum number of channels
     std::vector<size_t> cNPixelChannels(0), cNStripChannels(0);
@@ -69,7 +71,10 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
                     auto cNChannels = theDetectorStructure.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->size();
                     auto cType      = cChip->getFrontEndType();
                     if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) { cNPixelChannels.push_back(cNChannels); }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    {
+                        cNPixelChannels.push_back(cNChannels);
+                    }
                 }
             }
         }
@@ -724,9 +729,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                             }
                         }
                         if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                        {
-                            cChannel2DPixelNoiseHistogram->SetBinContent(int(cChannelNumber % 120) + 1, int(cChannelNumber / 120) + 1, cNoise);
-                        }
+                        { cChannel2DPixelNoiseHistogram->SetBinContent(int(cChannelNumber % 120) + 1, int(cChannelNumber / 120) + 1, cNoise); }
                         ++cChannelNumber;
                     }
                 }
@@ -914,7 +917,10 @@ void DQMHistogramPedeNoise::fitSCurves()
                     auto     cType      = cChip->getFrontEndType();
                     uint32_t cNChannels = 0;
                     if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2) { cNChannels = fNStripChannels; }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) { cNChannels = fNPixelChannels; }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    {
+                        cNChannels = fNPixelChannels;
+                    }
 
                     for(uint32_t cChannel = 0; cChannel < cNChannels; cChannel++)
                     {

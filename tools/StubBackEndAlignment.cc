@@ -447,7 +447,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             auto cEventIter   = cEvents.begin() + cTriggerId;
             cNEventsMatched   = 0;
             size_t cAllEvents = 0;
-            do {
+            do
+            {
                 if(cEventIter >= cEvents.end()) break;
                 size_t cNHits = 0;
                 for(auto cOpticalReadout: *pBoard)

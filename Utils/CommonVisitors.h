@@ -373,7 +373,10 @@ struct LatencyVisitor : public HwDescriptionVisitor
                 cRegVec.emplace_back("L1-Latency_MSB", (0x0100 & fLatency) >> 8);
                 fInterface->WriteChipMultReg(&pCbc, cRegVec);
             }
-            else { fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB") | (fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB") << 8); }
+            else
+            {
+                fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB") | (fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB") << 8);
+            }
         }
 
         else if(pCbc.getFrontEndType() == FrontEndType::MPA)
@@ -386,7 +389,10 @@ struct LatencyVisitor : public HwDescriptionVisitor
                 cRegVec.emplace_back("L1Offset_2_ALL", (0x0100 & fLatency) >> 8);
                 fInterface->WriteChipMultReg(&pCbc, cRegVec, false);
             }
-            else { fLatency = fInterface->ReadChipReg(&pCbc, "L1Offset_1_R1") | (fInterface->ReadChipReg(&pCbc, "L1Offset_2_R1") << 8); }
+            else
+            {
+                fLatency = fInterface->ReadChipReg(&pCbc, "L1Offset_1_R1") | (fInterface->ReadChipReg(&pCbc, "L1Offset_2_R1") << 8);
+            }
         }
 
         else

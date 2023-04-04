@@ -153,7 +153,10 @@ class D19clpGBTInterface : public lpGBTInterface
         auto cIterator = fRxChannelMap.find(pGroup);
         if(cIterator != fRxChannelMap.end())
             return cIterator->second;
-        else { return {}; }
+        else
+        {
+            return {};
+        }
     }
 
   private:

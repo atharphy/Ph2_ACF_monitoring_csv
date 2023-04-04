@@ -388,7 +388,10 @@ void PedestalEqualization::FindVplus()
                     {
                         auto cType = cChip->getFrontEndType();
                         if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2 || cType == FrontEndType::CBC3) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
-                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fPixelTargetVcth); }
+                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        {
+                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fPixelTargetVcth);
+                        }
                     }
                 }
             }
@@ -425,7 +428,10 @@ void PedestalEqualization::FindOffsets()
                     {
                         auto cType = cChip->getFrontEndType();
                         if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2 || cType == FrontEndType::CBC3) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
-                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fPixelTargetVcth); }
+                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        {
+                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fPixelTargetVcth);
+                        }
                     }
                 }
             }

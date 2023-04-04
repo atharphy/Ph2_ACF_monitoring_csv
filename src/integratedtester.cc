@@ -223,7 +223,8 @@ bool check_CurrentConsumption(Tool pTool, int pNCBCs = 2, std::string pHostname 
     HMP4040_currents    cCurrentsMeasured      = cMeasurement.second;
     int                 cNumTimes_limitReached = 0;
 
-    do {
+    do
+    {
         message           = "";
         bool limitReached = false;
 

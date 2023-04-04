@@ -345,7 +345,8 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     uint8_t cMaxIterations = (pWait_ms / 100);
     uint8_t cIteration     = 0;
     bool    cStop          = false;
-    do {
+    do
+    {
         // check status
         ChipRegItem cRegItem;
         cRegItem.fPage      = 0x00;

@@ -118,7 +118,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 }
 
                 size_t cLine = 0;
-                do {
+                do
+                {
                     cFWInterface->selectLink(cOpticalGroup->getId());
                     cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);
 
@@ -320,7 +321,10 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
                     cMasterSuccess &= cSuccess;
                 }
                 if(cMasterSuccess) { LOG(INFO) << BOLDGREEN << "I2C Master " << +cMasterId << " PASSED the Test Card Test" << RESET; }
-                else { LOG(INFO) << BOLDRED << "I2C Master " << +cMasterId << " FAILED the Test Card Test" << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDRED << "I2C Master " << +cMasterId << " FAILED the Test Card Test" << RESET;
+                }
                 fillSummaryTree(Form("i2cmaster%i", cMasterId), cMasterSuccess);
                 gettimeofday(&stop, NULL);
                 LOG(INFO) << BOLDBLUE << "Duration " << std::to_string((stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec) << RESET;
@@ -469,11 +473,11 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 #ifdef __SEH_USB__
 
     cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
-                            {"VMIN", "VMIN_Nominal"},
-                            {"TEMPP", "TEMPP_Nominal"},
-                            {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
-                            {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
-                            {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
+                {"VMIN", "VMIN_Nominal"},
+                {"TEMPP", "TEMPP_Nominal"},
+                {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
+                {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
+                {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
     cDefaultParameters   = &f2SSEHDefaultParameters;
     cADCNametoPinMapping = &f2SSEHADCInputMap;
 
@@ -517,7 +521,8 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 #elif __SEH_USB__
             flpGBTInterface->GetExternalController()->getInterface().set_AMUX(3500, 3500);
 #endif
-            do {
+            do
+            {
                 cADCValueVect.clear();
                 cADCNameString = cADCsMapIterator->first;
                 cADCHistogram->GetXaxis()->SetBinLabel(cBinCount, cADCsMapIterator->first.c_str());
@@ -610,7 +615,8 @@ bool OTHybridTester::LpGBTTestResetLines()
 #endif
         auto cMapIterator = cResetLines.begin();
         bool cStatus      = true;
-        do {
+        do
+        {
 #ifdef __ROH_USB__
             flpGBTInterface->GetExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
@@ -666,7 +672,10 @@ bool OTHybridTester::LpGBTTestGPILines()
                 cReadGPI = clpGBTInterface->ReadGPIO(cOpticalGroup->flpGBT, cMapIterator->second);
                 cValid   = cValid && cReadGPI;
                 if(!cReadGPI) { LOG(INFO) << BOLDRED << "GPIO connected to " << cMapIterator->first << " is low!" << RESET; }
-                else { LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDGREEN << "GPIO connected to " << cMapIterator->first << " is high!" << RESET;
+                }
                 fillSummaryTree(cMapIterator->first.c_str(), cReadGPI);
                 cMapIterator++;
             }
@@ -713,14 +722,13 @@ bool OTHybridTester::LpGBTTestVTRx()
             }
 
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
-            do {
+            do
+            {
                 cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cMapIterator->first);
                 cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
                 cSuccess       = cSuccess && cRecent && (cReadBackValue == cMapIterator->second);
                 if(cRecent && (cReadBackValue == cMapIterator->second))
-                {
-                    LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cReadBackValue << " ." << RESET;
-                }
+                { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cReadBackValue << " ." << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Error in VTRx+ register " << +(cMapIterator->first) << " ." << RESET;
@@ -775,7 +783,8 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
         auto cMapIterator = fFCMDLines.begin();
         LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
         res = true;
-        do {
+        do
+        {
             uint32_t cFCMDOutput = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second);
             LOG(INFO) << BOLDBLUE << "Scoped output on " << cMapIterator->first << ": " << std::bitset<32>(cFCMDOutput) << RESET;
 
@@ -938,7 +947,8 @@ bool OTHybridTester::LpGBTCheckClocks()
         LOG(INFO) << GREEN << "============================" << RESET;
         LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
 
-        do {
+        do
+        {
             cClkTestDone = (fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_test_done") == 1);
             while(!cClkTestDone)
             {
@@ -1027,7 +1037,10 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
         LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
         // throw std::runtime_error(std::string("Could not phase align-BE data in LinkAlignmentOT..."));
     }
-    else { LOG(INFO) << BOLDBLUE << "Could phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET; }
+    else
+    {
+        LOG(INFO) << BOLDBLUE << "Could phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
+    }
 
     cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
     return cLineStatus;

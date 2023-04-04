@@ -841,9 +841,7 @@ void RegisterTester::RegisterTest()
                                       << " sensitive registers." << RESET;
                         std::sort(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), customGreaterThanAddress);
                         for(auto cSensitiveRegister: cSensitiveRegisters)
-                        {
-                            LOG(INFO) << BOLDRED << "Sensitive register " << cSensitiveRegister.first << " on page " << +cSensitiveRegister.second.fPage << RESET;
-                        }
+                        { LOG(INFO) << BOLDRED << "Sensitive register " << cSensitiveRegister.first << " on page " << +cSensitiveRegister.second.fPage << RESET; }
                     } // chip
                 }     // hybrid
             }         // OG

@@ -235,7 +235,10 @@ void Tool::initMetadataAndFillInitialConditions()
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
     if(fBoardType == BoardType::D19C) { fDQMMetadata = new DQMMetadataOT(); }
-    else if(fBoardType == BoardType::RD53) { fDQMMetadata = new DQMMetadataIT(); }
+    else if(fBoardType == BoardType::RD53)
+    {
+        fDQMMetadata = new DQMMetadataIT();
+    }
     else
     {
         LOG(ERROR) << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Board type not defined!! Impossible to create DQM for metadata, aborting..." << std::endl;
@@ -292,7 +295,10 @@ void Tool::initMetadataAndFillInitialConditions()
 #endif
 
     if(fBoardType == BoardType::D19C) { fillOTMetadataInitialConditions(); }
-    else if(fBoardType == BoardType::RD53) { fillITMetadataInitialConditions(); }
+    else if(fBoardType == BoardType::RD53)
+    {
+        fillITMetadataInitialConditions();
+    }
 }
 
 void Tool::fillOTMetadataInitialConditions()
@@ -358,7 +364,10 @@ void Tool::fillMetadataFinalConditions()
 #endif
 
     if(fBoardType == BoardType::D19C) { fillOTMetadataFinalConditions(); }
-    else if(fBoardType == BoardType::RD53) { fillITMetadataFinalConditions(); }
+    else if(fBoardType == BoardType::RD53)
+    {
+        fillITMetadataFinalConditions();
+    }
 }
 
 void Tool::fillITMetadataFinalConditions() {}
@@ -918,7 +927,10 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
         LOG(INFO) << "OT Module GUI (GIPHT) result directory environmental variable set: " << std::getenv("GIPHT_RESULT_FOLDER");
         nDirname = std::getenv("GIPHT_RESULT_FOLDER");
     }
-    else { nDirname = pDirname; }
+    else
+    {
+        nDirname = pDirname;
+    }
     if(pDate) nDirname += currentDateTime();
 
     std::string cCommand = "mkdir -p " + nDirname;
@@ -1291,9 +1303,7 @@ std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vecto
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     // replace negative entries with 0s
-    if(pIgnoreNegative)
-        std::replace_if(
-            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
     pValues.erase(pValues.begin(), pValues.begin() + 1);
     return std::make_pair(cWeights, pValues);
@@ -1304,9 +1314,7 @@ std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<fl
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
-    if(pIgnoreNegative)
-        std::replace_if(
-            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     float cN            = static_cast<float>(cWeights.size() - std::count(cWeights.begin(), cWeights.end(), 0.));
     float cSumOfWeights = std::accumulate(cWeights.begin(), cWeights.end(), 0.);
     // Weighted sum of scan values to get pedestal
@@ -1407,9 +1415,7 @@ void Tool::scanDacDac(const std::string&                               dac1Name,
                       int32_t                                          numberOfEventsPerBurst)
 {
     for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    {
-        scanBeBoardDacDac(boardIndex, dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector, numberOfEventsPerBurst);
-    }
+    { scanBeBoardDacDac(boardIndex, dac1Name, dac1List, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector, numberOfEventsPerBurst); }
 
     return;
 }
@@ -1450,9 +1456,7 @@ void Tool::scanDac(const std::string&                  dacName,
                    int32_t                             numberOfEventsPerBurst)
 {
     for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    {
-        scanBeBoardDac(boardIndex, dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst);
-    }
+    { scanBeBoardDac(boardIndex, dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst); }
 }
 
 // bit wise scan
@@ -1730,9 +1734,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 void Tool::fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst, int32_t startVal, bool mask)
 {
     for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
-    {
-        fullScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst, startVal, mask);
-    }
+    { fullScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst, startVal, mask); }
 }
 
 // full scan per BeBoard. Returns untrimmed objects list (channels/chips)
@@ -1795,9 +1797,7 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
                             if(not currentDoneList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel))
-                            {
-                                currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) = threshToSet;
-                            }
+                            { currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) = threshToSet; }
                         }
                     }
                     else
@@ -2022,9 +2022,7 @@ void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint
                                                                   ->getSummary<Occupancy, Occupancy>()
                                                                   .fOccupancy -
                                                               0.5))
-                                {
-                                    currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() += 1;
-                                }
+                                { currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() += 1; }
                                 currentDoneList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 1;
                             }
                             else
@@ -2414,9 +2412,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     // }
 
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
-    {
-        numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
-    }
+    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;
 
     if(fNormalize)
@@ -2495,9 +2491,7 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
 
         doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
         if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
-        {
-            numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
-        }
+        { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
         for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
     }
 }
@@ -2579,7 +2573,10 @@ void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const 
 {
     // Assumption: 1 BeBoard has only 1 chip flavor
     if(static_cast<ReadoutChip*>(pBoard->at(0)->at(0)->at(0))->isDACLocal(dacName)) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
-    else { setSameGlobalDacBeBoard(pBoard, dacName, dacValue); }
+    else
+    {
+        setSameGlobalDacBeBoard(pBoard, dacName, dacValue);
+    }
 }
 
 void Tool::setSameDac(const std::string& dacName, const uint16_t dacValue)

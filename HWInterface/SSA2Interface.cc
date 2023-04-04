@@ -154,7 +154,10 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         cRegItem.fAddress = 0x600 + cChannel;
         cRegItems.push_back(cRegItem); // LSB
     }
-    else if(pRegNode == "ChipId") { return this->ReadChipId(pSSA2); }
+    else if(pRegNode == "ChipId")
+    {
+        return this->ReadChipId(pSSA2);
+    }
     else if(pRegNode == "Threshold")
     {
         LOG(INFO) << BOLDYELLOW << "Adding thrshld register to multi-reg read..." << RESET;
@@ -355,16 +358,31 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         cRegItem.fValue = (pValue << 2) | (1 << 0);
         return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
-    else if(pRegNameMod == "AmuxHigh") { return this->ConfigureAmux(pSSA2, "HighZ"); }
+    else if(pRegNameMod == "AmuxHigh")
+    {
+        return this->ConfigureAmux(pSSA2, "HighZ");
+    }
     // need to re-name threshold here..
     // else if(fAmuxMap.find(pRegNameMod) != fAmuxMap.end())
     // {
     //     return this->ConfigureAmux(pSSA2, pRegNameMod);
     // }
-    else if(pRegNameMod == "MonitorBandgap") { return this->ConfigureAmux(pSSA2, "Bandgap"); }
-    else if(pRegNameMod == "MonitorGround") { return this->ConfigureAmux(pSSA2, "GND"); }
-    else if(pRegNameMod == "ReadoutMode") { return this->WriteChipRegBits(pSSA2, "control_1", pValue, "mask_peri_D", 7); }
-    else if(pRegNameMod == "SamplingMode") { return this->WriteChipRegBits(pSSA2, "control_1", pValue << 5, "mask_strip", 0x60); }
+    else if(pRegNameMod == "MonitorBandgap")
+    {
+        return this->ConfigureAmux(pSSA2, "Bandgap");
+    }
+    else if(pRegNameMod == "MonitorGround")
+    {
+        return this->ConfigureAmux(pSSA2, "GND");
+    }
+    else if(pRegNameMod == "ReadoutMode")
+    {
+        return this->WriteChipRegBits(pSSA2, "control_1", pValue, "mask_peri_D", 7);
+    }
+    else if(pRegNameMod == "SamplingMode")
+    {
+        return this->WriteChipRegBits(pSSA2, "control_1", pValue << 5, "mask_strip", 0x60);
+    }
     else if(pRegNameMod == "TriggerLatency")
     {
         bool cSuccess = this->WriteChipRegBits(pSSA2, "control_3", pValue & 0xFF, "mask_peri_D", 0xFF);
@@ -638,8 +656,14 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         LOG(DEBUG) << BOLDYELLOW << "!!! Writing to " << pRegNameMod << "," << pValue << RESET;
         return this->WriteChipRegBits(pSSA2, "Bias_THDAC", pValue, "mask_peri_A", 0xFF);
     }
-    else if(pRegNameMod == "LateralRX_L_PhaseData") { return this->WriteChipRegBits(pSSA2, "LateralRX_sampling", pValue, "mask_peri_A", 0x07); }
-    else if(pRegNameMod == "LateralRX_R_PhaseData") { return this->WriteChipRegBits(pSSA2, "LateralRX_sampling", (pValue << 4), "mask_peri_A", (0x7 << 4)); }
+    else if(pRegNameMod == "LateralRX_L_PhaseData")
+    {
+        return this->WriteChipRegBits(pSSA2, "LateralRX_sampling", pValue, "mask_peri_A", 0x07);
+    }
+    else if(pRegNameMod == "LateralRX_R_PhaseData")
+    {
+        return this->WriteChipRegBits(pSSA2, "LateralRX_sampling", (pValue << 4), "mask_peri_A", (0x7 << 4));
+    }
     else
     {
         cRegItem        = cRegMap[pRegNameMod];

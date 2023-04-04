@@ -93,7 +93,8 @@ bool D19cTriggerInterface::Stop()
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
     auto cTriggerState = GetTriggerState();
-    do {
+    do
+    {
         LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Stop Trigger state is " << cTriggerState << RESET;
         WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
@@ -179,12 +180,14 @@ bool D19cTriggerInterface::SendNTriggers(uint32_t pNTriggers)
     size_t cAttempt         = 0;
     size_t cMaxAttempts     = 10;
     this->ResetTriggerFSM();
-    do {
+    do
+    {
         this->Start();
         auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
         auto cDuration      = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         auto cNTriggersSent = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do {
+        do
+        {
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cNTriggersSent   = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             cAllTriggersSent = (cNTriggersSent >= pNTriggers);
@@ -208,7 +211,8 @@ bool D19cTriggerInterface::WaitForNTriggers(uint32_t pNTriggers)
     uint32_t cNtriggersPrev = cNtriggers;
     size_t   cFoundSame     = 0;
     size_t   cCounter       = 0;
-    do {
+    do
+    {
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
         cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0;
@@ -232,7 +236,8 @@ bool D19cTriggerInterface::RunTriggerFSM()
     // check if trigger state machine is running
     if(cCheckRunningTime)
     {
-        do {
+        do
+        {
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cRunningTime = ReadReg("fc7_daq_stat.fast_command_block.running_time");
             if(cRunningTime == 0)

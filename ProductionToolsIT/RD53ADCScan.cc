@@ -77,9 +77,7 @@ void ADCScan::run(std::string configFile)
                             {
                                 if(((ADCcode[variable][input] > 0 && ADCcode[variable][input - 1] == 0) || (ADCcode[variable][input - 1] > 0 && ADCcode[variable][input] == 0)) &&
                                    fitStart[variable] == 0)
-                                {
-                                    fitStart[variable] = VMUXvolt[variable][input - 1];
-                                }
+                                { fitStart[variable] = VMUXvolt[variable][input - 1]; }
                                 if(((ADCcode[variable][input] == 4095 && ADCcode[variable][input - 1] < 4095) || (ADCcode[variable][input] < 4095 && ADCcode[variable][input - 1] == 4095)) &&
                                    fitEnd[variable] == 0)
                                     fitEnd[variable] = VMUXvolt[variable][input];
@@ -87,7 +85,10 @@ void ADCScan::run(std::string configFile)
                             }
 
                             if(input > 0) { DNLcode[variable][input] = ADCcode[variable][input] - ADCcode[variable][input - 1] - 1; }
-                            else { DNLcode[variable][0] = 0; }
+                            else
+                            {
+                                DNLcode[variable][0] = 0;
+                            }
                             INLcode[variable][input] = ADCcode[variable][input] - ADCcode[variable][0] - input;
                         }
                     }

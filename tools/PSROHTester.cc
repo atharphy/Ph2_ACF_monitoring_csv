@@ -642,7 +642,10 @@ void PSROHTester::PSROHInputsDebug()
         char Answer;
         std::cin >> Answer;
         if(Answer == 'y') { fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.start_input", 1); }
-        else if(Answer == 'n') { exit(1); }
+        else if(Answer == 'n')
+        {
+            exit(1);
+        }
         else
         {
             LOG(ERROR) << "Wrong option!" << std::endl;

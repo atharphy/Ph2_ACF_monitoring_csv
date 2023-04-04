@@ -546,7 +546,8 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
             {
                 size_t cMatchedEvents = 0;
                 auto   cEventIter     = cEvents.begin() + cTriggerId;
-                do {
+                do
+                {
                     if(cEventIter >= cEvents.end()) break;
                     bool cNmatch = true;
                     bool cFmatch = true;
@@ -696,7 +697,8 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
                     auto   cEventIter       = cEvents.begin() + cTriggerId;
                     size_t cMatchedEventsL1 = 0;
                     size_t cNchecked        = 0;
-                    do {
+                    do
+                    {
                         if(cEventIter >= cEvents.end()) break;
                         auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
                         auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(pChip->getHybridId(), pChip->getId());
@@ -817,7 +819,8 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
             {
                 size_t cMatchedEvents = 0;
                 auto   cEventIter     = cEvents.begin() + cTriggerId;
-                do {
+                do
+                {
                     if(cEventIter >= cEvents.end()) break;
                     bool cNmatch = true;
                     bool cFmatch = true;
@@ -909,7 +912,8 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
                     {
                         size_t cMatchedEvents = 0;
                         auto   cEventIter     = cEvents.begin() + cTriggerId;
-                        do {
+                        do
+                        {
                             if(cEventIter >= cEvents.end()) break;
                             bool cNmatch = true;
                             auto cPclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
@@ -984,9 +988,7 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
             {
                 std::vector<uint8_t> cChipIds(0);
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
-                {
-                    cChipIds.push_back(cChip->getId());
-                }
+                { cChipIds.push_back(cChip->getId()); }
                 cChipFound = (std::find(cChipIds.begin(), cChipIds.end(), pChipId) != cChipIds.end());
                 if(!cChipFound) continue;
 
@@ -1025,7 +1027,8 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
             // cNEventsMatched=0;
             size_t cAllEvents     = 0;
             size_t cMatchedEvents = 0;
-            do {
+            do
+            {
                 if(cEventIter >= cEvents.end()) break;
                 bool cAllEventsMatched = true;
                 for(auto cOpticalReadout: *pBoard)
@@ -1034,9 +1037,7 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
                     {
                         std::vector<uint8_t> cChipIds(0);
                         for(auto cChip: *cHybrid) // for each chip (makes sense)
-                        {
-                            cChipIds.push_back(cChip->getId());
-                        }
+                        { cChipIds.push_back(cChip->getId()); }
                         bool cChipFound = (std::find(cChipIds.begin(), cChipIds.end(), pChipId) != cChipIds.end());
                         if(!cChipFound) continue;
 
@@ -1157,13 +1158,15 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     auto    cOriginlStubOffset = pBoard->getStubOffset();
     bool    cScanEdgeT1        = true;
     uint8_t cEdgeSelT1         = 1;
-    do {
+    do
+    {
         LOG(INFO) << BOLDYELLOW << "Edge-select for T1 input is " << +cEdgeSelT1 << RESET;
         // need to find the correct hit latency
         // try 5 times
         uint8_t cLatencyAttempt = 0;
         bool    cLatencyFound   = false;
-        do {
+        do
+        {
             LOG(INFO) << BOLDBLUE << "Latency Scan PSAlignment Attempt#" << +cLatencyAttempt << RESET;
             cLatencyFound = FindLatency(pBoard, pChipId, cInjections, cEdgeSelT1);
             cLatencyAttempt++;
@@ -1205,9 +1208,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
 
                         auto cL1AlignmentPars = this->AlignL1(cChip, cInjections, cEdgeSelRaw);
                         if(cL1AlignmentPars.size() > 0)
-                        {
-                            LOG(INFO) << BOLDYELLOW << "\t\tFound " << +cL1AlignmentPars.size() << " combinations of alignment parameters for L1 data from SSA" << RESET;
-                        }
+                        { LOG(INFO) << BOLDYELLOW << "\t\tFound " << +cL1AlignmentPars.size() << " combinations of alignment parameters for L1 data from SSA" << RESET; }
                         else
                             LOG(INFO) << BOLDYELLOW << "\t\t no alignment parameters found for L1 data from SSA" << RESET;
 
@@ -1290,7 +1291,8 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
                     fBeBoardInterface->ChipReSync(pBoard);
                     bool    cScanEdgeStubs = true;
                     uint8_t cEdgeSelStub   = 0;
-                    do {
+                    do
+                    {
                         pBoard->setStubOffset(cOriginlStubOffset);
                         cPars.fEdgeSelStubs = cEdgeSelStub;
 
@@ -1485,13 +1487,9 @@ bool PSAlignment::CheckL1Data(std::vector<PCluster> pPClusters, std::vector<SClu
 
     LOG(DEBUG) << BOLDGREEN << "\t\t Found " << cMtchdSclstrs.size() << " matched S clusters and " << cMtchdPclstrs.size() << " matched P clusters in L1 data" << RESET;
     for(uint8_t cMatchId = 0; cMatchId < cMtchdPclstrs.size(); cMatchId++)
-    {
-        LOG(DEBUG) << BOLDGREEN << "\t\t\t Exact match found for injection - P cluster " << BOLDYELLOW << +cMtchdPclstrs[cMatchId].fAddress << " column " << +cMtchdPclstrs[cMatchId].fZpos << RESET;
-    }
+    { LOG(DEBUG) << BOLDGREEN << "\t\t\t Exact match found for injection - P cluster " << BOLDYELLOW << +cMtchdPclstrs[cMatchId].fAddress << " column " << +cMtchdPclstrs[cMatchId].fZpos << RESET; }
     for(uint8_t cMatchId = 0; cMatchId < cMtchdSclstrs.size(); cMatchId++)
-    {
-        LOG(DEBUG) << BOLDGREEN << "\t\t\t Exact match found for injection - S cluster " << BOLDYELLOW << " S-cluster in row " << +cMtchdSclstrs[cMatchId].fAddress << RESET;
-    }
+    { LOG(DEBUG) << BOLDGREEN << "\t\t\t Exact match found for injection - S cluster " << BOLDYELLOW << " S-cluster in row " << +cMtchdSclstrs[cMatchId].fAddress << RESET; }
     return cFmatch;
 }
 void PSAlignment::Validate(BeBoard* pBoard, std::vector<Injection> pInjections, uint8_t pEdgeSelT1)
@@ -1592,7 +1590,8 @@ bool PSAlignment::CheckFullMatch(ReadoutChip* pChip, const std::vector<Event*>& 
     auto   cEventIter       = pEvents.begin() + pTriggerId;
     size_t cMatchedEventsL1 = 0;
     size_t cNchecked        = 0;
-    do {
+    do
+    {
         if(cEventIter >= pEvents.end()) break;
         auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
         auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(pChip->getHybridId(), pChip->getId());

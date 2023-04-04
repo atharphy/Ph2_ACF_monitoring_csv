@@ -74,7 +74,10 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
         auto cRegisterMap = pChip->getRegMap();
         cValue            = fBoardFW->SingleRegisterRead(pChip, cRegisterMap[pDacName]);
     }
-    else if(pChip->isOptical()) { cValue = fBoardFW->ReadOptoLinkRegister(pChip, cAddress); }
+    else if(pChip->isOptical())
+    {
+        cValue = fBoardFW->ReadOptoLinkRegister(pChip, cAddress);
+    }
     else
     {
 #if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
@@ -395,7 +398,10 @@ void lpGBTInterface::SetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
     auto        cIt  = fPhaseTapMap.find(cKey);
     if(cIt != fPhaseTapMap.end()) { cIt->second = pPhase; }
-    else { throw std::runtime_error(std::string("Unused Channel or Group!")); }
+    else
+    {
+        throw std::runtime_error(std::string("Unused Channel or Group!"));
+    }
 }
 
 // ################################
@@ -733,7 +739,8 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     // Check conversion status
     uint8_t cIter    = 0;
     bool    cSuccess = false;
-    do {
+    do
+    {
         LOG(DEBUG) << GREEN << "Waiting for ADC conversion to end" << RESET;
 
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
@@ -1109,7 +1116,8 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
 
     // Wait until the transaction is done
     uint8_t cIter = 0;
-    do {
+    do
+    {
         LOG(DEBUG) << GREEN << "Waiting for I2C Write transaction to finisih" << RESET;
         cIter++;
     } while(cIter < lpGBTconstants::MAXATTEMPTS && !IsI2CSuccess(pChip, pMaster));
@@ -1148,7 +1156,8 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
 
     // Wait until the transaction is done
     uint8_t cIter = 0;
-    do {
+    do
+    {
         LOG(DEBUG) << GREEN << "Waiting for I2C Read transaction to finisih" << RESET;
         cIter++;
     } while(cIter < lpGBTconstants::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));

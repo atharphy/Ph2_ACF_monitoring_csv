@@ -472,12 +472,10 @@ int main(int argc, char* argv[])
                     {
                         LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
                         if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
-                        {
-                            cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
-                        } // SSAs
-                    }     // Chips
-                }         // OG
-            }             // configure SSA
+                        { cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip); } // SSAs
+                    }                                                                 // Chips
+                }                                                                     // OG
+            }                                                                         // configure SSA
         }
     }
 

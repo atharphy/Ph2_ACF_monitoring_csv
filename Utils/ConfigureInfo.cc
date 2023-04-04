@@ -7,8 +7,7 @@ ConfigureInfo::~ConfigureInfo() {}
 
 void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) const
 {
-    auto getIdList = [this](const MessageUtils::ObjectType::ObjectTypeEnum theObjectType) -> std::set<int16_t>
-    {
+    auto getIdList = [this](const MessageUtils::ObjectType::ObjectTypeEnum theObjectType) -> std::set<int16_t> {
         std::set<int16_t> enabledIdList;
         if(this->fObjectList.find(theObjectType) != fObjectList.end())
         {
@@ -29,8 +28,9 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
     auto enabledOpticalGroupIds = getIdList(MessageUtils::ObjectType::OPTICALGROUP);
     if(enabledOpticalGroupIds.size() > 0)
     {
-        auto enableOpticalGroupListFunction = [enabledOpticalGroupIds](const OpticalGroupContainer* theOpticalGroup)
-        { return enabledOpticalGroupIds.find(theOpticalGroup->getId()) != enabledOpticalGroupIds.end(); };
+        auto enableOpticalGroupListFunction = [enabledOpticalGroupIds](const OpticalGroupContainer* theOpticalGroup) {
+            return enabledOpticalGroupIds.find(theOpticalGroup->getId()) != enabledOpticalGroupIds.end();
+        };
         theDetectorContainer->addOpticalGroupQueryFunction(enableOpticalGroupListFunction);
     }
 
@@ -46,8 +46,9 @@ void ConfigureInfo::setEnabledObjects(DetectorContainer* theDetectorContainer) c
     auto enabledReadoutChipIds = getIdList(MessageUtils::ObjectType::CHIP);
     if(enabledReadoutChipIds.size() > 0)
     {
-        auto enableReadoutChipListFunction = [enabledReadoutChipIds](const ChipContainer* theReadoutChip)
-        { return enabledReadoutChipIds.find(theReadoutChip->getId()) != enabledReadoutChipIds.end(); };
+        auto enableReadoutChipListFunction = [enabledReadoutChipIds](const ChipContainer* theReadoutChip) {
+            return enabledReadoutChipIds.find(theReadoutChip->getId()) != enabledReadoutChipIds.end();
+        };
         theDetectorContainer->addReadoutChipQueryFunction(enableReadoutChipListFunction);
     }
 }

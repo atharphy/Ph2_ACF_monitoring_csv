@@ -289,7 +289,8 @@ int main(int argc, char** argv)
         // #############################################
         int  evenORodd = 0;
         bool doTwice   = false;
-        do {
+        do
+        {
             if(TESTSUBDETECTOR == true)
             {
                 if(pa.fDetectorContainer->size() != 1)
@@ -529,7 +530,8 @@ int main(int argc, char** argv)
             ph.Start(theStartInfo);
             if(runtime == -1)
             {
-                do {
+                do
+                {
                     LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop the run ..." << RESET;
                 } while(std::cin.get() != '\n');
             }

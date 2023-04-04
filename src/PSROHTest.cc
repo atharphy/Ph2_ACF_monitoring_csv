@@ -266,7 +266,10 @@ int main(int argc, char* argv[])
 #endif
             cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
             if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
-            else { LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET; }
+            else
+            {
+                LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
+            }
             if(cGui)
             {
                 gui::message("CIC OUT test finished");
@@ -291,13 +294,19 @@ int main(int argc, char* argv[])
         cTool.fillSummaryTree("status_ResetTest", (cStatus) ? 1 : 0);
 #endif
         if(cStatus) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
-        else { LOG(INFO) << BOLDRED << "Reset test failed." << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+        }
         cStatus = cPSROHTester.LpGBTTestGPILines();
 #ifdef __USE_ROOT__
         cTool.fillSummaryTree("status_PowerGoodTest", (cStatus) ? 1 : 0);
 #endif
         if(cStatus) { LOG(INFO) << BOLDGREEN << "Power Good test passed." << RESET; }
-        else { LOG(INFO) << BOLDRED << "Power Good test failed." << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Power Good test failed." << RESET;
+        }
     }
 
     // Test VTRx+ slow control
@@ -339,7 +348,10 @@ int main(int argc, char* argv[])
 #endif
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
-        else { LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
+        }
     }
 
     /**********************************/
@@ -400,7 +412,10 @@ int main(int argc, char* argv[])
         bool cStatus = cPSROHTester.LpGBTCheckClocks();
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "Clock test " << BOLDGREEN << " passed" << RESET;
-        else { LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET;
+        }
 #ifdef __USE_ROOT__
         cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
 #endif

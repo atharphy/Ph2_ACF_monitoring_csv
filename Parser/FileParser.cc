@@ -1202,7 +1202,10 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                     cRegName << std::setfill('0') << std::setw(3) << +(7 + cRegisterIndex) << "-to-" << std::setfill('0') << std::setw(3) << +(cRegisterIndex);
                     cBitShift = (cChnlId) % 8;
                 }
-                else { cRegName << cChnlId; }
+                else
+                {
+                    cRegName << cChnlId;
+                }
                 // get the original value of the register
                 os << GREEN << "|\t|\t|\t|\t|\t|  ---- Preparing registers to mask channel " << +cChnlId << " - controled by register " << cRegName.str() << " \n";
                 for(auto cChip: *pHybrid)
@@ -1709,8 +1712,7 @@ void FileParser::parseCommunicationSettings(const std::string& pFilename, Commun
     auto theCommunicationSettingsNode = doc.child("HwDescription").child("CommunicationSettings");
     if(bool(theCommunicationSettingsNode))
     {
-        auto retrieveDQMParameters = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting& theCommunicationSetting, const std::string& theNodeName)
-        {
+        auto retrieveDQMParameters = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting& theCommunicationSetting, const std::string& theNodeName) {
             auto theDQMnode = theCommunicationSettingsNode.child(theNodeName.c_str());
             if(bool(theDQMnode))
             {
