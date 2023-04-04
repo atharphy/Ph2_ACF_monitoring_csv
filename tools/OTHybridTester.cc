@@ -1071,7 +1071,7 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
 
 uint16_t OTHybridTester::calibrateADC()
 {
-    uint16_t cBestVrefround = 0;
+    uint8_t cTrimOptimized = 0;
 #ifdef __SEH_USB__
     float       cTestCard1V25 = 0;
     float       cVref         = 0;
@@ -1110,34 +1110,32 @@ uint16_t OTHybridTester::calibrateADC()
             cGain   = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, true);
             cOffset = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, true);
             clpGBTInterface->GetRssiPower(cOpticalGroup->flpGBT, "ADC5", 0.45, true);
-            cVersion          = static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getVersion();
-            uint8_t trimStart = 100;
-            uint8_t trimStop  = 0xb4;
-            uint8_t trimStep  = 1;
+            cVersion      = static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getVersion();
+            uint8_t nBits = 8;
+            uint8_t cTrim = 0;
             if(cVersion == 0)
             {
                 registerStr = "VREFCNTR";
-                trimStart   = 0;
-                trimStop    = 64;
+                nBits       = 6;
             }
-            for(uint8_t trim = trimStart; trim < trimStop; trim += trimStep)
+            for(uint8_t cBit = 0; cBit < nBits; cBit += 1)
             {
-                clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, registerStr, trim);
+                cTrim = (1 << (nBits - cBit - 1)) | cTrimOptimized;
+                clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, registerStr, cTrim);
                 cADC1V25 = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC1", "VREF/2");
                 cVref    = cTestCard1V25 * 200. / 310. * cGain * 512 / (cADC1V25 - cOffset * (1 - cGain / 2.));
                 // std::cout << std::dec << trim << "," << cOffset << "," << cGain << "," << cADC1V25 << "," << cTestCard1V25 << "," << cVref << std::endl;
-                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +trim << std::dec << " ADC value: 0x" << std::hex << +cADC1V25 << std::dec
+                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +cTrim << std::dec << " ADC value: 0x" << std::hex << +cADC1V25 << std::dec
                           << " calculated Vref: " << cVref << "V offset: 0x" << std::hex << +cOffset << std::dec << " gain: " << cGain << RESET;
-                cVREFTuneVect.push_back(trim);
+                if(cVref < 1.0) { cTrimOptimized = (1 << (nBits - cBit - 1)) | cTrimOptimized; }
+                cVREFTuneVect.push_back(cTrim);
                 cADCValVect.push_back(cADC1V25);
                 cOffsetVect.push_back(cOffset);
                 cGainVect.push_back(cGain);
                 cVrefVect.push_back(cVref);
             }
             for(uint16_t i = 0; i < cVREFTuneVect.size(); i++) { cCalibrationGraph->SetPoint(i, cVrefVect.at(i), cVREFTuneVect.at(i)); }
-            double cBestVref = cCalibrationGraph->Eval(1);
-            cBestVrefround   = std::lround(cBestVref);
-            LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): Best Vref: " << cBestVref << " rounded 0x" << std::hex << cBestVrefround << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): Best Vref: " << +cTrimOptimized << " rounded 0x" << std::hex << +cTrimOptimized << std::dec << RESET;
             // cGain   = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, false);
             // cOffset = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, false);
 
@@ -1148,24 +1146,24 @@ uint16_t OTHybridTester::calibrateADC()
             cGainVect.clear();
             cVrefVect.clear();
             cCalibrationGraph->Clear();
-            for(uint8_t trim = trimStart; trim < trimStop; trim += trimStep)
+            for(uint8_t cBit = 0; cBit < nBits; cBit += 1)
             {
-                clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, registerStr, trim);
+                cTrim = (1 << (nBits - cBit - 1)) | cTrimOptimized;
+                clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, registerStr, cTrim);
                 cADC1V25 = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC0", "VREF/2");
                 cVref    = 3303. / 4096. * cGain * 512 / (cADC1V25 - cOffset * (1 - cGain / 2.));
                 // std::cout << std::dec << trim << "," << cOffset << "," << cGain << "," << cADC1V25 << "," << cTestCard1V25 << "," << cVref << std::endl;
-                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +trim << std::dec << " ADC value: 0x" << std::hex << +cADC1V25 << std::dec
+                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +cTrim << std::dec << " ADC value: 0x" << std::hex << +cADC1V25 << std::dec
                           << " calculated Vref: " << cVref << "V offset: 0x" << std::hex << +cOffset << std::dec << " gain: " << cGain << RESET;
-                cVREFTuneVect.push_back(trim);
+                if(cVref < 1.0) { cTrimOptimized = (1 << (nBits - cBit - 1)) | cTrimOptimized; }
+                cVREFTuneVect.push_back(cTrim);
                 cADCValVect.push_back(cADC1V25);
                 cOffsetVect.push_back(cOffset);
                 cGainVect.push_back(cGain);
                 cVrefVect.push_back(cVref);
             }
             for(uint16_t i = 0; i < cVREFTuneVect.size(); i++) { cCalibrationGraph->SetPoint(i, cVrefVect.at(i), cVREFTuneVect.at(i)); }
-            cBestVref      = cCalibrationGraph->Eval(1);
-            cBestVrefround = std::lround(cBestVref);
-            LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): Best Vref: " << cBestVref << " rounded 0x" << std::hex << cBestVrefround << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): Best Vref: " << +cTrimOptimized << " rounded 0x" << std::hex << +cTrimOptimized << std::dec << RESET;
         }
     }
     fResultFile->cd();
@@ -1173,7 +1171,7 @@ uint16_t OTHybridTester::calibrateADC()
     cCalibrationTree->Write();
     flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 #endif
-    return cBestVrefround;
+    return cTrimOptimized;
 }
 
 void OTHybridTester::calibrateCurrentDAC()
