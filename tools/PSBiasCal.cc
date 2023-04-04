@@ -323,9 +323,9 @@ float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGst
 
     }
 
-
-    LOG(INFO) << BOLDRED << "New VBG val: " << (ADC_VBG*ADCLSB - gnd_corr) << " Expected val: " << VBGexpected << "+/-" << LSB*ADCLSB << RESET;
-    float VREFobtained = ADCMAX*ADCLSB - gnd_corr;
+    float newVBG = ADC_VBG*ADCLSB - gnd_corr;
+    LOG(INFO) << BOLDRED << "New VBG val: " << newVBG << " Expected val: " << VBGexpected << "+/-" << LSB*ADCLSB << RESET;
+    float VREFobtained = ADCMAX*(newVBG-gnd_corr)/(ADC_VBG-offset) + gnd_corr;
     LOG(INFO) << BOLDRED << "New VREF val: " << VREFobtained << " Expected val: " << VREFexpected << "+/-" << LSB*ADCLSB << RESET;
 
 
