@@ -29,9 +29,13 @@ class MiddlewareController : public TCPServer
         // std::cout << __PRETTY_FUNCTION__ << "RECEIVED: " << buffer << std::endl;
 
         if(buffer == "Initialize") // changing the status changes the mode in threadMain (BBC) function.
-        { return "InitializeDone"; }
+        {
+            return "InitializeDone";
+        }
         if(buffer == "Configure") // changing the status changes the mode in threadMain (BBC) function.
-        { return "ConfiguereDone"; }
+        {
+            return "ConfiguereDone";
+        }
         if(buffer.substr(0, 5) == "Start") // changing the status changes the mode in threadMain (BBC) function.
         {
             fRunning     = true;

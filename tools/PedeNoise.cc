@@ -555,8 +555,7 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
         bool cStripFirstLim = false, cPixelFirstLim = false;
         bool cLimitFound = false, cStripLimitFound = false, cPixelLimitFound = false;
         int  cStripLimitCounter = 0, cPixelLimitCounter = 0;
-        do
-        {
+        do {
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
             fSCurvePixelOccupancyMap[cPixelValue]        = theOccupancyContainer;

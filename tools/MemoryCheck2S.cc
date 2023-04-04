@@ -577,8 +577,7 @@ void MemoryCheck2S::GenericTriggers(int pTriggerSeparation, int pMaxBurstLength)
         cBxId++;
     }
     size_t cNtriggersToSend = 30;
-    do
-    {
+    do {
         // first injection
         fFastCommands.push_back(cFCMDs.fTestPulse);
         size_t cBxWithTP = cBxId;
@@ -641,8 +640,7 @@ bool MemoryCheck2S::SendGenericTriggers(int pTriggerSeparation)
         // wait until all triggers have been sent
         uint32_t cCounter   = 0;
         uint32_t cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             // auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -734,8 +732,7 @@ bool MemoryCheck2S::SendGenericTestPulses(int pReSync)
         // wait until all triggers have been sent
         uint32_t cCounter   = 0;
         uint32_t cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             // auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -764,8 +761,7 @@ bool MemoryCheck2S::ReadAfterGenericBlock(int pNExpected)
         size_t   cCounter    = 0;
         uint32_t cNtriggers  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
         auto     cNWords     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             cNWordsPrev = (cCounter == 0) ? 0 : cNWords;
             cNWords     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");

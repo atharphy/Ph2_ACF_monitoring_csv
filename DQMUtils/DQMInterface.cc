@@ -106,7 +106,9 @@ void DQMInterface::stopProcessingData(void)
 
     fListener->disconnect();
     while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout > 0)
-    { LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET; }
+    {
+        LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET;
+    }
 
     LOG(INFO) << __PRETTY_FUNCTION__ << " Thread done running" << RESET;
 

@@ -42,10 +42,7 @@ void PSBiasCal::Reset()
                         {
                             if(false) { LOG(INFO) << BOLDMAGENTA << "\t...Will NOT set " << cReg.first << " back to original value. " << RESET; }
                         }
-                        else
-                        {
-                            cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
-                        }
+                        else { cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue)); }
                     }
                     fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
@@ -177,10 +174,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     uint8_t     regIndex = 0;
     float       ADCLSB   = 0;
     if(cChip->getFrontEndType() == FrontEndType::MPA2) { ADCLSB = (static_cast<MPA2Interface*>(fReadoutChipInterface)->calculateADCLSB(cChip)); }
-    else if(cChip->getFrontEndType() == FrontEndType::SSA2)
-    {
-        ADCLSB = (static_cast<SSA2Interface*>(fReadoutChipInterface)->CalculateADCLSB(cChip));
-    }
+    else if(cChip->getFrontEndType() == FrontEndType::SSA2) { ADCLSB = (static_cast<SSA2Interface*>(fReadoutChipInterface)->CalculateADCLSB(cChip)); }
     else
     {
         LOG(ERROR) << BOLDRED << "Calibration procedure unknown for this chip type - aborting." << RESET;
@@ -437,10 +431,7 @@ float PSBiasCal::MeasureGnd(Chip* cChip, Chip* clpGBT, std::string dac_str)
         fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB", (1 << 11) >> 8);
         gnd_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
     }
-    else if(cChip->getFrontEndType() == FrontEndType::SSA2)
-    {
-        gnd_val = static_cast<SSA2Interface*>(fReadoutChipInterface)->MeasureGND(cChip);
-    }
+    else if(cChip->getFrontEndType() == FrontEndType::SSA2) { gnd_val = static_cast<SSA2Interface*>(fReadoutChipInterface)->MeasureGND(cChip); }
     LOG(INFO) << BOLDRED << "gndval " << gnd_val << RESET;
     return gnd_val;
 }

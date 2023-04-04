@@ -36,14 +36,12 @@ void InjectionDelayHistograms::book(TFile* theOutputFile, DetectorContainer& the
 
 bool InjectionDelayHistograms::fill(std::string& inputStream)
 {
-    const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerSerialization theOccupancySerialization("InjectionDelayOccupancy");
     ContainerSerialization theInjectionDelaySerialization("InjectionDelayInjectionDelay");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<InjDelaySize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         InjectionDelayHistograms::fillOccupancy(fDetectorData);
         return true;
     }
@@ -58,8 +56,6 @@ bool InjectionDelayHistograms::fill(std::string& inputStream)
 
 void InjectionDelayHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer)
 {
-    const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -74,8 +70,7 @@ void InjectionDelayHistograms::fillOccupancy(const DetectorDataContainer& Occupa
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                    for(size_t i = startValue; i <= stopValue; i++)
-                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<InjDelaySize>>().data[i - startValue]);
+                    for(size_t i = startValue; i <= stopValue; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<std::vector<uint16_t>>().at(i - startValue));
                 }
 }
 

@@ -208,18 +208,9 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         this->producePhaseAlignmentPattern(static_cast<ReadoutChip*>(pSSA), pValue);
         return true;
     }
-    else if(pRegName == "AmuxHigh")
-    {
-        return this->ConfigureAmux(pSSA, "HighZ");
-    }
-    else if(pRegName == "MonitorBandgap")
-    {
-        return this->ConfigureAmux(pSSA, "Bandgap");
-    }
-    else if(pRegName == "MonitorGround")
-    {
-        return this->ConfigureAmux(pSSA, "GND");
-    }
+    else if(pRegName == "AmuxHigh") { return this->ConfigureAmux(pSSA, "HighZ"); }
+    else if(pRegName == "MonitorBandgap") { return this->ConfigureAmux(pSSA, "Bandgap"); }
+    else if(pRegName == "MonitorGround") { return this->ConfigureAmux(pSSA, "GND"); }
     else if(pRegName.find("MaskChannel") != std::string::npos)
     {
         std::string cToken    = "MaskChannel";
@@ -336,7 +327,9 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         bool              cReadoutMode = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerify);
         std::stringstream cRegName;
         if(pRegName.find("S") != std::string::npos) // global
-        { cRegName << "ENFLAGS_ALL"; }
+        {
+            cRegName << "ENFLAGS_ALL";
+        }
         else // single row
         {
             int cStripNumber = std::stoi(pRegName.substr(pRegName.find("R") + 1, pRegName.length()));
@@ -520,10 +513,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         LOG(INFO) << BOLDYELLOW << pRegName << RESET;
         return ConfigureAmux(pSSA, pRegName);
     }
-    else if(pRegName.substr(0, pRegName.find("__")) == "AMUX")
-    {
-        return this->ConfigureAmux(pSSA, pRegName.substr(1, pRegName.find("__")));
-    }
+    else if(pRegName.substr(0, pRegName.find("__")) == "AMUX") { return this->ConfigureAmux(pSSA, pRegName.substr(1, pRegName.find("__"))); }
     else
     {
         auto cRegItem   = pSSA->getRegItem(pRegName);
@@ -770,18 +760,9 @@ uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
                    << RESET;
         return cCounterValue;
     }
-    else if(pRegNode == "ChipId")
-    {
-        return this->ReadChipId(pSSA);
-    }
-    else if(pRegNode == "Threshold")
-    {
-        return this->ReadChipReg(pSSA, "Bias_THDAC");
-    }
-    else if(pRegNode.find("SLVS_pad_current") != std::string::npos)
-    {
-        return this->ReadChipReg(pSSA, "SLVS_pad_current");
-    }
+    else if(pRegNode == "ChipId") { return this->ReadChipId(pSSA); }
+    else if(pRegNode == "Threshold") { return this->ReadChipReg(pSSA, "Bias_THDAC"); }
+    else if(pRegNode.find("SLVS_pad_current") != std::string::npos) { return this->ReadChipReg(pSSA, "SLVS_pad_current"); }
     else if(pRegNode == "TriggerLatency")
     {
         auto    cRegItem     = pSSA->getRegItem("L1-Latency_LSB");

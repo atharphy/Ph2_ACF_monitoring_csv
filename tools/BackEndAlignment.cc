@@ -111,7 +111,9 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                     continue;
                 }
                 for(uint8_t cLineId = cFirstLine; cLineId <= 8; cLineId++) // stub lines - 1 to 8
-                { PhaseTuneLine(cChip, cLineId); }
+                {
+                    PhaseTuneLine(cChip, cLineId);
+                }
             }
         }
     } // run phase aligner on all lines
@@ -146,7 +148,9 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                     continue;
                 }
                 for(uint8_t cLineId = cFirstLine; cLineId <= 8; cLineId++) // stub lines - 1 to 8
-                { WordAlignLine(cChip, cLineId, cWordAlignmentPattern, 8); }
+                {
+                    WordAlignLine(cChip, cLineId, cWordAlignmentPattern, 8);
+                }
 
                 // replace this with something that gets the value
                 // from one of the stub lines
@@ -560,10 +564,7 @@ bool BackEndAlignment::Align()
             }     // Hybrids
         }         // OGs
         if(cWithCIC) { cAligned = this->CICAlignment(theBoard); }
-        else if(cWithCBC)
-        {
-            cAligned = this->CBCAlignment(theBoard);
-        }
+        else if(cWithCBC) { cAligned = this->CBCAlignment(theBoard); }
         else if(cWithMPA || cWithSSA || cWithMPA2 || cWithSSA2)
             cAligned = this->PSAlignment(theBoard);
 

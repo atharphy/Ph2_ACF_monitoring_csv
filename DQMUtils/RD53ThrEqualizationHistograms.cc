@@ -50,8 +50,6 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
 
 bool ThrEqualizationHistograms::fill(std::string& inputStream)
 {
-    const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerSerialization theOccupancySerialization("ThrEqualizationOccupancy");
     ContainerSerialization theTDACSerialization("ThrEqualizationTDAC");
     ContainerSerialization theOccupancyScanSerialization("ThrEqualizationOccupancyScan");
@@ -71,7 +69,7 @@ bool ThrEqualizationHistograms::fill(std::string& inputStream)
     }
     if(theOccupancyScanSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theOccupancyScanSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TDACGainSize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancyScanSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         ThrEqualizationHistograms::fillOccupancyScan(fDetectorData);
         return true;
     }
@@ -140,9 +138,6 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
 
 void ThrEqualizationHistograms::fillOccupancyScan(const DetectorDataContainer& OccupancyContainer)
 {
-    const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-    const float  step         = (TDACGainNSteps != 0 ? (stopValue - startValue) / TDACGainNSteps : 0);
-
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -157,8 +152,9 @@ void ThrEqualizationHistograms::fillOccupancyScan(const DetectorDataContainer& O
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                    for(auto i = 0u; i <= TDACGainNSteps; i++)
-                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<GenericDataArray<TDACGainSize>>().data[i]);
+                    const size_t TDACGainNSteps = cChip->getSummary<std::vector<uint16_t>>().size();
+                    const float  step           = (TDACGainNSteps != 0 ? (stopValue - startValue) / TDACGainNSteps : 0);
+                    for(auto i = 0u; i <= TDACGainNSteps; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<std::vector<uint16_t>>().at(i));
                 }
 }
 

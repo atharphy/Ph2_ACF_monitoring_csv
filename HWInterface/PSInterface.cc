@@ -83,10 +83,7 @@ bool PSInterface::ConfigureChip(Chip* pPS, bool pVerifLoop, uint32_t pBlockSize)
 void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->producePhaseAlignmentPattern(pChip, pWait_ms); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-    {
-        theMPA2Interface->producePhaseAlignmentPattern(pChip, pWait_ms);
-    }
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->producePhaseAlignmentPattern(pChip, pWait_ms); }
     else if(pChip->getFrontEndType() == FrontEndType::SSA or pChip->getFrontEndType() == FrontEndType::SSA2)
     {
         LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
@@ -95,10 +92,7 @@ void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait
 void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->produceWordAlignmentPattern(pChip); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-    {
-        theMPA2Interface->produceWordAlignmentPattern(pChip);
-    }
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->produceWordAlignmentPattern(pChip); }
     else if(pChip->getFrontEndType() == FrontEndType::SSA or pChip->getFrontEndType() == FrontEndType::SSA2)
     {
         LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
@@ -108,18 +102,9 @@ void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop)
 {
     if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->enableInjection(pPS, inject, pVerifLoop); }
-    else if(pPS->getFrontEndType() == FrontEndType::MPA2)
-    {
-        return theMPA2Interface->enableInjection(pPS, inject, pVerifLoop);
-    }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA)
-    {
-        return theSSAInterface->enableInjection(pPS, inject, pVerifLoop);
-    }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA2)
-    {
-        return theSSA2Interface->enableInjection(pPS, inject, pVerifLoop);
-    }
+    else if(pPS->getFrontEndType() == FrontEndType::MPA2) { return theMPA2Interface->enableInjection(pPS, inject, pVerifLoop); }
+    else if(pPS->getFrontEndType() == FrontEndType::SSA) { return theSSAInterface->enableInjection(pPS, inject, pVerifLoop); }
+    else if(pPS->getFrontEndType() == FrontEndType::SSA2) { return theSSA2Interface->enableInjection(pPS, inject, pVerifLoop); }
     else
         LOG(ERROR) << "Bad chip for PS interface";
     return false;
@@ -129,24 +114,15 @@ bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop
 std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->decodeBendCode(pChip, pBendCode); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-    {
-        return theMPA2Interface->decodeBendCode(pChip, pBendCode);
-    }
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { return theMPA2Interface->decodeBendCode(pChip, pBendCode); }
     return std::vector<int>(0);
 }
 //
 void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections, pPattern); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-    {
-        theMPA2Interface->digiInjection(pChip, pInjections, pPattern);
-    }
-    else if(pChip->getFrontEndType() == FrontEndType::SSA2 or pChip->getFrontEndType() == FrontEndType::SSA)
-    {
-        LOG(ERROR) << "No digiInjection for SSA for some reason";
-    }
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->digiInjection(pChip, pInjections, pPattern); }
+    else if(pChip->getFrontEndType() == FrontEndType::SSA2 or pChip->getFrontEndType() == FrontEndType::SSA) { LOG(ERROR) << "No digiInjection for SSA for some reason"; }
 }
 
 } // namespace Ph2_HwInterface

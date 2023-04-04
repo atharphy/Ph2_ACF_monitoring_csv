@@ -774,10 +774,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             this->ChipReset();
         }
     }
-    else
-    {
-        this->ReadoutChipReset();
-    }
+    else { this->ReadoutChipReset(); }
 
     // modifying FC7 configuration based on CIC
     cVecReg.clear();
@@ -808,10 +805,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             }
         }
     }
-    else
-    {
-        LOG(INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET;
-    }
+    else { LOG(INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET; }
 
     // Enable hybrids + Chips for readout
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
@@ -893,10 +887,7 @@ void D19cFWInterface::InitFMCPower()
         else
             LOG(INFO) << BOLDGREEN << "Powering on DIO5 at L8..." << RESET;
     }
-    else if(cPSMux || c2SMux)
-    {
-        LOG(INFO) << BOLDGREEN << "Powering FMCs in multiplexing setup" << RESET;
-    }
+    else if(cPSMux || c2SMux) { LOG(INFO) << BOLDGREEN << "Powering FMCs in multiplexing setup" << RESET; }
 
     std::vector<std::string> cRegNames  = {"sysreg.fmc_pwr.l12_pwr_en", "sysreg.fmc_pwr.l8_pwr_en"};
     std::vector<bool>        cFMCStates = {cEnableL12, cEnableL8};
@@ -1198,8 +1189,7 @@ bool D19cFWInterface::Bx0Alignment()
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
     // number of triggers to accept
-    do
-    {
+    do {
         if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         // pause after reset
         // send a resync then wait
@@ -1533,10 +1523,7 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
         else
             LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead FAILED to write to Register " << cIterator->first << RESET;
     }
-    else
-    {
-        LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address " << std::hex << +pItem.fAddress << std::dec << " in register map " << RESET;
-    }
+    else { LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address " << std::hex << +pItem.fAddress << std::dec << " in register map " << RESET; }
     return false;
 }
 
@@ -1564,10 +1551,7 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
                     LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register " << cIterator->first << " 0x" << std::hex << +cItem.fAddress << std::dec << " set to 0x" << std::hex
                                << +cValues.at(cValues.size() - 1) << std::dec << RESET;
                 }
-                else
-                {
-                    cValues.push_back(cItem.fValue);
-                }
+                else { cValues.push_back(cItem.fValue); }
             } // update map
         }
     }

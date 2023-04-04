@@ -100,10 +100,7 @@ void SystemController::StopMonitoring()
 std::string SystemController::GetMonitorFileName()
 {
     if(fDetectorMonitor != nullptr) { return fDetectorMonitor->getMonitorFileName(); }
-    else
-    {
-        return "";
-    }
+    else { return ""; }
 }
 
 void SystemController::Destroy()
@@ -234,10 +231,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             delete fPowerSupplyClient;
             fPowerSupplyClient = nullptr;
         }
-        else
-        {
-            LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET;
-        }
+        else { LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET; }
     }
 
     LOG(INFO) << GREEN << "Operation completed" << RESET;
@@ -420,19 +414,13 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             bool cWith2SHybrid = (cCBCfound && !cWithLpGBT);
 
             if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
-            else if(cWith2Smodule)
-            {
-                cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
-            }
+            else if(cWith2Smodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S); }
             else if(cWithPSHybrid)
             {
                 LOG(INFO) << BOLDYELLOW << "HYBRIDPS" << RESET;
                 cOpticalGroup->setFrontEndType(FrontEndType::HYBRIDPS);
             }
-            else if(cWith2SHybrid)
-            {
-                cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S);
-            }
+            else if(cWith2SHybrid) { cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S); }
             else if(cWithLpGBT && flpGBTInterface != nullptr)
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
             else
@@ -636,14 +624,8 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             if(cCic == NULL) continue;
             uint8_t cSide = cHybrid->getId() % 2;
             if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
-            else if(!cBrokenPS)
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
-            }
-            else
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0);
-            }
+            else if(!cBrokenPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
+            else { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0); }
         }
     }
 
@@ -735,10 +717,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             {
                 LOG(DEBUG) << BOLDBLUE << "\t... Applying hard reset to MPAs" << RESET;
                 if(!cBrokenPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide); }
-                else
-                {
-                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, 1);
-                }
+                else { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, 1); }
             }
             if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
             {
@@ -816,10 +795,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             // regardless of how many are enabled on this hybrid
             LOG(INFO) << BOLDBLUE << "Resetting SSA" << RESET;
             if(!cBrokenPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cSide); }
-            else
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
-            }
+            else { static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0); }
             bool setSSACurrent = true;
             for(auto cChip: *cHybrid)
             {
@@ -1065,14 +1041,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                         if(cCic == NULL) continue;
                         uint8_t cSide = cHybrid->getId() % 2;
                         if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
-                        else if(!cBrokenPS)
-                        {
-                            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
-                        }
-                        else
-                        {
-                            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0);
-                        }
+                        else if(!cBrokenPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
+                        else { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0); }
                     }
                 }
 
@@ -1338,8 +1308,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
                 size_t cEventIndex    = 0;
                 auto   cEventIterator = pData.begin();
-                do
-                {
+                do {
                     uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
                     if(cHeader != 0xFFFF)
                     {
@@ -1373,14 +1342,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                                     LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 2S-FEH  " << RESET;
                                 fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3, cTLUconfig));
                             }
-                            else if(pBoard->getFrontEndType() == FrontEndType::SSA)
-                            {
-                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNHybrid, cEvent));
-                            }
-                            else if(pBoard->getFrontEndType() == FrontEndType::SSA2)
-                            {
-                                fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNHybrid, cEvent));
-                            }
+                            else if(pBoard->getFrontEndType() == FrontEndType::SSA) { fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNHybrid, cEvent)); }
+                            else if(pBoard->getFrontEndType() == FrontEndType::SSA2) { fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNHybrid, cEvent)); }
                             else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                             {
                                 fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNHybrid, cEvent));
@@ -1416,9 +1379,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::vector<FrontEndType> cFrontEndTypes)
 {
-    auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip) {
-        return (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end());
-    };
+    auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip)
+    { return (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end()); };
     setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
 }
 

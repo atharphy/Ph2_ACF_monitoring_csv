@@ -34,14 +34,12 @@ void LatencyHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 
 bool LatencyHistograms::fill(std::string& inputStream)
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerSerialization theOccupancySerialization("LatencyOccupancy");
     ContainerSerialization theLatencySerialization("LatencyLatency");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<LatencySize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         LatencyHistograms::fillOccupancy(fDetectorData);
         return true;
     }
@@ -56,8 +54,6 @@ bool LatencyHistograms::fill(std::string& inputStream)
 
 void LatencyHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer)
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -73,7 +69,7 @@ void LatencyHistograms::fillOccupancy(const DetectorDataContainer& OccupancyCont
                                                 .fTheHistogram;
 
                     for(size_t i = startValue; i <= stopValue; i += nTRIGxEvent)
-                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<LatencySize>>().data[(i - startValue) / nTRIGxEvent]);
+                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<std::vector<uint16_t>>().at((i - startValue) / nTRIGxEvent));
                 }
 }
 

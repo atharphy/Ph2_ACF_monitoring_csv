@@ -48,8 +48,6 @@ void DataReadbackOptimizationHistograms::book(TFile* theOutputFile, DetectorCont
 
 bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerSerialization theTAP0scanSerialization("DataReadbackOptimizationTAP0scan");
     ContainerSerialization theTAP0Serialization("DataReadbackOptimizationTAP0");
 
@@ -61,7 +59,7 @@ bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
 
     if(theTAP0scanSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theTAP0scanSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TAPsize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theTAP0scanSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillScanTAP0(fDetectorData);
         return true;
     }
@@ -73,7 +71,7 @@ bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
     }
     if(theTAP1scanSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theTAP1scanSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TAPsize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theTAP1scanSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillScanTAP1(fDetectorData);
         return true;
     }
@@ -85,7 +83,7 @@ bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
     }
     if(theTAP2scanSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theTAP2scanSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TAPsize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theTAP2scanSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillScanTAP2(fDetectorData);
         return true;
     }
@@ -100,8 +98,6 @@ bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
 
 void DataReadbackOptimizationHistograms::fillScanTAP0(const DetectorDataContainer& TAP0scanContainer)
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(const auto cBoard: TAP0scanContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -116,7 +112,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP0(const DetectorDataContaine
                                              ->getSummary<CanvasContainer<TH1F>>()
                                              .fTheHistogram;
 
-                    for(auto i = 0; i < TAP0scanHist->GetNbinsX(); i++) TAP0scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TAPsize>>().data[i]);
+                    for(auto i = 0; i < TAP0scanHist->GetNbinsX(); i++) TAP0scanHist->SetBinContent(i + 1, cChip->getSummary<std::vector<uint16_t>>().at(i));
                 }
 }
 
@@ -138,8 +134,6 @@ void DataReadbackOptimizationHistograms::fillTAP0(const DetectorDataContainer& T
 
 void DataReadbackOptimizationHistograms::fillScanTAP1(const DetectorDataContainer& TAP1scanContainer)
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(const auto cBoard: TAP1scanContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -154,7 +148,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP1(const DetectorDataContaine
                                              ->getSummary<CanvasContainer<TH1F>>()
                                              .fTheHistogram;
 
-                    for(auto i = 0; i < TAP1scanHist->GetNbinsX(); i++) TAP1scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TAPsize>>().data[i]);
+                    for(auto i = 0; i < TAP1scanHist->GetNbinsX(); i++) TAP1scanHist->SetBinContent(i + 1, cChip->getSummary<std::vector<uint16_t>>().at(i));
                 }
 }
 
@@ -176,8 +170,6 @@ void DataReadbackOptimizationHistograms::fillTAP1(const DetectorDataContainer& T
 
 void DataReadbackOptimizationHistograms::fillScanTAP2(const DetectorDataContainer& TAP2scanContainer)
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(const auto cBoard: TAP2scanContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -192,7 +184,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP2(const DetectorDataContaine
                                              ->getSummary<CanvasContainer<TH1F>>()
                                              .fTheHistogram;
 
-                    for(auto i = 0; i < TAP2scanHist->GetNbinsX(); i++) TAP2scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TAPsize>>().data[i]);
+                    for(auto i = 0; i < TAP2scanHist->GetNbinsX(); i++) TAP2scanHist->SetBinContent(i + 1, cChip->getSummary<std::vector<uint16_t>>().at(i));
                 }
 }
 

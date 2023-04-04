@@ -36,14 +36,12 @@ void ClockDelayHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
 
 bool ClockDelayHistograms::fill(std::string& inputStream)
 {
-    const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerSerialization theOccupancySerialization("ClockDelayOccupancy");
     ContainerSerialization theClockDelaySerialization("ClockDelayClockDelay");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<ClkDelaySize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         ClockDelayHistograms::fillOccupancy(fDetectorData);
         return true;
     }
@@ -58,8 +56,6 @@ bool ClockDelayHistograms::fill(std::string& inputStream)
 
 void ClockDelayHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer)
 {
-    const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -74,8 +70,7 @@ void ClockDelayHistograms::fillOccupancy(const DetectorDataContainer& OccupancyC
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                    for(size_t i = startValue; i <= stopValue; i++)
-                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<ClkDelaySize>>().data[i - startValue]);
+                    for(size_t i = startValue; i <= stopValue; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<std::vector<uint16_t>>().at(i - startValue));
                 }
 }
 

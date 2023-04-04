@@ -499,10 +499,7 @@ void OpenFinder::FindOpensPS()
                             }
                             LOG(INFO) << BOLDBLUE << "Threshold  " << cThreshold << RESET;
                         }
-                        else
-                        {
-                            cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
-                        }
+                        else { cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold"); }
                         // cThreshold = 12;
                         std::string tmpParameter = "thresholdForOpens_" + std::to_string(cChip->getId());
 #if defined(__USE_ROOT__)
@@ -704,14 +701,8 @@ void OpenFinder::FindOpensPS()
                                             else
                                                 finalAntennaOdd[cChip->getIndex()] = antennaPullup;
                                         }
-                                        else if(occupancy_avg < 0.90)
-                                        {
-                                            antennaPullupLowEnd = antennaPullup + 1;
-                                        }
-                                        else if(occupancy_avg > 0.99)
-                                        {
-                                            antennaPullupHighEnd = antennaPullup - 1;
-                                        }
+                                        else if(occupancy_avg < 0.90) { antennaPullupLowEnd = antennaPullup + 1; }
+                                        else if(occupancy_avg > 0.99) { antennaPullupHighEnd = antennaPullup - 1; }
                                         if(nTries > 50) // Check if we want to keep this
                                         {
                                             LOG(INFO) << BOLDRED << "Could not find a valid antenna value for " << chn << " channels of chip " << +cChip->getId() << "!!" << RESET;

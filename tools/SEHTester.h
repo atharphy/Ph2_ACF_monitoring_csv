@@ -109,20 +109,20 @@ class SEHTester : public OTHybridTester
     // void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string & pFastCommand ,  uint8_t pDuartion=1);
 
     std::map<std::string, uint8_t>     fInputDebugMap = {{"l_fcmd_cic", 0},
-                                                     {"r_fcmd_cic", 1},
-                                                     {"l_fcmd_ssa", 2},
-                                                     {"r_fcmd_ssa", 3},
-                                                     {"l_clk_320", 4},
-                                                     {"r_clk_320", 5},
-                                                     {"l_clk_640", 6},
-                                                     {"r_clk_640", 7},
-                                                     {"l_i2c_scl", 8},
-                                                     {"r_i2c_scl", 9},
-                                                     {"l_i2c_sda_o", 10},
-                                                     {"r_i2c_sda_o", 11},
-                                                     {"cpg", 12},
-                                                     {"bpg", 13},
-                                                     {"na", 14}};
+                                                         {"r_fcmd_cic", 1},
+                                                         {"l_fcmd_ssa", 2},
+                                                         {"r_fcmd_ssa", 3},
+                                                         {"l_clk_320", 4},
+                                                         {"r_clk_320", 5},
+                                                         {"l_clk_640", 6},
+                                                         {"r_clk_640", 7},
+                                                         {"l_i2c_scl", 8},
+                                                         {"r_i2c_scl", 9},
+                                                         {"l_i2c_sda_o", 10},
+                                                         {"r_i2c_sda_o", 11},
+                                                         {"cpg", 12},
+                                                         {"bpg", 13},
+                                                         {"na", 14}};
     std::map<std::string, std::string> fADCInputMap =
         {{"AMUX_L", "ADC0"}, {"VMON_P1V25_L", "ADC1"}, {"VMIN", "ADC2"}, {"AMUX_R", "ADC3"}, {"TEMPP", "ADC4"}, {"VTRX+_RSSI_ADC", "ADC5"}, {"PTAT_BPOL2V5", "ADC6"}, {"PTAT_BPOL12V", "ADC7"}};
 
@@ -154,18 +154,18 @@ class SEHTester : public OTHybridTester
                                                                                              {"Temp_SEH", TC_2SSEH::temperatureMeasurement::Temp_SEH}};
 
     std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines   = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
-                                                                          {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
-                                                                          {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
-                                                                          {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
+                                                                            {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
+                                                                            {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
+                                                                            {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
     std::map<std::string, float>                      fDefaultParameters = {{"Spannung", 2},
-                                                       {"Strom", 0.5},
-                                                       {"HV", 1},
-                                                       {"VMON_P1V25_L_Nominal", 0.806},
-                                                       {"VMIN_Nominal", 0.49},
-                                                       {"TEMPP_Nominal", 0.6},
-                                                       {"VTRX+_RSSI_ADC_Nominal", 0.6},
-                                                       {"PTAT_BPOL2V5_Nominal", 0.6},
-                                                       {"PTAT_BPOL12V_Nominal", 0.6}};
+                                                                            {"Strom", 0.5},
+                                                                            {"HV", 1},
+                                                                            {"VMON_P1V25_L_Nominal", 0.806},
+                                                                            {"VMIN_Nominal", 0.49},
+                                                                            {"TEMPP_Nominal", 0.6},
+                                                                            {"VTRX+_RSSI_ADC_Nominal", 0.6},
+                                                                            {"PTAT_BPOL2V5_Nominal", 0.6},
+                                                                            {"PTAT_BPOL12V_Nominal", 0.6}};
 };
 #endif
 #endif

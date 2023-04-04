@@ -213,10 +213,7 @@ void PixelAlive::run()
         this->setChannelGroupHandler(theChnGroupHandler);
         RD53RunProgress::turnON();
     }
-    else if((doDataIntegrity == true) && (strcmp(frontEnd->name, "RD53B") != 0))
-    {
-        throw std::runtime_error("Option -DoDataIntegrity- not available for RD53A");
-    }
+    else if((doDataIntegrity == true) && (strcmp(frontEnd->name, "RD53B") != 0)) { throw std::runtime_error("Option -DoDataIntegrity- not available for RD53A"); }
 
     PixelAlive::runPixelAlive();
 }

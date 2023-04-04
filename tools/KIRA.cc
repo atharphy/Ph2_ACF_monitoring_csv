@@ -23,10 +23,7 @@ void KIRA::Running()
         determineLatency();
         performKIRATest();
     }
-    else
-    {
-        LOG(INFO) << "KIRA settings not set, abort" << RESET;
-    }
+    else { LOG(INFO) << "KIRA settings not set, abort" << RESET; }
 }
 
 void KIRA::Initialise(int pKiraPort, std::string pKiraId)
@@ -43,10 +40,7 @@ void KIRA::Initialise(int pKiraPort, std::string pKiraId)
         delete fKiraClient;
         fKiraClient = nullptr;
     }
-    else
-    {
-        LOG(INFO) << BOLDYELLOW << "Connected to the KIRA Server!" << RESET;
-    }
+    else { LOG(INFO) << BOLDYELLOW << "Connected to the KIRA Server!" << RESET; }
 
     // Switch all LEDs off
     for(int i = 0; i < 8; i++)
@@ -155,15 +149,16 @@ void KIRA::determineLatency()
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     for(auto cChip: *cHybrid)
-                    { cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0; } // chip
-                }                                                                                                                                                        // hybrid
-            }                                                                                                                                                            // optical group
+                    {
+                        cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
+                    } // chip
+                }     // hybrid
+            }         // optical group
 
             // start at the beginning + trigger id in burst
             auto cEventIter  = cEvents.begin() + cTriggerId;
             fNReadbackEvents = cEvents.size();
-            do
-            {
+            do {
                 if(cEventIter >= cEvents.end()) break;
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -182,7 +177,9 @@ void KIRA::determineLatency()
                             {
                                 // monitor only specified sensor channels
                                 if(cHit % 2 == cLatencySensor)
-                                { cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() += 1; }
+                                {
+                                    cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() += 1;
+                                }
                             }
                         } // chip vector
                     }     // hybrid vector
@@ -341,10 +338,7 @@ void KIRA::calibrateIntensity()
         }
     }
     if(fTargetIntensity != 0 && cNrChipCovered == 16) { LOG(INFO) << BOLDBLUE << "Found new target intensity to illuminate all chips: " << fTargetIntensity << RESET; }
-    else
-    {
-        fTargetIntensity = 0;
-    }
+    else { fTargetIntensity = 0; }
 }
 
 bool KIRA::check_channel_illumination(BeBoard* pBoard, DetectorDataContainer& pContainer, uint16_t pLED)
@@ -380,8 +374,7 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
     // start at the beginning + trigger id in burst
     auto cEventIter  = pEvents.begin();
     fNReadbackEvents = pEvents.size();
-    do
-    {
+    do {
         if(cEventIter >= pEvents.end()) break;
         for(auto cOpticalGroup: *pBoard)
         {

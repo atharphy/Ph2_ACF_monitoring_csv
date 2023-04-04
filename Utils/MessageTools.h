@@ -85,10 +85,7 @@
             maxL -= 4;                                                                                                                                                                                 \
             PFs_ << ACRed << "...";                                                                                                                                                                    \
         }                                                                                                                                                                                              \
-        else                                                                                                                                                                                           \
-        {                                                                                                                                                                                              \
-            PFs_ << ACPlain << ACPlain << ACPlain << ACPlain;                                                                                                                                          \
-        }                                                                                                                                                                                              \
+        else { PFs_ << ACPlain << ACPlain << ACPlain << ACPlain; }                                                                                                                                     \
         msg_ << ACCyan << ACBold << __LINE__ << ACPlain << ACYellow << "\t] [" << ACPlain << ACWhite << ACBold << PFs_.str() << ACPlain << ACYellow << "]";                                            \
         int msgS = msg_.str().size() + 1;                                                                                                                                                              \
         if(msgS < __OFFSET__) msgS = __OFFSET__;                                                                                                                                                       \

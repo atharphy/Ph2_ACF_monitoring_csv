@@ -127,10 +127,7 @@ void DQMMetadata::fillCalibrationTimestamp(const DetectorDataContainer& theCalib
 {
     DetectorDataContainer* theTimestampPlotContainer;
     if(start) { theTimestampPlotContainer = &fCalibrationStartTimestampContainer; }
-    else
-    {
-        theTimestampPlotContainer = &fCalibrationStopTimestampContainer;
-    }
+    else { theTimestampPlotContainer = &fCalibrationStopTimestampContainer; }
     theTimestampPlotContainer->getSummary<StringContainer>().saveString(theCalibrationTimestampContainer.getSummary<std::string>());
 }
 

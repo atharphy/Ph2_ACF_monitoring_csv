@@ -22,7 +22,7 @@ class HistContainer : public PlotContainer
   public:
     HistContainer() : fTheHistogram(nullptr) {}
 
-    HistContainer(const HistContainer<Hist>& container) = delete;
+    HistContainer(const HistContainer<Hist>& container)                  = delete;
     HistContainer<Hist>& operator=(const HistContainer<Hist>& container) = delete;
 
     template <class... Args>

@@ -78,18 +78,12 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
             // if aligned then try and scope
             LOG(INFO) << "SLVS debug [stub lines] : Chip " << +cPairId << RESET;
         }
-        else
-        {
-            LOG(INFO) << BOLDBLUE << "SLVS debug [L1 line] : Chip " << +cPairId << RESET;
-        }
+        else { LOG(INFO) << BOLDBLUE << "SLVS debug [L1 line] : Chip " << +cPairId << RESET; }
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0);
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cPairId);
         if(pTrigger)
             cDebugInterface->L1ADebug((uint8_t)1, false);
-        else
-        {
-            cDebugInterface->StubDebug(true, 7);
-        }
+        else { cDebugInterface->StubDebug(true, 7); }
     }
 }
 
@@ -173,8 +167,7 @@ void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.start_input", 1);
     // send N triggers
     uint8_t cTriggerCounter = 0;
-    do
-    {
+    do {
         if(pTrigger) fBeBoardInterface->ChipTrigger(pBoard);
         // fBeBoardInterface->ChipTestPulse(pBoard);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -182,15 +175,13 @@ void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
     } while(cTriggerCounter < cNtriggers);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.stop_input", 1);
     auto cDebugDone = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.input_lines_debug_done");
-    do
-    {
+    do {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         cDebugDone = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.input_lines_debug_done");
     } while(cDebugDone != 0xFFFFFFFF);
     LOG(INFO) << BOLDBLUE << "Input lines debug done: 0x" << std::hex << cDebugDone << std::dec << RESET;
     auto cMapIterator = fInputDebugMap.begin();
-    do
-    {
+    do {
         auto cRegisterName = cMapIterator->first;
         // only print out registers that are of interest
         bool cPrintMapItem = (cRegisterName.find("ssa") != std::string::npos);
@@ -231,10 +222,7 @@ void PSHybridTester::SSAPairSelect(BeBoard* pBoard, const std::string& SSAPairSe
             cRegister = this->fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select");
             LOG(INFO) << BLUE << "SSA pair " << SSAPairSel << " is selected register value is " << std::bitset<4>(cRegister) << RESET;
         }
-        else
-        {
-            LOG(INFO) << BLUE << "SSA pair " << SSAPairSel << " already selected. Register value is " << std::bitset<4>(cRegister) << RESET;
-        }
+        else { LOG(INFO) << BLUE << "SSA pair " << SSAPairSel << " already selected. Register value is " << std::bitset<4>(cRegister) << RESET; }
     }
     catch(const std::out_of_range& e)
     {
@@ -300,10 +288,7 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
                             LOG(INFO) << BOLDRED << "CIC OUT Line " << +cLine << " was not aligned correctly." << RESET;
                             cBadLines[cLine - 1]++;
                         }
-                        else
-                        {
-                            LOG(DEBUG) << BOLDGREEN << "CIC OUT Line " << +cLine << " was aligned correctly." << RESET;
-                        }
+                        else { LOG(DEBUG) << BOLDGREEN << "CIC OUT Line " << +cLine << " was aligned correctly." << RESET; }
                         cRetry |= !cSuccess;
                     }
                 }
@@ -408,8 +393,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                         LOG(INFO) << "Tuning lines for PhyPort " << +cPhyPort << RESET;
                         cAlignmentStatus = true;
                         bool cFirstRun   = true;
-                        do
-                        {
+                        do {
                             for(uint8_t cLineId = 1; cLineId < 5; cLineId++)
                             {
                                 // auto cPhaseTuneLineOutput = PhaseTuneLine(cCic, cLineId);
@@ -428,10 +412,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
 
                                 // if (cPhaseTuneLineOutput.first) {
                                 if(cAlignmentStatus) { LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDGREEN << "GOOD" << RESET; }
-                                else
-                                {
-                                    LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDRED << "BAD" << RESET;
-                                }
+                                else { LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDRED << "BAD" << RESET; }
                             }
                             cFirstRun = false;
                         } while(!cAlignmentStatus && cFirstRun);
@@ -444,10 +425,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
             // cBackEndAlignment.Initialise();
             // cAlignmentStatus = cBackEndAlignment.CICAlignment(pBoard);
             if(cAlignmentStatus) { LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET; }
-            else
-            {
-                LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET;
-            }
+            else { LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET; }
 
             // D19cFWInterface::PhaseTuner pTuner;
             // uint8_t cMode        = 2;
@@ -722,10 +700,7 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
         { // Check this
             fillSummaryTree(Form("SSA%d_stub", (int)cSSAPairSel.at(1 - a) - '0'), badLines);
         }
-        else
-        {
-            fillSummaryTree(Form("SSA%d_stub", (int)cSSAPairSel.at(a) - '0'), badLines);
-        }
+        else { fillSummaryTree(Form("SSA%d_stub", (int)cSSAPairSel.at(a) - '0'), badLines); }
 #endif
     }
     // SSATree->Write();
@@ -833,10 +808,7 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
                                     LOG(DEBUG) << BOLDGREEN << +cL1PacketId << " L1 packet position: " << cL1HeaderPosition << " to " << +cL1PacketEndPosition << "." << RESET;
                                 }
                             }
-                            else
-                            {
-                                LOG(INFO) << BOLDRED << "L1 Header not found" << RESET;
-                            }
+                            else { LOG(INFO) << BOLDRED << "L1 Header not found" << RESET; }
                         }
                     }
                     cLinesInPairOK[1 - cReadoutChip->getId() % 2] = cPhaseTuned;
@@ -1245,8 +1217,7 @@ void PSHybridTester::CheckI2C(BeBoard* pBoard)
     int total = 0;
     int value = 0;
     int bad   = 0;
-    do
-    {
+    do {
         for(int i = 0; i < 256; i++)
         {
             for(auto cOpticalReadout: *pBoard)
@@ -1438,10 +1409,7 @@ void PSHybridTester::RunHybridETest()
                 if(cAcceptancePercentage != 0)
                 {
                     if(result < cNominalValue->second * (1 + cAcceptancePercentage) && result > cNominalValue->second * (1 - cAcceptancePercentage)) { LOG(INFO) << BOLDGREEN << "OK" << RESET; }
-                    else
-                    {
-                        LOG(INFO) << BOLDRED << "BAD" << RESET;
-                    }
+                    else { LOG(INFO) << BOLDRED << "BAD" << RESET; }
                 }
             }
         }
@@ -1620,15 +1588,14 @@ void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
                     while(!cCalibrated && iterations < 25)
                     {
                         if(result - ground > cAdjustmentTarget + 1)
-                        { fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) - 1); }
+                        {
+                            fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) - 1);
+                        }
                         else if(result - ground < cAdjustmentTarget - 1)
                         {
                             fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) + 1);
                         }
-                        else if(result - ground >= cAdjustmentTarget - 1.1 && result - ground <= cAdjustmentTarget + 1.1)
-                        {
-                            cCalibrated = true;
-                        }
+                        else if(result - ground >= cAdjustmentTarget - 1.1 && result - ground <= cAdjustmentTarget + 1.1) { cCalibrated = true; }
                         std::this_thread::sleep_for(std::chrono::microseconds(50));
                         cTC_PSFE.adc_get(TC_PSFE::measurement::AMUX, result);
                         iterations++;
@@ -1914,18 +1881,9 @@ void PSHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string& pFast
 {
     LOG(DEBUG) << BOLDBLUE << "Sending " << pFastCommand << RESET;
     if(pFastCommand == "ReSync") { this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 16) | (pDuration << 28)); }
-    else if(pFastCommand == "Trigger" || pFastCommand == "OpenShutter")
-    {
-        this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 18) | (pDuration << 28));
-    }
-    else if(pFastCommand == "TestPulse")
-    {
-        this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 17) | (pDuration << 28));
-    }
-    else if(pFastCommand == "BC0" || pFastCommand == "CloseShutter")
-    {
-        this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (pDuration << 28));
-    }
+    else if(pFastCommand == "Trigger" || pFastCommand == "OpenShutter") { this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 18) | (pDuration << 28)); }
+    else if(pFastCommand == "TestPulse") { this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 17) | (pDuration << 28)); }
+    else if(pFastCommand == "BC0" || pFastCommand == "CloseShutter") { this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (pDuration << 28)); }
     else if(pFastCommand == "ReSync&BC0" || pFastCommand == "StartReadout")
     {
         this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 16) | (pDuration << 28));
@@ -1934,10 +1892,7 @@ void PSHybridTester::CheckFastCommands(BeBoard* pBoard, const std::string& pFast
     {
         this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 18) | (pDuration << 28));
     }
-    else if(pFastCommand == "TestPulse&BC0")
-    {
-        this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 17) | (pDuration << 28));
-    }
+    else if(pFastCommand == "TestPulse&BC0") { this->fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control", (1 << 19) | (1 << 17) | (pDuration << 28)); }
 }
 void PSHybridTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
