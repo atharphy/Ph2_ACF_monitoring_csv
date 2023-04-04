@@ -22,6 +22,7 @@
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
+#include "Utils/ExceptionHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -656,11 +657,14 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             fCicInterface->ConfigureChip(cCic);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
         }
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         bool cSuccess = CicStartUp(cOpticalGroup, true);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET;
-            throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
+            LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
+            ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
+            continue;
         }
     }
 
@@ -718,7 +722,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             if(clpGBT == nullptr) continue;
 
             uint8_t cSide = cHybrid->getId() % 2;
-            LOG(DEBUG) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
+            LOG(INFO) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
 
             if(cHybrid->getReset() == 0)
             {
@@ -892,13 +896,20 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
 
 bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStartUpSequence)
 {
-    auto cBoardId    = pOpticalGroup->getBeBoardId();
+    auto cBoardId        = pOpticalGroup->getBeBoardId();
+    auto cOpticalGroupId = pOpticalGroup->getId();
     auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     bool cWith2SFEH  = (*cBoardIter)->getEventType() == EventType::VR2S;
     auto cSparsified = (*cBoardIter)->getSparsification();
 
+    auto exceptionHandleFunction = [cBoardId, cOpticalGroupId](uint16_t hybridId, const std::string&& failMode)
+    {
+        LOG(INFO) << BOLDRED << "FAILED to " << failMode <<" for Board id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
+        ExceptionHandler::getInstance()->disableHybrid(cBoardId, cOpticalGroupId, hybridId);
+    };
+
     auto& clpGBT   = pOpticalGroup->flpGBT;
-    bool  cSuccess = true;
+    bool  cSuccess = false;
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     for(auto cHybrid: *pOpticalGroup)
     {
@@ -924,11 +935,10 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         uint8_t cModeSelect = (cIs2S) ? 0 : 1;
         uint8_t cBx0Delay   = (cIs2S) ? 8 : 22;
         // select CIC mode
-        cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
-        if(!cSuccess)
+        if(!fCicInterface->SelectMode(cCic, cModeSelect))
         {
-            LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-            throw std::runtime_error(std::string("FAILED to set CIC mode ... something is wrong... .. STOPPING"));
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC mode");
+            continue;
         }
         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << (cIs2S ? "2S" : "PS") << " readout." << RESET;
 
@@ -952,7 +962,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             uint8_t cFeConfigReg  = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
             auto    cClkFrequency = cCic->getClockFrequency();
             uint8_t cNewValue     = (cFeConfigReg & 0xFD) | ((uint8_t)(cClkFrequency == 640) << 1);
-            cSuccess              = fCicInterface->WriteChipReg(cCic, "FE_CONFIG", cNewValue);
+            fCicInterface->WriteChipReg(cCic, "FE_CONFIG", cNewValue);
         }
 
         // 2S-FEHs
@@ -964,41 +974,53 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             cClkTerm = 0;
             cRxTerm  = 1;
         }
-        cSuccess = fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
-        if(cSuccess)
+
+        if(!fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm))
         {
-            if(cStartUpSequence)
-            {
-                LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
-                cSuccess = fCicInterface->StartUp(cCic, cCic->getDriveStrength(), cCic->getEdgeSelect());
-            }
-            else
-            {
-                LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
-                if(fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength()))
-                    cSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
-                else
-                    cSuccess = false;
-            }
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC Termination");
+            continue;
+        }
+
+        bool startUpSuccess;
+        if(cStartUpSequence)
+        {
+            LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
+            startUpSuccess = fCicInterface->StartUp(cCic, cCic->getDriveStrength(), cCic->getEdgeSelect());
         }
         else
-            throw std::runtime_error(std::string("FAILED to start-up CIC ... something is wrong... .. STOPPING"));
+        {
+            LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
+            if(fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength()))
+                startUpSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
+            else
+                startUpSuccess = false;
+        }
 
-        if(cSuccess)
-            cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
-        else
-            throw std::runtime_error(std::string("FAILED to set CIC sparsification... .. STOPPING"));
+        if(!startUpSuccess)
+        {
+            exceptionHandleFunction(cHybrid->getId(), "start-up CIC");
+            continue;
+        }
 
-        if(cSuccess)
-            cSuccess = fCicInterface->ConfigureStubOutput(cCic);
-        else
-            throw std::runtime_error(std::string("FAILED to configure CIC stub output... .. STOPPING"));
+        if(!fCicInterface->SetSparsification(cCic, cSparsified))
+        {
+            exceptionHandleFunction(cHybrid->getId(), "set CIC sparsification");
+            continue;
+        }
 
-        if(cSuccess)
-            cSuccess = fCicInterface->ManualBx0Alignment(cCic, cBx0Delay);
-        else
-            throw std::runtime_error(std::string("FAILED to configure CIC Bx0 delay... .. STOPPING"));
+        if(!fCicInterface->ConfigureStubOutput(cCic))
+        {
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC stub output");
+            continue;
+        }
 
+        if(!fCicInterface->ManualBx0Alignment(cCic, cBx0Delay))
+        {
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC Bx0 delay");
+            continue;
+        }
+
+        cSuccess = true; // at least on hybrid is working fine
     } // all hybrids connected to this OG
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
@@ -1088,11 +1110,14 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                         fCicInterface->ConfigureChip(cCic);
                         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
                     }
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                     bool cSuccess = CicStartUp(cOpticalGroup, false);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                     if(!cSuccess)
                     {
-                        LOG(INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET;
-                        throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
+                        LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +cBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
+                        ExceptionHandler::getInstance()->disableOpticalGroup(cBoard->getId(), cOpticalGroup->getId());
+                        continue;
                     }
                 }
             }
@@ -1198,6 +1223,8 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
     theConfigureInfo.extractObjectNames(fNameContainer);
+
+    ExceptionHandler::getInstance()->setDetectorContainer(fDetectorContainer);
 
     std::cout << fParsedFile.str() << std::endl;
     ConfigureHw(false, true);

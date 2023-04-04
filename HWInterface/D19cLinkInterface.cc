@@ -1,4 +1,5 @@
 #include "HWInterface/D19cLinkInterface.h"
+#include "Utils/ExceptionHandler.h"
 
 using namespace Ph2_HwDescription;
 
@@ -72,8 +73,15 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
 
     if(!cAllLocked)
     {
-        LOG(ERROR) << BOLDRED << "Failed to lock all links after a general reset" << RESET;
-        throw Exception("Failed to lock all links after a general reset");
+        LOG(ERROR) << BOLDRED << "Failed to lock all links after a general reset, disabling problematic OpticalGroups and continuing" << RESET;
+        for(auto cOpticalReadout: *pBoard)
+        {
+            if(!GetLinkStatus(cOpticalReadout->getId()))
+            {
+                LOG(ERROR) << BOLDRED << "Disabling Board " << RESET;
+                ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalReadout->getId());
+            }
+        }
     }
 }
 

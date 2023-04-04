@@ -390,8 +390,6 @@ void Tool::fillOTMetadataFinalConditions()
 #else
     if(fDQMStreamerEnabled)
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-
         ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");
         theCICConfigurationSerialization.streamByHybridContainer(fDQMStreamer, theCICConfigurationContainer, isInitialValue);
     }
@@ -2305,7 +2303,6 @@ class MeasureBeBoardDataPerGroup : public ScanBase
 
     void operator()() override
     {
- std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         uint32_t burstNumbers;
         uint32_t lastBurstNumberOfEvents;
         if(fNumberOfEventsPerBurst <= 0)
@@ -2323,11 +2320,9 @@ class MeasureBeBoardDataPerGroup : public ScanBase
                 lastBurstNumberOfEvents = fNumberOfEvents % fNumberOfEventsPerBurst;
             }
         }
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         while(burstNumbers > 0)
         {
-  std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
             // LOG (INFO) << BOLDYELLOW << "Tool::ReadNEvents : number of events requested is " << +currentNumberOfEvents << RESET;
@@ -2346,17 +2341,14 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             const std::vector<Event*>& events = fTool->GetEvents();
             fTool->setNReadbackEvents(events.size());
             // Assuming all chip will have all channels enabled:
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             if(fSameChannelGroupForAllChannels)
             {
-   std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                 // LOG (INFO) << BOLDYELLOW << "MeasureBeBoardDataPerGroup fSameChannelGroupForAllChannels read-back " << events.size() << " event." << RESET;
                 auto channelGroup = this->getChannelGroup(fGroupNumber);
                 if(channelGroup == nullptr)
                     LOG(ERROR) << BOLDRED << "Channel group does not exist..." << RESET;
                 else
                 {
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                     for(auto& event: events) event->fillDataContainer(fDetectorDataContainer->getObject(fBoardId), channelGroup);
                 }
             }
@@ -2388,7 +2380,6 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
 void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     
     MeasureBeBoardDataPerGroup theScan(this);
     theScan.setDataContainer(fDetectorDataContainer);

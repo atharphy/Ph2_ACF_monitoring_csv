@@ -4,12 +4,17 @@
 #include "iostream"
 
 class DetectorContainer;
+class DetectorDataContainer;
 
 class ExceptionHandler {
 private:
     static ExceptionHandler* fInstance;
-    ExceptionHandler() {} // Private constructor to prevent instantiation outside of the class
-
+    ExceptionHandler() {}; // Private constructor to prevent instantiation outside of the class
+    ~ExceptionHandler();
+    void removeContainerExceptionQuery(std::vector<std::string>& theFunctionNameList);
+    void initializeQueryFunctionNameContainer();
+    DetectorDataContainer *fQueryFunctionNames {nullptr};
+    DetectorContainer     *fDetectorContainer {nullptr};
 
 public:
     static ExceptionHandler* getInstance() {
@@ -19,12 +24,14 @@ public:
         return fInstance;
     }
 
-    void doSomething() {
-        std::cout << "Doing something" << std::endl;
-    }
-};
+    void setDetectorContainer(DetectorContainer *theDetectorContainer);
 
-// Initialize static member variable
-ExceptionHandler* ExceptionHandler::fInstance = nullptr;
+    void disableChip(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId);
+    void disableHybrid(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId);
+    void disableOpticalGroup(uint16_t boardId, uint16_t opticalGroupId);
+    void disableBoard(uint16_t boardId);
+
+    void resetExceptionQueries();
+};
 
 #endif
