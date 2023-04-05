@@ -35,7 +35,7 @@ class PSROHTester : public OTHybridTester
     ~PSROHTester();
 
     void Initialise();
-    void Start(int currentRun);
+    void Start(const StartInfo& theStartInfo);
     void Stop();
     void Pause();
     void Resume();

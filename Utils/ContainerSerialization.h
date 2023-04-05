@@ -253,12 +253,9 @@ class ContainerSerialization
     {
         std::ostringstream            ouputStream;
         boost::archive::text_oarchive theArchive(ouputStream);
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         theArchive << fCalibrationName;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         theArchive << theInputContainer;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         serializeExtraArguments(theArchive, extraArguments...);
         return ouputStream.str();

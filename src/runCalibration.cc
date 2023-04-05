@@ -136,9 +136,6 @@ int main(int argc, char* argv[])
 
     theMiddlewareStateMachine.initialize();
 
-    // int main ( int argc, char* argv[] )
-    // std::cout << argc << "-" << argv[2] << std::endl;
-    // exit(0);
     int   tAppArgc = 1;
     char* tAppArgv[2];
     tAppArgv[0] = argv[0];

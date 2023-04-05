@@ -707,7 +707,7 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
     }
 }
 
-void PSROHTester::Start(int currentRun)
+void PSROHTester::Start(const StartInfo& theStartInfo)
 {
     LOG(INFO) << BOLDBLUE << "Starting PS ROH Tester" << RESET;
     Initialise();
