@@ -125,8 +125,8 @@ void GenericDacDacScan::localConfigure(const std::string& histoFileName, int cur
 
 void GenericDacDacScan::run()
 {
-    ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theOccContainer);
-    CalibBase::fillVectorContainer(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
+    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
     GenericDacDacScan::scanDacDac(regNameDAC1, regNameDAC2, dac1List, dac2List, &theOccContainer);
 
     // ################
@@ -178,7 +178,7 @@ void GenericDacDacScan::analyze()
                                                ->at(cOpticalGroup->getIndex())
                                                ->at(cHybrid->getIndex())
                                                ->at(cChip->getIndex())
-                                               ->getSummary<std::vector<uint16_t>>()
+                                               ->getSummary<std::vector<float>>()
                                                .at(i * dac2List.size() + j);
                             if(current > best)
                             {
@@ -259,7 +259,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
                                 ->at(cOpticalGroup->getIndex())
                                 ->at(cHybrid->getIndex())
                                 ->at(cChip->getIndex())
-                                ->getSummary<std::vector<uint16_t>>()
+                                ->getSummary<std::vector<float>>()
                                 .at(i * dac2List.size() + j) = occ;
                         }
 

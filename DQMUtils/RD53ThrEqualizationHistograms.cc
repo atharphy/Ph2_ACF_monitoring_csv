@@ -69,7 +69,7 @@ bool ThrEqualizationHistograms::fill(std::string& inputStream)
     }
     if(theOccupancyScanSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theOccupancyScanSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancyScanSerialization.deserializeChipContainer<EmptyContainer, std::vector<float>>(fDetectorContainer);
         ThrEqualizationHistograms::fillOccupancyScan(fDetectorData);
         return true;
     }
@@ -152,9 +152,9 @@ void ThrEqualizationHistograms::fillOccupancyScan(const DetectorDataContainer& O
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                    const size_t TDACGainNSteps = cChip->getSummary<std::vector<uint16_t>>().size();
+                    const size_t TDACGainNSteps = cChip->getSummary<std::vector<float>>().size();
                     const float  step           = (TDACGainNSteps != 0 ? (stopValue - startValue) / TDACGainNSteps : 0);
-                    for(auto i = 0u; i <= TDACGainNSteps; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<std::vector<uint16_t>>().at(i));
+                    for(auto i = 0u; i <= TDACGainNSteps; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<std::vector<float>>().at(i));
                 }
 }
 

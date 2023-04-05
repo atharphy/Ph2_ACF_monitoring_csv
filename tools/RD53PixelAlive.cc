@@ -274,11 +274,11 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
     // ####################
     theBCIDContainer.reset();
     ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theBCIDContainer);
-    CalibBase::fillVectorContainer(theBCIDContainer, frontEnd->maxBCIDvalue + 1, 0);
+    CalibBase::fillVectorContainer<uint16_t>(theBCIDContainer, frontEnd->maxBCIDvalue + 1, 0);
 
     theTrgIDContainer.reset();
     ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theTrgIDContainer);
-    CalibBase::fillVectorContainer(theTrgIDContainer, frontEnd->maxTRIGIDvalue + 1, 0);
+    CalibBase::fillVectorContainer<uint16_t>(theTrgIDContainer, frontEnd->maxTRIGIDvalue + 1, 0);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)

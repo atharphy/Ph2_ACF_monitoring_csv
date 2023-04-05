@@ -39,7 +39,7 @@ bool LatencyHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<float>>(fDetectorContainer);
         LatencyHistograms::fillOccupancy(fDetectorData);
         return true;
     }
@@ -69,7 +69,7 @@ void LatencyHistograms::fillOccupancy(const DetectorDataContainer& OccupancyCont
                                                 .fTheHistogram;
 
                     for(size_t i = startValue; i <= stopValue; i += nTRIGxEvent)
-                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<std::vector<uint16_t>>().at((i - startValue) / nTRIGxEvent));
+                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<std::vector<float>>().at((i - startValue) / nTRIGxEvent));
                 }
 }
 

@@ -146,8 +146,8 @@ void ThrEqualization::run()
         // ###########################################
         // # Scan DAC and run threshold equalization #
         // ###########################################
-        ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theContainer);
-        CalibBase::fillVectorContainer(theContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+        ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theContainer);
+        CalibBase::fillVectorContainer<float>(theContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
         ThrEqualization::scanDac(frontEnd->TDACGainReg, dacList, &theContainer);
 
         // #######################################
@@ -306,7 +306,7 @@ void ThrEqualization::analyzeDuringRun()
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
                         auto current =
-                            round(theContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().at(i) /
+                            round(theContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i) /
                                   RD53Shared::PRECISION) *
                             RD53Shared::PRECISION;
                         if(current < best)
@@ -397,7 +397,7 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // ###############
                         // # Save output #
                         // ###############
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().at(i) = stdDev;
+                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i) = stdDev;
 
                         // ##############################################
                         // # Send periodic data to monitor the progress #

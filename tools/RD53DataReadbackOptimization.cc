@@ -121,12 +121,12 @@ void DataReadbackOptimization::localConfigure(const std::string& histoFileName, 
 
 void DataReadbackOptimization::run()
 {
-    ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theTAP0scanContainer);
-    CalibBase::fillVectorContainer(theTAP0scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
-    ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theTAP1scanContainer);
-    CalibBase::fillVectorContainer(theTAP1scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
-    ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theTAP2scanContainer);
-    CalibBase::fillVectorContainer(theTAP2scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP0scanContainer);
+    CalibBase::fillVectorContainer<uint16_t>(theTAP0scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP1scanContainer);
+    CalibBase::fillVectorContainer<uint16_t>(theTAP1scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP2scanContainer);
+    CalibBase::fillVectorContainer<uint16_t>(theTAP2scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
     DataReadbackOptimization::scanDac("DAC_CML_BIAS_0", dacListTAP0, &theTAP0scanContainer);
@@ -182,14 +182,14 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                 for(const auto cChip: *cHybrid)
                 {
                     auto best = *std::max_element(
-                        theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().begin(),
-                        theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().end());
+                        theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<double>>().begin(),
+                        theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<double>>().end());
                     int regVal = 0;
 
                     for(auto i = 1u; i < dacListTAP.size(); i++)
                     {
                         auto current =
-                            round(theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().at(i) /
+                            round(theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<double>>().at(i) /
                                   RD53Shared::PRECISION) *
                             RD53Shared::PRECISION;
                         if((current >= 0) && (current < best))
@@ -246,7 +246,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        cChip->getSummary<std::vector<uint16_t>>().at(i) =
+                        cChip->getSummary<std::vector<double>>().at(i) =
                             BERtest::theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>();
 
         // ##############################################

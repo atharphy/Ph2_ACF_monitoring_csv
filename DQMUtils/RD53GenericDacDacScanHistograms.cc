@@ -100,7 +100,7 @@ bool GenericDacDacScanHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<float>>(fDetectorContainer);
         GenericDacDacScanHistograms::fillOccupancy(fDetectorData);
         return true;
     }
@@ -131,7 +131,7 @@ void GenericDacDacScanHistograms::fillOccupancy(const DetectorDataContainer& Occ
 
                     for(auto i = 0; i < Occupancy2DHist->GetNbinsX(); i++)
                         for(auto j = 0; j < Occupancy2DHist->GetNbinsY(); j++)
-                            Occupancy2DHist->SetBinContent(i + 1, j + 1, cChip->getSummary<std::vector<uint16_t>>().at(i * Occupancy2DHist->GetNbinsY() + j));
+                            Occupancy2DHist->SetBinContent(i + 1, j + 1, cChip->getSummary<std::vector<float>>().at(i * Occupancy2DHist->GetNbinsY() + j));
                 }
 }
 

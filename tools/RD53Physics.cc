@@ -298,21 +298,6 @@ void Physics::fillDataContainer(BeBoard& theBoard)
 void Physics::clearContainers(BeBoard& theBoard)
 {
     RD53Event::clearEventContainer(theBoard, theOccContainer);
-    const auto cBoard = theOccContainer.at(theBoard.getIndex());
-
-    // ####################
-    // # Clear containers #
-    // ####################
-    for(const auto cOpticalGroup: *cBoard)
-        for(const auto cHybrid: *cOpticalGroup)
-            for(const auto cChip: *cHybrid)
-            {
-                theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().clear();
-                theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().clear();
-
-                for(auto i = 0u; i < (frontEnd->maxBCIDvalue + 1); i++)
-                    theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().push_back(0);
-                for(auto i = 0u; i < (frontEnd->maxTRIGIDvalue + 1); i++)
-                    theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().push_back(0);
-            }
+    CalibBase::fillVectorContainer<uint16_t>(theBCIDContainer, frontEnd->maxBCIDvalue + 1, 0, theBoard.getIndex());
+    CalibBase::fillVectorContainer<uint16_t>(theTrgIDContainer, frontEnd->maxTRIGIDvalue + 1, 0, theBoard.getIndex());
 }

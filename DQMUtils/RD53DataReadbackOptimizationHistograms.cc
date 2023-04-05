@@ -59,7 +59,7 @@ bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
 
     if(theTAP0scanSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theTAP0scanSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theTAP0scanSerialization.deserializeChipContainer<EmptyContainer, std::vector<double>>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillScanTAP0(fDetectorData);
         return true;
     }
@@ -71,7 +71,7 @@ bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
     }
     if(theTAP1scanSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theTAP1scanSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theTAP1scanSerialization.deserializeChipContainer<EmptyContainer, std::vector<double>>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillScanTAP1(fDetectorData);
         return true;
     }
@@ -83,7 +83,7 @@ bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)
     }
     if(theTAP2scanSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theTAP2scanSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theTAP2scanSerialization.deserializeChipContainer<EmptyContainer, std::vector<double>>(fDetectorContainer);
         DataReadbackOptimizationHistograms::fillScanTAP2(fDetectorData);
         return true;
     }
@@ -112,7 +112,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP0(const DetectorDataContaine
                                              ->getSummary<CanvasContainer<TH1F>>()
                                              .fTheHistogram;
 
-                    for(auto i = 0; i < TAP0scanHist->GetNbinsX(); i++) TAP0scanHist->SetBinContent(i + 1, cChip->getSummary<std::vector<uint16_t>>().at(i));
+                    for(auto i = 0; i < TAP0scanHist->GetNbinsX(); i++) TAP0scanHist->SetBinContent(i + 1, cChip->getSummary<std::vector<double>>().at(i));
                 }
 }
 
@@ -148,7 +148,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP1(const DetectorDataContaine
                                              ->getSummary<CanvasContainer<TH1F>>()
                                              .fTheHistogram;
 
-                    for(auto i = 0; i < TAP1scanHist->GetNbinsX(); i++) TAP1scanHist->SetBinContent(i + 1, cChip->getSummary<std::vector<uint16_t>>().at(i));
+                    for(auto i = 0; i < TAP1scanHist->GetNbinsX(); i++) TAP1scanHist->SetBinContent(i + 1, cChip->getSummary<std::vector<double>>().at(i));
                 }
 }
 
@@ -184,7 +184,7 @@ void DataReadbackOptimizationHistograms::fillScanTAP2(const DetectorDataContaine
                                              ->getSummary<CanvasContainer<TH1F>>()
                                              .fTheHistogram;
 
-                    for(auto i = 0; i < TAP2scanHist->GetNbinsX(); i++) TAP2scanHist->SetBinContent(i + 1, cChip->getSummary<std::vector<uint16_t>>().at(i));
+                    for(auto i = 0; i < TAP2scanHist->GetNbinsX(); i++) TAP2scanHist->SetBinContent(i + 1, cChip->getSummary<std::vector<double>>().at(i));
                 }
 }
 

@@ -41,7 +41,7 @@ bool ClockDelayHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<float>>(fDetectorContainer);
         ClockDelayHistograms::fillOccupancy(fDetectorData);
         return true;
     }
@@ -70,7 +70,7 @@ void ClockDelayHistograms::fillOccupancy(const DetectorDataContainer& OccupancyC
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                    for(size_t i = startValue; i <= stopValue; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<std::vector<uint16_t>>().at(i - startValue));
+                    for(size_t i = startValue; i <= stopValue; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<std::vector<float>>().at(i - startValue));
                 }
 }
 
