@@ -6,7 +6,7 @@
 #include <array>
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/RD53EyeScanOptimizationHistograms.h"
+#include "DQMUtils/ProductionITRD53A/RD53EyeScanOptimizationHistograms.h"
 #include "TApplication.h"
 #include "TH2F.h"
 #endif

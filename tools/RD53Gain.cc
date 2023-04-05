@@ -89,17 +89,18 @@ void Gain::sendData()
 {
     if(fDQMStreamerEnabled)
     {
-        ContainerSerialization theOccupancySerialization("GainOccupancy");
-        size_t                 index = 0;
-        for(const auto theOccContainer: detectorContainerVector)
-        {
-            uint16_t deltaVcal = dacList[index++] - offset;
-            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVcal);
-        }
         if(theGainContainer != nullptr)
         {
             ContainerSerialization theGainSerialization("GainGain");
             theGainSerialization.streamByChipContainer(fDQMStreamer, *theGainContainer.get());
+        }
+
+        size_t                 index = 0;
+        ContainerSerialization theOccupancySerialization("GainOccupancy");
+        for(const auto theOccContainer: detectorContainerVector)
+        {
+            uint16_t deltaVcal = dacList[index++] - offset;
+            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVcal);
         }
     }
 }

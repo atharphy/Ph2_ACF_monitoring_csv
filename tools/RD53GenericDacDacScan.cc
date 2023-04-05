@@ -125,9 +125,8 @@ void GenericDacDacScan::localConfigure(const std::string& histoFileName, int cur
 
 void GenericDacDacScan::run()
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
-    ContainerFactory::copyAndInitChip<GenericDataArray<GenericDacDacScanSize>>(*fDetectorContainer, theOccContainer);
+    ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
+    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
     GenericDacDacScan::scanDacDac(regNameDAC1, regNameDAC2, dac1List, dac2List, &theOccContainer);
 
     // ################
@@ -161,8 +160,6 @@ void GenericDacDacScan::draw(bool saveData)
 
 void GenericDacDacScan::analyze()
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerFactory::copyAndInitChip<std::pair<uint16_t, uint16_t>>(*fDetectorContainer, theGenericDacDacScanContainer);
 
     for(const auto cBoard: *fDetectorContainer)
@@ -181,8 +178,8 @@ void GenericDacDacScan::analyze()
                                                ->at(cOpticalGroup->getIndex())
                                                ->at(cHybrid->getIndex())
                                                ->at(cChip->getIndex())
-                                               ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
-                                               .data[i * dac2List.size() + j];
+                                               ->getSummary<std::vector<float>>()
+                                               .at(i * dac2List.size() + j);
                             if(current > best)
                             {
                                 regVal1 = dac1List[i];
@@ -217,8 +214,6 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
                                    const std::vector<uint16_t>& dac2List,
                                    DetectorDataContainer*       theContainer)
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(auto i = 0u; i < dac1List.size(); i++)
     {
         // ###########################
@@ -264,8 +259,8 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
                                 ->at(cOpticalGroup->getIndex())
                                 ->at(cHybrid->getIndex())
                                 ->at(cChip->getIndex())
-                                ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
-                                .data[i * dac2List.size() + j] = occ;
+                                ->getSummary<std::vector<float>>()
+                                .at(i * dac2List.size() + j) = occ;
                         }
 
             // ##############################################

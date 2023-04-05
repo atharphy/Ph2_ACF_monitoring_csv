@@ -79,7 +79,6 @@ export USBINSTLIB=$USBINSTDIR/lib
 #########
 # EUDAQ #
 #########
-export EUDAQ_DIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
 export EUDAQLIB=$EUDAQDIR/lib
 
 ############

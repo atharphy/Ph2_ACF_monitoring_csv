@@ -27,7 +27,7 @@
 #include "HWInterface/ReadoutChipInterface.h"
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/RD53TempSensorHistograms.h"
+#include "DQMUtils/ProductionITRD53A/RD53TempSensorHistograms.h"
 #endif
 
 // #########################

@@ -95,21 +95,17 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
 
 bool GenericDacDacScanHistograms::fill(std::string& inputStream)
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerSerialization theOccupancySerialization("GenericDacDacScanOccupancy");
     ContainerSerialization theDACDACSerialization("GenericDacDacScanDACDAC");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched GenericDacDacScan Occupancy!!!!!\n";
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<float>>(fDetectorContainer);
         GenericDacDacScanHistograms::fillOccupancy(fDetectorData);
         return true;
     }
     if(theDACDACSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched GenericDacDacScan DACDAC!!!!!\n";
         DetectorDataContainer fDetectorData = theDACDACSerialization.deserializeChipContainer<EmptyContainer, std::pair<uint16_t, uint16_t>>(fDetectorContainer);
         GenericDacDacScanHistograms::fillGenericDacDacScan(fDetectorData);
         return true;
@@ -119,14 +115,12 @@ bool GenericDacDacScanHistograms::fill(std::string& inputStream)
 
 void GenericDacDacScanHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer)
 {
-    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<GenericDacDacScanSize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* Occupancy2DHist = Occupancy2D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -137,7 +131,7 @@ void GenericDacDacScanHistograms::fillOccupancy(const DetectorDataContainer& Occ
 
                     for(auto i = 0; i < Occupancy2DHist->GetNbinsX(); i++)
                         for(auto j = 0; j < Occupancy2DHist->GetNbinsY(); j++)
-                            Occupancy2DHist->SetBinContent(i + 1, j + 1, cChip->getSummary<GenericDataArray<GenericDacDacScanSize>>().data[i * Occupancy2DHist->GetNbinsY() + j]);
+                            Occupancy2DHist->SetBinContent(i + 1, j + 1, cChip->getSummary<std::vector<float>>().at(i * Occupancy2DHist->GetNbinsY() + j));
                 }
 }
 
@@ -148,7 +142,7 @@ void GenericDacDacScanHistograms::fillGenericDacDacScan(const DetectorDataContai
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* GenericDac1ScanHist = GenericDac1Scan.getObject(cBoard->getId())
                                                     ->getObject(cOpticalGroup->getId())

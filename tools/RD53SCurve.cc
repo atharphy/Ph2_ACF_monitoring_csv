@@ -88,6 +88,7 @@ void SCurve::sendData()
             ContainerSerialization theThresholdAndNoiseSerialization("SCurveThresholdAndNoise");
             theThresholdAndNoiseSerialization.streamByChipContainer(fDQMStreamer, *theThresholdAndNoiseContainer.get());
         }
+
         size_t                 index = 0;
         ContainerSerialization theOccupancySerialization("SCurveOccupancy");
         for(const auto theOccContainer: detectorContainerVector)

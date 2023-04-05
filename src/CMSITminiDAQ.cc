@@ -296,25 +296,25 @@ int main(int argc, char** argv)
                 if(pa.fDetectorContainer->size() != 1)
                 {
                     auto boardSubset = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addBoardQueryFunction(boardSubset);
+                    pa.fDetectorContainer->addBoardQueryFunction(boardSubset, "boardSubset");
                     doTwice = true;
                 }
                 else if(pa.fDetectorContainer->at(0)->size() != 1)
                 {
                     auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addOpticalGroupQueryFunction(optoGroupSubset);
+                    pa.fDetectorContainer->addOpticalGroupQueryFunction(optoGroupSubset, "opticalGroupSubset");
                     doTwice = true;
                 }
                 else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
                 {
                     auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addHybridQueryFunction(hybridSubset);
+                    pa.fDetectorContainer->addHybridQueryFunction(hybridSubset, "moduleSubset");
                     doTwice = true;
                 }
                 else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
                 {
                     auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset);
+                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset, "readoutChipSubset");
                     doTwice = true;
                 }
             }

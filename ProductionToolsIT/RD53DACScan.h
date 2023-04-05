@@ -21,7 +21,7 @@
 // #endif
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/RD53DACScanHistograms.h"
+#include "DQMUtils/ProductionITRD53A/RD53DACScanHistograms.h"
 #include "TApplication.h"
 #endif
 

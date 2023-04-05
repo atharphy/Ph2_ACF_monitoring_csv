@@ -27,8 +27,8 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
     // #######################
     auto         frontEnd  = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
     const size_t ToTsize   = frontEnd->maxToTvalue + 1;
-    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = frontEnd->maxBCIDvalue + 1;
+    const size_t TrgIDsize = frontEnd->maxTRIGIDvalue + 1;
 
     auto hToT1D = CanvasContainer<TH1F>("ToT1D", "<ToT> Distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
@@ -51,31 +51,25 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 
 bool PhysicsHistograms::fill(std::string& inputStream)
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
-
     ContainerSerialization theOccupancySerialization("PhysicsOccupancy");
     ContainerSerialization theBCIDSerialization("PhysicsBCID");
     ContainerSerialization theTrgIDSerialization("PhysicsTrgID");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Physics Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer);
         PhysicsHistograms::fill(fDetectorData);
         return true;
     }
     if(theBCIDSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Physics BCID!!!!!\n";
-        DetectorDataContainer fDetectorData = theBCIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<BCIDsize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theBCIDSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         PhysicsHistograms::fillBCID(fDetectorData);
         return true;
     }
     if(theTrgIDSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Physics TrgID!!!!!\n";
-        DetectorDataContainer fDetectorData = theTrgIDSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TrgIDsize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theTrgIDSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         PhysicsHistograms::fillTrgID(fDetectorData);
         return true;
     }
@@ -89,7 +83,9 @@ void PhysicsHistograms::fill(const DetectorDataContainer& DataContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+                    if(DataContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<OccupancyAndPh>() ==
+                       nullptr)
+                        continue;
 
                     auto* ToT1DHist =
                         ToT1D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
@@ -126,36 +122,32 @@ void PhysicsHistograms::fill(const DetectorDataContainer& DataContainer)
 
 void PhysicsHistograms::fillBCID(const DetectorDataContainer& DataContainer)
 {
-    const size_t BCIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-
     for(const auto cBoard: DataContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<BCIDsize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* BCIDHist =
                         BCID.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < BCIDsize; i++)
+                    for(auto i = 0u; i < cChip->getSummary<std::vector<uint16_t>>().size(); i++)
                     {
                         auto bin = (i == 0 ? BCIDHist->GetNbinsX() : i);
-                        BCIDHist->SetBinContent(bin, BCIDHist->GetBinContent(bin) + cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+                        BCIDHist->SetBinContent(bin, BCIDHist->GetBinContent(bin) + cChip->getSummary<std::vector<uint16_t>>().at(i));
                     }
                 }
 }
 
 void PhysicsHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
 {
-    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
-
     for(const auto cBoard: DataContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<TrgIDsize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TriggerIDHist = TriggerID.getObject(cBoard->getId())
                                               ->getObject(cOpticalGroup->getId())
@@ -164,10 +156,10 @@ void PhysicsHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
                                               ->getSummary<CanvasContainer<TH1F>>()
                                               .fTheHistogram;
 
-                    for(auto i = 0u; i < TrgIDsize; i++)
+                    for(auto i = 0u; i < cChip->getSummary<std::vector<uint16_t>>().size(); i++)
                     {
                         auto bin = (i == 0 ? TriggerIDHist->GetNbinsX() : i);
-                        TriggerIDHist->SetBinContent(bin, TriggerIDHist->GetBinContent(bin) + cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
+                        TriggerIDHist->SetBinContent(bin, TriggerIDHist->GetBinContent(bin) + cChip->getSummary<std::vector<uint16_t>>().at(i));
                     }
                 }
 }
