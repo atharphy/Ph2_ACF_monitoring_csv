@@ -221,6 +221,7 @@ float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGst
         //if (abs(ADC_VBG - targetADCVBG) < LSB )
         {
             cSuccess = true;
+            fReadoutChipInterface->WriteChipReg(cChip, VREFstring, DAC_val);
             std::cout << " VREF calibrated" << std::endl;
             break;
         }
