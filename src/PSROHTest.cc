@@ -55,7 +55,7 @@ void killProcessFunction(Tool* theTool)
 
 int main(int argc, char* argv[])
 {
-#if defined(__TCUSB__) && defined(__ROH_USB__) && defined(__USE_ROOT__)
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -220,7 +220,7 @@ int main(int argc, char* argv[])
     // Initilaise PSROH tester
     PSROHTester cPSROHTester;
     cPSROHTester.Inherit(&cTool);
-
+    cPSROHTester.InitialiseTestCard(false);
     uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
     cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
 

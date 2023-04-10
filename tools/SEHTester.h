@@ -10,7 +10,7 @@
  */
 #ifndef SEHTester_h__
 #define SEHTester_h__
-#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
 
 #include "OTHybridTester.h"
 //
@@ -54,7 +54,7 @@ class SEHTester : public OTHybridTester
     ~SEHTester();
 
     void Initialise();
-    void Start(int currentRun);
+    void Start(const StartInfo& theStartInfo);
     void Stop();
     void Pause();
     void Resume();

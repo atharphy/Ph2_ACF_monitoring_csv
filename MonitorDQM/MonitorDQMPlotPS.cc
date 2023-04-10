@@ -36,14 +36,14 @@ void MonitorDQMPlotPS::book(TFile* theOutputFile, DetectorContainer& theDetector
     // make fDetectorData ready to receive the information fromm the stream
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
-    auto MPAqueryFunction = [](const ChipContainer* theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
+    auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     std::string theMPAqueryFunctionString = "MPAqueryFunction";
-    theDetectorStructure.addReadoutChipQueryFunction(MPAqueryFunction,theMPAqueryFunctionString);
+    theDetectorStructure.addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("MPA2")) bookMPA2Plots(theOutputFile, theDetectorStructure, registerName);
     theDetectorStructure.removeReadoutChipQueryFunction(theMPAqueryFunctionString);
-    auto SSAqueryFunction = [](const ChipContainer* theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
+    auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     std::string theSSAqueryFunctionString = "SSAqueryFunction";
-    theDetectorStructure.addReadoutChipQueryFunction(SSAqueryFunction,theSSAqueryFunctionString);
+    theDetectorStructure.addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("SSA2")) bookSSA2Plots(theOutputFile, theDetectorStructure, registerName);
     theDetectorStructure.removeReadoutChipQueryFunction(theSSAqueryFunctionString);
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT")) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName);
@@ -112,7 +112,7 @@ void MonitorDQMPlotPS::bookMPA2Plots(TFile* theOutputFile, const DetectorContain
 //========================================================================================================================
 void MonitorDQMPlotPS::bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
 {
-    //std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
     // creating the histograms for all the chips:
     // create the GraphContainer<TGraph> as you would create a TGraph (it implements some feature needed to avoid memory
     // leaks in copying histograms like the move constructor)
@@ -134,7 +134,7 @@ void MonitorDQMPlotPS::bookLpGBTPlots(TFile* theOutputFile, const DetectorContai
 //========================================================================================================================
 void MonitorDQMPlotPS::fillPSRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
-    //std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+    // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
     if(fPSRegisterMonitorPlotMap.find(registerName) == fPSRegisterMonitorPlotMap.end())
     {
         LOG(ERROR) << BOLDRED << "No plots for PS register " << registerName << RESET;
@@ -176,7 +176,7 @@ void MonitorDQMPlotPS::fillPSRegisterPlots(DetectorDataContainer& theThresholdCo
 //========================================================================================================================
 void MonitorDQMPlotPS::fillSSA2RegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
-    //std::cout <<  __PRETTY_FUNCTION__ << " register "<< registerName  << std::endl;
+    // std::cout <<  __PRETTY_FUNCTION__ << " register "<< registerName  << std::endl;
     if(fSSA2RegisterMonitorPlotMap.find(registerName) == fSSA2RegisterMonitorPlotMap.end())
     {
         LOG(ERROR) << BOLDRED << "No plots for SSA2 register " << registerName << RESET;
@@ -199,29 +199,34 @@ void MonitorDQMPlotPS::fillSSA2RegisterPlots(DetectorDataContainer& theThreshold
                 // std::cout <<  __PRETTY_FUNCTION__ << hybridId << std::endl;
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipId = chip->getId();
-                    auto theReadoutChip =  static_cast<const  Ph2_HwDescription::ReadoutChip*>(fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId));
+                    size_t chipId       = chip->getId();
+                    auto theReadoutChip = static_cast<const Ph2_HwDescription::ReadoutChip*>(fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId));
                     if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         // Retreive the corresponging chip histogram:
-                        TGraph* chipDQMPlot =
-                            fSSA2RegisterMonitorPlotMap[registerName].getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+                        TGraph* chipDQMPlot = fSSA2RegisterMonitorPlotMap[registerName]
+                                                  .getObject(boardId)
+                                                  ->getObject(opticalGroupId)
+                                                  ->getObject(hybridId)
+                                                  ->getObject(chipId)
+                                                  ->getSummary<GraphContainer<TGraph>>()
+                                                  .fTheGraph;
 
                         // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                         // by chip and not in one shot)
                         if(!chip->hasSummary()) continue;
                         auto theValueAndTime = chip->getSummary<ValueAndTime<uint16_t>>();
                         chipDQMPlot->SetPoint(chipDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue); // for on channel - end
-                    }                                                                                                               // if on chip type
-                }                                                                                                                   // for on chip - end
-            }                                                                                                                       // for on hybrid - end
-        }                                                                                                                           // for on opticalGroup - end
-    }                                                                                                                               // for on boards - end
+                    }                                                                                                                   // if on chip type
+                }                                                                                                                       // for on chip - end
+            }                                                                                                                           // for on hybrid - end
+        }                                                                                                                               // for on opticalGroup - end
+    }                                                                                                                                   // for on boards - end
 }
 //========================================================================================================================
 void MonitorDQMPlotPS::fillMPA2RegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
-    //std::cout <<  __PRETTY_FUNCTION__ << " register "<< registerName  << std::endl;
+    // std::cout <<  __PRETTY_FUNCTION__ << " register "<< registerName  << std::endl;
     if(fMPA2RegisterMonitorPlotMap.find(registerName) == fMPA2RegisterMonitorPlotMap.end())
     {
         LOG(ERROR) << BOLDRED << "No plots for MPA2 register " << registerName << RESET;
@@ -244,29 +249,34 @@ void MonitorDQMPlotPS::fillMPA2RegisterPlots(DetectorDataContainer& theThreshold
                 // std::cout <<  __PRETTY_FUNCTION__ << hybridId << std::endl;
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipId = chip->getId();
-                    auto theReadoutChip =  static_cast<const  Ph2_HwDescription::ReadoutChip*>(fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId));     
+                    size_t chipId       = chip->getId();
+                    auto theReadoutChip = static_cast<const Ph2_HwDescription::ReadoutChip*>(fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId));
                     if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         // Retreive the corresponging chip histogram:
-                        TGraph* chipDQMPlot =
-                            fMPA2RegisterMonitorPlotMap[registerName].getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+                        TGraph* chipDQMPlot = fMPA2RegisterMonitorPlotMap[registerName]
+                                                  .getObject(boardId)
+                                                  ->getObject(opticalGroupId)
+                                                  ->getObject(hybridId)
+                                                  ->getObject(chipId)
+                                                  ->getSummary<GraphContainer<TGraph>>()
+                                                  .fTheGraph;
 
                         // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                         // by chip and not in one shot)
                         if(!chip->hasSummary()) continue;
                         auto theValueAndTime = chip->getSummary<ValueAndTime<uint16_t>>();
                         chipDQMPlot->SetPoint(chipDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue); // for on channel - end
-                    }                                                                                                               // if on chip type
-                }                                                                                                                   // for on chip - end
-            }                                                                                                                       // for on hybrid - end
-        }                                                                                                                           // for on opticalGroup - end
-    }                                                                                                                               // for on boards - end
+                    }                                                                                                                   // if on chip type
+                }                                                                                                                       // for on chip - end
+            }                                                                                                                           // for on hybrid - end
+        }                                                                                                                               // for on opticalGroup - end
+    }                                                                                                                                   // for on boards - end
 }
 //========================================================================================================================
 void MonitorDQMPlotPS::fillLpGBTRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
-    //std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+    // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
     if(fLpGBTRegisterMonitorPlotMap.find(registerName) == fLpGBTRegisterMonitorPlotMap.end())
     {
         LOG(ERROR) << BOLDRED << "No plots for LpGBT register " << registerName << RESET;
@@ -301,7 +311,7 @@ void MonitorDQMPlotPS::reset(void)
 //========================================================================================================================
 bool MonitorDQMPlotPS::fill(std::string& inputStream)
 {
-    //ContainerSerialization thePSRegisterSerialization("PSMonitorPSRegister");
+    // ContainerSerialization thePSRegisterSerialization("PSMonitorPSRegister");
     ContainerSerialization theSSA2RegisterSerialization("PSMonitorSSA2Register");
     ContainerSerialization theMPA2RegisterSerialization("PSMonitorMPA2Register");
     ContainerSerialization theLpGBTRegisterSerialization("PSMonitorLpGBTRegister");

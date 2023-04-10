@@ -16,7 +16,7 @@ using namespace Ph2_HwInterface;
 PSMonitor::PSMonitor(Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
-    fMonitorPlotDQM    = new MonitorDQMPlotPS();
+    fMonitorPlotDQM   = new MonitorDQMPlotPS();
     fMonitorDQMPlotPS = static_cast<MonitorDQMPlotPS*>(fMonitorPlotDQM);
     fMonitorDQMPlotPS->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
@@ -44,14 +44,14 @@ void PSMonitor::runSSA2RegisterMonitor(std::string registerName)
             {
                 for(const auto& chip: *hybrid)
                 {
-                    if(chip->getFrontEndType() == FrontEndType::SSA2) 
+                    if(chip->getFrontEndType() == FrontEndType::SSA2)
                     {
-                        auto SSA2ReadoutChipInterface = fTheSystemController->fReadoutChipInterface;
-                        uint16_t registerValue = static_cast<SSA2Interface*>(SSA2ReadoutChipInterface)->ReadADC(chip,registerName);
-                        LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip "<< chip->getId() << " " << registerName << " = " << registerValue << RESET;
+                        auto     SSA2ReadoutChipInterface = fTheSystemController->fReadoutChipInterface;
+                        uint16_t registerValue            = static_cast<SSA2Interface*>(SSA2ReadoutChipInterface)->ReadADC(chip, registerName);
+                        LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
                         theSSA2RegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ValueAndTime<uint16_t>>() =
-                        theRegisterAndTime;
+                            theRegisterAndTime;
                     }
                 }
             }
@@ -82,14 +82,14 @@ void PSMonitor::runMPA2RegisterMonitor(std::string registerName)
             {
                 for(const auto& chip: *hybrid)
                 {
-                    if(chip->getFrontEndType() == FrontEndType::MPA2) 
+                    if(chip->getFrontEndType() == FrontEndType::MPA2)
                     {
-                        auto MPA2ReadoutChipInterface = fTheSystemController->fReadoutChipInterface;
-                        uint16_t registerValue = static_cast<MPA2Interface*>(MPA2ReadoutChipInterface)->ReadADC(chip,registerName);
-                        LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip "<< chip->getId() << " " << registerName << " = " << registerValue << RESET;
+                        auto     MPA2ReadoutChipInterface = fTheSystemController->fReadoutChipInterface;
+                        uint16_t registerValue            = static_cast<MPA2Interface*>(MPA2ReadoutChipInterface)->ReadADC(chip, registerName);
+                        LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
                         theMPA2RegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ValueAndTime<uint16_t>>() =
-                        theRegisterAndTime;
+                            theRegisterAndTime;
                     }
                 }
             }
@@ -106,10 +106,6 @@ void PSMonitor::runMPA2RegisterMonitor(std::string registerName)
     }
 #endif
 }
-
-
-
-
 
 void PSMonitor::runLpGBTRegisterMonitor(std::string registerName)
 {
