@@ -64,8 +64,6 @@ class D19cFWInterface : public BeBoardFWInterface
 
     FileHandler* fFileHandler;
     uint32_t     fBroadcastCbcId;
-    uint32_t     fNReadoutChip;
-    uint32_t     fNHybrids;
     uint32_t     fNCic;
     uint32_t     fFMCId;
 
@@ -287,9 +285,9 @@ class D19cFWInterface : public BeBoardFWInterface
         return r;
     }
 
-    void EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard);
 
   public:
+    void EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard);
     void ChipReSync() override;
 
     void ChipReset() override;

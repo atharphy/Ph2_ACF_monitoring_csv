@@ -34,7 +34,7 @@ using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface
 {
 D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId)
-    : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
     // can only link one type of trigger + FC interface to this type of FW
@@ -70,7 +70,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
 }
 
 D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
-    : BeBoardFWInterface(puHalConfigFileName, pBoardId), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
         fSaveToFile = false;
@@ -110,7 +110,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
 }
 
 D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
-    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(nullptr), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
+    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(nullptr), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     LOG(INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
     std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
@@ -148,7 +148,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
 }
 
 D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler)
-    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
+    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
         fSaveToFile = false;
@@ -831,8 +831,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 void D19cFWInterface::EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard)
 {
     fNCic                                                       = 0;
-    fNReadoutChip                                               = 0;
-    fNHybrids                                                   = 0;
     uint16_t                                      hybrid_enable = 0;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.clear();
@@ -844,12 +842,10 @@ void D19cFWInterface::EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard)
             uint8_t cChipsEnable = 0x00;
             fNCic += (cCic != nullptr) ? 1 : 0;
             hybrid_enable |= 1 << cHybrid->getId();
-            fNHybrids++;
             LOG(INFO) << BOLDBLUE << "Enabling FE hybrid : " << +cHybrid->getId() << " - link Id " << +cOpticalGroup->getId() << RESET;
             for(auto cChip: *cHybrid)
             {
                 cChipsEnable |= (1 << cChip->getId());
-                fNReadoutChip++;
             }
             char name[50];
             std::sprintf(name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", cHybrid->getId());
@@ -859,8 +855,6 @@ void D19cFWInterface::EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard)
         }
     }
     LOG(INFO) << BOLDBLUE << +fNCic << " CIC(s) enabled on this BeBoard" << RESET;
-    LOG(INFO) << BOLDBLUE << +fNHybrids << " Hybrids(s) enabled on this BeBoard" << RESET;
-    LOG(INFO) << BOLDBLUE << +fNReadoutChip << " ReadoutChip(s) enabled on this BeBoard" << RESET;
     cVecReg.push_back({"fc7_daq_cnfg.global.hybrid_enable", hybrid_enable});
     LOG(INFO) << BOLDBLUE << "Setting hybrid enable register to " << std::bitset<32>(hybrid_enable) << RESET;
     this->WriteStackReg(cVecReg);
@@ -1068,20 +1062,35 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
     pData.clear();
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     if(fL1ReadoutInterface == nullptr) LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     auto cTriggerRate = ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     fTriggerInterface->setTimeout((uint32_t)(1.5e6 * pNEvents / (cTriggerRate * 1.0e3)));
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     fL1ReadoutInterface->setNEvents(pNEvents);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     if(fL1ReadoutInterface->ReadEvents(pBoard))
+    {
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         pData = fL1ReadoutInterface->getData();
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    }
     else
     {
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         LOG(INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         throw Exception("Failed to ReadNEvents....");
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     }
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     if(fSaveToFile) fFileHandler->setData(pData);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 }
 
 /** compute the block size according to the number of CBC's on this board

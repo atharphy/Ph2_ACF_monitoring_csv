@@ -657,9 +657,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             fCicInterface->ConfigureChip(cCic);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
         }
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         bool cSuccess = CicStartUp(cOpticalGroup, true);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         if(!cSuccess)
         {
             LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
@@ -902,10 +900,11 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     bool cWith2SFEH  = (*cBoardIter)->getEventType() == EventType::VR2S;
     auto cSparsified = (*cBoardIter)->getSparsification();
 
-    auto exceptionHandleFunction = [cBoardId, cOpticalGroupId](uint16_t hybridId, const std::string&& failMode)
+    auto exceptionHandleFunction = [cBoardId, cOpticalGroupId, this](uint16_t hybridId, const std::string&& failMode)
     {
         LOG(INFO) << BOLDRED << "FAILED to " << failMode <<" for Board id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(cBoardId, cOpticalGroupId, hybridId);
+        static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->EnableFrontEnds(fDetectorContainer->getObject(cBoardId));
     };
 
     auto& clpGBT   = pOpticalGroup->flpGBT;
@@ -1290,12 +1289,18 @@ void SystemController::ReadNEvents(uint32_t pNEvents)
 
 void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     uint32_t cMultiplicity = 0;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     if(fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C) cMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     pNEvents = pNEvents * (cMultiplicity + 1);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 }
 
 // #################

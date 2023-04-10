@@ -103,15 +103,18 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
+            uint16_t chipCounter = 0;
             for(auto cChip: *cHybrid)
             {
-                if(fEnabledChips.size() != cHybrid->size() && cChip->getId() > 1)
+                if(fEnabledChips.size() != cHybrid->size() && chipCounter > 1)
                 {
                     LOG(INFO) << BOLDYELLOW << "Skipping Phase tuning on Chip#" << +cChip->getId() << RESET;
                     continue;
                 }
                 for(uint8_t cLineId = cFirstLine; cLineId <= 8; cLineId++) // stub lines - 1 to 8
                 { PhaseTuneLine(cChip, cLineId); }
+
+                ++chipCounter;
             }
         }
     } // run phase aligner on all lines
@@ -138,9 +141,10 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
         {
+            uint16_t chipCounter = 0;
             for(auto cChip: *cHybrid)
             {
-                if(fEnabledChips.size() != cHybrid->size() && cChip->getId() > 1)
+                if(fEnabledChips.size() != cHybrid->size() && chipCounter > 1)
                 {
                     LOG(INFO) << BOLDYELLOW << "Skipping word alignment on Chip#" << +cChip->getId() << RESET;
                     continue;
@@ -151,27 +155,10 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                 // replace this with something that gets the value
                 // from one of the stub lines
                 // ManuallyConfigureLine(cChip,0, 15,0);
+                ++chipCounter;
             }
         }
     } // run word aligner on all lines
-
-    // manually set on L1 if SSA1
-
-    // for(auto cOpticalReadout: *pBoard)
-    // {
-    //     for(auto cHybrid: *cOpticalReadout)
-    //     {
-    //         for(auto cChip: *cHybrid)
-    //         {
-    //             if(fEnabledChips.size() != cHybrid->size() && cChip->getId() > 1) { continue; }
-    //             LOG(INFO) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " Chip#" << +cChip->getId() << RESET;
-    //             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-    //             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChip->getId());
-    //             cDebugInterface->StubDebug(true, 8, true);
-    //             cDebugInterface->L1ADebug();
-    //         }
-    //     }
-    // } // check data
 
     for(auto cOpticalReadout: *pBoard)
     {
@@ -542,23 +529,16 @@ bool BackEndAlignment::Align()
         bool cWithMPA          = false;
         bool cWithMPA2         = false;
 
-        for(auto cOpticalReadout: *cBoard)
+        auto cHybrid = cBoard->getFirstObject()->getFirstObject();
+        cWithCIC = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;
+        for(auto cReadoutChip: *cHybrid)
         {
-            if(cOpticalReadout->getId() > 0) break;
-            for(auto cHybrid: *cOpticalReadout)
-            {
-                if(cHybrid->getId() > 0) break;
-                cWithCIC = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;
-                for(auto cReadoutChip: *cHybrid)
-                {
-                    cWithCBC  = cWithCBC || cReadoutChip->getFrontEndType() == FrontEndType::CBC3;
-                    cWithSSA  = cWithSSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA;
-                    cWithSSA2 = cWithSSA2 || cReadoutChip->getFrontEndType() == FrontEndType::SSA2;
-                    cWithMPA  = cWithMPA || cReadoutChip->getFrontEndType() == FrontEndType::MPA;
-                    cWithMPA2 = cWithMPA2 || cReadoutChip->getFrontEndType() == FrontEndType::MPA2;
-                } // ROcs
-            }     // Hybrids
-        }         // OGs
+            cWithCBC  = cWithCBC || cReadoutChip->getFrontEndType() == FrontEndType::CBC3;
+            cWithSSA  = cWithSSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA;
+            cWithSSA2 = cWithSSA2 || cReadoutChip->getFrontEndType() == FrontEndType::SSA2;
+            cWithMPA  = cWithMPA || cReadoutChip->getFrontEndType() == FrontEndType::MPA;
+            cWithMPA2 = cWithMPA2 || cReadoutChip->getFrontEndType() == FrontEndType::MPA2;
+        } // ROcs
         if(cWithCIC) { cAligned = this->CICAlignment(theBoard); }
         else if(cWithCBC)
         {

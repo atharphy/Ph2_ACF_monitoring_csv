@@ -22,24 +22,38 @@ void LinkAlignmentOT::AlignStubPackage()
 }
 bool LinkAlignmentOT::Align()
 {
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ..." << RESET;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     for(const auto cBoard: *fDetectorContainer)
     {
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         // force trigger source to be internal triggers
         LOG(INFO) << BOLDYELLOW << "Forcing trigger source to internal triggers" << RESET;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         for(auto cOpticalGroup: *cBoard)
         {
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             AlignLpGBTInputs(cOpticalGroup);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             WordAlignBEdata(cOpticalGroup);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         }
         // check that word alignment of L1 data worked
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ... trying to readout L1 data.. " << RESET;
-        ReadNEvents(cBoard, 10);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        // ReadNEvents(cBoard, 10);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     } // align BE
 
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     AlignStubPackage();
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     fSuccess = true;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     return fSuccess;
 }
 
@@ -1255,23 +1269,18 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
         std::vector<int> cBxDifferences(0); // I think by injecting this way this number should always be the same ..
         for(auto& cEvent: cEventsWithStubs)
         {
-            for(auto cHybrid: *pOpticalGroup)
+            auto cHybrid = pOpticalGroup->getFirstObject();
+            auto cBx = (int)cEvent->BxId(cHybrid->getId());
+            if(cBxIds.size() > 0)
             {
-                if(cHybrid->getId() > 0) continue;
-
-                auto cBx = (int)cEvent->BxId(cHybrid->getId());
-                if(cBxIds.size() > 0)
-                {
-                    int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size() - 1] % cMaxBxCounter);
-                    cNRollOvers += ((cBxIds[cBxIds.size() - 1] >= 2500) && (cBxIds[cBxIds.size() - 1] < cMaxBxCounter)) && (cBx < cBxIds[cBxIds.size() - 1]) ? 1 : 0;
-                    cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBx % cMaxBxCounter) - cBxDifference;
-                    cBxDifferences.push_back(cBxDifference);
-                    // LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
-                }
-                cBxIds.push_back(cBx);
-                LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
-
-            } // hybrids or CICs
+                int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size() - 1] % cMaxBxCounter);
+                cNRollOvers += ((cBxIds[cBxIds.size() - 1] >= 2500) && (cBxIds[cBxIds.size() - 1] < cMaxBxCounter)) && (cBx < cBxIds[cBxIds.size() - 1]) ? 1 : 0;
+                cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBx % cMaxBxCounter) - cBxDifference;
+                cBxDifferences.push_back(cBxDifference);
+                // LOG(INFO) << BOLDBLUE << "\t.....BxDifference is " << +cBxDifference << RESET;
+            }
+            cBxIds.push_back(cBx);
+            LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
         }     // events
         // figure out the differences between the bxIds
         auto cFirstDifference = cBxDifferences[0];

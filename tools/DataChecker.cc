@@ -2026,9 +2026,6 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                 auto& cBadEventsHybrid = cBadEventsOpticalGroup->getObject(cHybrid->getId());
                 auto& cGdEventsHybrid  = cGdEventsOpticalGroup->getObject(cOpticalGroup->getId());
 
-                // for now I'm only checking one CIC
-                // if(cHybrid->getId() > 0) continue;
-
                 auto cBxId = (int)cEvent->BxId(cHybrid->getId());
                 cBxIdsGbl.push_back(cBxId);
                 // only check for differences when
