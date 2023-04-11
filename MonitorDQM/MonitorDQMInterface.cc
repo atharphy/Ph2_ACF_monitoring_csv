@@ -4,6 +4,7 @@
 
 #include "MonitorDQM/MonitorDQMInterface.h"
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "MonitorDQM/MonitorDQMPlotPS.h"
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/ContainerSerialization.h"
@@ -76,6 +77,7 @@ void MonitorDQMInterface::configure(const ConfigureInfo& theConfigureInfo)
     std::string           monitoringType = theFileParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);
 
     if(monitoringType == "2S") fMonitorDQMVector.push_back(new MonitorDQMPlotCBC());
+    if(monitoringType == "PS") fMonitorDQMVector.push_back(new MonitorDQMPlotPS());
 
     fOutputFile = new TFile("Monitor_tmp.root", "RECREATE");
     for(auto monitorDQM: fMonitorDQMVector) monitorDQM->book(fOutputFile, fDetectorStructure, theDetectorMonitorConfig);

@@ -1,13 +1,13 @@
 /*!
-        \file                MonitorDQMPlotCBC.h
+        \file                MonitorDQMPlotPS.h
         \brief               DQM class for DQM example -> use it as a templare
         \author              Fabio Ravera
         \date                25/7/19
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#ifndef __MonitorDQMPlotCBC_H__
-#define __MonitorDQMPlotCBC_H__
+#ifndef __MonitorDQMPlotPS_H__
+#define __MonitorDQMPlotPS_H__
 #include "MonitorDQM/MonitorDQMPlotBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -15,21 +15,21 @@
 class TFile;
 
 /*!
- * \class MonitorDQMPlotCBC
+ * \class MonitorDQMPlotPS
  * \brief Class for DQMExample monitoring Plots
  */
-class MonitorDQMPlotCBC : public MonitorDQMPlotBase
+class MonitorDQMPlotPS : public MonitorDQMPlotBase
 {
   public:
     /*!
      * constructor
      */
-    MonitorDQMPlotCBC();
+    MonitorDQMPlotPS();
 
     /*!
      * destructor
      */
-    ~MonitorDQMPlotCBC();
+    ~MonitorDQMPlotPS();
 
     /*!
      * \brief Book Plots
@@ -57,19 +57,25 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
     void reset(void) override;
 
     /*!
-     * \brief fillCBCRegisterPlots
-     * \param theCBCRegisterContainer : Container with the hits you want to plot
+     * \brief fillPSRegisterPlots
+     * \param thePSRegisterContainer : Container with the hits you want to plot
      * \param timeStamp : timeStamp
      */
-    void fillCBCRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
-    void fillLpGBTRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
+    void fillPSRegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
+    void fillSSA2RegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
+    void fillMPA2RegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
+    void fillLpGBTRegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
 
   private:
-    std::map<std::string, DetectorDataContainer> fCBCRegisterMonitorPlotMap;
+    std::map<std::string, DetectorDataContainer> fPSRegisterMonitorPlotMap;
+    std::map<std::string, DetectorDataContainer> fMPA2RegisterMonitorPlotMap;
+    std::map<std::string, DetectorDataContainer> fSSA2RegisterMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
     const DetectorContainer*                     fDetectorContainer;
 
-    void bookCBCPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
+    void bookPSPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
+    void bookMPA2Plots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
+    void bookSSA2Plots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
     void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
 };
 #endif

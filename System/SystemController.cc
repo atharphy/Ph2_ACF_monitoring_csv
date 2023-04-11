@@ -16,6 +16,7 @@
 #include "HWInterface/RD53FWInterface.h"
 #include "MonitorUtils/CBCMonitor.h"
 #include "MonitorUtils/DetectorMonitor.h"
+#include "MonitorUtils/PSMonitor.h"
 #include "MonitorUtils/RD53Monitor.h"
 #include "MonitorUtils/SEHMonitor.h"
 #include "Parser/CommunicationSettingConfig.h"
@@ -87,10 +88,6 @@ void SystemController::Inherit(const SystemController* pController)
     fConfigurationFileName          = pController->fConfigurationFileName;
     fCalibrationName                = pController->fCalibrationName;
     fConfigurationFileContent       = pController->fConfigurationFileContent;
-
-#ifdef __TCP_SERVER__
-    fTestcardClient = pController->fTestcardClient;
-#endif
 }
 
 void SystemController::StopMonitoring()
@@ -255,21 +252,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstOpticalGroup->flpGBT->isOptical());
-// check link to external interface
-#ifdef __TCUSB__
-#if defined(__SEH_USB__) || defined(__ROH_USB__)
-                    if(flpGBTInterface->GetExternalController() != nullptr)
-                    {
-                        LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->GetExternalController()->getName() << RESET;
-#ifdef __ROH_USB__
-                        // check reading of ADC from PSROH TC
-                        float cOutput;
-                        flpGBTInterface->GetExternalController()->getInterface().adc_get(TC_PSROH::measurement::_1V25_REF, cOutput);
-                        LOG(INFO) << BOLDBLUE << "Checking communication with test card by reading 1V25_Ref : " << cOutput << RESET;
-#endif
-                    }
-#endif
-#endif
                 }
 
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
@@ -376,6 +358,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "2SSEH")
             fDetectorMonitor = new SEHMonitor(this, theDetectorMonitorConfig);
+        else if(monitoringType == "PS")
+            fDetectorMonitor = new PSMonitor(this, theDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;

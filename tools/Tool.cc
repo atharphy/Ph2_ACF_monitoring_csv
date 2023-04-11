@@ -643,6 +643,7 @@ void Tool::SoftDestroy()
 
     delete fDQMMetadata;
     fDQMMetadata = nullptr;
+
 #endif
     fTestGroupChannelMap.clear();
 }

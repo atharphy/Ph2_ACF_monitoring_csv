@@ -49,12 +49,6 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     else if(pChip->isOptical())
         cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerify);
     // TO-DO .. figure out what to do if piGBT is used
-    else
-    {
-#if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
-        cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
-#endif
-    }
 
     if(!cSuccess)
     {
@@ -83,12 +77,6 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     else if(pChip->isOptical())
     {
         cValue = fBoardFW->ReadOptoLinkRegister(pChip, cAddress);
-    }
-    else
-    {
-#if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
-        cValue = fExternalController->getInterface().read_i2c(cAddress);
-#endif
     }
 
     pChip->setReg(pDacName, cValue);
