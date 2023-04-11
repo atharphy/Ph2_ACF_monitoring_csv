@@ -11,12 +11,12 @@ struct DetectorMonitorConfig
 {
     DetectorMonitorConfig()
     {
-        fMonitorElementList["Board"]       = {};
-        fMonitorElementList["LpGBT"]       = {};
-        fMonitorElementList["CIC"]         = {};
-//        fMonitorElementList["PS"]         = {};
-        fMonitorElementList["MPA2"]         = {};
-        fMonitorElementList["SSA2"]         = {};
+        fMonitorElementList["Board"] = {};
+        fMonitorElementList["LpGBT"] = {};
+        fMonitorElementList["CIC"]   = {};
+        //        fMonitorElementList["PS"]         = {};
+        fMonitorElementList["MPA2"]        = {};
+        fMonitorElementList["SSA2"]        = {};
         fMonitorElementList["CBC"]         = {};
         fMonitorElementList["RD53"]        = {};
         fMonitorElementList["PowerSupply"] = {};
