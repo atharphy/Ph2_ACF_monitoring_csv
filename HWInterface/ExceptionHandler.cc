@@ -1,9 +1,14 @@
 #include<vector>
 
-#include "Utils/ExceptionHandler.h"
+#include "HWInterface/ExceptionHandler.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
 #include "Utils/ContainerFactory.h"
+
+using namespace Ph2_HwInterface;
+
 
 // Initialize static member variable
 ExceptionHandler* ExceptionHandler::fInstance = nullptr;
@@ -30,6 +35,14 @@ void ExceptionHandler::setDetectorContainer(DetectorContainer *theDetectorContai
     initializeQueryFunctionNameContainer();
 }
 
+void ExceptionHandler::updateFWInformation(uint16_t boardId)
+{
+    if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
+    {
+         static_cast<D19cFWInterface*>(fFirmwareInterface)->EnableFrontEnds(fDetectorContainer->getObject(boardId));
+    }
+}
+
 void ExceptionHandler::disableChip(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
 {
     std::string functionName = "ExceptionHandler_disableChip_B" + std::to_string(boardId) + "_O" + std::to_string(opticalGroupId) + "_H" + std::to_string(hybridId) + "_C" + std::to_string(chipId);
@@ -40,6 +53,7 @@ void ExceptionHandler::disableChip(uint16_t boardId, uint16_t opticalGroupId, ui
     };
     fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->addQueryFunction(disableChip, functionName);
     fQueryFunctionNames->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getSummary<std::vector<std::string>>().push_back(functionName);
+    updateFWInformation(boardId);
 }
 
 void ExceptionHandler::disableHybrid(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId)
@@ -52,6 +66,7 @@ void ExceptionHandler::disableHybrid(uint16_t boardId, uint16_t opticalGroupId, 
     };
     fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->addQueryFunction(disableHybrid, functionName);
     fQueryFunctionNames->getObject(boardId)->getObject(opticalGroupId)->getSummary<std::vector<std::string>, std::vector<std::string>>().push_back(functionName);
+    updateFWInformation(boardId);
 }
 
 void ExceptionHandler::disableOpticalGroup(uint16_t boardId, uint16_t opticalGroupId)
@@ -64,6 +79,7 @@ void ExceptionHandler::disableOpticalGroup(uint16_t boardId, uint16_t opticalGro
     };
     fDetectorContainer->getObject(boardId)->addQueryFunction(disableOpticalGroup, functionName);
     fQueryFunctionNames->getObject(boardId)->getSummary<std::vector<std::string>, std::vector<std::string>>().push_back(functionName);
+    updateFWInformation(boardId);
 }
 
 void ExceptionHandler::disableBoard(uint16_t boardId)
@@ -109,6 +125,7 @@ void ExceptionHandler::resetExceptionQueries()
                 }
             }
         }
+        updateFWInformation(board->getId());
     }
 
     initializeQueryFunctionNameContainer();

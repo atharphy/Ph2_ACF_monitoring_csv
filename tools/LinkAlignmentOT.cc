@@ -3,6 +3,7 @@
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cDebugFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/ExceptionHandler.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
 
@@ -22,38 +23,24 @@ void LinkAlignmentOT::AlignStubPackage()
 }
 bool LinkAlignmentOT::Align()
 {
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ..." << RESET;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     for(const auto cBoard: *fDetectorContainer)
     {
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         // force trigger source to be internal triggers
         LOG(INFO) << BOLDYELLOW << "Forcing trigger source to internal triggers" << RESET;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         for(auto cOpticalGroup: *cBoard)
         {
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             AlignLpGBTInputs(cOpticalGroup);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             WordAlignBEdata(cOpticalGroup);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         }
         // check that word alignment of L1 data worked
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ... trying to readout L1 data.. " << RESET;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        // ReadNEvents(cBoard, 10);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        ReadNEvents(cBoard, 10);
     } // align BE
 
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     AlignStubPackage();
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     fSuccess = true;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     return fSuccess;
 }
 
@@ -258,9 +245,9 @@ bool LinkAlignmentOT::WordAlignBEdata(const BeBoard* pBoard)
         cAligned = WordAlignBEdata(cOpticalGroup);
         if(!cAligned)
         {
-            LOG(INFO) << BOLDRED << "Could not word align-BE data for BeBoard#" << +pBoard->getId() << " Link#" << +cOpticalGroup->getId() << RESET;
-            throw std::runtime_error(std::string("Could not word align-BE data in LinkAlignmentOT..."));
-            return cAligned;
+            LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " --- OpticalGroup will be disabled" << RESET;
+            ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
+            continue;
         }
     } // optical groups connected to this  board
     return cAligned;
@@ -322,8 +309,9 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
 
             if(!cAligned)
             {
-                LOG(INFO) << BOLDRED << "Could not word align-BE data for BeBoard#" << +cBoardId << " Link#" << +pOpticalGroup->getId() << " stub line " << +(cLineId - 1) << RESET;
-                throw std::runtime_error(std::string("Could not word align-BE data in LinkAlignmentOT..."));
+                LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id" << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
+                ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
+                continue;
             }
             if(cThisBeBitSlip[cLineId] == 0 && !fAllowZeroBitslip)
             {
@@ -339,8 +327,9 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
                 } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
                 if(cThisBeBitSlip[cLineId] == 0)
                 {
-                    LOG(INFO) << BOLDRED << "Bitslip of 0 found for BE-stub data for BeBoard#" << +cBoardId << " Link#" << +pOpticalGroup->getId() << " stub line " << +(cLineId - 1) << RESET;
-                    throw std::runtime_error(std::string("Bitslip of 0 for word-aligned BE data in LinkAlignmentOT..."));
+                    LOG(INFO) << BOLDRED << "Bitslip of 0 found for BE-stub data on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id" << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
+                    ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
+                    continue;
                 }
             }
         }
@@ -418,7 +407,12 @@ bool LinkAlignmentOT::PhaseAlignBEdata(const BeBoard* pBoard)
         for(auto cOpticalGroup: *cBoard)
         {
             cAligned = PhaseAlignBEdata(cOpticalGroup);
-            if(!cAligned) { throw std::runtime_error(std::string("Could not phase align-BE data in LinkAlignmentOT...")); }
+            if(!cAligned)
+            {
+                LOG(INFO) << BOLDRED << "Could not phase align-BE data in LinkAlignmentOT on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " --- OpticalGroup will be disabled" << RESET;
+                ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
+                continue;
+            }
         }
     }
     return cAligned;
@@ -523,9 +517,8 @@ std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8
     cLineStatus.first = cAlignerInterface->IsLinePhaseAligned(cAlignerObjct);
     if(!cLineStatus.first)
     {
-        LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Board#" << +pChip->getBeBoardId() << " Hybrid#" << +pChip->getHybridId() << " Chip#" << +pChip->getId()
-                  << " line# " << +pLineId << RESET;
-        throw std::runtime_error(std::string("Could not phase align-BE data in LinkAlignmentOT..."));
+        LOG(INFO) << BOLDRED << "Could not phase align-BE data in LinkAlignmentOT on Board id " << +cBoardId  << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId()  << " line# " << +pLineId << " --- Chip will be disabled" << RESET;
+        ExceptionHandler::getInstance()->disableChip(+cBoardId, pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
     }
 
     cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
@@ -561,9 +554,8 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
 
     if(!cLineStatus.first)
     {
-        LOG(INFO) << BOLDRED << "Could not word align-BE data for BeBoard#" << +cBoardId << " Board#" << +pChip->getBeBoardId() << " Hybrid#" << +pChip->getHybridId() << " Chip#" << +pChip->getId()
-                  << " line# " << +pLineId << RESET;
-        throw std::runtime_error(std::string("Could not word align-BE data in LinkAlignmentOT..."));
+        LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId  << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId()  << " line# " << +pLineId << " --- Chip will be disabled" << RESET;
+        ExceptionHandler::getInstance()->disableChip(+cBoardId, pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
     }
     // check if I allow a bit-slip of 0
     if(cLineStatus.second == 0 && !fAllowZeroBitslip)
@@ -580,9 +572,8 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
         } while(cIter < cMaxAttempts && cLineStatus.second == 0);
         if(cLineStatus.second == 0)
         {
-            LOG(INFO) << BOLDRED << "Bitslip of 0 found for BE-stub data for BeBoard#" << +cBoardId << " Board#" << +pChip->getBeBoardId() << " Hybrid#" << +pChip->getHybridId() << " Chip#"
-                      << +pChip->getId() << " line# " << +pLineId << RESET;
-            throw std::runtime_error(std::string("Bitslip of 0 for word-aligned BE data in LinkAlignmentOT..."));
+            LOG(INFO) << BOLDRED << "Bitslip of 0 for word-aligned BE data in LinkAlignmentOT on Board id " << +cBoardId  << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId()  << " line# " << +pLineId << " --- Chip will be disabled" << RESET;
+            ExceptionHandler::getInstance()->disableChip(+cBoardId, pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
         }
     }
     return cLineStatus;
@@ -638,7 +629,8 @@ void LinkAlignmentOT::LegacyAlignmentMPA(const Chip* pChip)
             uint32_t tuning_state_cbc0 = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_stat.physical_interface_block.state_tuning_cbc0");
             uint32_t tuning_state_cbc1 = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_stat.physical_interface_block.state_tuning_cbc1");
             LOG(INFO) << "tuning state cbc0: " << tuning_state_cbc0 << ", cbc1: " << tuning_state_cbc1;
-            throw std::runtime_error("Clock Data Timing tuning failed");
+            LOG(INFO) << BOLDRED << "Clock Data Timing tuning failed on Board id " << +cBoardId  << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId()  << " --- Chip will be disabled" << RESET;
+            ExceptionHandler::getInstance()->disableChip(+cBoardId, pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
         }
 
         fBeBoardInterface->ChipReSync(*cBoardIter);

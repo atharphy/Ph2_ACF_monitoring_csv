@@ -22,7 +22,7 @@
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
-#include "Utils/ExceptionHandler.h"
+#include "HWInterface/ExceptionHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -698,8 +698,9 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
                 if(fCicInterface->GetResyncRequest(cCic))
                 {
-                    LOG(INFO) << BOLDRED << "ReSync request ofrom CIC" << +cHybrid->getId() << RESET;
-                    throw std::runtime_error(std::string("FAILED to clear CIC ReSync request"));
+                    LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId() << " --- Hybrid will be disabled" << RESET;
+                    ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
+                    continue;
                 }
             }
         }
@@ -1109,9 +1110,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                         fCicInterface->ConfigureChip(cCic);
                         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
                     }
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                     bool cSuccess = CicStartUp(cOpticalGroup, false);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                     if(!cSuccess)
                     {
                         LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +cBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
@@ -1216,14 +1215,12 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
 
-    // auto chipSubset = [](const ChipContainer* theChip) { return (theChip->getId() % 2 == 0); };
-    // fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->addQueryFunction(chipSubset, "TEST");
-
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
     theConfigureInfo.extractObjectNames(fNameContainer);
 
     ExceptionHandler::getInstance()->setDetectorContainer(fDetectorContainer);
+    ExceptionHandler::getInstance()->setFirmwareInterface(fBeBoardInterface->getFirmwareInterface());
 
     std::cout << fParsedFile.str() << std::endl;
     ConfigureHw(false, true);
@@ -1289,18 +1286,12 @@ void SystemController::ReadNEvents(uint32_t pNEvents)
 
 void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     uint32_t cMultiplicity = 0;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     if(fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C) cMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     pNEvents = pNEvents * (cMultiplicity + 1);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 }
 
 // #################
