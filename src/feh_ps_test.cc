@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "HWInterface/DPInterface.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -294,7 +295,9 @@ int main(int argc, char* argv[])
 
         LOG(INFO) << "Phase Aligned CIC Inputs" << RESET;
         // align back-end
-        cBackEndAligner.Start(0);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(0);
+        cBackEndAligner.Start(theStartInfo);
         cBackEndAligner.waitForRunToBeCompleted();
         // // reset all chip and board registers
         // // to what they were before this tool was called
