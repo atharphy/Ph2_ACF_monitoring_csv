@@ -166,6 +166,42 @@ void PSBiasCal::CalibrateADC()
     }
 }
 
+float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, float VBGexpected, float VREFexpected, float VREFmin, float VREFmax)
+{
+    float ADC_GND = 0;
+    if(cChip->getFrontEndType() == FrontEndType::MPA2)
+        ADC_GND = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
+    else
+        ADC_GND = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
+
+    float ADCMAX = 4095;
+
+    float ADC_VBG = 0;
+    if(cChip->getFrontEndType() == FrontEndType::MPA2)
+        ADC_VBG = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), VBGstring)));
+    else
+        ADC_VBG = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), VBGstring)));
+
+    float slope = VBGexpected/(ADC_VBG-ADC_GND); // In this case it is the one measured on the module - GND measured on module. In the future it will be given.
+    float offset = - ADC_GND*slope;
+
+    std::cout << " offset " << offset << " slope "<< slope <<" ADC_VBG " << ADC_VBG << " ADC_GND " << ADC_GND <<  std::endl;
+
+    float VREFobtained = ADCMAX*slope + offset;
+    LOG(INFO) << BOLDRED << "New VREF val: " << VREFobtained << " Expected val: " << VREFexpected  << RESET;
+
+    if (VREFobtained > VREFmax || VREFobtained < VREFmin)
+    {
+        LOG(INFO) << BOLDRED << " Need to calibrate VREF! VREF is outside of allowed range!!" << RESET;
+        VREFobtained = CalibrateVREF(cChip,VBGstring, VREFstring, VBGexpected, VREFexpected);
+        LOG(INFO) << BOLDRED << "New VREF val: " << VREFobtained << " Expected val: " << VREFexpected  << RESET;
+
+
+    }
+    return VREFobtained;
+}
+
+
 float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, float VBGexpected, float VREFexpected)
 {
 
@@ -647,7 +683,8 @@ void PSBiasCal::CalibrateBias()
 
                         LOG(INFO) << BOLDMAGENTA << " Calibrate VREF "<< RESET;
 
-                        VREFmeasured = CalibrateVREF(cChip,"VBG","ADC_VREF",SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED);
+                        // VREFmeasured = CalibrateVREF(cChip,"VBG","ADC_VREF",SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED);
+                        VREFmeasured = MeasureVREF(cChip,"VBG","ADC_VREF",SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED,SSA2_VREF_MIN, SSA2_VREF_MAX);
 
 
 

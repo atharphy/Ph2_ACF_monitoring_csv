@@ -99,6 +99,8 @@
 // in float
 #define SSA2_VBG_EXPECTED 0.275
 #define SSA2_VREF_EXPECTED 0.850
+#define SSA2_VREF_MIN   0.750
+#define SSA2_VREF_MAX   1.0
 
 // MPA
 // in uint32_t words
