@@ -370,8 +370,6 @@ int main(int argc, char* argv[])
     //     // cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
-    cTool.ConfigureHw();
-
     cTool.fBeBoardInterface->setBoard(pBoard->getId());
     for(int i = 0; i < 8; i++)
     {
@@ -389,6 +387,24 @@ int main(int argc, char* argv[])
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("RX", i);
     }
     // Initialize tester
+    try
+    {
+        cTool.ConfigureHw();
+    }
+    catch(...)
+    {
+        if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-leak-parallel"))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+            LOG(INFO) << BOLDBLUE << "Stop leakage current with external power supply in parallel due to error" << RESET;
+            cSEHTester.EndExternalTestLeakageCurrent(cHVPowerSupplyId, cHVChannelId);
+        }
+        cTool.SaveResults();
+        cTool.WriteRootFile();
+        cTool.CloseResultFile();
+        cTool.Destroy();
+        abort();
+    }
     cSEHTester.Initialise();
     // std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     if(cmd.foundOption("test-parameter"))
@@ -535,7 +551,7 @@ int main(int argc, char* argv[])
         }
         bool                     cCalibrate = cmd.foundOption("calibrate-adc");
         std::vector<std::string> cADCs      = {"ADC0", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 600, cCalibrate); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 600, cCalibrate); // 12 bit DAC with 1V reference, ROH is 12 bit something, needs to be included somewhere
         cSEHTester.LpGBTTestFixedADCs();
     }
 
