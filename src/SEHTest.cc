@@ -170,6 +170,8 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("USBBus", "USB device bus number", ArgvParser::OptionRequiresValue);
     cmd.defineOption("USBDev", "USB device device number", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("linkId", "Optical link Id", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("fmcId", "Optical fmc Id", ArgvParser::OptionRequiresValue);
     cmd.defineOption("useGui",
                      "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
                      ArgvParser::NoOptionAttribute);
@@ -208,6 +210,8 @@ int main(int argc, char* argv[])
     uint8_t  cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
     bool     cGui    = (cmd.foundOption("useGui"));
 
+    uint8_t            linkId = (cmd.foundOption("linkId")) ? (uint32_t)(std::stoi(cmd.optionValue("linkId"))) : 0;
+    std::string        fmcId  = (cmd.foundOption("fmcId")) ? cmd.optionValue("fmcId") : "L12";
     pugi::xml_document doc;
     if(!doc.load_file(cHWFile.c_str())) return -1;
     pugi::xml_node cDescription = doc.child("HwDescription");
@@ -215,6 +219,17 @@ int main(int argc, char* argv[])
     {
         for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
         {
+            if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
+            {
+                if(static_cast<std::string>(ps.name()) == "OpticalGroup")
+                {
+                    LOG(INFO) << BOLDBLUE << "Identified optical group" << RESET;
+                    pugi::xml_attribute attr = ps.attribute("Id");
+                    attr.set_value(linkId);
+                    attr = ps.attribute("FMCId");
+                    attr.set_value(fmcId.c_str());
+                }
+            }
             std::string stringID(ps.attribute("ID").value());
             std::string stringType(ps.attribute("Type").value());
             if(stringType == "LV")
@@ -239,6 +254,7 @@ int main(int argc, char* argv[])
             }
         }
     }
+    doc.save_file("copy.xml");
 
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
@@ -274,8 +290,8 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
-    cTool.InitializeHw(cHWFile, outp);
-    cTool.InitializeSettings(cHWFile, outp);
+    cTool.InitializeHw("copy.xml", outp);
+    cTool.InitializeSettings("copy.xml", outp);
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory, true, true);
