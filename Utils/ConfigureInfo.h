@@ -23,6 +23,7 @@ class ConfigureInfo
     }
     std::string getConfigurationFile() const { return fConfigurationFile; }
     std::string getSettingsFile() const { return fSettingsFile; }
+    std::string getConfigFileStream(const std::string& fileName) const;
 
     void        setCalibrationName(const std::string& theCalibrationName) { fCalibrationName = theCalibrationName; }
     std::string getCalibrationName() const { return fCalibrationName; }
