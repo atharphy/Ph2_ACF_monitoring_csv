@@ -89,7 +89,7 @@ class StateMachine(object):
         stringMessage = configureMessage.SerializeToString()
         return stringMessage
 
-    def setConfigurationFile(self, configurationFile):
+    def setConfigurationFiles(self, configurationFile):
         self.configurationFile_ = configurationFile
 
     def setCalibrationName(self, calibrationName):

@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
         ConfigureInfo theConfigureInfo;
-        theConfigureInfo.setConfigurationFile(configFile);
+        theConfigureInfo.setConfigurationFiles(configFile);
         mySysCntr.Configure(theConfigureInfo);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }

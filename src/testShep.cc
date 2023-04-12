@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
                 std::string   calibrationName   = cmd.optionValue("calibration");
                 std::string   configurationFile = cmd.optionValue("file");
                 ConfigureInfo theConfigureInfo;
-                theConfigureInfo.setConfigurationFile(configurationFile);
+                theConfigureInfo.setConfigurationFiles(configurationFile);
                 theConfigureInfo.setCalibrationName(calibrationName);
                 theMiddlewareInterface.configure(theConfigureInfo);
                 theDQMInterface.configure(theConfigureInfo);

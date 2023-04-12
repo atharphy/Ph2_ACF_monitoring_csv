@@ -1171,17 +1171,25 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
     fCalibrationName       = theConfigureInfo.getCalibrationName();
+
+    // #######################################
+    // # Save raw configuration file content #
+    // #######################################
     std::ifstream     configurationFile(fConfigurationFileName);
     std::stringstream configurationFileStream;
     configurationFileStream << configurationFile.rdbuf();
     fConfigurationFileContent = configurationFileStream.str();
+    if(fConfigurationFileName != theConfigureInfo.getSettingsFile())
+    {
+        std::ifstream     settingsFile(theConfigureInfo.getSettingsFile());
+        std::stringstream settingsFileStream;
+        settingsFileStream << settingsFile.rdbuf();
+        fConfigurationFileContent += settingsFileStream.str();
+    }
 
     InitializeHw(fConfigurationFileName, fParsedFile);
-    InitializeSettings(fConfigurationFileName, fParsedFile);
+    InitializeSettings(theConfigureInfo.getSettingsFile(), fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
-
-    // auto chipSubset = [](const ChipContainer* theChip) { return (theChip->getId() % 2 == 0); };
-    // fDetectorContainer->at(0)->at(0)->at(0)->addQueryFunction(chipSubset, "TEST");
 
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
