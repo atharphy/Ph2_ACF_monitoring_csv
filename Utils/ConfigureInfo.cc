@@ -181,3 +181,11 @@ void ConfigureInfo::enableReadoutChip(uint16_t boardId, uint16_t opticalGroupId,
     auto& readoutChipMap          = hybridMap[hybridId].second;
     readoutChipMap[readoutChipId] = readoutChipName;
 }
+
+std::string ConfigureInfo::getConfigFileStream(const std::string& fileName) const
+{
+    std::ifstream     fileHandler(fileName);
+    std::stringstream fileStream;
+    fileStream << fileHandler.rdbuf();
+    return fileStream.str();
+}

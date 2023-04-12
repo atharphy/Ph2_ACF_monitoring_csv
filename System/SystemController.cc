@@ -1175,17 +1175,8 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     // #######################################
     // # Save raw configuration file content #
     // #######################################
-    std::ifstream     configurationFile(fConfigurationFileName);
-    std::stringstream configurationFileStream;
-    configurationFileStream << configurationFile.rdbuf();
-    fConfigurationFileContent = configurationFileStream.str();
-    if(fConfigurationFileName != theConfigureInfo.getSettingsFile())
-    {
-        std::ifstream     settingsFile(theConfigureInfo.getSettingsFile());
-        std::stringstream settingsFileStream;
-        settingsFileStream << settingsFile.rdbuf();
-        fConfigurationFileContent += settingsFileStream.str();
-    }
+    fConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
+    if(fConfigurationFileName != theConfigureInfo.getSettingsFile()) fConfigurationFileContent += theConfigureInfo.getConfigFileStream(theConfigureInfo.getSettingsFile());
 
     InitializeHw(fConfigurationFileName, fParsedFile);
     InitializeSettings(theConfigureInfo.getSettingsFile(), fParsedFile);
