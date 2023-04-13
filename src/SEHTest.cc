@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    doc.save_file("copy.xml");
+    doc.save_file((cHWFile+"_copy").c_str());
 
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
@@ -288,10 +288,15 @@ int main(int argc, char* argv[])
     act.sa_handler = interruptHandler;
     sigaction(SIGINT, &act, NULL);
 
+    struct sigaction act2;
+    act2.sa_handler = interruptHandler;
+    sigaction(SIGTERM, &act2, NULL);
+
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
-    cTool.InitializeHw("copy.xml", outp);
-    cTool.InitializeSettings("copy.xml", outp);
+    cTool.InitializeHw((cHWFile+"_copy").c_str(), outp);
+    cTool.InitializeSettings((cHWFile+"_copy").c_str(), outp);
+    remove((cHWFile+"_copy").c_str());
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory, true, true);
