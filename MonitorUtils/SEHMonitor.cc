@@ -3,6 +3,7 @@
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/D19clpGBTInterface.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/Utilities.h"
 #include "Utils/ValueAndTime.h"
 
 #ifdef __USE_ROOT__
@@ -127,8 +128,8 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
 {
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName << RESET;
     float cValue = 0;
-#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
-    fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().HV_meas, cValue);
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
+    pTC_2SSEH->read_hvmon(pTC_2SSEH->HV_meas, cValue);
     LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
 #endif
     DetectorDataContainer theTestCardContainer;

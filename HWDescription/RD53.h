@@ -103,25 +103,25 @@ class RD53 : public ReadoutChip
     // ########################################
     struct FrontEnd
     {
-        const char* name;
-        const char* thresholdReg;
-        const char* gainReg;
-        const char* latencyReg;
-        const char* TDACGainReg;
-        const char* VDDDreadReg;
-        const char* VDDAreadReg;
-        size_t      nLatencyBins2Span;
-        size_t      nTDACvalues;
-        size_t      maxToTvalue;
-        size_t      splitToTvalue;
-        size_t      maxBCIDvalue;
-        size_t      maxTRIGIDvalue;
-        size_t      nBitTrimDig;
-        size_t      nBitTrimAna;
-        size_t      colStart;
-        size_t      colStop;
-        size_t      VCalSleepTime; // [microseconds]
-        size_t      AutoIncrementMask;
+        const char*                    name;
+        const std::vector<const char*> thresholdRegs;
+        const char*                    gainReg;
+        const char*                    latencyReg;
+        const char*                    TDACGainReg;
+        const char*                    VDDDreadReg;
+        const char*                    VDDAreadReg;
+        size_t                         nLatencyBins2Span;
+        size_t                         nTDACvalues;
+        size_t                         maxToTvalue;
+        size_t                         splitToTvalue;
+        size_t                         maxBCIDvalue;
+        size_t                         maxTRIGIDvalue;
+        size_t                         nBitTrimDig;
+        size_t                         nBitTrimAna;
+        size_t                         colStart;
+        size_t                         colStop;
+        size_t                         VCalSleepTime; // [microseconds]
+        size_t                         AutoIncrementMask;
     };
 
     // ####################################
@@ -143,7 +143,7 @@ class RD53 : public ReadoutChip
     RD53(const RD53& chipObj);
 
     void              loadfRegMap(const std::string& fileName) override;
-    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
+    std::stringstream getRegMapStream() override;
     uint32_t          getNumberOfChannels() const override;
     bool              isDACLocal(const std::string& regName) override;
     uint8_t           getNumberOfBits(const std::string& regName) override;

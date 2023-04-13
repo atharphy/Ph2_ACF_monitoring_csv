@@ -1,11 +1,11 @@
 #ifndef _MiddlewareInterface_h_
 #define _MiddlewareInterface_h_
 
-#include "MessageUtils/cpp/QueryMessage.pb.h"
 #include "NetworkUtils/TCPClient.h"
 #include <string>
 
 class ConfigureInfo;
+class StartInfo;
 
 class MiddlewareInterface : public TCPClient
 {
@@ -17,7 +17,7 @@ class MiddlewareInterface : public TCPClient
     void        halt(void);
     void        pause(void);
     void        resume(void);
-    void        start(int runNumber);
+    void        start(const StartInfo& theStartInfo);
     void        stop(void);
     std::string status(void);
 

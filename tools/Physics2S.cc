@@ -14,6 +14,7 @@
 #include "Utils/Data2S.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/Occupancy.h"
+#include "Utils/StartInfo.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 
@@ -41,7 +42,9 @@ void Physics2S::ConfigureCalibration()
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(this);
-    cCicAligner.Start(0);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(0);
+    cCicAligner.Start(theStartInfo);
     cCicAligner.waitForRunToBeCompleted();
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
@@ -72,7 +75,9 @@ void Physics2S::Running()
     }
 
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
-    SystemController::Start(fRunNumber);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(fRunNumber);
+    SystemController::Start(theStartInfo);
 
     Physics2S::run();
 }

@@ -10,6 +10,7 @@
 #include "Utils/DataContainer.h"
 #include "Utils/RD53Shared.h"
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/string.hpp>
 #include <boost/utility/identity_type.hpp>
 
 class Occupancy;
@@ -51,6 +52,9 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<uint16_t, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, uint8_t>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, uint16_t>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, std::string>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::string, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::string, std::string>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<uint32_t, uint32_t>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<VECSIZE, uint16_t>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<TDCBINS, uint16_t>, EmptyContainer>)))
@@ -66,6 +70,8 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<RD53Shared:
 #include "Utils/Occupancy.h"
 #include <arpa/inet.h>
 #include <iostream>
+
+#define END_OF_TRANSMISSION_MESSAGE "DoneWithRun"
 
 class PacketHeader
 {

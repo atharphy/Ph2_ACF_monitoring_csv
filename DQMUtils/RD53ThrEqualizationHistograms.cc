@@ -48,11 +48,10 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
     bookImplementer(theOutputFile, theDetectorStructure, TDACGain, hTDACGain, "TDAC Gain", "Entries");
 }
 
-bool ThrEqualizationHistograms::fill(std::vector<char>& dataBuffer)
+bool ThrEqualizationHistograms::fill(std::string& inputStream)
 {
     const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theOccupancySerialization("ThrEqualizationOccupancy");
     ContainerSerialization theTDACSerialization("ThrEqualizationTDAC");
     ContainerSerialization theOccupancyScanSerialization("ThrEqualizationOccupancyScan");

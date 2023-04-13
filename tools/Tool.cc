@@ -5,6 +5,8 @@
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/Utilities.h"
 
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
@@ -14,6 +16,12 @@
 #include "Utils/ConfigureInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
+#include "Utils/StartInfo.h"
+
+#ifdef __USE_ROOT__
+#include "DQMUtils/DQMMetadataIT.h"
+#include "DQMUtils/DQMMetadataOT.h"
+#endif
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -58,6 +66,7 @@ Tool::Tool(THttpServer* pHttpServer)
     , fCanvasMap()
     , fChipHistMap()
     , fHybridHistMap()
+    , fDQMMetadata(nullptr)
     , fType()
     , fTestGroupChannelMap()
     , fDirectoryName("")
@@ -132,25 +141,24 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(const ConfigureInfo theConfigureInfo)
+void Tool::Configure(const ConfigureInfo& theConfigureInfo)
 {
     SystemController::Configure(theConfigureInfo);
     ConfigureCalibration();
 }
 
-void Tool::Start(int runNumber)
+void Tool::Start(const StartInfo& theStartInfo)
 {
     if(fDirectoryName == "")
     {
-        std::string resultDirectory = "Results/Run_" + std::to_string(runNumber);
+        std::string resultDirectory = getResultDirectoryName(theStartInfo);
         CreateResultDirectory(resultDirectory, false, false);
     }
-#ifdef __USE_ROOT__
-    InitResultFile("Hybrid");
-#endif
+    initMetadataAndFillInitialConditions();
+
     // doExit       = false;
     Tool::fKeepRunning = true;
-    fRunNumber         = runNumber;
+    fRunNumber         = theStartInfo.getRunNumber();
     fRunningFuture     = std::async(std::launch::async, &Tool::Running, this);
     // std::promise<int> thePromise;
     // fRunningFuture = thePromise.get_future();
@@ -164,6 +172,330 @@ void Tool::Start(int runNumber)
 //     theGuard.unlock();
 //     wakeUp.notify_one();
 // }
+
+void Tool::initMetadataAndFillInitialConditions()
+{
+    fillNameContainerWithChipIDs();
+
+    std::string theUsername;
+    try
+    {
+        theUsername = std::string(std::getenv("USER"));
+    }
+    catch(const std::exception& e)
+    {
+        LOG(WARNING) << e.what();
+        LOG(WARNING) << __PRETTY_FUNCTION__ << " Username not set, using dummy name";
+        theUsername = "user";
+    }
+
+    DetectorDataContainer theUsernameContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theUsernameContainer);
+    theUsernameContainer.getSummary<std::string>() = theUsername;
+
+    std::string           theHostName = std::string(std::getenv("HOSTNAME"));
+    DetectorDataContainer theHostNameContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theHostNameContainer);
+    theHostNameContainer.getSummary<std::string>() = theHostName;
+
+    std::string           theGitCommitHash = GIT_COMMIT_HASH;
+    DetectorDataContainer theGitCommitHashContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitCommitHashContainer);
+    theGitCommitHashContainer.getSummary<std::string>() = theGitCommitHash;
+
+    DetectorDataContainer theCalibrationNameContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationNameContainer);
+    theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName;
+
+    DetectorDataContainer theFirmwareVersionContainer;
+    ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
+    for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
+
+    DetectorDataContainer theDetectorConfigurationContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
+    theDetectorConfigurationContainer.getSummary<std::string>() = fConfigurationFileContent;
+
+    DetectorDataContainer theCalibrationTimestampContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationTimestampContainer);
+    std::stringstream timestampStream; // for come reason std::to_string does not work with python
+    timestampStream << getTimeStamp();
+    theCalibrationTimestampContainer.getSummary<std::string>() = timestampStream.str();
+
+    DetectorDataContainer theReadoutChipConfigurationContainer;
+    ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
+    fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
+
+    DetectorDataContainer theLpGBTConfigurationContainer;
+    ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theLpGBTConfigurationContainer);
+    fillLpGBTConfigurationContainer(theLpGBTConfigurationContainer);
+
+    DetectorDataContainer theLpGBTFuseIdContainer;
+    ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theLpGBTFuseIdContainer);
+    fillLpGBTFuseIdContainer(theLpGBTFuseIdContainer);
+    bool isInitialValue = true;
+
+#ifdef __USE_ROOT__
+    InitResultFile("Hybrid");
+    if(fBoardType == BoardType::D19C) { fDQMMetadata = new DQMMetadataOT(); }
+    else if(fBoardType == BoardType::RD53)
+    {
+        fDQMMetadata = new DQMMetadataIT();
+    }
+    else
+    {
+        LOG(ERROR) << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Board type not defined!! Impossible to create DQM for metadata, aborting..." << std::endl;
+        abort();
+    }
+    fDQMMetadata->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    if(fNameContainer != nullptr) fDQMMetadata->fillObjectNames(*fNameContainer);
+    fDQMMetadata->fillUsername(theUsernameContainer);
+    fDQMMetadata->fillHostName(theHostNameContainer);
+    fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
+    fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
+    fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
+    fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
+    fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
+    fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
+    fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
+    fDQMMetadata->fillLpGBTFuseId(theLpGBTFuseIdContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theObjectNameSerialization("MetadataObjectNames");
+        theObjectNameSerialization.streamByDetectorContainer(fDQMStreamer, *fNameContainer);
+
+        ContainerSerialization theUsernameSerialization("MetadataUsername");
+        theUsernameSerialization.streamByDetectorContainer(fDQMStreamer, theUsernameContainer);
+
+        ContainerSerialization theHostNameSerialization("MetadataHostName");
+        theHostNameSerialization.streamByDetectorContainer(fDQMStreamer, theHostNameContainer);
+
+        ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
+        theGitCommitHashSerialization.streamByDetectorContainer(fDQMStreamer, theGitCommitHashContainer);
+
+        ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
+        theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
+
+        ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
+        theCalibrationNameSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationNameContainer);
+
+        ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
+        theDetectorConfigurationSerialization.streamByDetectorContainer(fDQMStreamer, theDetectorConfigurationContainer);
+
+        ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
+        theCalibrationTimestampSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationTimestampContainer, isInitialValue);
+
+        ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
+        theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isInitialValue);
+
+        ContainerSerialization theLpGBTConfigurationSerialization("MetadataLpGBTConfiguration");
+        theLpGBTConfigurationSerialization.streamByOpticalGroupContainer(fDQMStreamer, theLpGBTConfigurationContainer, isInitialValue);
+
+        ContainerSerialization theLpGBTFuseIdSerialization("MetadataLpGBTFuseId");
+        theLpGBTFuseIdSerialization.streamByBoardContainer(fDQMStreamer, theLpGBTFuseIdContainer);
+    }
+#endif
+
+    if(fBoardType == BoardType::D19C) { fillOTMetadataInitialConditions(); }
+    else if(fBoardType == BoardType::RD53)
+    {
+        fillITMetadataInitialConditions();
+    }
+}
+
+void Tool::fillOTMetadataInitialConditions()
+{
+    bool                  isInitialValue = true;
+    DetectorDataContainer theCICFuseIdContainer;
+    ContainerFactory::copyAndInitHybrid<std::string>(*fDetectorContainer, theCICFuseIdContainer);
+    fillCICFuseIdContainer(theCICFuseIdContainer);
+
+    DetectorDataContainer theCICConfigurationContainer;
+    ContainerFactory::copyAndInitHybrid<std::string>(*fDetectorContainer, theCICConfigurationContainer);
+    fillCICConfigurationContainer(theCICConfigurationContainer);
+
+#ifdef __USE_ROOT__
+    auto* theOTDQMMetadata = static_cast<DQMMetadataOT*>(fDQMMetadata);
+    theOTDQMMetadata->fillCICFuseId(theCICFuseIdContainer);
+    theOTDQMMetadata->fillCICConfiguration(theCICConfigurationContainer, isInitialValue);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theCICFuseIdSerialization("MetadataCICFuseId");
+        theCICFuseIdSerialization.streamByBoardContainer(fDQMStreamer, theCICFuseIdContainer);
+
+        ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");
+        theCICConfigurationSerialization.streamByHybridContainer(fDQMStreamer, theCICConfigurationContainer, isInitialValue);
+    }
+#endif
+}
+
+void Tool::fillITMetadataInitialConditions() {}
+
+void Tool::fillMetadataFinalConditions()
+{
+    bool                  isInitialValue = false;
+    DetectorDataContainer theReadoutChipConfigurationContainer;
+    ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
+    fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
+
+    DetectorDataContainer theLpGBTConfigurationContainer;
+    ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theLpGBTConfigurationContainer);
+    fillLpGBTConfigurationContainer(theLpGBTConfigurationContainer);
+
+    DetectorDataContainer theCalibrationTimestampContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationTimestampContainer);
+    std::stringstream timestampStream; // for come reason std::to_string does not work with python
+    timestampStream << getTimeStamp();
+    theCalibrationTimestampContainer.getSummary<std::string>() = timestampStream.str();
+
+#ifdef __USE_ROOT__
+    fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
+    fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
+    fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
+        theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isInitialValue);
+
+        ContainerSerialization theLpGBTConfigurationSerialization("MetadataLpGBTConfiguration");
+        theLpGBTConfigurationSerialization.streamByOpticalGroupContainer(fDQMStreamer, theLpGBTConfigurationContainer, isInitialValue);
+
+        ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
+        theCalibrationTimestampSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationTimestampContainer, isInitialValue);
+    }
+#endif
+
+    if(fBoardType == BoardType::D19C) { fillOTMetadataFinalConditions(); }
+    else if(fBoardType == BoardType::RD53)
+    {
+        fillITMetadataFinalConditions();
+    }
+}
+
+void Tool::fillITMetadataFinalConditions() {}
+
+void Tool::fillOTMetadataFinalConditions()
+{
+    bool isInitialValue = false;
+
+    DetectorDataContainer theCICConfigurationContainer;
+    ContainerFactory::copyAndInitHybrid<std::string>(*fDetectorContainer, theCICConfigurationContainer);
+    fillCICConfigurationContainer(theCICConfigurationContainer);
+
+#ifdef __USE_ROOT__
+    auto* theOTDQMMetadata = static_cast<DQMMetadataOT*>(fDQMMetadata);
+    theOTDQMMetadata->fillCICConfiguration(theCICConfigurationContainer, isInitialValue);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
+        ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");
+        theCICConfigurationSerialization.streamByHybridContainer(fDQMStreamer, theCICConfigurationContainer, isInitialValue);
+    }
+#endif
+}
+
+void Tool::fillNameContainerWithChipIDs()
+{
+    if(fNameContainer == nullptr) return;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        fNameContainer->getObject(cBoard->getId())->getSummary<std::string>() = cBoard->getConnectionUri();
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    uint32_t chipFuseId = fReadoutChipInterface->ReadChipFuseID(cChip);
+                    fNameContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::string>() =
+                        std::to_string(chipFuseId);
+                }
+            }
+        }
+    }
+}
+
+void Tool::fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    theReadoutChipConfigurationContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
+                        ->getSummary<std::string, EmptyContainer>() = cChip->getRegMapStream().str();
+                }
+            }
+        }
+    }
+}
+
+void Tool::fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                uint32_t chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
+                theCICFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::string>() = std::to_string(chipFuseId);
+            }
+        }
+    }
+}
+
+void Tool::fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurationContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                theCICConfigurationContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::string>() =
+                    static_cast<OuterTrackerHybrid*>(cHybrid)->fCic->getRegMapStream().str();
+            }
+        }
+    }
+}
+
+void Tool::fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto theLpGBT = cOpticalGroup->flpGBT;
+            if(theLpGBT == nullptr) continue;
+            theLpGBTConfigurationContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = theLpGBT->getRegMapStream().str();
+        }
+    }
+}
+
+void Tool::fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto theLpGBT = cOpticalGroup->flpGBT;
+            if(theLpGBT == nullptr) continue;
+            uint32_t chipFuseId                                                                                                              = flpGBTInterface->ReadChipFuseID(theLpGBT);
+            theLpGBTFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
+        }
+    }
+}
 
 void Tool::Stop()
 {
@@ -185,6 +517,19 @@ void Tool::Stop()
             throw std::runtime_error(e.what());
         }
         SystemController::Stop();
+
+        fillMetadataFinalConditions();
+        if(fDQMStreamerEnabled)
+        {
+            std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
+            PacketHeader thePacketHeader;
+            thePacketHeader.addPacketHeader(doneWithRunMessage);
+            fDQMStreamer->broadcast(doneWithRunMessage);
+        }
+        Tool::dumpConfigFiles();
+        Tool::SaveResults();
+        Tool::WriteRootFile();
+        Tool::CloseResultFile();
     }
 }
 
@@ -205,6 +550,7 @@ void Tool::Inherit(const Tool* pTool)
     fBeBoardHistMap       = pTool->fBeBoardHistMap;
     fSummaryTreeParameter = pTool->fSummaryTreeParameter;
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
+    fDQMMetadata          = pTool->fDQMMetadata;
 #endif
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
     fRunNumber           = pTool->fRunNumber;
@@ -234,7 +580,6 @@ void Tool::resetPointers() {}
 void Tool::Destroy()
 {
     LOG(INFO) << BOLDRED << "Destroying memory objects" << RESET;
-    SystemController::Destroy();
 #ifdef __HTTP__
     LOG(INFO) << BOLDRED << "Destroying HttpServer" << RESET;
     if(fHttpServer)
@@ -247,6 +592,7 @@ void Tool::Destroy()
 
     SoftDestroy();
     LOG(INFO) << BOLDRED << "Memory objects destroyed" << RESET;
+    SystemController::Destroy();
 }
 
 void Tool::SoftDestroy()
@@ -296,6 +642,10 @@ void Tool::SoftDestroy()
         }
     }
     fBeBoardHistMap.clear();
+
+    delete fDQMMetadata;
+    fDQMMetadata = nullptr;
+
 #endif
     fTestGroupChannelMap.clear();
 }

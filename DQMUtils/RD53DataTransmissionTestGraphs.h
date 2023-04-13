@@ -23,7 +23,7 @@ class DataTransmissionTestGraphs : public DQMHistogramBase
   public:
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
     void reset() override{};
 
     void fillTAP0scan(const DetectorDataContainer& TAP0scanContainer);

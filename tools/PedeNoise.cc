@@ -488,6 +488,8 @@ void PedeNoise::findPedestal(bool forceAllChannels)
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of hybrid 0 = " << fDetectorContainer->at(0)->at(0)->at(0)->size() << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of hybrid 0 = " << fDetectorDataContainer->at(0)->at(0)->at(0)->size() << std::endl;
     this->bitWiseScan("Threshold", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
 

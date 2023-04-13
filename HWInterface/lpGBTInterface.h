@@ -39,14 +39,6 @@ const float    ACCELERATOR_CLK   = 40e6;   // Accelerator clock frequency [Hz]
 
 namespace Ph2_HwInterface
 {
-#if defined(__TCUSB__)
-#if defined(__ROH_USB__)
-using TestCardInterface = TCInterface<TC_PSROH>;
-#elif defined(__SEH_USB__)
-using TestCardInterface = TCInterface<TC_2SSEH>;
-#endif
-#endif
-
 struct lpGBTClockConfig
 {
     uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
@@ -56,27 +48,7 @@ struct lpGBTClockConfig
 class lpGBTInterface : public ChipInterface
 {
   protected:
-#if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
-    TestCardInterface* fExternalController{nullptr};
-#endif
-
   public:
-#if defined(__TCUSB__)
-    void InitializeExternalController()
-    {
-#if defined(__ROH_USB__)
-        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
-        fExternalController = new TestCardInterface("ROH_USB");
-#elif defined(__SEH_USB__)
-        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
-        fExternalController = new TestCardInterface("SEH_USB");
-#endif
-    }
-#if defined(__ROH_USB__) || defined(__SEH_USB__)
-    TestCardInterface* GetExternalController() const { return fExternalController; }
-#endif
-#endif
-
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
     virtual ~lpGBTInterface() {}
 

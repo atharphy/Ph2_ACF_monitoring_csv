@@ -72,7 +72,7 @@ void RD53eudaqProducer::DoStartRun()
                 for(const auto cChip: *cHybrid)
                 {
                     std::stringstream header;
-                    std::stringstream chipData = cChip->saveRegMap("STREAMON");
+                    std::stringstream chipData = cChip->getRegMapStream();
                     header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
                     ev->SetTag(header.str().c_str(), chipData.str());
                 }
@@ -84,7 +84,9 @@ void RD53eudaqProducer::DoStartRun()
     // ###################################################
     std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
     RD53sysCntrPhys.initializeFiles<PhysicsHistograms>(fileName, "Physics", RD53sysCntrPhys.histos, theRunNumber);
-    RD53sysCntrPhys.Start(theRunNumber);
+    StartInfo theStartInfo;
+    theStartInfo.setRunNumber(theRunNumber);
+    RD53sysCntrPhys.Start(theStartInfo);
 
     doExit = false;
 }

@@ -159,6 +159,7 @@
 
 enum class BoardType
 {
+    UNDEFINED,
     D19C,
     RD53
 };

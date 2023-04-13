@@ -25,7 +25,7 @@ MonitorDQMPlotCBC::MonitorDQMPlotCBC() {}
 MonitorDQMPlotCBC::~MonitorDQMPlotCBC() {}
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig)
+void MonitorDQMPlotCBC::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -158,9 +158,8 @@ void MonitorDQMPlotCBC::reset(void)
 }
 
 //========================================================================================================================
-bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
+bool MonitorDQMPlotCBC::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theCBCRegisterSerialization("CBCMonitorCBCRegister");
     ContainerSerialization theLpGBTRegisterSerialization("CBCMonitorLpGBTRegister");
 

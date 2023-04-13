@@ -54,14 +54,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
       link_directories(${PH2_TCUSB_LIBRARY_DIRS})
       set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
-      if($ENV{UseTCUSBforROH})
-          message(STATUS "    Building the ROH TestCards USB components")
-          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-      endif($ENV{UseTCUSBforROH})
-      if($ENV{UseTCUSBforSEH})
-          message(STATUS "    Building the SEH TestCards USB components")
-          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
-      endif($ENV{UseTCUSBforSEH})
     endif(${PH2_TCUSB_FOUND})
 
     if(NoDataShipping)
@@ -103,9 +95,11 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}SYSTEM${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
-    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
-    include_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
+    include_directories(${UHAL_DIR}/uhal/include)
+    include_directories(${UHAL_DIR}/log/include)
+    include_directories(${UHAL_DIR}/grammars/include)
+
+    include_directories(${Protobuf_INCLUDE_DIRS})
 
     cet_set_compiler_flags(
                            EXTRA_FLAGS -Wno-reorder -Wl,--undefined

@@ -38,13 +38,13 @@ class MonitorDQMPlotSEH : public MonitorDQMPlotBase
      * all board/chip/hybrid/channel \param pSettingsMap : setting as for Tool setting map in case coe informations are
      * needed (i.e. FitSCurve)
      */
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig) override;
 
     /*!
      * \brief fill : fill Plots from TCP stream, need to be overwritten to avoid compilation errors, but it is not
      * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
-    bool fill(std::vector<char>& dataBuffer) override;
+    bool fill(std::string& inputStream) override;
 
     /*!
      * \brief process : do something with the Plot like colors, fit, drawing canvases, etc

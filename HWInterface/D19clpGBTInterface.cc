@@ -84,9 +84,9 @@ void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
     if(pOptical)
     {
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
-#if defined(__TC_USB__) && defined(__ROH_USB__)
+#if defined(__TC_USB__)
         LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
-        if(pToggleTC && fExternalController != nullptr) fExternalController->getInterface().toggle_SCI2C();
+        if(pToggleTC && fTC_PSROH != nullptr) fTC_PSROH->toggle_SCI2C();
 #endif
         fOptical = true;
     }
@@ -316,6 +316,9 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Forcing driver attenuation to be 1
     uint8_t cEQAttenuation = 3;
     WriteChipReg(pChip, "EQConfig", cEQAttenuation << 3);
+
+    // Configuring I2C Master pull-ups for VTRx+
+    WriteChipReg(pChip, "I2CM1Config", 1 << 4 | 1 << 6);
     // Clocks
     std::vector<uint8_t> cClocks = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
     // clock frequency set to 0 to disable it at first and only later configure what is needed

@@ -1,5 +1,5 @@
 
-#if defined(__TCUSB__) && defined(__ROH_USB__) && defined(__USE_ROOT__)
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
 #include "PSROHTester.h"
 
 // initialize the static member
@@ -42,14 +42,13 @@ void PSROHTester::Initialise()
 
 void PSROHTester::MeasureInputIV(const std::string& cTestStep)
 {
-    auto cTestCardInterface = flpGBTInterface->GetExternalController()->getInterface();
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto& cMeas: fInputIVMap)
         {
             float cVal;
-            cTestCardInterface.adc_get(cMeas.second, cVal);
+            fTC_PSROH->adc_get(cMeas.second, cVal);
             LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal / 1000) << " [SI] during phase " << cTestStep << RESET;
         }
     }
@@ -707,7 +706,7 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
     }
 }
 
-void PSROHTester::Start(int currentRun)
+void PSROHTester::Start(const StartInfo& theStartInfo)
 {
     LOG(INFO) << BOLDBLUE << "Starting PS ROH Tester" << RESET;
     Initialise();

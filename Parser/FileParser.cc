@@ -244,9 +244,11 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             uint8_t cChipId      = theChild.attribute("Id").as_int();
             uint8_t cChipVersion = theChild.attribute("version").as_int();
             bool    cIsOptical   = theChild.attribute("optical").as_int();
-            lpGBT*  thelpGBT     = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
+
+            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
             thelpGBT->setVersion(cChipVersion);
             thelpGBT->setOptical(cIsOptical);
+
             theOpticalGroup->setOptical(cIsOptical);
             pBoard->setOptical(cIsOptical);
             theOpticalGroup->addlpGBT(thelpGBT);

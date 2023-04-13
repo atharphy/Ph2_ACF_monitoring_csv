@@ -147,27 +147,27 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // ###################################
-    // # Check if DataMerging is enabled # // @TMP@
+    // # Check if DataMerging is enabled #
     // ###################################
-    // size_t primaryLane       = 0;
-    // bool   enableDataMerging = false;
-    // for(const auto cOpticalGroup: *pBoard)
-    //     for(const auto cHybrid: *cOpticalGroup)
-    //         for(const auto cChip: *cHybrid)
-    //         {
-    //             if(static_cast<RD53*>(cChip)->laneConfig.isPrimary == false)
-    //                 enableDataMerging = true;
-    //             else
-    //                 primaryLane = static_cast<RD53*>(cChip)->getChipLane();
-    //         }
+    size_t primaryLane       = 0;
+    bool   enableDataMerging = false;
+    for(const auto cOpticalGroup: *pBoard)
+        for(const auto cHybrid: *cOpticalGroup)
+            for(const auto cChip: *cHybrid)
+            {
+                if(static_cast<RD53*>(cChip)->laneConfig.isPrimary == false)
+                    enableDataMerging = true;
+                else
+                    primaryLane = static_cast<RD53*>(cChip)->getChipLane();
+            }
 
-    // RegManager::WriteReg("user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging);
+    RegManager::WriteReg("user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging);
 
-    // if(enableDataMerging == true)
-    // {
-    //     for(const auto cChip: *pBoard->at(0)->at(0)) WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(static_cast<RD53*>(cChip)->getChipLane()) + "_id", cChip->getId() & 3);
-    //     RegManager::WriteReg("user.ctrl_regs.Aurora_block.active_lane", primaryLane);
-    // }
+    if(enableDataMerging == true)
+    {
+        for(const auto cChip: *pBoard->at(0)->at(0)) WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(static_cast<RD53*>(cChip)->getChipLane()) + "_id", cChip->getId() & 3);
+        RegManager::WriteReg("user.ctrl_regs.Aurora_block.active_lane", primaryLane);
+    }
 
     // ################################
     // # Enabling hybrids and chips   #

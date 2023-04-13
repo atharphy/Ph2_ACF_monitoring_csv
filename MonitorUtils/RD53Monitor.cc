@@ -9,6 +9,7 @@
 
 #include "MonitorUtils/RD53Monitor.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/Utilities.h"
 #include "Utils/ValueAndTime.h"
 #include <array>
 

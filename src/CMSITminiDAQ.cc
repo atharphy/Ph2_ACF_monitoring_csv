@@ -9,6 +9,7 @@
 
 #include "System/SystemController.h"
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
 #include "tools/RD53BERtest.h"
 #include "tools/RD53ClockDelay.h"
@@ -38,7 +39,7 @@
 #define RUNNUMBER 0
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
-#define DELAYAFTERPHYSICS 2 // [seconds]
+#define DELAYAFTERPHYSICS -1 // [seconds]
 #define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
@@ -155,7 +156,7 @@ int main(int argc, char** argv)
     bool        program    = cmd.foundOption("prog") == true ? true : false;
     bool        reset      = cmd.foundOption("reset") == true ? true : false;
     bool        dumpRegs   = cmd.foundOption("dump") == true ? true : false;
-    size_t      runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : DELAYAFTERPHYSICS;
+    int         runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : DELAYAFTERPHYSICS;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
@@ -294,26 +295,30 @@ int main(int argc, char** argv)
             {
                 if(pa.fDetectorContainer->size() != 1)
                 {
-                    auto boardSubset = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addBoardQueryFunction(boardSubset);
+                    std::string queryFunctionName = "boardSubset";
+                    auto        boardSubset       = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
+                    pa.fDetectorContainer->addBoardQueryFunction(boardSubset, queryFunctionName);
                     doTwice = true;
                 }
                 else if(pa.fDetectorContainer->at(0)->size() != 1)
                 {
-                    auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addOpticalGroupQueryFunction(optoGroupSubset);
+                    std::string queryFunctionName = "opticalGroupSubset";
+                    auto        optoGroupSubset   = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
+                    pa.fDetectorContainer->addOpticalGroupQueryFunction(optoGroupSubset, queryFunctionName);
                     doTwice = true;
                 }
                 else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
                 {
-                    auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addHybridQueryFunction(hybridSubset);
+                    std::string queryFunctionName = "moduleSubset";
+                    auto        hybridSubset      = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
+                    pa.fDetectorContainer->addHybridQueryFunction(hybridSubset, queryFunctionName);
                     doTwice = true;
                 }
                 else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
                 {
-                    auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset);
+                    std::string queryFunctionName = "readoutChipSubset";
+                    auto        chipSubset        = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
+                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryFunctionName);
                     doTwice = true;
                 }
             }
@@ -524,12 +529,18 @@ int main(int argc, char** argv)
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
 
             ph.localConfigure(fileName, runNumber);
-            ph.Start(runNumber);
-            do
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(runNumber);
+            ph.Start(theStartInfo);
+            if(runtime == -1)
             {
-                LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop the run ..." << RESET;
-            } while(std::cin.get() != '\n');
-            std::this_thread::sleep_for(std::chrono::seconds(runtime));
+                do
+                {
+                    LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop the run ..." << RESET;
+                } while(std::cin.get() != '\n');
+            }
+            else
+                std::this_thread::sleep_for(std::chrono::seconds(runtime));
             ph.Stop();
         }
         else

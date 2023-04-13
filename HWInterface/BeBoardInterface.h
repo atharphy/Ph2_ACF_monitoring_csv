@@ -158,6 +158,12 @@ class BeBoardInterface
     uint32_t getBoardInfo(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
+     * \brief Get the board FW version
+     * \param pBoard
+     */
+    uint32_t getBoardFirmwareVersion(const Ph2_HwDescription::BeBoard* pBoard);
+
+    /*!
      * \brief Get the board infos
      * \param pBoard
      */

@@ -55,7 +55,7 @@ void DQMHistogramPhaseScan::book(TFile* theOutputFile, DetectorContainer& theDet
 }
 
 //========================================================================================================================
-bool DQMHistogramPhaseScan::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramPhaseScan::fill(std::string& inputStream)
 {
     // HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>> thePhaseStream("PhaseScan");
 

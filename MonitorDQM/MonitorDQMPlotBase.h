@@ -51,13 +51,13 @@ class MonitorDQMPlotBase
      * \brief Book histograms
      * \param theDetectorStructure : Container of the Detector structure
      */
-    virtual void book(TFile* outputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig) = 0;
+    virtual void book(TFile* outputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig) = 0;
 
     /*!
      * \brief Book histograms
      * \param configurationFileName : xml configuration file
      */
-    virtual bool fill(std::vector<char>& dataBuffer) = 0;
+    virtual bool fill(std::string& inputStream) = 0;
 
     /*!
      * \brief SAve histograms

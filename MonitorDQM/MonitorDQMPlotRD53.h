@@ -20,8 +20,8 @@ class MonitorDQMPlotRD53 : public MonitorDQMPlotBase
     MonitorDQMPlotRD53(){};
     ~MonitorDQMPlotRD53(){};
 
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig) override;
-    bool fill(std::vector<char>& dataBuffer) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig) override;
+    bool fill(std::string& inputStream) override;
     void process() override{};
     void reset(void) override{};
 

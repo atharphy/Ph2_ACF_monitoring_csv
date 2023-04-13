@@ -66,6 +66,7 @@
 class DetectorMonitor;
 class ChannelGroupHandler;
 class ConfigureInfo;
+class StartInfo;
 
 /*!
  * \namespace Ph2_System
@@ -232,11 +233,11 @@ class SystemController
      */
     void ReadData(bool pWait = true);
 
-    virtual void Start(int runNumber);
+    virtual void Start(const StartInfo& theStartInfo);
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(const ConfigureInfo theConfigureInfo);
+    virtual void Configure(const ConfigureInfo& theConfigureInfo);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);
@@ -368,8 +369,13 @@ class SystemController
     DetectorDataContainer* fChannelGroupHandlerContainer;
 
   protected:
-    bool    fSameChannelGroupForAllChannels{true};
-    uint8_t fInitializeInterfaces{1};
+    DetectorDataContainer* fNameContainer;
+    bool                   fSameChannelGroupForAllChannels{true};
+    uint8_t                fInitializeInterfaces{1};
+    std::string            fConfigurationFileName{""};
+    std::string            fCalibrationName{""};
+    std::string            fConfigurationFileContent{""};
+    BoardType              fBoardType{BoardType::UNDEFINED};
 };
 
 } // namespace Ph2_System

@@ -88,10 +88,11 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     if(fFitSCurves) fPlotSCurves = true;
 
+    std::string queryFunctionName = "ChipType";
     if(fWithCBC || fWithSSA)
     {
         // Set query function to only include strip chips in the data container
-        fDetectorContainer->addReadoutChipQueryFunction(selectStripChipFunction);
+        fDetectorContainer->addReadoutChipQueryFunction(selectStripChipFunction, queryFunctionName);
 
         if(fPlotSCurves)
         {
@@ -148,13 +149,13 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripValidationHistograms, theTH1FStripValidationContainer);
 
         // Reset query function from only including strip chips in the data container
-        fDetectorContainer->resetReadoutChipQueryFunction();
+        fDetectorContainer->removeReadoutChipQueryFunction(queryFunctionName);
     }
 
     if(fWithMPA)
     {
         // Set query function to only include strip chips in the data container
-        fDetectorContainer->addReadoutChipQueryFunction(selectPixelChipFunction);
+        fDetectorContainer->addReadoutChipQueryFunction(selectPixelChipFunction, queryFunctionName);
 
         if(fPlotSCurves)
         {
@@ -197,7 +198,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorPixelValidationHistograms, theTH1FPixelValidationContainer);
 
         // Reset query function from only including strip chips in the data container
-        fDetectorContainer->resetReadoutChipQueryFunction();
+        fDetectorContainer->removeReadoutChipQueryFunction(queryFunctionName);
     }
 
     // SCurve
@@ -209,10 +210,8 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 }
 
 //========================================================================================================================
-bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramPedeNoise::fill(std::string& inputStream)
 {
-    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
-
     ContainerSerialization theSCurveSerialization("PedeNoiseSCurve");
     ContainerSerialization theThresholdAndNoiseSerialization("PedeNoiseThresholdAndNoise");
     ContainerSerialization theValidationSerialization("PedeNoiseValidation");

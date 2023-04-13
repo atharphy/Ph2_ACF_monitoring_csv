@@ -4,6 +4,7 @@
 
 #include "MonitorDQM/MonitorDQMInterface.h"
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "MonitorDQM/MonitorDQMPlotPS.h"
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/ContainerSerialization.h"
@@ -76,6 +77,7 @@ void MonitorDQMInterface::configure(const ConfigureInfo& theConfigureInfo)
     std::string           monitoringType = theFileParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);
 
     if(monitoringType == "2S") fMonitorDQMVector.push_back(new MonitorDQMPlotCBC());
+    if(monitoringType == "PS") fMonitorDQMVector.push_back(new MonitorDQMPlotPS());
 
     fOutputFile = new TFile("Monitor_tmp.root", "RECREATE");
     for(auto monitorDQM: fMonitorDQMVector) monitorDQM->book(fOutputFile, fDetectorStructure, theDetectorMonitorConfig);
@@ -91,7 +93,6 @@ void MonitorDQMInterface::startProcessingData()
 //========================================================================================================================
 void MonitorDQMInterface::stopProcessingData(void)
 {
-    fRunning = false;
     std::chrono::milliseconds span(1000);
     int                       timeout = 10; // in seconds
 
@@ -154,11 +155,32 @@ bool MonitorDQMInterface::running()
                 break;
             }
 
-            std::vector<char> streamDataBuffer(fDataBuffer.begin() + packerHeaderSize, fDataBuffer.begin() + packetSize);
+            std::string inputStream(fDataBuffer.begin() + packerHeaderSize, fDataBuffer.begin() + packetSize);
             fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + packetSize);
 
-            for(auto monitorDQM: fMonitorDQMVector)
-                if(monitorDQM->fill(streamDataBuffer)) break;
+            if(inputStream == END_OF_TRANSMISSION_MESSAGE)
+            {
+                LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " End of transmission message received, stopping listening thread" << RESET;
+                fRunning = false;
+                break;
+            }
+            else
+            {
+                bool decodedByOneDQM = false;
+                for(auto monitorDQM: fMonitorDQMVector)
+                {
+                    if(monitorDQM->fill(inputStream))
+                    {
+                        decodedByOneDQM = true;
+                        break;
+                    }
+                }
+                if(!decodedByOneDQM)
+                {
+                    LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << "None decoded message " << inputStream << ", aborting..." << RESET;
+                    abort();
+                }
+            }
         }
     }
 

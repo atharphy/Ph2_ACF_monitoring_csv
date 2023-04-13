@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -135,9 +136,6 @@ int main(int argc, char* argv[])
 
     theMiddlewareStateMachine.initialize();
 
-    // int main ( int argc, char* argv[] )
-    // std::cout << argc << "-" << argv[2] << std::endl;
-    // exit(0);
     int   tAppArgc = 1;
     char* tAppArgv[2];
     tAppArgv[0] = argv[0];
@@ -165,8 +163,10 @@ int main(int argc, char* argv[])
         }
         case CONFIGURED:
         {
-            int runNumber = returnRunNumber("RunNumbers.dat");
-            theMiddlewareStateMachine.start(runNumber);
+            int       runNumber = returnRunNumber("RunNumbers.dat");
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(runNumber);
+            theMiddlewareStateMachine.start(theStartInfo);
             stateMachineStatus = RUNNING;
             break;
         }

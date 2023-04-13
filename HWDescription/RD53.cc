@@ -265,16 +265,10 @@ void RD53::loadfRegMap(const std::string& fileName)
         throw Exception("[RD53::loadfRegMapd] The RD53 file settings does not exist");
 }
 
-std::stringstream RD53::saveRegMap(const std::string& fName2Add)
-// #################################################################
-// # If fName2Add != STREAMON --> then data are also saved on file #
-// #################################################################
+std::stringstream RD53::getRegMapStream()
 {
     const unsigned int Nspaces = 26; // @CONST@
-
-    std::stringstream theStream;
-    std::ofstream     file;
-    std::string       fileName = this->getFileName(fName2Add);
+    std::stringstream  theStream;
 
     std::set<ChipRegPair, RegItemComparer> fSetRegItem;
     for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
@@ -333,19 +327,6 @@ std::stringstream RD53::saveRegMap(const std::string& fName2Add)
         theStream << std::endl;
 
         theStream << std::endl;
-    }
-
-    if(fName2Add != "STREAMON")
-    {
-        file.open(fileName.c_str(), std::ios::out | std::ios::trunc);
-
-        if(file)
-        {
-            file << theStream.str();
-            file.close();
-        }
-        else
-            LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
     }
 
     return theStream;

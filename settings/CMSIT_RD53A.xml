@@ -155,7 +155,10 @@
           <Register name="trigger_source"> 2 </Register>
           <!-- 1=IPBus, 2=Test-FSM, 3=TTC, 4=TLU, 5=External, 6=Hit-Or, 7=User-defined frequency -->
           <Register name="HitOr_enable_l12"> 0 </Register>
-          <!-- Enable HitOr port: set trigger_source to proper value then this register, 0b0001 enable HitOr from left-most connector, 0b1000 enable HitOr from right-most connector -->
+          <!-- HitOr port enable: set trigger_source to proper value then this register,
+               0b01 enables HitOr for the first (left-most) miniDP connector,
+               0b10 enables HitOr for the second miniDP connector
+          -->
         </Register>
 
         <Register name="ext_tlu_reg1">
@@ -198,7 +201,7 @@
             INJtype            = 2:  digital
             INJtype            = 3:  analog + custom from txt file
             INJtype            = 4:  analog + X-talk coupled pixels
-            INJtype            = 5:  analog + X-talk un-coupled pixels
+            INJtype            = 5:  analog + X-talk decoupled pixels
          ResetMask             = 0:  do not enable masked pixels;        ResetMask             = 1: enable all pixels
          ResetTDAC             = -1: do not reset TDAC;                  ResetTDAC             >=0: reset all TDACs to value
          DoOnlyNGroups         = 0:  do not consider this option;        DoOnlyNGroups         = n: run only on the specified number of groups
@@ -327,6 +330,7 @@
     </Monitoring>
   </MonitoringSettings>
 
+<!-- === Communication parameters === -->
 <CommunicationSettings>
     <DQM               ip="127.0.0.1" port="6000" enableConnection="1"/>
     <MonitorDQM        ip="127.0.0.1" port="8000" enableConnection="1"/>

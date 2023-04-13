@@ -16,11 +16,13 @@
 #include "HWInterface/RD53FWInterface.h"
 #include "MonitorUtils/CBCMonitor.h"
 #include "MonitorUtils/DetectorMonitor.h"
+#include "MonitorUtils/PSMonitor.h"
 #include "MonitorUtils/RD53Monitor.h"
 #include "MonitorUtils/SEHMonitor.h"
 #include "Parser/CommunicationSettingConfig.h"
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
+#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -45,6 +47,7 @@ SystemController::SystemController()
     , fMonitorDQMStreamer(nullptr)
     , fDetectorMonitor(nullptr)
     , fChannelGroupHandlerContainer(nullptr)
+    , fNameContainer(nullptr)
 {
 }
 
@@ -79,6 +82,11 @@ void SystemController::Inherit(const SystemController* pController)
     fParser                         = pController->fParser;
     fSameChannelGroupForAllChannels = pController->fSameChannelGroupForAllChannels;
     fInitializeInterfaces           = pController->fInitializeInterfaces;
+    fNameContainer                  = pController->fNameContainer;
+    fBoardType                      = pController->fBoardType;
+    fConfigurationFileName          = pController->fConfigurationFileName;
+    fCalibrationName                = pController->fCalibrationName;
+    fConfigurationFileContent       = pController->fConfigurationFileContent;
 }
 
 void SystemController::StopMonitoring()
@@ -124,17 +132,24 @@ void SystemController::Destroy()
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
+    LOG(INFO) << GREEN << "Trying to shutdown Calibration DQM Server..." << RESET;
     delete fDQMStreamer;
     fDQMStreamer = nullptr;
+    LOG(INFO) << GREEN << "Operation completed" << RESET;
 
+    LOG(INFO) << GREEN << "Trying to shutdown Monitor DQM Server..." << RESET;
     delete fMonitorDQMStreamer;
     fMonitorDQMStreamer = nullptr;
+    LOG(INFO) << GREEN << "Operation completed" << RESET;
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
 
     delete fChannelGroupHandlerContainer;
     fChannelGroupHandlerContainer = nullptr;
+
+    delete fNameContainer;
+    fNameContainer = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -203,27 +218,28 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     fBeBoardInterface->setBoard(0);
 
-    LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
+    LOG(INFO) << GREEN << "Trying to connect to the Power Supply Server..." << RESET;
 
     if(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fEnable)
     {
         fPowerSupplyClient = new TCPClient(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fIP, theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fPort);
         if(!fPowerSupplyClient->connect(1))
         {
-            LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
+            LOG(INFO) << GREEN << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
             delete fPowerSupplyClient;
             fPowerSupplyClient = nullptr;
         }
         else
         {
-            LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
+            LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET;
         }
     }
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
-        if(cFirstBoard->getBoardType() != BoardType::RD53)
+        fBoardType                 = cFirstBoard->getBoardType();
+        if(fBoardType != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
@@ -235,21 +251,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstOpticalGroup->flpGBT->isOptical());
-// check link to external interface
-#ifdef __TCUSB__
-#if defined(__SEH_USB__) || defined(__ROH_USB__)
-                    if(flpGBTInterface->GetExternalController() != nullptr)
-                    {
-                        LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->GetExternalController()->getName() << RESET;
-#ifdef __ROH_USB__
-                        // check reading of ADC from PSROH TC
-                        float cOutput;
-                        flpGBTInterface->GetExternalController()->getInterface().adc_get(TC_PSROH::measurement::_1V25_REF, cOutput);
-                        LOG(INFO) << BOLDBLUE << "Checking communication with test card by reading 1V25_Ref : " << cOutput << RESET;
-#endif
-                    }
-#endif
-#endif
                 }
 
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
@@ -356,6 +357,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "2SSEH")
             fDetectorMonitor = new SEHMonitor(this, theDetectorMonitorConfig);
+        else if(monitoringType == "PS")
+            fDetectorMonitor = new PSMonitor(this, theDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
@@ -1160,26 +1163,31 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(const ConfigureInfo theConfigureInfo)
+void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
 {
-    InitializeHw(theConfigureInfo.getConfigurationFile(), fParsedFile);
-    InitializeSettings(theConfigureInfo.getConfigurationFile(), fParsedFile);
+    fConfigurationFileName = theConfigureInfo.getConfigurationFile();
+    fCalibrationName       = theConfigureInfo.getCalibrationName();
+    std::ifstream     configurationFile(fConfigurationFileName);
+    std::stringstream configurationFileStream;
+    configurationFileStream << configurationFile.rdbuf();
+    fConfigurationFileContent = configurationFileStream.str();
+
+    InitializeHw(fConfigurationFileName, fParsedFile);
+    InitializeSettings(fConfigurationFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
-    // auto excludeEven = [](const OpticalGroupContainer* theContainer)
-    // {
-    //     return theContainer->getId()%2 == 1;
-    // };
-    // fDetectorContainer->addOpticalGroupQueryFunction(excludeEven);
-    // auto exclude = [](const OpticalGroupContainer* theContainer)
-    // {
-    //     return theContainer->getId() != 3;
-    // };
-    // fDetectorContainer->addOpticalGroupQueryFunction(exclude);
+
+    // auto chipSubset = [](const ChipContainer* theChip) { return (theChip->getId() % 2 == 0); };
+    // fDetectorContainer->at(0)->at(0)->at(0)->addQueryFunction(chipSubset, "TEST");
+
+    fNameContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
+    theConfigureInfo.extractObjectNames(fNameContainer);
+
     std::cout << fParsedFile.str() << std::endl;
     ConfigureHw(false, true);
 }
 
-void SystemController::Start(int runNumber)
+void SystemController::Start(const StartInfo& theStartInfo)
 {
     for(auto cBoard: *fDetectorContainer) fBeBoardInterface->Start(cBoard);
 }
@@ -1405,18 +1413,7 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
-    if(fChannelGroupHandlerContainer == nullptr) { delete fChannelGroupHandlerContainer; }
-    fChannelGroupHandlerContainer = new DetectorDataContainer();
-    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
-    uint16_t totalNumberOfChips = 0;
-    for(const auto board: *fDetectorContainer)
-    {
-        for(const auto opticalGroup: *board)
-        {
-            for(const auto hybrid: *opticalGroup) { totalNumberOfChips += hybrid->size(); }
-        }
-    }
-
+    uint16_t totalNumberOfChips        = 0;
     uint16_t totalNumberOfQueriedChips = 0;
     for(const auto board: *fDetectorContainer)
     {
@@ -1424,23 +1421,40 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
         {
             for(const auto hybrid: *opticalGroup)
             {
-                totalNumberOfQueriedChips += hybrid->size();
+                totalNumberOfChips += hybrid->size();
                 for(const auto chip: *hybrid)
                 {
-                    if(theQueryFunction(chip))
-                    {
-                        fChannelGroupHandlerContainer->getObject(board->getId())
-                            ->getObject(opticalGroup->getId())
-                            ->getObject(hybrid->getId())
-                            ->getObject(chip->getId())
-                            ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
-                    }
+                    if(theQueryFunction(chip)) totalNumberOfQueriedChips++;
                 }
             }
         }
     }
-
     fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
+
+    if(fChannelGroupHandlerContainer == nullptr)
+    {
+        fChannelGroupHandlerContainer = new DetectorDataContainer();
+        ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
+    }
+    for(const auto board: *fDetectorContainer)
+    {
+        for(const auto opticalGroup: *board)
+        {
+            for(const auto hybrid: *opticalGroup)
+            {
+                for(const auto chip: *hybrid)
+                {
+                    if(!theQueryFunction(chip)) continue;
+
+                    fChannelGroupHandlerContainer->getObject(board->getId())
+                        ->getObject(opticalGroup->getId())
+                        ->getObject(hybrid->getId())
+                        ->getObject(chip->getId())
+                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
+                }
+            }
+        }
+    }
 }
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)

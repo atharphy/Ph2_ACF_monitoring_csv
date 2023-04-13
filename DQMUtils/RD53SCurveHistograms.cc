@@ -58,9 +58,8 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 }
 
-bool SCurveHistograms::fill(std::vector<char>& dataBuffer)
+bool SCurveHistograms::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theThresholdAndNoiseSerialization("SCurveThresholdAndNoise");
     ContainerSerialization theOccupancySerialization("SCurveOccupancy");
 

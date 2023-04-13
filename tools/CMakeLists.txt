@@ -65,14 +65,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         link_directories(${PH2_TCUSB_LIBRARY_DIRS})
         set(LIBS ${LIBS} usb ${PH2_TCUSB_LIBRARIES})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
-        if($ENV{UseTCUSBforROH})
-            message(STATUS "    Building the ROH TestCards USB components")
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-        endif($ENV{UseTCUSBforROH})
-        if($ENV{UseTCUSBforSEH})
-            message(STATUS "    Building the SEH TestCards USB components")
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
-        endif($ENV{UseTCUSBforSEH})
     endif(${PH2_TCUSB_FOUND})
 
     #last but not least, find root and link against it
@@ -123,6 +115,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     endforeach(sourcefile ${BINARIES})
 
     TARGET_LINK_LIBRARIES(Ph2_Tools ${LIBS})
+    target_compile_definitions(Ph2_Tools PRIVATE
+    "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
@@ -141,10 +135,12 @@ else()
     include_directories(${UHAL_DIR}/uhal/include)
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
+
+    include_directories(${Protobuf_INCLUDE_DIRS})
     
     cet_set_compiler_flags(
-     EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-     )
+        EXTRA_FLAGS -Wno-reorder -Wl,--undefined
+    )
 
     cet_make(LIBRARY_NAME Ph2_Tools
             LIBRARIES
@@ -155,6 +151,9 @@ else()
             EXCLUDE Eudaq2Producer.h Eudaq2Producer.cc
             EXCLUDE SSAPhysics.h SSAPhysics.cc
             )
+    
+    target_compile_definitions(Ph2_Tools PRIVATE
+    "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
 
     install_headers()
     install_source()

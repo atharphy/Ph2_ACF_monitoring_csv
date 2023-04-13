@@ -11,7 +11,7 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/ValueAndTime.h"
 
-void MonitorDQMPlotRD53::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& fDetectorMonitorConfig)
+void MonitorDQMPlotRD53::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& fDetectorMonitorConfig)
 {
     fDetectorContainer = &theDetectorStructure;
 
@@ -25,9 +25,8 @@ void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer
     bookImplementer(theOutputFile, theDetectorStructure, fRegisterMonitorPlotMap[registerName], graphContainer, "Time", registerName.c_str());
 }
 
-bool MonitorDQMPlotRD53::fill(std::vector<char>& dataBuffer)
+bool MonitorDQMPlotRD53::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theContainerSerialization("RD53MonitorRegister");
 
     if(theContainerSerialization.attachDeserializer(inputStream))

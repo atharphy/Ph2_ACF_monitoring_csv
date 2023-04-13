@@ -22,15 +22,14 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
     // # Retrieve parameters #
     // #######################
     auto           frontEnd       = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2);
-    const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->thresholdReg)) + 1;
+    const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->thresholdRegs[0])) + 1;
 
     auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
     bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");
 }
 
-bool ThresholdHistograms::fill(std::vector<char>& dataBuffer)
+bool ThresholdHistograms::fill(std::string& inputStream)
 {
-    std::string            inputStream(dataBuffer.begin(), dataBuffer.end());
     ContainerSerialization theContainerSerialization("ThrAdjustmentThreshold");
 
     if(theContainerSerialization.attachDeserializer(inputStream))
