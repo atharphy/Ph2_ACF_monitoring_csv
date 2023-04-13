@@ -1178,6 +1178,9 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     fConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
     if(fConfigurationFileName != theConfigureInfo.getSettingsFile()) fConfigurationFileContent += theConfigureInfo.getConfigFileStream(theConfigureInfo.getSettingsFile());
 
+    // ##################
+    // # Initialization #
+    // ##################
     InitializeHw(fConfigurationFileName, fParsedFile);
     InitializeSettings(theConfigureInfo.getSettingsFile(), fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
@@ -1186,7 +1189,11 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
     theConfigureInfo.extractObjectNames(fNameContainer);
 
+    // ########################################################
+    // # Formatted printout on screen of the xml file content #
+    // ########################################################
     std::cout << fParsedFile.str() << std::endl;
+
     ConfigureHw(false, true);
 }
 

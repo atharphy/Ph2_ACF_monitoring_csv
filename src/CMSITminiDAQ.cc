@@ -224,6 +224,7 @@ int main(int argc, char** argv)
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
         ConfigureInfo theConfigureInfo;
         theConfigureInfo.setConfigurationFiles(configFile, settingsFile);
+        theConfigureInfo.setCalibrationName(whichCalib);
         mySysCntr.Configure(theConfigureInfo);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
