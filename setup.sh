@@ -165,4 +165,7 @@ if [[ $1 == "ci" ]]; then
     export CompileWithTCUSB=false
 fi
 
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+
 echo "=== DONE: you can now run cmake ==="
