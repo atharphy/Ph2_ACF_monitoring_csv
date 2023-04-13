@@ -1496,7 +1496,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
     pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
-    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
+    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings") && nSettings != 0; nSettings = nSettings.next_sibling())
     {
         os << std::endl;
 

@@ -449,11 +449,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ###################
     // # Configuring FSM #
     // ###################
-    const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
-    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"));
-    const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
-    const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
-    const size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
+    const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 1);
+    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"), 1);
+    const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
+    const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
+    const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
 
     auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
@@ -1178,6 +1178,9 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     fConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
     if(fConfigurationFileName != theConfigureInfo.getSettingsFile()) fConfigurationFileContent += theConfigureInfo.getConfigFileStream(theConfigureInfo.getSettingsFile());
 
+    // ##################
+    // # Initialization #
+    // ##################
     InitializeHw(fConfigurationFileName, fParsedFile);
     InitializeSettings(theConfigureInfo.getSettingsFile(), fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
@@ -1186,7 +1189,11 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
     theConfigureInfo.extractObjectNames(fNameContainer);
 
+    // ########################################################
+    // # Formatted printout on screen of the xml file content #
+    // ########################################################
     std::cout << fParsedFile.str() << std::endl;
+
     ConfigureHw(false, true);
 }
 
