@@ -18,7 +18,9 @@
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
-
+#ifdef __USE_ROOT__
+#include "DQMUtils/DQMHistogramPSBiasCal.h"
+#endif
 #include <map>
 
 class PSBiasCal : public Tool
@@ -58,7 +60,7 @@ class PSBiasCal : public Tool
 
 // booking histograms
 #ifdef __USE_ROOT__
-//  DQMHistogramCic fDQMHistogram;
+  DQMHistogramPSBiasCal fDQMHistogramPSBiasCal;
 #endif
 };
 #endif

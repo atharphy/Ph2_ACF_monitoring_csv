@@ -4,6 +4,9 @@
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
 
+#ifdef __USE_ROOT__
+#include "DQMUtils/DQMHistogramPSBiasCal.h"
+#endif
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -75,6 +78,9 @@ void PSBiasCal::Initialise()
             }
         }
     }
+#ifdef __USE_ROOT__
+    fDQMHistogramPSBiasCal.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 }
 
 void PSBiasCal::CalibrateADC()
@@ -188,15 +194,14 @@ float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstri
     std::cout << " offset " << offset << " slope "<< slope <<" ADC_VBG " << ADC_VBG << " ADC_GND " << ADC_GND <<  std::endl;
 
     float VREFobtained = ADCMAX*slope + offset;
-    LOG(INFO) << BOLDRED << "New VREF val: " << VREFobtained << " Expected val: " << VREFexpected  << RESET;
+    LOG(INFO) << BOLDRED << "for DAC_val "<< static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring) << " VREF val extrapolated: " << VREFobtained << " Expected val: " << VREFexpected  << RESET;
 
     if (VREFobtained > VREFmax || VREFobtained < VREFmin)
     {
         LOG(INFO) << BOLDRED << " Need to calibrate VREF! VREF is outside of allowed range!!" << RESET;
         VREFobtained = CalibrateVREF(cChip,VBGstring, VREFstring, VBGexpected, VREFexpected);
-        LOG(INFO) << BOLDRED << "New VREF val: " << VREFobtained << " Expected val: " << VREFexpected  << RESET;
-
-
+        LOG(INFO) << BOLDRED << "for new DAC_val " << static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring)<< " New VREF val: " << VREFobtained << " Expected val: " << VREFexpected  << RESET;
+        //FIXMEEE Get values again to update the slope!!
     }
     return VREFobtained;
 }
@@ -664,6 +669,9 @@ void PSBiasCal::CalibrateBias()
         }
     }
     LOG(INFO) << BOLDRED << "Starting Cal" << RESET;
+    DetectorDataContainer theDACContainer;
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theDACContainer);
+
     for(const auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalReadout: *cBoard)
@@ -684,9 +692,22 @@ void PSBiasCal::CalibrateBias()
                         LOG(INFO) << BOLDMAGENTA << " Calibrate VREF "<< RESET;
 
                         // VREFmeasured = CalibrateVREF(cChip,"VBG","ADC_VREF",SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED);
-                        VREFmeasured = MeasureVREF(cChip,"VBG","ADC_VREF",SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED,SSA2_VREF_MIN, SSA2_VREF_MAX);
+                        std::string VREFstring = "ADC_VREF";
+                        VREFmeasured = MeasureVREF(cChip,"VBG",VREFstring,SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED,SSA2_VREF_MIN, SSA2_VREF_MAX);
+                        uint32_t VREFdac = static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring);
+                        std::cout << "VREFdac "<< VREFdac << " VREFmeasured "<< VREFmeasured << std::endl;
+                        theDACContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<uint32_t>()= VREFdac;
 
-
+#ifdef __USE_ROOT__
+    fDQMHistogramPSBiasCal.fillDACPlots(theDACContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("PSBiasCalVrefDac");
+        theContainerSerialization.fill(VREFdac);
+        theContainerSerialization.streamByBoardContainer(fDQMStreamer, theDACContainer);
+    }
+#endif
 
                         std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF, 0xF};
                         std::vector<float>    exp_val{0.082, 0.082, 0.115, 0.082, 0.082, 0.086};
@@ -726,7 +747,12 @@ void PSBiasCal::CalibrateBias()
         }     // hybrid
     }         // optica]l group
 }
-void PSBiasCal::writeObjects() {}
+void PSBiasCal::writeObjects() 
+{
+#ifdef __USE_ROOT__
+    fDQMHistogramPSBiasCal.process();
+#endif
+}
 // State machine control functions
 void PSBiasCal::Running() {}
 
