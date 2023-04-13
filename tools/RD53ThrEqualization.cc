@@ -32,7 +32,7 @@ void ThrEqualization::ConfigureCalibration()
     stopValue          = this->findValueInSettings<double>("VCalHstop");
     startTDACGainValue = this->findValueInSettings<double>("TDACGainStart");
     stopTDACGainValue  = this->findValueInSettings<double>("TDACGainStop");
-    TDACGainNSteps     = this->findValueInSettings<double>("TDACGainNSteps");
+    TDACGainNSteps     = this->findValueInSettings<double>("TDACGainNSteps", 1);
     doNSteps           = this->findValueInSettings<double>("DoNSteps");
     doDisplay          = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip       = this->findValueInSettings<double>("UpdateChipCfg");
