@@ -22,8 +22,8 @@ void PixelAlive::ConfigureCalibration()
     rowStop         = this->findValueInSettings<double>("ROWstop");
     colStart        = this->findValueInSettings<double>("COLstart");
     colStop         = this->findValueInSettings<double>("COLstop");
-    nEvents         = this->findValueInSettings<double>("nEvents");
-    nEvtsBurst      = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
+    nEvents         = this->findValueInSettings<double>("nEvents", 1);
+    nEvtsBurst      = this->findValueInSettings<double>("nEvtsBurst", 1) < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
     nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
     injType         = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     nHITxCol        = this->findValueInSettings<double>("nHITxCol");

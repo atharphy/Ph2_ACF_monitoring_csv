@@ -27,12 +27,12 @@ void Gain::ConfigureCalibration()
     rowStop        = this->findValueInSettings<double>("ROWstop");
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents");
+    nEvents        = this->findValueInSettings<double>("nEvents", 1);
     injType        = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
     targetCharge   = RD53Shared::firstChip->Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
-    nSteps         = this->findValueInSettings<double>("VCalHnsteps");
+    nSteps         = this->findValueInSettings<double>("VCalHnsteps", 1);
     offset         = this->findValueInSettings<double>("VCalMED");
     nHITxCol       = this->findValueInSettings<double>("nHITxCol");
     doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");

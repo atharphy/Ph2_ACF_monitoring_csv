@@ -85,6 +85,7 @@ void SystemController::Inherit(const SystemController* pController)
     fNameContainer                  = pController->fNameContainer;
     fBoardType                      = pController->fBoardType;
     fConfigurationFileName          = pController->fConfigurationFileName;
+    fSettingsFileName               = pController->fSettingsFileName;
     fCalibrationName                = pController->fCalibrationName;
     fConfigurationFileContent       = pController->fConfigurationFileContent;
 }
@@ -1170,19 +1171,20 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
+    fSettingsFileName      = theConfigureInfo.getSettingsFile();
     fCalibrationName       = theConfigureInfo.getCalibrationName();
 
     // #######################################
     // # Save raw configuration file content #
     // #######################################
     fConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
-    if(fConfigurationFileName != theConfigureInfo.getSettingsFile()) fConfigurationFileContent += theConfigureInfo.getConfigFileStream(theConfigureInfo.getSettingsFile());
+    if(fConfigurationFileName != fSettingsFileName) fConfigurationFileContent += theConfigureInfo.getConfigFileStream(fSettingsFileName);
 
     // ##################
     // # Initialization #
     // ##################
     InitializeHw(fConfigurationFileName, fParsedFile);
-    InitializeSettings(theConfigureInfo.getSettingsFile(), fParsedFile);
+    InitializeSettings(fSettingsFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
 
     fNameContainer = new DetectorDataContainer();
