@@ -91,8 +91,9 @@ class StateMachine(object):
         stringMessage = configureMessage.SerializeToString()
         return stringMessage
 
-    def setConfigurationFiles(self, configurationFile):
+    def setConfigurationFiles(self, configurationFile, settingsFile == ""):
         self.configurationFile_ = configurationFile
+        self.settingsFile_      = configurationFile if settingsFile == "" else settingsFile
 
     def setSettingsFiles(self, settingsFile):
         self.settingsFile_ = settingsFile
