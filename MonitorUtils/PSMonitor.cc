@@ -50,7 +50,7 @@ void PSMonitor::runSSA2RegisterMonitor(std::string registerName)
                         uint16_t registerValue            = static_cast<SSA2Interface*>(SSA2ReadoutChipInterface)->ReadADC(chip, registerName);
                         LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-                        theSSA2RegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ValueAndTime<uint16_t>>() =
+                        theSSA2RegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<ValueAndTime<uint16_t>>() =
                             theRegisterAndTime;
                     }
                 }
@@ -88,7 +88,7 @@ void PSMonitor::runMPA2RegisterMonitor(std::string registerName)
                         uint16_t registerValue            = static_cast<MPA2Interface*>(MPA2ReadoutChipInterface)->ReadADC(chip, registerName);
                         LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-                        theMPA2RegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ValueAndTime<uint16_t>>() =
+                        theMPA2RegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<ValueAndTime<uint16_t>>() =
                             theRegisterAndTime;
                     }
                 }
@@ -114,12 +114,12 @@ void PSMonitor::runLpGBTRegisterMonitor(std::string registerName)
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
-        if(board->at(0)->flpGBT == nullptr)
+        if(board->getFirstObject()->flpGBT == nullptr)
         {
             for(const auto& opticalGroup: *board)
             {
                 ValueAndTime<uint16_t> theRegisterAndTime(0, getTimeStamp());
-                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
+                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
             }
             continue;
         }
@@ -128,7 +128,7 @@ void PSMonitor::runLpGBTRegisterMonitor(std::string registerName)
             uint16_t               registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
             ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
+            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
         }
     }
 

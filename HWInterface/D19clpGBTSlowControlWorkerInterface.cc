@@ -25,6 +25,16 @@ void D19clpGBTSlowControlWorkerInterface::Reset()
     uint8_t cWorkerId = 0, cFunctionId = 2;
     // reset should be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
+
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 1);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0);
+
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 1);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 0);
+
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 1);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 0);
+
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
 }
@@ -126,7 +136,7 @@ void D19clpGBTSlowControlWorkerInterface::PrintState()
 
 bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
 {
-    int cWaitCounter = 1000000;
+    int cWaitCounter = 100000;
     while(!IsDone(pFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
@@ -136,6 +146,8 @@ bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
     {
         PrintState();
         Reset();
+        PrintState();
+        throw std::runtime_error("D19c lpGBT Slow Control Worker is stuck");
         return false;
     }
     return true;
