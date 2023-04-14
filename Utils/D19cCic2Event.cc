@@ -294,8 +294,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         }
                         else
                         {
-                            LOG(INFO) << BOLDRED << "Incorrect L1 header from the firmware " << RESET;
-                            throw std::runtime_error(std::string("Incorrect L1 header found when decoding data ... stopping"));
+                            LOG(INFO) << BOLDRED << "Incorrect statusWord " << RESET;
+                            throw std::runtime_error(std::string("Incorrect statusWord when decoding data ... stopping"));
                         }
 
                         // stub info
