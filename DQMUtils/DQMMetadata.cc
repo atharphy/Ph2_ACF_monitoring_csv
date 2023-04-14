@@ -70,28 +70,60 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
 
 void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
 {
+    //Try and catch are required because this is (hopefully) the only case in which the container is created before the histogram booking
     for(const auto board: theNameContainer)
     {
-        auto* theTreeContainerBoard = fNameContainer.getObject(board->getId());
+        BoardDataContainer* theTreeContainerBoard;
+        try
+        {
+            theTreeContainerBoard = fNameContainer.getObject(board->getId());
+        }
+        catch(const std::exception& e)
+        {
+            continue;
+        }
+        
         theTreeContainerBoard->getSummary<StringContainer, StringContainer>().saveString(board->getSummary<std::string, std::string>().c_str());
-
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] board size = " << board->size() << std::endl;
 
         for(const auto opticalGroup: *board)
         {
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] opticalGroup id = " << opticalGroup->getId() << std::endl;
-
-            auto* theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
+            OpticalGroupDataContainer* theTreeContainerOpticalGroup;
+            try
+            {
+                theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
+            }
+            catch(const std::exception& e)
+            {
+                continue;
+            }
+            
             theTreeContainerOpticalGroup->getSummary<StringContainer, StringContainer>().saveString(opticalGroup->getSummary<std::string, std::string>().c_str());
 
             for(const auto hybrid: *opticalGroup)
             {
-                auto* theTreeContainerHybrid = theTreeContainerOpticalGroup->getObject(hybrid->getId());
+                HybridDataContainer* theTreeContainerHybrid;
+                try
+                {
+                    theTreeContainerHybrid = theTreeContainerOpticalGroup->getObject(hybrid->getId());
+                }
+                catch(const std::exception& e)
+                {
+                    continue;
+                }
+                
                 theTreeContainerHybrid->getSummary<StringContainer, StringContainer>().saveString(hybrid->getSummary<std::string, std::string>().c_str());
 
                 for(const auto chip: *hybrid)
                 {
-                    auto* theTreeContainerChip = theTreeContainerHybrid->getObject(chip->getId());
+                    ChipDataContainer* theTreeContainerChip;
+                    try
+                    {
+                        theTreeContainerChip = theTreeContainerHybrid->getObject(chip->getId());
+                    }
+                    catch(const std::exception& e)
+                    {
+                        continue;
+                    }
                     theTreeContainerChip->getSummary<StringContainer>().saveString(chip->getSummary<std::string>().c_str());
                 }
             }

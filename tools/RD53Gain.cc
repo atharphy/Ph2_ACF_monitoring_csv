@@ -166,19 +166,19 @@ void Gain::run()
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
-                                                                                                                     ->at(cBoard->getIndex())
-                                                                                                                     ->at(cOpticalGroup->getIndex())
-                                                                                                                     ->at(cHybrid->getIndex())
-                                                                                                                     ->at(cChip->getIndex())
+                                                                                                                     ->getObject(cBoard->getId())
+                                                                                                                     ->getObject(cOpticalGroup->getId())
+                                                                                                                     ->getObject(cHybrid->getId())
+                                                                                                                     ->getObject(cChip->getId())
                                                                                                                      ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                      ->allChannelGroup()
                                                                                                                      ->isChannelEnabled(row, col))
                                 for(auto i = 0u; i < dacList.size(); i++)
                                     detectorContainerVector[i]
-                                        ->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                        ->getObject(cBoard->getId())
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<OccupancyAndPh>(row, col)
                                         .fStatus = RD53Shared::ISDISABLED;
 
@@ -246,10 +246,10 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->at(cBoard->getIndex())
-                                                                                                                   ->at(cOpticalGroup->getIndex())
-                                                                                                                   ->at(cHybrid->getIndex())
-                                                                                                                   ->at(cChip->getIndex())
+                                                                                                                   ->getObject(cBoard->getId())
+                                                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                                                   ->getObject(cHybrid->getId())
+                                                                                                                   ->getObject(cChip->getId())
                                                                                                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
@@ -258,24 +258,24 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 {
                                     x[i] = dacList[i] - offset;
                                     y[i] = detectorContainerVector[i]
-                                               ->at(cBoard->getIndex())
-                                               ->at(cOpticalGroup->getIndex())
-                                               ->at(cHybrid->getIndex())
-                                               ->at(cChip->getIndex())
+                                               ->getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
                                                ->getChannel<OccupancyAndPh>(row, col)
                                                .fPh;
                                     e[i] = detectorContainerVector[i]
-                                               ->at(cBoard->getIndex())
-                                               ->at(cOpticalGroup->getIndex())
-                                               ->at(cHybrid->getIndex())
-                                               ->at(cChip->getIndex())
+                                               ->getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
                                                ->getChannel<OccupancyAndPh>(row, col)
                                                .fPhError;
                                     o[i] = detectorContainerVector[i]
-                                               ->at(cBoard->getIndex())
-                                               ->at(cOpticalGroup->getIndex())
-                                               ->at(cHybrid->getIndex())
-                                               ->at(cChip->getIndex())
+                                               ->getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
                                                ->getChannel<OccupancyAndPh>(row, col)
                                                .fOccupancy;
                                 }
@@ -295,57 +295,57 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
 
                                 if(chi2 == -1)
                                 {
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
+                                    theGainContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<GainFit>(row, col).fChi2 =
                                         RD53Shared::ISFITERROR;
                                 }
                                 else
                                 {
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theGainContainer->getObject(cBoard->getId())
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<GainFit>(row, col)
                                         .fInterceptHighQ = highQintercept;
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theGainContainer->getObject(cBoard->getId())
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<GainFit>(row, col)
                                         .fInterceptHighQError = highQinterceptErr;
 
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeHighQ =
+                                    theGainContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<GainFit>(row, col).fSlopeHighQ =
                                         highQslope;
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theGainContainer->getObject(cBoard->getId())
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<GainFit>(row, col)
                                         .fSlopeHighQError = highQslopeErr;
 
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theGainContainer->getObject(cBoard->getId())
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<GainFit>(row, col)
                                         .fInterceptLowQ = lowQintercept;
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theGainContainer->getObject(cBoard->getId())
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<GainFit>(row, col)
                                         .fInterceptLowQError = lowQinterceptErr;
 
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeLowQ =
+                                    theGainContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<GainFit>(row, col).fSlopeLowQ =
                                         lowQslope;
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theGainContainer->getObject(cBoard->getId())
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
                                         ->getChannel<GainFit>(row, col)
                                         .fSlopeLowQError = lowQslopeErr;
 
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 = chi2;
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fDoF  = DoF;
+                                    theGainContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<GainFit>(row, col).fChi2 = chi2;
+                                    theGainContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<GainFit>(row, col).fDoF  = DoF;
                                 }
                             }
 

@@ -1,7 +1,8 @@
-#if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
 
 #include "OTHybridTester.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "MonitorUtils/SEHMonitor.h"
 
 OTHybridTester::OTHybridTester() : Tool()
 {
@@ -13,12 +14,29 @@ OTHybridTester::OTHybridTester() : Tool()
 
 OTHybridTester::~OTHybridTester() {}
 
+void OTHybridTester::InitialiseTestCard(bool cIsSEH)
+{
+    if(cIsSEH)
+    {
+        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
+        fTC_2SSEH = new TC_2SSEH();
+        fIsSEH    = true;
+        if(fDetectorMonitor != nullptr) { fDetectorMonitor->setTestCardPointer(fTC_2SSEH); }
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
+        fTC_PSROH = new TC_PSROH();
+        fIsSEH    = false;
+    }
+}
+
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
@@ -35,7 +53,7 @@ void OTHybridTester::LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern)
     DPInterface cDPInterfacer;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         if(pStart)
         {
@@ -87,7 +105,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     // {
     //     for(auto cBoard: *fDetectorContainer)
     //     {
-    //         if(cBoard->at(0)->flpGBT == nullptr) continue;
+    //         if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
 
     //         for(auto cOpticalGroup: *cBoard)
     //         {
@@ -100,7 +118,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     //     }
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
 
         fBeBoardInterface->setBoard(cBoard->getId());
         D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
@@ -117,7 +135,13 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
 
-                size_t cLine = 0;
+                size_t  cLine  = 0;
+                uint8_t nLines = 0;
+                if(fIsSEH) { nLines = 5; }
+                else
+                {
+                    nLines = 6;
+                }
                 do
                 {
                     cFWInterface->selectLink(cOpticalGroup->getId());
@@ -162,11 +186,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                         res = false;
                     }
                     cLine++;
-#ifdef __SEH_USB__
-                } while(cLine < 5); // making sure missing stub line pair is skipped in 2S case
-#else
-                } while(cLine < 6);
-#endif
+                } while(cLine < nLines); // making sure missing stub line pair is skipped in 2S case
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
                 cTriggerInterface->Start();
@@ -231,7 +251,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             uint8_t cSource = 3;
@@ -249,7 +269,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     }
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 0); // 0 --> link data, 3 --> constant pattern
@@ -263,7 +283,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.data_player.i2c_slave_reset", 0x01);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         LOG(DEBUG) << BOLDBLUE << "Reset I2C slave in electrical FC7" << RESET;
@@ -273,7 +293,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
     std::vector<std::vector<uint8_t>> cI2CStatusVectVect;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         D19cOpticalInterface* cOpticalInterface = static_cast<D19cOpticalInterface*>(pInterface->getFEConfigurationInterface());
 
@@ -353,7 +373,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
     int                 cTrim           = -1;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             // Create TTree for DAC to ADC conversion in lpGBT
@@ -367,8 +387,11 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             cDACtoADCTree->Branch("DAC", &cDACValVect);
             cDACtoADCTree->Branch("ADC", &cADCValVect);
 
-            cTrim = calibrateADC();
-            calibrateCurrentDAC();
+            if(fIsSEH)
+            {
+                cTrim = calibrateADC();
+                calibrateCurrentDAC();
+            }
             LOG(INFO) << BOLDBLUE << "VREFTune value " << cTrim << RESET;
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE", cTrim);
 
@@ -393,14 +416,14 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 cADCId = cADC[3] - '0';
                 for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
                 {
-// Need to confirm conversion factor for 2S-SEH
-// fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
-// example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
-#ifdef __ROH_USB__
-                    flpGBTInterface->GetExternalController()->getInterface().dac_output(cDACValue);
-#elif __SEH_USB__
-                    flpGBTInterface->GetExternalController()->getInterface().set_AMUX(cDACValue, cDACValue);
-#endif
+                    // Need to confirm conversion factor for 2S-SEH
+                    // fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
+                    // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
+                    if(fIsSEH) { fTC_2SSEH->set_AMUX(cDACValue, cDACValue); }
+                    else
+                    {
+                        fTC_PSROH->dac_output(cDACValue);
+                    }
                     std::this_thread::sleep_for(std::chrono::milliseconds(1200));
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
 
@@ -470,29 +493,31 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Branch("Id", &cADCNameString);
     cFixedADCsTree->Branch("AdcValue", &cADCValueVect);
     gStyle->SetOptStat(0);
-#ifdef __SEH_USB__
 
-    cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
-                {"VMIN", "VMIN_Nominal"},
-                {"TEMPP", "TEMPP_Nominal"},
-                {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
-                {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
-                {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
-    cDefaultParameters   = &f2SSEHDefaultParameters;
-    cADCNametoPinMapping = &f2SSEHADCInputMap;
+    if(fIsSEH)
+    {
+        cADCsMap             = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
+                    {"VMIN", "VMIN_Nominal"},
+                    {"TEMPP", "TEMPP_Nominal"},
+                    {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
+                    {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
+                    {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
+        cDefaultParameters   = &f2SSEHDefaultParameters;
+        cADCNametoPinMapping = &f2SSEHADCInputMap;
 
-    flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-#elif __ROH_USB__
+        fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+    }
+    else
+    {
+        cADCsMap             = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
+                    {"TEMP", "TEMP_Nominal"},
+                    {"VTRX+.RSSI_ADC", "VTRX+.RSSI_ADC_Nominal"},
 
-    cADCsMap = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
-                {"TEMP", "TEMP_Nominal"},
-                {"VTRX+.RSSI_ADC", "VTRX+.RSSI_ADC_Nominal"},
-
-                {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
-                {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
-    cDefaultParameters = &fPSROHDefaultParameters;
-    cADCNametoPinMapping = &fPSROHADCInputMap;
-#endif
+                    {"1V25_MONITOR", "1V25_MONITOR_Nominal"},
+                    {"2V55_MONITOR", "2V55_MONITOR_Nominal"}};
+        cDefaultParameters   = &fPSROHDefaultParameters;
+        cADCNametoPinMapping = &fPSROHADCInputMap;
+    }
 
     auto cADCHistogram = new TH2I("hADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
@@ -503,7 +528,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr)
+        if(cBoard->getFirstObject()->flpGBT == nullptr)
         {
             cReturn = false;
             continue;
@@ -515,12 +540,12 @@ bool OTHybridTester::LpGBTTestFixedADCs()
             uint16_t            cOffset         = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, false);
             fillSummaryTree("ADC offset", cOffset);
             fillSummaryTree("ADC gain", cGain);
-#ifdef __ROH_USB__
+
+            if(fIsSEH) { fTC_2SSEH->set_AMUX(3500, 3500); }
+            // else{
             // FIXME why is this here and what is cDACValue
-            // flpGBTInterface->GetExternalController()->getInterface().dac_output(cDACValue);
-#elif __SEH_USB__
-            flpGBTInterface->GetExternalController()->getInterface().set_AMUX(3500, 3500);
-#endif
+            // flpGBTInterface->GetExternalController()->getInterface().dac_output(cDACValue);    }
+
             do
             {
                 cADCValueVect.clear();
@@ -538,11 +563,11 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
                 float mean          = sum / cADCValueVect.size();
-                float result        = (mean - cOffset * (1 - cGain / 2.)) / cGain / 512.;
+                float result        = (mean - cOffset * (1 - cGain / 2.)) / cGain / 512.; // ADC master formula
                 float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - result);
                 fillSummaryTree(cADCsMapIterator->first.c_str(), result);
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
-                if(cDifference_V > 0.1)
+                if(cDifference_V > fGradingThreshold)
                 {
                     LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << result << " V, nominal value is "
                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
@@ -569,9 +594,8 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cADCCanvas->Write();
     cFixedADCsTree->Write();
 
-#ifdef __SEH_USB__
     // flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
-#endif
+
     return cReturn;
 }
 
@@ -580,7 +604,7 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             // LOG(INFO) << BOLDBLUE << "Set levels to " << +pLevel << RESET;
@@ -594,14 +618,16 @@ bool OTHybridTester::LpGBTTestResetLines()
 {
     bool                                         cValid  = true;
     std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
-    // lpGBTinterface now nows this .. so don't need the if statements
-#ifdef __ROH_USB__
-    std::vector<uint8_t>                         cGPIOs      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getPSResetGPIOs();
-    std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
-#elif __SEH_USB__
-    std::vector<uint8_t> cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->get2SResetGPIOs();
-    std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
-#endif
+    std::vector<uint8_t>                         cGPIOs;
+
+    // lpGBTinterface now knows this .. so don't need the if statements
+
+    if(fIsSEH) { cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->get2SResetGPIOs(); }
+    else
+    {
+        cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getPSResetGPIOs();
+    }
+
     LpGBTSetGPIOLevel(cGPIOs, 1);
 
     float cMeasurement;
@@ -609,43 +635,75 @@ bool OTHybridTester::LpGBTTestResetLines()
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-#ifdef __SEH_USB__
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        // mu-controller is too slow
-#endif
-        auto cMapIterator = cResetLines.begin();
-        bool cStatus      = true;
-        do
+        if(fIsSEH)
         {
-#ifdef __ROH_USB__
-            flpGBTInterface->GetExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
-            float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
-#elif __SEH_USB__
-            flpGBTInterface->GetExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
-            float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
-            fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
-            cStatus = cStatus && (cDifference_mV <= 100);
-#endif
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            // mu-controller is too slow
 
-            cValid = cValid && cStatus;
-            // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);
-            // cValues.push_back(cMeasurement);
-            if(cDifference_mV > 200)
+            auto cMapIterator = f2SSEHResetLines.begin();
+
+            bool cStatus = true;
+            do
             {
-                LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
-                fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 0);
-            }
+                float cDifference_mV = 0;
+                fTC_2SSEH->read_reset(cMapIterator->second, cMeasurement);
+                cDifference_mV = std::fabs((cLevel.second * fNominalOutputbpol2v5) - cMeasurement) * 1000.; // 1300
+                fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
+                cStatus = cStatus && (cDifference_mV <= fGradingThreshold * 1000);
+
+                cValid = cValid && cStatus;
+                // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);
+                // cValues.push_back(cMeasurement);
+                if(cDifference_mV > fGradingThreshold * 1000)
+                {
+                    LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
+                    fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 0);
+                }
+                else
+                {
+                    LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
+                    fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 1);
+                }
+                cMapIterator++;
+            } while(cMapIterator != f2SSEHResetLines.end());
+            if(cStatus)
+                LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
             else
-            {
-                LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
-                fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 1);
-            }
-            cMapIterator++;
-        } while(cMapIterator != cResetLines.end());
-        if(cStatus)
-            LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
+                LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
+        }
         else
-            LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
+        {
+            auto cMapIterator = fResetLines.begin();
+
+            bool cStatus = true;
+            do
+            {
+                float cDifference_mV = 0;
+                fTC_PSROH->adc_get(cMapIterator->second, cMeasurement);
+                cDifference_mV = std::fabs((cLevel.second * fNominalOutputbpol2v5) - cMeasurement) * 1000.; // 1300
+                fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
+                cStatus = cStatus && (cDifference_mV <= fGradingThreshold * 1000);
+
+                cValid = cValid && cStatus;
+                // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);
+                // cValues.push_back(cMeasurement);
+                if(cDifference_mV > fGradingThreshold * 1000)
+                {
+                    LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
+                    fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 0);
+                }
+                else
+                {
+                    LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
+                    fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 1);
+                }
+                cMapIterator++;
+            } while(cMapIterator != fResetLines.end());
+            if(cStatus)
+                LOG(INFO) << BOLDBLUE << "Set levels to " << cLevel.first << " : test " << BOLDGREEN << " passed." << RESET;
+            else
+                LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
+        }
     }
     return cValid;
 }
@@ -653,18 +711,20 @@ bool OTHybridTester::LpGBTTestResetLines()
 bool OTHybridTester::LpGBTTestGPILines()
 {
     std::map<std::string, uint8_t> fGPILines;
-#ifdef __SEH_USB__
-    fGPILines = f2SSEHGPILines;
-#elif __ROH_USB__
-    fGPILines = fPSROHGPILines; // On the TC the PWRGOOD is connected to a switch!
-#endif
+
+    if(fIsSEH) { fGPILines = f2SSEHGPILines; }
+    else
+    {
+        fGPILines = fPSROHGPILines;
+    }
+    // On the TC the PWRGOOD is connected to a switch!
     bool                cValid = true;
     bool                cReadGPI;
     auto                cMapIterator    = fGPILines.begin();
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             while(cMapIterator != fGPILines.end())
@@ -691,7 +751,7 @@ bool OTHybridTester::LpGBTTestVTRx()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         D19cOpticalInterface* cOpticalInterface = static_cast<D19cOpticalInterface*>(pInterface->getFEConfigurationInterface());
         for(auto cOpticalGroup: *cBoard)
@@ -749,7 +809,7 @@ bool OTHybridTester::LpGBTGetLinkLock()
     bool cStatus = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         fBeBoardInterface->setBoard(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
@@ -770,15 +830,16 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
 
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         fBeBoardInterface->setBoard(cBoard->getId());
 
         std::map<std::string, std::string> fFCMDLines;
-#ifdef __SEH_USB__
-        fFCMDLines = f2SSEHFCMDLines;
-#elif __ROH_USB__
-        fFCMDLines = fPSROHFCMDLines;
-#endif
+
+        if(fIsSEH) { fFCMDLines = f2SSEHFCMDLines; }
+        else
+        {
+            fFCMDLines = fPSROHFCMDLines;
+        }
 
         auto cMapIterator = fFCMDLines.begin();
         LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
@@ -826,7 +887,7 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             LOG(INFO) << MAGENTA << "VDDRX read value = " << +clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDDRX") << RESET;
@@ -896,7 +957,7 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
     // Run Bit Error Rate Test
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             // Configure BERT Pattern for comparision
@@ -930,16 +991,18 @@ bool OTHybridTester::LpGBTCheckClocks()
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         // clk test
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x1);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x0);
         std::map<std::string, std::string> cClockMap;
-#ifdef __SEH_USB__
-        cClockMap = f2SSEHClockMap;
-#elif __ROH_USB__
-        cClockMap = fPSROHClockMap;
-#endif
+
+        if(fIsSEH) { cClockMap = f2SSEHClockMap; }
+        else
+        {
+            cClockMap = fPSROHClockMap;
+        }
+
         auto cMapIterator = cClockMap.begin();
         bool cClkTestDone = false;
         bool cClkStat     = false;
@@ -1049,12 +1112,11 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
 uint16_t OTHybridTester::calibrateADC()
 {
     uint16_t cBestVrefround = 0;
-#ifdef __SEH_USB__
-    float    cTestCard1V25 = 0;
-    float    cVref         = 0;
-    float    cGain         = 0;
-    uint16_t cOffset       = 0;
-    uint16_t cADC1V25      = 0;
+    float    cTestCard1V25  = 0;
+    float    cVref          = 0;
+    float    cGain          = 0;
+    uint16_t cOffset        = 0;
+    uint16_t cADC1V25       = 0;
 
     // Create TTree for DAC to ADC conversion in lpGBT
     auto cCalibrationTree  = new TTree("tADCCalibration", "Calibration of the ADC");
@@ -1073,13 +1135,13 @@ uint16_t OTHybridTester::calibrateADC()
     cCalibrationTree->Branch("Gain", &cGainVect);
     cCalibrationTree->Branch("Vref", &cVrefVect);
 
-    flpGBTInterface->GetExternalController()->getInterface().read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
-    flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-    flpGBTInterface->GetExternalController()->getInterface().set_AMUX(3303, 3303);
+    fTC_2SSEH->read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
+    fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+    fTC_2SSEH->set_AMUX(3303, 3303);
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             cGain   = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, false);
@@ -1129,7 +1191,6 @@ uint16_t OTHybridTester::calibrateADC()
     fResultFile->cd();
     cCalibrationTree->Fill();
     cCalibrationTree->Write();
-#endif
     return cBestVrefround;
 }
 
@@ -1149,7 +1210,7 @@ void OTHybridTester::calibrateCurrentDAC()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
             // clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE", 132); // optimal tune

@@ -25,7 +25,7 @@ MonitorDQMPlotSEH::MonitorDQMPlotSEH() {}
 MonitorDQMPlotSEH::~MonitorDQMPlotSEH() {}
 
 //========================================================================================================================
-void MonitorDQMPlotSEH::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig)
+void MonitorDQMPlotSEH::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -116,12 +116,12 @@ void MonitorDQMPlotSEH::bookTestCardPlots(TFile* theOutputFile, const DetectorCo
 
 //     for(auto board: theThresholdContainer) // for on boards - begin
 //     {
-//         size_t boardIndex = board->getIndex();
+//         size_t boardId = board->getId();
 //         for(auto opticalGroup: *board) // for on opticalGroup - begin
 //         {
 //             if(!opticalGroup->hasSummary()) continue;
-//             size_t  opticalGroupIndex = opticalGroup->getIndex();
-//             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+//             size_t  opticalGroupId = opticalGroup->getId();
+//             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardId)->getObject(opticalGroupId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
 //             auto theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
 //             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue * CONVERSION_FACTOR);
 //         } // for on opticalGroup - end

@@ -190,10 +190,10 @@ int main(int argc, char** argv)
         // ##################
         if(reset == true)
         {
-            if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
-                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
+            if(mySysCntr.fDetectorContainer->getFirstObject()->getFirstObject()->flpGBT == nullptr)
+                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->getFirstObject()->getId()])->ResetSequence("160");
             else
-                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
+                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->getFirstObject()->getId()])->ResetSequence("320");
             exit(EXIT_SUCCESS);
         }
 
@@ -300,21 +300,21 @@ int main(int argc, char** argv)
                     pa.fDetectorContainer->addBoardQueryFunction(boardSubset, queryFunctionName);
                     doTwice = true;
                 }
-                else if(pa.fDetectorContainer->at(0)->size() != 1)
+                else if(pa.fDetectorContainer->getFirstObject()->size() != 1)
                 {
                     std::string queryFunctionName = "opticalGroupSubset";
                     auto        optoGroupSubset   = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
                     pa.fDetectorContainer->addOpticalGroupQueryFunction(optoGroupSubset, queryFunctionName);
                     doTwice = true;
                 }
-                else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
+                else if(pa.fDetectorContainer->getFirstObject()->getFirstObject()->size() != 1)
                 {
                     std::string queryFunctionName = "moduleSubset";
                     auto        hybridSubset      = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
                     pa.fDetectorContainer->addHybridQueryFunction(hybridSubset, queryFunctionName);
                     doTwice = true;
                 }
-                else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
+                else if(pa.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->size() != 1)
                 {
                     std::string queryFunctionName = "readoutChipSubset";
                     auto        chipSubset        = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };

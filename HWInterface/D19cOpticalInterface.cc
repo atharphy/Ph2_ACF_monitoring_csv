@@ -132,10 +132,10 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
                 if(cErrorCode != 0)
                 {
                     if(pChip->getFrontEndType() == FrontEndType::LpGBT)
-                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Error Code : " << +cErrorCode << RESET;
+                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Error Code : " << +cErrorCode << " for LpGBT on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << RESET;
                     else
                         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Error Code : " << +cErrorCode << " -- I2C Status : " << LpGBTSlowControlWorker::I2C_STATUS_MAP.at(cReadBack) << RESET;
-                    LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " -- Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex
+                    LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex
                                << +pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1).fAddress << std::dec << RESET;
                     cSuccess &= false;
                 }

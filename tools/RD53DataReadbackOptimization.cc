@@ -180,17 +180,17 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                 for(const auto cChip: *cHybrid)
                 {
                     auto best = *std::max_element(
-                        theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data,
-                        theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data +
+                        theTAPscanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<TAPsize>>().data,
+                        theTAPscanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<TAPsize>>().data +
                             dacListTAP.size());
                     int regVal = 0;
 
                     for(auto i = 1u; i < dacListTAP.size(); i++)
                     {
-                        auto current = round(theTAPscanContainer.at(cBoard->getIndex())
-                                                 ->at(cOpticalGroup->getIndex())
-                                                 ->at(cHybrid->getIndex())
-                                                 ->at(cChip->getIndex())
+                        auto current = round(theTAPscanContainer.getObject(cBoard->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
                                                  ->getSummary<GenericDataArray<TAPsize>>()
                                                  .data[i] /
                                              RD53Shared::PRECISION) *
@@ -208,7 +208,7 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                     // ##################################################
                     // # Fill TAP container and download new DAC values #
                     // ##################################################
-                    theTAPContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
+                    theTAPContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regVal);
                 }
 }
@@ -252,7 +252,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                         cChip->getSummary<GenericDataArray<TAPsize>>().data[i] =
-                            BERtest::theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>();
+                            BERtest::theBERtestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>();
 
         // ##############################################
         // # Send periodic data to monitor the progress #

@@ -24,13 +24,7 @@ class ChannelContainer;
 namespace Ph2_HwInterface
 {
 using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
-// #ifdef __TCUSB__
-//     #ifdef __ROH_USB__
-//         using TestCardInterface =  TCInterface<TC_PSROH>;
-//     #elif __SEH_USB__
-//         using TestCardInterface =  TCInterface<TC_2SSEH>;
-//     #endif
-// #endif
+
 /*!
  * \class ChipInterface
  * \brief Class representing the User Interface to the Chip on different boards
@@ -39,17 +33,10 @@ class ChipInterface
 {
   protected:
     std::recursive_mutex fMutex;
-    BeBoardFWMap         fBoardMap; /*!< Map of Board connected */
-    BeBoardFWInterface*  fBoardFW;  /*!< Board loaded */
-    // #ifdef __TCUSB__
-    //     #ifdef __ROH_USB__
-    //         TCInterface<TC_PSROH>*   fExternalController;
-    //     #elif __SEH_USB__
-    //         TCInterface<TC_2SSEH>*   fExternalController;
-    //     #endif
-    // #endif
-    uint16_t fPrevBoardIdentifier; /*!< Id of the previous board */
-    bool     fWithlpGBT = false;   /*!< lpGBT is used for configuration */
+    BeBoardFWMap         fBoardMap;            /*!< Map of Board connected */
+    BeBoardFWInterface*  fBoardFW;             /*!< Board loaded */
+    uint16_t             fPrevBoardIdentifier; /*!< Id of the previous board */
+    bool                 fWithlpGBT = false;   /*!< lpGBT is used for configuration */
 
     /*!
      * \brief Set the board to talk with
@@ -122,14 +109,7 @@ class ChipInterface
     // this does not need to be virtual as its the same for all types of readout chips
     bool lpGBTCheck(const Ph2_HwDescription::BeBoard* pBoard)
     {
-        fWithlpGBT = false;
-        for(auto cOpticalGroup: *pBoard)
-        {
-            if(cOpticalGroup->getIndex() > 0) break;
-
-            auto& clpGBT = cOpticalGroup->flpGBT;
-            fWithlpGBT   = (clpGBT != nullptr);
-        }
+        fWithlpGBT = (pBoard->getFirstObject()->flpGBT != nullptr);
         return fWithlpGBT;
     }
     //

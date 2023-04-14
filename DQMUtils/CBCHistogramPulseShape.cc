@@ -35,7 +35,7 @@ void CBCHistogramPulseShape::book(TFile* theOutputFile, DetectorContainer& theDe
     fDelayStep             = findValueInSettings<double>(pSettingsMap, "PulseShapeDelayStep", 1);
     fPlotPulseShapeSCurves = findValueInSettings<double>(pSettingsMap, "PlotPulseShapeSCurves", 0);
 
-    uint32_t numberOfChannels = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
+    uint32_t numberOfChannels = theDetectorStructure.getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->size();
     int      delayNbins       = (fFinalDelay - fInitialDelay) / fDelayStep + 1;
     fEffectiveFinalDelay      = (delayNbins - 1) * fDelayStep + fInitialDelay;
 
@@ -87,20 +87,20 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
 
     for(auto board: theThresholdAndNoiseContainer) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardId = board->getId();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getIndex();
+            size_t opticalGroupId = opticalGroup->getId();
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getIndex();
+                size_t hybridId = hybrid->getId();
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getIndex();
+                    size_t chipId = chip->getId();
                     // Retreive the corresponging chip histogram:
                     if(chip->getSummaryContainer<ThresholdAndNoise, ThresholdAndNoise>() == nullptr) continue;
                     TH1F* chipPulseShapeHistogram =
-                        fDetectorChipPulseShapeHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        fDetectorChipPulseShapeHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     int currentBin = chipPulseShapeHistogram->FindBin(binCenterValue);
                     chipPulseShapeHistogram->SetBinContent(currentBin, chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold);
                     chipPulseShapeHistogram->SetBinError(currentBin, chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThresholdError);
@@ -110,7 +110,7 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
                     for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>()) // for on channel - begin
                     {
                         TH1F* channelPulseShapeHistogram =
-                            fDetectorChannelPulseShapeHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getChannel<HistContainer<TH1F>>(channelNumber).fTheHistogram;
+                            fDetectorChannelPulseShapeHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getChannel<HistContainer<TH1F>>(channelNumber).fTheHistogram;
                         int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
                         channelPulseShapeHistogram->SetBinContent(currentBin, channel.fThreshold);
                         channelPulseShapeHistogram->SetBinError(currentBin, channel.fNoise);
@@ -134,10 +134,10 @@ void CBCHistogramPulseShape::fillSCurvePlots(uint16_t vcthr, uint16_t latency, u
                 for(auto chip: *hybrid)
                 {
                     TH2F* chipSCurve = fDetectorSCurveHistogramMap.at(std::make_tuple(latency, delay))
-                                           .at(board->getIndex())
-                                           ->at(opticalGroup->getIndex())
-                                           ->at(hybrid->getIndex())
-                                           ->at(chip->getIndex())
+                                           .getObject(board->getId())
+                                           ->getObject(opticalGroup->getId())
+                                           ->getObject(hybrid->getId())
+                                           ->getObject(chip->getId())
                                            ->getSummary<HistContainer<TH2F>>()
                                            .fTheHistogram;
 
@@ -175,9 +175,9 @@ void CBCHistogramPulseShape::process()
 
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t       chipIndex     = chip->getIndex();
-                    TVirtualPad* currentCanvas = cChipPulseShape->cd(chipIndex + 1);
-                    TPad*        myPad         = static_cast<TPad*>(cChipPulseShape->GetPad(chipIndex + 1));
+                    size_t       chipId     = chip->getId();
+                    TVirtualPad* currentCanvas = cChipPulseShape->cd(chipId + 1);
+                    TPad*        myPad         = static_cast<TPad*>(cChipPulseShape->GetPad(chipId + 1));
                     // Retreive the corresponging chip histogram:
                     TH1F*   chipPulseShapeHistogram = chip->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     TGaxis* theAxis                 = new TGaxis(myPad->GetUxmin(), myPad->GetUymax(), myPad->GetUxmax() / 3, myPad->GetUymax(), 0., 25., 510, "-");

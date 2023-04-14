@@ -10,6 +10,7 @@
  */
 
 #include "HWInterface/SSAInterface.h"
+#include "HWInterface/ExceptionHandler.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
@@ -588,7 +589,11 @@ uint8_t SSAInterface::ReadChipId(Chip* pChip)
         return 0;
     }
     else
-        throw std::runtime_error(std::string("Failed to start e-fuse read operation from SSA ") + std::to_string(pChip->getId()));
+    {
+        LOG(INFO) << BOLDRED << "Failed to start e-fuse read operation from SSA on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
+        ExceptionHandler::getInstance()->disableChip(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
+        return 0;
+    }
 }
 
 std::pair<int, float> SSAInterface::getWRattempts()

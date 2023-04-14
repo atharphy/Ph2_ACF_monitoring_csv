@@ -71,17 +71,17 @@ void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
-        if(board->at(0)->flpGBT == nullptr)
+        if(board->getFirstObject()->flpGBT == nullptr)
         {
             for(const auto& opticalGroup: *board)
-                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(0, getTimeStamp());
+                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(0, getTimeStamp());
             continue;
         }
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
+            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
         }
     }
 
@@ -128,8 +128,8 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
 {
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName << RESET;
     float cValue = 0;
-#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
-    fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().HV_meas, cValue);
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
+    pTC_2SSEH->read_hvmon(pTC_2SSEH->HV_meas, cValue);
     LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
 #endif
     DetectorDataContainer theTestCardContainer;
@@ -156,14 +156,14 @@ void SEHMonitor::runInputCurrentMonitor(std::string registerName)
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
-        if(board->at(0)->flpGBT == nullptr) continue;
+        if(board->getFirstObject()->flpGBT == nullptr) continue;
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = (fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, "ADC1");
             LOG(INFO) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - "
                       << "ADC1"
                       << " = " << registerValue << RESET;
-            // theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
+            // theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
         }
     }
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;

@@ -195,8 +195,8 @@ int main(int argc, char* argv[])
             } // board
         }     // loop over delays
     }
-    // BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
-    // HybridContainer* ChipVec = pBoard->at(0)->at(0);
+    // BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->getFirstObject());
+    // HybridContainer* ChipVec = pBoard->getFirstObject()->getFirstObject();
     // cTool.setFWTestPulse();
     // TH1I* h1 = new TH1I("h1", "S-CURVE", 256, 0, 256);
     // for(int thd = 0; thd <= 256; thd++)

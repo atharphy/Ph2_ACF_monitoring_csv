@@ -1,5 +1,5 @@
 
-#if defined(__TCUSB__) && defined(__ROH_USB__) && defined(__USE_ROOT__)
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
 #include "PSROHTester.h"
 
 // initialize the static member
@@ -42,14 +42,13 @@ void PSROHTester::Initialise()
 
 void PSROHTester::MeasureInputIV(const std::string& cTestStep)
 {
-    auto cTestCardInterface = flpGBTInterface->GetExternalController()->getInterface();
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
         for(auto& cMeas: fInputIVMap)
         {
             float cVal;
-            cTestCardInterface.adc_get(cMeas.second, cVal);
+            fTC_PSROH->adc_get(cMeas.second, cVal);
             LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal / 1000) << " [SI] during phase " << cTestStep << RESET;
         }
     }
@@ -125,7 +124,7 @@ void PSROHTester::ClearBRAM(const std::string& sBramToReset)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         this->ClearBRAM(cBoard, sBramToReset);
     }
 }
@@ -242,7 +241,7 @@ void PSROHTester::WritePatternToBRAM(const std::string& sFileName = "fcmd_file.t
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         this->WritePatternToBRAM(cBoard, sFileName);
     }
 }
@@ -283,7 +282,7 @@ void PSROHTester::CheckFastCommandsBRAM(const std::string& sFCMDLine)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         this->CheckFastCommandsBRAM(cBoard, sFCMDLine);
     }
 }
@@ -394,7 +393,7 @@ void PSROHTester::CheckFastCommands(const std::string& sFastCommand, const std::
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         this->CheckFastCommands(cBoard, sFastCommand, filename);
     }
 }
@@ -419,7 +418,7 @@ void PSROHTester::ReadRefAddrBRAM(int iRefBRAMAddr)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         this->ReadRefAddrBRAM(cBoard, iRefBRAMAddr);
     }
 }
@@ -446,7 +445,7 @@ void PSROHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr);
     }
 }
@@ -543,7 +542,7 @@ bool PSROHTester::FastCommandScope()
     bool cSuccess = true;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         cSuccess &= this->FastCommandScope(cBoard);
     }
     return cSuccess;
@@ -589,7 +588,7 @@ void PSROHTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vecto
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         this->CheckHybridInputs(cBoard, pInputs, pCounters);
     }
 }
@@ -702,7 +701,7 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->getFirstObject()->flpGBT != nullptr) continue;
         this->CheckHybridOutputs(cBoard, pInputs, pCounters);
     }
 }

@@ -170,14 +170,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
                 )
         endif(NOT PH2_TCUSB_FOUND)
 
-        if($ENV{UseTCUSBforROH})
-            message(STATUS "    Building the ROH TestCards USB components")
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-	endif($ENV{UseTCUSBforROH})
-	if($ENV{UseTCUSBforSEH})
-            message(STATUS "    Building the SEH TestCards USB components")
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
-        endif($ENV{UseTCUSBforSEH})
     endif($ENV{CompileWithTCUSB})
 
     # EUDAQ

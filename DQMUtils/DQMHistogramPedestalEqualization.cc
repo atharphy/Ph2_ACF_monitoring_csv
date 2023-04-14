@@ -33,7 +33,7 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContai
 {
     fDetectorContainer = &theDetectorStructure;
 
-    NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
+    NCH = theDetectorStructure.getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->size();
 
     HistContainer<TH1I> hVplus("VplusValue", "Vplus Value", 1, 0, 1);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorVplusHistograms, hVplus);
@@ -97,15 +97,15 @@ void DQMHistogramPedestalEqualization::process()
 
                 for(auto chip: *hybrid)
                 {
-                    offsetCanvas->cd(chip->getIndex() + 1);
+                    offsetCanvas->cd(chip->getId() + 1);
                     TH1I* offsetHistogram = chip->getSummary<HistContainer<TH1I>>().fTheHistogram;
                     offsetHistogram->GetXaxis()->SetTitle("Channel");
                     offsetHistogram->GetYaxis()->SetTitle("Offset");
                     offsetHistogram->DrawCopy();
 
-                    occupancyCanvas->cd(chip->getIndex() + 1);
+                    occupancyCanvas->cd(chip->getId() + 1);
                     TH1F* occupancyHistogram =
-                        fDetectorOccupancyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        fDetectorOccupancyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     occupancyHistogram->GetXaxis()->SetTitle("Channel");
                     occupancyHistogram->GetYaxis()->SetTitle("Occupancy");
                     occupancyHistogram->DrawCopy();

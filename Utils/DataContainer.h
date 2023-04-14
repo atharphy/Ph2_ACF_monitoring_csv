@@ -391,7 +391,6 @@ class DataContainer
 
     uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const BaseDataContainer* theChannelGroupContainer, const uint32_t numberOfEvents) override
     {
-        uint16_t              index                    = 0;
         uint32_t              numberOfEnabledChannels_ = 0;
         std::vector<uint32_t> theNumberOfEnabledChannelsList;
         for(auto container: *this)
@@ -400,7 +399,7 @@ class DataContainer
             if(container != nullptr)
             {
                 numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(
-                    theContainer->getElement(index++), static_cast<const DataContainer<T>*>(theChannelGroupContainer)->getObject(container->getId()), numberOfEvents);
+                    theContainer->getElement(container->getId()), static_cast<const DataContainer<T>*>(theChannelGroupContainer)->getObject(container->getId()), numberOfEvents);
             }
             theNumberOfEnabledChannelsList.emplace_back(numberOfContainerEnabledChannels);
             numberOfEnabledChannels_ += numberOfContainerEnabledChannels;
@@ -427,6 +426,10 @@ class DataContainer
         for(auto container: *this) { container->cleanDataStored(); }
     }
 
+
+    // T*& getObject(size_t id) {return std::vector<T*>::at(index);}
+    // const T* const& getObject(size_t id) const {return std::vector<T*>::at(index);}
+
   private:
     friend class boost::serialization::access;
     template <class Archive>
@@ -436,6 +439,9 @@ class DataContainer
         theArchive& boost::serialization::base_object<BaseDataContainer>(*this);
         theArchive& boost::serialization::base_object<Container<T>>(*this);
     }
+
+    T*& at(size_t index) {return this->std::vector<T*>::at(index);}
+    const T* const& at(size_t index)const {return this->std::vector<T*>::at(index);}
 };
 
 template <typename T>
@@ -556,7 +562,7 @@ class ChipDataContainer
 
     uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const BaseDataContainer* theChannelGroupContainer, const uint32_t numberOfEvents)
     {
-        // std::cout << " Index " << theContainer->getIndex()
+        // std::cout << " Index " << theContainer->getId()
         //     << " # of enabled channels " << cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask())
         //     << " # of events " << numberOfEvents
         //     << "\n";

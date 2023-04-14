@@ -64,7 +64,7 @@ constexpr size_t setBits(size_t nBit2Set) { return (1L << nBit2Set) - 1; }
 template <typename T>
 static void setFirstChip(T& theDetectorContainer)
 {
-    firstChip = static_cast<Ph2_HwDescription::RD53*>(theDetectorContainer.at(0)->at(0)->at(0)->at(0));
+    firstChip = static_cast<Ph2_HwDescription::RD53*>(theDetectorContainer.getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
 }
 
 template <typename T>

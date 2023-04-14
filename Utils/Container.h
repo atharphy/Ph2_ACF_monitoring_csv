@@ -33,33 +33,27 @@ class ChipContainer;
 class BaseContainer
 {
   public:
-    BaseContainer(uint16_t id = -1) : id_(id), index_(0), globalIndex_(0), isEnabled_(true) { ; }
+    BaseContainer(uint16_t id = -1) : id_(id), isEnabled_(true) { ; }
 
     BaseContainer(const BaseContainer&) = delete;
     BaseContainer(BaseContainer&& theCopyContainer)
     {
         id_          = theCopyContainer.id_;
-        index_       = theCopyContainer.index_;
-        globalIndex_ = theCopyContainer.globalIndex_;
+        isEnabled_   = theCopyContainer.isEnabled_;
     }
 
     virtual ~BaseContainer() { ; }
     uint16_t               getId(void) const { return id_; }
-    uint16_t               getIndex(void) const { return index_; }
-    uint16_t               getGlobalIndex(void) const { return globalIndex_; }
     virtual void           cleanDataStored(void)            = 0;
-    virtual BaseContainer* getElement(uint16_t index) const = 0;
+    virtual const BaseContainer* getElement(uint16_t theId) const = 0;
     bool                   isEnabled() const { return isEnabled_; }
     void                   setEnabled(bool enable) { isEnabled_ = enable; }
     virtual void           setEnabledAll(bool enable) = 0;
-    void                   setIndex(uint16_t index) { index_ = index; }
-    void                   setGlobalIndex(uint16_t globalIndex) { globalIndex_ = globalIndex; }
 
   protected:
     uint16_t id_;
 
   private:
-    uint16_t index_, globalIndex_;
     bool     isEnabled_;
 };
 
@@ -87,7 +81,7 @@ class Container
         idObjectMap_.clear();
     }
 
-    T* getObject(uint16_t id)
+    T*& getObject(uint16_t id)
     {
         if(idObjectMap_.find(id) == idObjectMap_.end())
         {
@@ -97,7 +91,7 @@ class Container
         return idObjectMap_[id];
     }
 
-    const T* getObject(uint16_t id) const
+    const T* const& getObject(uint16_t id) const
     {
         if(idObjectMap_.find(id) == idObjectMap_.end())
         {
@@ -105,6 +99,16 @@ class Container
             throw Exception(std::move(errorMessage));
         }
         return idObjectMap_.at(id);
+    }
+
+    T*& getFirstObject()
+    {
+        return idObjectMap_.begin()->second;
+    }
+
+    const T* const& getFirstObject() const
+    {
+        return idObjectMap_.begin()->second;
     }
 
     void cleanDataStored() override
@@ -118,7 +122,7 @@ class Container
         for(auto& container: *this) { container->setEnabledAll(enable); }
     }
 
-    BaseContainer* getElement(uint16_t index) const override { return this->at(index); }
+    const BaseContainer* getElement(uint16_t theId) const override { return Container<T>::getObject(theId); }
 
   protected:
     virtual T* addObject(uint16_t objectId, T* object)
@@ -129,8 +133,6 @@ class Container
         }
         catch(std::exception& ex)
         {
-            object->setIndex(this->size());
-            object->setGlobalIndex(this->size());
             std::vector<T*>::push_back(object);
             Container::idObjectMap_[objectId] = this->back();
             return this->back();
@@ -144,6 +146,9 @@ class Container
     std::map<uint16_t, T*> idObjectMap_;
 
   private:
+    T* at(size_t index) {return this->std::vector<T*>::at(index);}
+    T* at(size_t index)const {return this->std::vector<T*>::at(index);}
+
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
@@ -299,7 +304,7 @@ class ChipContainer : public BaseContainer
 
     void setEnabledAll(bool enable) override { setEnabled(enable); }
 
-    BaseContainer* getElement(uint16_t index) const override
+    const BaseContainer* getElement(uint16_t index) const override
     {
         std::cout << __PRETTY_FUNCTION__ << " This function should never be called!!! Aborting...";
         abort();
@@ -386,32 +391,40 @@ class HWDescriptionContainer : public Container<T>
 
     template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
                                    // is defined
-    theHW* at(size_t index)
+    theHW* getObject(size_t theId)
     {
-        if(!fQueryFunction.fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
-        for(auto element: *this)
-        {
-            if(element->getIndex() == index) return static_cast<theHW*>(element);
-        }
-        throw std::runtime_error("out of range");
+        return static_cast<theHW*>(Container<T>::getObject(theId));
     }
 
     template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
                                    // is defined
-    theHW* at(size_t index) const
+    const theHW* getObject(size_t theId) const
     {
-        if(!fQueryFunction.fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
-        for(const auto element: *this)
-        {
-            if(element->getIndex() == index) return static_cast<theHW*>(element);
-        }
-        throw std::runtime_error("out of range");
+        return static_cast<const theHW*>(Container<T>::getObject(theId));
+    }
+
+    template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
+                                   // is defined
+    theHW* getFirstObject()
+    {
+        return static_cast<theHW*>(Container<T>::getFirstObject());
+    }
+
+    template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
+                                   // is defined
+    const theHW* getFirstObject() const
+    {
+        return static_cast<const theHW*>(Container<T>::getFirstObject());
+
     }
 
     uint16_t size() const
     {
         if(!fQueryFunction.fQueryFunction) return std::vector<T*>::size();
-        return size_;
+        uint16_t theSize = 0;
+        for(__attribute__((unused)) auto object : *this) ++theSize;
+        return theSize;
+        // return std::count_if(this->begin(), this->begin(), fQueryFunction.fQueryFunction);
     }
 
     uint16_t fullSize() const { return std::vector<T*>::size(); }
@@ -420,48 +433,28 @@ class HWDescriptionContainer : public Container<T>
     {
         fQueryFunctionMap.clear();
         fQueryFunction.fQueryFunction = 0;
-        updateSubcontainerIndex();
     }
     void addQueryFunction(std::function<bool(const T*)> theInputQueryFunction, const std::string& functionName)
     {
         fQueryFunctionMap[functionName] = theInputQueryFunction;
         updateQueryFunction();
-        updateSubcontainerIndex();
     }
     void removeQueryFunction(const std::string& functionName)
     {
         fQueryFunctionMap.erase(functionName);
         updateQueryFunction();
-        updateSubcontainerIndex();
     }
 
   protected:
-    void updateSubcontainerIndex()
-    {
-        uint16_t theNewSubcontainerIndex = 0;
-        for(uint16_t subcontainerIndex = 0; subcontainerIndex < this->std::vector<T*>::size(); ++subcontainerIndex)
-        {
-            auto theSubContainer = (*this)[subcontainerIndex];
-            if(fQueryFunction(theSubContainer))
-            {
-                // std::cout << "Matched... index " << chipIndex << " new index " << theNewSubcontainerIndex << "\n";
-                theSubContainer->setIndex(theNewSubcontainerIndex++);
-            }
-            else
-            {
-                // std::cout << "Did not match...\n";
-                theSubContainer->setIndex(0xFFFF);
-            }
-        }
-        this->size_ = theNewSubcontainerIndex;
-    }
     QueryFunction fQueryFunction;
 
   private:
-    uint16_t                                             size_;
     T*&                                                  operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
     const T&                                             operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
     std::map<std::string, std::function<bool(const T*)>> fQueryFunctionMap;
+
+    T* at(size_t index) {return this->std::vector<T*>::at(index);}
+    T* at(size_t index)const {return this->std::vector<T*>::at(index);}
 
     void updateQueryFunction()
     {
