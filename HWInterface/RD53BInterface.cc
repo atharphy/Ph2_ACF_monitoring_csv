@@ -563,6 +563,7 @@ void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
 
 uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
 {
+    RD53Interface::WriteChipReg(pChip, "EfusesConfig", 0x0F0F, false);
     uint16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
     uint16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
     return low | (high << pChip->getNumberOfBits("EfusesReadData0"));
