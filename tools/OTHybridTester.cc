@@ -1125,14 +1125,14 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
 
 uint16_t OTHybridTester::calibrateADC()
 {
-    uint8_t cTrimOptimized = 0;
-    float       cTestCard1V25 = 0;
-    float       cVref         = 0;
-    float       cGain         = 0;
-    uint16_t    cOffset       = 0;
-    uint16_t    cADC1V25      = 0;
-    uint8_t     cVersion      = 0;
-    std::string registerStr   = "VREFTUNE";
+    uint8_t     cTrimOptimized = 0;
+    float       cTestCard1V25  = 0;
+    float       cVref          = 0;
+    float       cGain          = 0;
+    uint16_t    cOffset        = 0;
+    uint16_t    cADC1V25       = 0;
+    uint8_t     cVersion       = 0;
+    std::string registerStr    = "VREFTUNE";
 
     // Create TTree for DAC to ADC conversion in lpGBT
     auto cCalibrationTree  = new TTree("tADCCalibration", "Calibration of the ADC");
@@ -1160,8 +1160,8 @@ uint16_t OTHybridTester::calibrateADC()
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            cGain   = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, true);
-            cOffset = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, true);
+            cGain         = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, true);
+            cOffset       = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, true);
             cVersion      = static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getVersion();
             uint8_t nBits = 8;
             uint8_t cTrim = 0;
@@ -1223,7 +1223,6 @@ uint16_t OTHybridTester::calibrateADC()
     cCalibrationTree->Write();
     fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
     return cTrimOptimized;
-
 }
 
 void OTHybridTester::calibrateCurrentDAC()

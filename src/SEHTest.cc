@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    doc.save_file((cHWFile+"_copy").c_str());
+    doc.save_file((cHWFile + "_copy").c_str());
 
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
@@ -291,9 +291,9 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
-    cTool.InitializeHw((cHWFile+"_copy").c_str(), outp);
-    cTool.InitializeSettings((cHWFile+"_copy").c_str(), outp);
-    remove((cHWFile+"_copy").c_str());
+    cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
+    cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
+    remove((cHWFile + "_copy").c_str());
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory, true, true);
@@ -316,7 +316,6 @@ int main(int argc, char* argv[])
         gui::message("");
         gui::status("Establishing optical link");
         gui::progress(0 / 10.0);
-    
 
         gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
         // gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());

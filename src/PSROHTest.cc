@@ -179,12 +179,12 @@ int main(int argc, char* argv[])
     bool        cMeasureInputIV       = cmd.foundOption("measure-input-iv");
 
     // To use from the GUI
-    uint32_t cUsbBus = (cmd.foundOption("USBBus")) ? (uint32_t)(std::stoi(cmd.optionValue("USBBus"))) : 0; // Default option?
-    uint8_t  cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
-    bool     cGui    = (cmd.foundOption("useGui"));
-    uint8_t            linkId = (cmd.foundOption("linkId")) ? (uint32_t)(std::stoi(cmd.optionValue("linkId"))) : 0;
-    std::string        fmcId  = (cmd.foundOption("fmcId")) ? cmd.optionValue("fmcId") : "L12";
-    
+    uint32_t    cUsbBus = (cmd.foundOption("USBBus")) ? (uint32_t)(std::stoi(cmd.optionValue("USBBus"))) : 0; // Default option?
+    uint8_t     cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
+    bool        cGui    = (cmd.foundOption("useGui"));
+    uint8_t     linkId  = (cmd.foundOption("linkId")) ? (uint32_t)(std::stoi(cmd.optionValue("linkId"))) : 0;
+    std::string fmcId   = (cmd.foundOption("fmcId")) ? cmd.optionValue("fmcId") : "L12";
+
     cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
 
     pugi::xml_document doc;
@@ -207,8 +207,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    doc.save_file((cHWFile+"_copy").c_str());
-
+    doc.save_file((cHWFile + "_copy").c_str());
 
     TApplication cApp("Root Application", &argc, argv);
     if(batchMode)
@@ -247,9 +246,9 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
-    cTool.InitializeHw((cHWFile+"_copy").c_str(), outp);
-    cTool.InitializeSettings((cHWFile+"_copy").c_str(), outp);
-    remove((cHWFile+"_copy").c_str());
+    cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
+    cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
+    remove((cHWFile + "_copy").c_str());
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory);
