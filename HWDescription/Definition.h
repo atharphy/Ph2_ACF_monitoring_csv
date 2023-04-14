@@ -207,4 +207,6 @@ enum class EventType
 // Monitoring parameters
 #define MAX_LENGHT_PARAMETER_STRING 50
 
+#define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
+
 #endif

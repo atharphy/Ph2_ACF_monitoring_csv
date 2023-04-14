@@ -179,4 +179,6 @@ std::string getReadoutChipString(uint16_t boardId, uint16_t opticalGroupId, uint
 
 time_t getTimeStamp();
 
+std::string getTimeStampString();
+
 #endif

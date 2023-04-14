@@ -282,3 +282,13 @@ time_t getTimeStamp()
     time(&rawtime);
     return rawtime;
 }
+
+std::string getTimeStampString()
+{
+    time_t rawtime = getTimeStamp();
+    char buffer[80];
+    std::strftime(buffer, sizeof(buffer), TIME_FORMAT, std::localtime(&rawtime));
+    std::string time_str(buffer);
+
+    return time_str;
+}
