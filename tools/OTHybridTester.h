@@ -66,7 +66,7 @@ class OTHybridTester : public Tool
     // Test lpGBT I2C Masters
     bool LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, int pNTries = 1000);
     // Test lpGBT ADC
-    void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
+    void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep, bool pCalibrate = false);
     // Set GPIO level
     void     LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
     bool     LpGBTTestResetLines();
