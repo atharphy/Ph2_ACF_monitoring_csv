@@ -282,33 +282,44 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                 {
                     auto     cType                  = cChip->getFrontEndType();
                     // uint32_t cNChannels             = 0;
-                    TH1F * fChipVrefHistograms = nullptr;
+                    TH1F * fStripVrefHistograms = nullptr;
+                    TH1F * fPixelVrefHistograms = nullptr;
                     if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                     {
             
-                        fChipVrefHistograms = fChipStripVrefHistograms.getObject(cBoard->getId())
+                        fStripVrefHistograms = fChipStripVrefHistograms.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
                                                      ->getSummary<HistContainer<TH1F>>()
                                                      .fTheHistogram;
-                    }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                    {
-                        fChipVrefHistograms = fChipPixelVrefHistograms.getObject(cBoard->getId())
-                                                     ->getObject(cOpticalGroup->getId())
-                                                     ->getObject(cHybrid->getId())
-                                                     ->getObject(cChip->getId())
-                                                     ->getSummary<HistContainer<TH1F>>()
-                                                     .fTheHistogram;
-                    }
-
-
-                    fChipVrefHistograms->Fill(theDAC.getObject(cBoard->getId())
+                        std::cout << " Fill SSA "<<std::endl;
+                        fStripVrefHistograms->Fill(theDAC.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
                                                      ->getSummary<uint32_t>());
+
+                    }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    {
+                        fPixelVrefHistograms = fChipPixelVrefHistograms.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<HistContainer<TH1F>>()
+                                                     .fTheHistogram;
+                        
+                        std::cout << " Fill MPA "<<std::endl;
+                        fPixelVrefHistograms->Fill(theDAC.getObject(cBoard->getId())
+                                 ->getObject(cOpticalGroup->getId())
+                                 ->getObject(cHybrid->getId())
+                                 ->getObject(cChip->getId())
+                                 ->getSummary<uint32_t>());
+                    }
+
+
+
                     // auto cChannelContainer = thePedestalAndNoise.getObject(cBoard->getId())
                     //                              ->getObject(cOpticalGroup->getId())
                     //                              ->getObject(cHybrid->getId())

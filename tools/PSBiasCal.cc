@@ -682,7 +682,9 @@ void PSBiasCal::CalibrateBias()
                 {
                     std::string dac_str = "ADC3";
                     if(cHybrid->getId() == 1) dac_str = "ADC0";
-                    float VREFmeasured = SSA2_VREF_EXPECTED;
+                    float VREFmeasured = 0;
+                    std::string VREFstring = "";
+                    uint32_t VREFdac = 0;
                     float gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
                     if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
@@ -692,22 +694,11 @@ void PSBiasCal::CalibrateBias()
                         LOG(INFO) << BOLDMAGENTA << " Calibrate VREF "<< RESET;
 
                         // VREFmeasured = CalibrateVREF(cChip,"VBG","ADC_VREF",SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED);
-                        std::string VREFstring = "ADC_VREF";
+                        VREFstring = "ADC_VREF";
                         VREFmeasured = MeasureVREF(cChip,"VBG",VREFstring,SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED,SSA2_VREF_MIN, SSA2_VREF_MAX);
-                        uint32_t VREFdac = static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring);
+                        VREFdac = static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring);
                         std::cout << "VREFdac "<< VREFdac << " VREFmeasured "<< VREFmeasured << std::endl;
-                        theDACContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<uint32_t>()= VREFdac;
 
-#ifdef __USE_ROOT__
-    fDQMHistogramPSBiasCal.fillDACPlots(theDACContainer);
-#else
-    if(fDQMStreamerEnabled)
-    {
-        ContainerSerialization theContainerSerialization("PSBiasCalVrefDac");
-        theContainerSerialization.fill(VREFdac);
-        theContainerSerialization.streamByBoardContainer(fDQMStreamer, theDACContainer);
-    }
-#endif
 
                         std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF, 0xF};
                         std::vector<float>    exp_val{0.082, 0.082, 0.115, 0.082, 0.082, 0.086};
@@ -725,6 +716,10 @@ void PSBiasCal::CalibrateBias()
                         std::vector<float>    exp_val{0.082, 0.082, 0.108, 0.082, 0.082}; //, 1.0, 1.0};
                         static_cast<MPA2Interface*>(fReadoutChipInterface)->loadVref(cChip);
                         //CalibrateVREF(cChip,gndval,"bandgap","vref",MPA2_VBG_EXPECTED,MPA2_VREF_EXPECTED);
+                        VREFstring = "vref";
+                        VREFmeasured = MeasureVREF(cChip,"bandgap",VREFstring,MPA2_VBG_EXPECTED,MPA2_VREF_EXPECTED,MPA2_VREF_MIN, MPA2_VREF_MAX);
+                        VREFdac = static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring);
+                        std::cout << "VREFdac "<< VREFdac << " VREFmeasured "<< VREFmeasured << std::endl;
 
                         for(int ipoint = 0; ipoint < 5; ipoint++)
                         {
@@ -735,17 +730,25 @@ void PSBiasCal::CalibrateBias()
                             }
                         }
                     }
+                    std::cout << " ------ setting VREF DAC in DACContainter "<< VREFdac <<std::endl;
+                    theDACContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<uint32_t>()= VREFdac;
 
-                    // else if(cChip->getFrontEndType() == FrontEndType::SSA2)
-                    // {
-                    //     LOG(INFO) << BOLDRED << "Skipping SSA2" << RESET;
-                    // }
 
                     DisableTest(cChip);
                 }
+
             } // chip
         }     // hybrid
     }         // optica]l group
+#ifdef __USE_ROOT__
+    fDQMHistogramPSBiasCal.fillDACPlots(theDACContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("PSBiasCalVrefDac");
+        theContainerSerialization.streamByBoardContainer(fDQMStreamer, theDACContainer);
+    }
+#endif
 }
 void PSBiasCal::writeObjects() 
 {
