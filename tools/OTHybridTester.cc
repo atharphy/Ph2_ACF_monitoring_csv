@@ -36,9 +36,9 @@ void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
             LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
             clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
@@ -53,41 +53,52 @@ void OTHybridTester::LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern)
     DPInterface cDPInterfacer;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
-        if(pStart)
+        bool isElectricalFc7 = true;
+        for(auto cOpticalGroup: *cBoard)
         {
-            LOG(INFO) << BOLDGREEN << "Electrical FC7 pattern generation" << RESET;
-            // Check if Emulator is running
-            for(int i = 0; i < 5; i++)
+            if(cOpticalGroup->flpGBT != nullptr)
             {
-                if(cDPInterfacer.IsRunning(pInterface, 1))
-                {
-                    LOG(INFO) << BOLDYELLOW << " STATUS : Data Player is running and will be stopped " << RESET;
-                    cDPInterfacer.Stop(pInterface);
-                }
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                // Configure and Start DataPlayer
-                cDPInterfacer.Configure(pInterface, pPattern);
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                cDPInterfacer.Start(pInterface, 1);
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                if(cDPInterfacer.IsRunning(pInterface, 1))
-                {
-                    LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
-                    break;
-                }
-                else
-                    LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+                isElectricalFc7 = false;
+                break;
             }
         }
-        else
+        if(isElectricalFc7)
         {
-            LOG(INFO) << BOLDYELLOW << " Data Player will be stopped " << RESET;
-            cDPInterfacer.Stop(pInterface);
+            BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
+            if(pStart)
+            {
+                LOG(INFO) << BOLDGREEN << "Electrical FC7 pattern generation" << RESET;
+                // Check if Emulator is running
+                for(int i = 0; i < 5; i++)
+                {
+                    if(cDPInterfacer.IsRunning(pInterface, 1))
+                    {
+                        LOG(INFO) << BOLDYELLOW << " STATUS : Data Player is running and will be stopped " << RESET;
+                        cDPInterfacer.Stop(pInterface);
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    // Configure and Start DataPlayer
+                    cDPInterfacer.Configure(pInterface, pPattern);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    cDPInterfacer.Start(pInterface, 1);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    if(cDPInterfacer.IsRunning(pInterface, 1))
+                    {
+                        LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+                        break;
+                    }
+                    else
+                        LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+                }
+            }
+            else
+            {
+                LOG(INFO) << BOLDYELLOW << " Data Player will be stopped " << RESET;
+                cDPInterfacer.Stop(pInterface);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            return;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        return;
     }
 }
 
@@ -118,13 +129,12 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     //     }
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
-
         fBeBoardInterface->setBoard(cBoard->getId());
         D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         D19cTriggerInterface* cTriggerInterface = dynamic_cast<D19cTriggerInterface*>(cFWInterface->getTriggerInterface());
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
             {
                 auto cHybridId = 2 * cOpticalGroup->getId() + hybridNumber;
@@ -251,9 +261,9 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             uint8_t cSource = 3;
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
@@ -269,9 +279,9 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     }
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 0); // 0 --> link data, 3 --> constant pattern
         }
     }
@@ -283,22 +293,33 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.data_player.i2c_slave_reset", 0x01);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        LOG(DEBUG) << BOLDBLUE << "Reset I2C slave in electrical FC7" << RESET;
+        bool isElectricalFc7 = true;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->flpGBT != nullptr)
+            {
+                isElectricalFc7 = false;
+                break;
+            }
+        }
+        if(isElectricalFc7)
+        {
+            fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.data_player.i2c_slave_reset", 0x01);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            LOG(DEBUG) << BOLDBLUE << "Reset I2C slave in electrical FC7" << RESET;
+        }
     }
 
     // Create variables for TTree branches
     std::vector<std::vector<uint8_t>> cI2CStatusVectVect;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         D19cOpticalInterface* cOpticalInterface = static_cast<D19cOpticalInterface*>(pInterface->getFEConfigurationInterface());
 
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             auto clpGBT = cOpticalGroup->flpGBT;
             clpGBTInterface->ResetI2C(clpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
@@ -375,9 +396,9 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
     std::string         registerStr     = "VREFTUNE";
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             // Create TTree for DAC to ADC conversion in lpGBT
             auto cDACtoADCTree = new TTree("tDACtoADC", "DAC to ADC conversion in lpGBT");
             // Create variables for TTree branches
@@ -532,13 +553,13 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr)
         {
             cReturn = false;
             continue;
         }
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             float               cGain           = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, false);
             uint16_t            cOffset         = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, false);
@@ -608,9 +629,9 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             // LOG(INFO) << BOLDBLUE << "Set levels to " << +pLevel << RESET;
             clpGBTInterface->ConfigureGPIODirection(cOpticalGroup->flpGBT, pGPIOs, 1);
             clpGBTInterface->ConfigureGPIOLevel(cOpticalGroup->flpGBT, pGPIOs, pLevel);
@@ -728,9 +749,9 @@ bool OTHybridTester::LpGBTTestGPILines()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             while(cMapIterator != fGPILines.end())
             {
                 cReadGPI = clpGBTInterface->ReadGPIO(cOpticalGroup->flpGBT, cMapIterator->second);
@@ -755,11 +776,11 @@ bool OTHybridTester::LpGBTTestVTRx()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         D19cOpticalInterface* cOpticalInterface = static_cast<D19cOpticalInterface*>(pInterface->getFEConfigurationInterface());
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             auto clpGBT = cOpticalGroup->flpGBT;
             clpGBTInterface->ResetI2C(clpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
@@ -813,10 +834,10 @@ bool OTHybridTester::LpGBTGetLinkLock()
     bool cStatus = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         fBeBoardInterface->setBoard(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             D19cFWInterface*   cFWInterface   = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             D19cLinkInterface* cLinkInterface = static_cast<D19cLinkInterface*>(cFWInterface->getLinkInterface());
             cStatus                           = cLinkInterface->GetLinkStatus(cOpticalGroup->getId());
@@ -834,54 +855,65 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
 
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        fBeBoardInterface->setBoard(cBoard->getId());
-
-        std::map<std::string, std::string> fFCMDLines;
-
-        if(fIsSEH) { fFCMDLines = f2SSEHFCMDLines; }
-        else
+        bool isElectricalFc7 = true;
+        for(auto cOpticalGroup: *cBoard)
         {
-            fFCMDLines = fPSROHFCMDLines;
-        }
-
-        auto cMapIterator = fFCMDLines.begin();
-        LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
-        res = true;
-        do
-        {
-            uint32_t cFCMDOutput = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second);
-            LOG(INFO) << BOLDBLUE << "Scoped output on " << cMapIterator->first << ": " << std::bitset<32>(cFCMDOutput) << RESET;
-
-            cMatch = 32;
-            cShift = 0;
-            for(uint8_t shift = 0; shift < 8; shift++)
+            if(cOpticalGroup->flpGBT != nullptr)
             {
-                cWrappedByte = (pPattern >> shift) | (pPattern << (8 - shift));
-                cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
-                LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
-                LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
-                int popcount = __builtin_popcountll(cWrappedData ^ cFCMDOutput);
-                if(popcount < cMatch)
-                {
-                    cMatch = popcount;
-                    cShift = shift;
-                }
-                LOG(DEBUG) << BOLDBLUE << "Line " << cMapIterator->first << " Shift " << +shift << " Match " << +popcount << RESET;
+                isElectricalFc7 = false;
+                break;
             }
-            LOG(INFO) << BOLDBLUE << "Found for " << cMapIterator->first << " a minimal bit difference of " << +cMatch << " for a bit shift of " << +cShift << RESET;
+        }
+        if(isElectricalFc7)
+        {
+            fBeBoardInterface->setBoard(cBoard->getId());
 
-            fillSummaryTree(cMapIterator->first + "_match", cMatch);
-            fillSummaryTree(cMapIterator->first + "_shift", cShift);
+            std::map<std::string, std::string> fFCMDLines;
 
-            if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "FCMD Test passed for " << cMapIterator->first << RESET; }
+            if(fIsSEH) { fFCMDLines = f2SSEHFCMDLines; }
             else
             {
-                LOG(INFO) << BOLDRED << "FCMD Test failed for " << cMapIterator->first << RESET;
-                res = false;
+                fFCMDLines = fPSROHFCMDLines;
             }
-            cMapIterator++;
-        } while(cMapIterator != fFCMDLines.end());
+
+            auto cMapIterator = fFCMDLines.begin();
+            LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
+            res = true;
+            do
+            {
+                uint32_t cFCMDOutput = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second);
+                LOG(INFO) << BOLDBLUE << "Scoped output on " << cMapIterator->first << ": " << std::bitset<32>(cFCMDOutput) << RESET;
+
+                cMatch = 32;
+                cShift = 0;
+                for(uint8_t shift = 0; shift < 8; shift++)
+                {
+                    cWrappedByte = (pPattern >> shift) | (pPattern << (8 - shift));
+                    cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+                    LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
+                    LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
+                    int popcount = __builtin_popcountll(cWrappedData ^ cFCMDOutput);
+                    if(popcount < cMatch)
+                    {
+                        cMatch = popcount;
+                        cShift = shift;
+                    }
+                    LOG(DEBUG) << BOLDBLUE << "Line " << cMapIterator->first << " Shift " << +shift << " Match " << +popcount << RESET;
+                }
+                LOG(INFO) << BOLDBLUE << "Found for " << cMapIterator->first << " a minimal bit difference of " << +cMatch << " for a bit shift of " << +cShift << RESET;
+
+                fillSummaryTree(cMapIterator->first + "_match", cMatch);
+                fillSummaryTree(cMapIterator->first + "_shift", cShift);
+
+                if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "FCMD Test passed for " << cMapIterator->first << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDRED << "FCMD Test failed for " << cMapIterator->first << RESET;
+                    res = false;
+                }
+                cMapIterator++;
+            } while(cMapIterator != fFCMDLines.end());
+        }
     }
     return res;
 }
@@ -891,9 +923,9 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             LOG(INFO) << MAGENTA << "VDDRX read value = " << +clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDDRX") << RESET;
             // uint8_t cEQConfig = (clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") & ~(0x2 << 3)) | (pEQAttenuation << 3);
             // FIXME for now I am forcing to 0x00 EQCap bits of the register
@@ -961,9 +993,9 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
     // Run Bit Error Rate Test
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             // Configure BERT Pattern for comparision
             if(pPattern != 0x00000000) { clpGBTInterface->ConfigureBERTPattern(cOpticalGroup->flpGBT, pPattern); }
             else
@@ -995,85 +1027,96 @@ bool OTHybridTester::LpGBTCheckClocks()
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        // clk test
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x1);
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x0);
-        std::map<std::string, std::string> cClockMap;
-
-        if(fIsSEH) { cClockMap = f2SSEHClockMap; }
-        else
+        bool isElectricalFc7 = true;
+        for(auto cOpticalGroup: *cBoard)
         {
-            cClockMap = fPSROHClockMap;
+            if(cOpticalGroup->flpGBT != nullptr)
+            {
+                isElectricalFc7 = false;
+                break;
+            }
         }
-
-        auto cMapIterator = cClockMap.begin();
-        bool cClkTestDone = false;
-        bool cClkStat     = false;
-
-        LOG(INFO) << GREEN << "============================" << RESET;
-        LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
-
-        do
+        if(isElectricalFc7)
         {
-            cClkTestDone = (fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_test_done") == 1);
-            while(!cClkTestDone)
+            // clk test
+            fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x1);
+            fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x0);
+            std::map<std::string, std::string> cClockMap;
+
+            if(fIsSEH) { cClockMap = f2SSEHClockMap; }
+            else
             {
-                LOG(INFO) << "Waiting for clock test" << RESET;
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                cClockMap = fPSROHClockMap;
+            }
+
+            auto cMapIterator = cClockMap.begin();
+            bool cClkTestDone = false;
+            bool cClkStat     = false;
+
+            LOG(INFO) << GREEN << "============================" << RESET;
+            LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
+
+            do
+            {
                 cClkTestDone = (fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_test_done") == 1);
-            }
-            if(cClkTestDone)
-            {
-                std::string cRegName        = "";
-                uint16_t    cClkTestCounter = 0, cClkRefCounter = 0;
-                if(cMapIterator->first == "320_l_Clk_Test")
+                while(!cClkTestDone)
                 {
-                    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_test_counter");
-                    cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_ref_counter");
+                    LOG(INFO) << "Waiting for clock test" << RESET;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    cClkTestDone = (fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_test_done") == 1);
                 }
-                else if(cMapIterator->first == "320_r_Clk_Test")
+                if(cClkTestDone)
                 {
-                    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_test_counter");
-                    cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_ref_counter");
-                }
-                else if(cMapIterator->first == "640_l_Clk_Test")
-                {
-                    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_test_counter");
-                    cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_ref_counter");
-                }
-                else if(cMapIterator->first == "640_r_Clk_Test")
-                {
-                    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_test_counter");
-                    cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_ref_counter");
-                }
+                    std::string cRegName        = "";
+                    uint16_t    cClkTestCounter = 0, cClkRefCounter = 0;
+                    if(cMapIterator->first == "320_l_Clk_Test")
+                    {
+                        cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_test_counter");
+                        cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_ref_counter");
+                    }
+                    else if(cMapIterator->first == "320_r_Clk_Test")
+                    {
+                        cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_test_counter");
+                        cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_ref_counter");
+                    }
+                    else if(cMapIterator->first == "640_l_Clk_Test")
+                    {
+                        cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_test_counter");
+                        cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_ref_counter");
+                    }
+                    else if(cMapIterator->first == "640_r_Clk_Test")
+                    {
+                        cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_test_counter");
+                        cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_ref_counter");
+                    }
 
-                LOG(INFO) << "\t Test Counter = " << +cClkTestCounter << " --- Ref Counter = " << +cClkRefCounter << RESET;
-                // Ignored until firmware is fixed
-                cClkStat = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_stat");
-                if(cClkStat)
-                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED (firmware)" << RESET;
-                else
-                {
-                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDRED << " FAILED (firmware)" << RESET;
-                    // cStatus &= false;
-                }
-                // HOTFIX
-                cClkStat = (abs(cClkTestCounter - cClkRefCounter) < 5);
+                    LOG(INFO) << "\t Test Counter = " << +cClkTestCounter << " --- Ref Counter = " << +cClkRefCounter << RESET;
+                    // Ignored until firmware is fixed
+                    cClkStat = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_stat");
+                    if(cClkStat)
+                        LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED (firmware)" << RESET;
+                    else
+                    {
+                        LOG(INFO) << cMapIterator->first << " test ->" << BOLDRED << " FAILED (firmware)" << RESET;
+                        // cStatus &= false;
+                    }
+                    // HOTFIX
+                    cClkStat = (abs(cClkTestCounter - cClkRefCounter) < 5);
 
-                if(cClkStat)
-                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED (counter)" << RESET;
-                else
-                {
-                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDRED << " FAILED (counter)" << RESET;
-                    cStatus &= false;
+                    if(cClkStat)
+                        LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED (counter)" << RESET;
+                    else
+                    {
+                        LOG(INFO) << cMapIterator->first << " test ->" << BOLDRED << " FAILED (counter)" << RESET;
+                        cStatus &= false;
+                    }
+                    fillSummaryTree(cMapIterator->first, cClkStat);
                 }
-                fillSummaryTree(cMapIterator->first, cClkStat);
-            }
-            cMapIterator++;
-        } while(cMapIterator != cClockMap.end());
+                cMapIterator++;
+            } while(cMapIterator != cClockMap.end());
 
-        LOG(INFO) << GREEN << "============================" << RESET;
+            LOG(INFO) << GREEN << "============================" << RESET;
+        }
     }
     return cStatus;
 }
@@ -1157,9 +1200,9 @@ uint16_t OTHybridTester::calibrateADC()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             cGain         = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, true);
             cOffset       = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, true);
             cVersion      = static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getVersion();
@@ -1241,9 +1284,9 @@ void OTHybridTester::calibrateCurrentDAC()
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             // clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE", 132); // optimal tune
             cGain   = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, false);
             cOffset = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, false);

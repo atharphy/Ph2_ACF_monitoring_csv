@@ -44,12 +44,15 @@ void PSROHTester::MeasureInputIV(const std::string& cTestStep)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
-        for(auto& cMeas: fInputIVMap)
+        for(auto cOpticalGroup: *cBoard)
         {
-            float cVal;
-            fTC_PSROH->adc_get(cMeas.second, cVal);
-            LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal / 1000) << " [SI] during phase " << cTestStep << RESET;
+            if(cOpticalGroup->flpGBT == nullptr) continue;
+            for(auto& cMeas: fInputIVMap)
+            {
+                float cVal;
+                fTC_PSROH->adc_get(cMeas.second, cVal);
+                LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal / 1000) << " [SI] during phase " << cTestStep << RESET;
+            }
         }
     }
 }
