@@ -38,7 +38,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 - Software git branch / tag : `Dev` / `v4-12`
 - Firmware tag: `v4-06`
 
-### Important webpages:
+### Important webpages and information:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 - Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
