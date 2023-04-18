@@ -15,6 +15,35 @@
                 <Settings />
             </lpGBT>
         </OpticalGroup>
+        <OpticalGroup Id="5" FMCId="L12" reset="1">
+            <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+                <!-- <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt"> -->
+                <Settings />
+            </lpGBT>
+        </OpticalGroup>
+        <OpticalGroup Id="1" FMCId="L12" reset="1">
+            <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+                <!-- <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt"> -->
+                <Settings />
+            </lpGBT>
+        </OpticalGroup>
+        <OpticalGroup Id="2" FMCId="L12" reset="1">
+            <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+                <!-- <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt"> -->
+                <Settings />
+            </lpGBT>
+        </OpticalGroup>
+        <OpticalGroup Id="3" FMCId="L12" reset="1">
+            <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+                <!-- <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt"> -->
+                <Settings />
+            </lpGBT>
+        </OpticalGroup>
+
 
         
 

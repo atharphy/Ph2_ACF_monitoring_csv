@@ -111,6 +111,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("fcmd-test-userfile", "User file with fastcommands for testing", ArgvParser::OptionRequiresValue);
     cmd.defineOption("test-ber", "Run Bit Error Rate test");
     cmd.defineOptionAlternative("test-ber", "ber");
+    cmd.defineOption("ber-pattern", "Define pattern to be used for Bit Error Rate test", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOptionAlternative("ber-pattern", "bp");
     // FCMD check in BRAM
     cmd.defineOption("bramfcmd-check", "Access to written data in BRAM", ArgvParser::OptionRequiresValue);
     // Write reference patterns to BRAM
