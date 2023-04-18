@@ -421,13 +421,18 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
             if((std::find(mask.Enable.begin() + (0 + RD53B::NROWS * col), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col), true) ==
                 (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col))) &&
                (std::find(mask.Enable.begin() + (0 + RD53B::NROWS * (col + 1)), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)), true) ==
-                (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)))))
+                (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)))) &&
+               (std::find(mask.InjEn.begin() + (0 + RD53B::NROWS * col), mask.InjEn.begin() + (RD53B::NROWS + RD53B::NROWS * col), true) ==
+                (mask.InjEn.begin() + (RD53B::NROWS + RD53B::NROWS * col))) &&
+               (std::find(mask.InjEn.begin() + (0 + RD53B::NROWS * (col + 1)), mask.InjEn.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)), true) ==
+                (mask.InjEn.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)))))
                 continue;
 
             RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
             for(auto row = 0u; row < RD53B::NROWS; row++)
-                if((mask.Enable[row + RD53B::NROWS * col] == true) || (mask.Enable[row + RD53B::NROWS * (col + 1)] == true))
+                if((mask.Enable[row + RD53B::NROWS * col] == true) || (mask.Enable[row + RD53B::NROWS * (col + 1)] == true) || (mask.InjEn[row + RD53B::NROWS * col] == true) ||
+                   (mask.InjEn[row + RD53B::NROWS * (col + 1)] == true))
                 {
                     auto data = RD53BInterface::GetPixelConfig(mask, row, col);
 

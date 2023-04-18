@@ -105,12 +105,12 @@ def makeGroup(groupNumber, patternType):
             if patternType == 'coupled':
                 if col % 2 == 0 and col + 1 < NCOLS:
                     newMaskInj.append([row, col + 1])
-                elif col % 2 == 1 and col - 1 > 0:
+                elif col % 2 == 1 and col - 1 >= 0:
                     newMaskInj.append([row, col - 1])
             elif patternType == 'decoupled':
-                if col % 2 == 0 and col + 1 < NCOLS and row - 1 > 0:
+                if col % 2 == 0 and col + 1 < NCOLS and row - 1 >= 0:
                     newMaskInj.append([row - 1, col + 1])
-                elif col % 2 == 1 and col - 1 > 0 and row + 1 < NROWS:
+                elif col % 2 == 1 and col - 1 >= 0 and row + 1 < NROWS:
                     newMaskInj.append([row + 1, col - 1])
             else:
                 print('Option not recognized:', patternType)
