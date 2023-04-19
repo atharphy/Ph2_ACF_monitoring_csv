@@ -194,7 +194,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif(NOT DEFINED ENV{EUDAQDIR})
 
         include_directories($ENV{EUDAQDIR}/include)
-        set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib eudaq_core)
+        set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib -Wl,-rpath=$ENV{EUDAQDIR}/lib eudaq_core)
         message(STATUS "    EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}{Reset}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
