@@ -66,13 +66,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif()
     endif()
 
-    find_package(Protobuf REQUIRED)
 
     # Boost also needs to be linked
     include_directories(${Boost_INCLUDE_DIRS})
     link_directories(${Boost_LIBRARY_DIRS})
 
-    set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Protobuf_LIBRARIES})
+    set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
     # Find source files
     file(GLOB SOURCES *.cc)
@@ -104,10 +103,8 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
-    include_directories(${Protobuf_INCLUDE_DIRS})
 
     #library dirs
-    link_directories(${Protobuf_LIBRARIES})
 
     cet_make_exec(RunController
         SOURCE

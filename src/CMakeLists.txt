@@ -107,7 +107,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Utils Ph2_Parser Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM NetworkUtils MessageUtils ${Protobuf_LIBRARIES})
+    set(LIBS ${LIBS} Ph2_Description Ph2_Utils Ph2_Parser Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM NetworkUtils MessageUtils) 
     
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
@@ -153,6 +153,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
                 target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
             endif()
         endif()
+
+        if ("${name}" STREQUAL "testShep")
+            if(${PH2_POWERSUPPLY_FOUND})
+               target_link_libraries(${name} ${LIBS} protobuf::libprotobuf)
+            endif()
+        endif()
+
     endforeach(sourcefile ${BINARIES})
 
     message("--     ${BoldCyan}#### End ####${Reset}")
