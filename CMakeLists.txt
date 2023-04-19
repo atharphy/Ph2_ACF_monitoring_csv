@@ -186,6 +186,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
                     GIT_TAG $ENV{EUDAQ_REF}
                     PREFIX ${EXTERNAL_INSTALL_LOCATION}
+                    CMAKE_ARGS -DUSER_EUDET_BUILD=OFF
+                               -DUSER_EXAMPLE_BUILD=OFF
+                               -DEUDAQ_BUILD_EXECUTABLE=OFF
                 )
             set(ENV{EUDAQDIR} ${EXTERNAL_INSTALL_LOCATION}/src/ext_eudaq/ )
         endif(NOT DEFINED ENV{EUDAQDIR})
