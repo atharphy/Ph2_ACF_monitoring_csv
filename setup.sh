@@ -25,9 +25,6 @@ export PH2ACF_BASE_DIR=$(pwd)
 # CACTUS #
 ##########
 export CACTUSROOT=/opt/cactus
-export CACTUSBIN=$CACTUSROOT/bin
-export CACTUSLIB=$CACTUSROOT/lib
-export CACTUSINCLUDE=$CACTUSROOT/include
 
 ##########
 # PYTHON #
