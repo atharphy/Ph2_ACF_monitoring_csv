@@ -31,22 +31,22 @@ if(uhal_include)
         #message(STATUS "Could NOT find AMC13 compoenent")
     endif(amc13_include)
 else(uhal_include)
-file(GLOB_RECURSE extern_file ${PROJECT_SOURCE_DIR}/extern/*uhal.hpp)
-if (extern_file)
-    # strip the file and 'include' path away:
-    get_filename_component(extern_lib_path "${extern_file}" PATH)
-    get_filename_component(extern_lib_path "${extern_lib_path}" PATH)
-    get_filename_component(extern_lib_path "${extern_lib_path}" PATH)
-    #MESSAGE(STATUS "Found CACTUS package in 'extern' subfolder: ${extern_lib_path}")
-    set(CACTUS_ROOT ${extern_lib_path})
-    set(CACTUS_FOUND TRUE)
-endif(extern_file)
+    file(GLOB_RECURSE extern_file ${PROJECT_SOURCE_DIR}/extern/*uhal.hpp)
+    if (extern_file)
+        # strip the file and 'include' path away:
+        get_filename_component(extern_lib_path "${extern_file}" PATH)
+        get_filename_component(extern_lib_path "${extern_lib_path}" PATH)
+        get_filename_component(extern_lib_path "${extern_lib_path}" PATH)
+        #MESSAGE(STATUS "Found CACTUS package in 'extern' subfolder: ${extern_lib_path}")
+        set(CACTUS_ROOT ${extern_lib_path})
+        set(CACTUS_FOUND TRUE)
+    endif(extern_file)
 endif(uhal_include)
 
 
 # could not find the package at the usual locations -- try to copy from AFS if accessible
 if (NOT CACTUS_ROOT)
-  MESSAGE(WARNING "Could not find CACTUS package required by Ph2_ACF. Please refer to the documentation on how to obtain the software.")
+    MESSAGE(ERROR "Could not find CACTUS package required by Ph2_ACF. Please refer to the documentation on how to obtain the software.")
   set(CACTUS_FOUND FALSE)
 endif()
 
