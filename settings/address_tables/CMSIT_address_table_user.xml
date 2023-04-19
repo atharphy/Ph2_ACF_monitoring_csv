@@ -328,9 +328,9 @@
       <node id="gnd_sense"             mask="0x00FFF000"      permission="r"       description="" />
     </node>
 
+    <node id="prbs_frame_cntr_high" address="0x00000018"      permission="r"> </node>
     <node id="prbs_frame_cntr_low"  address="0x00000019"      permission="r"> </node>
-    <node id="prbs_frame_cntr_high" address="0x0000001A"      permission="r"> </node>
-    <node id="prbs_ber_cntr"        address="0x0000001B"      permission="r"> </node>
+    <node id="prbs_ber_cntr"        address="0x0000001A"      permission="r"> </node>
 
     <!-- Optical Link -->
     <node id="lpgbt_fpga"           address="0x00000017"      permission="r"       description="Status Signals from the lpgbt-fpga core">
