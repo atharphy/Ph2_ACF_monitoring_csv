@@ -16,7 +16,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System NetworkUtils MessageUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System NetworkUtils MessageUtils CACTUS::uhal)
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -76,6 +76,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Find source files
     file(GLOB SOURCES *.cc)
     add_library(Ph2_miniDAQ STATIC ${SOURCES})
+    target_link_libraries(Ph2_miniDAQ CACTUS::headers)
 
     ###############
     # EXECUTABLES #

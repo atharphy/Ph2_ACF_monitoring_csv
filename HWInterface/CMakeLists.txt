@@ -34,7 +34,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Add the library
     add_library(Ph2_Interface STATIC ${SOURCES} ${HEADERS})
 
-    set(LIBS ${LIBS} Ph2_Description NetworkUtils cactus_uhal_uhal cactus_uhal_log boost_regex)
+    set(LIBS ${LIBS} Ph2_Description NetworkUtils CACTUS::uhal CACTUS::uhal_log boost_regex)
 
     # Check for TestCard USBDriver
     TARGET_LINK_LIBRARIES(Ph2_Interface ${LIBS})

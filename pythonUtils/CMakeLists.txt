@@ -37,7 +37,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System MessageUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System )
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -98,7 +98,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     add_subdirectory($ENV{PYBIND11} subproject/pybind11)
 
     pybind11_add_module(Ph2_ACF_PythonInterface PythonMiddlewareMessageHandler.cc)
-    target_link_libraries(Ph2_ACF_PythonInterface PRIVATE ${LIBS} Ph2_Tools Ph2_Parser Ph2_System Ph2_miniDAQ MessageUtils)
+    target_link_libraries(Ph2_ACF_PythonInterface PRIVATE ${LIBS} Ph2_Tools Ph2_Parser Ph2_System Ph2_miniDAQ MessageUtils CACTUS::uhal)
 
     ###############
     # EXECUTABLES #

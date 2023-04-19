@@ -33,7 +33,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     # Add the library
     add_library(Ph2_System STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_MonitorUtils NetworkUtils Ph2_Parser)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_MonitorUtils NetworkUtils Ph2_Parser CACTUS::headers)
     if(NoDataShipping)
         set(LIBS ${LIBS} Ph2_MonitorDQM)
     endif()
