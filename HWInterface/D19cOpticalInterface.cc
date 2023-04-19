@@ -56,7 +56,7 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
             size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
             if(cNWords != cRegisterBlock.size())
             {
-                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read -- Corrupted CPB reply" << RESET;
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read -- Corrupted CPB reply: cNWords = " <<  cNWords << " - cDataBlock.size() = " << cRegisterBlock.size() << RESET;
                 throw std::runtime_error("D19cOpticalInterface::Read -- Corrupted CPB reply");
             }
             // Decode reply frame and extract data
@@ -120,7 +120,7 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
             size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
             if(cNWords != cRegisterBlock.size())
             {
-                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Corrupted CPB reply" << RESET;
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Corrupted CPB reply: cNWords = " <<  cNWords << " - cDataBlock.size() = " << cRegisterBlock.size() << RESET;
                 throw std::runtime_error("D19cOpticalInterface::Write -- Corrupted CPB reply");
             }
             // Decode reply frame and extract data
@@ -218,7 +218,7 @@ bool D19cOpticalInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMas
             size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
             if(cNWords != cDataBlock.size())
             {
-                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::WriteI2C -- Corrupted CPB reply" << RESET;
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::WriteI2C -- Corrupted CPB reply: cNWords = " <<  cNWords << " - cDataBlock.size() = " << cDataBlock.size() << RESET;
                 throw std::runtime_error("D19cOpticalInterface::WriteI2C -- Corrupted CPB reply");
             }
             // Decode reply frame and extract data
@@ -270,7 +270,7 @@ std::vector<uint16_t> D19cOpticalInterface::ReadI2C(Ph2_HwDescription::Chip* pCh
             size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
             if(cNWords != cDataBlock.size())
             {
-                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::ReadI2C -- Corrupted CPB reply" << RESET;
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::ReadI2C -- Corrupted CPB reply: cNWords = " <<  cNWords << " - cDataBlock.size() = " << cDataBlock.size() << RESET;
                 throw std::runtime_error("D19cOpticalInterface::ReadI2C -- Corrupted CPB reply");
             }
             // Decode reply frame and extract data
