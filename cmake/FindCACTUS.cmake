@@ -1,5 +1,13 @@
 # - Try to find cactus
 
+cmake_policy(PUSH)
+
+# Avoid false warning about INTERFACE IMPORTS (bug in some cmake versions
+IF (POLICY CMP1111)
+cmake_policy(SET CMP1111 OLD)
+ENDIF()
+
+
 #macro(find_cactus_in_extern arg)
 # find_path(CACTUS_ROOT uhal.hpp
 #    HINTS ${PROJECT_SOURCE_DIR}/extern/cactus ${arg})
@@ -9,7 +17,7 @@
 
 #set(CACTUS_ROOT ${PROJECT_SOURCE_DIR}/extern/cactus )
 
-file(GLOB_RECURSE uhal_include $ENV{CACTUSROOT}/*uhal.hpp)
+file(GLOB_RECURSE uhal_include $ENV{CACTUSROOT}/include/*uhal.hpp)
 if(uhal_include)
     set(CACTUS_ROOT "$ENV{CACTUSROOT}")
     set(CACTUS_FOUND TRUE)
@@ -36,12 +44,14 @@ endif(extern_file)
 endif(uhal_include)
 
 
-
 # could not find the package at the usual locations -- try to copy from AFS if accessible
 if (NOT CACTUS_ROOT)
   MESSAGE(WARNING "Could not find CACTUS package required by Ph2_ACF. Please refer to the documentation on how to obtain the software.")
   set(CACTUS_FOUND FALSE)
 endif()
+
+set(CACTUS_LIBDIR "${CACTUS_ROOT}/lib")
+set(CACTUS_INCLUDEDIR "${CACTUS_ROOT}/include")
 
 #set(EXTERN_ERLANG_PREFIX ${CACTUS_ROOT}/lib/erlang )
 #set(EXTERN_ERLANG_BIN_PREFIX ${EXTERN_ERLANG_PREFIX}/bin )
@@ -53,6 +63,8 @@ endif()
 #set(EXTERN_PUGIXML_PREFIX ${CACTUS_ROOT}  )
 #set(EXTERN_PUGIXML_INCLUDE_PREFIX ${EXTERN_PUGIXML_PREFIX}/include/pugixml )
 #set(EXTERN_PUGIXML_LIB_PREFIX ${EXTERN_PUGIXML_PREFIX}/lib )
+
+#FIXME: are these variables needed?
 
 set(UHAL_GRAMMARS_PREFIX ${CACTUS_ROOT} )
 set(UHAL_GRAMMARS_INCLUDE_PREFIX $ENV{CACTUSGRAMMARINCLUDE} )
@@ -66,6 +78,40 @@ set(UHAL_UHAL_PREFIX ${CACTUS_ROOT} )
 set(UHAL_UHAL_INCLUDE_PREFIX $ENV{CACTUSINCLUDE} )
 set(UHAL_UHAL_LIB_PREFIX $ENV{CACTUSLIB} )
 
+######################
+# Add targets for uhal
+######################
+if (CACTUS_FOUND)
+    add_library(CACTUS::headers INTERFACE IMPORTED)
+    set_target_properties(CACTUS::headers PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${CACTUS_INCLUDEDIR}"
+        INTERFACE_LINK_LIBRARIES "Boost::boost"
+    )
+
+    macro ( add_lib_target uhal_name uhal_suffix )
+        set(CACTUS_LIBS ${CACTUS_LIBS} CACTUS_UHAL_${uhal_name})
+        find_library (CACTUS_UHAL_${uhal_name}
+            NAMES "cactus_uhal_${uhal_suffix}"
+            PATHS "${CACTUS_LIBDIR}"
+             )
+        if ( CACTUS_UHAL_${uhal_name} )
+            mark_as_advanced(CACTUS_UHAL_${uhal_name})
+            add_library(CACTUS::${uhal_name} SHARED IMPORTED)
+            set_target_properties(CACTUS::${uhal_name} PROPERTIES
+                IMPORTED_LOCATION "${CACTUS_UHAL_${uhal_name}}"
+                INTERFACE_LINK_DIRECTORIES "${CACTUS_LIBDIR}"
+                INTERFACE_LINK_LIBRARIES "CACTUS::headers"
+            )
+        else()
+            message(ERROR "Library ${uhal_name} not found")
+        endif()
+    endmacro()
+
+    add_lib_target(uhal uhal)
+    add_lib_target(uhal_log log)
+    add_lib_target(uhal_grammars grammars)
+endif()
+
 if(${CACTUS_AMC13_FOUND})
     set(UHAL_AMC13_PREFIX ${CACTUS_ROOT})
     set(UHAL_AMC13_INCLUDE_PREFIX $ENV{CACTUSINCLUDE}/amc13 )
@@ -75,7 +121,10 @@ endif(${CACTUS_AMC13_FOUND})
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set ZESTSC1_FOUND to TRUE
 # if all listed variables are TRUE
-find_package_handle_standard_args(CACTUS  DEFAULT_MSG CACTUS_ROOT)
+find_package_handle_standard_args(CACTUS  DEFAULT_MSG CACTUS_ROOT ${CACTUS_LIBS})
 find_package_handle_standard_args(AMC13  DEFAULT_MSG CACTUS_AMC13_FOUND)
 
 mark_as_advanced(CACTUS_ROOT UHAL_AMC13_PREFIX)
+unset(CACTUS_LIBS)
+
+cmake_policy(POP)
