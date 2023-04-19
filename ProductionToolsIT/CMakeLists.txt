@@ -6,9 +6,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS " ")
 
     # Includes
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Boost also needs to be linked
@@ -17,9 +14,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
 
     # Library dirs
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${UHAL_LOG_LIB_PREFIX})
-    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
+    # none
 
     # Find source files
     file(GLOB HEADERS *.h)

@@ -7,14 +7,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     # Includes
     include_directories(${PROJECT_SOURCE_DIR})
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
 
     # Library directories
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${UHAL_LOG_LIB_PREFIX})
-    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
+    # None
 
     # Boost also needs to be linked
     #    include_directories(${Boost_INCLUDE_DIRS})

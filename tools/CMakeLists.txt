@@ -6,16 +6,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS " ")
 
     # Includes
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    message("GRAMARS      ${grammars}")
     include_directories(${grammars})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
 
     # Library dirs
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${UHAL_LOG_LIB_PREFIX})
-    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
+    # none
 
     # Find source files
     file(GLOB HEADERS *.h)

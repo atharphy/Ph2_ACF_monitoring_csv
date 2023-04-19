@@ -21,9 +21,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     endif(NOT DEFINED ENV{PYBIND11})
 
     # Includes
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR}/MessageUtils/cpp)
     include_directories(${PROJECT_SOURCE_DIR}/miniDAQ)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
@@ -33,7 +30,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     # Library dirs
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
