@@ -242,6 +242,49 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ##########
     RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
 
+    // #################################
+    // # TAP0 optimization for modules # // @TMP@ : temporary for CROC v1
+    // #################################
+    auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
+    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", fwInterface->ReadReg("user.ctrl_regs.Aurora_block.active_lane"));
+    if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
+    {
+        LOG(INFO) << GREEN << "Optimizing TAP0 setting for chip ID " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW << +pRD53->getChipLane() << RESET;
+
+        const auto            maxTAP0value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_CML_BIAS_0"));
+        const int             nSteps       = 100; // @CONST@
+        const int             nFrames2Read = 100; // @CONST@
+        const int             step         = floor(maxTAP0value / nSteps);
+        std::vector<uint16_t> vecFrameCounter;
+        std::vector<uint16_t> vecTAP0Values(nSteps);
+        uint16_t              value = 0;
+        std::generate(vecTAP0Values.begin(), vecTAP0Values.end(), [&value, &step]() { return value += step; });
+        for(auto& TAP0: vecTAP0Values)
+        {
+            RD53Interface::WriteChipReg(pChip, "DAC_CML_BIAS_0", TAP0, false);
+
+            fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 1);
+            fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 0);
+            fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 1);
+            fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 0);
+
+            while(fwInterface->ReadReg("user.stat_regs.aurora_frame_cntr") < nFrames2Read) std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+
+            vecFrameCounter.push_back(fwInterface->ReadReg("user.stat_regs.aurora_service_blk_cntr"));
+        }
+
+        // ########################
+        // # Find best TAP0 value #
+        // ########################
+        auto it       = std::max_element(vecFrameCounter.begin(), vecFrameCounter.end());
+        auto maxRange = std::equal_range(it, vecFrameCounter.end(), *it);
+        it += (maxRange.second - maxRange.first) / 2;
+        auto bestTAP0 = vecTAP0Values[it - vecFrameCounter.begin()];
+
+        RD53Interface::WriteChipReg(pChip, "DAC_CML_BIAS_0", bestTAP0);
+        LOG(INFO) << BOLDBLUE << "\t--> Best TAP0 setting is " << BOLDYELLOW << +bestTAP0 << RESET;
+    }
+
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
@@ -378,13 +421,18 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
             if((std::find(mask.Enable.begin() + (0 + RD53B::NROWS * col), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col), true) ==
                 (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col))) &&
                (std::find(mask.Enable.begin() + (0 + RD53B::NROWS * (col + 1)), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)), true) ==
-                (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)))))
+                (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)))) &&
+               (std::find(mask.InjEn.begin() + (0 + RD53B::NROWS * col), mask.InjEn.begin() + (RD53B::NROWS + RD53B::NROWS * col), true) ==
+                (mask.InjEn.begin() + (RD53B::NROWS + RD53B::NROWS * col))) &&
+               (std::find(mask.InjEn.begin() + (0 + RD53B::NROWS * (col + 1)), mask.InjEn.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)), true) ==
+                (mask.InjEn.begin() + (RD53B::NROWS + RD53B::NROWS * (col + 1)))))
                 continue;
 
             RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
             for(auto row = 0u; row < RD53B::NROWS; row++)
-                if((mask.Enable[row + RD53B::NROWS * col] == true) || (mask.Enable[row + RD53B::NROWS * (col + 1)] == true))
+                if((mask.Enable[row + RD53B::NROWS * col] == true) || (mask.Enable[row + RD53B::NROWS * (col + 1)] == true) || (mask.InjEn[row + RD53B::NROWS * col] == true) ||
+                   (mask.InjEn[row + RD53B::NROWS * (col + 1)] == true))
                 {
                     auto data = RD53BInterface::GetPixelConfig(mask, row, col);
 
@@ -520,6 +568,7 @@ void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
 
 uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
 {
+    RD53Interface::WriteChipReg(pChip, "EfusesConfig", 0x0F0F, false);
     uint16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
     uint16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
     return low | (high << pChip->getNumberOfBits("EfusesReadData0"));

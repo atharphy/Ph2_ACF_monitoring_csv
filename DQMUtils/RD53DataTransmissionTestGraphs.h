@@ -12,7 +12,6 @@
 
 #include "DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
 
 #include <TGraphAsymmErrors.h>

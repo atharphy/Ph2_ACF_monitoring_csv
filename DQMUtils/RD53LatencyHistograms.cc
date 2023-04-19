@@ -34,21 +34,17 @@ void LatencyHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 
 bool LatencyHistograms::fill(std::string& inputStream)
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerSerialization theOccupancySerialization("LatencyOccupancy");
     ContainerSerialization theLatencySerialization("LatencyLatency");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Latency Occupancy!!!!!\n";
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<LatencySize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<float>>(fDetectorContainer);
         LatencyHistograms::fillOccupancy(fDetectorData);
         return true;
     }
     if(theLatencySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Latency Latency!!!!!\n";
         DetectorDataContainer fDetectorData = theLatencySerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         LatencyHistograms::fillLatency(fDetectorData);
         return true;
@@ -58,14 +54,12 @@ bool LatencyHistograms::fill(std::string& inputStream)
 
 void LatencyHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer)
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -75,7 +69,7 @@ void LatencyHistograms::fillOccupancy(const DetectorDataContainer& OccupancyCont
                                                 .fTheHistogram;
 
                     for(size_t i = startValue; i <= stopValue; i += nTRIGxEvent)
-                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<LatencySize>>().data[(i - startValue) / nTRIGxEvent]);
+                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<std::vector<float>>().at((i - startValue) / nTRIGxEvent));
                 }
 }
 
@@ -86,7 +80,7 @@ void LatencyHistograms::fillLatency(const DetectorDataContainer& LatencyContaine
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* LatencyHist = Latency.getObject(cBoard->getId())
                                             ->getObject(cOpticalGroup->getId())

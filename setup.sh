@@ -54,9 +54,11 @@ export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
 export AMC13DIR=$CACTUSINCLUDE/amc13
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
-# These are git references for the dependencies that are included via CMake ExternalProjects
+##############################################################################################
+# These are git references for the dependencies that are included via CMake ExternalProjects #
+##############################################################################################
 export PH2_TCUSB_REF=889b673e9d9582dab64cfeb60990800970ee47af
-export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
+export EUDAQ_REF=0f4aeb7e542a77a8f561a20b42c6d5081334ac26
 export PYBIND11_REF=v2.9.2
 
 #######
@@ -79,7 +81,6 @@ export USBINSTLIB=$USBINSTDIR/lib
 #########
 # EUDAQ #
 #########
-export EUDAQ_DIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
 export EUDAQLIB=$EUDAQDIR/lib
 
 ############
@@ -112,18 +113,24 @@ export EuDaqFlag='-D__EUDAQ__'
 # Compilation flags #
 #####################
 
-# C++ standard
+################
+# C++ standard #
+################
 if [[ $majorRelease == "9" ]]; then
   export STDCXX="17"
 else
   export STDCXX="14"
 fi
 
-# Stand-alone application, without data streaming
+###################################################
+# Stand-alone application, without data streaming #
+###################################################
 export CompileForHerd=false
 export CompileForShep=false
 
-# Stand-alone application, with data streaming
+################################################
+# Stand-alone application, with data streaming #
+################################################
 # export CompileForHerd=true
 # export CompileForShep=true
 
@@ -148,6 +155,7 @@ export CompileWithEUDAQ=false
 # Compile with TC_USB library #
 ###############################
 export CompileWithTCUSB=false
+
 ########################
 # Clang-format command #
 ########################

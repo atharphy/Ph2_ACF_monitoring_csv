@@ -103,6 +103,9 @@ int main(int argc, char** argv)
     cmd.defineOption("file", "Hardware description file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("file", "f");
 
+    cmd.defineOption("settingsFile", "Settings override file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("settingsFile", "s");
+
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj"
                      "injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning gendacdac]",
@@ -150,13 +153,14 @@ int main(int argc, char** argv)
     // ####################
     // # Retrieve options #
     // ####################
-    std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
-    std::string whichCalib = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
-    std::string binaryFile = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
-    bool        program    = cmd.foundOption("prog") == true ? true : false;
-    bool        reset      = cmd.foundOption("reset") == true ? true : false;
-    bool        dumpRegs   = cmd.foundOption("dump") == true ? true : false;
-    int         runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : DELAYAFTERPHYSICS;
+    std::string configFile   = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
+    std::string settingsFile = cmd.foundOption("settingsFile") == true ? cmd.optionValue("settingsFile") : configFile;
+    std::string whichCalib   = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
+    std::string binaryFile   = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
+    bool        program      = cmd.foundOption("prog") == true ? true : false;
+    bool        reset        = cmd.foundOption("reset") == true ? true : false;
+    bool        dumpRegs     = cmd.foundOption("dump") == true ? true : false;
+    int         runtime      = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : DELAYAFTERPHYSICS;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
@@ -182,8 +186,8 @@ int main(int argc, char** argv)
     if((reset == true) || (dumpRegs == true) || (binaryFile != ""))
     {
         std::stringstream outp;
-        mySysCntr.InitializeSettings(configFile, outp);
         mySysCntr.InitializeHw(configFile, outp);
+        mySysCntr.InitializeSettings(settingsFile, outp);
 
         // ##################
         // # Reset hardware #
@@ -219,7 +223,8 @@ int main(int argc, char** argv)
         // #######################
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
         ConfigureInfo theConfigureInfo;
-        theConfigureInfo.setConfigurationFile(configFile);
+        theConfigureInfo.setConfigurationFiles(configFile, settingsFile);
+        theConfigureInfo.setCalibrationName(whichCalib);
         mySysCntr.Configure(theConfigureInfo);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
@@ -295,30 +300,26 @@ int main(int argc, char** argv)
             {
                 if(pa.fDetectorContainer->size() != 1)
                 {
-                    std::string queryFunctionName = "boardSubset";
-                    auto        boardSubset       = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addBoardQueryFunction(boardSubset, queryFunctionName);
+                    auto boardSubset = [evenORodd](const BoardContainer* theBoard) { return (theBoard->getId() % 2 == evenORodd); };
+                    pa.fDetectorContainer->addBoardQueryFunction(boardSubset, "boardSubset");
                     doTwice = true;
                 }
                 else if(pa.fDetectorContainer->at(0)->size() != 1)
                 {
-                    std::string queryFunctionName = "opticalGroupSubset";
-                    auto        optoGroupSubset   = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addOpticalGroupQueryFunction(optoGroupSubset, queryFunctionName);
+                    auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
+                    pa.fDetectorContainer->addOpticalGroupQueryFunction(optoGroupSubset, "opticalGroupSubset");
                     doTwice = true;
                 }
                 else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
                 {
-                    std::string queryFunctionName = "moduleSubset";
-                    auto        hybridSubset      = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addHybridQueryFunction(hybridSubset, queryFunctionName);
+                    auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
+                    pa.fDetectorContainer->addHybridQueryFunction(hybridSubset, "moduleSubset");
                     doTwice = true;
                 }
                 else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
                 {
-                    std::string queryFunctionName = "readoutChipSubset";
-                    auto        chipSubset        = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryFunctionName);
+                    auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
+                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset, "readoutChipSubset");
                     doTwice = true;
                 }
             }
@@ -603,9 +604,13 @@ int main(int argc, char** argv)
     // ###########################
     // # Copy configuration file #
     // ###########################
-    const auto configFileBasename = configFile.substr(configFile.find_last_of("/\\") + 1);
-    const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + configFileBasename;
-    system(("cp " + configFile + " " + outputConfigFile).c_str());
+    auto copyConfigFile = [&](const std::string& fileName) {
+        const auto fileBasename = fileName.substr(fileName.find_last_of("/\\") + 1);
+        const auto outputFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + fileBasename;
+        system(("cp " + fileName + " " + outputFile).c_str());
+    };
+    copyConfigFile(configFile);
+    if(configFile != settingsFile) copyConfigFile(settingsFile);
 
     // #####################
     // # Update run number #

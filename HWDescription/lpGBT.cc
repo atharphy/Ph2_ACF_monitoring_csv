@@ -89,13 +89,9 @@ void lpGBT::loadfRegMap(const std::string& fileName)
 }
 
 std::stringstream lpGBT::getRegMapStream()
-// #################################################################
-// # If fName2Add != STREAMON --> then data are also saved on file #
-// #################################################################
 {
     const unsigned int Nspaces = 26; // @CONST@
-
-    std::stringstream theStream;
+    std::stringstream  theStream;
 
     std::set<ChipRegPair, RegItemComparer> fSetRegItem;
     for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
