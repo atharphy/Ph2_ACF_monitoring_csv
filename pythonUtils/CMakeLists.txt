@@ -90,8 +90,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     #    find_package(Protobuf REQUIRED)
 
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    # include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
 
     set(LIBS ${LIBS} boost_serialization ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}) # ${Protobuf_LIBRARIES})
 
