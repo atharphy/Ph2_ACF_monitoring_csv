@@ -16,6 +16,7 @@ void SEHTester::Initialise()
         for(auto cOpticalGroup: *cBoard)
         {
             if(cOpticalGroup->flpGBT == nullptr) continue;
+            if(!cOpticalGroup->fIsLocked) continue;
             clpGBTInterface->Configure2SSEH(cOpticalGroup->flpGBT);
             //
 

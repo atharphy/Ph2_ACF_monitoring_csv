@@ -62,14 +62,38 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
     bool   cAllLocked   = false;
     size_t cMaxAttempts = fConfiguration.fReTry ? fConfiguration.fMaxAttempts : 1;
     size_t cAttempts    = 0;
+#if defined(__TCUSB__)
+    uint8_t cLockedLink = 0;
+#endif
     do
     {
         cAllLocked = true;
         LOG(INFO) << BOLDMAGENTA << "D19cLinkInterface::GeneralLinkReset Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << " [Attempt#" << cAttempts++ << "]" << RESET;
         ResetLinks();
-        for(auto cOpticalReadout: *pBoard) { cAllLocked = cAllLocked && GetLinkStatus(cOpticalReadout->getId()); }
+        for(auto cOpticalReadout: *pBoard)
+        {
+            bool cLinkStatus = GetLinkStatus(cOpticalReadout->getId());
+            cAllLocked       = cAllLocked && cLinkStatus;
+#if defined(__TCUSB__)
+            if(cLinkStatus)
+            {
+                cAllLocked  = true;
+                cLockedLink = cOpticalReadout->getId();
+                break;
+            }
+#endif
+        }
     } while(cAttempts < cMaxAttempts && !cAllLocked);
-
+#if defined(__TCUSB__)
+    for(auto cOpticalReadout: *pBoard)
+    {
+        if(cLockedLink == cOpticalReadout->getId())
+        {
+            //LOG(INFO) << BOLDRED << "D19cLinkInterface::GeneralLinkReset unset lpgbt link" << +cOpticalReadout->getId() << RESET;
+            cOpticalReadout->fIsLocked = true;
+        }
+    }
+#endif
     if(!cAllLocked)
     {
         LOG(ERROR) << BOLDRED << "Failed to lock all links after a general reset" << RESET;

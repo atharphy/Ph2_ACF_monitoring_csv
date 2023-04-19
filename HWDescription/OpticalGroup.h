@@ -56,7 +56,7 @@ class OpticalGroup
     void addlpGBT(lpGBT* plpGBT) { flpGBT = plpGBT; }
 
     lpGBT* flpGBT = nullptr;
-
+    bool fIsLocked=false;
   protected:
 };
 } // namespace Ph2_HwDescription

@@ -566,7 +566,9 @@ void SystemController::InitializeOT(BeBoard* pBoard)
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
-
+#if defined(__TCUSB__)
+        if(!cOpticalGroup->fIsLocked) continue;
+#endif 
         LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << int(pBoard->getId()) << RESET;
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         if(cOpticalGroup->getReset() == 0)
@@ -1017,7 +1019,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                 for(auto cOpticalGroup: *cBoard)
                 {
                     if(cOpticalGroup->flpGBT == nullptr) continue;
-
+#if defined(__TCUSB__)
+                    if(!cOpticalGroup->fIsLocked) continue;
+#endif
                     LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << +cBoard->getId() << RESET;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     if(cOpticalGroup->getReset() == 0)
