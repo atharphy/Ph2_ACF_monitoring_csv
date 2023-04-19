@@ -103,11 +103,21 @@ class Container
 
     T*& getFirstObject()
     {
+        if(this->size() == 0)
+        {
+            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: no enabled element present for id " + std::to_string(getId());
+            throw Exception(std::move(errorMessage));   
+        }
         return idObjectMap_.begin()->second;
     }
 
     const T* const& getFirstObject() const
     {
+        if(this->size() == 0)
+        {
+            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: no enabled element present for id " + std::to_string(getId());
+            throw Exception(std::move(errorMessage));   
+        }
         return idObjectMap_.begin()->second;
     }
 

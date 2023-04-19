@@ -36,7 +36,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
     } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
-    if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state" + fPUSMStatusMap[cChipVersion][cPUSMState])); }
+    if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state " + fPUSMStatusMap[cChipVersion][cPUSMState])); }
     // Configuring chip
     bool cReconfigure = false;
     if(cReconfigure)

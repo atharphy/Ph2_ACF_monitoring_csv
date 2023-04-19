@@ -638,8 +638,8 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             if(cCic == NULL) continue;
 
             LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
-            fCicInterface->ConfigureChip(cCic);
-            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
+            if(!fCicInterface->ConfigureChip(cCic)) continue;
+            if(!fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false)) continue; // make sure all FEs are disabled by default
         }
         bool cSuccess = CicStartUp(cOpticalGroup, true);
         if(!cSuccess)

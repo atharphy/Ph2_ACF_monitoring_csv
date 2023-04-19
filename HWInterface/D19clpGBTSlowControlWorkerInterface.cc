@@ -5,6 +5,7 @@ namespace Ph2_HwInterface
 D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
     : D19cCommandProcessorInterface(pId, pUri, pAddressTable)
 {
+    PrintState();
     LOG(INFO) << BOLDYELLOW << "D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface Constructor" << RESET;
 }
 
@@ -26,14 +27,14 @@ void D19clpGBTSlowControlWorkerInterface::Reset()
     // reset should be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
 
-    // WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 1);
-    // WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 1);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0);
 
-    // WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 1);
-    // WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 0);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 1);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 0);
 
-    // WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 1);
-    // WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 0);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 1);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 0);
 
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
@@ -42,6 +43,8 @@ void D19clpGBTSlowControlWorkerInterface::SelectLink(uint8_t pLinkId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     WriteReg("fc7_daq_cnfg.optical_block.link_select", pLinkId);
+
+    LOG(INFO) << BOLDBLUE << "selected link " << + ReadReg("fc7_daq_cnfg.optical_block.link_select") << RESET;
 }
 std::vector<uint32_t>
 D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, const std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems, bool pVerify)
@@ -136,6 +139,7 @@ void D19clpGBTSlowControlWorkerInterface::PrintState()
 
 bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
 {
+    // int cWaitCounter = 150000;
     int cWaitCounter = 100000;
     while(!IsDone(pFunctionId) && (cWaitCounter != 0))
     {
@@ -144,8 +148,10 @@ bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
     }
     if(cWaitCounter == 0)
     {
+        LOG(INFO) << BOLDBLUE << "Status before reset:" << RESET;
         PrintState();
         Reset();
+        LOG(INFO) << BOLDBLUE << "Status after reset:" << RESET;
         PrintState();
         throw std::runtime_error("D19c lpGBT Slow Control Worker is stuck");
         return false;
