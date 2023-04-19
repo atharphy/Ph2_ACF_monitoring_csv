@@ -71,7 +71,6 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
      * \param fSCurveOccupancyMap : maps of Vthr and DataContainer
      */
     void fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh, DetectorDataContainer& fSCurveOccupancy);
-    void fillSCurvePlots(DetectorDataContainer& fThresholds, DetectorDataContainer& fSCurveOccupancy);
 
   private:
     DetectorContainer*    fDetectorContainer;

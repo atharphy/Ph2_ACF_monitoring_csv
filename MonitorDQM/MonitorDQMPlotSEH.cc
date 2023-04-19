@@ -50,8 +50,8 @@ void MonitorDQMPlotSEH::book(TFile* theOutputFile, DetectorContainer& theDetecto
 //     theTGraphPedestalContainer.setNameTitle("LpGBT_DQM_" + registerName, "LpGBT_DQM_" + registerName);
 //     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
 //     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-//     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
-//     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+//     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
+//     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
 //     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
 //     theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((registerName + " [V]").c_str());
 //     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
@@ -71,8 +71,8 @@ void MonitorDQMPlotSEH::bookPowerSupplyPlots(TFile* theOutputFile, const Detecto
     theTGraphPedestalContainer.setNameTitle("PowerSupply_DQM_" + registerName, "PowerSupply_DQM_" + registerName);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
     theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((registerName).c_str());
     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
@@ -92,8 +92,8 @@ void MonitorDQMPlotSEH::bookTestCardPlots(TFile* theOutputFile, const DetectorCo
     theTGraphPedestalContainer.setNameTitle("TestCard_DQM_" + registerName, "TestCard_DQM_" + registerName);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
     theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((registerName).c_str());
     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);

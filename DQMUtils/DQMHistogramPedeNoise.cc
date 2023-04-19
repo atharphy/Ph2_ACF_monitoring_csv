@@ -377,9 +377,10 @@ void DQMHistogramPedeNoise::process()
                                                              ->getSummary<HistContainer<TH2F>>()
                                                              .fTheHistogram;
 
+                            float    maxY   = (fWithSSA) ? 254.5 : 1023.5;
+                            cChipStripSCurveHist->GetYaxis()->SetRangeUser(-0.5, maxY);
                             TH1D* cTmp = cChipStripSCurveHist->ProjectionY();
-                            cChipStripSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
-                            // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
+                            cChipStripSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0.)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10);
                             delete cTmp;
                             cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);
                             cChipStripSCurveHist->SetStats(false);
@@ -402,8 +403,9 @@ void DQMHistogramPedeNoise::process()
                                                              ->getSummary<HistContainer<TH2F>>()
                                                              .fTheHistogram;
 
+                            cChipPixelSCurveHist->GetYaxis()->SetRangeUser( -0.5, 254.5);
                             TH1D* cTmp = cChipPixelSCurveHist->ProjectionY();
-                            cChipPixelSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
+                            cChipPixelSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10);
                             // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
                             delete cTmp;
                             cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);
@@ -813,85 +815,6 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                             // std::cout << "Threshold = " << cTh + 1 << " - Occupancy = " <<  tmpOccupancy << std::endl;
                             cChannelSCurve->SetBinContent(cTh + 1, tmpOccupancy);
                             cChannelSCurve->SetBinError(cTh + 1, tmpOccupancyError);
-                        }
-                        ++cChannelNumber;
-                    }
-                }
-            }
-        }
-    }
-}
-
-void DQMHistogramPedeNoise::fillSCurvePlots(DetectorDataContainer& fThresholds, DetectorDataContainer& fSCurveOccupancy)
-{
-    for(auto cBoard: *fDetectorContainer)
-    {
-        auto cThThisBrd = fThresholds.getObject(cBoard->getId());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto cThThisGrp = cThThisBrd->getObject(cOpticalGroup->getId());
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto cThThisHybrd = cThThisGrp->getObject(cHybrid->getId());
-                for(auto cChip: *cHybrid)
-                {
-                    auto cType = cChip->getFrontEndType();
-
-                    auto  cThThisChip = cThThisHybrd->getObject(cChip->getId());
-                    TH2F* cChipSCurve = nullptr;
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-                    {
-                        cChipSCurve = fDetectorChipStripSCurveHistograms.getObject(cBoard->getId())
-                                          ->getObject(cOpticalGroup->getId())
-                                          ->getObject(cHybrid->getId())
-                                          ->getObject(cChip->getId())
-                                          ->getSummary<HistContainer<TH2F>>()
-                                          .fTheHistogram;
-                    }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                    {
-                        cChipSCurve = fDetectorChipPixelSCurveHistograms.getObject(cBoard->getId())
-                                          ->getObject(cOpticalGroup->getId())
-                                          ->getObject(cHybrid->getId())
-                                          ->getObject(cChip->getId())
-                                          ->getSummary<HistContainer<TH2F>>()
-                                          .fTheHistogram;
-                    }
-
-                    auto cChannelContainer =
-                        fSCurveOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<Occupancy>();
-                    if(cChannelContainer == nullptr) continue;
-                    uint16_t cChannelNumber = 0;
-                    for(auto cChannel: *cChannelContainer)
-                    {
-                        float tmpOccupancy      = cChannel.fOccupancy;
-                        float tmpOccupancyError = cChannel.fOccupancyError;
-                        cChipSCurve->SetBinContent(cChannelNumber + 1, cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancy);
-                        cChipSCurve->SetBinError(cChannelNumber + 1, cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancyError);
-
-                        if(fFitSCurves)
-                        {
-                            TH1F* cChannelSCurve = nullptr;
-                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-                            {
-                                cChannelSCurve = fDetectorChannelStripSCurveHistograms.getObject(cBoard->getId())
-                                                     ->getObject(cOpticalGroup->getId())
-                                                     ->getObject(cHybrid->getId())
-                                                     ->getObject(cChip->getId())
-                                                     ->getChannel<HistContainer<TH1F>>(cChannelNumber)
-                                                     .fTheHistogram;
-                            }
-                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                            {
-                                cChannelSCurve = fDetectorChannelPixelSCurveHistograms.getObject(cBoard->getId())
-                                                     ->getObject(cOpticalGroup->getId())
-                                                     ->getObject(cHybrid->getId())
-                                                     ->getObject(cChip->getId())
-                                                     ->getChannel<HistContainer<TH1F>>(cChannelNumber)
-                                                     .fTheHistogram;
-                            }
-                            cChannelSCurve->SetBinContent(cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancy);
-                            cChannelSCurve->SetBinError(cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancyError);
                         }
                         ++cChannelNumber;
                     }
