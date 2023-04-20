@@ -651,7 +651,7 @@ bool OTHybridTester::LpGBTTestResetLines()
             {
                 float cDifference_mV = 0;
                 fTC_2SSEH->read_reset(cMapIterator->second, cMeasurement);
-                cDifference_mV = std::fabs((cLevel.second * fNominalOutputbpol2v5) - cMeasurement) * 1000.; // 1300
+                cDifference_mV = std::fabs((cLevel.second * fNominalOutputbpol2v5) - cMeasurement/1000) * 1000.; // 1300
                 fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
                 cStatus = cStatus && (cDifference_mV <= fGradingThreshold * 1000);
 
