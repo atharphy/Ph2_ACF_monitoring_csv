@@ -642,10 +642,10 @@ void Tool::SoftDestroy()
         }
     }
     fBeBoardHistMap.clear();
-
+#ifndef __TCUSB__
     delete fDQMMetadata;
     fDQMMetadata = nullptr;
-
+#endif
 #endif
     fTestGroupChannelMap.clear();
 }
