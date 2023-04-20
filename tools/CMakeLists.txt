@@ -6,7 +6,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS " ")
 
     # Includes
-    message("GRAMARS      ${grammars}")
     include_directories(${grammars})
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
@@ -134,7 +133,7 @@ else()
     include_directories(${UHAL_DIR}/grammars/include)
 
     # include_directories(${Protobuf_INCLUDE_DIRS})
-    
+
     cet_set_compiler_flags(
         EXTRA_FLAGS -Wno-reorder -Wl,--undefined
     )
@@ -148,7 +147,7 @@ else()
             EXCLUDE Eudaq2Producer.h Eudaq2Producer.cc
             EXCLUDE SSAPhysics.h SSAPhysics.cc
             )
-    
+
     target_compile_definitions(Ph2_Tools PRIVATE
     "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
 
