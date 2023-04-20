@@ -20,8 +20,8 @@
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
 
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    #   include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
 
     # Find root and link against it
@@ -71,7 +71,7 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}UTILS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/Utils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories(${Protobuf_INCLUDE_DIRS})
+    #    include_directories(${Protobuf_INCLUDE_DIRS})
 
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
