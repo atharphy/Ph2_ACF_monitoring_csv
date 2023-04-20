@@ -25,9 +25,6 @@ export PH2ACF_BASE_DIR=$(pwd)
 # CACTUS #
 ##########
 export CACTUSROOT=/opt/cactus
-export CACTUSBIN=$CACTUSROOT/bin
-export CACTUSLIB=$CACTUSROOT/lib
-export CACTUSINCLUDE=$CACTUSROOT/include
 
 ##########
 # PYTHON #
@@ -58,7 +55,7 @@ export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 # These are git references for the dependencies that are included via CMake ExternalProjects #
 ##############################################################################################
 export PH2_TCUSB_REF=889b673e9d9582dab64cfeb60990800970ee47af
-export EUDAQ_REF=0f4aeb7e542a77a8f561a20b42c6d5081334ac26
+export EUDAQ_REF=cb46a3528c8dac535d840f747a98b3edadbc8db0
 export PYBIND11_REF=v2.9.2
 
 #######

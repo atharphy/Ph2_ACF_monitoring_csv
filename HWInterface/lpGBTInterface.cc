@@ -681,8 +681,43 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
 uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
 {
     uint16_t cMeasurement = ReadADC(pChip, "VREF/2", "VREF/2");
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
     return cMeasurement;
+}
+
+// Implements the ADC master formula for the a basic measurement
+// Assumes a calibrated Vref
+float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose)
+{
+    uint16_t cMeasurement = ReadADC(pChip, pADCInputP, "VREF/2");
+    return (cMeasurement - cOffset * (1. - cGain / 2.)) / cGain / 512.;
+}
+
+float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, bool pVerbose)
+{
+    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
+    float    cGain   = GetADCGain(pChip, pVerbose);
+    return GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
+}
+
+float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose)
+{
+    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
+    float    cGain   = GetADCGain(pChip, pVerbose);
+    return GetRssiPower(pChip, pADCInputP, cResponsivity, cOffset, cGain, pVerbose);
+}
+
+// Calculation vaild for 2S SEH v3.2 prototypes in W
+// Resistor values also valid for PS ROH v2
+// R1=1k; Voltage divider 680k and 1000k
+// Typical responsivity 0.45-0.55 A/W
+float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
+{
+    float cAdcMeasurement = GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
+    float cCurrent        = 1. / 1000. * (2.5 - cAdcMeasurement * 1680. / 680.);
+    float cResult         = cCurrent / cResponsivity;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Measured RSSI Power " << BOLDYELLOW << +cResult << BOLDBLUE << " W" << RESET;
+    return cResult;
 }
 
 float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
@@ -693,12 +728,12 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
     std::this_thread::sleep_for(std::chrono::microseconds(1000));
     uint16_t cMeasurement = ReadADC(pChip, "VDD", "VREF/2");
     cResult               = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2. * -1.;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
     cMeasurement = ReadADC(pChip, "VREF/2", "VDD");
     cResult      = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2.;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
 
     return cResult;
 }
@@ -718,7 +753,8 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, true, false);
 
     // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | 0x00);
+    uint8_t cVrefcntrContent = ReadChipReg(pChip, "VREFCNTR");
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | (0x3f & cVrefcntrContent));
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
     // Start ADC conversion
@@ -744,7 +780,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, false, false);
 
     // disable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 0 << 7);
+    WriteChipReg(pChip, "VREFCNTR", 0 << 7 | (0x3f & cVrefcntrContent));
 
     return (cADCvalue1 << 8 | cADCvalue2);
 }

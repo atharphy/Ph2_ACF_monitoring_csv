@@ -11,8 +11,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Library dirs
 
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    #    include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_FILESYSTEM_LIBRARY} ${Boost_ITERATOR_LIBRARY})
 
     # Find source files
