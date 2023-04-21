@@ -52,7 +52,12 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
         uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
         return cValue;
     }
+    else if(pRegNode == "vref")
+    {
+        //cRegItem = pMPA2->getRegItem("ADC_control");
+        return this->ReadReg(pMPA2, 0x8868) & 0xF;
 
+    }
     else if(pRegNode == "ReadoutMode") // New decoding control reg for MPA2
     {
         uint8_t cBitShift = CONTROL_TABLE.find("ReadoutMode")->second;

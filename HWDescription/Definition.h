@@ -97,10 +97,11 @@
 
 // SSA2 
 // in float
-#define SSA2_VBG_EXPECTED 0.275
-#define SSA2_VREF_EXPECTED 0.850
-#define SSA2_VREF_MIN   0.750
-#define SSA2_VREF_MAX   1.0
+#define SSA2_VBG_EXPECTED 0.275 // [V] this will need to be taken from database
+#define SSA2_VREF_EXPECTED 0.850 // [V] this is true if ADC_VREF is tuned 
+#define SSA2_VREF_MIN   0.750 // [V] should be verified once we have numbers/manual is updated
+#define SSA2_VREF_MAX   1.0 // [V] should be verified once we have numbers/manual is updated
+#define SSA2_ADC_PRECISION 0.010 // [V] from skeleton testing: changing by 1 bit ADC_VREF, VREF measured on skeleton changes by 7-8 mV. Here we are rounding up the precision.
 
 // MPA
 // in uint32_t words
@@ -109,9 +110,11 @@
 
 // MPA2 
 // in float
-#define MPA2_VBG_EXPECTED 0.280
-#define MPA2_VREF_EXPECTED 0.850
-
+#define MPA2_VBG_EXPECTED 0.280 // FIXMEEEE
+#define MPA2_VREF_EXPECTED 0.850 // FIXMEEEE
+#define MPA2_VREF_MIN   0.750 // FIXMEEEE
+#define MPA2_VREF_MAX   2.0 // FIXMEEE
+#define MPA2_ADC_PRECISION 0.010 // FIXME
 
 // points to bufferoverlow
 #define D19C_OFFSET_ERROR_CBC3 2 * 32 + 0

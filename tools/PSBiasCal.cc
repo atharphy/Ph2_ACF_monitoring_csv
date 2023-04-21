@@ -172,21 +172,33 @@ void PSBiasCal::CalibrateADC()
     }
 }
 
-float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, float VBGexpected, float VREFexpected, float VREFmin, float VREFmax)
+float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring) //, float VBGexpected, float VREFexpected, float VREFmin, float VREFmax)
 {
+    float VBGexpected, VREFexpected, VREFmin, VREFmax, VREFprecision;
     float ADC_GND = 0;
-    if(cChip->getFrontEndType() == FrontEndType::MPA2)
-        ADC_GND = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
-    else
-        ADC_GND = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
-
     float ADCMAX = 4095;
-
     float ADC_VBG = 0;
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
+    {
+        VBGexpected   = MPA2_VBG_EXPECTED;
+        VREFexpected  = MPA2_VREF_EXPECTED;
+        VREFmin       = MPA2_VREF_MIN;
+        VREFmax       = MPA2_VREF_MAX;
+        VREFprecision = MPA2_ADC_PRECISION;
+        ADC_GND = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
         ADC_VBG = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), VBGstring)));
+    }
     else
+    {
+        VBGexpected   = SSA2_VBG_EXPECTED;
+        VREFexpected  = SSA2_VREF_EXPECTED;
+        VREFmin       = SSA2_VREF_MIN;
+        VREFmax       = SSA2_VREF_MAX;
+        VREFprecision = SSA2_ADC_PRECISION;
+        ADC_GND = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
         ADC_VBG = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), VBGstring)));
+    }
+
 
     float slope = VBGexpected/(ADC_VBG-ADC_GND); // In this case it is the one measured on the module - GND measured on module. In the future it will be given.
     float offset = - ADC_GND*slope;
@@ -196,7 +208,9 @@ float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstri
     float VREFobtained = ADCMAX*slope + offset;
     LOG(INFO) << BOLDRED << "for DAC_val "<< static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring) << " VREF val extrapolated: " << VREFobtained << " Expected val: " << VREFexpected  << RESET;
 
-    if (VREFobtained > VREFmax || VREFobtained < VREFmin)
+
+
+    if (VREFobtained > VREFmax || VREFobtained < VREFmin || (VREFobtained - VREFexpected)<VREFprecision)
     {
         LOG(INFO) << BOLDRED << " Need to calibrate VREF! VREF is outside of allowed range!!" << RESET;
         VREFobtained = CalibrateVREF(cChip,VBGstring, VREFstring, VBGexpected, VREFexpected);
@@ -213,24 +227,23 @@ float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGst
     bool cSuccess = false;
     uint32_t    DAC_val = static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring);
     uint32_t    DAC_new_val = 0;
-    float offset = 0;
+    float ADC_GND = 0;
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
-        offset = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
+        ADC_GND = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
     else
-        offset = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
+        ADC_GND = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip),"GND")));
 
     float ADCMAX = 4095;
-    float ADCLSB = VREFexpected / (ADCMAX - offset);
-    float gnd_corr = offset*ADCLSB;
-    std::cout << " ground "<< gnd_corr << std::endl;
+    float ADCLSB = VREFexpected / (ADCMAX - ADC_GND); // slope estimated from VREF
+    float offset = -ADC_GND*ADCLSB;
     float ADC_VBG = 0;
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
         ADC_VBG = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), VBGstring)));
     else
         ADC_VBG = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), VBGstring)));
-    float VBG_converted = ADC_VBG*ADCLSB;
-    float targetADCVBG = (VBGexpected + gnd_corr)/ ADCLSB;
-    std::cout << " offset " << offset << " targetADCVBG "<< targetADCVBG <<" ADC_VBG " << ADC_VBG << " ADCLSB " << ADCLSB << " VBG_converted "<< VBG_converted << " - gnd offset = " << VBG_converted-gnd_corr<< std::endl;
+
+    float targetADCVBG = ( VBGexpected- offset)/ ADCLSB;
+    std::cout << " offset " << offset << " targetADCVBG "<< targetADCVBG <<" ADC_VBG " << ADC_VBG << " ADCLSB " << ADCLSB << " ADC_GND "<< ADC_GND << std::endl;
     // write VREF DAC with value 0 (minimum)
     fReadoutChipInterface->WriteChipReg(cChip, VREFstring, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
@@ -252,13 +265,13 @@ float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGst
     std::cout << " max_val " << max_val << " off_val "<< off_val << " float(DAC_max) "<< float(DAC_max) <<std::endl;
     float LSB = (float(off_val) - float(max_val)) / float(DAC_max);
     LOG(INFO) << BOLDMAGENTA << VREFstring << " LSB " << LSB << " default DAC val " << DAC_val << RESET;
-    std::cout<< " ADC_VBG "<< ADC_VBG << " offset " << offset << " targetADCVBG " << targetADCVBG << " diff "<< abs(ADC_VBG - offset - targetADCVBG) << " LSB "<< LSB << std::endl;
+    std::cout<< " ADC_VBG "<< ADC_VBG <<  " targetADCVBG " << targetADCVBG << " diff "<< abs(ADC_VBG - targetADCVBG) << " LSB "<< LSB << std::endl;
     //std::cout<< " ADC_VBG "<< ADC_VBG << " targetADCVBG " << targetADCVBG << " diff "<< abs(ADC_VBG - targetADCVBG) << " LSB "<< LSB << std::endl;
 
     while(!cSuccess)
     {
 
-        if (abs(ADC_VBG - offset - targetADCVBG) < LSB )
+        if (abs(ADC_VBG - targetADCVBG) < LSB )
         //if (abs(ADC_VBG - targetADCVBG) < LSB )
         {
             cSuccess = true;
@@ -266,8 +279,8 @@ float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGst
             std::cout << " VREF calibrated" << std::endl;
             break;
         }
-        std::cout << " (float(targetADCVBG) + float(offset) - float(ADC_VBG) ) / LSB "<< (float(targetADCVBG) + float(offset) - float(ADC_VBG) ) / LSB <<std::endl;
-        DAC_val     = DAC_val - uint32_t(std::round((float(targetADCVBG) + float(offset) - float(ADC_VBG) ) / LSB));
+        std::cout << " (float(targetADCVBG) - float(ADC_VBG) ) / LSB "<< (float(targetADCVBG) - float(ADC_VBG) ) / LSB <<std::endl;
+        DAC_val     = DAC_val - uint32_t(std::round((float(targetADCVBG)  - float(ADC_VBG) ) / LSB));
         // std::cout << " (float(targetADCVBG) - float(ADC_VBG) ) / LSB "<< (float(targetADCVBG) - float(ADC_VBG) ) / LSB <<std::endl;
         // DAC_val     = DAC_val - uint32_t(std::round((float(targetADCVBG) - float(ADC_VBG) ) / LSB));
    
@@ -279,8 +292,7 @@ float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGst
             ADC_VBG = uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), VBGstring)));
         else
             ADC_VBG = uint32_t(std::round(static_cast<SSA2Interface*>(fReadoutChipInterface)->ReadADC(static_cast<ReadoutChip*>(cChip), VBGstring)));
-        VBG_converted = ADC_VBG*ADCLSB;
-        LOG(INFO) << BOLDRED << " VREF at " << DAC_new_val << " is ADC_VBG " << ADC_VBG << " target " <<targetADCVBG << " VBG_converted "<< VBG_converted << RESET;
+        LOG(INFO) << BOLDRED << " VREF at " << DAC_new_val << " is ADC_VBG " << ADC_VBG << " target " <<targetADCVBG  << RESET;
 
         bool checkadj = true;
         if(checkadj) // This checks if the linear extrapolation finds the best value.
@@ -317,9 +329,9 @@ float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGst
                 
                 LOG(INFO) << BOLDRED << "Down " << new_val_down  << " Up " << new_val_up  << RESET;
 
-                float expdiff     = std::fabs(targetADCVBG - (ADC_VBG - offset ));
-                float expdiffdown = std::fabs(targetADCVBG - (new_val_down - offset));
-                float expdiffup   = std::fabs(targetADCVBG - (new_val_up - offset));
+                float expdiff     = std::fabs(targetADCVBG - ADC_VBG );
+                float expdiffdown = std::fabs(targetADCVBG - new_val_down );
+                float expdiffup   = std::fabs(targetADCVBG - new_val_up);
 
                 if((expdiffdown < expdiff) or (expdiffup < expdiff))
                 {
@@ -365,9 +377,11 @@ float PSBiasCal::CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGst
 
     }
 
-    float newVBG = ADC_VBG*ADCLSB - gnd_corr;
+    float newVBG = ADC_VBG*ADCLSB+offset;
     LOG(INFO) << BOLDRED << "New VBG val: " << newVBG << " Expected val: " << VBGexpected << "+/-" << LSB*ADCLSB << RESET;
-    float VREFobtained = ADCMAX*(newVBG-gnd_corr)/(ADC_VBG-offset) + gnd_corr;
+    float slope = (VBGexpected)/(ADC_VBG-ADC_GND);
+    offset = -ADC_GND*slope;
+    float VREFobtained = ADCMAX*slope+offset;
     LOG(INFO) << BOLDRED << "New VREF val: " << VREFobtained << " Expected val: " << VREFexpected << "+/-" << LSB*ADCLSB << RESET;
 
 
@@ -669,8 +683,8 @@ void PSBiasCal::CalibrateBias()
         }
     }
     LOG(INFO) << BOLDRED << "Starting Cal" << RESET;
-    DetectorDataContainer theDACContainer;
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theDACContainer);
+    DetectorDataContainer theVREFDACContainer;
+    ContainerFactory::copyAndInitChip<std::pair<uint32_t, float>>(*fDetectorContainer, theVREFDACContainer);
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -695,7 +709,7 @@ void PSBiasCal::CalibrateBias()
 
                         // VREFmeasured = CalibrateVREF(cChip,"VBG","ADC_VREF",SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED);
                         VREFstring = "ADC_VREF";
-                        VREFmeasured = MeasureVREF(cChip,"VBG",VREFstring,SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED,SSA2_VREF_MIN, SSA2_VREF_MAX);
+                        VREFmeasured = MeasureVREF(cChip,"VBG",VREFstring); //,SSA2_VBG_EXPECTED,SSA2_VREF_EXPECTED,SSA2_VREF_MIN, SSA2_VREF_MAX);
                         VREFdac = static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring);
                         std::cout << "VREFdac "<< VREFdac << " VREFmeasured "<< VREFmeasured << std::endl;
 
@@ -717,7 +731,7 @@ void PSBiasCal::CalibrateBias()
                         static_cast<MPA2Interface*>(fReadoutChipInterface)->loadVref(cChip);
                         //CalibrateVREF(cChip,gndval,"bandgap","vref",MPA2_VBG_EXPECTED,MPA2_VREF_EXPECTED);
                         VREFstring = "vref";
-                        VREFmeasured = MeasureVREF(cChip,"bandgap",VREFstring,MPA2_VBG_EXPECTED,MPA2_VREF_EXPECTED,MPA2_VREF_MIN, MPA2_VREF_MAX);
+                        VREFmeasured = MeasureVREF(cChip,"bandgap",VREFstring); //,MPA2_VBG_EXPECTED,MPA2_VREF_EXPECTED,MPA2_VREF_MIN, MPA2_VREF_MAX);
                         VREFdac = static_cast<ChipInterface*>(fReadoutChipInterface)->ReadChipReg(static_cast<ReadoutChip*>(cChip), VREFstring);
                         std::cout << "VREFdac "<< VREFdac << " VREFmeasured "<< VREFmeasured << std::endl;
 
@@ -731,7 +745,8 @@ void PSBiasCal::CalibrateBias()
                         }
                     }
                     std::cout << " ------ setting VREF DAC in DACContainter "<< VREFdac <<std::endl;
-                    theDACContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<uint32_t>()= VREFdac;
+                    theVREFDACContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<std::pair<uint32_t, float>>().first= VREFdac;
+                    theVREFDACContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<std::pair<uint32_t, float>>().second= VREFmeasured;
 
 
                     DisableTest(cChip);
@@ -741,12 +756,12 @@ void PSBiasCal::CalibrateBias()
         }     // hybrid
     }         // optica]l group
 #ifdef __USE_ROOT__
-    fDQMHistogramPSBiasCal.fillDACPlots(theDACContainer);
+    fDQMHistogramPSBiasCal.fillDACPlots(theVREFDACContainer);
 #else
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theContainerSerialization("PSBiasCalVrefDac");
-        theContainerSerialization.streamByBoardContainer(fDQMStreamer, theDACContainer);
+        theContainerSerialization.streamByBoardContainer(fDQMStreamer, theVREFDACContainer);
     }
 #endif
 }

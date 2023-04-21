@@ -37,7 +37,7 @@ class PSBiasCal : public Tool
     void     DisableTest(Ph2_HwDescription::Chip* cChip);
     float    MeasureGnd(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, std::string dac_str);
     float    CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, float VBGexpected, float VREFexpected);
-    float    MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, float VBGexpected, float VREFexpected, float VREFmin, float VREFmax);
+    float    MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring); //, float VBGexpected, float VREFexpected, float VREFmin, float VREFmax);
 
 
     void Running() override;

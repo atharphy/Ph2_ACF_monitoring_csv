@@ -120,12 +120,12 @@ void DQMHistogramPSBiasCal::book(TFile* theOutputFile, DetectorContainer& theDet
 bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
 {
     ContainerSerialization theDACSerialization("PSBiasCalVrefDac");
-
     if(theDACSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Vref DAC!!!!!\n";
-        DetectorDataContainer theDetectorData = theDACSerialization.deserializeBoardContainer<uint32_t, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
-        fillDACPlots(theDetectorData);
+        DetectorDataContainer theVREFDACData  = theDACSerialization.deserializeBoardContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
+    
+        fillDACPlots(theVREFDACData);
         return true;
     }
 
@@ -294,11 +294,24 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                                                      ->getSummary<HistContainer<TH1F>>()
                                                      .fTheHistogram;
                         std::cout << " Fill SSA "<<std::endl;
+                        std::cout << " DAC, VREF "<< theDAC.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().first << " " << theDAC.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().second << std::endl;
                         fStripVrefHistograms->Fill(theDAC.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
-                                                     ->getSummary<uint32_t>());
+                                                     ->getSummary<std::pair<uint32_t, float>>().first,theDAC.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().second);
 
                     }
                     else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
@@ -315,7 +328,11 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                                  ->getObject(cOpticalGroup->getId())
                                  ->getObject(cHybrid->getId())
                                  ->getObject(cChip->getId())
-                                 ->getSummary<uint32_t>());
+                                 ->getSummary<std::pair<uint32_t, float>>().first,theDAC.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().second);
                     }
 
 

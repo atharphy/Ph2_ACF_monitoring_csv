@@ -62,7 +62,7 @@ class DQMHistogramPSBiasCal : public DQMHistogramBase
 
     /*!
      * \brief Fill validation histograms
-     * \param theDAC : DataContainer for the DAC value info
+     * \param theDAC : DataContainer for the VREF DAC & VREF value info
      */
     void fillDACPlots(DetectorDataContainer& theDAC);
 
