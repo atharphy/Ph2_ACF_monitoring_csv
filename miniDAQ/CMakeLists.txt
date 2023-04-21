@@ -6,17 +6,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS " ")
 
     # Includes
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Library dirs
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System NetworkUtils MessageUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System NetworkUtils MessageUtils CACTUS::uhal)
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -66,17 +62,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif()
     endif()
 
-    find_package(Protobuf REQUIRED)
 
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    #  include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
 
-    set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Protobuf_LIBRARIES})
+    set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
     # Find source files
     file(GLOB SOURCES *.cc)
     add_library(Ph2_miniDAQ STATIC ${SOURCES})
+    target_link_libraries(Ph2_miniDAQ CACTUS::headers)
 
     ###############
     # EXECUTABLES #
@@ -104,10 +100,8 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
-    include_directories(${Protobuf_INCLUDE_DIRS})
 
     #library dirs
-    link_directories(${Protobuf_LIBRARIES})
 
     cet_make_exec(RunController
         SOURCE

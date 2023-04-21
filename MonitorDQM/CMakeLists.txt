@@ -9,8 +9,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    # include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
 
     # Find root and link against it
@@ -33,6 +33,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Find source files
     file(GLOB SOURCES *.cc)
     add_library(Ph2_MonitorDQM STATIC ${SOURCES})
+    target_link_libraries(Ph2_MonitorDQM ${LIBS})
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/RootUtils *.cc)
 

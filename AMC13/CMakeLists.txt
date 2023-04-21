@@ -1,14 +1,11 @@
 #includes
-include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-include_directories(${UHAL_LOG_INCLUDE_PREFIX})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${UHAL_AMC13_INCLUDE_PREFIX})
 #library directory
 link_directories(${UHAL_AMC13_LIB_PREFIX})
 
-set(LIBS ${LIBS} cactus_amc13_amc13)
+set(LIBS ${LIBS} cactus_amc13_amc13 CACTUS::uhal)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__AMC13__")
 
 #find source files

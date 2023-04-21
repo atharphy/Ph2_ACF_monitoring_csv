@@ -681,8 +681,45 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
 uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
 {
     uint16_t cMeasurement = ReadADC(pChip, "VREF/2", "VREF/2");
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
     return cMeasurement;
+}
+
+// #################################################################
+// # Implements the ADC master formula for the a basic measurement #
+// # Assumes a calibrated Vref                                     #
+// #################################################################
+float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose)
+{
+    uint16_t cMeasurement = ReadADC(pChip, pADCInputP, "VREF/2");
+    return (cMeasurement - cOffset * (1. - cGain / 2.)) / cGain / 512.;
+}
+
+float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, bool pVerbose)
+{
+    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
+    float    cGain   = GetADCGain(pChip, pVerbose);
+    return GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
+}
+
+float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose)
+{
+    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
+    float    cGain   = GetADCGain(pChip, pVerbose);
+    return GetRssiPower(pChip, pADCInputP, cResponsivity, cOffset, cGain, pVerbose);
+}
+
+// Calculation vaild for 2S SEH v3.2 prototypes in W
+// Resistor values also valid for PS ROH v2
+// R1=1k; Voltage divider 680k and 1000k
+// Typical responsivity 0.45-0.55 A/W
+float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
+{
+    float cAdcMeasurement = GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
+    float cCurrent        = 1. / 1000. * (2.5 - cAdcMeasurement * 1680. / 680.);
+    float cResult         = cCurrent / cResponsivity;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Measured RSSI Power " << BOLDYELLOW << +cResult << BOLDBLUE << " W" << RESET;
+    return cResult;
 }
 
 float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
@@ -693,12 +730,12 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
     std::this_thread::sleep_for(std::chrono::microseconds(1000));
     uint16_t cMeasurement = ReadADC(pChip, "VDD", "VREF/2");
     cResult               = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2. * -1.;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
     cMeasurement = ReadADC(pChip, "VREF/2", "VDD");
     cResult      = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2.;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
 
     return cResult;
 }
@@ -718,7 +755,8 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, true, false);
 
     // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | 0x00);
+    uint8_t cVrefcntrContent = ReadChipReg(pChip, "VREFCNTR");
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | (0x3f & cVrefcntrContent));
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
     // Start ADC conversion
@@ -744,7 +782,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, false, false);
 
     // disable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 0 << 7);
+    WriteChipReg(pChip, "VREFCNTR", 0 << 7 | (0x3f & cVrefcntrContent));
 
     return (cADCvalue1 << 8 | cADCvalue2);
 }
@@ -843,77 +881,6 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
 
     // Return fraction of errors
     return (double)cErrors / cBitsChecked;
-}
-
-// I've changed it to reprt BERT as bits in error/ bits received
-// individual users (i.e. IT/OT) can decide how to interpret the number of bits in error
-// In addition, the BERT in the lpGBT itself doesn't need to 'know' anything external to the lpGBT - it knows how many bits
-// it receives per second and you configure it to count for N clock cycles (or x seconds)
-// so no need to provide any information aside from how long to count for
-double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel)
-{
-    const float cConfidenceLevel = pConfidenceLevel;
-    // figure out data rate at which I'm receiving data
-    // this should be totally based on the configuration of the lpGBT
-    // and the e-port Rx
-    // so I do not need to pass anything to this function
-    // number of bits received per second
-    uint16_t cRxRate = GetRxDataRate(pChip, pGroup);
-    // constants to allow me to calculate the error rate
-    const int nPrints  = 10; // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
-    double    time2run = (given_time) ? bits_or_time : bits_or_time / cRxRate;
-    double    bitsRxd  = (given_time) ? time2run * cRxRate : bits_or_time;
-    LOG(INFO) << GREEN << "Running BERT for ~" << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will test  " << BOLDYELLOW << bitsRxd << RESET << GREEN
-              << " received bits." << RESET;
-    uint32_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
-    // Configure number of printouts and calculate the frequency of printouts
-    double time_per_step = std::min(std::max(time2run / nPrints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
-
-    // ###############
-    // # Configuring #
-    // ###############
-    lpGBTInterface::ConfigureRxSource(pChip, {pGroup}, lpGBTconstants::PATTERN_NORMAL);
-    lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - cRxRate)], BERTMeasTime);
-
-    // #########
-    // # Start #
-    // #########
-    lpGBTInterface::StartBERT(pChip, false); // Stop
-    lpGBTInterface::StartBERT(pChip, true);  // Start
-    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
-
-    LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
-    int      idx = 1;
-    uint64_t nErrors;
-    while(lpGBTInterface::IsBERTDone(pChip) == false)
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
-
-        nErrors = lpGBTInterface::GetBERTErrors(pChip);
-
-        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << lpGBTInterface::GetBERTErrors(pChip) << RESET << GREEN << " bit(s) in error ...." << RESET;
-        idx++;
-    }
-    LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
-
-    if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
-    {
-        lpGBTInterface::StartBERT(pChip, false); // Stop
-        throw Exception("[lpGBTInterface::BERtestCL] All zeros at input");
-    }
-
-    // ########
-    // # Stop #
-    // ########
-    nErrors = lpGBTInterface::GetBERTErrors(pChip);
-    lpGBTInterface::StartBERT(pChip, false);                                                            // Stop
-    float cErrorRate = (nErrors == 0) ? -1 * log(1.0 - cConfidenceLevel) / bitsRxd : nErrors / bitsRxd; // upper limit on BERT is I see no errors detected
-    LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
-    LOG(INFO) << GREEN << "Final number of bits received : " << BOLDYELLOW << bitsRxd << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " bits in error i.e. a BERT of " << BOLDYELLOW << cErrorRate << RESET;
-    LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
-    return nErrors;
 }
 
 double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
@@ -1053,12 +1020,12 @@ void lpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<
 
 void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
 {
-    // First let's write configuration data into the I2C Master Data register
+    // Write configuration data into the I2C Master Data register
     std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data0";
     uint8_t     cValueData  = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
     WriteChipReg(pChip, cI2CDataReg, cValueData);
 
-    // Now let's write Command (0x00) to the Command register to tranfer Configuration to the I2C Master Control register
+    // Write Command (0x00) to the Command register to tranfer Configuration to the I2C Master Control register
     std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
     WriteChipReg(pChip, cI2CCmdReg, 0x00);
 }

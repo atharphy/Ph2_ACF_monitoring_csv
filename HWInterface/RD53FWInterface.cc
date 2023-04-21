@@ -1327,8 +1327,8 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
         // #########################################
         // # Read frame counters to check progress #
         // #########################################
-        cntr_lo = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
         cntr_hi = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
+        cntr_lo = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
         if(bits::pack<32, 32>(cntr_hi, cntr_lo) == frameCounter)
         {
             LOG(ERROR) << BOLDRED << "BER test stopping because no clock was detected for this chip" << RESET;
@@ -1356,8 +1356,8 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     // ###########################
     // # Read PRBS frame counter #
     // ###########################
-    cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
     cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
+    cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
     frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
     nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;

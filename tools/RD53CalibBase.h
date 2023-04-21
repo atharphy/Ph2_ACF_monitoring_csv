@@ -26,6 +26,7 @@
 class CalibBase : public Tool
 {
   public:
+    CalibBase() : showErrorReport(true) {}
     void    chipErrorReport() const;
     void    copyMaskFromDefault(const std::string& which = "all") const;
     void    saveChipRegisters(int currentRun, bool doUpdateChip);
@@ -81,6 +82,7 @@ class CalibBase : public Tool
   protected:
     std::string theHistoFileName;
     std::string dataOutputDir;
+    bool        showErrorReport;
 
   private:
     virtual void fillHisto() = 0;

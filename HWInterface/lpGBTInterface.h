@@ -68,6 +68,7 @@ class lpGBTInterface : public ChipInterface
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
     void     ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL);
+
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
@@ -101,6 +102,10 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     uint16_t GetADCOffset(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
     float    GetADCGain(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
+    float    GetADCVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose = true);
+    float    GetADCVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, bool pVerbose = true);
+    float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose = true);
+    float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose = true);
 
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
     void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
@@ -128,7 +133,6 @@ class lpGBTInterface : public ChipInterface
     void   ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     double GetBERTResult(Ph2_HwDescription::Chip* pChip);
     double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
-    double BERtestCL(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
