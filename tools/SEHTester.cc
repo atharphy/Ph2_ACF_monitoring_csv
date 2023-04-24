@@ -1526,6 +1526,71 @@ void SEHTester::Stop()
     Destroy();
 }
 
+/*!
+    Checks the hybrid and test card measurements using the TC USB library, and compares the measurement to the nominal value, allowing for a percentage of variation, defined in the settings file.
+*/
+void SEHTester::RunHybridETest()
+{
+    float result;
+
+    double cAcceptancePercentage = 15. / 100.;
+    LOG(INFO) << "Running electrical test on the hybrid. Accepted deviation: +- " << +cAcceptancePercentage << " %" << RESET;
+
+    for(auto cMapIterator: f2SSEHSupplyMeasurements)
+    {
+        auto  cNominalValue = fHybridNominalValues.find(cMapIterator.first);
+        auto& cMeasurement  = cMapIterator.second;
+        fTC_2SSEH->read_supply(cMeasurement, result);
+        LOG(INFO) << cMapIterator.first << " : " << result << RESET;
+        std::string cMeasurementName = "EM_" + (cMapIterator.first);
+        fillSummaryTree(cMeasurementName, result);
+        if(cNominalValue != fHybridNominalValues.end())
+        {
+            if(cNominalValue->second != 0)
+            {
+                fillSummaryTree(cMeasurementName + "_dev", cNominalValue->second - result);
+                if(cAcceptancePercentage != 0)
+                {
+                    if(result < cNominalValue->second * (1 + cAcceptancePercentage) && result > cNominalValue->second * (1 - cAcceptancePercentage)) { LOG(INFO) << BOLDGREEN << "OK" << RESET; }
+                    else
+                    {
+                        LOG(INFO) << BOLDRED << "BAD" << RESET;
+                    }
+                }
+            }
+            else
+            {
+                if(result > 0.05) { LOG(INFO) << BOLDRED << "BAD" << RESET; }
+            }
+        }
+    }
+
+    // for(auto cMapIterator: fHybridCurrentMap)
+    // {
+    //     auto& cMeasurement = cMapIterator.second;
+    //     cTC_PSFE.adc_get(cMeasurement, result);
+    //     LOG(INFO) << cMapIterator.first << " : " << result << RESET;
+    //     fillSummaryTree(cMapIterator.first, result);
+
+    //     if(cMapIterator.first == "Hybrid1V00_current" || cMapIterator.first == "Hybrid1V25_current")
+    //     {
+    //         if(result == 0)
+    //         {
+    //             LOG(ERROR) << BOLDRED << "Hybrid is not connected! Check the jumper cable between hybrid and test card" << RESET;
+    //             exit(-6);
+    //         }
+    //     }
+    // }
+
+    // for(auto cMapIterator: fHybridOtherMap)
+    // {
+    //     auto& cMeasurement = cMapIterator.second;
+    //     cTC_PSFE.adc_get(cMeasurement, result);
+    //     LOG(INFO) << cMapIterator.first << " : " << result << RESET;
+    //     fillSummaryTree(cMapIterator.first, result);
+    // }
+}
+
 void SEHTester::Pause() {}
 
 void SEHTester::Resume() {}

@@ -267,7 +267,7 @@ int main(int argc, char* argv[])
     if(cMeasureInputIV) cPSROHTester.MeasureInputIV("BEFORE_CONFIG");
     LOG(INFO) << BOLDMAGENTA << " ------------------------------------------- " << RESET;
     cTool.ConfigureHw();
-
+    cPSROHTester.ReadChipIds();
     // Initialise tester
     cPSROHTester.Initialise();
 

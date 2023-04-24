@@ -58,7 +58,7 @@ class SEHTester : public OTHybridTester
     void Stop();
     void Pause();
     void Resume();
-
+    void RunHybridETest();
     void SEHInputsDebug();
     void TurnOn(uint32_t pRightLoadValue = 0, uint32_t pLeftLoadValue = 0, bool setLoad = false);
     void TurnOff();
@@ -138,9 +138,10 @@ class SEHTester : public OTHybridTester
                                                                                    {"U_P2V5", TC_2SSEH::supplyMeasurement::U_P2V5},
                                                                                    {"I_P2V5", TC_2SSEH::supplyMeasurement::I_P2V5},
                                                                                    {"U_P1V25", TC_2SSEH::supplyMeasurement::U_P1V25},
-                                                                                   {"I_P1V25", TC_2SSEH::supplyMeasurement::U_P1V25},
+                                                                                   {"I_P1V25", TC_2SSEH::supplyMeasurement::I_P1V25},
                                                                                    {"U_SEH", TC_2SSEH::supplyMeasurement::U_SEH},
                                                                                    {"I_SEH", TC_2SSEH::supplyMeasurement::I_SEH}};
+    std::map<std::string, double> fHybridNominalValues = {{"U_P5V", 5.}, {"I_P5V", 0.045}, {"U_P3V3", 3.29}, {"I_P3V3", 1.27}, {"U_P2V5", 2.5}, {"I_P2V5", 0.0}, {"U_P1V25", 1.24}, {"I_P1V25", 0.000}};
 
     std::map<std::string, TC_2SSEH::loadMeasurement> f2SSEHLoadMeasurements = {{"U_P1V2_R", TC_2SSEH::loadMeasurement::U_P1V2_R},
                                                                                {"I_P1V2_R", TC_2SSEH::loadMeasurement::I_P1V2_R},

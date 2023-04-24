@@ -14,6 +14,36 @@ OTHybridTester::OTHybridTester() : Tool()
 
 OTHybridTester::~OTHybridTester() {}
 
+void OTHybridTester::ReadChipIds()
+{
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
+            if(!cOpticalGroup->fIsLocked) continue;
+            if(static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getVersion() == 1)
+            {
+                uint32_t cChipID = clpGBTInterface->ReadChipID(cOpticalGroup->flpGBT, 1);
+
+                LOG(INFO) << BOLDYELLOW << "lpgbt version 1" << RESET;
+                LOG(INFO) << BOLDYELLOW << "lpgbt ID: 0x" << std::hex << +cChipID << std::dec << RESET;
+                fillSummaryTree("lpgbt_id", cChipID);
+                fillSummaryTree("lpgbt_version", 1);
+            }
+            else
+            {
+                LOG(INFO) << BOLDYELLOW << "lpgbt version 0" << RESET;
+                LOG(INFO) << BOLDYELLOW << "no lpgbt ID" << RESET;
+
+                fillSummaryTree("lpgbt_id", 0);
+                fillSummaryTree("lpgbt_version", 0);
+            }
+        }
+    }
+}
+
 void OTHybridTester::InitialiseTestCard(bool cIsSEH)
 {
     if(cIsSEH)
@@ -559,10 +589,6 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
-        {
-            cReturn = false;
-            continue;
-        }
         for(auto cOpticalGroup: *cBoard)
         {
             if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -717,7 +743,7 @@ bool OTHybridTester::LpGBTTestResetLines()
             {
                 float cDifference_mV = 0;
                 fTC_PSROH->adc_get(cMapIterator->second, cMeasurement);
-                cDifference_mV = std::fabs((cLevel.second * fNominalOutputbpol2v5) - cMeasurement) * 1000.; // 1300
+                cDifference_mV = std::fabs((cLevel.second * fNominalOutputbpol2v5) - (cMeasurement / 1000)) * 1000.; // 1300
                 fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
                 cStatus = cStatus && (cDifference_mV <= fGradingThreshold * 1000);
 
@@ -786,6 +812,7 @@ bool OTHybridTester::LpGBTTestVTRx()
 {
     bool                cSuccess = true;
     bool                cRecent;
+    bool                cReset          = true;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -813,11 +840,24 @@ bool OTHybridTester::LpGBTTestVTRx()
                 cVTRxplusDefaultRegisters = fVTRxplusDefaultRegistersV13;
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.3 is used!" << RESET;
                 fillSummaryTree("vtrxplusversion", 1.3);
+                uint32_t cChipId = 0;
+                for(int i = 0; i < 4; i++)
+                {
+                    cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, i + 0x16);
+                    cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
+                    cChipId        = cChipId | cReadBackValue << (i + 8);
+                    LOG(INFO) << BOLDGREEN << "VTRx+ register 0x" << std::hex << +i + 0x16 << std::dec << " contains the value 0x" << std::hex << +cReadBackValue << std::dec << " ." << RESET;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+                LOG(INFO) << BOLDYELLOW << "vtrx+ ID: 0x" << std::hex << +cChipId << std::dec << RESET;
+                fillSummaryTree("vtrxplus_id", cChipId);
             }
             else
             {
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.2 is used!" << RESET;
                 fillSummaryTree("vtrxplusversion", 1.2);
+                fillSummaryTree("vtrxplus_id", 0);
+                LOG(INFO) << BOLDYELLOW << "no VTRx+ ID" << RESET;
             }
 
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
@@ -841,9 +881,9 @@ bool OTHybridTester::LpGBTTestVTRx()
             cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
             if(cReadBackValue == 0xA0)
             {
-                //std::vector<uint32_t> cSlaveData = {0xac,0x0d,cSlaveAddress};
-                cRecent        = static_cast<D19clpGBTInterface*>(flpGBTInterface)->WriteI2C(clpGBT, cMasterId, cSlaveAddress, 0xac0d, 2, 2);
-                //SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d0d);
+                // std::vector<uint32_t> cSlaveData = {0xac,0x0d,cSlaveAddress};
+                cRecent = static_cast<D19clpGBTInterface*>(flpGBTInterface)->WriteI2C(clpGBT, cMasterId, cSlaveAddress, 0xac0d, 2, 2);
+                // SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d0d);
                 cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d);
                 cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
                 if(cReadBackValue == 0xAC)
@@ -866,19 +906,20 @@ bool OTHybridTester::LpGBTTestVTRx()
                 }
                 else
                 {
-                    LOG(INFO) << BOLDRED << "Failed to write 0xAC to VTRx+ register 0x0D for reset test, read back 0x"<< std::hex << +cReadBackValue << std::dec << RESET;
+                    LOG(INFO) << BOLDRED << "Failed to write 0xAC to VTRx+ register 0x0D for reset test, read back 0x" << std::hex << +cReadBackValue << std::dec << RESET;
                     cReset = false;
                 }
             }
             else
             {
-                LOG(INFO) << BOLDRED << "Wrong starting value in register 0x0D for VTRx+ reset test (0x"<< std::hex << +cReadBackValue << std::dec <<")" << RESET;
+                LOG(INFO) << BOLDRED << "Wrong starting value in register 0x0D for VTRx+ reset test (0x" << std::hex << +cReadBackValue << std::dec << ")" << RESET;
                 cReset = false;
             }
         }
     }
-    fillSummaryTree("vtrxplusslowcontrol", cSuccess);
+    fillSummaryTree("vtrxplus_register", cSuccess);
     fillSummaryTree("vtrxplus_reset", cReset);
+    fillSummaryTree("vtrxplusslowcontrol", cSuccess & cReset);
     return cSuccess & cReset;
 }
 

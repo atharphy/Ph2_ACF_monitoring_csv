@@ -568,7 +568,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
         if(cOpticalGroup->flpGBT == nullptr) continue;
 #if defined(__TCUSB__)
         if(!cOpticalGroup->fIsLocked) continue;
-#endif 
+#endif
         LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << int(pBoard->getId()) << RESET;
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         if(cOpticalGroup->getReset() == 0)

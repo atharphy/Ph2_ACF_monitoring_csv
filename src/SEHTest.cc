@@ -312,6 +312,7 @@ int main(int argc, char* argv[])
     // ¯\_(ツ)_/¯
     if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_2SSEH cTC_2SSEH(cUsbBus, cUsbDev); }
     cSEHTester.InitialiseTestCard(true);
+    cSEHTester.RunHybridETest();
     cTool.fillSummaryTree("setup_type", (cGui) ? 1 : 0);
     if(cGui)
     {
@@ -413,7 +414,9 @@ int main(int argc, char* argv[])
         cTool.Destroy();
         abort();
     }
+    cSEHTester.ReadChipIds();
     cSEHTester.Initialise();
+
     // std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     if(cmd.foundOption("test-parameter"))
     {

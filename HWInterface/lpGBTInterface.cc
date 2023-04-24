@@ -77,10 +77,56 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     return cValue;
 }
 
-void lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL)
+uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t version)
+{
+    if(version == 1)
+    {
+        uint32_t cChipID   = 0;
+        uint32_t cChipID_0 = ReadChipFusedBlock(pChip, 0, 0);
+        // cChipID_0          = 0x10000067;
+        uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 4);
+        // cChipID_1          = 0b10000000000000000001100111000100;
+        cChipID_1          = ((cChipID_1 & 0xFFFFFFC0) >> 6) | ((cChipID_1 & 0x3f) << 26);
+        uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 8);
+        // cChipID_2          = 0b00000000000001100000000100100011;
+        cChipID_2          = ((cChipID_2 & 0xFFFFF000) >> 12) | ((cChipID_2 & 0xfff) << 20);
+        uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 12);
+        // cChipID_3          = 0b00000001100000000000100011010000;
+        cChipID_3          = ((cChipID_3 & 0xFFFC0000) >> 18) | ((cChipID_3 & 0x3ffff) << 14);
+        uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 16);
+        // cChipID_4          = 0b01100111000000000011010001010000;
+        cChipID_4 = ((cChipID_4 & 0xFF000000) >> 24) | ((cChipID_4 & 0xffffff) << 8);
+        // Majority vote for lpgbt ID
+        for(int i = 0; i < 32; i++)
+        {
+            uint8_t cTemp = 0;
+            cTemp         = ((cChipID_0 >> i) & 1) | ((cChipID_1 >> i & 1) << 1) | ((cChipID_2 >> i & 1) << 2) | ((cChipID_3 >> i & 1) << 3) | ((cChipID_4 >> i & 1) << 4);
+            // LOG(INFO) << BOLDYELLOW << "cTemp 0x"<< std::hex << +cTemp << std::dec << RESET;
+            // LOG(INFO) << BOLDYELLOW << "popcount 0x"<< std::hex << +__builtin_popcountll(cTemp) << std::dec << RESET;
+            if(__builtin_popcountll(cTemp) > 2) { cChipID = cChipID | (1 << i); }
+            else
+            {
+                cChipID = cChipID | (0 << i);
+            }
+        }
+        if(cChipID == 0)
+        {
+            LOG(INFO) << BOLDYELLOW << "No redundant lpgbt ID, only use first register" << RESET;
+            cChipID = cChipID_0;
+        }
+        return cChipID;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL)
 {
     WriteChipReg(pChip, "FUSEControl", 2);
-    int cReadBack = 0;
+    int      cReadBack = 0;
+    uint32_t cResult   = 0;
     while(cReadBack != 4)
     {
         cReadBack = ReadChipReg(pChip, "FUSEStatus");
@@ -92,18 +138,23 @@ void lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t 
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEBlowAddH = " << +cFuseH << RESET;
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEBlowAddL = " << +cFuseL << RESET;
     cReadBack = ReadChipReg(pChip, "FUSEValuesA");
+    cResult   = cResult | (cReadBack << 24);
     std::cout << std::hex << "Register 0x" << cFuseL + 0 << " , Value 0x" << cReadBack << std::endl;
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesA = " << +cReadBack << RESET;
     cReadBack = ReadChipReg(pChip, "FUSEValuesB");
+    cResult   = cResult | (cReadBack << 16);
     std::cout << std::hex << "Register 0x" << cFuseL + 1 << " , Value 0x" << cReadBack << std::endl;
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesB = " << +cReadBack << RESET;
     cReadBack = ReadChipReg(pChip, "FUSEValuesC");
+    cResult   = cResult | (cReadBack << 8);
     std::cout << std::hex << "Register 0x" << cFuseL + 2 << " , Value 0x" << cReadBack << std::endl;
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesC = " << +cReadBack << RESET;
     cReadBack = ReadChipReg(pChip, "FUSEValuesD");
+    cResult   = cResult | (cReadBack);
     std::cout << std::hex << "Register 0x" << cFuseL + 3 << " , Value 0x" << cReadBack << std::endl;
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesD = " << +cReadBack << RESET;
     WriteChipReg(pChip, "FUSEControl", 0);
+    return cResult;
 }
 
 bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
