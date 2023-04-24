@@ -54,7 +54,7 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     }
     else if(pRegNode == "vref")
     {
-        //cRegItem = pMPA2->getRegItem("ADC_control");
+        // cRegItem = pMPA2->getRegItem("ADCcontrol");
         return this->ReadReg(pMPA2, 0x8868) & 0xF;
 
     }
@@ -514,6 +514,10 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         LOG(DEBUG) << BOLDMAGENTA << "Setting threshold on MPA#" << +pMPA2->getId() << " to " << pValue << RESET;
         this->Set_threshold(pMPA2, pValue);
         return true;
+    }
+    else if(pRegName == "vref")
+    {
+        return this->WriteChipSingleReg(pMPA2, "ADCcontrol", pValue, false);
     }
     else if(pRegName == "Offsets")
     {
@@ -1123,7 +1127,9 @@ uint16_t MPA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
         {"temperature", std::make_pair(11, 0)}, {"avdd", std::make_pair(12, 0)},   {"io_vdd", std::make_pair(13, 0)}, {"dvdd", std::make_pair(14, 0)}};
     LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +ADCcontrol[pRegName].first << " shift " << +ADCcontrol[pRegName].second << RESET;
     this->selectBlock(static_cast<ReadoutChip*>(pChip), ADCcontrol[pRegName].first, ADCcontrol[pRegName].second);
-    return this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
+    uint16_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
+    if (pRegName == "GND") ADC = this->measureGnd(static_cast<ReadoutChip*>(pChip));
+    return ADC;
 }
 
 float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
@@ -1195,8 +1201,18 @@ void MPA2Interface::readFuseID(Chip* pMPA2)
 void MPA2Interface::loadVref(Chip* pMPA2)
 {
     // Set the Vref from the fuse
+    this->readFuseID(pMPA2);
     this->WriteChipRegBits(pMPA2, "ADCcontrol", pMPA2->pChipFuseID.ADCRef(), "Mask", (0x1F));
+    std::cout << " loading VREF from fuse ID " << +pMPA2->pChipFuseID.ADCRef() << std::endl;
 }
+
+void MPA2Interface::loadVref(Chip* pMPA2, uint8_t VREFvalue)
+{
+    // Set the Vref from the fuse
+    this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
+    std::cout << " loading VREF " << +VREFvalue << std::endl;
+}
+
 
 // This is done at probe?
 /*def calibrate_vref(self, vref_exp, lin_pts, plot = 0, verbose = 0):

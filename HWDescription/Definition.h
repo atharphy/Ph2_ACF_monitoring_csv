@@ -113,7 +113,7 @@
 #define MPA2_VBG_EXPECTED 0.280 // FIXMEEEE
 #define MPA2_VREF_EXPECTED 0.850 // FIXMEEEE
 #define MPA2_VREF_MIN   0.750 // FIXMEEEE
-#define MPA2_VREF_MAX   2.0 // FIXMEEE
+#define MPA2_VREF_MAX   1.0 // FIXMEEE
 #define MPA2_ADC_PRECISION 0.010 // FIXME
 
 // points to bufferoverlow
