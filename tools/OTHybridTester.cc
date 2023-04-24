@@ -837,10 +837,49 @@ bool OTHybridTester::LpGBTTestVTRx()
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 cMapIterator++;
             } while(cMapIterator != cVTRxplusDefaultRegisters.end());
+            cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d);
+            cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
+            if(cReadBackValue == 0xA0)
+            {
+                //std::vector<uint32_t> cSlaveData = {0xac,0x0d,cSlaveAddress};
+                cRecent        = static_cast<D19clpGBTInterface*>(flpGBTInterface)->WriteI2C(clpGBT, cMasterId, cSlaveAddress, 0xac0d, 2, 2);
+                //SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d0d);
+                cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d);
+                cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
+                if(cReadBackValue == 0xAC)
+                {
+                    LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 0);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 1);
+                    cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d);
+                    cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
+                    if(cReadBackValue == 0xA0)
+                    {
+                        LOG(INFO) << BOLDGREEN << "Passed VTRx+ reset, read back 0xA0" << RESET;
+                        cReset = true;
+                    }
+                    else
+                    {
+                        LOG(INFO) << BOLDRED << "Failed to reset VTRx+, read back 0x" << std::hex << +cReadBackValue << std::dec << RESET;
+                        cReset = false;
+                    }
+                }
+                else
+                {
+                    LOG(INFO) << BOLDRED << "Failed to write 0xAC to VTRx+ register 0x0D for reset test, read back 0x"<< std::hex << +cReadBackValue << std::dec << RESET;
+                    cReset = false;
+                }
+            }
+            else
+            {
+                LOG(INFO) << BOLDRED << "Wrong starting value in register 0x0D for VTRx+ reset test (0x"<< std::hex << +cReadBackValue << std::dec <<")" << RESET;
+                cReset = false;
+            }
         }
     }
     fillSummaryTree("vtrxplusslowcontrol", cSuccess);
-    return cSuccess;
+    fillSummaryTree("vtrxplus_reset", cReset);
+    return cSuccess & cReset;
 }
 
 bool OTHybridTester::LpGBTGetLinkLock()
