@@ -60,7 +60,7 @@ void RD53eudaqProducer::DoStartRun()
     // # Add extra information to the event #
     // ######################################
     ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    ev->SetTag("Dataformat version", CMSITEventData::DataFormatVersion());
+    ev->SetTag("Dataformat version", CMSITEventData::DataFormatVersion);
     ev->SetTag("Configuration file", RD53sysCntrPhys.fParsedFile.str());
     for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
     {
