@@ -660,17 +660,18 @@ void RD53Event::DecodeRD53AEvents(const std::vector<uint32_t>& data, std::vector
 // # Specific for RD53B #
 // ######################
 
-size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus, const FormatOptions& options)
+size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus, const DataFormatOptions& options)
 {
     return RD53Event::DecodeRD53BEvents(&data[0], events, RD53FWEvtEncoder::NBIT_EVT_WORD * data.size(), eventStatus, options);
 }
 
-size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint32_t& eventStatus, const FormatOptions& options)
+size_t
+RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint32_t& eventStatus, const DataFormatOptions& options)
 {
     return RD53Event::DecodeRD53BEvents(&data[refEventStart[0]], events, RD53FWEvtEncoder::NBIT_EVT_WORD * (refEventStart.back() - refEventStart[0]), eventStatus, options);
 }
 
-size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, uint32_t& eventStatus, const FormatOptions& options)
+size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, uint32_t& eventStatus, const DataFormatOptions& options)
 {
     auto         bits         = bit_view(data, 0, howMany);
     const size_t n32bitsWords = bits.size() / RD53FWEvtEncoder::NBIT_EVT_WORD;

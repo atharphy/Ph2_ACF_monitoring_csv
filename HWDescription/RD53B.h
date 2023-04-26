@@ -55,7 +55,7 @@ class RD53B : public RD53
     static const size_t   NCOLS;
     static const FrontEnd CROC;
 
-    static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const Ph2_HwInterface::FormatOptions& options = {});
+    static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const Ph2_HwInterface::DataFormatOptions& options = Ph2_HwInterface::DataFormatOptions());
 
     RD53B() {}
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
