@@ -102,7 +102,7 @@ auto decodeCompressedHitmap(BitView<T>& bits)
     return hits;
 }
 
-void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const FormatOptions& options)
+void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const DataFormatOptions& options)
 {
     if((options.enableBCID == true) && (options.enableTriggerId == false))
         e.bc_id = bits.pop(RD53BEvtEncoder::NBIT_BCID * 2);
@@ -128,7 +128,7 @@ void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t nWords)
         e.eventStatus |= RD53EvtEncoder::CHIPID;
 }
 
-auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const FormatOptions& options)
+auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const DataFormatOptions& options)
 {
     BitVector<uint32_t> payloadData;
     size_t              nWords = bits.size() / 64;
@@ -163,7 +163,7 @@ auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const Fo
     return payloadData;
 }
 
-void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const FormatOptions& options)
+void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const DataFormatOptions& options)
 {
     std::array<int, RD53B::NCOLS / RD53Constants::NROW_CORE> last_qrow;
     last_qrow.fill(RD53B::NROWS / 2);

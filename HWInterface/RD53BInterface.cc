@@ -43,8 +43,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # bit 9:    EnEoS         --> Map in FormatOptions: enableEOSmarker
     // # bits 1-8: NumOfEventsInStream[7:0]
     RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, false);
-    // # bit9:     BinaryReadOut --> Map in FormatOptions: enableToT
-    // # bit8:     RawData       --> Map in FormatOptions: enableRawMap
+    // # bit 9:    BinaryReadOut --> Map in FormatOptions: enableToT
+    // # bit 8:    RawData       --> Map in FormatOptions: enableRawMap
     // # bits 4-7: MaxHits[3:0]
     // # bits 1-3: MaxToT[2:0]
 
