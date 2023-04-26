@@ -193,7 +193,7 @@ void Tool::initMetadataAndFillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theUsernameContainer);
     theUsernameContainer.getSummary<std::string>() = theUsername;
 
-    std::string           theHostName;
+    std::string theHostName;
     try
     {
         theHostName = std::string(std::getenv("HOSTNAME"));
