@@ -32,7 +32,8 @@ class PSBiasCal : public Tool
     void Initialise();
     void CalibrateADC();
 
-    uint32_t CalibrateChipBias(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr, std::string dac_str, float VREFmeasured = SSA2_VREF_EXPECTED);
+    uint32_t CalibrateChipBias(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr, std::string dac_str, float VREFmeasured );
+    uint8_t  TuneDAC(Ph2_HwDescription::Chip* cChip, float slope, float exp_val, std::string DAC, uint8_t DAC_val, bool isVref = false);
     void     CalibrateBias();
     void     DisableTest(Ph2_HwDescription::Chip* cChip);
     float    MeasureGnd(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, std::string dac_str);

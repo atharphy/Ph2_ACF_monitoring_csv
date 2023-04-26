@@ -1123,13 +1123,12 @@ uint32_t MPA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
         {"ThDAC0", std::make_pair(1, 5)},       {"ThDAC1", std::make_pair(2, 5)},  {"ThDAC2", std::make_pair(3, 5)},  {"ThDAC3",  std::make_pair(4, 5)},  {"ThDAC4", std::make_pair(5, 5)},
         {"ThDAC5", std::make_pair(6, 5)},       {"ThDAC6", std::make_pair(7, 5)},  {"CalDAC0", std::make_pair(1, 6)}, {"CalDAC1", std::make_pair(2, 6)},
         {"CalDAC2", std::make_pair(3, 6)},      {"CalDAC3", std::make_pair(4, 6)}, {"CalDAC4", std::make_pair(5, 6)}, {"CalDAC5", std::make_pair(6, 6)}, {"CalDAC6", std::make_pair(7, 6)},
-        {"GND", std::make_pair(1, 7)},     {"bandgap", std::make_pair(8, 0)}, {"dac_ref", std::make_pair(9, 0)}, {"vref", std::make_pair(10, 0)},
+        {"GND", std::make_pair(1, 7)},     {"VBG", std::make_pair(8, 0)}, {"dac_ref", std::make_pair(9, 0)}, {"vref", std::make_pair(10, 0)},
         {"temperature", std::make_pair(11, 0)}, {"avdd", std::make_pair(12, 0)},   {"io_vdd", std::make_pair(13, 0)}, {"dvdd", std::make_pair(14, 0)}};
-    LOG(INFO) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +ADCcontrol[pRegName].first << " shift " << +ADCcontrol[pRegName].second << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +ADCcontrol[pRegName].first << " shift " << +ADCcontrol[pRegName].second << RESET;
     this->selectBlock(static_cast<ReadoutChip*>(pChip), ADCcontrol[pRegName].first, ADCcontrol[pRegName].second);
     uint32_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
-    if (pRegName == "GND") ADC = this->measureGnd(static_cast<ReadoutChip*>(pChip));
-    LOG(INFO) << BOLDMAGENTA << " ADC " << ADC << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << " ADC " << ADC << RESET;
     return ADC;
 }
 
@@ -1204,14 +1203,14 @@ void MPA2Interface::loadVref(Chip* pMPA2)
     // Set the Vref from the fuse
     this->readFuseID(pMPA2);
     this->WriteChipRegBits(pMPA2, "ADCcontrol", pMPA2->pChipFuseID.ADCRef(), "Mask", (0x1F));
-    std::cout << " loading VREF from fuse ID " << +pMPA2->pChipFuseID.ADCRef() << std::endl;
+    LOG(DEBUG) << BOLDMAGENTA << " loading VREF from fuse ID " << +pMPA2->pChipFuseID.ADCRef() << RESET;
 }
 
 void MPA2Interface::loadVref(Chip* pMPA2, uint8_t VREFvalue)
 {
     // Set the Vref from the fuse
     this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
-    std::cout << " loading VREF " << +VREFvalue << std::endl;
+    LOG(DEBUG) << BOLDMAGENTA << " loading VREF " << +VREFvalue << RESET;
 }
 
 
