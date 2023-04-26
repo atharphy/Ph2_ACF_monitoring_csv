@@ -75,6 +75,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t cL12FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l12_type");
     uint32_t cL08FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l8_type");
 
+    LOG(INFO) << BOLDBLUE << "\t--> SW commit number : " << BOLDYELLOW << RD53Shared::gitGitCommit() << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor << BOLDBLUE << " -- Date (yy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/"
               << cFWday << BOLDBLUE << " -- Time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Link type : " << BOLDYELLOW << (cLinkType == 0 ? "electrical" : "optical") << BOLDBLUE << " -- Optical speed : " << BOLDYELLOW
@@ -95,11 +96,11 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // # Resets #
     // ##########
     RD53FWInterface::ChipReset();
-    RD53FWInterface::ChipReSync();
     RD53FWInterface::ResetFastCmdBlk();
     RD53FWInterface::ResetSlowCmdFIFO();
     RD53FWInterface::ResetReadBkFIFO();
     RD53FWInterface::ResetReadoutBlk();
+    RD53FWInterface::ChipReSync();
 
     // ###############################################
     // # FW register initialization from config file #
@@ -178,9 +179,9 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ################################
     this->singleChip     = RegManager::ReadReg("user.stat_regs.aurora_rx.Module_type") == 1;
     this->enabledHybrids = RD53FWInterface::GetBoardEnabledHybrids(pBoard);
-    uint32_t chips_en    = RD53FWInterface::GetBoardEnabledChips(pBoard);
+    uint32_t chipsEn     = RD53FWInterface::GetBoardEnabledChips(pBoard);
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", this->enabledHybrids});
-    cVecReg.push_back({"user.ctrl_regs.Chips_en", chips_en});
+    cVecReg.push_back({"user.ctrl_regs.Chips_en", chipsEn});
     if(cVecReg.size() != 0) RegManager::WriteStackReg(cVecReg);
 
     // ########################
@@ -412,19 +413,17 @@ void RD53FWInterface::PrintFWstatus()
 
 bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 {
-    uint32_t chips_en;
-    uint32_t channel_up;
-
     LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;
 
     // ########################################
     // # Check communication with the chip(s) #
     // ########################################
-    chips_en = RegManager::ReadReg("user.ctrl_regs.Chips_en");
+    uint32_t chips_en = RD53FWInterface::GetBoardEnabledChips(pBoard, true);
     if(chips_en == 0) throw Exception("[RD53FWInterface::CheckChipCommunication] No data lane is enabled: aborting");
     LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << " i.e. "
               << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
 
+    uint32_t              channel_up;
     int                   nAttempts = 0;
     std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
     while(nAttempts < RD53Shared::MAXATTEMPTS)
@@ -471,7 +470,7 @@ RD53FWconstants::ReadoutSpeed RD53FWInterface::ReadoutSpeed()
     return RegManager::ReadReg("user.stat_regs.aurora_rx.speed") == 0 ? RD53FWconstants::ReadoutSpeed::x1280 : RD53FWconstants::ReadoutSpeed::x640;
 }
 
-uint32_t RD53FWInterface::GetBoardEnabledChips(const BeBoard* pBoard)
+uint32_t RD53FWInterface::GetBoardEnabledChips(const BeBoard* pBoard, bool primariesOnly)
 {
     uint32_t theChipsEn = 0;
 
@@ -486,7 +485,7 @@ uint32_t RD53FWInterface::GetBoardEnabledChips(const BeBoard* pBoard)
             else
             {
                 for(const auto cChip: *cHybrid)
-                    if(static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == true)
+                    if((primariesOnly == false) || (static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == true))
                     {
                         uint32_t chip_lane = hybrid_id;
                         if(this->singleChip != true) chip_lane = (RD53FWconstants::NLANE_HYBRID * hybrid_id) + static_cast<RD53*>(cChip)->getChipLane();
@@ -502,19 +501,19 @@ uint32_t RD53FWInterface::GetBoardEnabledChips(const BeBoard* pBoard)
 
 uint32_t RD53FWInterface::GetBoardEnabledHybrids(const BeBoard* pBoard)
 {
-    uint32_t hybrids_en = 0;
+    uint32_t theHybridsEn = 0;
 
     for(const auto cOpticalGroup: *pBoard)
-        for(const auto cHybrid: *cOpticalGroup) hybrids_en |= 1 << cHybrid->getId();
+        for(const auto cHybrid: *cOpticalGroup) theHybridsEn |= 1 << cHybrid->getId();
 
-    return hybrids_en;
+    return theHybridsEn;
 }
 
 void RD53FWInterface::Start()
 {
     RD53FWInterface::ChipReset();
-    RD53FWInterface::ChipReSync();
     RD53FWInterface::ResetReadoutBlk();
+    RD53FWInterface::ChipReSync();
 
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
 }

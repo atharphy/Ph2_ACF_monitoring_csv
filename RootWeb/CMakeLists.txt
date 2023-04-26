@@ -17,8 +17,8 @@ endif()
 
 if(${Boost_FOUND})
     #need to find local boost
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    #    include_directories(${Boost_INCLUDE_DIRS})
+    #link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_LIBRARIES})
 endif()
 

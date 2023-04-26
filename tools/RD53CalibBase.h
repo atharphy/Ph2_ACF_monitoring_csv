@@ -59,6 +59,25 @@ class CalibBase : public Tool
         histos = new T;
     }
 
+    template <typename T>
+    void fillVectorContainer(DetectorDataContainer& theDataContainer, const size_t nElements, const T value, const int fromBoardIndx = -1)
+    {
+        for(const auto cBoard: theDataContainer)
+        {
+            const auto& theBoard = (fromBoardIndx < 0 ? cBoard : theDataContainer.at(fromBoardIndx));
+
+            for(const auto cOpticalGroup: *theBoard)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
+                    {
+                        cChip->getSummary<std::vector<T>>().clear();
+                        for(auto i = 0u; i < nElements; i++) cChip->getSummary<std::vector<T>>().push_back(value);
+                    }
+
+            if(fromBoardIndx >= 0) break;
+        }
+    }
+
   protected:
     std::string theHistoFileName;
     std::string dataOutputDir;

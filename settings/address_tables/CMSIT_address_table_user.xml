@@ -135,6 +135,8 @@
       <node id="error_cntr_chip_addr"   mask="0x00000070"     permission="rw"      description="" />
       <node id="event_stream_timeout"   mask="0x007FFF80"     permission="rw"      description="" />
       <node id="data_merging_en"        mask="0x01000000"     permission="rw"      description="" />
+      <node id="rst_frame_cntr"         mask="0x02000000"     permission="rw"      description="" />
+      <node id="start_frame_cntr"       mask="0x04000000"     permission="rw"      description="" />
       <node id="active_lane"            mask="0xF0000000"     permission="rw"      description="" />
     </node>
 
@@ -349,6 +351,9 @@
       <node id="reg_addr_rx"           mask="0x0000FFFF"      permission="r"       description="Returned Register addres from Slow Control Read Command" />
       <node id="nb_of_words_rx"        mask="0xFFFF0000"      permission="r"       description="Nb of received words from Slow Control Read Command" />
     </node>
+
+    <node id="aurora_frame_cntr"       address="0x0000001D"   permission="r"       description="Aurora Frame Counter for DM Tests"> </node>
+    <node id="aurora_service_blk_cntr" address="0x0000001E"   permission="r"       description="Aurora Service Block Counter for DM Tests"> </node>
 
   </node>
 

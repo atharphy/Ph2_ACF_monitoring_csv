@@ -1496,7 +1496,8 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
     pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
-    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
+    if(doc.child("HwDescription").child("Settings") == 0) LOG(WARNING) << BOLDRED << "No -Settings- tag found in XML file: " << BOLDYELLOW << pFilename << RESET;
+    for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings") && nSettings != 0; nSettings = nSettings.next_sibling())
     {
         os << std::endl;
 

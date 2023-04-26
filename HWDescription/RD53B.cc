@@ -47,24 +47,9 @@ RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
     this->setFrontEndType(FrontEndType::RD53B);
 }
 
-uint32_t RD53B::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const
-{
-    return bits::pack<1, 5, 8, 1, 5>(cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
-}
-
-float RD53B::VCal2Charge(float VCal, bool isNoise) const
-{
-    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
-    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
-    return (Vref / VrefDivider / RD53BchargeConvertion::ADCrange) * VCal / RD53BchargeConvertion::ele * (RD53BchargeConvertion::cap * 1e4) + (isNoise == false ? RD53BchargeConvertion::offset : 0);
-}
-
-float RD53B::Charge2VCal(float Charge) const
-{
-    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
-    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
-    return (Charge - RD53BchargeConvertion::offset) / (RD53BchargeConvertion::cap * 1e4) * RD53BchargeConvertion::ele / (Vref / VrefDivider / RD53BchargeConvertion::ADCrange);
-}
+// ###########################################
+// # Functions needed for decoding chip data #
+// ###########################################
 
 template <class T>
 size_t decodeCompressedBitpair(BitView<T>& bits)
@@ -116,10 +101,6 @@ auto decodeCompressedHitmap(BitView<T>& bits)
 
     return hits;
 }
-
-// ###########################################
-// # Functions needed for decoding chip data #
-// ###########################################
 
 void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const FormatOptions& options)
 {
@@ -249,6 +230,25 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
                     }
         }
     }
+}
+
+uint32_t RD53B::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const
+{
+    return bits::pack<1, 5, 8, 1, 5>(cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
+}
+
+float RD53B::VCal2Charge(float VCal, bool isNoise) const
+{
+    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
+    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
+    return (Vref / VrefDivider / RD53BchargeConvertion::ADCrange) * VCal / RD53BchargeConvertion::ele * (RD53BchargeConvertion::cap * 1e4) + (isNoise == false ? RD53BchargeConvertion::offset : 0);
+}
+
+float RD53B::Charge2VCal(float Charge) const
+{
+    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
+    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
+    return (Charge - RD53BchargeConvertion::offset) / (RD53BchargeConvertion::cap * 1e4) * RD53BchargeConvertion::ele / (Vref / VrefDivider / RD53BchargeConvertion::ADCrange);
 }
 
 } // namespace Ph2_HwDescription
