@@ -193,7 +193,17 @@ void Tool::initMetadataAndFillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theUsernameContainer);
     theUsernameContainer.getSummary<std::string>() = theUsername;
 
-    std::string           theHostName = std::string(std::getenv("HOSTNAME"));
+    std::string theHostName;
+    try
+    {
+        theHostName = std::string(std::getenv("HOSTNAME"));
+    }
+    catch(const std::exception& e)
+    {
+        LOG(WARNING) << e.what();
+        LOG(WARNING) << __PRETTY_FUNCTION__ << " Hostname not set, using dummy name";
+        theHostName = "host";
+    }
     DetectorDataContainer theHostNameContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theHostNameContainer);
     theHostNameContainer.getSummary<std::string>() = theHostName;
