@@ -108,7 +108,7 @@ class MPA2Interface : public ReadoutChipInterface
     bool                 selectBlock(Ph2_HwDescription::Chip* pMPA2, uint8_t block, uint8_t testPoint = 0, uint8_t swEn = 0);
     float                measureGnd(Ph2_HwDescription::Chip* pMPA2);
     float                measureBg(Ph2_HwDescription::Chip* pMPA2);
-    uint32_t             ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
+    uint16_t             ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
 
     float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = 0.850);
 

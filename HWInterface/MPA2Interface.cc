@@ -1097,7 +1097,7 @@ bool MPA2Interface::Set_threshold(Chip* pMPA2, uint32_t th)
     return success;
 }
 
-uint32_t MPA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
+uint16_t MPA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {   
     auto theRegister = ADC_CONTROL_TABLE.find(pRegName);
     LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
