@@ -120,6 +120,9 @@ int main(int argc, char** argv)
 
     cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address (e.g. tcp://localhost:44000)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
+    cmd.defineOption("name", "Name to use for the eudaq producer in run control", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("name", "n");
+
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
 
@@ -156,6 +159,7 @@ int main(int argc, char** argv)
     std::string configFile   = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
     std::string settingsFile = cmd.foundOption("settingsFile") == true ? cmd.optionValue("settingsFile") : configFile;
     std::string whichCalib   = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
+    std::string ProducerName = cmd.foundOption("name") == true ? cmd.optionValue("name") : EUDAQ::EUDAQproducerNAME;
     std::string binaryFile   = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
     bool        program      = cmd.foundOption("prog") == true ? true : false;
     bool        reset        = cmd.foundOption("reset") == true ? true : false;
@@ -567,7 +571,7 @@ int main(int argc, char** argv)
 
         gROOT->SetBatch(true);
 
-        auto theEUDAQproducer = eudaq::Producer::Make(EUDAQ::EUDAQproducerNAME, EUDAQ::EUDAQproducerNAME, eudaqRunCtr);
+	auto theEUDAQproducer = eudaq::Producer::Make(EUDAQ::EUDAQproducerNAME, ProducerName, eudaqRunCtr);
 
         if(!theEUDAQproducer)
         {
