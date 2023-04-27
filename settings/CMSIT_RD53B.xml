@@ -137,7 +137,7 @@
           <Register name="HitOr_enable_l12"> 0 </Register>
           <!-- HitOr port enable: set trigger_source to proper value then this register,
                0b01 enables HitOr for the first (left-most) miniDP connector,
-               0b10 enables HitOr for the second miniDP connector
+               0b10 enables HitOr for the second miniDP connector, ...
           -->
         </Register>
 
