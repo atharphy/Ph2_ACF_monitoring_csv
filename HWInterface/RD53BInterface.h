@@ -82,7 +82,12 @@ class RD53BInterface : public RD53Interface
                                                                                 {"EnEoS", {"DataConcentratorConf", 8}},
                                                                                 {"EnLv1Id", {"DataConcentratorConf", 9}},
                                                                                 {"EnBCId", {"DataConcentratorConf", 10}},
-                                                                                {"EnCRC", {"DataConcentratorConf", 11}}};
+                                                                                {"EnCRC", {"DataConcentratorConf", 11}},
+
+                                                                                {"RawData", {"CoreColEncoderConf", 7}},
+                                                                                {"BinaryReadOut", {"CoreColEncoderConf", 8}},
+
+                                                                                {"EnOutputDataChipId", {"DataMerging", 8}}};
 
     // ###########################
     // # Dedicated to monitoring #
