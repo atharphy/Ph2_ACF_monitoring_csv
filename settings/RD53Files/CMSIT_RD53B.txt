@@ -325,6 +325,10 @@ EN_INJCAP_MEAS            0x115         0b0                     0b0             
 EN_INJCAP_PAR_MEAS        0x116         0b0                     0b0                                 1
 ToT6to4Mapping            0x117         0b0                     0b0                                 1
 ToTDualEdgeCount          0x118         0b0                     0b0                                 1
+EnEoS                     0x119         0b0                     0b0                                 1
+EnLv1Id                   0x11A         0b0                     0b0                                 1
+EnBCId                    0x11B         0b0                     0b0                                 1
+EnCRC                     0x11C         0b0                     0b0                                 1
 
 RESISTORI2V               0x1A0         0d5000                  0d5000                             16
 ADC_OFFSET_VOLT           0x1A1         0d63                    0d63                               16
