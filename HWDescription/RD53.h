@@ -128,8 +128,6 @@ class RD53 : public ReadoutChip
         size_t                         nTDACvalues;
         size_t                         maxToTvalue;
         size_t                         splitToTvalue;
-        size_t                         maxBCIDvalue;
-        size_t                         maxTRIGIDvalue;
         size_t                         nBitTrimDig;
         size_t                         nBitTrimAna;
         size_t                         colStart;
@@ -145,6 +143,8 @@ class RD53 : public ReadoutChip
 
     virtual size_t                   getNRows() const                                                                                                           = 0;
     virtual size_t                   getNCols() const                                                                                                           = 0;
+    virtual size_t                   getMaxBCIDvalue() const                                                                                                    = 0;
+    virtual size_t                   getMaxTRIGIDvalue() const                                                                                                  = 0;
     virtual std::vector<uint16_t>    getLaneUpInitSequence() const                                                                                              = 0;
     virtual const DataFormatOptions& getDataFormatOptions()                                                                                                     = 0;
     virtual const FrontEnd*          getFEtype(const size_t colStart, const size_t colStop) const                                                               = 0;
