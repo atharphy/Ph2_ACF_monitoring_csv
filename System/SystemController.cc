@@ -190,7 +190,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseCommunicationSettings(pFilename, theCommunicationSettingConfig, os);
 
     fDQMStreamerEnabled = theCommunicationSettingConfig.fDQMCommunication.fEnable;
-    if(fDQMStreamerEnabled)
+    if(fDQMStreamerEnabled && (fDQMStreamer == nullptr))
     {
         fDQMStreamer = new TCPPublishServer(theCommunicationSettingConfig.fDQMCommunication.fPort, 1);
         fDQMStreamer->startAccept();
@@ -199,7 +199,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     LOG(INFO) << GREEN << "Bootstrapping TCP Server..." << RESET;
 
     fMonitorDQMStreamerEnabled = theCommunicationSettingConfig.fMonitorDQMCommunication.fEnable;
-    if(fMonitorDQMStreamerEnabled)
+    if(fMonitorDQMStreamerEnabled && (fMonitorDQMStreamer == nullptr))
     {
         fMonitorDQMStreamer = new TCPPublishServer(theCommunicationSettingConfig.fMonitorDQMCommunication.fPort, 1);
         fMonitorDQMStreamer->startAccept();

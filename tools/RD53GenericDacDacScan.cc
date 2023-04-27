@@ -125,9 +125,11 @@ void GenericDacDacScan::localConfigure(const std::string& histoFileName, int cur
 
 void GenericDacDacScan::run()
 {
+    CalibBase::showErrorReport = false;
     ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
     CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
     GenericDacDacScan::scanDacDac(regNameDAC1, regNameDAC2, dac1List, dac2List, &theOccContainer);
+    CalibBase::showErrorReport = true;
 
     // ################
     // # Error report #
@@ -171,15 +173,22 @@ void GenericDacDacScan::analyze()
                     size_t regVal1 = 0u;
                     size_t regVal2 = 0u;
 
-                    for(auto i = 0u; i < dac1List.size(); i++)
-                        for(auto j = 0u; j < dac2List.size(); j++)
+                    // #####################################################
+                    // # Inverted loop (dac2 external and dac1 internal)   #
+                    // # in order to find the lowest value in tornado plot #
+                    // #####################################################
+                    for(auto j = 0u; j < dac2List.size(); j++)
+                        for(auto i = 0u; i < dac1List.size(); i++)
                         {
-                            auto current = theOccContainer.at(cBoard->getIndex())
-                                               ->at(cOpticalGroup->getIndex())
-                                               ->at(cHybrid->getIndex())
-                                               ->at(cChip->getIndex())
-                                               ->getSummary<std::vector<float>>()
-                                               .at(i * dac2List.size() + j);
+                            auto current = round(theOccContainer.at(cBoard->getIndex())
+                                                     ->at(cOpticalGroup->getIndex())
+                                                     ->at(cHybrid->getIndex())
+                                                     ->at(cChip->getIndex())
+                                                     ->getSummary<std::vector<float>>()
+                                                     .at(i * dac2List.size() + j) /
+                                                 RD53Shared::PRECISION) *
+                                           RD53Shared::PRECISION;
+
                             if(current > best)
                             {
                                 regVal1 = dac1List[i];

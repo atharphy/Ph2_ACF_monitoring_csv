@@ -181,7 +181,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         message(STATUS "Building with EUDAQ")
         set(USE_EUDAQ ON)
         if(NOT DEFINED ENV{EUDAQDIR})
-            message(WARNING "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
+            message(WARNING "Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
             ExternalProject_Add( ext_eudaq
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
                     GIT_TAG $ENV{EUDAQ_REF}
@@ -195,7 +195,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
         include_directories($ENV{EUDAQDIR}/include)
         set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib -Wl,-rpath=$ENV{EUDAQDIR}/lib eudaq_core)
-        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}{Reset}")
+        message(STATUS "EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}${Reset}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
@@ -300,7 +300,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
         set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}{Reset}")
+        message(STATUS "EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}${Reset}")
     else(${USE_EUDAQ})
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif(${USE_EUDAQ})

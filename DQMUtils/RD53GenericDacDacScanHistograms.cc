@@ -39,16 +39,7 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
     std::stringstream titleX("");
     std::stringstream titleY("");
 
-    if(regNameDAC2.find("CAL_EDGE_FINE_DELAY") != std::string::npos)
-    {
-        const auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNRows() / 2, RD53Shared::firstChip->getNCols() / 2);
-        const auto unitTime =
-            1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
-        titleY << "Injection Delay (ns)";
-        startValueY *= unitTime;
-        stopValueY *= unitTime;
-    }
-    else if(regNameDAC1.find("CAL_EDGE_FINE_DELAY") != std::string::npos)
+    if(regNameDAC1.find("CAL_EDGE_FINE_DELAY") != std::string::npos)
     {
         const auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNRows() / 2, RD53Shared::firstChip->getNCols() / 2);
         const auto unitTime =
@@ -56,6 +47,15 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
         titleX << "Injection Delay (ns)";
         startValueX *= unitTime;
         stopValueX *= unitTime;
+    }
+    else if(regNameDAC2.find("CAL_EDGE_FINE_DELAY") != std::string::npos)
+    {
+        const auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNRows() / 2, RD53Shared::firstChip->getNCols() / 2);
+        const auto unitTime =
+            1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
+        titleY << "Injection Delay (ns)";
+        startValueY *= unitTime;
+        stopValueY *= unitTime;
     }
 
     if(regNameDAC1.find("VCAL") != std::string::npos)

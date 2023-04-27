@@ -84,6 +84,12 @@ RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
     this->setFrontEndType(FrontEndType::RD53A);
 }
 
+const DataFormatOptions& RD53A::getDataFormatOptions()
+{
+    dataFormatOptions = DataFormatOptions{true, true, true, true, false, false, false};
+    return dataFormatOptions;
+}
+
 std::vector<uint16_t> RD53A::getLaneUpInitSequence() const
 {
     const int             nWordsReset    = 500;  // @CONST@
