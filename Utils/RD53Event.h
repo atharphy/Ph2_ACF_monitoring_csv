@@ -21,8 +21,8 @@
 
 namespace Ph2_HwDescription
 {
-class RD53;
-}
+struct DataFormatOptions;
+} // namespace Ph2_HwDescription
 
 // #############
 // # CONSTANTS #
@@ -47,7 +47,7 @@ const uint8_t  NBIT_FMTVER     = 8;  // Number of bits for the Format Version
 const uint8_t  NBIT_DUMMY      = 8;  // Number of bits for the Dummy Size
 const uint8_t  NBIT_TDC        = 8;  // Number of bits for the TDC
 const uint8_t  NBIT_L1ACNT     = 24; // Number of bits for the L1A Counter (Event number)
-const uint8_t  NBIT_BXCNT      = 32; // Number of bits for the BX Counter */
+const uint8_t  NBIT_BXCNT      = 32; // Number of bits for the BX Counter
 
 // ###############
 // # Chip header #
@@ -114,40 +114,29 @@ struct RD53ChipEvent
     uint32_t eventStatus = RD53FWEvtEncoder::GOOD;
 };
 
-// #############################
-// # Options in RD53B protocol #
-// #############################
-struct DataFormatOptions
-{
-    bool enableChipId    = true;
-    bool enableToT       = true;
-    bool enableBCID      = false;
-    bool enableTriggerId = false;
-    bool enableEOSmarker = false;
-    bool enableRawMap    = false;
-    bool enableCRC       = false;
-};
-
 class RD53Event : public Ph2_HwInterface::Event
 {
   public:
     // ######################
     // # Specific for RD53A #
     // ######################
-    void        DecodeRD53AEvent(const uint32_t* data, size_t n32bitsWords);
-    static void DecodeRD53AEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint32_t& eventStatus);
+    static RD53Event DecodeRD53AEvent(const uint32_t* data, size_t n32bitsWords);
+    static void      DecodeRD53AEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint32_t& eventStatus);
 
     // ######################
     // # Specific for RD53B #
     // ######################
-    static size_t DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus, const DataFormatOptions& options = DataFormatOptions());
-    static size_t DecodeRD53BEvents(const std::vector<uint32_t>& data,
-                                    std::vector<RD53Event>&      events,
-                                    const std::vector<size_t>&   refEventStart,
-                                    uint32_t&                    eventStatus,
-                                    const DataFormatOptions&     options = DataFormatOptions());
-    static size_t DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, uint32_t& eventStatus, const DataFormatOptions& options = DataFormatOptions());
+    static size_t DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus, const Ph2_HwDescription::DataFormatOptions& options);
+    static size_t DecodeRD53BEvents(const std::vector<uint32_t>&                data,
+                                    std::vector<RD53Event>&                     events,
+                                    const std::vector<size_t>&                  refEventStart,
+                                    uint32_t&                                   eventStatus,
+                                    const Ph2_HwDescription::DataFormatOptions& options);
+    static size_t DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, uint32_t& eventStatus, const Ph2_HwDescription::DataFormatOptions& options);
 
+    // ############################
+    // # Generic member functions #
+    // ############################
     void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
     void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
 
@@ -162,6 +151,9 @@ class RD53Event : public Ph2_HwInterface::Event
     static void PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData = {});
     static void MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
 
+    // ################
+    // # Event format #
+    // ################
     uint16_t                   block_size;
     uint16_t                   tlu_trigger_id;
     uint16_t                   data_format_ver;

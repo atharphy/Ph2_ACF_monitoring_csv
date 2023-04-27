@@ -77,7 +77,12 @@ class RD53BInterface : public RD53Interface
                                                                                 {"EN_INJCAP_PAR_MEAS", {"MEAS_CAP", 2}},
 
                                                                                 {"ToT6to4Mapping", {"ToTConfig", 9}},
-                                                                                {"ToTDualEdgeCount", {"ToTConfig", 10}}};
+                                                                                {"ToTDualEdgeCount", {"ToTConfig", 10}},
+
+                                                                                {"EnEoS", {"DataConcentratorConf", 8}},
+                                                                                {"EnLv1Id", {"DataConcentratorConf", 9}},
+                                                                                {"EnBCId", {"DataConcentratorConf", 10}},
+                                                                                {"EnCRC", {"DataConcentratorConf", 11}}};
 
     // ###########################
     // # Dedicated to monitoring #

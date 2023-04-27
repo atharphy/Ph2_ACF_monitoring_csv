@@ -95,6 +95,20 @@ struct LaneConfig
     bool                   isPrimary;
 };
 
+// ####################################
+// # Optional fields in chip protocol #
+// ####################################
+struct DataFormatOptions
+{
+    bool enableChipId;
+    bool enableToT;
+    bool enableBCID;
+    bool enableTriggerId;
+    bool enableEOSmarker;
+    bool enableRawMap;
+    bool enableCRC;
+};
+
 class RD53 : public ReadoutChip
 {
   public:
@@ -129,14 +143,15 @@ class RD53 : public ReadoutChip
     // ####################################
     LaneConfig laneConfig;
 
-    virtual size_t                getNRows() const                                                                                                           = 0;
-    virtual size_t                getNCols() const                                                                                                           = 0;
-    virtual std::vector<uint16_t> getLaneUpInitSequence() const                                                                                              = 0;
-    virtual const FrontEnd*       getFEtype(const size_t colStart, const size_t colStop) const                                                               = 0;
-    virtual uint32_t              getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const = 0;
-    virtual float                 VCal2Charge(float VCal, bool isNoise = false) const                                                                        = 0;
-    virtual float                 Charge2VCal(float Charge) const                                                                                            = 0;
-    virtual bool                  getUseGainDualSlope() const                                                                                                = 0;
+    virtual size_t                   getNRows() const                                                                                                           = 0;
+    virtual size_t                   getNCols() const                                                                                                           = 0;
+    virtual std::vector<uint16_t>    getLaneUpInitSequence() const                                                                                              = 0;
+    virtual const DataFormatOptions& getDataFormatOptions()                                                                                                     = 0;
+    virtual const FrontEnd*          getFEtype(const size_t colStart, const size_t colStop) const                                                               = 0;
+    virtual uint32_t                 getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const = 0;
+    virtual float                    VCal2Charge(float VCal, bool isNoise = false) const                                                                        = 0;
+    virtual float                    Charge2VCal(float Charge) const                                                                                            = 0;
+    virtual bool                     getUseGainDualSlope() const                                                                                                = 0;
 
     RD53() : ReadoutChip(0, 0, 0, 0, 0) {}
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
@@ -176,6 +191,9 @@ class RD53 : public ReadoutChip
     uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
     uint8_t getTxGroup() { return fLpGBTmap.TxGroup; }
     uint8_t getTxChannel() { return fLpGBTmap.TxChannel; }
+
+  protected:
+    DataFormatOptions dataFormatOptions;
 
   private:
     struct LpGBTmap

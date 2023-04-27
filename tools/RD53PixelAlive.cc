@@ -374,13 +374,13 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                  ->at(cHybrid->getIndex())
                                                  ->at(cChip->getIndex())
                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                                 .data1[i] -
+                                                 .data1.at(i) -
                                              theOccContainer->at(cBoard->getIndex())
                                                  ->at(cOpticalGroup->getIndex())
                                                  ->at(cHybrid->getIndex())
                                                  ->at(cChip->getIndex())
                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                                 .data1[i - 1];
+                                                 .data1.at(i - 1);
                         deltaBCID += (deltaBCID >= 0 ? 0 : frontEnd->maxBCIDvalue + 1);
                         if(deltaBCID >= int(frontEnd->maxBCIDvalue))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
@@ -401,13 +401,13 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                   ->at(cHybrid->getIndex())
                                                   ->at(cChip->getIndex())
                                                   ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                                  .data2[i] -
+                                                  .data2.at(i) -
                                               theOccContainer->at(cBoard->getIndex())
                                                   ->at(cOpticalGroup->getIndex())
                                                   ->at(cHybrid->getIndex())
                                                   ->at(cChip->getIndex())
                                                   ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                                  .data2[i - 1];
+                                                  .data2.at(i - 1);
                         deltaTrgID += (deltaTrgID >= 0 ? 0 : frontEnd->maxTRIGIDvalue + 1);
                         if(deltaTrgID > int(frontEnd->maxTRIGIDvalue))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
