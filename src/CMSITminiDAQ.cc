@@ -575,7 +575,7 @@ int main(int argc, char** argv)
 
         if(!theEUDAQproducer)
         {
-            LOG(ERROR) << BOLDRED << "Unknown Producer: " << EUDAQ::EUDAQproducerNAME " - " << EUDAQproducerNAME << RESET;
+            LOG(ERROR) << BOLDRED << "Unknown Producer: " << EUDAQ::EUDAQproducerNAME << " - " << EUDAQproducerNAME << RESET;
             exit(EXIT_FAILURE);
         }
 
