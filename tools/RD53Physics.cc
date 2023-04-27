@@ -276,7 +276,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
 
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
                 {
-                  int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.at(i) - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.at(i - 1);
+                    int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.at(i) - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.at(i - 1);
                     deltaTrgID += (deltaTrgID >= 0 ? 0 : frontEnd->maxTRIGIDvalue + 1);
                     if(deltaTrgID >= int(frontEnd->maxTRIGIDvalue))
                         LOG(DEBUG) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
