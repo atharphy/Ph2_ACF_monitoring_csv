@@ -267,8 +267,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
                 {
                     int deltaBCID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.at(i) - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.at(i - 1);
-                    deltaBCID += (deltaBCID >= 0 ? 0 : frontEnd->maxBCIDvalue + 1);
-                    if(deltaBCID >= int(frontEnd->maxBCIDvalue))
+                    deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::firstChip->getMaxBCIDvalue() + 1);
+                    if(deltaBCID >= int(RD53Shared::firstChip->getMaxBCIDvalue()))
                         LOG(DEBUG) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                     else
                         theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().at(deltaBCID)++;
@@ -277,8 +277,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
                 {
                     int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.at(i) - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.at(i - 1);
-                    deltaTrgID += (deltaTrgID >= 0 ? 0 : frontEnd->maxTRIGIDvalue + 1);
-                    if(deltaTrgID >= int(frontEnd->maxTRIGIDvalue))
+                    deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::firstChip->getMaxTRIGIDvalue() + 1);
+                    if(deltaTrgID >= int(RD53Shared::firstChip->getMaxTRIGIDvalue()))
                         LOG(DEBUG) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                     else
                         theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().at(deltaTrgID)++;
@@ -298,6 +298,6 @@ void Physics::fillDataContainer(BeBoard& theBoard)
 void Physics::clearContainers(BeBoard& theBoard)
 {
     RD53Event::clearEventContainer(theBoard, theOccContainer);
-    CalibBase::fillVectorContainer<uint16_t>(theBCIDContainer, frontEnd->maxBCIDvalue + 1, 0, theBoard.getIndex());
-    CalibBase::fillVectorContainer<uint16_t>(theTrgIDContainer, frontEnd->maxTRIGIDvalue + 1, 0, theBoard.getIndex());
+    CalibBase::fillVectorContainer<uint16_t>(theBCIDContainer, RD53Shared::firstChip->getMaxBCIDvalue() + 1, 0, theBoard.getIndex());
+    CalibBase::fillVectorContainer<uint16_t>(theTrgIDContainer, RD53Shared::firstChip->getMaxTRIGIDvalue() + 1, 0, theBoard.getIndex());
 }

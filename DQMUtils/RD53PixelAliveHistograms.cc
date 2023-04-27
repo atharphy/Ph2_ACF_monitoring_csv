@@ -29,8 +29,8 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     nEvents                = this->findValueInSettings<double>(settingsMap, "nEvents");
     auto         frontEnd  = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
     const size_t ToTsize   = frontEnd->maxToTvalue + 1;
-    const size_t BCIDsize  = frontEnd->maxBCIDvalue + 1;
-    const size_t TrgIDsize = frontEnd->maxTRIGIDvalue + 1;
+    const size_t BCIDsize  = RD53Shared::firstChip->getMaxBCIDvalue() + 1;
+    const size_t TrgIDsize = RD53Shared::firstChip->getMaxTRIGIDvalue() + 1;
 
     auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Efficiency", "Entries");
