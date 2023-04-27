@@ -60,6 +60,14 @@ class RD53B : public RD53
     RD53B() {}
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
+    size_t getMaxBCIDvalue() const override
+    {
+        return RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID * ((this->getRegItem("EnBCId").fValue == true) && (this->getRegItem("EnLv1Id").fValue == true) ? 1 : 2));
+    }
+    size_t getMaxTRIGIDvalue() const override
+    {
+        return RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID * ((this->getRegItem("EnBCId").fValue == true) && (this->getRegItem("EnLv1Id").fValue == true) ? 1 : 2));
+    }
     const DataFormatOptions& getDataFormatOptions() override;
     const FrontEnd*          getFEtype(const size_t colStart, const size_t colStop) const override { return &RD53B::CROC; }
     size_t                   getNRows() const override { return RD53B::NROWS; }

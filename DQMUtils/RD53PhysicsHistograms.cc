@@ -27,8 +27,8 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
     // #######################
     auto         frontEnd  = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
     const size_t ToTsize   = frontEnd->maxToTvalue + 1;
-    const size_t BCIDsize  = frontEnd->maxBCIDvalue + 1;
-    const size_t TrgIDsize = frontEnd->maxTRIGIDvalue + 1;
+    const size_t BCIDsize  = RD53Shared::firstChip->getMaxBCIDvalue() + 1;
+    const size_t TrgIDsize = RD53Shared::firstChip->getMaxTRIGIDvalue() + 1;
 
     auto hToT1D = CanvasContainer<TH1F>("ToT1D", "<ToT> Distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
