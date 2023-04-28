@@ -120,24 +120,23 @@ class MPA2Interface : public ReadoutChipInterface
 
     const std::map<std::string, uint8_t> CONTROL_TABLE = {{"ReadoutMode", 0}, {"RetimePix", 2}, {"PhaseShift", 5}}; // I think the doc should read 3,3,2 for the bits -- to check
 
-    // MPA2 ADC Multiplexer control 
+    // MPA2 ADC Multiplexer control
     // < register name , < block for AMUX selection, switch sel (shift) for analog bias >>
-    typedef std::pair<uint8_t, uint8_t> block_switch;
+    typedef std::pair<uint8_t, uint8_t>       block_switch;
     const std::map<std::string, block_switch> ADC_CONTROL_TABLE = {
         {"disabled", std::make_pair(0, 0)}, // not sure on the shift selection when we are not looking at a bias
-        {"A0", std::make_pair(1, 0)},           {"A1", std::make_pair(2, 0)},      {"A2", std::make_pair(3, 0)},      {"A3", std::make_pair(4, 0)},      {"A4", std::make_pair(5, 0)},
-        {"A5", std::make_pair(6, 0)},           {"A6", std::make_pair(7, 0)},      {"B0", std::make_pair(1, 1)},      {"B1", std::make_pair(2, 1)},
-        {"B2", std::make_pair(3, 1)},           {"B3", std::make_pair(4, 1)},      {"B4", std::make_pair(5, 1)},      {"B5", std::make_pair(6, 1)},      {"B6", std::make_pair(7, 1)},
-        {"C0", std::make_pair(1, 2)},           {"C1", std::make_pair(2, 2)},      {"C2", std::make_pair(3, 2)},      {"C3", std::make_pair(4, 2)},
-        {"C4", std::make_pair(5, 2)},           {"C5", std::make_pair(6, 2)},      {"C6", std::make_pair(7, 2)},      {"D0", std::make_pair(1, 3)},      {"D1", std::make_pair(2, 3)},
-        {"D2", std::make_pair(3, 3)},           {"D3", std::make_pair(4, 3)},      {"D4", std::make_pair(5, 3)},      {"D5", std::make_pair(6, 3)},      {"D6", std::make_pair(7, 3)},
-        {"E0", std::make_pair(1, 4)},           {"E1", std::make_pair(2, 4)},      {"E2", std::make_pair(3, 4)},      {"E3", std::make_pair(4, 4)},
-        {"E4", std::make_pair(5, 4)},           {"E5", std::make_pair(6, 4)},      {"E6", std::make_pair(7, 4)},
-        {"ThDAC0", std::make_pair(1, 5)},       {"ThDAC1", std::make_pair(2, 5)},  {"ThDAC2", std::make_pair(3, 5)},  {"ThDAC3",  std::make_pair(4, 5)},  {"ThDAC4", std::make_pair(5, 5)},
-        {"ThDAC5", std::make_pair(6, 5)},       {"ThDAC6", std::make_pair(7, 5)},  {"CalDAC0", std::make_pair(1, 6)}, {"CalDAC1", std::make_pair(2, 6)},
-        {"CalDAC2", std::make_pair(3, 6)},      {"CalDAC3", std::make_pair(4, 6)}, {"CalDAC4", std::make_pair(5, 6)}, {"CalDAC5", std::make_pair(6, 6)}, {"CalDAC6", std::make_pair(7, 6)},
-        {"GND", std::make_pair(1, 7)},     {"VBG", std::make_pair(8, 0)}, {"dac_ref", std::make_pair(9, 0)}, {"vref", std::make_pair(10, 0)},
-        {"temperature", std::make_pair(11, 0)}, {"avdd", std::make_pair(12, 0)},   {"io_vdd", std::make_pair(13, 0)}, {"dvdd", std::make_pair(14, 0)}};
+        {"A0", std::make_pair(1, 0)},       {"A1", std::make_pair(2, 0)},      {"A2", std::make_pair(3, 0)},      {"A3", std::make_pair(4, 0)},           {"A4", std::make_pair(5, 0)},
+        {"A5", std::make_pair(6, 0)},       {"A6", std::make_pair(7, 0)},      {"B0", std::make_pair(1, 1)},      {"B1", std::make_pair(2, 1)},           {"B2", std::make_pair(3, 1)},
+        {"B3", std::make_pair(4, 1)},       {"B4", std::make_pair(5, 1)},      {"B5", std::make_pair(6, 1)},      {"B6", std::make_pair(7, 1)},           {"C0", std::make_pair(1, 2)},
+        {"C1", std::make_pair(2, 2)},       {"C2", std::make_pair(3, 2)},      {"C3", std::make_pair(4, 2)},      {"C4", std::make_pair(5, 2)},           {"C5", std::make_pair(6, 2)},
+        {"C6", std::make_pair(7, 2)},       {"D0", std::make_pair(1, 3)},      {"D1", std::make_pair(2, 3)},      {"D2", std::make_pair(3, 3)},           {"D3", std::make_pair(4, 3)},
+        {"D4", std::make_pair(5, 3)},       {"D5", std::make_pair(6, 3)},      {"D6", std::make_pair(7, 3)},      {"E0", std::make_pair(1, 4)},           {"E1", std::make_pair(2, 4)},
+        {"E2", std::make_pair(3, 4)},       {"E3", std::make_pair(4, 4)},      {"E4", std::make_pair(5, 4)},      {"E5", std::make_pair(6, 4)},           {"E6", std::make_pair(7, 4)},
+        {"ThDAC0", std::make_pair(1, 5)},   {"ThDAC1", std::make_pair(2, 5)},  {"ThDAC2", std::make_pair(3, 5)},  {"ThDAC3", std::make_pair(4, 5)},       {"ThDAC4", std::make_pair(5, 5)},
+        {"ThDAC5", std::make_pair(6, 5)},   {"ThDAC6", std::make_pair(7, 5)},  {"CalDAC0", std::make_pair(1, 6)}, {"CalDAC1", std::make_pair(2, 6)},      {"CalDAC2", std::make_pair(3, 6)},
+        {"CalDAC3", std::make_pair(4, 6)},  {"CalDAC4", std::make_pair(5, 6)}, {"CalDAC5", std::make_pair(6, 6)}, {"CalDAC6", std::make_pair(7, 6)},      {"GND", std::make_pair(1, 7)},
+        {"VBG", std::make_pair(8, 0)},      {"dac_ref", std::make_pair(9, 0)}, {"vref", std::make_pair(10, 0)},   {"temperature", std::make_pair(11, 0)}, {"avdd", std::make_pair(12, 0)},
+        {"io_vdd", std::make_pair(13, 0)},  {"dvdd", std::make_pair(14, 0)}};
 
     // MPA2 periphery config register map
     const std::map<std::string, std::pair<uint8_t, uint8_t>> PERI_CONFIG_TABLE = {{"Control_1", std::pair<uint8_t, uint8_t>{0x11, 0}}, // MPA2 has 0x11 and 0x12 peri blocks
