@@ -54,9 +54,8 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     }
     else if(pRegNode == "vref")
     {
-        // cRegItem = pMPA2->getRegItem("ADCcontrol");
-        return this->ReadReg(pMPA2, 0x8868) & 0xF;
-
+        cRegItem = pMPA2->getRegItem("ADCcontrol");
+        return this->ReadReg(pMPA2, cRegItem.fAddress) & 0xFF;
     }
     else if(pRegNode == "ReadoutMode") // New decoding control reg for MPA2
     {

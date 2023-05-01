@@ -10,8 +10,10 @@
 #include "DQMUtils/DQMHistogramPSBiasCal.h"
 #include "HWDescription/ReadoutChip.h"
 #include "RootUtils/HistContainer.h"
+#include "RootUtils/GraphContainer.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "TCanvas.h"
+#include "TGraph.h"
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
@@ -21,6 +23,7 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/Utilities.h"
+#include "Utils/ADCSlope.h"
 
 using namespace Ph2_HwDescription;
 
@@ -55,46 +58,22 @@ void DQMHistogramPSBiasCal::book(TFile* theOutputFile, DetectorContainer& theDet
         return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end());
     };
 
-    // find maximum number of channels
-    // std::vector<size_t> cNPixelChannels(0), cNStripChannels(0);
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     for(auto cOpticalGroup: *cBoard)
-    //     {
-    //         for(auto cHybrid: *cOpticalGroup)
-    //         {
-    //             for(auto cChip: *cHybrid)
-    //             {
-    //                 auto cNChannels = theDetectorStructure.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->size();
-    //                 auto cType      = cChip->getFrontEndType();
-    //                 if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
-    //                 else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-    //                 {
-    //                     cNPixelChannels.push_back(cNChannels);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    // auto cSetting = pSettingsMap.find("PlotSCurves");
-    // fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
-    // cSetting      = pSettingsMap.find("FitSCurves");
-    // fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
-    // if(fFitSCurves) fPlotSCurves = true;
-
     std::string queryFunctionName = "ChipType";
     if(fWithSSA)
     {
         // Set query function to only include strip chips in the data container
         fDetectorContainer->addReadoutChipQueryFunction(selectStripChipFunction, queryFunctionName);
 
-            //uint16_t nYbins = (fWithSSA) ? 255 : 1024;
-            // float    minY   = -0.5;
-            //float    maxY   = (fWithSSA) ? 254.5 : 1023.5;
-
         HistContainer<TH1F> theTH1FChipStripVref("VREFdac", "VREFdac", 32, 0, 32);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipStripVrefHistograms, theTH1FChipStripVref);
+
+        GraphContainer<TGraph> theTGraphChipStripSlope(fGraphSize);
+        RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fChipStripSlopeGraphs, theTGraphChipStripSlope);
+
+        HistContainer<TH1F> theTH1FChipStripAVDD("AVDD", "AVDD", 4096, 0, 4096);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipStripAVDDHistograms, theTH1FChipStripAVDD);
+        HistContainer<TH1F> theTH1FChipStripDVDD("DVDD", "DVDD", 4096, 0, 4096);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipStripDVDDHistograms, theTH1FChipStripDVDD);
 
         fDetectorContainer->removeReadoutChipQueryFunction(queryFunctionName);
     }
@@ -109,7 +88,15 @@ void DQMHistogramPSBiasCal::book(TFile* theOutputFile, DetectorContainer& theDet
         HistContainer<TH1F> theTH1FChipPixelVref("VREFdac", "VREFdac", 32, 0, 32);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipPixelVrefHistograms, theTH1FChipPixelVref);
 
-        
+        GraphContainer<TGraph> theTGraphChipPixelSlope(fGraphSize);
+        RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fChipPixelSlopeGraphs, theTGraphChipPixelSlope);
+
+        HistContainer<TH1F> theTH1FChipPixelAVDD("AVDD", "AVDD", 4096, 0, 4096);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipPixelAVDDHistograms, theTH1FChipPixelAVDD);
+        HistContainer<TH1F> theTH1FChipPixelDVDD("DVDD", "DVDD", 4096, 0, 4096);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipPixelDVDDHistograms, theTH1FChipPixelDVDD);
+
+
         // Reset query function from only including strip chips in the data container
         fDetectorContainer->removeReadoutChipQueryFunction(queryFunctionName);
     }
@@ -129,141 +116,42 @@ bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
         return true;
     }
 
+    ContainerSerialization theADCSlopeSerialization("PSBiasCalADCSlope");
+    if(theADCSlopeSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched ADC slope!!!!!\n";
+        DetectorDataContainer theADCSlopeData  = theADCSlopeSerialization.deserializeBoardContainer<ADCSlope, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
+    
+        fillSlopePlots(theADCSlopeData);
+        return true;
+    }
+
+    ContainerSerialization theAVDDSerialization("PSBiasCalAVDD");
+    if(theAVDDSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched AVDD!!!!!\n";
+        DetectorDataContainer theAVDDData  = theAVDDSerialization.deserializeBoardContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
+    
+        fillVDDPlots(theAVDDData, true);
+        return true;
+    }
+    ContainerSerialization theDVDDSerialization("PSBiasCalDVDD");
+    if(theDVDDSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched DVDD!!!!!\n";
+        DetectorDataContainer theDVDDData  = theDVDDSerialization.deserializeBoardContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
+    
+        fillVDDPlots(theDVDDData, false);
+        return true;
+    }
+
     return false;
 }
 
 //========================================================================================================================
 void DQMHistogramPSBiasCal::process()
 {
-    fitSlopes();
 
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     for(auto cOpticalGroup: *cBoard)
-    //     {
-    //         for(auto cHybrid: *cOpticalGroup)
-    //         {
-    //             // std::string validationCanvasName = "Validation_B_" + std::to_string(cBoard->getId()) + "_O_" + std::to_string(cOpticalGroup->getId()) + "_H_" + std::to_string(cHybrid->getId());
-    //             // TCanvas* cValidation = new TCanvas(validationCanvasName.data(), validationCanvasName.data(), 0, 0, 650, fPlotSCurves ? 900 : 650);
-
-    //             // cValidation->Divide(cHybrid->size(), fPlotSCurves ? 3 : 2);
-
-    //             for(auto cChip: *cHybrid)
-    //             {
-    //                 // auto cType = cChip->getFrontEndType();
-    //                 // if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-    //                 // {
-    //                 //     cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
-    //                 //     TH1F* validationHistogram = fDetectorStripValidationHistograms.getObject(cBoard->getId())
-    //                 //                                     ->getObject(cOpticalGroup->getId())
-    //                 //                                     ->getObject(cHybrid->getId())
-    //                 //                                     ->getObject(cChip->getId())
-    //                 //                                     ->getSummary<HistContainer<TH1F>>()
-    //                 //                                     .fTheHistogram;
-    //                 //     validationHistogram->SetStats(false);
-    //                 //     validationHistogram->DrawCopy();
-    //                 //     gPad->SetLogy();
-
-    //                 // }
-    //                 // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-    //                 // {
-    //                 //     cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
-    //                 //     TH1F* validationHistogram = fDetectorPixelValidationHistograms.getObject(cBoard->getId())
-    //                 //                                     ->getObject(cOpticalGroup->getId())
-    //                 //                                     ->getObject(cHybrid->getId())
-    //                 //                                     ->getObject(cChip->getId())
-    //                 //                                     ->getSummary<HistContainer<TH1F>>()
-    //                 //                                     .fTheHistogram;
-    //                 //     validationHistogram->SetStats(false);
-    //                 //     validationHistogram->DrawCopy();
-    //                 //     gPad->SetLogy();
-    //                 // }
-
-
-    //                 // if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-    //                 // {
-    //                 //     TH1F* cChipStripDACHist = fDetectorChipStripDACHistograms.getObject(cBoard->getId())
-    //                 //                                      ->getObject(cOpticalGroup->getId())
-    //                 //                                      ->getObject(cHybrid->getId())
-    //                 //                                      ->getObject(cChip->getId())
-    //                 //                                      ->getSummary<HistContainer<TH2F>>()
-    //                 //                                      .fTheHistogram;
-    //                 //     TH1D* cTmp = cChipStripSCurveHist->ProjectionY();
-    //                 //     cChipStripSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
-    //                 //     // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
-    //                 //     delete cTmp;
-    //                 //     cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 2);
-    //                 //     cChipStripSCurveHist->SetStats(false);
-    //                 //     cChipStripSCurveHist->DrawCopy("colz");
-    //                 //     fDetectorChannelStripNoiseHistograms.getObject(cBoard->getId())
-    //                 //         ->getObject(cOpticalGroup->getId())
-    //                 //         ->getObject(cHybrid->getId())
-    //                 //         ->getObject(cChip->getId())
-    //                 //         ->getSummary<HistContainer<TH1F>>()
-    //                 //         .fTheHistogram->GetYaxis()
-    //                 //         ->SetRangeUser(0., 20.);
-    //                 // }
-    //                 // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-    //                 // {
-    //                 //     TH2F* cChipPixelSCurveHist = fDetectorChipPixelSCurveHistograms.getObject(cBoard->getId())
-    //                 //                                      ->getObject(cOpticalGroup->getId())
-    //                 //                                      ->getObject(cHybrid->getId())
-    //                 //                                      ->getObject(cChip->getId())
-    //                 //                                      ->getSummary<HistContainer<TH2F>>()
-    //                 //                                      .fTheHistogram;
-    //                 //     TH1D* cTmp = cChipPixelSCurveHist->ProjectionY();
-    //                 //     cChipPixelSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
-    //                 //     // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
-    //                 //     delete cTmp;
-    //                 //     cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 2);
-    //                 //     cChipPixelSCurveHist->SetStats(false);
-    //                 //     cChipPixelSCurveHist->DrawCopy("colz");
-    //                 //     fDetectorChannelPixelNoiseHistograms.getObject(cBoard->getId())
-    //                 //         ->getObject(cOpticalGroup->getId())
-    //                 //         ->getObject(cHybrid->getId())
-    //                 //         ->getObject(cChip->getId())
-    //                 //         ->getSummary<HistContainer<TH1F>>()
-    //                 //         .fTheHistogram->GetYaxis()
-    //                 //         ->SetRangeUser(0., 20.);
-    //                 // }
-                    
-    //             }
-
-    //             if(fWithCBC || fWithSSA)
-    //             {
-    //                 fDetectorHybridStripNoiseHistograms.getObject(cBoard->getId())
-    //                     ->getObject(cOpticalGroup->getId())
-    //                     ->getObject(cHybrid->getId())
-    //                     ->getSummary<HistContainer<TH1F>>()
-    //                     .fTheHistogram->GetXaxis()
-    //                     ->SetRangeUser(-0.5, fNStripChannels * 8 - 0.5);
-    //                 fDetectorHybridStripNoiseHistograms.getObject(cBoard->getId())
-    //                     ->getObject(cOpticalGroup->getId())
-    //                     ->getObject(cHybrid->getId())
-    //                     ->getSummary<HistContainer<TH1F>>()
-    //                     .fTheHistogram->GetYaxis()
-    //                     ->SetRangeUser(0., 20.);
-
-                    
-    //             }
-    //             if(fWithMPA)
-    //             {
-    //                 fDetectorHybridPixelNoiseHistograms.getObject(cBoard->getId())
-    //                     ->getObject(cOpticalGroup->getId())
-    //                     ->getObject(cHybrid->getId())
-    //                     ->getSummary<HistContainer<TH1F>>()
-    //                     .fTheHistogram->GetXaxis()
-    //                     ->SetRangeUser(-0.5, fNPixelChannels * 8 - 0.5);
-    //                 fDetectorHybridPixelNoiseHistograms.getObject(cBoard->getId())
-    //                     ->getObject(cOpticalGroup->getId())
-    //                     ->getObject(cHybrid->getId())
-    //                     ->getSummary<HistContainer<TH1F>>()
-    //                     .fTheHistogram->GetYaxis()
-    //                     ->SetRangeUser(0., 20.);
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 //========================================================================================================================
@@ -271,7 +159,8 @@ void DQMHistogramPSBiasCal::reset(void) {}
 
 //========================================================================================================================
 void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
-{
+{   
+    LOG(INFO) << __PRETTY_FUNCTION__ << " Fill DAC Plots " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -281,7 +170,6 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                 for(auto cChip: *cHybrid)
                 {
                     auto     cType                  = cChip->getFrontEndType();
-                    // uint32_t cNChannels             = 0;
                     TH1F * fStripVrefHistograms = nullptr;
                     TH1F * fPixelVrefHistograms = nullptr;
                     if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
@@ -293,25 +181,27 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                                                      ->getObject(cChip->getId())
                                                      ->getSummary<HistContainer<TH1F>>()
                                                      .fTheHistogram;
-                        std::cout << " Fill SSA "<<std::endl;
-                        std::cout << " DAC, VREF "<< theDAC.getObject(cBoard->getId())
+                        LOG(INFO) << BOLDBLUE <<  " Fill SSA "<<RESET;
+                        LOG(INFO) << BOLDBLUE << " DAC, VREF "<< +theDAC.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
-                                                     ->getSummary<std::pair<uint32_t, float>>().first << " " << theDAC.getObject(cBoard->getId())
+                                                     ->getSummary<std::pair<uint8_t, float>>().first << " " << theDAC.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
-                                                     ->getSummary<std::pair<uint32_t, float>>().second << std::endl;
+                                                     ->getSummary<std::pair<uint8_t, float>>().second << RESET;
                         fStripVrefHistograms->Fill(theDAC.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
-                                                     ->getSummary<std::pair<uint32_t, float>>().first,theDAC.getObject(cBoard->getId())
+                                                     ->getSummary<std::pair<uint8_t, float>>().first,theDAC.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
-                                                     ->getSummary<std::pair<uint32_t, float>>().second);
+                                                     ->getSummary<std::pair<uint8_t, float>>().second);
+                        fStripVrefHistograms->GetXaxis()->SetTitle("ADC_VREF register");
+                        fStripVrefHistograms->GetYaxis()->SetTitle("VREF [V]");                             
 
                     }
                     else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
@@ -323,150 +213,255 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                                                      ->getSummary<HistContainer<TH1F>>()
                                                      .fTheHistogram;
                         
-                        std::cout << " Fill MPA "<<std::endl;
+                        LOG(INFO) << BOLDBLUE << " Fill MPA " << RESET;
+                        LOG(INFO) << BOLDBLUE << " DAC, VREF "<< +theDAC.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint8_t, float>>().first << " " << theDAC.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint8_t, float>>().second << RESET;
+
                         fPixelVrefHistograms->Fill(theDAC.getObject(cBoard->getId())
                                  ->getObject(cOpticalGroup->getId())
                                  ->getObject(cHybrid->getId())
                                  ->getObject(cChip->getId())
-                                 ->getSummary<std::pair<uint32_t, float>>().first,theDAC.getObject(cBoard->getId())
+                                 ->getSummary<std::pair<uint8_t, float>>().first,theDAC.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint8_t, float>>().second);
+                        fPixelVrefHistograms->GetXaxis()->SetTitle("ADC_VREF register");
+                        fPixelVrefHistograms->GetYaxis()->SetTitle("VREF [V]");                                                     
+                    }//chip type
+                }//chip
+            }//hybrid
+        }// optical group
+    }//board
+}
+
+//========================================================================================================================
+void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isAVDD)
+{   
+    LOG(INFO) << __PRETTY_FUNCTION__ << " Fill VDD Plots " << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    auto     cType                  = cChip->getFrontEndType();
+                    TH1F * fStripVDDHistograms = nullptr;
+                    TH1F * fPixelVDDHistograms = nullptr;
+                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    {
+            
+                        if (isAVDD)
+                        {
+                            std::cout << " AVDD " << std::endl;
+                            fStripVDDHistograms = fChipStripAVDDHistograms.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<HistContainer<TH1F>>()
+                                                     .fTheHistogram;
+                        }
+                        else
+                        {
+                            std::cout << " DVDD " << std::endl;
+                            fStripVDDHistograms = fChipStripDVDDHistograms.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<HistContainer<TH1F>>()
+                                                     .fTheHistogram;
+                        }
+
+                        LOG(INFO) << BOLDBLUE <<  " Fill SSA "<<RESET;
+                        LOG(INFO) << BOLDBLUE << " ADC, volts "<< theVDD.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().first << " " << theVDD.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().second << RESET;
+                        fStripVDDHistograms->Fill(theVDD.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().first,theVDD.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
                                                      ->getSummary<std::pair<uint32_t, float>>().second);
-                    }
-
-
-
-                    // auto cChannelContainer = thePedestalAndNoise.getObject(cBoard->getId())
-                    //                              ->getObject(cOpticalGroup->getId())
-                    //                              ->getObject(cHybrid->getId())
-                    //                              ->getObject(cChip->getId())
-                    //                              ->getChipContainer<ThresholdAndNoise>();
-                    // if(cChannelContainer == nullptr) continue;
-                    // uint16_t cChannelNumber = 0;
-                    // for(auto cChannel: *cChannelContainer)
-                    // {
-                    //     float cNoise       = (std::isnan(cChannel.fNoise)) ? 666 : cChannel.fNoise;
-                    //     float cNoiseErr    = (std::isnan(cChannel.fNoiseError)) ? 666 : cChannel.fNoiseError;
-                    //     float cPedestal    = (std::isnan(cChannel.fThreshold)) ? 666 : cChannel.fThreshold;
-                    //     float cPedestalErr = (std::isnan(cChannel.fThreshold)) ? 666 : cChannel.fThresholdError;
-                    //     cChipPedestalHistogram->Fill(cPedestal);
-                    //     cChipNoiseHistogram->Fill(cNoise);
-                    //     cHybridNoiseHistogram->Fill(cNoise);
-
-                    //     cChannelNoiseHistogram->SetBinContent(cChannelNumber + 1, cNoise);
-                    //     cChannelNoiseHistogram->SetBinError(cChannelNumber + 1, cNoiseErr);
-                    //     cChannelPedestalHistogram->SetBinContent(cChannelNumber + 1, cPedestal);
-                    //     cChannelPedestalHistogram->SetBinError(cChannelNumber + 1, cPedestalErr);
-                    //     cHybridChannelNoiseHistogram->SetBinContent(cNChannels * (cChip->getId() % 8) + cChannelNumber + 1, cNoise);
-                    //     cHybridChannelNoiseHistogram->SetBinError(cNChannels * (cChip->getId() % 8) + cChannelNumber + 1, cNoiseErr);
-
                         
-                    //     if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                    //     { cChannel2DPixelNoiseHistogram->SetBinContent(int(cChannelNumber % 120) + 1, int(cChannelNumber / 120) + 1, cNoise); }
-                    //     ++cChannelNumber;
-                    // }
-                }
-            }
-        }
-    }
+                        fStripVDDHistograms->GetXaxis()->SetTitle("VDD [ADC]");
+                        fStripVDDHistograms->GetYaxis()->SetTitle("VDD [V]");
+                        fStripVDDHistograms->SetMarkerStyle(20);                             
+
+                    }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    {
+                        if (isAVDD)
+                        {
+                            std::cout << " AVDD " << std::endl;
+                            fPixelVDDHistograms = fChipPixelAVDDHistograms.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<HistContainer<TH1F>>()
+                                                     .fTheHistogram;
+                        }
+                        else
+                        {
+                            std::cout << " DVDD " << std::endl;
+                            fPixelVDDHistograms = fChipPixelDVDDHistograms.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<HistContainer<TH1F>>()
+                                                     .fTheHistogram;
+                        }
+                        
+                        LOG(INFO) << BOLDBLUE << " Fill MPA " << RESET;
+                        LOG(INFO) << BOLDBLUE << " ADC, volts "<< theVDD.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().first << " " << theVDD.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().second << RESET;
+
+                        fPixelVDDHistograms->Fill(theVDD.getObject(cBoard->getId())
+                                 ->getObject(cOpticalGroup->getId())
+                                 ->getObject(cHybrid->getId())
+                                 ->getObject(cChip->getId())
+                                 ->getSummary<std::pair<uint32_t, float>>().first,theVDD.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::pair<uint32_t, float>>().second);
+                        fPixelVDDHistograms->GetXaxis()->SetTitle("VDD [ADC]");
+                        fPixelVDDHistograms->GetYaxis()->SetTitle("VDD [V]");
+                        fPixelVDDHistograms->SetMarkerStyle(20);                                            
+                    }//chip type
+                }//chip
+            }//hybrid
+        }// optical group
+    }//board
 }
 
-
-
 //========================================================================================================================
-void DQMHistogramPSBiasCal::fitSlopes()
+void DQMHistogramPSBiasCal::fillSlopePlots(DetectorDataContainer& theSlope)
 {
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     for(auto cOpticalGroup: *cBoard)
-    //     {
-    //         for(auto cHybrid: *cOpticalGroup)
-    //         {
-    //             for(auto cChip: *cHybrid)
-    //             {
-    //                 // // ChipDataContainer* theChipThresholdAndNoise =
-    //                 //     // fThresholdAndNoiseContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
 
-    //                 // // auto     cType      = cChip->getFrontEndType();
-    //                 // // uint32_t cNChannels = 0;
-    //                 // // if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2) { cNChannels = fNStripChannels; }
-    //                 // // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-    //                 // // {
-    //                 //     // cNChannels = fNPixelChannels;
-    //                 // // }
+                    auto     cType      = cChip->getFrontEndType();
+                    TGraph * fStripADCSlopeGraphs = nullptr;
+                    TGraph * fPixelADCSlopeGraphs = nullptr;
+                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    {
+            
+                        fStripADCSlopeGraphs = fChipStripSlopeGraphs.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<GraphContainer<TGraph>>()
+                                                     .fTheGraph;
 
-    //                 // // for(uint32_t cChannel = 0; cChannel < cNChannels; cChannel++)
-    //                 // // {
-    //                 //     // TH1F *cChannelSCurve = nullptr, *cChannelNoiseHistogram = nullptr, *cChannelPedestalHistogram = nullptr;
-    //                 //     // if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-    //                 //     // {
-    //                 //         // cChannelSCurve = fDetectorChannelStripSCurveHistograms.getObject(cBoard->getId())
-    //                 //                             //  ->getObject(cOpticalGroup->getId())
-    //                 //                             //  ->getObject(cHybrid->getId())
-    //                 //                             //  ->getObject(cChip->getId())
-    //                 //                             //  ->getChannel<HistContainer<TH1F>>(cChannel)
-    //                 //                             //  .fTheHistogram;
 
-    //                 //         // cChannelNoiseHistogram = fDetectorChannelStripNoiseHistograms.getObject(cBoard->getId())
-    //                 //                                     //  ->getObject(cOpticalGroup->getId())
-    //                 //                                     //  ->getObject(cHybrid->getId())
-    //                 //                                     //  ->getObject(cChip->getId())
-    //                 //                                     //  ->getSummary<HistContainer<TH1F>>()
-    //                 //                                     //  .fTheHistogram;
+                        auto cChipContainer =
+                        theSlope.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ADCSlope>();
 
-    //                 //         // cChannelPedestalHistogram = fDetectorChannelStripPedestalHistograms.getObject(cBoard->getId())
-    //                 //                                         // ->getObject(cOpticalGroup->getId())
-    //                 //                                         // ->getObject(cHybrid->getId())
-    //                 //                                         // ->getObject(cChip->getId())
-    //                 //                                         // ->getSummary<HistContainer<TH1F>>()
-    //                 //                                         // .fTheHistogram;
-    //                 //     // }
-    //                 //     // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-    //                 //     // {
-    //                 //         // cChannelSCurve = fDetectorChannelPixelSCurveHistograms.getObject(cBoard->getId())
-    //                 //                             //  ->getObject(cOpticalGroup->getId())
-    //                 //                             //  ->getObject(cHybrid->getId())
-    //                 //                             //  ->getObject(cChip->getId())
-    //                 //                             //  ->getChannel<HistContainer<TH1F>>(cChannel)
-    //                 //                             //  .fTheHistogram;
+                        std::cout << " Fill SSA "<<std::endl;
+                        std::cout << " GND ADC "<< cChipContainer.fADC_GND << std::endl;
+                        std::cout << " VBG ADC "<< cChipContainer.fADC_VBG << " measured V " << cChipContainer.fMeasured_VBG << std::endl;
+                        float ADCs[fGraphSize] = {cChipContainer.fADC_GND, cChipContainer.fADC_VBG};
+                        float voltages[fGraphSize] = {0,cChipContainer.fMeasured_VBG};
+                        for(int i = 0; i < fGraphSize; i ++ )
+                        {
+                            fStripADCSlopeGraphs->SetPointX(i,ADCs[i]);
+                            fStripADCSlopeGraphs->SetPointY(i,voltages[i]);
+                        }
+                        fStripADCSlopeGraphs->SetTitle("ADC_slope");
+                        fStripADCSlopeGraphs->SetMarkerStyle(20);
+                        fStripADCSlopeGraphs->GetXaxis()->SetTitle("ADC output [ADC]");
+                        fStripADCSlopeGraphs->GetYaxis()->SetTitle("ADC output [V]");
+                        fStripADCSlopeGraphs->Fit("pol1","Q");
+                        std::cout << " cChipContainer.fOffset " << cChipContainer.fOffset << " cChipContainer.fSlope "<< cChipContainer.fSlope << std::endl;
+                        TF1 *fPol1 = fStripADCSlopeGraphs->GetFunction("pol1");
+                        fPol1->SetParameter(0,cChipContainer.fOffset);
+                        fPol1->SetParameter(1,cChipContainer.fSlope);
+                        fPol1->SetRange(0,4095);
+                        fPol1->SetLineColor(kRed+1);
+                        fPol1->SetLineStyle(2);
 
-    //                 //         // cChannelNoiseHistogram = fDetectorChannelPixelNoiseHistograms.getObject(cBoard->getId())
-    //                 //                                     //  ->getObject(cOpticalGroup->getId())
-    //                 //                                     //  ->getObject(cHybrid->getId())
-    //                 //                                     //  ->getObject(cChip->getId())
-    //                 //                                     //  ->getSummary<HistContainer<TH1F>>()
-    //                 //                                     //  .fTheHistogram;
 
-    //                 //         // cChannelPedestalHistogram = fDetectorChannelPixelPedestalHistograms.getObject(cBoard->getId())
-    //                 //                                         // ->getObject(cOpticalGroup->getId())
-    //                 //                                         // ->getObject(cHybrid->getId())
-    //                 //                                         // ->getObject(cChip->getId())
-    //                 //                                         // ->getSummary<HistContainer<TH1F>>()
-    //                 //                                         // .fTheHistogram;
-    //                 //     // }
+                        // fStripADCAVDDGraphs->SetPointX(0,cChipContainer.fADC_AVDD);
+                        // fStripADCAVDDGraphs->SetPointY(0,cChipContainer.fObtained_AVDD);
+                        // fStripADCAVDDGraphs->SetMarkerStyle(22);
+                        // fStripADCSlopeGraphs->SetTitle("AVDD");
+                    }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    {
+            
+                        fPixelADCSlopeGraphs = fChipPixelSlopeGraphs.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<GraphContainer<TGraph>>()
+                                                     .fTheGraph;
 
-    //                 //     // float cChannelNoise = cChannelNoiseHistogram->GetBinContent(cChannel + 1);
+                        auto cChipContainer =
+                        theSlope.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ADCSlope>();
 
-    //                 //     // float cChannelPedestal = cChannelPedestalHistogram->GetBinContent(cChannel + 1);
+                        std::cout << " Fill MPA "<<std::endl;
+                        std::cout << " GND ADC "<< cChipContainer.fADC_GND << std::endl;
+                        std::cout << " VBG ADC "<< cChipContainer.fADC_VBG << " measured V " << cChipContainer.fMeasured_VBG << std::endl;
+                        float ADCs[fGraphSize] = {cChipContainer.fADC_GND, cChipContainer.fADC_VBG};
+                        float voltages[fGraphSize] = {0,cChipContainer.fMeasured_VBG};
+                        for(int i = 0; i < fGraphSize; i ++ )
+                        {
+                            fPixelADCSlopeGraphs->SetPointX(i,ADCs[i]);
+                            fPixelADCSlopeGraphs->SetPointY(i,voltages[i]);
+                        }
+                        fPixelADCSlopeGraphs->SetTitle("ADC_slope");
+                        fPixelADCSlopeGraphs->SetMarkerStyle(20);
+                        fPixelADCSlopeGraphs->GetXaxis()->SetTitle("ADC output [ADC]");
+                        fPixelADCSlopeGraphs->GetYaxis()->SetTitle("ADC output [V]");
+                        fPixelADCSlopeGraphs->Fit("pol1","Q");
+                        std::cout << " cChipContainer.fOffset " << cChipContainer.fOffset << " cChipContainer.fSlope "<< cChipContainer.fSlope << std::endl;
+                        TF1 *fPol1 = fPixelADCSlopeGraphs->GetFunction("pol1");
+                        fPol1->SetParameter(0,cChipContainer.fOffset);
+                        fPol1->SetParameter(1,cChipContainer.fSlope);
+                        fPol1->SetRange(0,4095);
+                        fPol1->SetLineColor(kRed+1);
+                        fPol1->SetLineStyle(2);
 
-    //                 //     // TF1* cFit = new TF1("SCurveFit", MyErf, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+                        // fPixelADCAVDDGraphs->SetPointX(0,cChipContainer.fADC_AVDD);
+                        // fPixelADCAVDDGraphs->SetPointY(0,cChipContainer.fObtained_AVDD);
+                        // fPixelADCAVDDGraphs->SetMarkerStyle(22);
+                        // fPixelADCSlopeGraphs->SetTitle("AVDD");
 
-    //                 //     // cFit->SetParameter(0, cChannelPedestal);
-    //                 //     // cFit->SetParameter(1, cChannelNoise);
+                    }
+                }// chip
+            }// hybrid
+        }//optical group
+    } // board
 
-    //                 //     Fit
-    //                 //     // cChannelSCurve->Fit(cFit, "RQ+0");
-
-    //                 //     // theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fThreshold      = cFit->GetParameter(0);
-    //                 //     // theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fNoise          = cFit->GetParameter(1);
-    //                 //     // theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fThresholdError = cFit->GetParError(0);
-    //                 //     // theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fNoiseError     = cFit->GetParError(1);
-    //                 // // }
-    //             }
-    //         }
-    //     }
-    // }
-
-    //fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
 }

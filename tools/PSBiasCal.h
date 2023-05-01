@@ -38,7 +38,7 @@ class PSBiasCal : public Tool
     void     DisableTest(Ph2_HwDescription::Chip* cChip);
     float    MeasureGnd(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, std::string dac_str);
     float    CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, float VBGexpected, float VREFexpected);
-    float    MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring); //, float VBGexpected, float VREFexpected, float VREFmin, float VREFmax);
+    float    MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, uint8_t *DAC); //, float VBGexpected, float VREFexpected, float VREFmin, float VREFmax);
 
 
     void Running() override;
@@ -58,6 +58,23 @@ class PSBiasCal : public Tool
     // Containers
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
+
+    typedef std::pair<uint8_t, uint8_t> hybrid_chip;
+    // FNAL PSv2.1 Bandgaps
+    const   std::map<hybrid_chip, float> SSA2_VBG_MEASURED_TABLE = { // in volts
+      {std::make_pair(0, 0), 0.2755}, {std::make_pair(0, 1), 0.2770}, {std::make_pair(0, 2), 0.2749}, {std::make_pair(0, 3), 0.0000}, {std::make_pair(0, 4), 0.0000}, {std::make_pair(0, 5), 0.2719}, {std::make_pair(0, 6), 0.2757}, {std::make_pair(0, 7), 0.2786}, 
+      {std::make_pair(1, 0), 0.2752}, {std::make_pair(1, 1), 0.2731}, {std::make_pair(1, 2), 0.2731}, {std::make_pair(1, 3), 0.2733}, {std::make_pair(1, 4), 0.2767}, {std::make_pair(1, 5), 0.2733}, {std::make_pair(1, 6), 0.2773}, {std::make_pair(1, 7), 0.2741}};
+
+    // FNAL PSv2 Bandgaps // I SUBTRACTED the GND, not sure it's correct. Waiting answer from Anvesh
+    const   std::map<hybrid_chip, float> MPA2_VBG_MEASURED_TABLE = { // in volts
+      {std::make_pair(0, 8), 0.276181}, {std::make_pair(0, 9), 0.276695}, {std::make_pair(0, 10), 0.280825}, {std::make_pair(0, 11), 0.279712}, {std::make_pair(0, 12), 0.276814}, {std::make_pair(0, 13), 0.273418}, {std::make_pair(0, 14), 0.274185}, {std::make_pair(0, 15), 0.273296}, 
+      {std::make_pair(1, 8), 0.275776}, {std::make_pair(1, 9), 0.279588}, {std::make_pair(1, 10), 0.281165}, {std::make_pair(1, 11), 0.275365}, {std::make_pair(1, 12), 0.278102}, {std::make_pair(1, 13), 0.275695}, {std::make_pair(1, 14), 0.272185}, {std::make_pair(1, 15), 0.274752}};
+
+    // // FNAL PSv2.1 Bandgaps FIXMEEEE need wafer 4 measurements from Anvesh
+    // const   std::map<hybrid_chip, float> MPA2_VBG_VOLTS = { // in volts
+    //   {std::make_pair(0, 0), 0.}, {std::make_pair(0, 1), 0.}, {std::make_pair(0, 2), 0.}, {std::make_pair(0, 3), 0.}, {std::make_pair(0, 4), 0.}, {std::make_pair(0, 5), 0.}, {std::make_pair(0, 6), 0.}, {std::make_pair(0, 7), 0.}, 
+    //   {std::make_pair(1, 0), 0.}, {std::make_pair(1, 1), 0.}, {std::make_pair(1, 2), 0.}, {std::make_pair(1, 3), 0.}, {std::make_pair(1, 4), 0.}, {std::make_pair(1, 5), 0.}, {std::make_pair(1, 6), 0.}, {std::make_pair(1, 7), 0.}};
+
 
 // booking histograms
 #ifdef __USE_ROOT__

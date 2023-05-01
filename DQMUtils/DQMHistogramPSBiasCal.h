@@ -13,6 +13,7 @@
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
+#define fGraphSize 2
 
 class TFile;
 
@@ -66,12 +67,21 @@ class DQMHistogramPSBiasCal : public DQMHistogramBase
      */
     void fillDACPlots(DetectorDataContainer& theDAC);
 
+        /*!
+     * \brief Fill validation histograms
+     * \param theVDD : DataContainer for the AVDD ADC & voltage value info
+     */
+    void fillVDDPlots(DetectorDataContainer& theVDD, bool isAVDD);
+
   private:
     DetectorContainer*    fDetectorContainer;
-    void                  fitSlopes();
 
-    DetectorDataContainer fDetectorChipStripSlopeHistograms;
-    DetectorDataContainer fDetectorChipPixelSlopeHistograms;
+    DetectorDataContainer fChipStripSlopeGraphs;
+    DetectorDataContainer fChipPixelSlopeGraphs;
+    DetectorDataContainer fChipStripAVDDHistograms;
+    DetectorDataContainer fChipPixelAVDDHistograms;
+    DetectorDataContainer fChipStripDVDDHistograms;
+    DetectorDataContainer fChipPixelDVDDHistograms;
     DetectorDataContainer fChipStripVrefHistograms;
     DetectorDataContainer fChipPixelVrefHistograms;
 
