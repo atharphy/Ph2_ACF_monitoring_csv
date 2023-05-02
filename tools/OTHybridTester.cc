@@ -21,8 +21,6 @@ void OTHybridTester::ReadChipIds()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             if(static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getVersion() == 1)
             {
                 uint32_t cChipID = clpGBTInterface->ReadChipID(cOpticalGroup->flpGBT, 1);
@@ -68,8 +66,6 @@ void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
             LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
             clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
@@ -163,10 +159,9 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
         fBeBoardInterface->setBoard(cBoard->getId());
         D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         D19cTriggerInterface* cTriggerInterface = dynamic_cast<D19cTriggerInterface*>(cFWInterface->getTriggerInterface());
+
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
             {
                 auto cHybridId = 2 * cOpticalGroup->getId() + hybridNumber;
@@ -295,8 +290,6 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             uint8_t cSource = 3;
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
@@ -314,8 +307,6 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 0); // 0 --> link data, 3 --> constant pattern
         }
     }
@@ -353,8 +344,6 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
 
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             auto clpGBT = cOpticalGroup->flpGBT;
             clpGBTInterface->ResetI2C(clpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
@@ -433,8 +422,6 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             // Create TTree for DAC to ADC conversion in lpGBT
             auto cDACtoADCTree = new TTree("tDACtoADC", "DAC to ADC conversion in lpGBT");
             // Create variables for TTree branches
@@ -591,8 +578,6 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
             float               cGain           = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, false);
             uint16_t            cOffset         = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, false);
@@ -668,8 +653,6 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             // LOG(INFO) << BOLDBLUE << "Set levels to " << +pLevel << RESET;
             clpGBTInterface->ConfigureGPIODirection(cOpticalGroup->flpGBT, pGPIOs, 1);
             clpGBTInterface->ConfigureGPIOLevel(cOpticalGroup->flpGBT, pGPIOs, pLevel);
@@ -789,8 +772,6 @@ bool OTHybridTester::LpGBTTestGPILines()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             while(cMapIterator != fGPILines.end())
             {
                 cReadGPI = clpGBTInterface->ReadGPIO(cOpticalGroup->flpGBT, cMapIterator->second);
@@ -820,8 +801,6 @@ bool OTHybridTester::LpGBTTestVTRx()
         D19cOpticalInterface* cOpticalInterface = static_cast<D19cOpticalInterface*>(pInterface->getFEConfigurationInterface());
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             auto clpGBT = cOpticalGroup->flpGBT;
             clpGBTInterface->ResetI2C(clpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
@@ -931,8 +910,6 @@ bool OTHybridTester::LpGBTGetLinkLock()
         fBeBoardInterface->setBoard(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             D19cFWInterface*   cFWInterface   = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             D19cLinkInterface* cLinkInterface = static_cast<D19cLinkInterface*>(cFWInterface->getLinkInterface());
             cStatus                           = cLinkInterface->GetLinkStatus(cOpticalGroup->getId());
@@ -1020,8 +997,6 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             LOG(INFO) << MAGENTA << "VDDRX read value = " << +clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDDRX") << RESET;
             // uint8_t cEQConfig = (clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") & ~(0x2 << 3)) | (pEQAttenuation << 3);
             // FIXME for now I am forcing to 0x00 EQCap bits of the register
@@ -1091,8 +1066,6 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             // Configure BERT Pattern for comparision
             if(pPattern != 0x00000000) { clpGBTInterface->ConfigureBERTPattern(cOpticalGroup->flpGBT, pPattern); }
             else
@@ -1299,8 +1272,6 @@ uint16_t OTHybridTester::calibrateADC()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             cGain         = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, true);
             cOffset       = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, true);
             cVersion      = static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getVersion();
@@ -1384,8 +1355,6 @@ void OTHybridTester::calibrateCurrentDAC()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             // clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE", 132); // optimal tune
             cGain   = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, false);
             cOffset = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, false);

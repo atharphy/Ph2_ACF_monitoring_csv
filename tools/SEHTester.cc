@@ -15,11 +15,7 @@ void SEHTester::Initialise()
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
-            if(!cOpticalGroup->fIsLocked) continue;
             clpGBTInterface->Configure2SSEH(cOpticalGroup->flpGBT);
-            //
-
             lpGBTClockConfig cClkCnfg;
             cClkCnfg.fClkFreq         = 4;
             cClkCnfg.fClkDriveStr     = 7;
@@ -940,7 +936,7 @@ void SEHTester::ClearBRAM(const std::string& sBramToReset)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->ClearBRAM(cBoard, sBramToReset);
     }
 }
@@ -1057,7 +1053,7 @@ void SEHTester::WritePatternToBRAM(const std::string& sFileName = "fcmd_file.txt
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->WritePatternToBRAM(cBoard, sFileName);
     }
 }
@@ -1098,7 +1094,7 @@ void SEHTester::CheckFastCommandsBRAM(const std::string& sFCMDLine)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->CheckFastCommandsBRAM(cBoard, sFCMDLine);
     }
 }
@@ -1209,7 +1205,7 @@ void SEHTester::CheckFastCommands(const std::string& sFastCommand, const std::st
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->CheckFastCommands(cBoard, sFastCommand, filename);
     }
 }
@@ -1234,7 +1230,7 @@ void SEHTester::ReadRefAddrBRAM(int iRefBRAMAddr)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->ReadRefAddrBRAM(cBoard, iRefBRAMAddr);
     }
 }
@@ -1261,7 +1257,7 @@ void SEHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr);
     }
 }
@@ -1341,7 +1337,7 @@ void SEHTester::FastCommandScope()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->FastCommandScope(cBoard);
     }
 }
@@ -1350,7 +1346,7 @@ bool SEHTester::FastCommandChecker(uint8_t pPattern)
     bool re = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         re = this->FastCommandChecker(cBoard, pPattern);
     }
     return re;
@@ -1395,7 +1391,7 @@ void SEHTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vector<
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->CheckHybridInputs(cBoard, pInputs, pCounters);
     }
 }
@@ -1507,7 +1503,7 @@ void SEHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vector
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->CheckHybridOutputs(cBoard, pInputs, pCounters);
     }
 }

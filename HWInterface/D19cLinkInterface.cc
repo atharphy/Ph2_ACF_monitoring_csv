@@ -62,9 +62,6 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
     bool   cAllLocked   = false;
     size_t cMaxAttempts = fConfiguration.fReTry ? fConfiguration.fMaxAttempts : 1;
     size_t cAttempts    = 0;
-#if defined(__TCUSB__)
-    uint8_t cLockedLink = 0;
-#endif
     do
     {
         cAllLocked = true;
@@ -72,33 +69,36 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
         ResetLinks();
         for(auto cOpticalReadout: *pBoard)
         {
-            bool cLinkStatus = GetLinkStatus(cOpticalReadout->getId());
-            cAllLocked       = cAllLocked && cLinkStatus;
-#if defined(__TCUSB__)
-            if(cLinkStatus)
+            bool cLinkStatus = cOpticalReadout->fIsLocked;
+            if(!cLinkStatus)
             {
-                cAllLocked  = true;
-                cLockedLink = cOpticalReadout->getId();
-                break;
+                cLinkStatus = GetLinkStatus(cOpticalReadout->getId());
+                if(cLinkStatus) cOpticalReadout->fIsLocked = true;
             }
-#endif
+            cAllLocked = cAllLocked && cLinkStatus;
         }
     } while(cAttempts < cMaxAttempts && !cAllLocked);
-#if defined(__TCUSB__)
-    for(auto cOpticalReadout: *pBoard)
-    {
-        if(cLockedLink == cOpticalReadout->getId())
-        {
-            //LOG(INFO) << BOLDRED << "D19cLinkInterface::GeneralLinkReset unset lpgbt link" << +cOpticalReadout->getId() << RESET;
-            cOpticalReadout->fIsLocked = true;
-        }
-    }
-#endif
     if(!cAllLocked)
     {
-        LOG(ERROR) << BOLDRED << "Failed to lock all links after a general reset" << RESET;
-        throw Exception("Failed to lock all links after a general reset");
+        bool cIsAnyLocked = false;
+        for(auto cOpticalReadout: *pBoard)
+        {
+            if(cOpticalReadout->fIsLocked)
+            {
+                cIsAnyLocked = true;
+                LOG(INFO) << BOLDGREEN << "D19cLinkInterface:GeneralLinkReset     Succesfull lock on link" << +cOpticalReadout->getId() << " after a general reset" << RESET;
+            }
+            else
+            {
+                LOG(INFO) << BOLDRED << "D19cLinkInterface:GeneralLinkReset     WARNING: Failed to lock link" << +cOpticalReadout->getId() << " after a general reset" << RESET;
+                LOG(INFO) << BOLDRED << "D19cLinkInterface:GeneralLinkReset     WARNING: Proceeding without link" << +cOpticalReadout->getId() << RESET;
+            }
+        }
+        if(!cIsAnyLocked)
+        {
+            LOG(ERROR) << BOLDRED << "Failed to lock any links after a general reset" << RESET;
+            throw Exception("Failed to lock any links after a general reset");
+        }
     }
 }
-
 } // namespace Ph2_HwInterface
