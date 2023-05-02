@@ -3,6 +3,7 @@
 #include "Utils/ADCSlope.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
+#include "HWInterface/D19cFWInterface.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMHistogramPSBiasCal.h"
@@ -1086,12 +1087,30 @@ void PSBiasCal::CalibrateBias()
                     if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         ADC_VBG = uint32_t(std::round(static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), "VBG")));
-                        measured_VBG = MPA2_VBG_EXPECTED;
+                        //measured_VBG = MPA2_VBG_EXPECTED;
+                        auto theRegister = MPA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
+                        if (theRegister ==  MPA2_VBG_MEASURED_TABLE.end())
+                        {
+                            LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
+                            abort();
+                        }
+                        LOG(INFO) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
+                        measured_VBG = theRegister->second;
+                        VREFstring = "vref";
                     }
                     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         ADC_VBG = uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), "VBG")));
-                        measured_VBG = SSA2_VBG_EXPECTED;
+                        //measured_VBG = SSA2_VBG_EXPECTED;
+                        auto theRegister = SSA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
+                        if (theRegister ==  SSA2_VBG_MEASURED_TABLE.end())
+                        {
+                            LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
+                            abort();
+                        }
+                        LOG(INFO) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
+                        measured_VBG = theRegister->second;
+                        VREFstring = "VREF";
                     }
                     else
                         LOG(INFO) << BOLDRED <<__PRETTY_FUNCTION__<< "Calibration procedure not implemented for this chip type. Some variables will be set to 0!!" << RESET;
@@ -1103,7 +1122,11 @@ void PSBiasCal::CalibrateBias()
                     float fOffset = -gndval*fSlope;
                     theADCSlopeContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<ADCSlope>().fSlope = fSlope;
                     theADCSlopeContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<ADCSlope>().fOffset = fOffset;
-                    DisableTest(cChip);
+
+                    // reset chip before measuring VDDs
+                    fBeBoardInterface->setBoard(cBoard->getId());
+                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadoutChipReset();
+
                     uint32_t ADC_AVDD = 0, ADC_DVDD =0;
                     float obtained_AVDD= 0, obtained_DVDD = 0;
                     if(cChip->getFrontEndType() == FrontEndType::MPA2)
@@ -1131,6 +1154,7 @@ void PSBiasCal::CalibrateBias()
                     theDVDDContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<std::pair<uint32_t, float>>().first  = ADC_DVDD;
                     theDVDDContainer.getObject(cChip->getBeBoardId())->getObject(cChip->getOpticalGroupId())->getObject(cChip->getHybridId())->getObject(cChip->getId())->getSummary<std::pair<uint32_t, float>>().second = obtained_DVDD*2; //including factor 2 to take voltage divider into account
 
+                    DisableTest(cChip);
                 
                 } // chip
             } // hybrid

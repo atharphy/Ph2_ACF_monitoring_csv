@@ -65,10 +65,10 @@ class PSBiasCal : public Tool
       {std::make_pair(0, 0), 0.2755}, {std::make_pair(0, 1), 0.2770}, {std::make_pair(0, 2), 0.2749}, {std::make_pair(0, 3), 0.0000}, {std::make_pair(0, 4), 0.0000}, {std::make_pair(0, 5), 0.2719}, {std::make_pair(0, 6), 0.2757}, {std::make_pair(0, 7), 0.2786}, 
       {std::make_pair(1, 0), 0.2752}, {std::make_pair(1, 1), 0.2731}, {std::make_pair(1, 2), 0.2731}, {std::make_pair(1, 3), 0.2733}, {std::make_pair(1, 4), 0.2767}, {std::make_pair(1, 5), 0.2733}, {std::make_pair(1, 6), 0.2773}, {std::make_pair(1, 7), 0.2741}};
 
-    // FNAL PSv2 Bandgaps // I SUBTRACTED the GND, not sure it's correct. Waiting answer from Anvesh
+    // FNAL PSv2 Bandgaps // No GND subtracted, not sure it's correct. Waiting answer from Anvesh
     const   std::map<hybrid_chip, float> MPA2_VBG_MEASURED_TABLE = { // in volts
-      {std::make_pair(0, 8), 0.276181}, {std::make_pair(0, 9), 0.276695}, {std::make_pair(0, 10), 0.280825}, {std::make_pair(0, 11), 0.279712}, {std::make_pair(0, 12), 0.276814}, {std::make_pair(0, 13), 0.273418}, {std::make_pair(0, 14), 0.274185}, {std::make_pair(0, 15), 0.273296}, 
-      {std::make_pair(1, 8), 0.275776}, {std::make_pair(1, 9), 0.279588}, {std::make_pair(1, 10), 0.281165}, {std::make_pair(1, 11), 0.275365}, {std::make_pair(1, 12), 0.278102}, {std::make_pair(1, 13), 0.275695}, {std::make_pair(1, 14), 0.272185}, {std::make_pair(1, 15), 0.274752}};
+      {std::make_pair(0, 8), 0.284034}, {std::make_pair(0, 9), 0.284278}, {std::make_pair(0, 10), 0.288666}, {std::make_pair(0, 11), 0.287456}, {std::make_pair(0, 12), 0.284372}, {std::make_pair(0, 13), 0.280807}, {std::make_pair(0, 14), 0.281693}, {std::make_pair(0, 15), 0.281034}, 
+      {std::make_pair(1, 8), 0.283530}, {std::make_pair(1, 9), 0.287363}, {std::make_pair(1, 10), 0.288779}, {std::make_pair(1, 11), 0.282850}, {std::make_pair(1, 12), 0.285709}, {std::make_pair(1, 13), 0.283248}, {std::make_pair(1, 14), 0.279707}, {std::make_pair(1, 15), 0.282432}};
 
     // // FNAL PSv2.1 Bandgaps FIXMEEEE need wafer 4 measurements from Anvesh
     // const   std::map<hybrid_chip, float> MPA2_VBG_VOLTS = { // in volts
