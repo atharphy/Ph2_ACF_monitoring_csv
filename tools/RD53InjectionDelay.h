@@ -62,6 +62,7 @@ class InjectionDelay : public PixelAlive
   protected:
     size_t startValue;
     size_t stopValue;
+    bool   doUpdateChip;
 
     int theCurrentRun;
 };
