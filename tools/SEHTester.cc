@@ -57,7 +57,22 @@ void SEHTester::readTestParameters(std::string file)
         }
     }
 }
-
+bool SEHTester::CheckShort(std::string powerSupplyId, std::string channelId)
+{
+    if(fPowerSupplyClient == nullptr)
+    {
+        LOG(ERROR) << BOLDRED << "Not connected to the power supply!!!" << RESET;
+        throw std::runtime_error("Not connected to the power supply!!!");
+    }
+    std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
+    float       LvMea  = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
+    if(LvMea == 0)
+    {
+        LOG(ERROR) << BOLDRED << "No output voltage at power supply, possible short detected!" << RESET;
+        return false;
+    }
+    return true;
+}
 void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId)
 {
     if(fPowerSupplyClient == nullptr)
@@ -513,13 +528,14 @@ void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool setLoad)
 {
     // workaround to turn on the bPOL2V5 propertly
+    if(!setLoad)
+    {
+        float T;
+        // check if the critical temperature of -35C has been reached
+        fTC_2SSEH->read_temperature(fTC_2SSEH->Temp1, T);
 
-    float T;
-    // check if the critical temperature of -35C has been reached
-    fTC_2SSEH->read_temperature(fTC_2SSEH->Temp1, T);
-
-    fillSummaryTree("StartTemperature", T);
-
+        fillSummaryTree("StartTemperature", T);
+    }
     float I_SEH;
     float U_SEH;
     float I_P1V2_R;

@@ -329,6 +329,15 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control and perform I-V scan" << RESET;
         cSEHTester.TurnOn(0, 0, false);
+        if(!cSEHTester.CheckShort(cLVPowerSupplyId, cLVChannelId))
+        {
+            LOG(INFO) << BOLDBLUE << "Stop test due to possible short" << RESET;
+            cTool.SaveResults();
+            cTool.WriteRootFile();
+            cTool.CloseResultFile();
+            cTool.Destroy();
+            abort();
+        }
         cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
         cSEHTester.TurnOn(cRightLoad, cLeftLoad, true);
     }
