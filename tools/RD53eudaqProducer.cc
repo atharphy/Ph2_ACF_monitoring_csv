@@ -61,7 +61,7 @@ void RD53eudaqProducer::DoStartRun()
     // ######################################
     ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
     ev->SetTag("Dataformat version", CMSITEventData::DataFormatVersion);
-    ev->SetTag("Configuration file", RD53sysCntrPhys.fParsedFile.str());
+    ev->SetTag("Configuration file", "\n" + RD53sysCntrPhys.fParsedFile.str());
     for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
     {
         std::stringstream header;
@@ -75,7 +75,7 @@ void RD53eudaqProducer::DoStartRun()
                     std::stringstream header;
                     std::stringstream chipData = cChip->getRegMapStream();
                     header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
-                    ev->SetTag(header.str().c_str(), chipData.str());
+                    ev->SetTag(header.str().c_str(), "\n" + chipData.str());
                 }
     }
     RD53eudaqProducer::MySendEvent(std::move(ev));
