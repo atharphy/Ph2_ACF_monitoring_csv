@@ -101,7 +101,12 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
 
 uint16_t SSA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
-    auto theRegister = ADC_CONTROL_TABLE.find(pRegName);
+    auto theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
+    if (theRegister ==  SSA2_ADC_CONTROL_TABLE.end())
+    {
+        LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " " << pRegName << "not found for this chip type - aborting." << RESET;
+        std::runtime_error(std::string("SSA2Interface::ReadADC: Error, register not found for this chip type. Abort."));
+    }
     LOG(DEBUG) << BOLDMAGENTA << " converting " << pRegName << " to " << +theRegister->second << RESET;
     return SSA2Interface::ReadADC(pChip, theRegister->second);
 }

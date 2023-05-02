@@ -1100,6 +1100,11 @@ bool MPA2Interface::Set_threshold(Chip* pMPA2, uint32_t th)
 uint16_t MPA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {   
     auto theRegister = ADC_CONTROL_TABLE.find(pRegName);
+    if (theRegister ==  ADC_CONTROL_TABLE.end())
+    {
+        LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " " << pRegName << "not found for this chip type - aborting." << RESET;
+        std::runtime_error(std::string("MPA2Interface::ReadADC: Error, register not found for this chip type. Abort."));
+    }
     LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
     this->selectBlock(static_cast<ReadoutChip*>(pChip), theRegister->second.first, theRegister->second.second);
     uint32_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
