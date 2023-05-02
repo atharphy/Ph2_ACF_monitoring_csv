@@ -1555,7 +1555,7 @@ void SEHTester::RunHybridETest()
         fTC_2SSEH->read_supply(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
         std::string cMeasurementName = "EM_" + (cMapIterator.first);
-        fillSummaryTree(cMeasurementName, result);
+        fillSummaryTree("Meas_" + cMeasurementName + "_mean", result);
         if(cNominalValue != fHybridNominalValues.end())
         {
             if(cNominalValue->second != 0)
@@ -1563,10 +1563,15 @@ void SEHTester::RunHybridETest()
                 fillSummaryTree(cMeasurementName + "_dev", cNominalValue->second - result);
                 if(cAcceptancePercentage != 0)
                 {
-                    if(result < cNominalValue->second * (1 + cAcceptancePercentage) && result > cNominalValue->second * (1 - cAcceptancePercentage)) { LOG(INFO) << BOLDGREEN << "OK" << RESET; }
+                    if(result < cNominalValue->second * (1 + cAcceptancePercentage) && result > cNominalValue->second * (1 - cAcceptancePercentage))
+                    {
+                        LOG(INFO) << BOLDGREEN << "OK" << RESET;
+                        fillSummaryTree("Meas_" + cMeasurementName + "_error", 1);
+                    }
                     else
                     {
                         LOG(INFO) << BOLDRED << "BAD" << RESET;
+                        fillSummaryTree("Meas_" + cMeasurementName + "_error", 0);
                     }
                 }
             }
