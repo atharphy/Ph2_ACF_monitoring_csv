@@ -29,7 +29,7 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, 
     {
         LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
     }
-
+    // fPowerSupplyClient->setReceiveTimeout(1,0);
 #ifdef __USE_ROOT__
     fMonitorPlotDQMSEH = new MonitorDQMPlotSEH();
     fMonitorPlotDQMSEH->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
