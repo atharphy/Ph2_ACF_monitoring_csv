@@ -1,12 +1,11 @@
 /*!
  *
  * \file PSBiasCal.h
- * \brief CIC FE alignment class, automated alignment procedure for CICs
- * connected to FEs
- * \author Sarah SEIF EL NASR-STOREY
+ * \brief PS ADC calibration
+ * \author Sarah SEIF EL NASR-STOREY, Kevin Nash, Irene Zoi
  * \date 28 / 06 / 19
  *
- * \Support : sarah.storey@cern.ch
+ * \Support : irene.zoi@cern.ch
  *
  */
 
@@ -37,7 +36,6 @@ class PSBiasCal : public Tool
     void     CalibrateBias();
     void     DisableTest(Ph2_HwDescription::Chip* cChip);
     float    MeasureGnd(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, std::string dac_str);
-    float    CalibrateVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, float VBGexpected, float VREFexpected);
     float    MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, uint8_t *DAC); //, float VBGexpected, float VREFexpected, float VREFmin, float VREFmax);
 
 
