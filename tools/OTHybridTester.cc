@@ -433,7 +433,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             cDACtoADCTree->Branch("DAC", &cDACValVect);
             cDACtoADCTree->Branch("ADC", &cADCValVect);
 
-            if(fIsSEH)
+            if(fIsSEH & pCalibrate)
             {
                 cTrim = calibrateADC();
                 calibrateCurrentDAC();
@@ -824,7 +824,7 @@ bool OTHybridTester::LpGBTTestVTRx()
                 {
                     cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, i + 0x16);
                     cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
-                    cChipId        = cChipId | cReadBackValue << (i + 8);
+                    cChipId        = cChipId | cReadBackValue << (i * 8);
                     LOG(INFO) << BOLDGREEN << "VTRx+ register 0x" << std::hex << +i + 0x16 << std::dec << " contains the value 0x" << std::hex << +cReadBackValue << std::dec << " ." << RESET;
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
@@ -860,9 +860,11 @@ bool OTHybridTester::LpGBTTestVTRx()
             cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
             if(cReadBackValue == 0xA0)
             {
-                // std::vector<uint32_t> cSlaveData = {0xac,0x0d,cSlaveAddress};
-                cRecent = static_cast<D19clpGBTInterface*>(flpGBTInterface)->WriteI2C(clpGBT, cMasterId, cSlaveAddress, 0xac0d, 2, 2);
-                // SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d0d);
+                cNbyte         = 2;
+                cMasterConfig  = (cNbyte << 2) | (cFrequency << 0);
+                cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0xac0d);
+                cNbyte         = 1;
+                cMasterConfig  = (cNbyte << 2) | (cFrequency << 0);
                 cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d);
                 cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
                 if(cReadBackValue == 0xAC)
@@ -1238,14 +1240,15 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
 
 uint16_t OTHybridTester::calibrateADC()
 {
-    uint8_t     cTrimOptimized = 0;
-    float       cTestCard1V25  = 0;
-    float       cVref          = 0;
-    float       cGain          = 0;
-    uint16_t    cOffset        = 0;
-    uint16_t    cADC1V25       = 0;
-    uint8_t     cVersion       = 0;
-    std::string registerStr    = "VREFTUNE";
+    uint8_t     cTrimOptimized   = 0;
+    float       cTestCard1V25    = 0;
+    float       cTestCardVDD2V55 = 0;
+    float       cVref            = 0;
+    float       cGain            = 0;
+    uint16_t    cOffset          = 0;
+    uint16_t    cADC1V25         = 0;
+    uint8_t     cVersion         = 0;
+    std::string registerStr      = "VREFTUNE";
 
     // Create TTree for DAC to ADC conversion in lpGBT
     auto cCalibrationTree  = new TTree("tADCCalibration", "Calibration of the ADC");
@@ -1263,10 +1266,16 @@ uint16_t OTHybridTester::calibrateADC()
     cCalibrationTree->Branch("Offset", &cOffsetVect);
     cCalibrationTree->Branch("Gain", &cGainVect);
     cCalibrationTree->Branch("Vref", &cVrefVect);
-
-    fTC_2SSEH->read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
-    fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-    fTC_2SSEH->set_AMUX(3303, 3303);
+    if(fIsSEH)
+    {
+        fTC_2SSEH->read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
+        fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+        fTC_2SSEH->set_AMUX(3303, 3303);
+    }
+    else
+    {
+        fTC_PSROH->adc_get(TC_PSROH::measurement::_2V55, cTestCardVDD2V55);
+    }
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -1282,7 +1291,7 @@ uint16_t OTHybridTester::calibrateADC()
                 registerStr = "VREFCNTR";
                 nBits       = 6;
             }
-            for(uint8_t cBit = 0; cBit < nBits; cBit += 1)
+            /* for(uint8_t cBit = 0; cBit < nBits; cBit += 1)
             {
                 cTrim = (1 << (nBits - cBit - 1)) | cTrimOptimized;
                 clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, registerStr, cTrim);
@@ -1309,16 +1318,27 @@ uint16_t OTHybridTester::calibrateADC()
             cOffsetVect.clear();
             cGainVect.clear();
             cVrefVect.clear();
-            cCalibrationGraph->Clear();
+            cCalibrationGraph->Clear(); */
             for(uint8_t cBit = 0; cBit < nBits; cBit += 1)
             {
                 cTrim = (1 << (nBits - cBit - 1)) | cTrimOptimized;
                 clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, registerStr, cTrim);
-                cADC1V25 = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC0", "VREF/2");
-                cVref    = 3303. / 4096. * cGain * 512 / (cADC1V25 - cOffset * (1 - cGain / 2.));
-                // std::cout << std::dec << trim << "," << cOffset << "," << cGain << "," << cADC1V25 << "," << cTestCard1V25 << "," << cVref << std::endl;
-                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +cTrim << std::dec << " ADC value: 0x" << std::hex << +cADC1V25 << std::dec
-                          << " calculated Vref: " << cVref << "V offset: 0x" << std::hex << +cOffset << std::dec << " gain: " << cGain << RESET;
+                if(fIsSEH)
+                {
+                    cADC1V25 = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC0", "VREF/2");
+                    cVref    = 3303. / 4096. * cGain * 512 / (cADC1V25 - cOffset * (1 - cGain / 2.));
+                    // std::cout << std::dec << trim << "," << cOffset << "," << cGain << "," << cADC1V25 << "," << cTestCard1V25 << "," << cVref << std::endl;
+                    LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +cTrim << std::dec << " ADC value: 0x" << std::hex << +cADC1V25 << std::dec
+                              << " calculated Vref: " << cVref << "V offset: 0x" << std::hex << +cOffset << std::dec << " gain: " << cGain << RESET;
+                }
+                else
+                {
+                    cADC1V25 = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC7", "VREF/2");
+                    cVref    = cTestCardVDD2V55 * 51. / 161. * cGain * 512 / (cADC1V25 - cOffset * (1 - cGain / 2.));
+                    // std::cout << std::dec << trim << "," << cOffset << "," << cGain << "," << cADC1V25 << "," << cTestCard1V25 << "," << cVref << std::endl;
+                    LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +cTrim << std::dec << " ADC value: 0x" << std::hex << +cADC1V25 << std::dec
+                              << " calculated Vref: " << cVref << "V offset: 0x" << std::hex << +cOffset << std::dec << " gain: " << cGain << RESET;
+                }
                 if(cVref < 1.0) { cTrimOptimized = (1 << (nBits - cBit - 1)) | cTrimOptimized; }
                 cVREFTuneVect.push_back(cTrim);
                 cADCValVect.push_back(cADC1V25);
@@ -1345,11 +1365,17 @@ void OTHybridTester::calibrateCurrentDAC()
     std::vector<uint16_t> cDACVect;
     std::vector<float>    cCurrentVect;
     std::vector<uint16_t> cADCVect;
-    auto                  cCalibrationTree = new TTree("tCurrentDACCalibration", "Calibration of the current DAC");
+    std::vector<uint16_t> cOffsetVect;
+    std::vector<float>    cGainVect;
+
+    auto cCalibrationTree = new TTree("tCurrentDACCalibration", "Calibration of the current DAC");
 
     cCalibrationTree->Branch("ADCValue", &cADCVect);
     cCalibrationTree->Branch("CurrentDACValue", &cDACVect);
     cCalibrationTree->Branch("Current", &cCurrentVect);
+    cCalibrationTree->Branch("Offset", &cOffsetVect);
+    cCalibrationTree->Branch("Gain", &cGainVect);
+
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -1369,6 +1395,8 @@ void OTHybridTester::calibrateCurrentDAC()
                 cCurrentVect.push_back(cCurrent);
                 cDACVect.push_back(cDAC);
                 cADCVect.push_back(cADCTempp);
+                cOffsetVect.push_back(cOffset);
+                cGainVect.push_back(cGain);
             }
         }
     }
