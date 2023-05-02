@@ -14,6 +14,7 @@ Ph2_ACF_controller = Ph2_ACF.MiddlewareMessageHandler()
 class StateMachine(object):
     def __init__(self):
         self.configurationFile_ = ""
+        self.settingsFile_ = ""
         self.calibrationName_ = ""
         self.runNumber_ = 0;
         self.status_ = "INITIAL"
@@ -65,6 +66,7 @@ class StateMachine(object):
         configureMessage.query_type.type = Query.QueryType.CONFIGURE
         configureMessage.data.calibration_name = self.calibrationName_
         configureMessage.data.configuration_file = self.configurationFile_
+        configureMessage.data.settings_file = self.settingsFile_
         for boardId, boardNameAndContent in self.mapOfEnabledObjects_.items():
             boardMessage = configureMessage.data.object_list.add()
             boardMessage.object_type.type = Query.ObjectType.BOARD
@@ -89,8 +91,12 @@ class StateMachine(object):
         stringMessage = configureMessage.SerializeToString()
         return stringMessage
 
-    def setConfigurationFile(self, configurationFile):
+    def setConfigurationFiles(self, configurationFile, settingsFile = ''):
         self.configurationFile_ = configurationFile
+        self.settingsFile_      = configurationFile if settingsFile == '' else settingsFile
+
+    def setSettingsFiles(self, settingsFile):
+        self.settingsFile_ = settingsFile
 
     def setCalibrationName(self, calibrationName):
         self.calibrationName_ = calibrationName

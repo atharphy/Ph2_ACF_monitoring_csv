@@ -65,14 +65,12 @@ bool SCurveHistograms::fill(std::string& inputStream)
 
     if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched SCurve ThresholdAndNoise!!!!!\n";
         DetectorDataContainer fDetectorData = theThresholdAndNoiseSerialization.deserializeChipContainer<ThresholdAndNoise, ThresholdAndNoise>(fDetectorContainer);
         SCurveHistograms::fillThrAndNoise(fDetectorData);
         return true;
     }
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched SCurve ThresholdAndNoise!!!!!\n";
         int                   deltaVcal;
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer, deltaVcal);
         SCurveHistograms::fillOccupancy(fDetectorData, deltaVcal);
@@ -88,7 +86,12 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+                    if(OccupancyContainer.getObject(cBoard->getId())
+                           ->getObject(cOpticalGroup->getId())
+                           ->getObject(cHybrid->getId())
+                           ->getObject(cChip->getId())
+                           ->getChannelContainer<OccupancyAndPh>() == nullptr)
+                        continue;
 
                     auto* hOcc2D = Occupancy2D.getObject(cBoard->getId())
                                        ->getObject(cOpticalGroup->getId())
@@ -138,7 +141,12 @@ void SCurveHistograms::fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseC
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<ThresholdAndNoise>() == nullptr) continue;
+                    if(ThrAndNoiseContainer.getObject(cBoard->getId())
+                           ->getObject(cOpticalGroup->getId())
+                           ->getObject(cHybrid->getId())
+                           ->getObject(cChip->getId())
+                           ->getChannelContainer<ThresholdAndNoise>() == nullptr)
+                        continue;
 
                     auto* Threshold1DHist = Threshold1D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())

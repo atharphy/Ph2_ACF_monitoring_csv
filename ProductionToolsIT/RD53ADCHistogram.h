@@ -13,7 +13,7 @@
 #include "tools/Tool.h"
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/RD53ADCScanHistograms.h"
+#include "DQMUtils/ProductionITRD53A/RD53ADCScanHistograms.h"
 #endif
 
 // #########################

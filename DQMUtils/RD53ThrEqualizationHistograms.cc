@@ -50,8 +50,6 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
 
 bool ThrEqualizationHistograms::fill(std::string& inputStream)
 {
-    const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerSerialization theOccupancySerialization("ThrEqualizationOccupancy");
     ContainerSerialization theTDACSerialization("ThrEqualizationTDAC");
     ContainerSerialization theOccupancyScanSerialization("ThrEqualizationOccupancyScan");
@@ -59,28 +57,24 @@ bool ThrEqualizationHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrEqualization Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, GenericDataVector>(fDetectorContainer);
         ThrEqualizationHistograms::fillOccupancy(fDetectorData);
         return true;
     }
     if(theTDACSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrEqualization TDAC!!!!!\n";
         DetectorDataContainer fDetectorData = theTDACSerialization.deserializeChipContainer<uint16_t, EmptyContainer>(fDetectorContainer);
         ThrEqualizationHistograms::fillTDAC(fDetectorData);
         return true;
     }
     if(theOccupancyScanSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrEqualization OccupancyScan!!!!!\n";
-        DetectorDataContainer fDetectorData = theOccupancyScanSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<TDACGainSize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancyScanSerialization.deserializeChipContainer<EmptyContainer, std::vector<float>>(fDetectorContainer);
         ThrEqualizationHistograms::fillOccupancyScan(fDetectorData);
         return true;
     }
     if(theTDACGainSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrEqualization TDACGain!!!!!\n";
         DetectorDataContainer fDetectorData = theTDACGainSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         ThrEqualizationHistograms::fillTDACGain(fDetectorData);
         return true;
@@ -95,7 +89,12 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
+                    if(OccupancyContainer.getObject(cBoard->getId())
+                           ->getObject(cOpticalGroup->getId())
+                           ->getObject(cHybrid->getId())
+                           ->getObject(cChip->getId())
+                           ->getChannelContainer<OccupancyAndPh>() == nullptr)
+                        continue;
 
                     auto* hThrEqualization = ThrEqualization.getObject(cBoard->getId())
                                                  ->getObject(cOpticalGroup->getId())
@@ -118,7 +117,8 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<uint16_t>() == nullptr) continue;
+                    if(TDACContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<uint16_t>() == nullptr)
+                        continue;
 
                     auto* hTDAC1D =
                         TDAC1D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
@@ -138,15 +138,12 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
 
 void ThrEqualizationHistograms::fillOccupancyScan(const DetectorDataContainer& OccupancyContainer)
 {
-    const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-    const float  step         = (TDACGainNSteps != 0 ? (stopValue - startValue) / TDACGainNSteps : 0);
-
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<TDACGainSize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -155,8 +152,9 @@ void ThrEqualizationHistograms::fillOccupancyScan(const DetectorDataContainer& O
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                    for(auto i = 0u; i <= TDACGainNSteps; i++)
-                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<GenericDataArray<TDACGainSize>>().data[i]);
+                    const size_t TDACGainNSteps = cChip->getSummary<std::vector<float>>().size();
+                    const float  step           = (TDACGainNSteps != 0 ? (stopValue - startValue) / TDACGainNSteps : 0);
+                    for(auto i = 0u; i <= TDACGainNSteps; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<std::vector<float>>().at(i));
                 }
 }
 
@@ -167,7 +165,7 @@ void ThrEqualizationHistograms::fillTDACGain(const DetectorDataContainer& TDACGa
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TDACGainHist = TDACGain.getObject(cBoard->getId())
                                              ->getObject(cOpticalGroup->getId())

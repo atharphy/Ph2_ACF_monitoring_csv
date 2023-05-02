@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
             std::string   configurationFile = cmd.optionValue("file");
             std::string   calibrationName   = cmd.optionValue("calibration");
             ConfigureInfo theConfigureInfo;
-            theConfigureInfo.setConfigurationFile(configurationFile);
+            theConfigureInfo.setConfigurationFiles(configurationFile);
             theConfigureInfo.setCalibrationName(calibrationName);
             theMiddlewareStateMachine.configure(theConfigureInfo);
             stateMachineStatus = CONFIGURED;

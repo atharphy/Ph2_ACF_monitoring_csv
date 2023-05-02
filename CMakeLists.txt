@@ -36,6 +36,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
+    if( NOT DEFINED ENV{PH2ACF_BASE_DIR} )
+       MESSAGE(FATAL_ERROR "${BoldRed}PH2ACF_BASE_DIR not set. Did you source setup.sh${Reset}")
+    endif()
+
     cmake_minimum_required(VERSION 3.4)
     project(Ph2_ACF)
 
@@ -177,18 +181,21 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         message(STATUS "Building with EUDAQ")
         set(USE_EUDAQ ON)
         if(NOT DEFINED ENV{EUDAQDIR})
-            message(WARNING "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
+            message(WARNING "Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
             ExternalProject_Add( ext_eudaq
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
                     GIT_TAG $ENV{EUDAQ_REF}
                     PREFIX ${EXTERNAL_INSTALL_LOCATION}
+                    CMAKE_ARGS -DUSER_EUDET_BUILD=OFF
+                               -DUSER_EXAMPLE_BUILD=OFF
+                               -DEUDAQ_BUILD_EXECUTABLE=OFF
                 )
             set(ENV{EUDAQDIR} ${EXTERNAL_INSTALL_LOCATION}/src/ext_eudaq/ )
         endif(NOT DEFINED ENV{EUDAQDIR})
 
         include_directories($ENV{EUDAQDIR}/include)
-        set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib eudaq_core)
-        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}{Reset}")
+        set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib -Wl,-rpath=$ENV{EUDAQDIR}/lib eudaq_core)
+        message(STATUS "EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}${Reset}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
@@ -293,7 +300,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
         set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}{Reset}")
+        message(STATUS "EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}${Reset}")
     else(${USE_EUDAQ})
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif(${USE_EUDAQ})

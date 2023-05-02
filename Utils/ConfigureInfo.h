@@ -16,8 +16,14 @@ class ConfigureInfo
     ConfigureInfo();
     ~ConfigureInfo();
 
-    void        setConfigurationFile(const std::string& theConfigurationFile) { fConfigurationFile = theConfigurationFile; }
+    void setConfigurationFiles(const std::string& theConfigurationFile, const std::string& theSettingsFile = "")
+    {
+        fConfigurationFile = theConfigurationFile;
+        fSettingsFile      = (theSettingsFile == "" ? theConfigurationFile : theSettingsFile);
+    }
     std::string getConfigurationFile() const { return fConfigurationFile; }
+    std::string getSettingsFile() const { return fSettingsFile; }
+    std::string getConfigFileStream(const std::string& fileName) const;
 
     void        setCalibrationName(const std::string& theCalibrationName) { fCalibrationName = theCalibrationName; }
     std::string getCalibrationName() const { return fCalibrationName; }
@@ -39,6 +45,7 @@ class ConfigureInfo
 
   private:
     std::string       fConfigurationFile{""};
+    std::string       fSettingsFile{""};
     std::string       fCalibrationName{""};
     const std::string fQueryName{"ConfigurationQueryFunction"};
 

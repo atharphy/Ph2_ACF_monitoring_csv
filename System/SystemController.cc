@@ -85,6 +85,7 @@ void SystemController::Inherit(const SystemController* pController)
     fNameContainer                  = pController->fNameContainer;
     fBoardType                      = pController->fBoardType;
     fConfigurationFileName          = pController->fConfigurationFileName;
+    fSettingsFileName               = pController->fSettingsFileName;
     fCalibrationName                = pController->fCalibrationName;
     fConfigurationFileContent       = pController->fConfigurationFileContent;
 }
@@ -189,14 +190,16 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseCommunicationSettings(pFilename, theCommunicationSettingConfig, os);
 
     fDQMStreamerEnabled = theCommunicationSettingConfig.fDQMCommunication.fEnable;
-    if(fDQMStreamerEnabled)
+    if(fDQMStreamerEnabled && (fDQMStreamer == nullptr))
     {
         fDQMStreamer = new TCPPublishServer(theCommunicationSettingConfig.fDQMCommunication.fPort, 1);
         fDQMStreamer->startAccept();
     }
 
+    LOG(INFO) << GREEN << "Bootstrapping TCP Server..." << RESET;
+
     fMonitorDQMStreamerEnabled = theCommunicationSettingConfig.fMonitorDQMCommunication.fEnable;
-    if(fMonitorDQMStreamerEnabled)
+    if(fMonitorDQMStreamerEnabled && (fMonitorDQMStreamer == nullptr))
     {
         fMonitorDQMStreamer = new TCPPublishServer(theCommunicationSettingConfig.fMonitorDQMCommunication.fPort, 1);
         fMonitorDQMStreamer->startAccept();
@@ -234,6 +237,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET;
         }
     }
+
+    LOG(INFO) << GREEN << "Operation completed" << RESET;
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
@@ -445,11 +450,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ###################
     // # Configuring FSM #
     // ###################
-    const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
-    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"));
-    const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
-    const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
-    const size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
+    const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 1);
+    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"), 1);
+    const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
+    const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
+    const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
 
     auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
@@ -1177,24 +1182,31 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
+    fSettingsFileName      = theConfigureInfo.getSettingsFile();
     fCalibrationName       = theConfigureInfo.getCalibrationName();
-    std::ifstream     configurationFile(fConfigurationFileName);
-    std::stringstream configurationFileStream;
-    configurationFileStream << configurationFile.rdbuf();
-    fConfigurationFileContent = configurationFileStream.str();
 
+    // #######################################
+    // # Save raw configuration file content #
+    // #######################################
+    fConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
+    if(fConfigurationFileName != fSettingsFileName) fConfigurationFileContent += theConfigureInfo.getConfigFileStream(fSettingsFileName);
+
+    // ##################
+    // # Initialization #
+    // ##################
     InitializeHw(fConfigurationFileName, fParsedFile);
-    InitializeSettings(fConfigurationFileName, fParsedFile);
+    InitializeSettings(fSettingsFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
-
-    // auto chipSubset = [](const ChipContainer* theChip) { return (theChip->getId() % 2 == 0); };
-    // fDetectorContainer->at(0)->at(0)->at(0)->addQueryFunction(chipSubset, "TEST");
 
     fNameContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
     theConfigureInfo.extractObjectNames(fNameContainer);
 
+    // ########################################################
+    // # Formatted printout on screen of the xml file content #
+    // ########################################################
     std::cout << fParsedFile.str() << std::endl;
+
     ConfigureHw(false, true);
 }
 

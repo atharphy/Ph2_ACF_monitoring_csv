@@ -6,15 +6,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS " ")
 
     # Includes
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Library dirs
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${UHAL_LOG_LIB_PREFIX})
-    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     find_package(Protobuf REQUIRED)
@@ -69,8 +63,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     endif(${PH2_TCUSB_FOUND})
 
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    # include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_DATE_TIME_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE})
 
     # Find ROOT and link against it
@@ -107,7 +101,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Utils Ph2_Parser Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM NetworkUtils MessageUtils ${Protobuf_LIBRARIES})
+    set(LIBS ${LIBS} Ph2_Description Ph2_Utils Ph2_Parser Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM NetworkUtils MessageUtils CACTUS::uhal)
     
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
@@ -153,6 +147,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
                 target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
             endif()
         endif()
+
+        if ("${name}" STREQUAL "testShep")
+            if(${PH2_POWERSUPPLY_FOUND})
+               target_link_libraries(${name} ${LIBS} protobuf::libprotobuf)
+            endif()
+        endif()
+
     endforeach(sourcefile ${BINARIES})
 
     message("--     ${BoldCyan}#### End ####${Reset}")

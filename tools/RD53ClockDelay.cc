@@ -73,6 +73,7 @@ void ClockDelay::sendData()
     {
         ContainerSerialization theOccupancySerialization("ClockDelayOccupancy");
         theOccupancySerialization.streamByChipContainer(fDQMStreamer, theOccContainer);
+
         ContainerSerialization theClockDelaySerialization("ClockDelayClockDelay");
         theClockDelaySerialization.streamByChipContainer(fDQMStreamer, theClockDelayContainer);
     }
@@ -124,8 +125,6 @@ void ClockDelay::localConfigure(const std::string& histoFileName, int currentRun
 
 void ClockDelay::run()
 {
-    const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     // ###############
     // # Run Latency #
     // ###############
@@ -137,7 +136,8 @@ void ClockDelay::run()
     la.run();
     la.analyze();
 
-    ContainerFactory::copyAndInitChip<GenericDataArray<ClkDelaySize>>(*fDetectorContainer, theOccContainer);
+    ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
+    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
 
     // #######################
     // # Set initial latency #
@@ -149,9 +149,6 @@ void ClockDelay::run()
                 {
                     auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg);
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg, latency - 1);
-
-                    for(auto i = 0u; i < ClkDelaySize; i++)
-                        theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<ClkDelaySize>>().data[i] = 0;
                 }
 
     // ###############################
@@ -206,8 +203,7 @@ void ClockDelay::draw(bool saveData)
 
 void ClockDelay::analyze()
 {
-    const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-    const size_t maxRegValue  = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK")) + 1;
+    const size_t maxRegValue = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK")) + 1;
     const auto unitTime = 1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theClockDelayContainer);
@@ -222,14 +218,10 @@ void ClockDelay::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current = round(theOccContainer.at(cBoard->getIndex())
-                                                 ->at(cOpticalGroup->getIndex())
-                                                 ->at(cHybrid->getIndex())
-                                                 ->at(cChip->getIndex())
-                                                 ->getSummary<GenericDataArray<ClkDelaySize>>()
-                                                 .data[i] /
-                                             RD53Shared::PRECISION) *
-                                       RD53Shared::PRECISION;
+                        auto current =
+                            round(theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i) /
+                                  RD53Shared::PRECISION) *
+                            RD53Shared::PRECISION;
                         if(current > best)
                         {
                             regVal = dacList[i];
@@ -266,8 +258,6 @@ void ClockDelay::fillHisto()
 
 void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
-    const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(auto i = 0u; i < dacList.size(); i++)
     {
         // ###########################
@@ -292,7 +282,7 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<ClkDelaySize>>().data[i] =
+                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i) =
                             cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
         // ##############################################

@@ -133,7 +133,6 @@ class lpGBTInterface : public ChipInterface
     void   ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     double GetBERTResult(Ph2_HwDescription::Chip* pChip);
     double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
-    double BERtestCL(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #

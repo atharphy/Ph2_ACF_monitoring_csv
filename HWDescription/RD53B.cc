@@ -17,27 +17,25 @@ namespace Ph2_HwDescription
 // ########################################
 // # Support for different FrontEnd types #
 // ########################################
-const size_t          RD53B::NROWS = 336;
-const size_t          RD53B::NCOLS = 432;
-const RD53B::FrontEnd RD53B::CROC  = {"RD53B",
-                                     {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
-                                     "DAC_KRUM_CURR_LIN",
-                                     "TriggerConfig",
-                                     "DAC_LDAC_LIN",
-                                     "VDDD",
-                                     "VDDA",
-                                     1,
-                                     32,
-                                     RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
-                                     7,
-                                     RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID),
-                                     RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID),
-                                     4,
-                                     4,
-                                     0,
-                                     RD53B::NCOLS - 1,
-                                     0,
-                                     0x01};
+const size_t         RD53B::NROWS = 336;
+const size_t         RD53B::NCOLS = 432;
+const RD53::FrontEnd RD53B::CROC  = {"RD53B",
+                                    {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
+                                    "DAC_KRUM_CURR_LIN",
+                                    "TriggerConfig",
+                                    "DAC_LDAC_LIN",
+                                    "VDDD",
+                                    "VDDA",
+                                    1,
+                                    32,
+                                    RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
+                                    7,
+                                    4,
+                                    4,
+                                    0,
+                                    RD53B::NCOLS - 1,
+                                    0,
+                                    0x01};
 
 RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, fileName, cfgComment)
@@ -47,24 +45,21 @@ RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
     this->setFrontEndType(FrontEndType::RD53B);
 }
 
-uint32_t RD53B::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const
+const DataFormatOptions& RD53B::getDataFormatOptions()
 {
-    return bits::pack<1, 5, 8, 1, 5>(cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
+    dataFormatOptions = DataFormatOptions{!bool(this->getRegItem("EnOutputDataChipId").fValue),
+                                          !bool(this->getRegItem("BinaryReadOut").fValue),
+                                          bool(this->getRegItem("EnBCId").fValue),
+                                          bool(this->getRegItem("EnLv1Id").fValue),
+                                          bool(this->getRegItem("EnEoS").fValue),
+                                          bool(this->getRegItem("RawData").fValue),
+                                          bool(this->getRegItem("EnCRC").fValue)};
+    return dataFormatOptions;
 }
 
-float RD53B::VCal2Charge(float VCal, bool isNoise) const
-{
-    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
-    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
-    return (Vref / VrefDivider / RD53BchargeConvertion::ADCrange) * VCal / RD53BchargeConvertion::ele * (RD53BchargeConvertion::cap * 1e4) + (isNoise == false ? RD53BchargeConvertion::offset : 0);
-}
-
-float RD53B::Charge2VCal(float Charge) const
-{
-    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
-    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
-    return (Charge - RD53BchargeConvertion::offset) / (RD53BchargeConvertion::cap * 1e4) * RD53BchargeConvertion::ele / (Vref / VrefDivider / RD53BchargeConvertion::ADCrange);
-}
+// ###########################################
+// # Functions needed for decoding chip data #
+// ###########################################
 
 template <class T>
 size_t decodeCompressedBitpair(BitView<T>& bits)
@@ -117,11 +112,7 @@ auto decodeCompressedHitmap(BitView<T>& bits)
     return hits;
 }
 
-// ###########################################
-// # Functions needed for decoding chip data #
-// ###########################################
-
-void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const FormatOptions& options)
+void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const DataFormatOptions& options)
 {
     if((options.enableBCID == true) && (options.enableTriggerId == false))
         e.bc_id = bits.pop(RD53BEvtEncoder::NBIT_BCID * 2);
@@ -147,7 +138,7 @@ void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t nWords)
         e.eventStatus |= RD53EvtEncoder::CHIPID;
 }
 
-auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const FormatOptions& options)
+auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const DataFormatOptions& options)
 {
     BitVector<uint32_t> payloadData;
     size_t              nWords = bits.size() / 64;
@@ -182,7 +173,7 @@ auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const Fo
     return payloadData;
 }
 
-void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const FormatOptions& options)
+void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const DataFormatOptions& options)
 {
     std::array<int, RD53B::NCOLS / RD53Constants::NROW_CORE> last_qrow;
     last_qrow.fill(RD53B::NROWS / 2);
@@ -249,6 +240,25 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
                     }
         }
     }
+}
+
+uint32_t RD53B::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const
+{
+    return bits::pack<1, 5, 8, 1, 5>(cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
+}
+
+float RD53B::VCal2Charge(float VCal, bool isNoise) const
+{
+    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
+    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
+    return (Vref / VrefDivider / RD53BchargeConvertion::ADCrange) * VCal / RD53BchargeConvertion::ele * (RD53BchargeConvertion::cap * 1e4) + (isNoise == false ? RD53BchargeConvertion::offset : 0);
+}
+
+float RD53B::Charge2VCal(float Charge) const
+{
+    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
+    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
+    return (Charge - RD53BchargeConvertion::offset) / (RD53BchargeConvertion::cap * 1e4) * RD53BchargeConvertion::ele / (Vref / VrefDivider / RD53BchargeConvertion::ADCrange);
 }
 
 } // namespace Ph2_HwDescription

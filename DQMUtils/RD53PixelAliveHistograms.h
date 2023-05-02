@@ -13,7 +13,6 @@
 
 #include "DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/GenericDataArray.h"
 
 #include <TH1F.h>
 #include <TH2F.h>

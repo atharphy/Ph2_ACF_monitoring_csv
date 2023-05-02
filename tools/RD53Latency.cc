@@ -68,6 +68,7 @@ void Latency::sendData()
     {
         ContainerSerialization theOccupancySerialization("LatencyOccupancy");
         theOccupancySerialization.streamByChipContainer(fDQMStreamer, theOccContainer);
+
         ContainerSerialization theLatencySerialization("LatencyLatency");
         theLatencySerialization.streamByChipContainer(fDQMStreamer, theLatencyContainer);
     }
@@ -111,9 +112,8 @@ void Latency::localConfigure(const std::string& histoFileName, int currentRun)
 
 void Latency::run()
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
-    ContainerFactory::copyAndInitChip<GenericDataArray<LatencySize>>(*fDetectorContainer, theOccContainer);
+    ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
+    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
     Latency::scanDac(frontEnd->latencyReg, dacList, &theOccContainer);
 
     // #################################
@@ -152,8 +152,6 @@ void Latency::draw(bool saveData)
 
 void Latency::analyze()
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theLatencyContainer);
 
     for(const auto cBoard: *fDetectorContainer)
@@ -166,8 +164,7 @@ void Latency::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current =
-                            theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i];
+                        auto current = theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i);
                         if(current > best)
                         {
                             regVal = dacList[i];
@@ -202,8 +199,6 @@ void Latency::fillHisto()
 
 void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
-    const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(auto i = 0u; i < dacList.size(); i++)
     {
         // ###########################
@@ -225,7 +220,7 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] =
+                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i) =
                             cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
         // ##############################################

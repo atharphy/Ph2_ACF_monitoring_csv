@@ -7,18 +7,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     # Includes
     include_directories(${PROJECT_SOURCE_DIR})
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
 
     # Library directories
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${UHAL_LOG_LIB_PREFIX})
-    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
+    # None
 
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    #    include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
 
     # Find root and link against it
@@ -33,7 +28,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     # Add the library
     add_library(Ph2_System STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_MonitorUtils NetworkUtils Ph2_Parser)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_MonitorUtils NetworkUtils Ph2_Parser CACTUS::headers)
     if(NoDataShipping)
         set(LIBS ${LIBS} Ph2_MonitorDQM)
     endif()
@@ -99,7 +94,7 @@ else()
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
-    include_directories(${Protobuf_INCLUDE_DIRS})
+    #    include_directories(${Protobuf_INCLUDE_DIRS})
 
     cet_set_compiler_flags(
                            EXTRA_FLAGS -Wno-reorder -Wl,--undefined

@@ -2,6 +2,7 @@
 #define __COMBINED_CALIBRATION_FACTORY__
 
 #include "tools/CombinedCalibration.h"
+#include "tools/RD53Physics.h"
 #include "tools/Tool.h"
 #include <iostream>
 #include <map>
@@ -22,6 +23,11 @@ class Creator : public BaseCreator
     Creator() {}
     virtual ~Creator() {}
     Tool* Create() const override { return new CombinedCalibration<Args...>(); };
+    // ##################################################
+    // # @TMP@ : when running IT-DAQ uncomment thisone  #
+    // # for better compatibility with running sequence #
+    // ##################################################
+    /* Physics* Create() const override { return new Physics(); }; */
 };
 
 class CombinedCalibrationFactory
