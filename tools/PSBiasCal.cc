@@ -221,6 +221,7 @@ float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstri
 
     }
 
+    *DAC = DAC_val;
 
     float slope = VBGexpected/(ADC_VBG-ADC_GND); // In this case it is the one measured on the module - GND measured on module. In the future it will be given.
     float offset = - ADC_GND*slope;
@@ -262,13 +263,13 @@ float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstri
 
         // float newVBG = ADC_VBG*slope+offset;
         // LOG(INFO) << BOLDRED << "New VBG val: " << newVBG << " Expected val: " << VBGexpected << "+/-" << slope+ADC_GND << RESET;
-    
+        *DAC = retrievedDAC;
     
         VREFobtained = ADCMAX*slope+offset;
         LOG(INFO) << BOLDRED << "for new DAC_val " << +retrievedDAC << " New VREF val: " << VREFobtained << " Expected val: " << VREFexpected  << RESET;
-        //FIXMEEE Get values again to update the slope!!
     }
-    *DAC = retrievedDAC;
+    
+    std::cout << " *DAC " << +(*DAC) << " VREFobtained " << VREFobtained << std::endl;
     return VREFobtained;
 }
 
@@ -285,7 +286,7 @@ uint8_t  PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string
     }
 
 
-    std::cout << " DAC_toTune " << DAC_toTune << " DAC_forCheck " << DAC_forCheck << std::endl;
+    LOG(DEBUG) << MAGENTA << " DAC_toTune " << DAC_toTune << " DAC_forCheck " << DAC_forCheck << RESET;
 
     float ADC_GND = 0;
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
@@ -299,44 +300,40 @@ uint8_t  PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string
     fReadoutChipInterface->WriteChipReg(cChip, DAC_toTune, DAC_min);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    LOG(INFO) << BOLDRED << "DAC:" << DAC_toTune << RESET;
-
     uint32_t off_val = 0;
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
         off_val = uint32_t(std::round(static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck)));
     else
         off_val = uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck)));
 
-    LOG(INFO) << BOLDRED << " value for DAC " << DAC << " at 0 is off_val " << off_val << RESET;
+    LOG(INFO) << BOLDMAGENTA << " value for DAC " << DAC << " at 0 is off_val " << off_val << RESET;
 
     // now set the DAC value to its max value
     uint8_t DAC_max =  0x1F;
     fReadoutChipInterface->WriteChipReg(cChip, DAC_toTune, DAC_max);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    LOG(INFO) << BOLDRED << "MAX" << RESET;
     uint32_t max_val = 0;
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
         max_val = uint32_t(std::round(static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck))); // uint32_t(std::round(static_cast<MPA2Interface*>(fReadoutChipInterface)->ADCMeasure(cChip)));
     else
         max_val = uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck)));
 
-    LOG(INFO) << BOLDRED << " value for DAC " << DAC << " at 0x1F is max_val " << max_val << RESET;
+    LOG(INFO) << BOLDMAGENTA << " value for DAC " << DAC << " at 0x1F is max_val " << max_val << RESET;
 
     float LSB = abs(float(max_val) - float(off_val)) / float(DAC_max);
-    std::cout << " abs(float(max_val) - float(off_val)) " << abs(float(max_val) - float(off_val)) << " float(DAC_max) "<< float(DAC_max) << std::endl;
-    LOG(INFO) << BOLDBLUE << DAC << " LSB " << LSB << RESET;
+    LOG(INFO) << BOLDMAGENTA << " abs(float(max_val) - float(off_val)) " << abs(float(max_val) - float(off_val)) << " float(DAC_max) "<< float(DAC_max) << RESET;
+    LOG(INFO) << BOLDMAGENTA << DAC << " LSB " << LSB << RESET;
 
 
     float exp_val_conv = 0.0;
     exp_val_conv       = exp_val / slope + ADC_GND; // converted from volts to ADC
-    LOG(INFO) << BOLDRED << "exp_val_conv " << exp_val_conv << RESET;
+    LOG(INFO) << BOLDMAGENTA << "exp_val_conv " << exp_val_conv << RESET;
 
     // now set the DAC value to its default value and get the nominal value
     fReadoutChipInterface->WriteChipReg(cChip, DAC_toTune, DAC_val);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    LOG(INFO) << BOLDRED << "NOM" << RESET;
     uint32_t act_val = 0;
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
         act_val = uint32_t(std::round(static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck)));
@@ -344,7 +341,7 @@ uint8_t  PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string
         act_val = uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck)));
 
 
-    std::cout << " DAC_val " << +DAC_val << " act_val "<< act_val << std::endl;
+    LOG(INFO) << BOLDMAGENTA << " DAC_val at nominal value " << +DAC_val << " gives act_val "<< act_val << RESET;
     int sign = 0;
     if (exp_val_conv < act_val ) sign = -1;
     else sign = 1;
@@ -355,7 +352,7 @@ uint8_t  PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string
     }
     uint8_t steps = uint8_t(std::round(abs(float(exp_val_conv)  - float(act_val) ) / float(LSB)));
     uint8_t DAC_new_val = 0;
-    std::cout << " steps "<< +steps <<std::endl;
+    LOG(INFO) << MAGENTA << " steps "<< +steps <<RESET;
     if ((DAC_val + sign*steps) > DAC_max)
         DAC_new_val = DAC_max;
     else if ((float(DAC_val + sign*steps) < DAC_min))
@@ -364,7 +361,7 @@ uint8_t  PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string
         DAC_new_val     = DAC_val +sign*steps;
     DAC_val = DAC_new_val;
 
-    std::cout << " DAC_new_val " << +DAC_new_val << std::endl;
+    LOG(INFO) << MAGENTA <<" DAC_new_val " << +DAC_new_val << RESET;
 
     // now writing the DAC to the some new value DAC_nom_val estimated above
     fReadoutChipInterface->WriteChipReg(cChip, DAC_toTune, DAC_new_val);
@@ -376,7 +373,7 @@ uint8_t  PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string
     else
         new_val = uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck)));
 
-    LOG(INFO) << BOLDRED << " value for DAC " << DAC_toTune << " at " << +DAC_val << " is new_val " << new_val << RESET;
+    LOG(INFO) << BOLDMAGENTA << " value for DAC " << DAC_toTune << " at " << +DAC_val << " is new_val " << new_val << RESET;
 
     bool checkadj = true;
     if(checkadj) // This checks if the linear extrapolation finds the best value.
@@ -387,10 +384,9 @@ uint8_t  PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string
         {
 
             uint8_t DAC_down_val;
-            std::cout << " DAC_new_val - 1 " << +uint8_t(DAC_new_val - 1) <<std::endl;
+            LOG(DEBUG)<< MAGENTA << " DAC_new_val - 1 " << +uint8_t(DAC_new_val - 1) << RESET;
             DAC_down_val = std::max(uint8_t(DAC_min), uint8_t(DAC_new_val - 1));
 
-            // LOG(INFO) << BOLDRED << "DAC_down_val "<<DAC_down_val << RESET;
             fReadoutChipInterface->WriteChipReg(cChip, DAC_toTune, DAC_down_val);
             std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
@@ -401,7 +397,7 @@ uint8_t  PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string
                 new_val_down = uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck)));
 
             uint8_t DAC_up_val = std::min(uint8_t(31), uint8_t(DAC_new_val + 1));
-            LOG(INFO) << BOLDRED << "DAC_up_val "<<+DAC_up_val << RESET;
+            LOG(DEBUG) << MAGENTA << "DAC_up_val "<<+DAC_up_val << RESET;
             // LOG(INFO) << BOLDRED << "DAC_up_val "<<DAC_up_val << RESET;
 
             fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_up_val);
