@@ -57,10 +57,9 @@ class SSA2Interface : public ReadoutChipInterface
     const std::map<std::string, uint8_t> ADC_CONTROL_TABLE = {
         {"highimpedence", 0}, {"Bias_D5BFEED", 1},   {"Bias_D5PREAMP", 2}, {"Bias_D5TDR", 3}, {"Bias_D5ALLV", 4}, {"Bias_D5ALLI", 5}, {"Bias_CALDAC", 6}, {"Bias_BOOSTERBASELINE", 7},
         {"Bias_THDAC", 8},    {"Bias_THDACHIGH", 9}, {"Bias_D5DAC8", 10},  {"VBG", 11},       {"GND", 12},        {"ADC_IREF", 13},   {"ADC_VREF", 14},   {"TESTPAD", 15},
-        {"Temperature", 16},  {"AVDD", 17},          {"PVDD", 18},         {"DVDD", 19}};                                             
+        {"Temperature", 16},  {"AVDD", 17},          {"PVDD", 18},         {"DVDD", 19}};
 
-
-    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},                                                                                                       // FIXME
+    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0}, // FIXME
                                                {"PreampBias", 1},
                                                {"Trim", 2},
                                                {"VoltageBias", 3},
@@ -74,7 +73,6 @@ class SSA2Interface : public ReadoutChipInterface
                                                {"GND", 11},
                                                {"HighZ", 12}};
 
-    
 }; // end class
 
 } // namespace Ph2_HwInterface
