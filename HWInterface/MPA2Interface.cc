@@ -1196,11 +1196,10 @@ void MPA2Interface::loadVref(Chip* pMPA2)
 
 void MPA2Interface::loadVref(Chip* pMPA2, uint8_t VREFvalue)
 {
-    // Set the Vref from the fuse
+    // Set the Vref to a desired value
     this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
     LOG(DEBUG) << BOLDMAGENTA << " loading VREF " << +VREFvalue << RESET;
 }
-
 
 // This is done at probe?
 /*def calibrate_vref(self, vref_exp, lin_pts, plot = 0, verbose = 0):
