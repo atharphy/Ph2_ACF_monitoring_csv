@@ -183,14 +183,15 @@ float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstri
     uint8_t DAC_val = 0;
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
     {
-        auto theRegister = MPA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
-        if (theRegister ==  MPA2_VBG_MEASURED_TABLE.end())
-        {
-            LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
-            abort();
-        }
-        LOG(DEBUG) << BOLDRED << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
-        VBGexpected   = theRegister->second;
+        // auto theRegister = MPA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
+        // if (theRegister ==  MPA2_VBG_MEASURED_TABLE.end())
+        // {
+        //     LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
+        //     abort();
+        // }
+        // LOG(DEBUG) << BOLDRED << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
+        // VBGexpected   = theRegister->second;
+        VBGexpected   = MPA2_VBG_EXPECTED;
         VREFexpected  = MPA2_VREF_EXPECTED;
         VREFmin       = MPA2_VREF_MIN;
         VREFmax       = MPA2_VREF_MAX;
@@ -202,14 +203,15 @@ float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstri
     }
     else
     {
-        auto theRegister = SSA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
-        if (theRegister ==  SSA2_VBG_MEASURED_TABLE.end())
-        {
-            LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
-            abort();        
-        }
-        LOG(INFO) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
-        VBGexpected   = theRegister->second;
+        // auto theRegister = SSA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
+        // if (theRegister ==  SSA2_VBG_MEASURED_TABLE.end())
+        // {
+        //     LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
+        //     abort();        
+        // }
+        // LOG(INFO) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
+        // VBGexpected   = theRegister->second;
+        VBGexpected   = MPA2_VBG_EXPECTED;
         VREFexpected  = SSA2_VREF_EXPECTED;
         VREFmin       = SSA2_VREF_MIN;
         VREFmax       = SSA2_VREF_MAX;
@@ -675,30 +677,30 @@ void PSBiasCal::CalibrateBias()
                     if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         ADC_VBG = uint32_t(std::round(static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), "VBG")));
-                        //measured_VBG = MPA2_VBG_EXPECTED;
-                        auto theRegister = MPA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
-                        if (theRegister ==  MPA2_VBG_MEASURED_TABLE.end())
-                        {
-                            LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
-                            abort();
-                        }
-                        LOG(DEBUG) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
-                        measured_VBG = theRegister->second;
+                        measured_VBG = MPA2_VBG_EXPECTED;
+                        // auto theRegister = MPA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
+                        // if (theRegister ==  MPA2_VBG_MEASURED_TABLE.end())
+                        // {
+                        //     LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
+                        //     abort();
+                        // }
+                        // LOG(DEBUG) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
+                        // measured_VBG = theRegister->second;
                         VREFstring = "vref";
                     }
                     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         ADC_VBG = uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), "VBG")));
-                        //measured_VBG = SSA2_VBG_EXPECTED;
-                        auto theRegister = SSA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
-                        if (theRegister ==  SSA2_VBG_MEASURED_TABLE.end())
-                        {
-                            LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
-                            abort();
-                        }
-                        LOG(DEBUG) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
-                        measured_VBG = theRegister->second;
-                        VREFstring = "VREF";
+                        measured_VBG = SSA2_VBG_EXPECTED;
+                        // auto theRegister = SSA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
+                        // if (theRegister ==  SSA2_VBG_MEASURED_TABLE.end())
+                        // {
+                        //     LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " no VBG entry found for chip "<< +cChip->getId() << " on hybrid "<<  +cChip->getHybridId() << " - aborting." << RESET;
+                        //     abort();
+                        // }
+                        // LOG(DEBUG) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
+                        // measured_VBG = theRegister->second;
+                        // VREFstring = "VREF";
                     }
                     else
                         LOG(INFO) << BOLDRED <<__PRETTY_FUNCTION__<< "Calibration procedure not implemented for this chip type. Some variables will be set to 0!!" << RESET;
