@@ -101,16 +101,16 @@ if (CACTUS_FOUND)
             set_target_properties(CACTUS::${uhal_name} PROPERTIES
                 IMPORTED_LOCATION "${CACTUS_UHAL_${uhal_name}}"
                 INTERFACE_LINK_DIRECTORIES "${CACTUS_LIBDIR}"
-                INTERFACE_LINK_LIBRARIES "CACTUS::headers"
-            )
+                INTERFACE_LINK_LIBRARIES "CACTUS::headers;$<$<STREQUAL:${uhal_suffix},uhal>:CACTUS::uhal_grammars>"
+                )
         else()
             message(ERROR "Library ${uhal_name} not found")
         endif()
     endmacro()
 
+    add_lib_target(uhal_grammars grammars)
     add_lib_target(uhal uhal)
     add_lib_target(uhal_log log)
-    add_lib_target(uhal_grammars grammars)
 endif()
 
 if(${CACTUS_AMC13_FOUND})
