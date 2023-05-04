@@ -181,6 +181,7 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         cRegItem = cRegMap[pRegNode];
         cRegItems.push_back(cRegItem);
     }
+    
     auto cValues = fBoardFW->MultiRegisterRead(pSSA2, cRegItems);
     if(pRegNode.find("CounterStrip") != std::string::npos) { return (cValues[0] << 8) | cValues[1]; }
     else
