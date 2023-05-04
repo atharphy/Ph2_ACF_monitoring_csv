@@ -68,6 +68,7 @@ void DQMHistogramPSBiasCal::book(TFile* theOutputFile, DetectorContainer& theDet
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipStripVrefHistograms, theTH1FChipStripVref);
 
         GraphContainer<TGraph> theTGraphChipStripSlope(fGraphSize);
+        theTGraphChipStripSlope.setNameTitle("ADC_slope","ADC_slope");
         RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fChipStripSlopeGraphs, theTGraphChipStripSlope);
 
         HistContainer<TH1F> theTH1FChipStripAVDD("AVDD", "AVDD", 4096, 0, 4096);
@@ -89,6 +90,7 @@ void DQMHistogramPSBiasCal::book(TFile* theOutputFile, DetectorContainer& theDet
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipPixelVrefHistograms, theTH1FChipPixelVref);
 
         GraphContainer<TGraph> theTGraphChipPixelSlope(fGraphSize);
+        theTGraphChipPixelSlope.setNameTitle("ADC_slope","ADC_slope");
         RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fChipPixelSlopeGraphs, theTGraphChipPixelSlope);
 
         HistContainer<TH1F> theTH1FChipPixelAVDD("AVDD", "AVDD", 4096, 0, 4096);
@@ -109,7 +111,7 @@ bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
     ContainerSerialization theDACSerialization("PSBiasCalVrefDac");
     if(theDACSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Vref DAC!!!!!\n";
+        LOG(DEBUG)<< BOLDMAGENTA << "Matched Vref DAC!!!!!" << RESET;
         DetectorDataContainer theVREFDACData  = theDACSerialization.deserializeBoardContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
     
         fillDACPlots(theVREFDACData);
@@ -119,7 +121,7 @@ bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
     ContainerSerialization theADCSlopeSerialization("PSBiasCalADCSlope");
     if(theADCSlopeSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ADC slope!!!!!\n";
+        LOG(DEBUG)<< BOLDMAGENTA << "Matched ADC slope!!!!!" << RESET;
         DetectorDataContainer theADCSlopeData  = theADCSlopeSerialization.deserializeBoardContainer<ADCSlope, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
     
         fillSlopePlots(theADCSlopeData);
@@ -129,7 +131,7 @@ bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
     ContainerSerialization theAVDDSerialization("PSBiasCalAVDD");
     if(theAVDDSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched AVDD!!!!!\n";
+        LOG(DEBUG)<< BOLDMAGENTA << "Matched AVDD!!!!!" << RESET;
         DetectorDataContainer theAVDDData  = theAVDDSerialization.deserializeBoardContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
     
         fillVDDPlots(theAVDDData, true);
@@ -138,7 +140,7 @@ bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
     ContainerSerialization theDVDDSerialization("PSBiasCalDVDD");
     if(theDVDDSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched DVDD!!!!!\n";
+        LOG(DEBUG)<< BOLDMAGENTA << "Matched DVDD!!!!!" << RESET;
         DetectorDataContainer theDVDDData  = theDVDDSerialization.deserializeBoardContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
     
         fillVDDPlots(theDVDDData, false);
@@ -160,7 +162,7 @@ void DQMHistogramPSBiasCal::reset(void) {}
 //========================================================================================================================
 void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
 {   
-    LOG(INFO) << __PRETTY_FUNCTION__ << " Fill DAC Plots " << RESET;
+    LOG(DEBUG) << __PRETTY_FUNCTION__ << " Fill DAC Plots " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -181,8 +183,8 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                                                      ->getObject(cChip->getId())
                                                      ->getSummary<HistContainer<TH1F>>()
                                                      .fTheHistogram;
-                        LOG(INFO) << BOLDBLUE <<  " Fill SSA "<<RESET;
-                        LOG(INFO) << BOLDBLUE << " DAC, VREF "<< +theDAC.getObject(cBoard->getId())
+                        LOG(DEBUG) << BOLDBLUE <<  " Fill SSA "<<RESET;
+                        LOG(DEBUG) << BOLDBLUE << " DAC, VREF "<< +theDAC.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
@@ -213,8 +215,8 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                                                      ->getSummary<HistContainer<TH1F>>()
                                                      .fTheHistogram;
                         
-                        LOG(INFO) << BOLDBLUE << " Fill MPA " << RESET;
-                        LOG(INFO) << BOLDBLUE << " DAC, VREF "<< +theDAC.getObject(cBoard->getId())
+                        LOG(DEBUG) << BOLDBLUE << " Fill MPA " << RESET;
+                        LOG(DEBUG) << BOLDBLUE << " DAC, VREF "<< +theDAC.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
@@ -245,7 +247,7 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
 //========================================================================================================================
 void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isAVDD)
 {   
-    LOG(INFO) << __PRETTY_FUNCTION__ << " Fill VDD Plots " << RESET;
+    LOG(DEBUG) << __PRETTY_FUNCTION__ << " Fill VDD Plots " << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -262,7 +264,7 @@ void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isA
             
                         if (isAVDD)
                         {
-                            std::cout << " AVDD " << std::endl;
+                            LOG(DEBUG) << MAGENTA<< " AVDD " << RESET;
                             fStripVDDHistograms = fChipStripAVDDHistograms.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
@@ -272,7 +274,7 @@ void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isA
                         }
                         else
                         {
-                            std::cout << " DVDD " << std::endl;
+                            LOG(DEBUG) << MAGENTA<< " DVDD " << RESET;
                             fStripVDDHistograms = fChipStripDVDDHistograms.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
@@ -281,8 +283,8 @@ void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isA
                                                      .fTheHistogram;
                         }
 
-                        LOG(INFO) << BOLDBLUE <<  " Fill SSA "<<RESET;
-                        LOG(INFO) << BOLDBLUE << " ADC, volts "<< theVDD.getObject(cBoard->getId())
+                        LOG(DEBUG) << BOLDBLUE <<  " Fill SSA "<<RESET;
+                        LOG(DEBUG) << BOLDBLUE << " ADC, volts "<< theVDD.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
@@ -310,7 +312,7 @@ void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isA
                     {
                         if (isAVDD)
                         {
-                            std::cout << " AVDD " << std::endl;
+                            LOG(DEBUG) << MAGENTA<< " AVDD " << RESET;
                             fPixelVDDHistograms = fChipPixelAVDDHistograms.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
@@ -320,7 +322,7 @@ void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isA
                         }
                         else
                         {
-                            std::cout << " DVDD " << std::endl;
+                            LOG(DEBUG) << MAGENTA<< " DVDD " << RESET;
                             fPixelVDDHistograms = fChipPixelDVDDHistograms.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
@@ -329,8 +331,8 @@ void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isA
                                                      .fTheHistogram;
                         }
                         
-                        LOG(INFO) << BOLDBLUE << " Fill MPA " << RESET;
-                        LOG(INFO) << BOLDBLUE << " ADC, volts "<< theVDD.getObject(cBoard->getId())
+                        LOG(DEBUG) << BOLDBLUE << " Fill MPA " << RESET;
+                        LOG(DEBUG) << BOLDBLUE << " ADC, volts "<< theVDD.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
@@ -388,9 +390,9 @@ void DQMHistogramPSBiasCal::fillSlopePlots(DetectorDataContainer& theSlope)
                         auto cChipContainer =
                         theSlope.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ADCSlope>();
 
-                        std::cout << " Fill SSA "<<std::endl;
-                        std::cout << " GND ADC "<< cChipContainer.fADC_GND << std::endl;
-                        std::cout << " VBG ADC "<< cChipContainer.fADC_VBG << " measured V " << cChipContainer.fMeasured_VBG << std::endl;
+                        LOG(DEBUG)<< BLUE << " Fill SSA "<<RESET;
+                        LOG(DEBUG)<< BLUE  << " GND ADC "<< cChipContainer.fADC_GND << RESET;
+                        LOG(DEBUG)<< BLUE  << " VBG ADC "<< cChipContainer.fADC_VBG << " measured V " << cChipContainer.fMeasured_VBG << RESET;
                         float ADCs[fGraphSize] = {cChipContainer.fADC_GND, cChipContainer.fADC_VBG};
                         float voltages[fGraphSize] = {0,cChipContainer.fMeasured_VBG};
                         for(int i = 0; i < fGraphSize; i ++ )
@@ -398,12 +400,11 @@ void DQMHistogramPSBiasCal::fillSlopePlots(DetectorDataContainer& theSlope)
                             fStripADCSlopeGraphs->SetPointX(i,ADCs[i]);
                             fStripADCSlopeGraphs->SetPointY(i,voltages[i]);
                         }
-                        fStripADCSlopeGraphs->SetTitle("ADC_slope");
                         fStripADCSlopeGraphs->SetMarkerStyle(20);
                         fStripADCSlopeGraphs->GetXaxis()->SetTitle("ADC output [ADC]");
                         fStripADCSlopeGraphs->GetYaxis()->SetTitle("ADC output [V]");
                         fStripADCSlopeGraphs->Fit("pol1","Q");
-                        std::cout << " cChipContainer.fOffset " << cChipContainer.fOffset << " cChipContainer.fSlope "<< cChipContainer.fSlope << std::endl;
+                        LOG(DEBUG)<< BLUE << " cChipContainer.fOffset " << cChipContainer.fOffset << " cChipContainer.fSlope "<< cChipContainer.fSlope << RESET;
                         TF1 *fPol1 = fStripADCSlopeGraphs->GetFunction("pol1");
                         fPol1->SetParameter(0,cChipContainer.fOffset);
                         fPol1->SetParameter(1,cChipContainer.fSlope);
@@ -411,11 +412,6 @@ void DQMHistogramPSBiasCal::fillSlopePlots(DetectorDataContainer& theSlope)
                         fPol1->SetLineColor(kRed+1);
                         fPol1->SetLineStyle(2);
 
-
-                        // fStripADCAVDDGraphs->SetPointX(0,cChipContainer.fADC_AVDD);
-                        // fStripADCAVDDGraphs->SetPointY(0,cChipContainer.fObtained_AVDD);
-                        // fStripADCAVDDGraphs->SetMarkerStyle(22);
-                        // fStripADCSlopeGraphs->SetTitle("AVDD");
                     }
                     else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                     {
@@ -430,9 +426,9 @@ void DQMHistogramPSBiasCal::fillSlopePlots(DetectorDataContainer& theSlope)
                         auto cChipContainer =
                         theSlope.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ADCSlope>();
 
-                        std::cout << " Fill MPA "<<std::endl;
-                        std::cout << " GND ADC "<< cChipContainer.fADC_GND << std::endl;
-                        std::cout << " VBG ADC "<< cChipContainer.fADC_VBG << " measured V " << cChipContainer.fMeasured_VBG << std::endl;
+                        LOG(DEBUG)<< BLUE << " Fill MPA "<<RESET;
+                        LOG(DEBUG)<< BLUE << " GND ADC "<< cChipContainer.fADC_GND << RESET;
+                        LOG(DEBUG)<< BLUE << " VBG ADC "<< cChipContainer.fADC_VBG << " measured V " << cChipContainer.fMeasured_VBG << RESET;
                         float ADCs[fGraphSize] = {cChipContainer.fADC_GND, cChipContainer.fADC_VBG};
                         float voltages[fGraphSize] = {0,cChipContainer.fMeasured_VBG};
                         for(int i = 0; i < fGraphSize; i ++ )
@@ -440,24 +436,17 @@ void DQMHistogramPSBiasCal::fillSlopePlots(DetectorDataContainer& theSlope)
                             fPixelADCSlopeGraphs->SetPointX(i,ADCs[i]);
                             fPixelADCSlopeGraphs->SetPointY(i,voltages[i]);
                         }
-                        fPixelADCSlopeGraphs->SetTitle("ADC_slope");
                         fPixelADCSlopeGraphs->SetMarkerStyle(20);
                         fPixelADCSlopeGraphs->GetXaxis()->SetTitle("ADC output [ADC]");
                         fPixelADCSlopeGraphs->GetYaxis()->SetTitle("ADC output [V]");
                         fPixelADCSlopeGraphs->Fit("pol1","Q");
-                        std::cout << " cChipContainer.fOffset " << cChipContainer.fOffset << " cChipContainer.fSlope "<< cChipContainer.fSlope << std::endl;
+                        LOG(DEBUG)<< BLUE << " cChipContainer.fOffset " << cChipContainer.fOffset << " cChipContainer.fSlope "<< cChipContainer.fSlope << RESET;
                         TF1 *fPol1 = fPixelADCSlopeGraphs->GetFunction("pol1");
                         fPol1->SetParameter(0,cChipContainer.fOffset);
                         fPol1->SetParameter(1,cChipContainer.fSlope);
                         fPol1->SetRange(0,4095);
                         fPol1->SetLineColor(kRed+1);
                         fPol1->SetLineStyle(2);
-
-                        // fPixelADCAVDDGraphs->SetPointX(0,cChipContainer.fADC_AVDD);
-                        // fPixelADCAVDDGraphs->SetPointY(0,cChipContainer.fObtained_AVDD);
-                        // fPixelADCAVDDGraphs->SetMarkerStyle(22);
-                        // fPixelADCSlopeGraphs->SetTitle("AVDD");
-
                     }
                 }// chip
             }// hybrid
