@@ -21,9 +21,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     endif(NOT DEFINED ENV{PYBIND11})
 
     # Includes
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR}/MessageUtils/cpp)
     include_directories(${PROJECT_SOURCE_DIR}/miniDAQ)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
@@ -33,11 +30,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     # Library dirs
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System MessageUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System )
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -87,18 +83,18 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif()
     endif()
 
-    find_package(Protobuf REQUIRED)
+    #    find_package(Protobuf REQUIRED)
 
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    # include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
 
-    set(LIBS ${LIBS} boost_serialization ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Protobuf_LIBRARIES})
+    set(LIBS ${LIBS} boost_serialization ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY}) # ${Protobuf_LIBRARIES})
 
     add_subdirectory($ENV{PYBIND11} subproject/pybind11)
 
     pybind11_add_module(Ph2_ACF_PythonInterface PythonMiddlewareMessageHandler.cc)
-    target_link_libraries(Ph2_ACF_PythonInterface PRIVATE ${LIBS} Ph2_Tools Ph2_Parser Ph2_System Ph2_miniDAQ MessageUtils)
+    target_link_libraries(Ph2_ACF_PythonInterface PRIVATE ${LIBS} Ph2_Tools Ph2_Parser Ph2_System Ph2_miniDAQ MessageUtils CACTUS::uhal)
 
     ###############
     # EXECUTABLES #

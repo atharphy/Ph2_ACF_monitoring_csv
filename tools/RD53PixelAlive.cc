@@ -22,8 +22,8 @@ void PixelAlive::ConfigureCalibration()
     rowStop         = this->findValueInSettings<double>("ROWstop");
     colStart        = this->findValueInSettings<double>("COLstart");
     colStop         = this->findValueInSettings<double>("COLstop");
-    nEvents         = this->findValueInSettings<double>("nEvents");
-    nEvtsBurst      = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
+    nEvents         = this->findValueInSettings<double>("nEvents", 1);
+    nEvtsBurst      = this->findValueInSettings<double>("nEvtsBurst", 1) < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
     nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
     injType         = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     nHITxCol        = this->findValueInSettings<double>("nHITxCol");
@@ -269,13 +269,16 @@ void PixelAlive::draw(bool saveData)
 
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
-
+    // ####################
+    // # Clear containers #
+    // ####################
     theBCIDContainer.reset();
+    ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theBCIDContainer);
+    CalibBase::fillVectorContainer<uint16_t>(theBCIDContainer, RD53Shared::firstChip->getMaxBCIDvalue() + 1, 0);
+
     theTrgIDContainer.reset();
-    ContainerFactory::copyAndInitChip<GenericDataArray<BCIDsize>>(*fDetectorContainer, theBCIDContainer);
-    ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
+    ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theTrgIDContainer);
+    CalibBase::fillVectorContainer<uint16_t>(theTrgIDContainer, RD53Shared::firstChip->getMaxTRIGIDvalue() + 1, 0);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -357,10 +360,6 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                     // ######################################
                     // # Copy register values for streaming #
                     // ######################################
-                    for(auto i = 0u; i < BCIDsize; i++)
-                        theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
-                    for(auto i = 0u; i < TrgIDsize; i++)
-                        theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
 
                     for(auto i = 1u; i < theOccContainer->at(cBoard->getIndex())
                                              ->at(cOpticalGroup->getIndex())
@@ -375,23 +374,18 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                  ->at(cHybrid->getIndex())
                                                  ->at(cChip->getIndex())
                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                                 .data1[i] -
+                                                 .data1.at(i) -
                                              theOccContainer->at(cBoard->getIndex())
                                                  ->at(cOpticalGroup->getIndex())
                                                  ->at(cHybrid->getIndex())
                                                  ->at(cChip->getIndex())
                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                                 .data1[i - 1];
-                        deltaBCID += (deltaBCID >= 0 ? 0 : frontEnd->maxBCIDvalue + 1);
-                        if(deltaBCID >= int(frontEnd->maxBCIDvalue))
+                                                 .data1.at(i - 1);
+                        deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::firstChip->getMaxBCIDvalue() + 1);
+                        if(deltaBCID >= int(RD53Shared::firstChip->getMaxBCIDvalue()))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                         else
-                            theBCIDContainer.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
-                                ->getSummary<GenericDataArray<BCIDsize>>()
-                                .data[deltaBCID]++;
+                            theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint16_t>>().at(deltaBCID)++;
                     }
 
                     for(auto i = 1u; i < theOccContainer->at(cBoard->getIndex())
@@ -407,23 +401,23 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                   ->at(cHybrid->getIndex())
                                                   ->at(cChip->getIndex())
                                                   ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                                  .data2[i] -
+                                                  .data2.at(i) -
                                               theOccContainer->at(cBoard->getIndex())
                                                   ->at(cOpticalGroup->getIndex())
                                                   ->at(cHybrid->getIndex())
                                                   ->at(cChip->getIndex())
                                                   ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                                  .data2[i - 1];
-                        deltaTrgID += (deltaTrgID >= 0 ? 0 : frontEnd->maxTRIGIDvalue + 1);
-                        if(deltaTrgID > int(frontEnd->maxTRIGIDvalue))
+                                                  .data2.at(i - 1);
+                        deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::firstChip->getMaxTRIGIDvalue() + 1);
+                        if(deltaTrgID > int(RD53Shared::firstChip->getMaxTRIGIDvalue()))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                         else
                             theTrgIDContainer.at(cBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
                                 ->at(cHybrid->getIndex())
                                 ->at(cChip->getIndex())
-                                ->getSummary<GenericDataArray<TrgIDsize>>()
-                                .data[deltaTrgID]++;
+                                ->getSummary<std::vector<uint16_t>>()
+                                .at(deltaTrgID)++;
                     }
                 }
 

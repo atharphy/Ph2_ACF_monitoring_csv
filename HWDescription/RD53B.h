@@ -15,19 +15,18 @@
 #include "RD53BCommands.h"
 #include "Utils/BitMaster/BitVector.h"
 #include "Utils/RD53ChannelGroupHandler.h"
-#include "Utils/RD53Event.h"
 
 // ############################
 // # Chip event configuration #
 // ############################
 namespace RD53BEvtEncoder
 {
-const uint8_t NBIT_CHIPID = 2;  // Number of chip ID bits
-const uint8_t NBIT_TRIGID = 8;  // Number of trigger ID bits
-const uint8_t NBIT_TRGTAG = 8;  // Number of trigger tag bits
-const uint8_t NBIT_BCID   = 11; // Number of bunch crossing ID bits
-const uint8_t NBIT_TOT    = 4;  // Number of ToT bits
-const uint8_t NBIT_CCOL   = 6;  // Number of core column bits
+const uint8_t NBIT_CHIPID = 2; // Number of chip ID bits
+const uint8_t NBIT_TRIGID = 8; // Number of trigger ID bits
+const uint8_t NBIT_TRGTAG = 8; // Number of trigger tag bits
+const uint8_t NBIT_BCID   = 8; // Number of bunch crossing ID bits
+const uint8_t NBIT_TOT    = 4; // Number of ToT bits
+const uint8_t NBIT_CCOL   = 6; // Number of core column bits
 } // namespace RD53BEvtEncoder
 
 namespace RD53BConstants
@@ -56,19 +55,28 @@ class RD53B : public RD53
     static const size_t   NCOLS;
     static const FrontEnd CROC;
 
-    static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const Ph2_HwInterface::FormatOptions& options = {});
+    static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const DataFormatOptions& options);
 
     RD53B() {}
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
-    const FrontEnd*       getFEtype(const size_t colStart, const size_t colStop) const override { return &RD53B::CROC; }
-    size_t                getNRows() const override { return RD53B::NROWS; }
-    size_t                getNCols() const override { return RD53B::NCOLS; }
-    std::vector<uint16_t> getLaneUpInitSequence() const override { return {}; }
-    uint32_t              getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
-    float                 VCal2Charge(float VCal, bool isNoise = false) const override;
-    float                 Charge2VCal(float Charge) const override;
-    bool                  getUseGainDualSlope() const override { return this->getRegItem("ToT6to4Mapping").fValue == 0 ? false : true; };
+    size_t getMaxBCIDvalue() const override
+    {
+        return RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID * ((this->getRegItem("EnBCId").fValue == true) && (this->getRegItem("EnLv1Id").fValue == true) ? 1 : 2));
+    }
+    size_t getMaxTRIGIDvalue() const override
+    {
+        return RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID * ((this->getRegItem("EnBCId").fValue == true) && (this->getRegItem("EnLv1Id").fValue == true) ? 1 : 2));
+    }
+    const DataFormatOptions& getDataFormatOptions() override;
+    const FrontEnd*          getFEtype(const size_t colStart, const size_t colStop) const override { return &RD53B::CROC; }
+    size_t                   getNRows() const override { return RD53B::NROWS; }
+    size_t                   getNCols() const override { return RD53B::NCOLS; }
+    std::vector<uint16_t>    getLaneUpInitSequence() const override { return {}; }
+    uint32_t                 getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
+    float                    VCal2Charge(float VCal, bool isNoise = false) const override;
+    float                    Charge2VCal(float Charge) const override;
+    bool                     getUseGainDualSlope() const override { return this->getRegItem("ToT6to4Mapping").fValue == 0 ? false : true; };
 };
 
 } // namespace Ph2_HwDescription

@@ -6,19 +6,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS " ")
 
     # Includes
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR})
 
-    # Replace this with find_package
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${UHAL_LOG_LIB_PREFIX})
-    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
-
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    #    include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY} ${Boost_IOSTREAMS_LIBRARY})
 
     # Find root and link against it
@@ -34,7 +26,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Add the library
     add_library(Ph2_Interface STATIC ${SOURCES} ${HEADERS})
 
-    set(LIBS ${LIBS} Ph2_Description NetworkUtils cactus_uhal_uhal cactus_uhal_log boost_regex)
+    set(LIBS ${LIBS} Ph2_Description NetworkUtils CACTUS::uhal CACTUS::uhal_log boost_regex)
 
     # Check for TestCard USBDriver
     TARGET_LINK_LIBRARIES(Ph2_Interface ${LIBS})

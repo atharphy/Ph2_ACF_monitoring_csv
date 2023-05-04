@@ -20,7 +20,7 @@
 #include "HWInterface/ReadoutChipInterface.h"
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/RD53RingOscillatorHistograms.h"
+#include "DQMUtils/ProductionITRD53A/RD53RingOscillatorHistograms.h"
 #endif
 
 // #########################

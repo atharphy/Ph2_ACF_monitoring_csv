@@ -28,8 +28,6 @@ const RD53::FrontEnd  RD53A::SYNC        = {"SYNC",
                                     0,
                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
-                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
-                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
                                     5,
                                     5,
                                     0,
@@ -47,8 +45,6 @@ const RD53::FrontEnd  RD53A::LIN         = {"LIN",
                                    16,
                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
-                                   RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
-                                   RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
                                    5,
                                    5,
                                    128,
@@ -66,8 +62,6 @@ const RD53::FrontEnd  RD53A::DIFF        = {"DIFF",
                                     31,
                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
-                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
-                                    RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
                                     5,
                                     5,
                                     264,
@@ -82,6 +76,12 @@ RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
     ReadoutChip::fChipOriginalMask = std::make_shared<RD53ChannelGroup>(RD53A::NROWS, RD53A::NCOLS, true);
     RD53::loadfRegMap(fileName);
     this->setFrontEndType(FrontEndType::RD53A);
+}
+
+const DataFormatOptions& RD53A::getDataFormatOptions()
+{
+    dataFormatOptions = DataFormatOptions{true, true, true, true, false, false, false};
+    return dataFormatOptions;
 }
 
 std::vector<uint16_t> RD53A::getLaneUpInitSequence() const
@@ -102,6 +102,10 @@ const RD53A::FrontEnd* RD53A::getFEtype(const size_t colStart, const size_t colS
         return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));
     });
 }
+
+// ###########################################
+// # Functions needed for decoding chip data #
+// ###########################################
 
 void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent)
 {
