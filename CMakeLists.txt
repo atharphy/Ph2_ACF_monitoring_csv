@@ -40,7 +40,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
        MESSAGE(FATAL_ERROR "${BoldRed}PH2ACF_BASE_DIR not set. Did you source setup.sh${Reset}")
     endif()
 
-    cmake_minimum_required(VERSION 3.4)
+    cmake_minimum_required(VERSION 3.17)
     project(Ph2_ACF)
 
 # Set the output directory
