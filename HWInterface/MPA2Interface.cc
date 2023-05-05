@@ -124,8 +124,8 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     }
     else if(pRegNode == "TriggerLatency")
     {
-        uint8_t cLatencyReg1 = pMPA2->getRegItem("MemoryControl_1").fValue;
-        uint8_t cLatencyReg2 = (pMPA2->getRegItem("MemoryControl_2").fValue) & (0x1); // first bit is latency for MPA2
+        uint8_t cLatencyReg1 = pMPA2->getRegItem("MemoryControl_1_ALL").fValue;
+        uint8_t cLatencyReg2 = (pMPA2->getRegItem("MemoryControl_2_ALL").fValue) & (0x1); // first bit is latency for MPA2
         return (cLatencyReg2 << 8) | cLatencyReg1;
     }
     else
