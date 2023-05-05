@@ -3,14 +3,15 @@
 ###################################
 # Enable devtools-10 for C++ > 14 #
 ###################################
-[ -f /etc/centos-release ] && majorRelease=$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)
-[ -f /etc/redhat-release ] && majorRelease=$(cat /etc/redhat-release | tr -dc '0-9.'|cut -d \. -f1)
+[ -f /etc/os-release ] && OS_release=$(bash -c 'source /etc/os-release; echo "${NAME}_${VERSION_ID}";')
+[ -f /etc/centos-release ] && OS_release="rh_$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)"
+[ -f /etc/redhat-release ] && OS_release="rh_$(cat /etc/redhat-release | tr -dc '0-9.'|cut -d \. -f1)"
 
-if [[ $majorRelease == "7" ]]; then
+if [[ $OS_release == "rh_7" ]]; then
   source scl_source enable devtoolset-10 || true # This might cause a nonzero exit code in the CI for some reason, so let's ignore it
-elif [[ $majorRelease == "8" ]]; then
+elif [[ $OS_release == "rh_8" ]]; then
   source scl_source enable gcc-toolset-10
-elif [[ $majorRelease == "9" ]]; then
+elif [[ $OS_release == "rh_9" ]]; then
   source scl_source enable gcc-toolset-12
 else
   echo OS Release not supported
@@ -113,7 +114,7 @@ export EuDaqFlag='-D__EUDAQ__'
 ################
 # C++ standard #
 ################
-if [[ $majorRelease == "9" ]]; then
+if [[ $OS_release == "rh_9" || $OS_release == "Ubuntu_22.04" ]]; then
   export STDCXX="17"
 else
   export STDCXX="14"
