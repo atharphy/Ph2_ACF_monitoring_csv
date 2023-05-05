@@ -67,14 +67,38 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
         cAllLocked = true;
         LOG(INFO) << BOLDMAGENTA << "D19cLinkInterface::GeneralLinkReset Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << " [Attempt#" << cAttempts++ << "]" << RESET;
         ResetLinks();
-        for(auto cOpticalReadout: *pBoard) { cAllLocked = cAllLocked && GetLinkStatus(cOpticalReadout->getId()); }
+        for(auto cOpticalReadout: *pBoard)
+        {
+            bool cLinkStatus = cOpticalReadout->fIsLocked;
+            if(!cLinkStatus)
+            {
+                cLinkStatus = GetLinkStatus(cOpticalReadout->getId());
+                if(cLinkStatus) cOpticalReadout->fIsLocked = true;
+            }
+            cAllLocked = cAllLocked && cLinkStatus;
+        }
     } while(cAttempts < cMaxAttempts && !cAllLocked);
-
     if(!cAllLocked)
     {
-        LOG(ERROR) << BOLDRED << "Failed to lock all links after a general reset" << RESET;
-        throw Exception("Failed to lock all links after a general reset");
+        bool cIsAnyLocked = false;
+        for(auto cOpticalReadout: *pBoard)
+        {
+            if(cOpticalReadout->fIsLocked)
+            {
+                cIsAnyLocked = true;
+                LOG(INFO) << BOLDGREEN << "D19cLinkInterface:GeneralLinkReset     Succesfull lock on link" << +cOpticalReadout->getId() << " after a general reset" << RESET;
+            }
+            else
+            {
+                LOG(INFO) << BOLDRED << "D19cLinkInterface:GeneralLinkReset     WARNING: Failed to lock link" << +cOpticalReadout->getId() << " after a general reset" << RESET;
+                LOG(INFO) << BOLDRED << "D19cLinkInterface:GeneralLinkReset     WARNING: Proceeding without link" << +cOpticalReadout->getId() << RESET;
+            }
+        }
+        if(!cIsAnyLocked)
+        {
+            LOG(ERROR) << BOLDRED << "Failed to lock any links after a general reset" << RESET;
+            throw Exception("Failed to lock any links after a general reset");
+        }
     }
 }
-
 } // namespace Ph2_HwInterface

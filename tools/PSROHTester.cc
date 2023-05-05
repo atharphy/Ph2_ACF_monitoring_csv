@@ -11,11 +11,9 @@ void PSROHTester::Initialise()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(flpGBTInterface == nullptr) continue;
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
             clpGBTInterface->ConfigurePSROH(cOpticalGroup->flpGBT);
             //
             uint8_t          cChipRate = clpGBTInterface->GetChipRate(cOpticalGroup->flpGBT);
@@ -42,15 +40,11 @@ void PSROHTester::Initialise()
 
 void PSROHTester::MeasureInputIV(const std::string& cTestStep)
 {
-    for(auto cBoard: *fDetectorContainer)
+    for(auto& cMeas: fInputIVMap)
     {
-        if(cBoard->at(0)->flpGBT == nullptr) continue;
-        for(auto& cMeas: fInputIVMap)
-        {
-            float cVal;
-            fTC_PSROH->adc_get(cMeas.second, cVal);
-            LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal / 1000) << " [SI] during phase " << cTestStep << RESET;
-        }
+        float cVal;
+        fTC_PSROH->adc_get(cMeas.second, cVal);
+        LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal / 1000) << " [SI] during phase " << cTestStep << RESET;
     }
 }
 
@@ -124,7 +118,7 @@ void PSROHTester::ClearBRAM(const std::string& sBramToReset)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->ClearBRAM(cBoard, sBramToReset);
     }
 }
@@ -241,7 +235,7 @@ void PSROHTester::WritePatternToBRAM(const std::string& sFileName = "fcmd_file.t
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->WritePatternToBRAM(cBoard, sFileName);
     }
 }
@@ -282,7 +276,7 @@ void PSROHTester::CheckFastCommandsBRAM(const std::string& sFCMDLine)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->CheckFastCommandsBRAM(cBoard, sFCMDLine);
     }
 }
@@ -393,7 +387,7 @@ void PSROHTester::CheckFastCommands(const std::string& sFastCommand, const std::
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->CheckFastCommands(cBoard, sFastCommand, filename);
     }
 }
@@ -418,7 +412,7 @@ void PSROHTester::ReadRefAddrBRAM(int iRefBRAMAddr)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->ReadRefAddrBRAM(cBoard, iRefBRAMAddr);
     }
 }
@@ -445,7 +439,7 @@ void PSROHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr);
     }
 }
@@ -542,7 +536,7 @@ bool PSROHTester::FastCommandScope()
     bool cSuccess = true;
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         cSuccess &= this->FastCommandScope(cBoard);
     }
     return cSuccess;
@@ -588,7 +582,7 @@ void PSROHTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vecto
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->CheckHybridInputs(cBoard, pInputs, pCounters);
     }
 }
@@ -701,7 +695,7 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        if(cBoard->isOptical()) continue;
         this->CheckHybridOutputs(cBoard, pInputs, pCounters);
     }
 }
