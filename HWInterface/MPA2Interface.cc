@@ -52,7 +52,11 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
         uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
         return cValue;
     }
-
+    else if(pRegNode == "vref")
+    {
+        cRegItem = pMPA2->getRegItem("ADCcontrol");
+        return this->ReadReg(pMPA2, cRegItem.fAddress) & 0xFF;
+    }
     else if(pRegNode == "ReadoutMode") // New decoding control reg for MPA2
     {
         uint8_t cBitShift = CONTROL_TABLE.find("ReadoutMode")->second;
@@ -509,6 +513,10 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         LOG(DEBUG) << BOLDMAGENTA << "Setting threshold on MPA#" << +pMPA2->getId() << " to " << pValue << RESET;
         this->Set_threshold(pMPA2, pValue);
         return true;
+    }
+    else if(pRegName == "vref")
+    {
+        return this->WriteChipSingleReg(pMPA2, "ADCcontrol", pValue, false);
     }
     else if(pRegName == "Offsets")
     {
@@ -1181,7 +1189,16 @@ void MPA2Interface::readFuseID(Chip* pMPA2)
 void MPA2Interface::loadVref(Chip* pMPA2)
 {
     // Set the Vref from the fuse
+    this->readFuseID(pMPA2);
     this->WriteChipRegBits(pMPA2, "ADCcontrol", pMPA2->pChipFuseID.ADCRef(), "Mask", (0x1F));
+    LOG(DEBUG) << BOLDMAGENTA << " loading VREF from fuse ID " << +pMPA2->pChipFuseID.ADCRef() << RESET;
+}
+
+void MPA2Interface::loadVref(Chip* pMPA2, uint8_t VREFvalue)
+{
+    // Set the Vref to a desired value
+    this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
+    LOG(DEBUG) << BOLDMAGENTA << " loading VREF " << +VREFvalue << RESET;
 }
 
 // This is done at probe?
