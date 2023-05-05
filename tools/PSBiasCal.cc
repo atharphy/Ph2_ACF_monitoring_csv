@@ -4,6 +4,7 @@
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "Utils/ContainerSerialization.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMHistogramPSBiasCal.h"
