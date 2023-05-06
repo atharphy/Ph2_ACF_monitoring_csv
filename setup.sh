@@ -49,7 +49,6 @@ fi
 # External Plugins #
 ####################
 export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
-export AMC13DIR=$CACTUSINCLUDE/amc13
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 ##############################################################################################
