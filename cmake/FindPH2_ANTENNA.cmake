@@ -25,7 +25,7 @@ else(PH2_ANTENNA_SOURCE_DIR)
 endif(PH2_ANTENNA_SOURCE_DIR)
 
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(PH2_Antenna DEFAULT_MSG PH2_ANTENNA_SOURCE_DIR)
+  find_package_handle_standard_args(PH2_ANTENNA DEFAULT_MSG PH2_ANTENNA_SOURCE_DIR)
 
   # show the PH2_USBINSTLIB_INCLUDE_DIRS and PH2_USBINSTLIB_LIBRARIES variables only in the advanced view
   mark_as_advanced(PH2_ANTENNA_INCLUDE_DIRS PH2_ANTENNA_LIBRARY_DIRS)
