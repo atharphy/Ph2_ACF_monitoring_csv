@@ -111,6 +111,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("fcmd-test-userfile", "User file with fastcommands for testing", ArgvParser::OptionRequiresValue);
     cmd.defineOption("test-ber", "Run Bit Error Rate test");
     cmd.defineOptionAlternative("test-ber", "ber");
+    cmd.defineOption("ber-pattern", "Define pattern to be used for Bit Error Rate test", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOptionAlternative("ber-pattern", "bp");
     // FCMD check in BRAM
     cmd.defineOption("bramfcmd-check", "Access to written data in BRAM", ArgvParser::OptionRequiresValue);
     // Write reference patterns to BRAM
@@ -310,6 +312,7 @@ int main(int argc, char* argv[])
     // ¯\_(ツ)_/¯
     if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_2SSEH cTC_2SSEH(cUsbBus, cUsbDev); }
     cSEHTester.InitialiseTestCard(true);
+    cSEHTester.RunHybridETest();
     cTool.fillSummaryTree("setup_type", (cGui) ? 1 : 0);
     if(cGui)
     {
@@ -326,6 +329,15 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control and perform I-V scan" << RESET;
         cSEHTester.TurnOn(0, 0, false);
+        if(!cSEHTester.CheckShort(cLVPowerSupplyId, cLVChannelId))
+        {
+            LOG(INFO) << BOLDBLUE << "Stop test due to possible short" << RESET;
+            cTool.SaveResults();
+            cTool.WriteRootFile();
+            cTool.CloseResultFile();
+            cTool.Destroy();
+            abort();
+        }
         cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
         cSEHTester.TurnOn(cRightLoad, cLeftLoad, true);
     }
@@ -411,7 +423,9 @@ int main(int argc, char* argv[])
         cTool.Destroy();
         abort();
     }
+    cSEHTester.ReadChipIds();
     cSEHTester.Initialise();
+
     // std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     if(cmd.foundOption("test-parameter"))
     {

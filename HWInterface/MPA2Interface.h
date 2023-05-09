@@ -104,13 +104,14 @@ class MPA2Interface : public ReadoutChipInterface
     bool                 configPeri(Ph2_HwDescription::Chip* pChip, std::string cReg, uint8_t pValue, bool pVerify = false);
     uint16_t             readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
     void                 loadVref(Ph2_HwDescription::Chip* pMPA2);
+    void                 loadVref(Ph2_HwDescription::Chip* pMPA2, uint8_t VREFvalue);
     float                ADCMeasure(Ph2_HwDescription::Chip* pMPA2, uint32_t nreads = 5);
     bool                 selectBlock(Ph2_HwDescription::Chip* pMPA2, uint8_t block, uint8_t testPoint = 0, uint8_t swEn = 0);
     float                measureGnd(Ph2_HwDescription::Chip* pMPA2);
     float                measureBg(Ph2_HwDescription::Chip* pMPA2);
     uint16_t             ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
 
-    float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = 0.850);
+    float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
 
   private:
     // pixelEnable bits

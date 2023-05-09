@@ -26,6 +26,8 @@ class SSA2Interface : public ReadoutChipInterface
   public:
     SSA2Interface(const BeBoardFWMap& pBoardMap);
     ~SSA2Interface();
+    SSA2Interface(const SSA2Interface&) = delete;
+    SSA2Interface& operator=(const SSA2Interface&) = delete;
     bool ConfigureChip(Ph2_HwDescription::Chip* pSSA2, bool pVerify = false, uint32_t pBlockSize = 310) override; // FIXME
     void DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                 // FIXME
 
@@ -46,7 +48,7 @@ class SSA2Interface : public ReadoutChipInterface
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pInput);
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
 
-    float    CalculateADCLSB(Ph2_HwDescription::Chip* pSSA2, float vrefExp = 0.850);
+    float    CalculateADCLSB(Ph2_HwDescription::Chip* pSSA2, float vrefExp = SSA2_VREF_EXPECTED);
     uint16_t MeasureGND(Ph2_HwDescription::Chip* pSSA2);
 
   private:
@@ -54,12 +56,12 @@ class SSA2Interface : public ReadoutChipInterface
     bool    WriteChipRegBits(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false); // FIXME
     bool    ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister, bool pVerify = true);                                                                // FIXME
 
-    const std::map<std::string, uint8_t> ADC_CONTROL_TABLE = {
+    const std::map<std::string, uint8_t> SSA2_ADC_CONTROL_TABLE = {
         {"highimpedence", 0}, {"Bias_D5BFEED", 1},   {"Bias_D5PREAMP", 2}, {"Bias_D5TDR", 3}, {"Bias_D5ALLV", 4}, {"Bias_D5ALLI", 5}, {"Bias_CALDAC", 6}, {"Bias_BOOSTERBASELINE", 7},
         {"Bias_THDAC", 8},    {"Bias_THDACHIGH", 9}, {"Bias_D5DAC8", 10},  {"VBG", 11},       {"GND", 12},        {"ADC_IREF", 13},   {"ADC_VREF", 14},   {"TESTPAD", 15},
         {"Temperature", 16},  {"AVDD", 17},          {"PVDD", 18},         {"DVDD", 19}};
 
-    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0}, // FIXME
+    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0}, // FIXMEEEE this map is wrong!! the one in ReadADC is correct                                                  // FIXME
                                                {"PreampBias", 1},
                                                {"Trim", 2},
                                                {"VoltageBias", 3},
