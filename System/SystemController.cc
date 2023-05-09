@@ -567,11 +567,10 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
+    LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << RESET;
 
     for(auto cOpticalGroup: *pBoard)
     {
-        if(cOpticalGroup->flpGBT == nullptr) continue;
-
         LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << int(pBoard->getId()) << RESET;
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         if(cOpticalGroup->getReset() == 0)
@@ -769,7 +768,10 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             lpGBTClockConfig cClkCnfg;
             cClkCnfg.fClkFreq         = 4;
             cClkCnfg.fClkDriveStr     = cSsaClockDrive;
-            cClkCnfg.fClkInvert       = 1;
+            cClkCnfg.fClkInvert       = 0;
+
+            LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " <<  +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
+
             cClkCnfg.fClkPreEmphWidth = 0;
             cClkCnfg.fClkPreEmphMode  = 3; // 3;
             cClkCnfg.fClkPreEmphStr   = 7; // 7;
@@ -1006,6 +1008,26 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         cBoard->printBoardType();
         fBeBoardInterface->setBoard(0);
         fBeBoardInterface->ConfigureBoard(cBoard);
+    }
+
+    // add query
+    std::string      cFunctionName = "opticalGroupSubset";
+    std::vector<int> cLockedIds;
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        for(const auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->fIsLocked) cLockedIds.push_back(cOpticalGroup->getId());
+        }
+    }
+    auto cSubset = [cLockedIds](const OpticalGroupContainer* cOpticalGroup) { return std::find(cLockedIds.begin(), cLockedIds.end(), cOpticalGroup->getId()) != cLockedIds.end(); };
+
+    this->fDetectorContainer->addOpticalGroupQueryFunction(cSubset, cFunctionName);
+
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->setBoard(0);
+
         if(cBoard->getBoardType() == BoardType::D19C)
         {
             // Set board sparisification
@@ -1021,8 +1043,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                 // lpGBT config
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    if(cOpticalGroup->flpGBT == nullptr) continue;
-
                     LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << +cBoard->getId() << RESET;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     if(cOpticalGroup->getReset() == 0)
@@ -1084,12 +1104,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                         throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
                     }
                 }
-            }
-            if(!cBoard->isOptical() && cBoard->at(0)->flpGBT != nullptr)
-            {
-                LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
-                auto cLinkInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getLinkInterface();
-                cLinkInterface->GeneralLinkReset(cBoard);
             }
             ConfigureOT(cBoard);
 

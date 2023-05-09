@@ -67,8 +67,8 @@ class lpGBTInterface : public ChipInterface
     // ################################
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
-    void     ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL);
-
+    uint32_t ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t version);
+    uint32_t ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL);
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
