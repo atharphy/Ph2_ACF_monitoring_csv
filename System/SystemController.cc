@@ -1010,7 +1010,9 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         fBeBoardInterface->ConfigureBoard(cBoard);
     }
 
-    // add query
+    // ################
+    // # Adding query #
+    // ################
     std::string      cFunctionName = "opticalGroupSubset";
     std::vector<int> cLockedIds;
     for(const auto cBoard: *fDetectorContainer)
@@ -1021,8 +1023,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         }
     }
     auto cSubset = [cLockedIds](const OpticalGroupContainer* cOpticalGroup) { return std::find(cLockedIds.begin(), cLockedIds.end(), cOpticalGroup->getId()) != cLockedIds.end(); };
-
-    this->fDetectorContainer->addOpticalGroupQueryFunction(cSubset, cFunctionName);
+    // this->fDetectorContainer->addOpticalGroupQueryFunction(cSubset, cFunctionName); / @TMP@ : not working for IT
 
     for(const auto cBoard: *fDetectorContainer)
     {
