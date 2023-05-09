@@ -67,14 +67,14 @@ class DQMHistogramPSBiasCal : public DQMHistogramBase
      */
     void fillDACPlots(DetectorDataContainer& theDAC);
 
-        /*!
+    /*!
      * \brief Fill validation histograms
      * \param theVDD : DataContainer for the AVDD ADC & voltage value info
      */
     void fillVDDPlots(DetectorDataContainer& theVDD, bool isAVDD);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer fChipStripSlopeGraphs;
     DetectorDataContainer fChipPixelSlopeGraphs;
@@ -87,6 +87,5 @@ class DQMHistogramPSBiasCal : public DQMHistogramBase
 
     bool fWithSSA = false;
     bool fWithMPA = false;
-
 };
 #endif

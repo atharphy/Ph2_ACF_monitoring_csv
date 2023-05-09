@@ -102,9 +102,9 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
 uint16_t SSA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
     auto theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
-    if (theRegister ==  SSA2_ADC_CONTROL_TABLE.end())
+    if(theRegister == SSA2_ADC_CONTROL_TABLE.end())
     {
-        LOG(ERROR) << BOLDRED <<__PRETTY_FUNCTION__<< " " << pRegName << "not found for this chip type - aborting." << RESET;
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
         std::runtime_error(std::string("SSA2Interface::ReadADC: Error, register not found for this chip type. Abort."));
     }
     LOG(DEBUG) << BOLDMAGENTA << " converting " << pRegName << " to " << +theRegister->second << RESET;
@@ -181,7 +181,7 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         cRegItem = cRegMap[pRegNode];
         cRegItems.push_back(cRegItem);
     }
-    
+
     auto cValues = fBoardFW->MultiRegisterRead(pSSA2, cRegItems);
     if(pRegNode.find("CounterStrip") != std::string::npos) { return (cValues[0] << 8) | cValues[1]; }
     else
