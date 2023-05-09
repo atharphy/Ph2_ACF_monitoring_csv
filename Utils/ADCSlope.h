@@ -19,10 +19,9 @@
 class ADCSlope //: public streammable
 {
   public:
-    ADCSlope() : fSlope(0), fOffset(0), fADC_GND(0), fADC_VBG(0), fMeasured_VBG(0)  { ; }
+    ADCSlope() : fSlope(0), fOffset(0), fADC_GND(0), fADC_VBG(0), fMeasured_VBG(0) { ; }
 
     void print(void) { std::cout << fSlope << std::endl; }
-
 
     friend class boost::serialization::access;
     template <class Archive>
@@ -33,7 +32,6 @@ class ADCSlope //: public streammable
         theArchive& fADC_GND;
         theArchive& fADC_VBG;
         theArchive& fMeasured_VBG;
-
     }
 
     float fSlope;
@@ -42,7 +40,5 @@ class ADCSlope //: public streammable
     float fADC_VBG;
     float fMeasured_VBG;
 };
-
-
 
 #endif

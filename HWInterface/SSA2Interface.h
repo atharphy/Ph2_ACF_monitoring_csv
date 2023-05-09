@@ -28,8 +28,8 @@ class SSA2Interface : public ReadoutChipInterface
     ~SSA2Interface();
     SSA2Interface(const SSA2Interface&) = delete;
     SSA2Interface& operator=(const SSA2Interface&) = delete;
-    bool ConfigureChip(Ph2_HwDescription::Chip* pSSA2, bool pVerify = false, uint32_t pBlockSize = 310) override; // FIXME
-    void DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                 // FIXME
+    bool           ConfigureChip(Ph2_HwDescription::Chip* pSSA2, bool pVerify = false, uint32_t pBlockSize = 310) override; // FIXME
+    void           DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                 // FIXME
 
     void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override {}
 
