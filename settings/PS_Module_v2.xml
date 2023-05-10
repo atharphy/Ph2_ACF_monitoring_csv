@@ -240,8 +240,8 @@
 
 
 
-    <Setting name="StartLatency">250</Setting>
-    <Setting name="LatencyRange">100</Setting>
+    <Setting name="StartLatency">0</Setting>
+    <Setting name="LatencyRange">200</Setting>
 
 
     <Setting name="PSmoduleSSAthreshold">150</Setting>
