@@ -240,6 +240,7 @@ void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> 
                 {
                     if(cChip->getFrontEndType() != pType) continue;
 
+                    std::cout << " I should not be here for SSA2 or MPA2 " <<std::endl;
                     auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
                     auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     cRegsToPerserve.clear();
@@ -279,12 +280,12 @@ void OTTool::PrintData(BeBoard* pBoard)
 {
     const std::vector<Event*>& cEvents = GetEvents();
     LOG(INFO) << BOLDRED << "Printing events from FC7.. collected : " << +cEvents.size() << " events." << RESET;
-    fEventCountInt = 0;
-    for(auto& cEvent: cEvents)
-    {
-        EventPrintout(pBoard, cEvent);
-        fEventCountInt++;
-    }
+    // fEventCountInt = 0;
+    // for(auto& cEvent: cEvents)
+    // {
+    //     //EventPrintout(pBoard, cEvent);
+    //     fEventCountInt++;
+    // }
 }
 
 // wait for triggers
@@ -430,10 +431,12 @@ void OTTool::CatchStop()
 // one thread per BeBoard connected to this computer
 void OTTool::ContinousReadout()
 {
+    LOG(INFO) << __PRETTY_FUNCTION__ << " starting function " << RESET;
     // std::vector<uint32_t> cBrdEvntCntrs(fDetectorContainer->size(), 0);
     // reset all event counters
     for(auto cBoard: *fDetectorContainer)
     {
+        LOG(INFO) << " get firmware interface and reset counter " << RESET;
         fBeBoardInterface->setBoard(cBoard->getId());
         auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         cInterface->ResetEventCounter();
@@ -445,6 +448,7 @@ void OTTool::ContinousReadout()
     std::thread* cStartThreads = new std::thread[fDetectorContainer->size()];
     for(auto cBoard: *fDetectorContainer)
     {
+        LOG(INFO) << BLUE<< " launch threads for continuous readout Start" << RESET;
         // launch threads for continuous readout
         cStartThreads[cBoard->getIndex()] = std::thread(&OTTool::StartReadoutTh, this, cBoard->getIndex());
     }
@@ -459,6 +463,7 @@ void OTTool::ContinousReadout()
     std::thread* cCheckDoneThreads = new std::thread[fDetectorContainer->size()];
     for(auto cBoard: *fDetectorContainer)
     {
+        LOG(INFO) << BLUE<< " launch threads for continuous readout Finish" << RESET;
         // launch threads for continuous readout
         cCheckDoneThreads[cBoard->getIndex()] = std::thread(&OTTool::CheckFinishedTh, this, cBoard->getIndex());
     }
@@ -468,6 +473,7 @@ void OTTool::ContinousReadout()
     std::thread* cReadoutThreads = new std::thread[fDetectorContainer->size()];
     for(auto cBoard: *fDetectorContainer)
     {
+        LOG(INFO) << BLUE<< " launch threads for continuous readout Continuos" << RESET;
         // launch threads for continuous readout
         cReadoutThreads[cBoard->getIndex()] = std::thread(&OTTool::ContinousReadoutTh, this, cBoard->getIndex());
     }
@@ -598,18 +604,22 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
-        if(cWaitCounter % 100 == 0) LOG(DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
+        if(cWaitCounter % 10 == 0) LOG(INFO) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
         cWaitCounter++;
+        LOG(INFO) << " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState() << " cWaitCounter " << cWaitCounter << " cMaxWait " << cMaxWait << RESET;
     } while(cTriggerInterface->GetTriggerState() != 1 && cWaitCounter < cMaxWait);
 
     auto cCounter = cInterface->GetEventCounter();
+    LOG(INFO) << " cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
     do
     {
+        // std::cout << " while loop cCounter " << cCounter << " fNevents " << fNevents << std::endl;
         if(cCounter >= fNevents || cTriggerInterface->GetTriggerState() == 0)
         { LOG(INFO) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard" << +cBrdId << RESET; }
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
         cCounter = cInterface->GetEventCounter();
     } while(cCounter < fNevents);
+    std::cout << "after  while loop cCounter " << cCounter << " fNevents " << fNevents << " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState() << std::endl;    
     LOG(INFO) << BOLDBLUE << fMyName << ": check finished thread ... finished collecting all requested events from BeBoard" << +cBrdId << " .. will stop triggers.. " << RESET;
     cInterface->Stop();
 }
@@ -1039,6 +1049,10 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     cLatency = 120;
+                    // cLatency = (cChip->getReg("control_1") & (1 << 4)) | cChip->getReg("control_3");
+                    // std::cout << " ssa2 control_1 " << (cChip->getReg("control_1")& (1 << 4))  << std::endl;
+                    // std::cout << " ssa2 control_3 " << cChip->getReg("control_3") << std::endl;
+                    std::cout << " ssa2 cLatency " << cLatency <<std::endl;
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
