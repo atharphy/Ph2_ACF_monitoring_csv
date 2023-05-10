@@ -176,6 +176,14 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         cRegItem = cRegMap["Bias_THDAC"];
         cRegItems.push_back(cRegItem);
     }
+    else if(pRegNode == "TriggerLatency")
+    {
+        uint8_t cLatencyReg1 = pSSA2->getRegItem("control_1").fValue & (0x10);// fourth bit is latency for SSA2
+        uint8_t cLatencyReg2 = pSSA2->getRegItem("control_3").fValue; 
+        std::cout << " reading SSA2 trying to read TriggerLatency " << +(cLatencyReg1 | cLatencyReg2) << std::endl;
+        return +(cLatencyReg1 | cLatencyReg2);
+    }
+
     else
     {
         cRegItem = cRegMap[pRegNode];
@@ -183,6 +191,7 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
     }
     
     auto cValues = fBoardFW->MultiRegisterRead(pSSA2, cRegItems);
+    if (pRegNode == "TriggerLatency") std::cout << " cValues[0] " << +cValues[0] << std::endl;
     if(pRegNode.find("CounterStrip") != std::string::npos) { return (cValues[0] << 8) | cValues[1]; }
     else
         return cValues[0];
