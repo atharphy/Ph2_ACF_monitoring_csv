@@ -23,6 +23,7 @@ void BeamTestCheck::Initialise()
     if(fReadoutMode == 0)
     {
         // list of chip registers that can be modified by this tool
+        std::cout << " SetChipRegstoPerserve(FrontEndType::CBC3, {TriggerLatency1, FeCtrl&TrgLat2}); " << std::endl;
         SetChipRegstoPerserve(FrontEndType::CBC3, {"TriggerLatency1", "FeCtrl&TrgLat2"});
 
         // list of board registers that can be modified by this tool
@@ -55,7 +56,7 @@ void BeamTestCheck::Initialise()
     // initialize latency scan range based on TP settings
     fStartLatency = findValueInSettings<double>("StartLatency", 0);
     fLatencyRange = findValueInSettings<double>("LatencyRange", 0);
-
+    std::cout << "fStartLatency " << fStartLatency << " fLatencyRange " << fLatencyRange << std::endl;
     auto cInjectionType = findValueInSettings<double>("InjectionType", 0);
     SetInjectionType(cInjectionType);
 
@@ -140,6 +141,7 @@ void BeamTestCheck::CheckWithTP(uint8_t pContinousReadout)
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        std::cout << __PRETTY_FUNCTION__ << std::endl;
         // prepare injection
         PrepareForTP(cBoard);
     }
@@ -668,7 +670,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinousReadout)
                     for(auto cChip: *cHybrid)
                     {
                         uint16_t cLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
-                        LOG(DEBUG) << BOLDMAGENTA << "L1 Latency for Chip#" << +cChip->getId() << " set to " << cLatency << RESET;
+                        LOG(INFO) << BOLDMAGENTA << "L1 Latency for Chip#" << +cChip->getId() << " set to " << cLatency << RESET;
                     } // chip
                 }     // hybrid
             }         // optical group
@@ -711,12 +713,12 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinousReadout)
                             if(cCrntCnt >= cMaxCnt && cCrntCnt > 0)
                             {
                                 cLat = cLatency;
-                                LOG(DEBUG) << BOLDYELLOW << "\t\t..New maximum found for Chip#" << +cChip->getId() << " on Hybrid#" << +cHybrid->getId() << " for an L1 latency of " << cLatency
+                                LOG(INFO) << BOLDYELLOW << "\t\t..New maximum found for Chip#" << +cChip->getId() << " on Hybrid#" << +cHybrid->getId() << " for an L1 latency of " << cLatency
                                            << " -- previous maximum was " << cMaxCnt << " -- now is " << cCrntCnt << RESET;
                                 cMaxCnt = cCrntCnt;
                             }
                             else
-                                LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChip->getId() << " -- previous maximum was " << cMaxCnt << " -- current hit count is " << cCrntCnt << RESET;
+                                LOG(INFO) << BOLDBLUE << "Chip#" << +cChip->getId() << " -- previous maximum was " << cMaxCnt << " -- current hit count is " << cCrntCnt << RESET;
                         } // chip
                     }     // hybrid
                 }         // optical group
@@ -737,7 +739,10 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinousReadout)
                             if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType ::CBC3)
                                 cIndices.push_back(cChip->getIndex());
                             else
+                            {
+                                std::cout << __PRETTY_FUNCTION__ << " Getting SSA ids " << std::endl;
                                 cSSAIds.push_back(cChip->getId());
+                            }
                         }
 
                         for(auto cChip: *cHybrid)
@@ -759,10 +764,13 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinousReadout)
                             if(cChip->getFrontEndType() == FrontEndType::CBC3 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 uint8_t cS1Index  = cChip->getIndex();
+                                std::cout << " cS1Index " << +cS1Index << std::endl;
                                 bool    cUpdateS1 = (cChip->getFrontEndType() == FrontEndType::CBC3) ? true : (std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8) != cSSAIds.end());
                                 if(cUpdateS1 && cChip->getFrontEndType() == FrontEndType::CBC3)
                                     cS1Index = std::distance(cSSAIds.begin(), std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8));
 
+                                std::cout << " cS1Index " << +cS1Index << std::endl;
+                            
                                 auto& cHitsS1 = cHitContainerS1->at(cS1Index)->getSummary<uint32_t>();
                                 cLatencyContainerS1->at(cOpticalGroup->getIndex())
                                     ->at(cHybrid->getIndex())
@@ -1641,7 +1649,7 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
 void BeamTestCheck::ScanStubLatency(uint8_t pContinousReadout)
 {
     // bool cUseReadNevents = false;
-    LOG(INFO) << "Scanning Stub Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
+    LOG(INFO) << __PRETTY_FUNCTION__ << "Scanning Stub Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
     // stub offset already set for this board
     // LOG(INFO) << BOLDBLUE << "Stub offset for BeBoard#" << +pBoard->getId() << " set to " << +pBoard->getStubOffset() << RESET;
     // figure out latency scan range
@@ -1662,7 +1670,14 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinousReadout)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
+                    std::stringstream cOutput;
+                    LOG(INFO) << __PRETTY_FUNCTION__ << " chip loop " << +cChip->getId() << " hybrid " << +cHybrid->getId() << " chip type " <<  RESET;
+                    cChip->printChipType(cOutput); 
+                    LOG(INFO) << BOLDBLUE << cOutput.str() << RESET;
+
+                    LOG(INFO) << __PRETTY_FUNCTION__ << " will try to read chip register TriggerLatency " << RESET;
                     auto cLat = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
+                    LOG(INFO) << __PRETTY_FUNCTION__ << " TriggerLatency read! " << RESET;
                     if(cLat > 0) cLatencyBins[cLat]++;
                     if(cMinLatency == 0) cMinLatency = cLat;
                     if(cMaxLatency == 0) cMaxLatency = cLat;
@@ -1712,6 +1727,7 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinousReadout)
         auto& cMaxCount                                                    = cMaximumStubCount.at(cBoard->getIndex());
         cMaxCount->getSummary<uint32_t>()                                  = 0;
         fOptimalStubLatency.at(cBoard->getIndex())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
+        std::cout << " fOptimalStubLatency " <<  fOptimalStubLatency.at(cBoard->getIndex())->getSummary<uint32_t>() << std::endl;
     }
 
     // check if stub alignment has already been run
@@ -1727,6 +1743,8 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinousReadout)
     }
     else
         cOffset = (int)(fLatencyRange / 2.);
+
+    std::cout << " cOffset " << cOffset << " fLatencyRange "<< fLatencyRange << std::endl;
 
     fOptimalLatency = 0;
     size_t cLatStep = 0;
