@@ -212,7 +212,7 @@ float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstri
         // }
         // LOG(INFO) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
         // VBGexpected   = theRegister->second;
-        VBGexpected   = MPA2_VBG_EXPECTED;
+        VBGexpected   = SSA2_VBG_EXPECTED;
         VREFexpected  = SSA2_VREF_EXPECTED;
         VREFmin       = SSA2_VREF_MIN;
         VREFmax       = SSA2_VREF_MAX;
