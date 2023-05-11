@@ -766,11 +766,11 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             LOG(INFO) << BOLDMAGENTA << "Readout rate on PS-module (Hybrid# " << +cHybrid->getId() << ") is " << +cReadoutRate << " Mbps" << RESET;
 
             lpGBTClockConfig cClkCnfg;
-            cClkCnfg.fClkFreq         = 4;
-            cClkCnfg.fClkDriveStr     = cSsaClockDrive;
-            cClkCnfg.fClkInvert       = 0;
+            cClkCnfg.fClkFreq     = 4;
+            cClkCnfg.fClkDriveStr = cSsaClockDrive;
+            cClkCnfg.fClkInvert   = 0;
 
-            LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " <<  +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
+            LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " << +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
 
             cClkCnfg.fClkPreEmphWidth = 0;
             cClkCnfg.fClkPreEmphMode  = 3; // 3;
@@ -1010,19 +1010,22 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         fBeBoardInterface->ConfigureBoard(cBoard);
     }
 
-    // add query
-    std::string      cFunctionName = "opticalGroupSubset";
-    std::vector<int> cLockedIds;
+    // ################
+    // # Adding query #
+    // ################
     for(const auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->getBoardType() != BoardType::D19C) continue;
+        std::string      cFunctionName = "opticalGroupSubset";
+        std::vector<int> cLockedIds;
         for(const auto cOpticalGroup: *cBoard)
         {
             if(cOpticalGroup->fIsLocked) cLockedIds.push_back(cOpticalGroup->getId());
         }
-    }
-    auto cSubset = [cLockedIds](const OpticalGroupContainer* cOpticalGroup) { return std::find(cLockedIds.begin(), cLockedIds.end(), cOpticalGroup->getId()) != cLockedIds.end(); };
+        auto cSubset = [cLockedIds](const OpticalGroupContainer* cOpticalGroup) { return std::find(cLockedIds.begin(), cLockedIds.end(), cOpticalGroup->getId()) != cLockedIds.end(); };
 
-    this->fDetectorContainer->addOpticalGroupQueryFunction(cSubset, cFunctionName);
+        cBoard->addQueryFunction(cSubset, cFunctionName);
+    }
 
     for(const auto cBoard: *fDetectorContainer)
     {

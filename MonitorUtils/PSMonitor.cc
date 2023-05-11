@@ -85,7 +85,7 @@ void PSMonitor::runMPA2RegisterMonitor(std::string registerName)
                     if(chip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         auto     MPA2ReadoutChipInterface = fTheSystemController->fReadoutChipInterface;
-                        uint16_t registerValue            = static_cast<MPA2Interface*>(static_cast<PSInterface*>(MPA2ReadoutChipInterface)->getInterface(chip))->ReadADC(chip, registerName);                        
+                        uint16_t registerValue            = static_cast<MPA2Interface*>(static_cast<PSInterface*>(MPA2ReadoutChipInterface)->getInterface(chip))->ReadADC(chip, registerName);
                         LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
                         theMPA2RegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<ValueAndTime<uint16_t>>() =

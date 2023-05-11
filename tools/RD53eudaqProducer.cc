@@ -47,19 +47,10 @@ void RD53eudaqProducer::DoStartRun()
     // #####################
     auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
     ev->SetBORE();
-    // RD53eudaqProducer::MySendEvent(std::move(ev));
-
-    // #############################
-    // # Add extra event if needed #
-    // #############################
-    // ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    // ev->SetTriggerN(swTrigCnt++);
-    // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // ######################################
     // # Add extra information to the event #
     // ######################################
-    ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
     ev->SetTag("Dataformat version", CMSITEventData::DataFormatVersion);
     ev->SetTag("Configuration file", "\n" + RD53sysCntrPhys.fParsedFile.str());
     for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
@@ -79,6 +70,13 @@ void RD53eudaqProducer::DoStartRun()
                 }
     }
     RD53eudaqProducer::MySendEvent(std::move(ev));
+
+    // #############################
+    // # Add extra event if needed #
+    // #############################
+    // ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    // ev->SetTriggerN(swTrigCnt++);
+    // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
