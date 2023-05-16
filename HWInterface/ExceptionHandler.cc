@@ -54,6 +54,11 @@ void ExceptionHandler::disableChip(uint16_t boardId, uint16_t opticalGroupId, ui
     fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->addQueryFunction(disableChip, functionName);
     fQueryFunctionNames->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getSummary<std::vector<std::string>>().push_back(functionName);
     updateFWInformation(boardId);
+    if(fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->size() == 0)
+    {
+        LOG(INFO) << BOLDRED << "No chip enabled on Board id " << boardId << " OpticalGroup id " << opticalGroupId << " Hybrid id " << hybridId << " --- Full hybrid will be disabled" << RESET;
+        disableHybrid(boardId, opticalGroupId, hybridId);
+    }
 }
 
 void ExceptionHandler::disableHybrid(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId)
@@ -67,6 +72,11 @@ void ExceptionHandler::disableHybrid(uint16_t boardId, uint16_t opticalGroupId, 
     fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->addQueryFunction(disableHybrid, functionName);
     fQueryFunctionNames->getObject(boardId)->getObject(opticalGroupId)->getSummary<std::vector<std::string>, std::vector<std::string>>().push_back(functionName);
     updateFWInformation(boardId);
+    if(fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->size() == 0)
+    {
+        LOG(INFO) << BOLDRED << "No hybrid enabled on Board id " << boardId << " OpticalGroup id " << opticalGroupId << " --- Full optical group will be disabled" << RESET;
+        disableOpticalGroup(boardId, opticalGroupId);
+    }
 }
 
 void ExceptionHandler::disableOpticalGroup(uint16_t boardId, uint16_t opticalGroupId)
@@ -80,6 +90,11 @@ void ExceptionHandler::disableOpticalGroup(uint16_t boardId, uint16_t opticalGro
     fDetectorContainer->getObject(boardId)->addQueryFunction(disableOpticalGroup, functionName);
     fQueryFunctionNames->getObject(boardId)->getSummary<std::vector<std::string>, std::vector<std::string>>().push_back(functionName);
     updateFWInformation(boardId);
+    if(fDetectorContainer->getObject(boardId)->size() == 0)
+    {
+        LOG(INFO) << BOLDRED << "No optical group enabled on Board id " << boardId << " --- Full board will be disabled" << RESET;
+        disableBoard(boardId);
+    }
 }
 
 void ExceptionHandler::disableBoard(uint16_t boardId)
@@ -92,6 +107,11 @@ void ExceptionHandler::disableBoard(uint16_t boardId)
     };
     fDetectorContainer->addQueryFunction(disableBoard, functionName);
     fQueryFunctionNames->getSummary<std::vector<std::string>, std::vector<std::string>>().push_back(functionName);
+    if(fDetectorContainer->size() == 0)
+    {
+        LOG(ERROR) << BOLDRED << "ExceptionHandler Error: No object enabled in fDetectorContainer, throwing exception" << RESET;
+        throw std::runtime_error("ExceptionHandler Error: No object enabled in fDetectorContainer");
+    }
 }
 
 void ExceptionHandler::resetExceptionQueries()

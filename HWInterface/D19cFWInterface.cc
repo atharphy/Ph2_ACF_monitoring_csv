@@ -1076,7 +1076,7 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     else
     {
         LOG(INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
-        throw Exception("Failed to ReadNEvents....");
+        // throw Exception("Failed to ReadNEvents....");
     }
     if(fSaveToFile) fFileHandler->setData(pData);
 }
@@ -1467,17 +1467,17 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
         const auto chipType = pChip->getFrontEndType();
         if(chipType == FrontEndType::LpGBT)
         {
-            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return 0;
         }
         if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
         {
-            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return 0;
         }
-        LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableChip(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
         return 0;
     }
@@ -1524,17 +1524,17 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
             const auto chipType = pChip->getFrontEndType();
             if(chipType == FrontEndType::LpGBT)
             {
-                LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
                 return false;
             }
             if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
             {
-                LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
                 return false;
             }
-            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableChip(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
             return false;
         }
@@ -1581,17 +1581,17 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
             const auto chipType = pChip->getFrontEndType();
             if(chipType == FrontEndType::LpGBT)
             {
-                LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
                 return false;
             }
             if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
             {
-                LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
                 return false;
             }
-            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableChip(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
             return false;
         }
@@ -1631,17 +1631,17 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
         const auto chipType = pChip->getFrontEndType();
         if(chipType == FrontEndType::LpGBT)
         {
-            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return {};
         }
         if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
         {
-            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return {};
         }
-        LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableChip(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
         return {};
     }
@@ -1695,17 +1695,17 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
         const auto chipType = pChip->getFrontEndType();
         if(chipType == FrontEndType::LpGBT)
         {
-            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return false;
         }
         if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
         {
-            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return false;
         }
-        LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableChip(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
         return false;
     }
@@ -1753,17 +1753,17 @@ bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegIte
         const auto chipType = pChip->getFrontEndType();
         if(chipType == FrontEndType::LpGBT)
         {
-            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return false;
         }
         if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
         {
-            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return false;
         }
-        LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableChip(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
         return false;
     }
