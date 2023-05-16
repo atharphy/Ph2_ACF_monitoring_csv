@@ -31,14 +31,12 @@ bool VoltageTuningHistograms::fill(std::string& inputStream)
 
     if(theVoltageDigitalSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched VoltageTuning VoltageDigital!!!!!\n";
         DetectorDataContainer fDetectorData = theVoltageDigitalSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         VoltageTuningHistograms::fillDig(fDetectorData);
         return true;
     }
     if(theVoltageAnalogSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched VoltageTuning VoltageAnalog!!!!!\n";
         DetectorDataContainer fDetectorData = theVoltageAnalogSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         VoltageTuningHistograms::fillAna(fDetectorData);
         return true;
@@ -53,7 +51,7 @@ void VoltageTuningHistograms::fillDig(const DetectorDataContainer& DataContainer
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* hVoltageDig = VoltageDig.getObject(cBoard->getId())
                                             ->getObject(cOpticalGroup->getId())
@@ -73,7 +71,7 @@ void VoltageTuningHistograms::fillAna(const DetectorDataContainer& DataContainer
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* hVoltageAna = VoltageAna.getObject(cBoard->getId())
                                             ->getObject(cOpticalGroup->getId())

@@ -101,12 +101,14 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
 
 uint16_t SSA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
-    std::map<std::string, uint8_t> ADCcontrol = {
-        {"highimpedence", 0}, {"Bias_D5BFEED", 1},   {"Bias_D5PREAMP", 2}, {"Bias_D5TDR", 3}, {"Bias_D5ALLV", 4}, {"Bias_D5ALLI", 5}, {"Bias_CALDAC", 6}, {"Bias_BOOSTERBASELINE", 7},
-        {"Bias_THDAC", 8},    {"Bias_THDACHIGH", 9}, {"Bias_D5DAC8", 10},  {"VBG", 11},       {"GND", 12},        {"ADC_IREF", 13},   {"ADC_VREF", 14},   {"TESTPAD", 15},
-        {"Temperature", 16},  {"AVDD", 17},          {"PVDD", 18},         {"DVDD", 19}};
-    LOG(DEBUG) << BOLDMAGENTA << " converting " << pRegName << " to " << +ADCcontrol[pRegName] << RESET;
-    return SSA2Interface::ReadADC(pChip, ADCcontrol[pRegName]);
+    auto theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
+    if(theRegister == SSA2_ADC_CONTROL_TABLE.end())
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
+        std::runtime_error(std::string("SSA2Interface::ReadADC: Error, register not found for this chip type. Abort."));
+    }
+    LOG(DEBUG) << BOLDMAGENTA << " converting " << pRegName << " to " << +theRegister->second << RESET;
+    return SSA2Interface::ReadADC(pChip, theRegister->second);
 }
 
 uint16_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)

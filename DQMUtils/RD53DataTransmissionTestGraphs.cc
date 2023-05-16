@@ -37,7 +37,6 @@ bool DataTransmissionTestGraphs::fill(std::string& inputStream)
 
     if(theTAP0targetSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched DataTransmissionTest TAP0target!!!!!\n";
         DetectorDataContainer fDetectorData = theTAP0targetSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         DataTransmissionTestGraphs::fillTAP0tgt(fDetectorData);
         return true;
@@ -53,7 +52,8 @@ void DataTransmissionTestGraphs::fillTAP0scan(const DetectorDataContainer& TAP0s
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<std::array<std::tuple<uint16_t, double, double, double>, 11>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
+
                     auto* TAP0scanGraph =
                         TAP0scan.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TGraphAsymmErrors>>().fTheHistogram;
 
@@ -80,7 +80,7 @@ void DataTransmissionTestGraphs::fillTAP0tgt(const DetectorDataContainer& TAP0tg
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* TAP0tgtHist =
                         TAP0tgt.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;

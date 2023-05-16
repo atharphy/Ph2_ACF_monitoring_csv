@@ -34,7 +34,6 @@ bool ThresholdHistograms::fill(std::string& inputStream)
 
     if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched ThrAdjustment Threshold!!!!!\n";
         DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         ThresholdHistograms::fill(fDetectorData);
         return true;
@@ -49,7 +48,7 @@ void ThresholdHistograms::fill(const DetectorDataContainer& DataContainer)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* hThrehsold = Threhsold.getObject(cBoard->getId())
                                            ->getObject(cOpticalGroup->getId())

@@ -32,7 +32,7 @@ void ThrEqualization::ConfigureCalibration()
     stopValue          = this->findValueInSettings<double>("VCalHstop");
     startTDACGainValue = this->findValueInSettings<double>("TDACGainStart");
     stopTDACGainValue  = this->findValueInSettings<double>("TDACGainStop");
-    TDACGainNSteps     = this->findValueInSettings<double>("TDACGainNSteps");
+    TDACGainNSteps     = this->findValueInSettings<double>("TDACGainNSteps", 1);
     doNSteps           = this->findValueInSettings<double>("DoNSteps");
     doDisplay          = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip       = this->findValueInSettings<double>("UpdateChipCfg");
@@ -146,8 +146,8 @@ void ThrEqualization::run()
         // ###########################################
         // # Scan DAC and run threshold equalization #
         // ###########################################
-        const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-        ContainerFactory::copyAndInitChip<GenericDataArray<TDACGainSize>>(*fDetectorContainer, theContainer);
+        ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theContainer);
+        CalibBase::fillVectorContainer<float>(theContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
         ThrEqualization::scanDac(frontEnd->TDACGainReg, dacList, &theContainer);
 
         // #######################################
@@ -293,8 +293,6 @@ void ThrEqualization::analyze()
 
 void ThrEqualization::analyzeDuringRun()
 {
-    const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theTDACGainContainer);
 
     for(const auto cBoard: *fDetectorContainer)
@@ -311,8 +309,7 @@ void ThrEqualization::analyzeDuringRun()
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
-                                                 ->getSummary<GenericDataArray<TDACGainSize>>()
-                                                 .data[i] /
+                                                 ->getSummary<std::vector<float>>().at(i) /
                                              RD53Shared::PRECISION) *
                                        RD53Shared::PRECISION;
                         if(current < best)
@@ -345,8 +342,6 @@ void ThrEqualization::fillHisto()
 
 void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
-    const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(auto i = 0u; i < dacList.size(); i++)
     {
         // ###########################
@@ -405,7 +400,7 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // ###############
                         // # Save output #
                         // ###############
-                        theContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<TDACGainSize>>().data[i] =
+                        theContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<float>>().at(i) =
                             stdDev;
 
                         // ##############################################

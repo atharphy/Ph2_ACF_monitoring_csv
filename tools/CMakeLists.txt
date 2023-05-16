@@ -6,24 +6,20 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS " ")
 
     # Includes
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${grammars})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
 
     # Library dirs
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${UHAL_LOG_LIB_PREFIX})
-    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
+    # none
 
     # Find source files
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
 
     # Boost also needs to be linked
-    include_directories(${Boost_INCLUDE_DIRS})
-    link_directories(${Boost_LIBRARY_DIRS})
+    #  include_directories(${Boost_INCLUDE_DIRS})
+    # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} boost_serialization ${Boost_ARCHIVE_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} ${Boost_MULTIPRECISION_LIBRARY})
 
     # Check for ZMQ installed
@@ -136,8 +132,8 @@ else()
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
-    include_directories(${Protobuf_INCLUDE_DIRS})
-    
+    # include_directories(${Protobuf_INCLUDE_DIRS})
+
     cet_set_compiler_flags(
         EXTRA_FLAGS -Wno-reorder -Wl,--undefined
     )
@@ -151,7 +147,7 @@ else()
             EXCLUDE Eudaq2Producer.h Eudaq2Producer.cc
             EXCLUDE SSAPhysics.h SSAPhysics.cc
             )
-    
+
     target_compile_definitions(Ph2_Tools PRIVATE
     "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
 

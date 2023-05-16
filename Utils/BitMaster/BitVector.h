@@ -86,13 +86,14 @@ class BitVector
 
     block_iterator erase_blocks(block_iterator it)
     {
-        _size = std::max(_size - block_size, 0ul);
+        _size -= _size > block_size ? block_size : 0;
         return _data.erase(it);
     }
 
     block_iterator erase_blocks(block_iterator first, block_iterator last)
     {
-        _size = std::max(_size - block_size * (last - first), 0ul);
+        auto n = block_size * (last - first);
+        _size -= _size > n ? n : 0;
         return _data.erase(first, last);
     }
 

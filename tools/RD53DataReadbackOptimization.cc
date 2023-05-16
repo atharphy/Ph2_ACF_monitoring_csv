@@ -65,16 +65,19 @@ void DataReadbackOptimization::sendData()
     {
         ContainerSerialization theTAP0scanSerialization("DataReadbackOptimizationTAP0scan");
         theTAP0scanSerialization.streamByChipContainer(fDQMStreamer, theTAP0scanContainer);
+
         ContainerSerialization theTAP0Serialization("DataReadbackOptimizationTAP0");
         theTAP0Serialization.streamByChipContainer(fDQMStreamer, theTAP0Container);
 
         ContainerSerialization theTAP1scanSerialization("DataReadbackOptimizationTAP1scan");
         theTAP1scanSerialization.streamByChipContainer(fDQMStreamer, theTAP1scanContainer);
+
         ContainerSerialization theTAP1Serialization("DataReadbackOptimizationTAP1");
         theTAP1Serialization.streamByChipContainer(fDQMStreamer, theTAP1Container);
 
         ContainerSerialization theTAP2scanSerialization("DataReadbackOptimizationTAP2scan");
         theTAP2scanSerialization.streamByChipContainer(fDQMStreamer, theTAP2scanContainer);
+
         ContainerSerialization theTAP2Serialization("DataReadbackOptimizationTAP2");
         theTAP2Serialization.streamByChipContainer(fDQMStreamer, theTAP2Container);
     }
@@ -118,11 +121,12 @@ void DataReadbackOptimization::localConfigure(const std::string& histoFileName, 
 
 void DataReadbackOptimization::run()
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
-    ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize>>(*fDetectorContainer, theTAP0scanContainer);
-    ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize>>(*fDetectorContainer, theTAP1scanContainer);
-    ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize>>(*fDetectorContainer, theTAP2scanContainer);
+    ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP0scanContainer);
+    CalibBase::fillVectorContainer<uint16_t>(theTAP0scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP1scanContainer);
+    CalibBase::fillVectorContainer<uint16_t>(theTAP1scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP2scanContainer);
+    CalibBase::fillVectorContainer<uint16_t>(theTAP2scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
     DataReadbackOptimization::scanDac("DAC_CML_BIAS_0", dacListTAP0, &theTAP0scanContainer);
@@ -170,8 +174,6 @@ void DataReadbackOptimization::draw(bool saveData)
 
 void DataReadbackOptimization::analyze(const std::string& regName, const std::vector<uint16_t>& dacListTAP, const DetectorDataContainer& theTAPscanContainer, DetectorDataContainer& theTAPContainer)
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theTAPContainer);
 
     for(const auto cBoard: *fDetectorContainer)
@@ -180,9 +182,8 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                 for(const auto cChip: *cHybrid)
                 {
                     auto best = *std::max_element(
-                        theTAPscanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<TAPsize>>().data,
-                        theTAPscanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<TAPsize>>().data +
-                            dacListTAP.size());
+                        theTAPscanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<double>>().begin(),
+                        theTAPscanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<double>>().end());
                     int regVal = 0;
 
                     for(auto i = 1u; i < dacListTAP.size(); i++)
@@ -191,8 +192,7 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
-                                                 ->getSummary<GenericDataArray<TAPsize>>()
-                                                 .data[i] /
+                                                 ->getSummary<std::vector<double>>().at(i) /
                                              RD53Shared::PRECISION) *
                                        RD53Shared::PRECISION;
                         if((current >= 0) && (current < best))
@@ -229,8 +229,6 @@ void DataReadbackOptimization::fillHisto()
 
 void DataReadbackOptimization::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
-    const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(auto i = 0u; i < dacList.size(); i++)
     {
         // ###########################
@@ -251,7 +249,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        cChip->getSummary<GenericDataArray<TAPsize>>().data[i] =
+                        cChip->getSummary<std::vector<double>>().data[i] =
                             BERtest::theBERtestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>();
 
         // ##############################################

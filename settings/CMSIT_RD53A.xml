@@ -157,7 +157,7 @@
           <Register name="HitOr_enable_l12"> 0 </Register>
           <!-- HitOr port enable: set trigger_source to proper value then this register,
                0b01 enables HitOr for the first (left-most) miniDP connector,
-               0b10 enables HitOr for the second miniDP connector
+               0b10 enables HitOr for the second miniDP connector, ...
           -->
         </Register>
 
@@ -332,9 +332,9 @@
 
 <!-- === Communication parameters === -->
 <CommunicationSettings>
-    <DQM               ip="127.0.0.1" port="6000" enableConnection="1"/>
-    <MonitorDQM        ip="127.0.0.1" port="8000" enableConnection="1"/>
-    <PowerSupplyClient ip="127.0.0.1" port="7000" enableConnection="1"/>
+    <DQM               ip="127.0.0.1" port="6000" enableConnection="0"/>
+    <MonitorDQM        ip="127.0.0.1" port="8000" enableConnection="0"/>
+    <PowerSupplyClient ip="127.0.0.1" port="7000" enableConnection="0"/>
 </CommunicationSettings>
 
 </HwDescription>

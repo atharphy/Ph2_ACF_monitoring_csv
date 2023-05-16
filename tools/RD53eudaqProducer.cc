@@ -47,20 +47,12 @@ void RD53eudaqProducer::DoStartRun()
     // #####################
     auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
     ev->SetBORE();
-    // RD53eudaqProducer::MySendEvent(std::move(ev));
-
-    // #############################
-    // # Add extra event if needed #
-    // #############################
-    // ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    // ev->SetTriggerN(swTrigCnt++);
-    // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // ######################################
     // # Add extra information to the event #
     // ######################################
-    ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    ev->SetTag("Configuration file", RD53sysCntrPhys.fParsedFile.str());
+    ev->SetTag("Dataformat version", CMSITEventData::DataFormatVersion);
+    ev->SetTag("Configuration file", "\n" + RD53sysCntrPhys.fParsedFile.str());
     for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
     {
         std::stringstream header;
@@ -74,10 +66,17 @@ void RD53eudaqProducer::DoStartRun()
                     std::stringstream header;
                     std::stringstream chipData = cChip->getRegMapStream();
                     header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
-                    ev->SetTag(header.str().c_str(), chipData.str());
+                    ev->SetTag(header.str().c_str(), "\n" + chipData.str());
                 }
     }
     RD53eudaqProducer::MySendEvent(std::move(ev));
+
+    // #############################
+    // # Add extra event if needed #
+    // #############################
+    // ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    // ev->SetTriggerN(swTrigCnt++);
+    // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
@@ -213,7 +212,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
                         for(const auto& cChip: *cHybrid)
                             if((cHybrid->getId() == event.hybrid_id) && (cChip->getId() == event.chip_id)) chipType = static_cast<Ph2_HwDescription::RD53*>(cChip)->getComment();
 
-                    theEvent.chipData.push_back({chipType, event.chip_id, event.chip_lane, event.hybrid_id, event.trigger_id, event.trigger_tag, event.bc_id, {}});
+                    theEvent.chipData.push_back({chipType, event.chip_id, event.chip_id_mod4, event.chip_lane, event.hybrid_id, event.trigger_id, event.trigger_tag, event.bc_id, {}});
                     for(const auto& hit: event.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
                 }
 

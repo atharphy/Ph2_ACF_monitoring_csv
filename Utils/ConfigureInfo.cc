@@ -45,8 +45,9 @@ void ConfigureInfo::parseProtobufMessage(const std::string& theConfigureInfoStri
     MessageUtils::ConfigurationMessage theConfigureMessage;
     theConfigureMessage.ParseFromString(theConfigureInfoString);
 
-    fConfigurationFile = theConfigureMessage.data().configuration_file();
     fCalibrationName   = theConfigureMessage.data().calibration_name();
+    fConfigurationFile = theConfigureMessage.data().configuration_file();
+    fSettingsFile      = theConfigureMessage.data().settings_file();
 
     for(const auto& board: theConfigureMessage.data().object_list())
     {
@@ -82,6 +83,7 @@ std::string ConfigureInfo::createProtobufMessage() const
     theConfigureMessage.mutable_query_type()->set_type(MessageUtils::QueryType::CONFIGURE);
     theConfigureMessage.mutable_data()->set_calibration_name(fCalibrationName);
     theConfigureMessage.mutable_data()->set_configuration_file(fConfigurationFile);
+    theConfigureMessage.mutable_data()->set_settings_file(fSettingsFile);
 
     for(const auto& theBoardStructure: fEnabledObjectStructure)
     {
@@ -181,4 +183,12 @@ void ConfigureInfo::enableReadoutChip(uint16_t boardId, uint16_t opticalGroupId,
     if(hybridMap.find(hybridId) == hybridMap.end()) enableHybrid(boardId, opticalGroupId, hybridId, "");
     auto& readoutChipMap          = hybridMap[hybridId].second;
     readoutChipMap[readoutChipId] = readoutChipName;
+}
+
+std::string ConfigureInfo::getConfigFileStream(const std::string& fileName) const
+{
+    std::ifstream     fileHandler(fileName);
+    std::stringstream fileStream;
+    fileStream << fileHandler.rdbuf();
+    return fileStream.str();
 }

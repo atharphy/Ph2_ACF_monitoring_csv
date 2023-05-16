@@ -10,7 +10,7 @@
 #ifndef RD53TempSensorHistograms_H
 #define RD53TempSensorHistograms_H
 
-#include "DQMHistogramBase.h"
+#include "../DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
 
 #include "Utils/GenericDataArray.h"

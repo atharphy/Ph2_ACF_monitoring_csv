@@ -125,8 +125,6 @@ void InjectionDelay::localConfigure(const std::string& histoFileName, int curren
 
 void InjectionDelay::run()
 {
-    const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     // ###############
     // # Run Latency #
     // ###############
@@ -135,7 +133,8 @@ void InjectionDelay::run()
     la.run();
     la.analyze();
 
-    ContainerFactory::copyAndInitChip<GenericDataArray<InjDelaySize>>(*fDetectorContainer, theOccContainer);
+    ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
+    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
 
     // #######################
     // # Set initial latency #
@@ -147,9 +146,6 @@ void InjectionDelay::run()
                 {
                     auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg);
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg, latency - 1);
-
-                    for(auto i = 0u; i < InjDelaySize; i++)
-                        theOccContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<InjDelaySize>>().data[i] = 0;
                 }
 
     // ###############################
@@ -204,8 +200,7 @@ void InjectionDelay::draw(bool saveData)
 
 void InjectionDelay::analyze()
 {
-    const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-    const size_t maxRegValue  = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1;
+    const size_t maxRegValue = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1;
     const auto unitTime = 1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theInjectionDelayContainer);
@@ -224,8 +219,7 @@ void InjectionDelay::analyze()
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
-                                                 ->getSummary<GenericDataArray<InjDelaySize>>()
-                                                 .data[i] /
+                                                 ->getSummary<std::vector<float>>().at(i) /
                                              RD53Shared::PRECISION) *
                                        RD53Shared::PRECISION;
                         if(current > best)
@@ -265,8 +259,7 @@ void InjectionDelay::fillHisto()
 
 void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
-    const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-    const size_t maxRegValue  = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1;
+    const size_t maxRegValue = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1;
 
     for(auto i = 0u; i < dacList.size(); i++)
     {

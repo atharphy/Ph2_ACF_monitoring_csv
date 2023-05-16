@@ -35,10 +35,10 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 ### Suggested software and firmware versions:
-- Software git branch / tag : `Dev` / `v4-12`
-- Firmware tag: `4.6`
+- Software git branch / tag : `Dev` / `v4-13`
+- Firmware tag: `v4-06`
 
-### Important webpages:
+### Important webpages and information:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 - Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
@@ -90,7 +90,7 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 1. Latency scan
 2. PixelAlive
 3. Noise scan
-4. SCurve scan
+4. SCurve and cross-talk scan
 5. Gain scan
 6. Threshold equalization
 7. Gain optimization
@@ -367,11 +367,12 @@ tar zxvf v2.9.2.tar.gz
 ### Setup on RHEL 9.1 or AlmaLinux 9.1
 The following procedure will install (in order):
 1. complete the `cern` installation
-2. the `boost` and `pugixml` libraries
-3. `erlang` (using [these instructions](https://www.rabbitmq.com/install-rpm.html))
-4. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
-5. `root` with all its needed libraries
-6. `cmake`, tools for clang, including `clang-format` and `git-extras`
+2. when installing `rarpd` use the version for `Fedora`
+3. the `boost` and `pugixml` libraries
+4. `erlang` (using [these instructions](https://www.rabbitmq.com/install-rpm.html))
+5. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+6. `root` with all its needed libraries
+7. `cmake`, tools for clang, including `clang-format` and `git-extras`
 
 #### Complete the CERN installation
 Make sure that the CERN installation is complete by running

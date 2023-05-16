@@ -68,9 +68,17 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
         cAllLocked = true;
         LOG(INFO) << BOLDMAGENTA << "D19cLinkInterface::GeneralLinkReset Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << " [Attempt#" << cAttempts++ << "]" << RESET;
         ResetLinks();
-        for(auto cOpticalReadout: *pBoard) { cAllLocked = cAllLocked && GetLinkStatus(cOpticalReadout->getId()); }
+        for(auto cOpticalReadout: *pBoard)
+        {
+            bool cLinkStatus = cOpticalReadout->fIsLocked;
+            if(!cLinkStatus)
+            {
+                cLinkStatus = GetLinkStatus(cOpticalReadout->getId());
+                if(cLinkStatus) cOpticalReadout->fIsLocked = true;
+            }
+            cAllLocked = cAllLocked && cLinkStatus;
+        }
     } while(cAttempts < cMaxAttempts && !cAllLocked);
-
     if(!cAllLocked)
     {
         LOG(ERROR) << BOLDRED << "Failed to lock all links after a general reset, disabling problematic OpticalGroups and continuing" << RESET;
@@ -84,5 +92,4 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
         }
     }
 }
-
 } // namespace Ph2_HwInterface

@@ -36,21 +36,17 @@ void InjectionDelayHistograms::book(TFile* theOutputFile, DetectorContainer& the
 
 bool InjectionDelayHistograms::fill(std::string& inputStream)
 {
-    const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     ContainerSerialization theOccupancySerialization("InjectionDelayOccupancy");
     ContainerSerialization theInjectionDelaySerialization("InjectionDelayInjectionDelay");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched InjectionDelay Occupancy!!!!!\n";
-        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<InjDelaySize>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<EmptyContainer, std::vector<float>>(fDetectorContainer);
         InjectionDelayHistograms::fillOccupancy(fDetectorData);
         return true;
     }
     if(theInjectionDelaySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched InjectionDelay InjectionDelay!!!!!\n";
         DetectorDataContainer fDetectorData = theInjectionDelaySerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
         InjectionDelayHistograms::fillInjectionDelay(fDetectorData);
         return true;
@@ -60,14 +56,12 @@ bool InjectionDelayHistograms::fill(std::string& inputStream)
 
 void InjectionDelayHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer)
 {
-    const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
-
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<GenericDataArray<InjDelaySize>>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -76,8 +70,7 @@ void InjectionDelayHistograms::fillOccupancy(const DetectorDataContainer& Occupa
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                    for(size_t i = startValue; i <= stopValue; i++)
-                        Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<GenericDataArray<InjDelaySize>>().data[i - startValue]);
+                    for(size_t i = startValue; i <= stopValue; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(i), cChip->getSummary<std::vector<float>>().at(i - startValue));
                 }
 }
 
@@ -88,7 +81,7 @@ void InjectionDelayHistograms::fillInjectionDelay(const DetectorDataContainer& I
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* InjectionDelayHist = InjectionDelay.getObject(cBoard->getId())
                                                    ->getObject(cOpticalGroup->getId())

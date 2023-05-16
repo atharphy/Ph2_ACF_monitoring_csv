@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
             std::string   configurationFile = cmd.optionValue("file");
             std::string   calibrationName   = cmd.optionValue("calibration");
             ConfigureInfo theConfigureInfo;
-            theConfigureInfo.setConfigurationFile(configurationFile);
+            theConfigureInfo.setConfigurationFiles(configurationFile);
             theConfigureInfo.setCalibrationName(calibrationName);
             // theConfigureInfo.enableOpticalGroup(0,0,"pippo");
             // theConfigureInfo.enableHybrid(0,0,0, "pippo");

@@ -91,6 +91,8 @@ int main(int argc, char* argv[])
     // test ADC channels
     cmd.defineOption("test-adc", "Test LpGBT ADCs on SEH");
     cmd.defineOptionAlternative("test-adc", "a");
+    cmd.defineOption("calibrate-adc", "Calibrate LpGBT ADCs on SEH via testcard");
+    cmd.defineOptionAlternative("calibrate-adc", "c");
     // run Eye Opening Monitor
     cmd.defineOption("test-eom", "Run Eye Opening Monitor test");
     cmd.defineOptionAlternative("test-eom", "eom");
@@ -107,6 +109,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("fcmd-test", "Run fast command tests", ArgvParser::NoOptionAttribute);
     cmd.defineOption("fcmd-test-start-pattern", "Fast command FSM test start pattern", ArgvParser::OptionRequiresValue);
     cmd.defineOption("fcmd-test-userfile", "User file with fastcommands for testing", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("test-ber", "Run Bit Error Rate test");
+    cmd.defineOptionAlternative("test-ber", "ber");
+    cmd.defineOption("ber-pattern", "Define pattern to be used for Bit Error Rate test", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOptionAlternative("ber-pattern", "bp");
     // FCMD check in BRAM
     cmd.defineOption("bramfcmd-check", "Access to written data in BRAM", ArgvParser::OptionRequiresValue);
     // Write reference patterns to BRAM
@@ -166,6 +172,8 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("USBBus", "USB device bus number", ArgvParser::OptionRequiresValue);
     cmd.defineOption("USBDev", "USB device device number", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("linkId", "Optical link Id", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("fmcId", "Optical fmc Id", ArgvParser::OptionRequiresValue);
     cmd.defineOption("useGui",
                      "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
                      ArgvParser::NoOptionAttribute);
@@ -204,6 +212,8 @@ int main(int argc, char* argv[])
     uint8_t  cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
     bool     cGui    = (cmd.foundOption("useGui"));
 
+    uint8_t            linkId = (cmd.foundOption("linkId")) ? (uint32_t)(std::stoi(cmd.optionValue("linkId"))) : 0;
+    std::string        fmcId  = (cmd.foundOption("fmcId")) ? cmd.optionValue("fmcId") : "L12";
     pugi::xml_document doc;
     if(!doc.load_file(cHWFile.c_str())) return -1;
     pugi::xml_node cDescription = doc.child("HwDescription");
@@ -211,6 +221,17 @@ int main(int argc, char* argv[])
     {
         for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
         {
+            if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
+            {
+                if(static_cast<std::string>(ps.name()) == "OpticalGroup")
+                {
+                    LOG(INFO) << BOLDBLUE << "Identified optical group" << RESET;
+                    pugi::xml_attribute attr = ps.attribute("Id");
+                    attr.set_value(linkId);
+                    attr = ps.attribute("FMCId");
+                    attr.set_value(fmcId.c_str());
+                }
+            }
             std::string stringID(ps.attribute("ID").value());
             std::string stringType(ps.attribute("Type").value());
             if(stringType == "LV")
@@ -235,6 +256,7 @@ int main(int argc, char* argv[])
             }
         }
     }
+    doc.save_file((cHWFile + "_copy").c_str());
 
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
@@ -265,10 +287,15 @@ int main(int argc, char* argv[])
     act.sa_handler = interruptHandler;
     sigaction(SIGINT, &act, NULL);
 
+    struct sigaction act2;
+    act2.sa_handler = interruptHandler;
+    sigaction(SIGTERM, &act2, NULL);
+
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
-    cTool.InitializeHw(cHWFile, outp);
-    cTool.InitializeSettings(cHWFile, outp);
+    cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
+    cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
+    remove((cHWFile + "_copy").c_str());
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory, true, true);
@@ -285,11 +312,32 @@ int main(int argc, char* argv[])
     // ¯\_(ツ)_/¯
     if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_2SSEH cTC_2SSEH(cUsbBus, cUsbDev); }
     cSEHTester.InitialiseTestCard(true);
+    cSEHTester.RunHybridETest();
+    cTool.fillSummaryTree("setup_type", (cGui) ? 1 : 0);
+    if(cGui)
+    {
+        gui::message("");
+        gui::status("Establishing optical link");
+        gui::progress(0 / 10.0);
 
+        gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
+        // gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
+        LOG(DEBUG) << BOLDBLUE << cSEHTester.getDirectoryName().c_str() << RESET;
+        LOG(DEBUG) << BOLDBLUE << cTool.GetMonitorFileName().c_str() << RESET;
+    }
     if(cmd.foundOption("measure-input-iv"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control and perform I-V scan" << RESET;
         cSEHTester.TurnOn(0, 0, false);
+        if(!cSEHTester.CheckShort(cLVPowerSupplyId, cLVChannelId))
+        {
+            LOG(INFO) << BOLDBLUE << "Stop test due to possible short" << RESET;
+            cTool.SaveResults();
+            cTool.WriteRootFile();
+            cTool.CloseResultFile();
+            cTool.Destroy();
+            abort();
+        }
         cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
         cSEHTester.TurnOn(cRightLoad, cLeftLoad, true);
     }
@@ -339,7 +387,6 @@ int main(int argc, char* argv[])
     //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     //     // cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    cTool.ConfigureHw();
 
     cTool.fBeBoardInterface->setBoard(pBoard->getId());
     for(int i = 0; i < 8; i++)
@@ -358,8 +405,28 @@ int main(int argc, char* argv[])
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("RX", i);
     }
     // Initialize tester
+    try
+    {
+        cTool.ConfigureHw();
+    }
+    catch(...)
+    {
+        if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-leak-parallel"))
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+            LOG(INFO) << BOLDBLUE << "Stop leakage current with external power supply in parallel due to error" << RESET;
+            cSEHTester.EndExternalTestLeakageCurrent(cHVPowerSupplyId, cHVChannelId);
+        }
+        cTool.SaveResults();
+        cTool.WriteRootFile();
+        cTool.CloseResultFile();
+        cTool.Destroy();
+        abort();
+    }
+    cSEHTester.ReadChipIds();
     cSEHTester.Initialise();
 
+    // std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     if(cmd.foundOption("test-parameter"))
     {
         cSEHTester.readTestParameters(cTestParameterFileName);
@@ -381,7 +448,7 @@ int main(int argc, char* argv[])
             gui::status("Testing uplink");
             gui::progress(1 / 10.0);
 
-            gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
+            // gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
             // gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
             LOG(DEBUG) << BOLDBLUE << cSEHTester.getDirectoryName().c_str() << RESET;
             LOG(DEBUG) << BOLDBLUE << cTool.GetMonitorFileName().c_str() << RESET;
@@ -400,6 +467,7 @@ int main(int argc, char* argv[])
             bool cStatus = true;
             // while(true){
             cStatus = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
+            // cSEHTester.LpGBTCheckULPatternv2(true, cExternalPattern);
             // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
             //}
 #ifdef __USE_ROOT__
@@ -501,8 +569,9 @@ int main(int argc, char* argv[])
             gui::status("Testing ADC lines on the lpGBT");
             gui::progress(5 / 10.0);
         }
-        std::vector<std::string> cADCs = {"ADC0", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 600); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        bool                     cCalibrate = cmd.foundOption("calibrate-adc");
+        std::vector<std::string> cADCs      = {"ADC0", "ADC3"};
+        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 600, cCalibrate); // 12 bit DAC with 1V reference, ROH is 12 bit something, needs to be included somewhere
         cSEHTester.LpGBTTestFixedADCs();
     }
 
@@ -541,7 +610,7 @@ int main(int argc, char* argv[])
         {
             gui::message("Eye opening monitoring finished");
             gui::status("Testing clock lines");
-            gui::progress(8.5 / 10.0);
+            gui::progress(6 / 10.0);
         }
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
         bool cStatus = cSEHTester.LpGBTCheckClocks();
@@ -567,7 +636,7 @@ int main(int argc, char* argv[])
         {
             gui::message("ADC test finished");
             gui::status("Testing FCMD lines");
-            gui::progress(6 / 10.0);
+            gui::progress(7 / 10.0);
         }
         if(cmd.foundOption("fcmd-pattern"))
         {
@@ -604,7 +673,7 @@ int main(int argc, char* argv[])
         {
             gui::message("FCMD test finished");
             gui::status("Testing efficiency");
-            gui::progress(7 / 10.0);
+            gui::progress(8 / 10.0);
         }
         LOG(INFO) << BOLDBLUE << "Efficiency Test" << RESET;
         cSEHTester.TestEfficiency(0, 2502, 417);
@@ -616,6 +685,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-leak-parallel"))
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         LOG(INFO) << BOLDBLUE << "Ending leakage current with external power supply in parallel" << RESET;
         cSEHTester.EndExternalTestLeakageCurrent(cHVPowerSupplyId, cHVChannelId);
     }
@@ -628,7 +698,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("test-ext-leak") & !cmd.foundOption("test-leak-parallel"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
-        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 30, cHVPowerSupplyId, cHVChannelId);
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
     }
 
     /*********************/
@@ -647,7 +717,7 @@ int main(int argc, char* argv[])
         {
             gui::message("Efficiency test finished");
             gui::status("Testing bias voltage");
-            gui::progress(8 / 10.0);
+            gui::progress(9 / 10.0);
         }
         LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side with external power supply" << RESET;
         cSEHTester.ExternalTestBiasVoltage(cHVPowerSupplyId, cHVChannelId);

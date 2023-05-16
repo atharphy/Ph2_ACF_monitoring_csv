@@ -37,3 +37,18 @@ size_t RD53Shared::countBitsOne(size_t num)
 }
 
 void RD53Shared::resetDefaultFloat() { std::cout.setf(std::ios_base::fmtflags(0), std::ios_base::floatfield); }
+
+std::string RD53Shared::gitGitCommit()
+{
+    std::string myString;
+
+    system(std::string("git rev-parse HEAD >> git.log").c_str());
+
+    std::ifstream gitFile("git.log");
+    gitFile >> myString;
+    gitFile.close();
+
+    system(std::string("rm git.log").c_str());
+
+    return myString;
+}

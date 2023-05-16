@@ -91,19 +91,19 @@ void VoltageTuning::run()
     const size_t      nBitsAna   = RD53Shared::firstChip->getFEtype(colStart, colStop)->nBitTrimAna;
     const std::string VDDDreg    = RD53Shared::firstChip->getFEtype(colStart, colStop)->VDDDreadReg;
     const std::string VDDAreg    = RD53Shared::firstChip->getFEtype(colStart, colStop)->VDDAreadReg;
+    uint16_t          init       = 0;
     float             targetDig_ = targetDig;
     float             targetAna_ = targetAna;
     bool              doRepeatDig;
     bool              doRepeatAna;
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theDigContainer);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theAnaContainer);
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theDigContainer, init);
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theAnaContainer, init);
 
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
-    std::string queryFunctionName = "chipSubset";
-    auto        chipSubset        = [](const ChipContainer* theChip) { return theChip->isEnabled(); };
-    fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryFunctionName);
+    auto chipSubset = [](const ChipContainer* theChip) { return theChip->isEnabled(); };
+    fDetectorContainer->addReadoutChipQueryFunction(chipSubset, "chipSubset");
     fDetectorContainer->setEnabledAll(true);
 
     for(auto nAttempt = 0; nAttempt < RD53Shared::MAXATTEMPTS; nAttempt++)
@@ -122,9 +122,9 @@ void VoltageTuning::run()
                         // # Start VDDD #
                         // ##############
 
-                        LOG(INFO) << GREEN << "VDDD tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << std::setprecision(3) << targetDig_ << RESET << GREEN
-                                  << " and tolerance = " << BOLDYELLOW << toleranceDig << RESET;
+                        LOG(INFO) << BOLDYELLOW << "VDDD" << RESET << GREEN << " tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << std::setprecision(3) << targetDig_ << RESET
+                                  << GREEN << " and tolerance = " << BOLDYELLOW << toleranceDig << RESET;
 
                         std::vector<float> trimVoltageDig;
                         std::vector<int>   trimVoltageDigIndex;
@@ -140,7 +140,7 @@ void VoltageTuning::run()
 
                         for(it = 0; it < scanrangeDig.size(); it++)
                         {
-                            auto vTrimDecimal = (((RD53Shared::setBits(nBitsAna) + 1) / 2) << nBitsDig) | scanrangeDig[it];
+                            auto vTrimDecimal = (static_cast<size_t>(RD53Shared::setBits(nBitsAna) * STARTfraction) << nBitsDig) | scanrangeDig[it];
 
                             RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
                             float readingDig = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg) * CONVERSIONfactor;
@@ -172,9 +172,9 @@ void VoltageTuning::run()
                         // # Start VDDA #
                         // ##############
 
-                        LOG(INFO) << GREEN << "VDDA tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << std::setprecision(3) << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << targetAna_ << RESET << GREEN
-                                  << " and tolerance = " << BOLDYELLOW << toleranceAna << RESET << GREEN << " and with VDDD = " << BOLDYELLOW << vdddNewSetting << RESET;
+                        LOG(INFO) << BOLDYELLOW << "VDDA" << RESET << GREEN << " tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << std::setprecision(3) << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << targetAna_ << RESET
+                                  << GREEN << " and tolerance = " << BOLDYELLOW << toleranceAna << RESET << GREEN << " and with VDDD = " << BOLDYELLOW << vdddNewSetting << RESET;
 
                         std::vector<float> trimVoltageAna;
                         std::vector<int>   trimVoltageAnaIndex;
@@ -240,7 +240,7 @@ void VoltageTuning::run()
         if((doRepeatDig == false) && (doRepeatAna == false))
         {
             if((targetDig_ != targetDig) || (targetAna_ != targetAna))
-                LOG(WARNING) << GREEN << "The original target values could not be achieved --> they were lowered by an automatic procedure" << RESET;
+                LOG(WARNING) << BOLDBLUE << "\t--> The original target values could not be achieved --> they were lowered by an automatic procedure" << RESET;
             break;
         }
         else
@@ -256,7 +256,8 @@ void VoltageTuning::run()
         {
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetBoard();
             static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureBoard(cBoard);
-            RD53ChipInterface->InitRD53Downlink(cBoard);
+            this->ConfigureIT(cBoard);
+            this->ConfigureFrontendIT(cBoard);
         }
     }
 
@@ -289,8 +290,9 @@ void VoltageTuning::run()
                     RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_3", 0);
 
                     RD53ChipInterface->MaskAllChannels(cChip, true);
-
-                    auto allDisabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURRENT");
+                    LOG(INFO) << GREEN << "Disabling all pixels for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
+                              << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    auto allDisabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURR");
 
                     // #######################
                     // # Enable all channels #
@@ -302,8 +304,9 @@ void VoltageTuning::run()
                     RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_3", 63);
 
                     RD53ChipInterface->MaskAllChannels(cChip, false);
-
-                    auto allEnabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURRENT");
+                    LOG(INFO) << GREEN << "Enabling all pixels for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
+                              << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    auto allEnabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURR");
 
                     // ##################################
                     // # Restore original configuration #
@@ -319,9 +322,9 @@ void VoltageTuning::run()
 
                     LOG(INFO) << GREEN << "Analog current consumption for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                               << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Entire chip: " << std::setprecision(3) << BOLDYELLOW << allEnabled_current - allDisabled_current << BOLDBLUE << " A" << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Single pixel cell: " << std::setprecision(3) << BOLDYELLOW
-                              << (allEnabled_current - allDisabled_current) / (RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols()) << BOLDBLUE << " A" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Entire chip: " << std::setprecision(3) << BOLDYELLOW << allEnabled_current - allDisabled_current << BOLDBLUE << " uA" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Single pixel cell: " << std::setprecision(6) << BOLDYELLOW
+                              << (allEnabled_current - allDisabled_current) / (RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols()) << BOLDBLUE << " uA" << RESET;
                 }
 
     fDetectorContainer->resetReadoutChipQueryFunction();

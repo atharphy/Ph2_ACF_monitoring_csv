@@ -86,6 +86,7 @@ void SystemController::Inherit(const SystemController* pController)
     fNameContainer                  = pController->fNameContainer;
     fBoardType                      = pController->fBoardType;
     fConfigurationFileName          = pController->fConfigurationFileName;
+    fSettingsFileName               = pController->fSettingsFileName;
     fCalibrationName                = pController->fCalibrationName;
     fConfigurationFileContent       = pController->fConfigurationFileContent;
 }
@@ -190,14 +191,16 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     this->fParser.parseCommunicationSettings(pFilename, theCommunicationSettingConfig, os);
 
     fDQMStreamerEnabled = theCommunicationSettingConfig.fDQMCommunication.fEnable;
-    if(fDQMStreamerEnabled)
+    if(fDQMStreamerEnabled && (fDQMStreamer == nullptr))
     {
         fDQMStreamer = new TCPPublishServer(theCommunicationSettingConfig.fDQMCommunication.fPort, 1);
         fDQMStreamer->startAccept();
     }
 
+    LOG(INFO) << GREEN << "Bootstrapping TCP Server..." << RESET;
+
     fMonitorDQMStreamerEnabled = theCommunicationSettingConfig.fMonitorDQMCommunication.fEnable;
-    if(fMonitorDQMStreamerEnabled)
+    if(fMonitorDQMStreamerEnabled && (fMonitorDQMStreamer == nullptr))
     {
         fMonitorDQMStreamer = new TCPPublishServer(theCommunicationSettingConfig.fMonitorDQMCommunication.fPort, 1);
         fMonitorDQMStreamer->startAccept();
@@ -235,6 +238,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET;
         }
     }
+
+    LOG(INFO) << GREEN << "Operation completed" << RESET;
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
@@ -446,11 +451,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ###################
     // # Configuring FSM #
     // ###################
-    const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
-    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"));
-    const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
-    const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
-    const size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
+    const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 1);
+    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"), 1);
+    const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
+    const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
+    const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
 
     auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
@@ -563,11 +568,10 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
+    LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << RESET;
 
     for(auto cOpticalGroup: *pBoard)
     {
-        if(cOpticalGroup->flpGBT == nullptr) continue;
-
         LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << int(pBoard->getId()) << RESET;
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         if(cOpticalGroup->getReset() == 0)
@@ -765,9 +769,12 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             LOG(INFO) << BOLDMAGENTA << "Readout rate on PS-module (Hybrid# " << +cHybrid->getId() << ") is " << +cReadoutRate << " Mbps" << RESET;
 
             lpGBTClockConfig cClkCnfg;
-            cClkCnfg.fClkFreq         = 4;
-            cClkCnfg.fClkDriveStr     = cSsaClockDrive;
-            cClkCnfg.fClkInvert       = 1;
+            cClkCnfg.fClkFreq     = 4;
+            cClkCnfg.fClkDriveStr = cSsaClockDrive;
+            cClkCnfg.fClkInvert   = 0;
+
+            LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " << +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
+
             cClkCnfg.fClkPreEmphWidth = 0;
             cClkCnfg.fClkPreEmphMode  = 3; // 3;
             cClkCnfg.fClkPreEmphStr   = 7; // 7;
@@ -1023,6 +1030,29 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         cBoard->printBoardType();
         fBeBoardInterface->setBoard(0);
         fBeBoardInterface->ConfigureBoard(cBoard);
+    }
+
+    // ################
+    // # Adding query #
+    // ################
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->getBoardType() != BoardType::D19C) continue;
+        std::string      cFunctionName = "opticalGroupSubset";
+        std::vector<int> cLockedIds;
+        for(const auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->fIsLocked) cLockedIds.push_back(cOpticalGroup->getId());
+        }
+        auto cSubset = [cLockedIds](const OpticalGroupContainer* cOpticalGroup) { return std::find(cLockedIds.begin(), cLockedIds.end(), cOpticalGroup->getId()) != cLockedIds.end(); };
+
+        cBoard->addQueryFunction(cSubset, cFunctionName);
+    }
+
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->setBoard(0);
+
         if(cBoard->getBoardType() == BoardType::D19C)
         {
             // Set board sparisification
@@ -1038,8 +1068,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                 // lpGBT config
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    if(cOpticalGroup->flpGBT == nullptr) continue;
-
                     LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << +cBoard->getId() << RESET;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     if(cOpticalGroup->getReset() == 0)
@@ -1102,12 +1130,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                         continue;
                     }
                 }
-            }
-            if(!cBoard->isOptical() && cBoard->getFirstObject()->flpGBT != nullptr)
-            {
-                LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
-                auto cLinkInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getLinkInterface();
-                cLinkInterface->GeneralLinkReset(cBoard);
             }
             ConfigureOT(cBoard);
 
@@ -1189,14 +1211,20 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
+    fSettingsFileName      = theConfigureInfo.getSettingsFile();
     fCalibrationName       = theConfigureInfo.getCalibrationName();
-    std::ifstream     configurationFile(fConfigurationFileName);
-    std::stringstream configurationFileStream;
-    configurationFileStream << configurationFile.rdbuf();
-    fConfigurationFileContent = configurationFileStream.str();
 
+    // #######################################
+    // # Save raw configuration file content #
+    // #######################################
+    fConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
+    if(fConfigurationFileName != fSettingsFileName) fConfigurationFileContent += theConfigureInfo.getConfigFileStream(fSettingsFileName);
+
+    // ##################
+    // # Initialization #
+    // ##################
     InitializeHw(fConfigurationFileName, fParsedFile);
-    InitializeSettings(fConfigurationFileName, fParsedFile);
+    InitializeSettings(fSettingsFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
 
     fNameContainer = new DetectorDataContainer();
@@ -1206,7 +1234,11 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     ExceptionHandler::getInstance()->setDetectorContainer(fDetectorContainer);
     ExceptionHandler::getInstance()->setFirmwareInterface(fBeBoardInterface->getFirmwareInterface());
 
+    // ########################################################
+    // # Formatted printout on screen of the xml file content #
+    // ########################################################
     std::cout << fParsedFile.str() << std::endl;
+
     ConfigureHw(false, true);
 }
 

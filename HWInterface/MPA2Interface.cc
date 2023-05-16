@@ -52,7 +52,11 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
         uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
         return cValue;
     }
-
+    else if(pRegNode == "vref")
+    {
+        cRegItem = pMPA2->getRegItem("ADCcontrol");
+        return this->ReadReg(pMPA2, cRegItem.fAddress) & 0xFF;
+    }
     else if(pRegNode == "ReadoutMode") // New decoding control reg for MPA2
     {
         uint8_t cBitShift = CONTROL_TABLE.find("ReadoutMode")->second;
@@ -509,6 +513,10 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         LOG(DEBUG) << BOLDMAGENTA << "Setting threshold on MPA#" << +pMPA2->getId() << " to " << pValue << RESET;
         this->Set_threshold(pMPA2, pValue);
         return true;
+    }
+    else if(pRegName == "vref")
+    {
+        return this->WriteChipSingleReg(pMPA2, "ADCcontrol", pValue, false);
     }
     else if(pRegName == "Offsets")
     {
@@ -1099,26 +1107,17 @@ bool MPA2Interface::Set_threshold(Chip* pMPA2, uint32_t th)
 
 uint16_t MPA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
-    // < register name , < block for AMUX selection, switch sel (shift) for analog bias >>
-    typedef std::pair<uint8_t, uint8_t> block_switch;
-    std::map<std::string, block_switch> ADCcontrol = {
-        {"disabled", std::make_pair(0, 0)}, // not sure on the shift selection when we are not looking at a bias
-        {"A1", std::make_pair(0, 1)},           {"A2", std::make_pair(0, 2)},      {"A3", std::make_pair(0, 3)},      {"A4", std::make_pair(0, 4)},      {"A5", std::make_pair(0, 5)},
-        {"A6", std::make_pair(0, 6)},           {"A7", std::make_pair(0, 7)},      {"A8", std::make_pair(0, 8)},      {"B1", std::make_pair(1, 1)},      {"B2", std::make_pair(1, 2)},
-        {"B3", std::make_pair(1, 3)},           {"B4", std::make_pair(1, 4)},      {"B5", std::make_pair(1, 5)},      {"B6", std::make_pair(1, 6)},      {"B7", std::make_pair(1, 7)},
-        {"B8", std::make_pair(1, 8)},           {"C1", std::make_pair(2, 1)},      {"C2", std::make_pair(2, 2)},      {"C3", std::make_pair(2, 3)},      {"C4", std::make_pair(2, 4)},
-        {"C5", std::make_pair(2, 5)},           {"C6", std::make_pair(2, 6)},      {"C7", std::make_pair(2, 7)},      {"C8", std::make_pair(2, 8)},      {"D1", std::make_pair(3, 1)},
-        {"D2", std::make_pair(3, 2)},           {"D3", std::make_pair(3, 3)},      {"D4", std::make_pair(3, 4)},      {"D5", std::make_pair(3, 5)},      {"D6", std::make_pair(3, 6)},
-        {"D7", std::make_pair(3, 7)},           {"D8", std::make_pair(3, 8)},      {"E1", std::make_pair(4, 1)},      {"E2", std::make_pair(4, 2)},      {"E3", std::make_pair(4, 3)},
-        {"E4", std::make_pair(4, 4)},           {"E5", std::make_pair(4, 5)},      {"E6", std::make_pair(4, 6)},      {"E7", std::make_pair(4, 7)},      {"E8", std::make_pair(4, 8)},
-        {"ThDAC1", std::make_pair(5, 1)},       {"ThDAC2", std::make_pair(5, 2)},  {"ThDAC3", std::make_pair(5, 3)},  {"ThDAC4", std::make_pair(5, 4)},  {"ThDAC5", std::make_pair(5, 5)},
-        {"ThDAC6", std::make_pair(5, 6)},       {"ThDAC7", std::make_pair(5, 7)},  {"ThDAC8", std::make_pair(5, 8)},  {"CalDAC1", std::make_pair(6, 1)}, {"CalDAC2", std::make_pair(6, 2)},
-        {"CalDAC3", std::make_pair(6, 3)},      {"CalDAC4", std::make_pair(6, 4)}, {"CalDAC5", std::make_pair(6, 5)}, {"CalDAC6", std::make_pair(6, 6)}, {"CalDAC7", std::make_pair(6, 7)},
-        {"CalDAC8", std::make_pair(6, 8)},      {"GND", std::make_pair(7, 0)},     {"bandgap", std::make_pair(8, 0)}, {"dac_ref", std::make_pair(9, 0)}, {"vref", std::make_pair(10, 0)},
-        {"temperature", std::make_pair(11, 0)}, {"avdd", std::make_pair(12, 0)},   {"io_vdd", std::make_pair(13, 0)}, {"dvdd", std::make_pair(14, 0)}};
-    LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +ADCcontrol[pRegName].first << " shift " << +ADCcontrol[pRegName].second << RESET;
-    this->selectBlock(static_cast<ReadoutChip*>(pChip), ADCcontrol[pRegName].first, ADCcontrol[pRegName].second);
-    return this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
+    auto theRegister = ADC_CONTROL_TABLE.find(pRegName);
+    if(theRegister == ADC_CONTROL_TABLE.end())
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
+        std::runtime_error(std::string("MPA2Interface::ReadADC: Error, register not found for this chip type. Abort."));
+    }
+    LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
+    this->selectBlock(static_cast<ReadoutChip*>(pChip), theRegister->second.first, theRegister->second.second);
+    uint32_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
+    LOG(DEBUG) << BOLDMAGENTA << " ADC " << ADC << RESET;
+    return ADC;
 }
 
 float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
@@ -1190,7 +1189,16 @@ void MPA2Interface::readFuseID(Chip* pMPA2)
 void MPA2Interface::loadVref(Chip* pMPA2)
 {
     // Set the Vref from the fuse
+    this->readFuseID(pMPA2);
     this->WriteChipRegBits(pMPA2, "ADCcontrol", pMPA2->pChipFuseID.ADCRef(), "Mask", (0x1F));
+    LOG(DEBUG) << BOLDMAGENTA << " loading VREF from fuse ID " << +pMPA2->pChipFuseID.ADCRef() << RESET;
+}
+
+void MPA2Interface::loadVref(Chip* pMPA2, uint8_t VREFvalue)
+{
+    // Set the Vref to a desired value
+    this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
+    LOG(DEBUG) << BOLDMAGENTA << " loading VREF " << +VREFvalue << RESET;
 }
 
 // This is done at probe?

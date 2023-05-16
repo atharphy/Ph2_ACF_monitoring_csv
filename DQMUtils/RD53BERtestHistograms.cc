@@ -25,7 +25,6 @@ bool BERtestHistograms::fill(std::string& inputStream)
 
     if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched BERtest!!!!!\n";
         DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, double>(fDetectorContainer);
         BERtestHistograms::fillBERtest(fDetectorData);
         return true;
@@ -40,7 +39,7 @@ void BERtestHistograms::fillBERtest(const DetectorDataContainer& BERtestContaine
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+                    if(cChip->hasSummary() == false) continue;
 
                     auto* BERtestHist = BERtest.getObject(cBoard->getId())
                                             ->getObject(cOpticalGroup->getId())
