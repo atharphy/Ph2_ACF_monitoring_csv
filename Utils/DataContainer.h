@@ -426,7 +426,6 @@ class DataContainer
         for(auto container: *this) { container->cleanDataStored(); }
     }
 
-
     // T*& getObject(size_t id) {return std::vector<T*>::at(index);}
     // const T* const& getObject(size_t id) const {return std::vector<T*>::at(index);}
 
@@ -440,8 +439,8 @@ class DataContainer
         theArchive& boost::serialization::base_object<Container<T>>(*this);
     }
 
-    T*& at(size_t index) {return this->std::vector<T*>::at(index);}
-    const T* const& at(size_t index)const {return this->std::vector<T*>::at(index);}
+    T*&             at(size_t index) { return this->std::vector<T*>::at(index); }
+    const T* const& at(size_t index) const { return this->std::vector<T*>::at(index); }
 };
 
 template <typename T>

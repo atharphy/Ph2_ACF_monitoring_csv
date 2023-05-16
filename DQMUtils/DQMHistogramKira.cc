@@ -172,11 +172,16 @@ void DQMHistogramKira::fillLatencyPlots(uint16_t pLatency, uint16_t pTriggerId, 
             {
                 for(auto chip: *hybrid)
                 {
-                    TH1F* cLatencyTDC =
-                        fLatencyTDCHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* cLatencyTDC = fLatencyTDCHistograms.getObject(board->getId())
+                                            ->getObject(opticalGroup->getId())
+                                            ->getObject(hybrid->getId())
+                                            ->getObject(chip->getId())
+                                            ->getSummary<HistContainer<TH1F>>()
+                                            .fTheHistogram;
                     cLatencyTDC->GetXaxis()->SetTitle("Latency");
                     cLatencyTDC->GetYaxis()->SetTitle("Illuminated Chip Hit Occupancy");
-                    TH1F* cLatencyTDCHybrid = fLatencyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* cLatencyTDCHybrid =
+                        fLatencyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     cLatencyTDCHybrid->GetXaxis()->SetTitle("Latency");
                     cLatencyTDCHybrid->GetYaxis()->SetTitle("Illuminated Chip Hit Occupancy");
                     int      cBin   = cLatencyTDC->FindBin((float)pLatency);
@@ -209,11 +214,16 @@ void DQMHistogramKira::fillBottomSensorPlots(DetectorDataContainer& pHitContaine
                     // skip all chips that are not directly illuminated by the LED
                     if(hybrid->getId() % 2 == 0 && chip->getId() != 7 - pLED) continue;
                     if(hybrid->getId() % 2 == 1 && chip->getId() != pLED) continue;
-                    TH1F* cKIRAHitsBottomSensor =
-                        fKIRAHitsBottomSensor.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* cKIRAHitsBottomSensor = fKIRAHitsBottomSensor.getObject(board->getId())
+                                                      ->getObject(opticalGroup->getId())
+                                                      ->getObject(hybrid->getId())
+                                                      ->getObject(chip->getId())
+                                                      ->getSummary<HistContainer<TH1F>>()
+                                                      .fTheHistogram;
                     cKIRAHitsBottomSensor->GetXaxis()->SetTitle("Bottom Sensor CBC Channel");
                     cKIRAHitsBottomSensor->GetYaxis()->SetTitle("Channel Hit Occupancy");
-                    auto cNhits = pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<VECSIZE, float>>();
+                    auto cNhits =
+                        pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<VECSIZE, float>>();
                     for(uint32_t cIndx = 0; cIndx < 127; cIndx++)
                     {
                         cKIRAHitsBottomSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents));
@@ -234,7 +244,8 @@ void DQMHistogramKira::fillTopSensorPlots(DetectorDataContainer& pHitContainer, 
         {
             for(auto hybrid: *opticalGroup)
             {
-                TH1F* cKIRAHitsHybridTopSensor = fKIRAHitsHybridTopSensor.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* cKIRAHitsHybridTopSensor =
+                    fKIRAHitsHybridTopSensor.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 cKIRAHitsHybridTopSensor->GetXaxis()->SetTitle("Top Sensor Channel");
                 cKIRAHitsHybridTopSensor->GetYaxis()->SetTitle("1 - Channel Hit Occupancy");
                 for(auto chip: *hybrid)
@@ -242,11 +253,16 @@ void DQMHistogramKira::fillTopSensorPlots(DetectorDataContainer& pHitContainer, 
                     // skip all chips that are not directly illuminated by the LED
                     if(hybrid->getId() % 2 == 0 && chip->getId() != 7 - pLED) continue;
                     if(hybrid->getId() % 2 == 1 && chip->getId() != pLED) continue;
-                    TH1F* cKIRAHitsTopSensor =
-                        fKIRAHitsTopSensor.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* cKIRAHitsTopSensor = fKIRAHitsTopSensor.getObject(board->getId())
+                                                   ->getObject(opticalGroup->getId())
+                                                   ->getObject(hybrid->getId())
+                                                   ->getObject(chip->getId())
+                                                   ->getSummary<HistContainer<TH1F>>()
+                                                   .fTheHistogram;
                     cKIRAHitsTopSensor->GetXaxis()->SetTitle("Top Sensor CBC Channel");
                     cKIRAHitsTopSensor->GetYaxis()->SetTitle("Channel Hit Occupancy");
-                    auto cNhits = pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<VECSIZE, float>>();
+                    auto cNhits =
+                        pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<VECSIZE, float>>();
                     for(uint32_t cIndx = 0; cIndx < 127; cIndx++)
                     {
                         cKIRAHitsTopSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents));
@@ -271,8 +287,12 @@ void DQMHistogramKira::fillSensorPlotsCalibration(DetectorDataContainer& pHitCon
                     // skip all chips that are not directly illuminated by the LED
                     if(hybrid->getId() % 2 == 0 && chip->getId() != 7 - pLED) continue;
                     if(hybrid->getId() % 2 == 1 && chip->getId() != pLED) continue;
-                    TH2F* cHitMap =
-                        fKIRACalibrationTopSensor.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cHitMap = fKIRACalibrationTopSensor.getObject(board->getId())
+                                        ->getObject(opticalGroup->getId())
+                                        ->getObject(hybrid->getId())
+                                        ->getObject(chip->getId())
+                                        ->getSummary<HistContainer<TH2F>>()
+                                        .fTheHistogram;
                     cHitMap->GetXaxis()->SetTitle("LED Intensity Setting");
                     cHitMap->GetYaxis()->SetTitle("Top Sensor CBC Channel");
                     cHitMap->GetZaxis()->SetTitle("Channel Hit Occupancy");
@@ -292,7 +312,11 @@ void DQMHistogramKira::fillSensorPlotsCalibration(DetectorDataContainer& pHitCon
                     // Loop over all chips in the DataContainer to fill hitmap
                     for(auto cChip: *hybrid)
                     {
-                        auto cNhits = pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<VECSIZE, float>>();
+                        auto cNhits = pHitContainer.getObject(board->getId())
+                                          ->getObject(opticalGroup->getId())
+                                          ->getObject(hybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<GenericDataArray<VECSIZE, float>>();
                         for(uint32_t cIndx = 0; cIndx < 127; cIndx++) { cHitMap->SetBinContent(cBinX, 127 * cChip->getId() + cIndx + 1, cNhits[cIndx] / (1.0 * pNevents)); }
                     }
                 }

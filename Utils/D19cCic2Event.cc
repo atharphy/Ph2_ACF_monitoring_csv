@@ -381,8 +381,8 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
         // This may happen if one object was disabled after the data container was already created
         return;
     }
-    
-    float                 cOcc  = 0;
+
+    float cOcc = 0;
     for(auto cHit: cHits)
     {
         if(testChannelGroup->isChannelEnabled(cHit))
@@ -493,7 +493,7 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             //  LOG (INFO) << BOLDBLUE << std::bitset<32>(*(cIterator+cIndex)) << RESET;
 
             size_t theOpticalGroupIndex = 0;
-            size_t theHybridId       = 0;
+            size_t theHybridId          = 0;
             for(auto cOpticalGroup: *pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -501,7 +501,7 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
                     if(cHybrid->getId() == cHybridId)
                     {
                         theOpticalGroupIndex = cOpticalGroup->getId();
-                        theHybridId       = cHybrid->getId();
+                        theHybridId          = cHybrid->getId();
                     }
                 }
             }
@@ -594,7 +594,7 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pHybridId, uint8_t
 {
     std::vector<PCluster> cPClusters;
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto                  cHybridIndex = getHybridIndex(pHybridId);
+    auto cHybridIndex = getHybridIndex(pHybridId);
     if(cHybridIndex >= fEventHitList.size())
     {
         LOG(INFO) << BOLDRED << " D19cCic2Event::GetPixelClusters out of range..." << RESET;
@@ -669,7 +669,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t
 {
     std::vector<SCluster> cSClusters;
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto                  cHybridIndex = getHybridIndex(pHybridId);
+    auto cHybridIndex = getHybridIndex(pHybridId);
     if(cHybridIndex >= fEventHitList.size())
     {
         LOG(INFO) << BOLDRED << " D19cCic2Event::GetPixelClusters out of range..." << RESET;
@@ -748,7 +748,7 @@ std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pHybridId, uint8_t p
     auto   cChipIdMapped = this->getChipIdMapped(pHybridId, pReadoutChipId);
     size_t cIndx         = 7 - cChipIdMapped;
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    size_t cHybridIndex  = getHybridIndex(pHybridId);
+    size_t cHybridIndex = getHybridIndex(pHybridId);
     // LOG (INFO) << BOLDYELLOW << "D19cCic2Event::getRawL1Word for CIC" << +pHybridId << " CBC" << +pReadoutChipId
     //     << " --- [cHybridIndex,cIndx] == " << +cHybridIndex << "," << +cIndx << " -- raw list has " << fEventRawList.size() << " entries and "
     //     << " --- list of bit-sets has " << +fEventRawList[cHybridIndex].second.size() << " "
@@ -986,7 +986,7 @@ std::string D19cCic2Event::DataBitString(uint8_t pHybridId, uint8_t pReadoutChip
     }
     else
     {
-        size_t      cOffset    = 2 + 9 + 9;
+        size_t cOffset = 2 + 9 + 9;
         // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling getRawL1Word" << std::endl;
         std::string cBitStream = std::bitset<RAW_L1_CBC>(getRawL1Word(pHybridId, pReadoutChipId)).to_string();
         return cBitStream.substr(cOffset, RAW_L1_CBC);
@@ -1003,9 +1003,9 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
     }
     else
     {
-        size_t cOffset     = 2 + 9 + 9;
+        size_t cOffset = 2 + 9 + 9;
         // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling getRawL1Word" << std::endl;
-        auto   cDataBitset = getRawL1Word(pHybridId, pReadoutChipId);
+        auto cDataBitset = getRawL1Word(pHybridId, pReadoutChipId);
         for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++) { blist.push_back(cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1); }
     }
     return blist;
@@ -1021,9 +1021,9 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
     }
     else
     {
-        size_t cOffset     = 2 + 9 + 9;
+        size_t cOffset = 2 + 9 + 9;
         // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling getRawL1Word" << std::endl;
-        auto   cDataBitset = getRawL1Word(pHybridId, pReadoutChipId);
+        auto cDataBitset = getRawL1Word(pHybridId, pReadoutChipId);
         for(auto cChannel: channelList) { blist.push_back(cDataBitset[cDataBitset.size() - cOffset - 1 - cChannel] == 1); }
     }
     return blist;
@@ -1088,9 +1088,9 @@ uint32_t D19cCic2Event::GetNHits(uint8_t pHybridId, uint8_t pReadoutChipId) cons
     }
     else
     {
-        size_t cOffset     = 2 + 9 + 9;
+        size_t cOffset = 2 + 9 + 9;
         // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling getRawL1Word" << std::endl;
-        auto   cDataBitset = this->getRawL1Word(pHybridId, pReadoutChipId);
+        auto cDataBitset = this->getRawL1Word(pHybridId, pReadoutChipId);
         for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++) { cNHits += (cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1); }
     }
     return cNHits;
@@ -1150,9 +1150,9 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadout
     {
         if(fIs2S)
         {
-            size_t cOffset     = 2 + 9 + 9;
+            size_t cOffset = 2 + 9 + 9;
             // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling getRawL1Word" << std::endl;
-            auto   cDataBitset = this->getRawL1Word(pHybridId, pReadoutChipId);
+            auto cDataBitset = this->getRawL1Word(pHybridId, pReadoutChipId);
             for(uint8_t cPos = 0; cPos < NCHANNELS; cPos++)
             {
                 if(cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1)
@@ -1252,7 +1252,7 @@ void D19cCic2Event::print(std::ostream& os) const
 std::vector<Cluster> D19cCic2Event::clusterize(uint8_t pHybridId) const
 {
     // even hits ---> bottom sensor : cSensorId ==0 [bottom], cSensorId == 1 [top]
-    std::vector<Cluster>   cClusters(0);
+    std::vector<Cluster> cClusters(0);
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
     auto&                  cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
     std::bitset<NCHANNELS> cBitSet(0);
@@ -1275,7 +1275,7 @@ std::vector<Cluster> D19cCic2Event::clusterize(uint8_t pHybridId) const
 // TO-DO : replace all get clusters with clusterize
 std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
-    std::vector<Cluster>   cClusters(0);
+    std::vector<Cluster> cClusters(0);
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
     auto&                  cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
     std::bitset<NCHANNELS> cBitSet(0);
@@ -1345,9 +1345,9 @@ SLinkEvent D19cCic2Event::GetSLinkEvent(BeBoard* pBoard) const
             uint8_t cHybridId = cHybrid->getId();
             for(auto cChip: *cHybrid)
             {
-                uint8_t cChipId     = cChip->getId();
+                uint8_t cChipId = cChip->getId();
                 // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling getRawL1Word" << std::endl;
-                auto    cDataBitset = getRawL1Word(cHybridId, cChipId);
+                auto cDataBitset = getRawL1Word(cHybridId, cChipId);
 
                 /*auto cIndex = 7 - std::distance( fFeMapping.begin() , std::find( fFeMapping.begin(), fFeMapping.end()
                 , cChipId ) ) ; if( cIndex >= (int)fEventDataList[cHybridId].second.size() ) continue; auto& cDataBitset =

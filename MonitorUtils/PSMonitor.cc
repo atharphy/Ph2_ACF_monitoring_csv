@@ -50,8 +50,11 @@ void PSMonitor::runSSA2RegisterMonitor(std::string registerName)
                         uint16_t registerValue            = static_cast<SSA2Interface*>(static_cast<PSInterface*>(SSA2ReadoutChipInterface)->getInterface(chip))->ReadADC(chip, registerName);
                         LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-                        theSSA2RegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<ValueAndTime<uint16_t>>() =
-                            theRegisterAndTime;
+                        theSSA2RegisterContainer.getObject(board->getId())
+                            ->getObject(opticalGroup->getId())
+                            ->getObject(hybrid->getId())
+                            ->getObject(chip->getId())
+                            ->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
                     }
                 }
             }
@@ -88,8 +91,11 @@ void PSMonitor::runMPA2RegisterMonitor(std::string registerName)
                         uint16_t registerValue            = static_cast<MPA2Interface*>(static_cast<PSInterface*>(MPA2ReadoutChipInterface)->getInterface(chip))->ReadADC(chip, registerName);
                         LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-                        theMPA2RegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<ValueAndTime<uint16_t>>() =
-                            theRegisterAndTime;
+                        theMPA2RegisterContainer.getObject(board->getId())
+                            ->getObject(opticalGroup->getId())
+                            ->getObject(hybrid->getId())
+                            ->getObject(chip->getId())
+                            ->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
                     }
                 }
             }

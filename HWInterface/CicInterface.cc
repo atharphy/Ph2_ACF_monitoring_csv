@@ -11,8 +11,8 @@
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
-#include "HWInterface/ReadoutChipInterface.h"
 #include "HWInterface/ExceptionHandler.h"
+#include "HWInterface/ReadoutChipInterface.h"
 #include "boost/format.hpp"
 #include <numeric>
 
@@ -314,7 +314,8 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     bool cSuccess = ConfigureAlignmentPatterns(pChip, pAlignmentPatterns);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Cannot configure patterns on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Cannot configure patterns on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                  << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -327,7 +328,8 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     cSuccess = this->WriteChipReg(pChip, cRegName, cToggleOn);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Cannot disable external word alignment value on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Cannot disable external word alignment value on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                  << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -339,7 +341,8 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     cSuccess   = this->WriteChipReg(pChip, cRegName, cToggleOn);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Cannot send external word alignment request to CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Cannot send external word alignment request to CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                  << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -371,7 +374,8 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     cSuccess = this->WriteChipReg(pChip, cRegName, cToggleOff);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Cannot disable automated Word alignment request on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Cannot disable automated Word alignment request on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                  << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -398,7 +402,8 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
         cSuccess = this->WriteChipReg(pChip, cRegName, 0xFF);
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                      << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return false;
         }
@@ -417,7 +422,8 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
         cSuccess = this->WriteChipReg(pChip, cRegName, 0x00);
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                      << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return false;
         }
@@ -458,7 +464,8 @@ bool CicInterface::SetAutomaticPhaseAlignment(Chip* pChip, bool pAuto)
     bool        cSuccess  = this->WriteChipReg(pChip, cRegName, cValue);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Error setting automatic phase alignment in CI on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Error setting automatic phase alignment in CI on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                  << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -486,7 +493,8 @@ bool CicInterface::PhaseAlignerPorts(Chip* pChip, uint8_t pState)
         cSuccess = this->WriteChipReg(pChip, cRegName, (pState == 1) ? 0xFF : 0x00);
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Error selecting phase aligner ports on CI on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Error selecting phase aligner ports on CI on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                      << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return false;
         }
@@ -511,7 +519,8 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
         cSuccess = this->WriteChipReg(pChip, cRegName, 0xFF);
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Error setting CIC phase aligner reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Error setting CIC phase aligner reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                      << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return false;
         }
@@ -531,7 +540,8 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
         cSuccess = this->WriteChipReg(pChip, cRegName, 0x00);
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Error setting CIC phase aligner reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Error setting CIC phase aligner reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                      << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return false;
         }
@@ -1212,7 +1222,8 @@ bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength)
         LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Could not configure drive strength on CIC output pads on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Could not configure drive strength on CIC output pads on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                      << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
             return false;
         }
@@ -1237,7 +1248,8 @@ bool CicInterface::ConfigureFCMDEdge(Chip* pChip, uint8_t pUseNegEdge)
     bool        cSuccess  = this->WriteChipReg(pChip, cRegName, cValue);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Error selecting FC edge in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Error selecting FC edge in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                  << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -1280,7 +1292,8 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     cSuccess = this->ResetDLL(pChip);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Could not reset DLL in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Could not reset DLL in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                  << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -1288,7 +1301,8 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     cSuccess = this->CheckDLL(pChip);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Could not lock DLL in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Could not lock DLL in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                  << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -1299,7 +1313,8 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     cSuccess        = this->SetAutomaticPhaseAlignment(pChip, cAutoAlign);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Could not set automatic phase aligner in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Could not set automatic phase aligner in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                  << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -1325,7 +1340,8 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
     cSuccess = this->CheckFastCommandLock(pChip);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Could not lock FC decoder in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Could not lock FC decoder in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                  << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }

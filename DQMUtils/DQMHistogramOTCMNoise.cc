@@ -184,7 +184,8 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
 
             for(auto hybrid: *opticalGroup)
             {
-                TH2F* hybridHitHistogram = f2DHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH2F* hybridHitHistogram =
+                    f2DHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 TH2F* hybridHitHistogram_chip =
                     f2DHybridHitHistograms_chip.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 uint32_t hybridOffset = HYBRID_CHANNELS_OT + 1;
@@ -220,8 +221,12 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
 
                 for(auto chip: *hybrid)
                 {
-                    TH2F* chipHitHistogram =
-                        f2DChipHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* chipHitHistogram = f2DChipHitHistograms.getObject(board->getId())
+                                                 ->getObject(opticalGroup->getId())
+                                                 ->getObject(hybrid->getId())
+                                                 ->getObject(chip->getId())
+                                                 ->getSummary<HistContainer<TH2F>>()
+                                                 .fTheHistogram;
                     uint16_t iChan_high = chip->getId() + 1 + (hybrid->getId() * NCHIPS_OT);
                     uint16_t iChan_low  = chip->getId() + (hybrid->getId() * NCHIPS_OT);
 
@@ -254,8 +259,12 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
             {
                 for(auto chip: *hybrid)
                 {
-                    TH1F* cChipHitHistogram =
-                        fChipHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* cChipHitHistogram = fChipHitHistograms.getObject(board->getId())
+                                                  ->getObject(opticalGroup->getId())
+                                                  ->getObject(hybrid->getId())
+                                                  ->getObject(chip->getId())
+                                                  ->getSummary<HistContainer<TH1F>>()
+                                                  .fTheHistogram;
 
                     // fill the histogram from the vector
                     for(uint16_t iChan = 0; iChan < NCHANNELS + 1; iChan++) { cChipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<NCHANNELS + 1, uint32_t>>()[iChan]); }
@@ -265,7 +274,8 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
                     LOG(INFO) << BOLDRED << "FE " << hybrid->getId() << " CBC " << chip->getId() << " CM is " << fabs(cChipFit->GetParameter(1)) << "+/-" << fabs(cChipFit->GetParError(1)) << "%"
                               << RESET;
                 }
-                TH1F* cHybridHitHistogram = fHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* cHybridHitHistogram =
+                    fHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint16_t iChan = 0; iChan < HYBRID_CHANNELS_OT + 1; iChan++)
                 { cHybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>>()[iChan]); }
 

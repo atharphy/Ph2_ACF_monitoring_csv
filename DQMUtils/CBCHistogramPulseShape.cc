@@ -109,8 +109,12 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
                     uint8_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>()) // for on channel - begin
                     {
-                        TH1F* channelPulseShapeHistogram =
-                            fDetectorChannelPulseShapeHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getChannel<HistContainer<TH1F>>(channelNumber).fTheHistogram;
+                        TH1F* channelPulseShapeHistogram = fDetectorChannelPulseShapeHistograms.getObject(boardId)
+                                                               ->getObject(opticalGroupId)
+                                                               ->getObject(hybridId)
+                                                               ->getObject(chipId)
+                                                               ->getChannel<HistContainer<TH1F>>(channelNumber)
+                                                               .fTheHistogram;
                         int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
                         channelPulseShapeHistogram->SetBinContent(currentBin, channel.fThreshold);
                         channelPulseShapeHistogram->SetBinError(currentBin, channel.fNoise);
@@ -175,7 +179,7 @@ void CBCHistogramPulseShape::process()
 
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t       chipId     = chip->getId();
+                    size_t       chipId        = chip->getId();
                     TVirtualPad* currentCanvas = cChipPulseShape->cd(chipId + 1);
                     TPad*        myPad         = static_cast<TPad*>(cChipPulseShape->GetPad(chipId + 1));
                     // Retreive the corresponging chip histogram:

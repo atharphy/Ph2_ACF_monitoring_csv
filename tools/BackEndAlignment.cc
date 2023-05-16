@@ -530,7 +530,7 @@ bool BackEndAlignment::Align()
         bool cWithMPA2         = false;
 
         auto cHybrid = cBoard->getFirstObject()->getFirstObject();
-        cWithCIC = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;
+        cWithCIC     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;
         for(auto cReadoutChip: *cHybrid)
         {
             cWithCBC  = cWithCBC || cReadoutChip->getFrontEndType() == FrontEndType::CBC3;

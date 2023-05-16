@@ -65,8 +65,9 @@ void DQMHistogramSSASCurveAsync::fillSSASCurveAsyncPlots(DetectorDataContainer& 
                     size_t chipId = chip->getId();
                     // Retreive the corresponging chip histogram:
 
-                    TH2F* chipHitHistogram = fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                    uint  channelBin       = 1;
+                    TH2F* chipHitHistogram =
+                        fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    uint channelBin = 1;
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
                     if(chip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>() == nullptr) continue;
@@ -109,7 +110,8 @@ void DQMHistogramSSASCurveAsync::process()
                     size_t chipId = chip->getId();
                     cValidation->cd(chipId + 1);
                     // Retreive the corresponging chip histogram:
-                    TH2F* chipHitHistogram = fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* chipHitHistogram =
+                        fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     // Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you
                     // need)
                     chipHitHistogram->SetStats(false);

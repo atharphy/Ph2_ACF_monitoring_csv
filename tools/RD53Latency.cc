@@ -164,8 +164,12 @@ void Latency::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current =
-                            theOccContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<float>>().at(i);
+                        auto current = theOccContainer.getObject(cBoard->getId())
+                                           ->getObject(cOpticalGroup->getId())
+                                           ->getObject(cHybrid->getId())
+                                           ->getObject(cChip->getId())
+                                           ->getSummary<std::vector<float>>()
+                                           .at(i);
                         if(current > best)
                         {
                             regVal = dacList[i];

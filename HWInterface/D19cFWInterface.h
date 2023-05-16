@@ -285,7 +285,6 @@ class D19cFWInterface : public BeBoardFWInterface
         return r;
     }
 
-
   public:
     void EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard);
     void ChipReSync() override;

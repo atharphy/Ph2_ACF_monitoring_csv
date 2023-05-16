@@ -70,7 +70,7 @@ void PSBiasCal::Initialise()
     for(auto cBoard: *fDetectorContainer)
     {
         fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-        auto& cRegMapThisBoard                                                 = fRegMapContainer.getObject(cBoard->getId());
+        auto& cRegMapThisBoard                                                     = fRegMapContainer.getObject(cBoard->getId());
         for(auto cOpticalReadout: *cBoard)
         {
             for(auto cHybrid: *cOpticalReadout)

@@ -156,8 +156,8 @@ void KIRA::determineLatency()
                 {
                     for(auto cChip: *cHybrid)
                     { cHitContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = 0; } // chip
-                }                                                                                                                                                        // hybrid
-            }                                                                                                                                                            // optical group
+                }                                                                                                                                                                        // hybrid
+            } // optical group
 
             // start at the beginning + trigger id in burst
             auto cEventIter  = cEvents.begin() + cTriggerId;
@@ -204,8 +204,8 @@ void KIRA::determineLatency()
                         if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
                         if(cHybrid->getId() % 2 == 0 && cChip->getId() != 7 - cLatencyLED) continue;
                         if(cHybrid->getId() % 2 == 1 && cChip->getId() != cLatencyLED) continue;
-                        double cTmpHits =
-                            cHitContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() / (1.0 * fNReadbackEvents);
+                        double cTmpHits = cHitContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() /
+                                          (1.0 * fNReadbackEvents);
                         cTmpHitsSum += cTmpHits;
 
                         if(cTmpHitsSum >= cHitMaximum)
@@ -362,7 +362,8 @@ bool KIRA::check_channel_illumination(BeBoard* pBoard, DetectorDataContainer& pC
                 if(cHybrid->getId() % 2 == 0 && cChip->getId() != 7 - pLED) continue;
                 if(cHybrid->getId() % 2 == 1 && cChip->getId() != pLED) continue;
                 // count occupancy in all channels
-                auto cContainer = pContainer.getObject(pBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<VECSIZE, float>>();
+                auto cContainer =
+                    pContainer.getObject(pBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<VECSIZE, float>>();
                 for(uint16_t cIndx = 0; cIndx < 127; cIndx++) { cSum += cContainer[cIndx]; }
             }
         }

@@ -58,9 +58,10 @@ class PSAlignment : public OTTool
         auto cBoard     = (*cBoardIter);
         //
         auto cOGId             = pChip->getOpticalGroupId();
-        auto cOpticalGroupIter = std::find_if(
-            fDetectorContainer->getObject(cBoard->getId())->begin(), fDetectorContainer->getObject(cBoard->getId())->end(), [&cOGId](Ph2_HwDescription::OpticalGroup* x) { return x->getId() == cOGId; });
-        auto cOG = (*cOpticalGroupIter);
+        auto cOpticalGroupIter = std::find_if(fDetectorContainer->getObject(cBoard->getId())->begin(),
+                                              fDetectorContainer->getObject(cBoard->getId())->end(),
+                                              [&cOGId](Ph2_HwDescription::OpticalGroup* x) { return x->getId() == cOGId; });
+        auto cOG               = (*cOpticalGroupIter);
         //
         auto cHybridId   = pChip->getHybridId();
         auto cHybridIter = std::find_if(fDetectorContainer->getObject(cBoard->getId())->getObject(cOG->getId())->begin(),

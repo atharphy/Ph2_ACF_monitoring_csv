@@ -206,7 +206,8 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
                 for(const auto cChip: *cHybrid)
                 {
                     uint16_t vcal_med_setting =
-                        static_cast<RD53*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()))->getReg("VCAL_MED");
+                        static_cast<RD53*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()))
+                            ->getReg("VCAL_MED");
                     uint16_t vcal_high_setting = round(RD53Shared::firstChip->Charge2VCal(target)) + vcal_med_setting;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", vcal_high_setting, true);
 

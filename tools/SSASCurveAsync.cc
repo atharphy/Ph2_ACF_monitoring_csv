@@ -141,7 +141,8 @@ void SSASCurve::run(void)
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
+                            ReadoutChip* theChip =
+                                static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
                             if(cWithSSA) { this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", thd); }
                             if(cWithMPA)
                             {
@@ -253,7 +254,8 @@ void SSASCurve::run(void)
                         for(auto& channel: *cChip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>()) // for on channel -
                                                                                                                      // begin
                         {
-                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoard->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(cChip->getId()));
+                            ReadoutChip* theChip =
+                                static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoard->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(cChip->getId()));
                             rms += (channel.second - mean) * (channel.second - mean);
 
                             int32_t cr      = fReadoutChipInterface->ReadChipReg(theChip, prestr + std::to_string(istrip));

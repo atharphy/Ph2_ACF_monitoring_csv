@@ -18,7 +18,7 @@ D19clpGBTSlowControlWorkerInterface::~D19clpGBTSlowControlWorkerInterface() {}
 
 void D19clpGBTSlowControlWorkerInterface::Reset()
 {
-    uint32_t sleepTimeInUs = 100000;
+    uint32_t                              sleepTimeInUs = 100000;
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     LOG(DEBUG) << BOLDBLUE << "Resetting Command Processor" << RESET;
     // Soft reset the GBT-SC worker

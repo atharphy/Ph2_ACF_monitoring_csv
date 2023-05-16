@@ -222,7 +222,8 @@ void ClockDelay::analyze()
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
-                                                 ->getSummary<std::vector<float>>().at(i) /
+                                                 ->getSummary<std::vector<float>>()
+                                                 .at(i) /
                                              RD53Shared::PRECISION) *
                                        RD53Shared::PRECISION;
                         if(current > best)

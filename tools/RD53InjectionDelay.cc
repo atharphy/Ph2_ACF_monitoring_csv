@@ -219,7 +219,8 @@ void InjectionDelay::analyze()
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
-                                                 ->getSummary<std::vector<float>>().at(i) /
+                                                 ->getSummary<std::vector<float>>()
+                                                 .at(i) /
                                              RD53Shared::PRECISION) *
                                        RD53Shared::PRECISION;
                         if(current > best)
@@ -286,7 +287,8 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
                             ->getObject(cChip->getId())
-                            ->getSummary<std::vector<float>>().at(dacList[i]) = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                            ->getSummary<std::vector<float>>()
+                            .at(dacList[i]) = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
         // ##############################################
         // # Send periodic data to monitor the progress #

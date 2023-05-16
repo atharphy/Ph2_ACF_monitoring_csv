@@ -104,8 +104,12 @@ void DQMHistogramPedestalEqualization::process()
                     offsetHistogram->DrawCopy();
 
                     occupancyCanvas->cd(chip->getId() + 1);
-                    TH1F* occupancyHistogram =
-                        fDetectorOccupancyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* occupancyHistogram = fDetectorOccupancyHistograms.getObject(board->getId())
+                                                   ->getObject(opticalGroup->getId())
+                                                   ->getObject(hybrid->getId())
+                                                   ->getObject(chip->getId())
+                                                   ->getSummary<HistContainer<TH1F>>()
+                                                   .fTheHistogram;
                     occupancyHistogram->GetXaxis()->SetTitle("Channel");
                     occupancyHistogram->GetYaxis()->SetTitle("Occupancy");
                     occupancyHistogram->DrawCopy();

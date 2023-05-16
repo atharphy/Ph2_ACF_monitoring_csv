@@ -181,12 +181,12 @@ void GenericDacDacScan::analyze()
                         for(auto i = 0u; i < dac1List.size(); i++)
                         {
                             auto current = round(theOccContainer.getObject(cBoard->getId())
-                                               ->getObject(cOpticalGroup->getId())
-                                               ->getObject(cHybrid->getId())
-                                               ->getObject(cChip->getId())
-                                               ->getSummary<std::vector<float>>()
-                                               .at(i * dac2List.size() + j) /
-                                              RD53Shared::PRECISION) *
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<std::vector<float>>()
+                                                     .at(i * dac2List.size() + j) /
+                                                 RD53Shared::PRECISION) *
                                            RD53Shared::PRECISION;
                             if(current > best)
                             {
@@ -203,8 +203,11 @@ void GenericDacDacScan::analyze()
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theGenericDacDacScanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::pair<uint16_t, uint16_t>>() =
-                        std::pair<uint16_t, uint16_t>(regVal1, regVal2);
+                    theGenericDacDacScanContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
+                        ->getSummary<std::pair<uint16_t, uint16_t>>() = std::pair<uint16_t, uint16_t>(regVal1, regVal2);
                 }
 }
 

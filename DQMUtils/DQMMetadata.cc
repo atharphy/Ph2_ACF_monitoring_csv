@@ -70,7 +70,7 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
 
 void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
 {
-    //Try and catch are required because this is (hopefully) the only case in which the container is created before the histogram booking
+    // Try and catch are required because this is (hopefully) the only case in which the container is created before the histogram booking
     for(const auto board: theNameContainer)
     {
         BoardDataContainer* theTreeContainerBoard;
@@ -82,7 +82,7 @@ void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
         {
             continue;
         }
-        
+
         theTreeContainerBoard->getSummary<StringContainer, StringContainer>().saveString(board->getSummary<std::string, std::string>().c_str());
 
         for(const auto opticalGroup: *board)
@@ -96,7 +96,7 @@ void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
             {
                 continue;
             }
-            
+
             theTreeContainerOpticalGroup->getSummary<StringContainer, StringContainer>().saveString(opticalGroup->getSummary<std::string, std::string>().c_str());
 
             for(const auto hybrid: *opticalGroup)
@@ -110,7 +110,7 @@ void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
                 {
                     continue;
                 }
-                
+
                 theTreeContainerHybrid->getSummary<StringContainer, StringContainer>().saveString(hybrid->getSummary<std::string, std::string>().c_str());
 
                 for(const auto chip: *hybrid)

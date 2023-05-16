@@ -181,10 +181,19 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto best = *std::max_element(
-                        theTAPscanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<double>>().begin(),
-                        theTAPscanContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<double>>().end());
-                    int regVal = 0;
+                    auto best   = *std::max_element(theTAPscanContainer.getObject(cBoard->getId())
+                                                      ->getObject(cOpticalGroup->getId())
+                                                      ->getObject(cHybrid->getId())
+                                                      ->getObject(cChip->getId())
+                                                      ->getSummary<std::vector<double>>()
+                                                      .begin(),
+                                                  theTAPscanContainer.getObject(cBoard->getId())
+                                                      ->getObject(cOpticalGroup->getId())
+                                                      ->getObject(cHybrid->getId())
+                                                      ->getObject(cChip->getId())
+                                                      ->getSummary<std::vector<double>>()
+                                                      .end());
+                    int  regVal = 0;
 
                     for(auto i = 1u; i < dacListTAP.size(); i++)
                     {
@@ -192,7 +201,8 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
-                                                 ->getSummary<std::vector<double>>().at(i) /
+                                                 ->getSummary<std::vector<double>>()
+                                                 .at(i) /
                                              RD53Shared::PRECISION) *
                                        RD53Shared::PRECISION;
                         if((current >= 0) && (current < best))

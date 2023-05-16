@@ -332,9 +332,10 @@ void PedestalEqualization::FindVplus()
                 // nChip += hybrid->size();
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId()));
-                    uint16_t     tmpVthr = 0;
-                    auto         cType   = theChip->getFrontEndType();
+                    ReadoutChip* theChip =
+                        static_cast<ReadoutChip*>(fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId()));
+                    uint16_t tmpVthr = 0;
+                    auto     cType   = theChip->getFrontEndType();
                     if(cType == FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
                     if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) tmpVthr = theChip->getReg("Bias_THDAC");
                     if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) tmpVthr = theChip->getReg("ThDAC0");
@@ -478,8 +479,8 @@ void PedestalEqualization::FindOffsets()
 
                     unsigned int channelNumber = 1;
                     int          cMeanOffset   = 0;
-                    ReadoutChip* roc           = static_cast<ReadoutChip*>(fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId()));
-                    auto         cType         = roc->getFrontEndType();
+                    ReadoutChip* roc = static_cast<ReadoutChip*>(fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId()));
+                    auto         cType = roc->getFrontEndType();
                     for(auto& channel: *chip->getChannelContainer<uint8_t>()) // for on channel - begin
                     {
                         char charRegName[20];

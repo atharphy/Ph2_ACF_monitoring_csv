@@ -120,7 +120,8 @@ void StubTool::scanStubs()
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.getObject(iCBC)), "VCth1", cVcth1);
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.getObject(iCBC)), "VCth2", cVcth2);
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.getObject(iCBC)), "Pipe&StubInpSel&Ptwidth", Pipe_StubSel_Ptwidth);
-                        for(int ireg = 0; ireg < 15; ireg++) { fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.getObject(iCBC)), "Bend" + std::to_string(ireg), BendReg[ireg]); }
+                        for(int ireg = 0; ireg < 15; ireg++)
+                        { fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cCbcVector.getObject(iCBC)), "Bend" + std::to_string(ireg), BendReg[ireg]); }
                     }
 
                     uint8_t     cRegValue;

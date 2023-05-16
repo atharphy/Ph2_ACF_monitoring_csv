@@ -579,8 +579,12 @@ void DQMHistogramBeamTestCheck::fillClusterOccupancyPlots(DetectorDataContainer&
                 auto& cHybrdClstrs = cOGClstrs->getObject(hybrid->getId());
                 for(auto chip: *hybrid)
                 {
-                    TH2F* chipClstOccHist =
-                        fClusterOccupancyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* chipClstOccHist = fClusterOccupancyHistograms.getObject(board->getId())
+                                                ->getObject(opticalGroup->getId())
+                                                ->getObject(hybrid->getId())
+                                                ->getObject(chip->getId())
+                                                ->getSummary<HistContainer<TH2F>>()
+                                                .fTheHistogram;
                     auto& cChipClstrs = cHybrdClstrs->getObject(chip->getId());
                     auto  cSize       = cChipClstrs->getSummary<GenericDataArray<VECSIZE, float>>().getSize();
                     for(size_t cIndx = 0; cIndx < cSize; cIndx++)
@@ -637,13 +641,20 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, uint16_t pTr
                         cChnlIndx++;
                     }
 
-                    TH2F* cLatencyTDC =
-                        fLatencyTDCHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cLatencyTDC = fLatencyTDCHistograms.getObject(board->getId())
+                                            ->getObject(opticalGroup->getId())
+                                            ->getObject(hybrid->getId())
+                                            ->getObject(chip->getId())
+                                            ->getSummary<HistContainer<TH2F>>()
+                                            .fTheHistogram;
                     for(uint8_t cTDC = 0; cTDC < TDCBINS; cTDC++)
                     {
-                        cBin = cLatencyTDC->FindBin((float)pLatency, (float)cTDC);
-                        uint32_t cNhits =
-                            pTDCsummary.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
+                        cBin            = cLatencyTDC->FindBin((float)pLatency, (float)cTDC);
+                        uint32_t cNhits = pTDCsummary.getObject(board->getId())
+                                              ->getObject(opticalGroup->getId())
+                                              ->getObject(hybrid->getId())
+                                              ->getObject(chip->getId())
+                                              ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid"
                                    << +hybrid->getId() << " Chip" << +chip->getId() << " - on average have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);
@@ -672,7 +683,8 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(DetectorDataContainer& theLaten
                 bool cFillS0 = (cHybridHitsS0->hasSummary());
                 bool cFillS1 = (cHybridHitsS1->hasSummary());
 
-                TH1F* hybridLatencyHistogram = fLatencyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(cHybridHitsS0->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogram =
+                    fLatencyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(cHybridHitsS0->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 TH1F* hybridLatencyHistogramS0 =
                     fLatencyHistogramsS0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(cHybridHitsS0->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 TH1F* hybridLatencyHistogramS1 =
@@ -717,8 +729,9 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(DetectorDataContainer& theLaten
         {
             for(auto hybrid: *opticalGroup)
             {
-                bool  cFill                  = (hybrid->hasSummary());
-                TH1F* hybridLatencyHistogram = fLatencyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                bool  cFill = (hybrid->hasSummary());
+                TH1F* hybridLatencyHistogram =
+                    fLatencyHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
                     if(cFill)
@@ -917,14 +930,21 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                     } // chanenls
 
                     // TDC hit map
-                    TH2F* cLatencyTDC =
-                        fLatencyTDCHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cLatencyTDC = fLatencyTDCHistograms.getObject(board->getId())
+                                            ->getObject(opticalGroup->getId())
+                                            ->getObject(hybrid->getId())
+                                            ->getObject(chip->getId())
+                                            ->getSummary<HistContainer<TH2F>>()
+                                            .fTheHistogram;
                     for(uint8_t cTDC = 0; cTDC < TDCBINS; cTDC++)
                     {
                         // when validating just use the mid-range value
-                        auto     cBin = cLatencyTDC->FindBin(fStartLatency + fLatencyRange / 2.0, (float)cTDC);
-                        uint32_t cNhits =
-                            theTDCMap.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
+                        auto     cBin   = cLatencyTDC->FindBin(fStartLatency + fLatencyRange / 2.0, (float)cTDC);
+                        uint32_t cNhits = theTDCMap.getObject(board->getId())
+                                              ->getObject(opticalGroup->getId())
+                                              ->getObject(hybrid->getId())
+                                              ->getObject(chip->getId())
+                                              ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of [1] "
                                    << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid" << +hybrid->getId() << " Chip" << +chip->getId() << " - on average have found " << cNhits
                                    << " channels with a hit [per chip per event]." << RESET;
@@ -1008,8 +1028,10 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                         cChnlIndx++;
                     } // chanenls
                     // now correlation for stubs
-                    TH2F* cStubS0      = fCorrelationStubS0Histograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                    TH2F* cStubS1      = fCorrelationStubS1Histograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cStubS0 =
+                        fCorrelationStubS0Histograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cStubS1 =
+                        fCorrelationStubS1Histograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     auto& cChipStubOcc = theStubMap.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                     cChnlIndx          = 0;
                     for(auto channel: *cChipStubOcc->getChannelContainer<Occupancy>())

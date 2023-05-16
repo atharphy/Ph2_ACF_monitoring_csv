@@ -282,8 +282,16 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fNoiseError = (nHits > 1 ? rms / sqrt(nHits) * sqrt(sqrt(2 / (nHits - 1))) : 0);
 
-                                    if(mean > theMaxThresholdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>())
-                                        theMaxThresholdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = mean;
+                                    if(mean > theMaxThresholdContainer.getObject(cBoard->getId())
+                                                  ->getObject(cOpticalGroup->getId())
+                                                  ->getObject(cHybrid->getId())
+                                                  ->getObject(cChip->getId())
+                                                  ->getSummary<float>())
+                                        theMaxThresholdContainer.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getSummary<float>() = mean;
                                 }
                                 else
                                     theThresholdAndNoiseContainer->getObject(cBoard->getId())
@@ -309,8 +317,8 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                               << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1)
                               << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold << RESET << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
                     LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
-                              << theMaxThresholdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() << BOLDBLUE
-                              << " (Delta_VCal)" << std::setprecision(-1) << RESET;
+                              << theMaxThresholdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>()
+                              << BOLDBLUE << " (Delta_VCal)" << std::setprecision(-1) << RESET;
                     RD53Shared::resetDefaultFloat();
                 }
 

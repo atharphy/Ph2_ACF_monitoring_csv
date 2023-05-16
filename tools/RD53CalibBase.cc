@@ -88,17 +88,18 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
                            (checkAgainst == false))
                         {
                             static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                                ->PackWriteCommand(cChip,
-                                                   regName,
-                                                   DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>(),
-                                                   chipCommandList,
-                                                   true);
+                                ->PackWriteCommand(
+                                    cChip,
+                                    regName,
+                                    DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>(),
+                                    chipCommandList,
+                                    true);
 
                             LOG(INFO) << BOLDMAGENTA << ">>> " << (checkAgainst == true ? "Best " : "") << BOLDYELLOW << regName << BOLDMAGENTA
                                       << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                       << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
-                                      << DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << BOLDMAGENTA
-                                      << " <<<" << RESET;
+                                      << DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()
+                                      << BOLDMAGENTA << " <<<" << RESET;
                         }
                         else
                         {

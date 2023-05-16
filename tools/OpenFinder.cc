@@ -85,9 +85,9 @@ void OpenFinder::Initialise(Parameters pParameters)
     for(auto cBoard: *fDetectorContainer)
     {
         fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-        auto& cRegMapThisBoard                                                 = fRegMapContainer.getObject(cBoard->getId());
-        auto& cOpens                                                           = fOpens.getObject(cBoard->getId());
-        auto& cOccupancy                                                       = fInTimeOccupancy.getObject(cBoard->getId());
+        auto& cRegMapThisBoard                                                     = fRegMapContainer.getObject(cBoard->getId());
+        auto& cOpens                                                               = fOpens.getObject(cBoard->getId());
+        auto& cOccupancy                                                           = fInTimeOccupancy.getObject(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cOpensOpticalGroup      = cOpens->getObject(cOpticalGroup->getId());
@@ -103,7 +103,7 @@ void OpenFinder::Initialise(Parameters pParameters)
                 {
                     cOpensHybrid->getObject(cChip->getId())->getSummary<ChannelList>().clear();
                     cRegMapThisHybrid->getObject(cChip->getId())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
-                    auto& cThisOcc                                                     = cOccupancyHybrid->getObject(cChip->getId())->getSummary<ScanSummaries>();
+                    auto& cThisOcc                                                         = cOccupancyHybrid->getObject(cChip->getId())->getSummary<ScanSummaries>();
                     for(int cAntennaPosition = cAntennaSwitchMinValue; cAntennaPosition < cAntennaSwitchMaxValue; cAntennaPosition++)
                     {
                         ScanSummary cSummary;
@@ -260,7 +260,8 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
                     auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                     for(auto cConnectedChannel: cConnectedChannels)
                     {
-                        if(std::find(cHits.begin(), cHits.end(), cConnectedChannel) == cHits.end()) { cSummaryThisChip->getChannelContainer<Occupancy>()->getObject(cConnectedChannel).fOccupancy += 1; }
+                        if(std::find(cHits.begin(), cHits.end(), cConnectedChannel) == cHits.end())
+                        { cSummaryThisChip->getChannelContainer<Occupancy>()->getObject(cConnectedChannel).fOccupancy += 1; }
                     }
                 }
 

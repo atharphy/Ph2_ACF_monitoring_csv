@@ -51,8 +51,9 @@ void DQMHistogramCalibrationExample::fillCalibrationExamplePlots(DetectorDataCon
                 {
                     size_t chipId = chip->getId();
                     // Retreive the corresponging chip histogram:
-                    TH1F* chipHitHistogram = fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                    uint  channelBin       = 1;
+                    TH1F* chipHitHistogram =
+                        fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    uint channelBin = 1;
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
                     if(chip->getChannelContainer<uint32_t>() == nullptr) continue;
@@ -90,7 +91,8 @@ void DQMHistogramCalibrationExample::process()
                     size_t chipId = chip->getId();
                     cValidation->cd(chipId + 1);
                     // Retreive the corresponging chip histogram:
-                    TH1F* chipHitHistogram = fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* chipHitHistogram =
+                        fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                     // Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you
                     // need)

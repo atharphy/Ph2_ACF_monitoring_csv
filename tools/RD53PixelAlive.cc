@@ -346,8 +346,12 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                 }
                             }
                             else
-                                theOccContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<OccupancyAndPh>(row, col).fStatus =
-                                    RD53Shared::ISDISABLED;
+                                theOccContainer->getObject(cBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getChannel<OccupancyAndPh>(row, col)
+                                    .fStatus = RD53Shared::ISDISABLED;
 
                     if(unstuckPixels == false)
                     {
@@ -389,7 +393,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
                                 ->getObject(cChip->getId())
-                                ->getSummary<std::vector<uint16_t>>().at(deltaBCID)++;
+                                ->getSummary<std::vector<uint16_t>>()
+                                .at(deltaBCID)++;
                     }
 
                     for(auto i = 1u; i < theOccContainer->getObject(cBoard->getId())

@@ -231,7 +231,7 @@ void Physics::fillHisto()
 
 void Physics::fillDataContainer(BeBoard& theBoard)
 {
-    const auto   cBoard    = theOccContainer.getObject(theBoard.getId());
+    const auto cBoard = theOccContainer.getObject(theBoard.getId());
 
     // ###################
     // # Clear container #
@@ -275,7 +275,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
                             ->getObject(cChip->getId())
-                            ->getSummary<std::vector<uint16_t>>().at(deltaBCID)++;
+                            ->getSummary<std::vector<uint16_t>>()
+                            .at(deltaBCID)++;
                 }
 
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
@@ -289,7 +290,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
                             ->getObject(cChip->getId())
-                            ->getSummary<std::vector<uint16_t>>().at(deltaTrgID)++;
+                            ->getSummary<std::vector<uint16_t>>()
+                            .at(deltaTrgID)++;
                 }
             }
 

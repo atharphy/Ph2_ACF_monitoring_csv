@@ -245,7 +245,8 @@ bool LinkAlignmentOT::WordAlignBEdata(const BeBoard* pBoard)
         cAligned = WordAlignBEdata(cOpticalGroup);
         if(!cAligned)
         {
-            LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " --- OpticalGroup will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
+                      << " --- OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
             continue;
         }
@@ -309,7 +310,8 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
 
             if(!cAligned)
             {
-                LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id" << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id"
+                          << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
                 continue;
             }
@@ -327,7 +329,8 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
                 } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
                 if(cThisBeBitSlip[cLineId] == 0)
                 {
-                    LOG(INFO) << BOLDRED << "Bitslip of 0 found for BE-stub data on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id" << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
+                    LOG(INFO) << BOLDRED << "Bitslip of 0 found for BE-stub data on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id" << +cHybrid->getId()
+                              << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
                     ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
                     continue;
                 }
@@ -409,7 +412,8 @@ bool LinkAlignmentOT::PhaseAlignBEdata(const BeBoard* pBoard)
             cAligned = PhaseAlignBEdata(cOpticalGroup);
             if(!cAligned)
             {
-                LOG(INFO) << BOLDRED << "Could not phase align-BE data in LinkAlignmentOT on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " --- OpticalGroup will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "Could not phase align-BE data in LinkAlignmentOT on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
+                          << " --- OpticalGroup will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
                 continue;
             }
@@ -517,7 +521,8 @@ std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8
     cLineStatus.first = cAlignerInterface->IsLinePhaseAligned(cAlignerObjct);
     if(!cLineStatus.first)
     {
-        LOG(INFO) << BOLDRED << "Could not phase align-BE data in LinkAlignmentOT on Board id " << +cBoardId  << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId()  << " line# " << +pLineId << " --- Chip will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Could not phase align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                  << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " line# " << +pLineId << " --- Chip will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableChip(+cBoardId, pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
     }
 
@@ -554,7 +559,8 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
 
     if(!cLineStatus.first)
     {
-        LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId  << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId()  << " line# " << +pLineId << " --- Chip will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                  << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " line# " << +pLineId << " --- Chip will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableChip(+cBoardId, pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
     }
     // check if I allow a bit-slip of 0
@@ -572,7 +578,8 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
         } while(cIter < cMaxAttempts && cLineStatus.second == 0);
         if(cLineStatus.second == 0)
         {
-            LOG(INFO) << BOLDRED << "Bitslip of 0 for word-aligned BE data in LinkAlignmentOT on Board id " << +cBoardId  << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId()  << " line# " << +pLineId << " --- Chip will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Bitslip of 0 for word-aligned BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                      << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " line# " << +pLineId << " --- Chip will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableChip(+cBoardId, pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
         }
     }
@@ -629,7 +636,8 @@ void LinkAlignmentOT::LegacyAlignmentMPA(const Chip* pChip)
             uint32_t tuning_state_cbc0 = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_stat.physical_interface_block.state_tuning_cbc0");
             uint32_t tuning_state_cbc1 = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_stat.physical_interface_block.state_tuning_cbc1");
             LOG(INFO) << "tuning state cbc0: " << tuning_state_cbc0 << ", cbc1: " << tuning_state_cbc1;
-            LOG(INFO) << BOLDRED << "Clock Data Timing tuning failed on Board id " << +cBoardId  << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId()  << " --- Chip will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Clock Data Timing tuning failed on Board id " << +cBoardId << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                      << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableChip(+cBoardId, pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
         }
 
@@ -1262,7 +1270,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
         for(auto& cEvent: cEventsWithStubs)
         {
             auto cHybrid = pOpticalGroup->getFirstObject();
-            auto cBx = (int)cEvent->BxId(cHybrid->getId());
+            auto cBx     = (int)cEvent->BxId(cHybrid->getId());
             if(cBxIds.size() > 0)
             {
                 int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size() - 1] % cMaxBxCounter);
@@ -1273,7 +1281,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
             }
             cBxIds.push_back(cBx);
             LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
-        }     // events
+        } // events
         // figure out the differences between the bxIds
         auto cFirstDifference = cBxDifferences[0];
         std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin());

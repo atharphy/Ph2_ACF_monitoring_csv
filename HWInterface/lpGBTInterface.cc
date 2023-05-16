@@ -52,7 +52,8 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
 
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "LpGBT register writing issue on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "LpGBT register writing issue on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return false;
     }
@@ -839,7 +840,8 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
-        LOG(INFO) << BOLDRED << "LpGBT ADC conversion timed out on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "LpGBT ADC conversion timed out on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return 0;
     }
@@ -933,7 +935,8 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
     {
         // Stop BERT
         lpGBTInterface::StartBERT(pChip, false);
-        LOG(INFO) << BOLDRED << "LpGBT BERT : All zeros at input on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "LpGBT BERT : All zeros at input on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return 0.;
     }
@@ -1010,7 +1013,8 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
         lpGBTInterface::StartBERT(pChip, false); // Stop
-        LOG(INFO) << BOLDRED << "LpGBT BERT : All zeros at input on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "LpGBT BERT : All zeros at input on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return 0.;
     }
@@ -1157,7 +1161,8 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
         // In the test system a run time error is undesired
         return false;
 #else
-        LOG(INFO) << BOLDRED << "LpGBT I2C write transaction FAILED on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "LpGBT I2C write transaction FAILED on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return false;
 #endif
@@ -1198,7 +1203,8 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
         // In the test system a run time error is undesired
         return false;
 #else
-        LOG(INFO) << BOLDRED << "LpGBT I2C read transaction FAILED on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "LpGBT I2C read transaction FAILED on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return false;
 #endif

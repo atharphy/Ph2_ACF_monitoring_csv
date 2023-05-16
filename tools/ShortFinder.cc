@@ -128,9 +128,9 @@ void ShortFinder::Initialise()
     for(auto cBoard: *fDetectorContainer)
     {
         fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-        auto& cRegMapThisBoard                                                 = fRegMapContainer.getObject(cBoard->getId());
-        auto& cShorts                                                          = fShorts.getObject(cBoard->getId());
-        auto& cInjections                                                      = fInjections.getObject(cBoard->getId());
+        auto& cRegMapThisBoard                                                     = fRegMapContainer.getObject(cBoard->getId());
+        auto& cShorts                                                              = fShorts.getObject(cBoard->getId());
+        auto& cInjections                                                          = fInjections.getObject(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cShortsOpticalGroup     = cShorts->getObject(cOpticalGroup->getId());
@@ -309,8 +309,8 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 cNchips += cHybridData->size();
                 for(auto cChipData: *cHybridData) // for on chip - begin
                 {
-                    ReadoutChip* cChip =
-                        static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoardData->getId())->getObject(cOpticalGroupData->getId())->getObject(cHybridData->getId())->getObject(cChipData->getId()));
+                    ReadoutChip* cChip = static_cast<ReadoutChip*>(
+                        fDetectorContainer->getObject(cBoardData->getId())->getObject(cOpticalGroupData->getId())->getObject(cHybridData->getId())->getObject(cChipData->getId()));
                     auto cThreshold                   = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                     cChipData->getSummary<uint16_t>() = cThreshold;
                     cMeanValue += cThreshold;

@@ -38,23 +38,23 @@ class BaseContainer
     BaseContainer(const BaseContainer&) = delete;
     BaseContainer(BaseContainer&& theCopyContainer)
     {
-        id_          = theCopyContainer.id_;
-        isEnabled_   = theCopyContainer.isEnabled_;
+        id_        = theCopyContainer.id_;
+        isEnabled_ = theCopyContainer.isEnabled_;
     }
 
     virtual ~BaseContainer() { ; }
-    uint16_t               getId(void) const { return id_; }
-    virtual void           cleanDataStored(void)            = 0;
+    uint16_t                     getId(void) const { return id_; }
+    virtual void                 cleanDataStored(void)            = 0;
     virtual const BaseContainer* getElement(uint16_t theId) const = 0;
-    bool                   isEnabled() const { return isEnabled_; }
-    void                   setEnabled(bool enable) { isEnabled_ = enable; }
-    virtual void           setEnabledAll(bool enable) = 0;
+    bool                         isEnabled() const { return isEnabled_; }
+    void                         setEnabled(bool enable) { isEnabled_ = enable; }
+    virtual void                 setEnabledAll(bool enable) = 0;
 
   protected:
     uint16_t id_;
 
   private:
-    bool     isEnabled_;
+    bool isEnabled_;
 };
 
 template <class T>
@@ -106,7 +106,7 @@ class Container
         if(this->size() == 0)
         {
             std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: no enabled element present for id " + std::to_string(getId());
-            throw Exception(std::move(errorMessage));   
+            throw Exception(std::move(errorMessage));
         }
         return idObjectMap_.begin()->second;
     }
@@ -116,7 +116,7 @@ class Container
         if(this->size() == 0)
         {
             std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: no enabled element present for id " + std::to_string(getId());
-            throw Exception(std::move(errorMessage));   
+            throw Exception(std::move(errorMessage));
         }
         return idObjectMap_.begin()->second;
     }
@@ -156,8 +156,8 @@ class Container
     std::map<uint16_t, T*> idObjectMap_;
 
   private:
-    T* at(size_t index) {return this->std::vector<T*>::at(index);}
-    T* at(size_t index)const {return this->std::vector<T*>::at(index);}
+    T* at(size_t index) { return this->std::vector<T*>::at(index); }
+    T* at(size_t index) const { return this->std::vector<T*>::at(index); }
 
     friend class boost::serialization::access;
     template <class Archive>
@@ -425,14 +425,13 @@ class HWDescriptionContainer : public Container<T>
     const theHW* getFirstObject() const
     {
         return static_cast<const theHW*>(Container<T>::getFirstObject());
-
     }
 
     uint16_t size() const
     {
         if(!fQueryFunction.fQueryFunction) return std::vector<T*>::size();
         uint16_t theSize = 0;
-        for(__attribute__((unused)) auto object : *this) ++theSize;
+        for(__attribute__((unused)) auto object: *this) ++theSize;
         return theSize;
         // return std::count_if(this->begin(), this->begin(), fQueryFunction.fQueryFunction);
     }
@@ -463,8 +462,8 @@ class HWDescriptionContainer : public Container<T>
     const T&                                             operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
     std::map<std::string, std::function<bool(const T*)>> fQueryFunctionMap;
 
-    T* at(size_t index) {return this->std::vector<T*>::at(index);}
-    T* at(size_t index)const {return this->std::vector<T*>::at(index);}
+    T* at(size_t index) { return this->std::vector<T*>::at(index); }
+    T* at(size_t index) const { return this->std::vector<T*>::at(index); }
 
     void updateQueryFunction()
     {

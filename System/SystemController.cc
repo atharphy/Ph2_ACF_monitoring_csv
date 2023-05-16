@@ -10,6 +10,7 @@
 #include "System/SystemController.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/ExceptionHandler.h"
 #include "HWInterface/LinkInterface.h"
 #include "HWInterface/RD53AInterface.h"
 #include "HWInterface/RD53BInterface.h"
@@ -23,7 +24,6 @@
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
-#include "HWInterface/ExceptionHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -648,7 +648,8 @@ void SystemController::InitializeOT(BeBoard* pBoard)
         bool cSuccess = CicStartUp(cOpticalGroup, true);
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
+            LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
+                      << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
             continue;
         }
@@ -686,7 +687,8 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
                 if(fCicInterface->GetResyncRequest(cCic))
                 {
-                    LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId() << " --- Hybrid will be disabled" << RESET;
+                    LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
+                              << " --- Hybrid will be disabled" << RESET;
                     ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
                     continue;
                 }
@@ -888,13 +890,12 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
 {
     auto cBoardId        = pOpticalGroup->getBeBoardId();
     auto cOpticalGroupId = pOpticalGroup->getId();
-    auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    bool cWith2SFEH  = (*cBoardIter)->getEventType() == EventType::VR2S;
-    auto cSparsified = (*cBoardIter)->getSparsification();
+    auto cBoardIter      = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    bool cWith2SFEH      = (*cBoardIter)->getEventType() == EventType::VR2S;
+    auto cSparsified     = (*cBoardIter)->getSparsification();
 
-    auto exceptionHandleFunction = [cBoardId, cOpticalGroupId, this](uint16_t hybridId, const std::string&& failMode)
-    {
-        LOG(INFO) << BOLDRED << "FAILED to " << failMode <<" for Board id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
+    auto exceptionHandleFunction = [cBoardId, cOpticalGroupId, this](uint16_t hybridId, const std::string&& failMode) {
+        LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(cBoardId, cOpticalGroupId, hybridId);
         static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->EnableFrontEnds(fDetectorContainer->getObject(cBoardId));
     };
@@ -1012,7 +1013,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         }
 
         cSuccess = true; // at least on hybrid is working fine
-    } // all hybrids connected to this OG
+    }                    // all hybrids connected to this OG
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
 }
@@ -1108,7 +1109,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     bool cSuccess = CicStartUp(cOpticalGroup, false);
                     if(!cSuccess)
                     {
-                        LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +cBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
+                        LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +cBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
+                                  << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
                         ExceptionHandler::getInstance()->disableOpticalGroup(cBoard->getId(), cOpticalGroup->getId());
                         continue;
                     }

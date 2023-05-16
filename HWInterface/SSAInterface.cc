@@ -590,7 +590,8 @@ uint8_t SSAInterface::ReadChipId(Chip* pChip)
     }
     else
     {
-        LOG(INFO) << BOLDRED << "Failed to start e-fuse read operation from SSA on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Failed to start e-fuse read operation from SSA on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                  << +pChip->getHybridId() << " Chip id " << +pChip->getId() << " --- Chip will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableChip(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId());
         return 0;
     }

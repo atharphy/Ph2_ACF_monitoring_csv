@@ -377,7 +377,7 @@ void DQMHistogramPedeNoise::process()
                                                              ->getSummary<HistContainer<TH2F>>()
                                                              .fTheHistogram;
 
-                            float    maxY   = (fWithSSA) ? 254.5 : 1023.5;
+                            float maxY = (fWithSSA) ? 254.5 : 1023.5;
                             cChipStripSCurveHist->GetYaxis()->SetRangeUser(-0.5, maxY);
                             TH1D* cTmp = cChipStripSCurveHist->ProjectionY();
                             cChipStripSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0.)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10);
@@ -403,7 +403,7 @@ void DQMHistogramPedeNoise::process()
                                                              ->getSummary<HistContainer<TH2F>>()
                                                              .fTheHistogram;
 
-                            cChipPixelSCurveHist->GetYaxis()->SetRangeUser( -0.5, 254.5);
+                            cChipPixelSCurveHist->GetYaxis()->SetRangeUser(-0.5, 254.5);
                             TH1D* cTmp = cChipPixelSCurveHist->ProjectionY();
                             cChipPixelSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10);
                             // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);

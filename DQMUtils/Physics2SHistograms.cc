@@ -87,8 +87,12 @@ void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                 {
                     if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
 
-                    TH1F* topSensorHistogram =
-                        fTopSensorHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* topSensorHistogram = fTopSensorHistogramContainer.getObject(board->getId())
+                                                   ->getObject(opticalGroup->getId())
+                                                   ->getObject(hybrid->getId())
+                                                   ->getObject(chip->getId())
+                                                   ->getSummary<HistContainer<TH1F>>()
+                                                   .fTheHistogram;
 
                     TH1F* bottomSensorHistogram = fBottomSensorHistogramContainer.getObject(board->getId())
                                                       ->getObject(opticalGroup->getId())
@@ -125,8 +129,12 @@ void Physics2SHistograms::fillStub(const DetectorDataContainer& DataContainer)
                 {
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
-                    TH2F* stubHistogram =
-                        fStubHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* stubHistogram = fStubHistogramContainer.getObject(board->getId())
+                                              ->getObject(opticalGroup->getId())
+                                              ->getObject(hybrid->getId())
+                                              ->getObject(chip->getId())
+                                              ->getSummary<HistContainer<TH2F>>()
+                                              .fTheHistogram;
 
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<float>())
