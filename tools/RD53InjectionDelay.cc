@@ -286,8 +286,7 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
                             ->getObject(cChip->getId())
-                            ->getSummary<GenericDataArray<InjDelaySize>>()
-                            .data[dacList[i]] = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                            ->getSummary<std::vector<float>>().at(dacList[i]) = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
         // ##############################################
         // # Send periodic data to monitor the progress #

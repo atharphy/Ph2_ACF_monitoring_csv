@@ -61,11 +61,11 @@ class CalibBase : public Tool
     }
 
     template <typename T>
-    void fillVectorContainer(DetectorDataContainer& theDataContainer, const size_t nElements, const T value, const int fromBoardIndx = -1)
+    void fillVectorContainer(DetectorDataContainer& theDataContainer, const size_t nElements, const T value, const int fromBoardId = -1)
     {
         for(const auto cBoard: theDataContainer)
         {
-            const auto& theBoard = (fromBoardIndx < 0 ? cBoard : theDataContainer.at(fromBoardIndx));
+            const auto& theBoard = (fromBoardId < 0 ? cBoard : theDataContainer.getObject(fromBoardId));
 
             for(const auto cOpticalGroup: *theBoard)
                 for(const auto cHybrid: *cOpticalGroup)
@@ -75,7 +75,7 @@ class CalibBase : public Tool
                         for(auto i = 0u; i < nElements; i++) cChip->getSummary<std::vector<T>>().push_back(value);
                     }
 
-            if(fromBoardIndx >= 0) break;
+            if(fromBoardId >= 0) break;
         }
     }
 

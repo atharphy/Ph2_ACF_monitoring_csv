@@ -195,6 +195,8 @@ class SystemController
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool cStartUpSequence);
 
+    void initializeExceptionHandler();
+
     /*!
      * \brief Run Bit Error Rate test
      * \param chain2test     : which part of the chain to be tested

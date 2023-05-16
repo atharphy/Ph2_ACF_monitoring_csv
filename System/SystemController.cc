@@ -1032,23 +1032,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         fBeBoardInterface->ConfigureBoard(cBoard);
     }
 
-    // ################
-    // # Adding query #
-    // ################
-    for(const auto cBoard: *fDetectorContainer)
-    {
-        if(cBoard->getBoardType() != BoardType::D19C) continue;
-        std::string      cFunctionName = "opticalGroupSubset";
-        std::vector<int> cLockedIds;
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            if(cOpticalGroup->fIsLocked) cLockedIds.push_back(cOpticalGroup->getId());
-        }
-        auto cSubset = [cLockedIds](const OpticalGroupContainer* cOpticalGroup) { return std::find(cLockedIds.begin(), cLockedIds.end(), cOpticalGroup->getId()) != cLockedIds.end(); };
-
-        cBoard->addQueryFunction(cSubset, cFunctionName);
-    }
-
     for(const auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(0);
@@ -1231,8 +1214,7 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
     theConfigureInfo.extractObjectNames(fNameContainer);
 
-    ExceptionHandler::getInstance()->setDetectorContainer(fDetectorContainer);
-    ExceptionHandler::getInstance()->setFirmwareInterface(fBeBoardInterface->getFirmwareInterface());
+    initializeExceptionHandler();
 
     // ########################################################
     // # Formatted printout on screen of the xml file content #
@@ -1240,6 +1222,12 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     std::cout << fParsedFile.str() << std::endl;
 
     ConfigureHw(false, true);
+}
+
+void SystemController::initializeExceptionHandler()
+{
+    ExceptionHandler::getInstance()->setDetectorContainer(fDetectorContainer);
+    ExceptionHandler::getInstance()->setFirmwareInterface(fBeBoardInterface->getFirmwareInterface());
 }
 
 void SystemController::Start(const StartInfo& theStartInfo)

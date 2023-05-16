@@ -249,7 +249,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        cChip->getSummary<std::vector<double>>().data[i] =
+                        cChip->getSummary<std::vector<double>>().at(i) =
                             BERtest::theBERtestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>();
 
         // ##############################################

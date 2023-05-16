@@ -300,6 +300,7 @@ int main(int argc, char* argv[])
     outp.str("");
     cTool.CreateResultDirectory(cDirectory, true, true);
     cTool.InitResultFile(cResultfile);
+    cTool.initializeExceptionHandler();
     cTool.bookSummaryTree();
 
     LOG(INFO) << BOLDYELLOW << "Monitoring file name " << cTool.GetMonitorFileName() << RESET;

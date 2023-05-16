@@ -271,6 +271,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
+    cTool.initializeExceptionHandler();
 
     if(cmd.foundOption("readTemperatures"))
     {
