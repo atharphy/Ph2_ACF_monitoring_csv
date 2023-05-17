@@ -238,12 +238,15 @@ build:StandAlone_wTC_USB_al9:
 ## IT hybrid
 run:IT:
   extends: .run
+  before_script:
+    - cp settings/CMSIT_CI.xml .
+    - cp settings/RD53Files/CMSIT_RD53B.txt .
   script:
     - source ./setup.sh ci
-    - CMSITminiDAQ -f settings/CMSIT_CI.xml -r
-    - CMSITminiDAQ -f settings/CMSIT_CI.xml -c pixelalive
-    - CMSITminiDAQ -f settings/CMSIT_CI.xml -c threqu
-    - CMSITminiDAQ -f settings/CMSIT_CI.xml -c scurve
+    - CMSITminiDAQ -f CMSIT_CI.xml -r
+    - CMSITminiDAQ -f CMSIT_CI.xml -c pixelalive
+    - CMSITminiDAQ -f CMSIT_CI.xml -c threqu
+    - CMSITminiDAQ -f CMSIT_CI.xml -c scurve
   after_script:
     - cp Results/Run000000_PixelAlive.root .
     - cp Results/Run000001_ThrEqualization.root .
