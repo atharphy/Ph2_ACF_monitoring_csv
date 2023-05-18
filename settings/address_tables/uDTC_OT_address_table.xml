@@ -308,10 +308,12 @@
             </node>
             <node id="cpb_command_fifo"         address="0x004" permission="w" mode="non-incremental" description="command fifo to new cpb"/>
             <node id="cpb_reply_fifo"         address="0x005" permission="r" mode="non-incremental" description="reply fifo to new cpb"/>
-            <node id="cpb_ctrl_reg"         address="0x006"/>
+            <node id="cpb_ctrl_reg"         address="0x006">
                 <node id="command_fifo_reset"         mask="0x00000001" description="reset command fifo of new cpb"/>
                 <node id="reply_fifo_reset"         mask="0x00000002" description="reset reply fifo of new cpb"/>
                 <node id="core_reset"         mask="0x00000004" description="core reset of the new cpb"/>
+                <node id="state_reset"         mask="0x80000000" description="state reset of the new cpb"/>
+            </node>
         </node>
 
         <node id="fast_command_block"           address="0x2000">

@@ -271,6 +271,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
+    cTool.initializeExceptionHandler();
 
     if(cmd.foundOption("readTemperatures"))
     {
@@ -1094,7 +1095,7 @@ int main(int argc, char* argv[])
         //                 cTool.ReadNEvents(cBoard, 42);
         //                 //const std::vector<Event*>& cEvents = cTool.GetEvents();
         //                 //LOG (INFO) << BOLDYELLOW << "Read-back " << +cEvents.size() << " events from the FC7 when 42 were requested" << RESET;
-        //                 //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
+        //                 //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->getObject(fBoardIndex)), fTestChannelGroup);
 
         //             //}
         //         // for( size_t cAttempt = 0 ; cAttempt < 1; cAttempt++ )

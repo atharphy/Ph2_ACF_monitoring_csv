@@ -5,6 +5,7 @@ namespace Ph2_HwInterface
 D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
     : D19cCommandProcessorInterface(pId, pUri, pAddressTable)
 {
+    PrintState();
     LOG(INFO) << BOLDYELLOW << "D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface Constructor" << RESET;
 }
 
@@ -17,6 +18,7 @@ D19clpGBTSlowControlWorkerInterface::~D19clpGBTSlowControlWorkerInterface() {}
 
 void D19clpGBTSlowControlWorkerInterface::Reset()
 {
+    uint32_t                              sleepTimeInUs = 100000;
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     LOG(DEBUG) << BOLDBLUE << "Resetting Command Processor" << RESET;
     // Soft reset the GBT-SC worker
@@ -25,9 +27,43 @@ void D19clpGBTSlowControlWorkerInterface::Reset()
     uint8_t cWorkerId = 0, cFunctionId = 2;
     // reset should be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
+
+    WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 1);
+    usleep(sleepTimeInUs);
+    WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0);
+    usleep(sleepTimeInUs);
+
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 1);
+    usleep(sleepTimeInUs);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 0);
+    usleep(sleepTimeInUs);
+
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 1);
+    usleep(sleepTimeInUs);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 0);
+    usleep(sleepTimeInUs);
+
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
+    usleep(sleepTimeInUs);
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
+    usleep(sleepTimeInUs);
+
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.state_reset", 1);
+    usleep(sleepTimeInUs);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.state_reset", 0);
+    usleep(sleepTimeInUs);
+
+    WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset", 1);
+    usleep(sleepTimeInUs);
+    WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset", 0);
+    usleep(sleepTimeInUs);
+
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 1);
+    usleep(sleepTimeInUs);
+    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0);
+    usleep(sleepTimeInUs);
 }
+
 void D19clpGBTSlowControlWorkerInterface::SelectLink(uint8_t pLinkId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
@@ -126,7 +162,8 @@ void D19clpGBTSlowControlWorkerInterface::PrintState()
 
 bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
 {
-    int cWaitCounter = 1000000;
+    // int cWaitCounter = 150000;
+    int cWaitCounter = 1000;
     while(!IsDone(pFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
@@ -134,8 +171,12 @@ bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
     }
     if(cWaitCounter == 0)
     {
+        LOG(INFO) << BOLDBLUE << "Status before reset:" << RESET;
         PrintState();
         Reset();
+        LOG(INFO) << BOLDBLUE << "Status after reset:" << RESET;
+        PrintState();
+        throw std::runtime_error("D19c lpGBT Slow Control Worker is stuck");
         return false;
     }
     return true;

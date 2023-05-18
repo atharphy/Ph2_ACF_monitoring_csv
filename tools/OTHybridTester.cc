@@ -143,7 +143,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     // {
     //     for(auto cBoard: *fDetectorContainer)
     //     {
-    //         if(cBoard->at(0)->flpGBT == nullptr) continue;
+    //         if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
 
     //         for(auto cOpticalGroup: *cBoard)
     //         {
