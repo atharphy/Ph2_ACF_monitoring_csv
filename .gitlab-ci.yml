@@ -261,7 +261,7 @@ run:IT:
       - coreAnalysisRD53.log
     expire_in: 1 week
 
-## 2S hybrid
+## 2S module
 run:2S:
   extends: .run
   script:
@@ -301,7 +301,7 @@ run:2S:DS:
   extends: .run
   script:
     - source ./setup.sh ci
-    - supervisor -b -f settngs/CMS2S_CI.xml -c calibrationandpedenoise
+    - supervisor -b -f settings/CMS2S_CI.xml -c calibrationandpedenoise
   after_script:
     - cp Results/*/*.root .
   artifacts:
@@ -335,9 +335,9 @@ check:IT:
   needs:
     - run:IT
   script:
-    - python3 pythonUtils/ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
-    - python3 pythonUtils/ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
-    - python3 pythonUtils/ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_SCurves_Chip(0)" -o plots
+    - python3 pythonUtils/ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_15/D_B(0)_O(0)_H(0)_PixelAlive_Chip(15)" -o plots
+    - python3 pythonUtils/ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_15/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(15)" -o plots
+    - python3 pythonUtils/ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_15/D_B(0)_O(0)_H(0)_SCurves_Chip(15)" -o plots
 
 check:2S:
   extends: .check
