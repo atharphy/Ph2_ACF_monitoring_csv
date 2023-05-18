@@ -185,3 +185,12 @@ uint8_t CalibBase::assignGroupType(RD53Shared::INJtype injType) const
 
     return groupType;
 }
+
+void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
+{
+    auto chipSubset = [](const ChipContainer* theChip) { return theChip->isEnabled(); };
+
+    fDetectorContainer->resetReadoutChipQueryFunction();
+    fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryName);
+    fDetectorContainer->setEnabledAll(true);
+}

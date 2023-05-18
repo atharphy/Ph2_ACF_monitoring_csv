@@ -159,6 +159,8 @@
                0b01 enables HitOr for the first (left-most) miniDP connector,
                0b10 enables HitOr for the second miniDP connector, ...
           -->
+          <Register name="tp_fsm_trigger_en"> 1 </Register>
+          <!-- Enable/Disable trigger in Test-FSM -->
         </Register>
 
         <Register name="ext_tlu_reg1">

@@ -38,6 +38,7 @@ class CalibBase : public Tool
                                     size_t                                     nEvents,
                                     const std::string&                         name);
     uint8_t assignGroupType(RD53Shared::INJtype injType) const;
+    void    prepareChipQueryForEnDis(const std::string& queryName);
 
     virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) = 0;
     virtual void   run()                                                                      = 0;
