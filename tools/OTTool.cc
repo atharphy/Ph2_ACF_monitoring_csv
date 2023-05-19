@@ -216,12 +216,13 @@ void OTTool::ConfigurePrintout(PrintConfig pCnfg)
 // set list of board registers to perserve
 void OTTool::SetBrdRegstoPerserve(std::vector<std::string> pListOfRegs)
 {
-    fBrdRegsToPerserve.clear();
-    for(const auto& cRegName: pListOfRegs)
-    {
-        LOG(DEBUG) << BOLDBLUE << "Adding " << cRegName << " to list of Brd Regs to perserve..." << RESET;
-        fBrdRegsToPerserve.push_back(cRegName);
-    }
+    //fBrdRegsToPerserve.clear();
+    fBrdRegsToPerserve = pListOfRegs;
+    // for(const auto& cRegName: pListOfRegs)
+    // {
+    //     LOG(DEBUG) << BOLDBLUE << "Adding " << cRegName << " to list of Brd Regs to perserve..." << RESET;
+    //     fBrdRegsToPerserve.push_back(cRegName);
+    // }
 }
 // set list of Chip registers to perserve
 void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> pListOfRegs)
@@ -240,7 +241,6 @@ void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> 
                 {
                     if(cChip->getFrontEndType() != pType) continue;
 
-                    std::cout << " I should not be here for SSA2 or MPA2 " <<std::endl;
                     auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
                     auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     cRegsToPerserve.clear();
@@ -429,14 +429,14 @@ void OTTool::CatchStop()
 }
 // poll board from data
 // one thread per BeBoard connected to this computer
-void OTTool::ContinousReadout()
+void OTTool::ContinuousReadout()
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << " starting function " << RESET;
     // std::vector<uint32_t> cBrdEvntCntrs(fDetectorContainer->size(), 0);
     // reset all event counters
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG(INFO) << " get firmware interface and reset counter " << RESET;
+        LOG(INFO) << __PRETTY_FUNCTION__ << " get firmware interface and reset counter " << RESET;
         fBeBoardInterface->setBoard(cBoard->getId());
         auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         cInterface->ResetEventCounter();
@@ -448,7 +448,7 @@ void OTTool::ContinousReadout()
     std::thread* cStartThreads = new std::thread[fDetectorContainer->size()];
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG(INFO) << BLUE<< " launch threads for continuous readout Start" << RESET;
+        LOG(INFO) << BLUE << __PRETTY_FUNCTION__ << " launch threads for continuous readout Start" << RESET;
         // launch threads for continuous readout
         cStartThreads[cBoard->getIndex()] = std::thread(&OTTool::StartReadoutTh, this, cBoard->getIndex());
     }
@@ -463,7 +463,7 @@ void OTTool::ContinousReadout()
     std::thread* cCheckDoneThreads = new std::thread[fDetectorContainer->size()];
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG(INFO) << BLUE<< " launch threads for continuous readout Finish" << RESET;
+        LOG(INFO) << BLUE << __PRETTY_FUNCTION__ << " launch threads for continuous readout Finish" << RESET;
         // launch threads for continuous readout
         cCheckDoneThreads[cBoard->getIndex()] = std::thread(&OTTool::CheckFinishedTh, this, cBoard->getIndex());
     }
@@ -473,9 +473,9 @@ void OTTool::ContinousReadout()
     std::thread* cReadoutThreads = new std::thread[fDetectorContainer->size()];
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG(INFO) << BLUE<< " launch threads for continuous readout Continuos" << RESET;
+        LOG(INFO) << BLUE << __PRETTY_FUNCTION__ << " launch threads for continuous readout Continuos" << RESET;
         // launch threads for continuous readout
-        cReadoutThreads[cBoard->getIndex()] = std::thread(&OTTool::ContinousReadoutTh, this, cBoard->getIndex());
+        cReadoutThreads[cBoard->getIndex()] = std::thread(&OTTool::ContinuousReadoutTh, this, cBoard->getIndex());
     }
 
     // start triggers on all boards
@@ -517,9 +517,11 @@ void OTTool::ContinousReadout()
     for(auto cBoard: *fDetectorContainer)
     {
         // launch threads for continuous readout
+        LOG(INFO) << BLUE << __PRETTY_FUNCTION__ << " waiting for thread to be done" << RESET;
         cReadoutThreads[cBoard->getIndex()].join();   // pauses until first finishes
         cCheckDoneThreads[cBoard->getIndex()].join(); // pauses until first finishes
-    }
+        LOG(INFO) << BLUE << __PRETTY_FUNCTION__ << " done waiting for thread to be done" << RESET;
+   }
 
     // now decode data sequentially
     // was having trouble doing this in the separate thread
@@ -540,19 +542,19 @@ void OTTool::StartReadoutTh(uint8_t cBrdId)
     auto cReadoutInterface = cInterface->getL1ReadoutInterface();
     cReadoutInterface->ResetReadout();
     cTriggerInterface->Start();
-    LOG(INFO) << BOLDMAGENTA << "Started triggers on BeBoard#" << +cBrdId << RESET;
+    LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << " Started triggers on BeBoard#" << +cBrdId << RESET;
 }
 // continuous readout
 // this will continue to read data until the stop triggers command
 // has been reached
-void OTTool::ContinousReadout(BeBoard* pBoard)
+void OTTool::ContinuousReadout(BeBoard* pBoard)
 {
     // get D19cFW Interface
     fBeBoardInterface->setBoard(pBoard->getId());
     auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     auto cTriggerInterface = cInterface->getTriggerInterface();
 
-    LOG(INFO) << BOLDBLUE << fMyName << "::ContinousReadout ... until I've received " << fNevents << " events in the readout" << RESET;
+    LOG(INFO) << BOLDBLUE << fMyName << "::ContinuousReadout ... until I've received " << fNevents << " events in the readout" << RESET;
     std::vector<uint32_t> cCompleteData(0);
     // stop triggers
     cTriggerInterface->Start();
@@ -604,18 +606,23 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
-        if(cWaitCounter % 10 == 0) LOG(INFO) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
+        if(cWaitCounter % 10 == 0)
+        {
+             LOG(INFO) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
+        }
         cWaitCounter++;
-        LOG(INFO) << " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState() << " cWaitCounter " << cWaitCounter << " cMaxWait " << cMaxWait << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState() << " cWaitCounter " << cWaitCounter << " cMaxWait " << cMaxWait << RESET;
     } while(cTriggerInterface->GetTriggerState() != 1 && cWaitCounter < cMaxWait);
 
     auto cCounter = cInterface->GetEventCounter();
-    LOG(INFO) << " cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
+    LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
     do
     {
-        // std::cout << " while loop cCounter " << cCounter << " fNevents " << fNevents << std::endl;
+        //LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << "while loop  cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
         if(cCounter >= fNevents || cTriggerInterface->GetTriggerState() == 0)
-        { LOG(INFO) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard" << +cBrdId << RESET; }
+        { 
+            LOG(INFO) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard" << +cBrdId << RESET; 
+        }
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
         cCounter = cInterface->GetEventCounter();
     } while(cCounter < fNevents);
@@ -625,7 +632,7 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
 }
 // poll board from data
 // one thread per BeBoard connected to this computer
-void OTTool::ContinousReadoutTh(uint8_t cBrdId)
+void OTTool::ContinuousReadoutTh(uint8_t cBrdId)
 {
     fReadoutData[cBrdId].clear();
     LOG(DEBUG) << BOLDBLUE << fMyName << ":Starting continuous readout thread for BeBoard#" << +cBrdId << RESET;
@@ -847,7 +854,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, int pChipId)
 {
     bool cInjectAll = false;
-    LOG(DEBUG) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET;
     // inject pixel clusters
     bool cLastFive = true;
     for(auto cOpticalReadout: *pBoard)
@@ -857,13 +864,22 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
             for(auto cChip: *cHybrid)
             {
                 // fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode",0x0);
-                if(cChip->getId() % 8 != pChipId && pChipId > 0) continue;
-                LOG(DEBUG) << BOLDMAGENTA << "Injecting patterns in Chip#" << +cChip->getId() << RESET;
+                if(cChip->getId() % 8 != pChipId && pChipId > 0)
+                {
+                    std::stringstream cOutput;
+                    cChip->printChipType(cOutput);
+                    std::cout << __LINE__ << " skipping chip type " << cOutput.str() << std::endl;
+                    exit(0);
+                    continue;
+                }
+                LOG(INFO) << BOLDMAGENTA << "Injecting patterns in Chip#" << +cChip->getId() << RESET;
                 // make sure L1 latency is configured
                 if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
+                    std::cout << __PRETTY_FUNCTION__ << " fInjectionType " << +fInjectionType << std::endl;
                     if(fInjectionType == 0)
                     {
+                        std::cout << " digi injection !" << std::endl;
                         // for digi injection .. explicity disable all other pixels
                         fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                         (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, pInjections, 0x01);
@@ -871,6 +887,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                     else
                     {
                         int inj = 0;
+                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);//disable all pixels :)
                         for(auto cInjection: pInjections)
                         {
                             if(pInjections.size() - inj > 5 and cLastFive) continue;
@@ -879,21 +896,26 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                             LOG(INFO) << BOLDBLUE << " Injecting in pixel " << +cPxl << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET;
                             std::stringstream cRegName;
                             cRegName << "ENFLAGS_P" << +cPxl;
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x5F, false);
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x4F, false);
                             inj += 1;
                         }
-                        if(cInjectAll) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x5F);
+                        if(cInjectAll)
+                        {
+                            fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x5F);
+                        }
                     }
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
+                    std::cout << __LINE__ << " " << __PRETTY_FUNCTION__ << " CalPulse_duration ? " << std::endl;
                     // for digi injection .. explicity disable all other strips
+                    std::cout << " pInjections.size() " << pInjections.size() << " fInjectionType " << +fInjectionType << std::endl;
                     if(pInjections.size() > 0 && fInjectionType == 0)
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x00);
-                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x00);
-                        fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0); // Disable all strip (StripControl1 in SSA2 manual)
+                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x00); // Set injection pattern
+                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x00); // Set injection pattern
+                        fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01); // CalPulse_duration or CalPulse_lenght is Duration of the Calibration pulse distributed to the Strip channels, in multiples of 25ns. Corresponds to bits 7:4 of control_2.
                     }
                     for(auto cInjection: pInjections)
                     {
@@ -901,7 +923,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                         {
                             std::stringstream cRegNameEn;
                             cRegNameEn << "ENFLAGS_S" << +cInjection.fRow;
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), 0x8);
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), 0x9);//ENABLE DIGITAL CALIBRATION
                             std::stringstream cRegNamePattern;
                             cRegNamePattern << "DigCalibPattern_L_S" << +cInjection.fRow;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegNamePattern.str(), 0x01);
@@ -927,11 +949,17 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
 void OTTool::UpdateFromRegMap(BeBoard* pBoard)
 {
     // important registers for beBoard
-    std::vector<std::string> cBoardRegs{
-        "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", "fc7_daq_cnfg.fast_command_block.trigger_source"};
-    cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.trigger_id_delay");
-    cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.tlu_enabled");
-    cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.handshake_mode");
+    std::vector<std::string> cBoardRegs
+    {
+        "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity",//0
+        "fc7_daq_cnfg.readout_block.global.common_stubdata_delay",
+        "fc7_daq_cnfg.fast_command_block.trigger_source",//6
+    
+        "fc7_daq_cnfg.tlu_block.trigger_id_delay",//42
+        "fc7_daq_cnfg.tlu_block.tlu_enabled",//0
+        "fc7_daq_cnfg.tlu_block.handshake_mode"//2
+    };
+
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
     for(auto cReg: cBoardRegs)
     {
@@ -946,12 +974,22 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-                uint32_t cThreshold = 0;
-                if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
-                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) cThreshold = cChip->getReg("Bias_THDAC");
-                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) cThreshold = cChip->getReg("ThDAC0");
-                LOG(INFO) << BOLDMAGENTA << "Setting threshold on Chip#" << +cChip->getId() << " to 0x" << std::hex << +cThreshold << std::dec << RESET;
-                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+                if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                {
+                     uint32_t cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
+                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+                }
+                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) 
+                {
+                    fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cChip->getReg("Bias_THDAC"));
+                    fReadoutChipInterface->WriteChipReg(cChip, "ThresholdHigh", cChip->getReg("Bias_THDACHIGH"));
+                }                    
+                else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cChip->getReg("ThDAC0"));
+                }
+                LOG(INFO) << BOLDMAGENTA << "Threshold setting on Chip#" << +cChip->getId() << " to 0x" << std::hex << fReadoutChipInterface->ReadChipReg(cChip, "Threshold") << std::dec << RESET;
+                
             }
         }
     }
@@ -998,7 +1036,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    auto cMode = 0;
+                    auto cMode = cChip->getReg("control_1") & 0x07;
                     fReadoutChipInterface->WriteChipReg(cChip, "SAMPLINGMODE_ALL", cMode);
                     LOG(INFO) << BOLDMAGENTA << "Setting HitLogicMode register on Chip#" << +cChip->getId() << " to " << cMode << RESET;
                 }
@@ -1013,7 +1051,10 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             for(auto cChip: *cHybrid)
             {
                 std::string cRegName = "";
-                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) { cRegName = "CalDAC0"; }
+                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) 
+                { 
+                    cRegName = "CalDAC0"; 
+                }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     cRegName = "Bias_CALDAC";
@@ -1023,9 +1064,17 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                     cRegName = "MiscTestPulseCtrl&AnalogMux";
                 }
                 uint8_t cInjectedCharge = cChip->getReg(cRegName);
-                if(cChip->getFrontEndType() == FrontEndType::CBC3) cInjectedCharge = (cInjectedCharge >> 6) & 0x3F;
+                if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                {
+                    cInjectedCharge = (cInjectedCharge >> 6) & 0x3F;
+                }
+
                 fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", cInjectedCharge);
-                LOG(INFO) << BOLDMAGENTA << "Setting Charge injection register on Chip#" << +cChip->getId() << " to " << +cInjectedCharge << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Setting Charge injection register on Chip#" 
+                          << +cChip->getId() << " to " 
+                          << +cInjectedCharge
+//                          << " from the chip: " << fReadoutChipInterface->ReadChipReg(cChip, "InjectedCharge")
+                          << RESET;
             }
         }
     }
@@ -1040,7 +1089,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 if(cChip->getFrontEndType() == FrontEndType::MPA) { cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); }
                 else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    cLatency = 118;
+                    cLatency = 295; //118;
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
@@ -1048,11 +1097,12 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    cLatency = 120;
-                    // cLatency = (cChip->getReg("control_1") & (1 << 4)) | cChip->getReg("control_3");
-                    // std::cout << " ssa2 control_1 " << (cChip->getReg("control_1")& (1 << 4))  << std::endl;
+                    // cLatency = 297; //120;
+                    cLatency = ((cChip->getReg("control_1") & (1 << 4)) >>4) <<8 | cChip->getReg("control_3");
+                    // std::cout << " ssa2 control_1 " << cChip->getReg("control_1")  << std::endl;
+                    // std::cout << " ssa2 control_1 4th bit ?" << (cChip->getReg("control_1")& (1 << 4) >>4)  << std::endl;
                     // std::cout << " ssa2 control_3 " << cChip->getReg("control_3") << std::endl;
-                    std::cout << " ssa2 cLatency " << cLatency <<std::endl;
+                    std::cout << " ssa2 cLatency " << cLatency << " " << std::hex << cLatency <<std::dec << std::endl;
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
@@ -1062,6 +1112,8 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 }
                 LOG(INFO) << BOLDYELLOW << "Setting latency on Chip#" << +cChip->getId() << " to " << cLatency << RESET;
                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
+                LOG(INFO) << BOLDYELLOW << "Set latency on Chip#" << +cChip->getId() << " to " << fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency") << RESET;
+               
             }
         }
     }
@@ -1138,7 +1190,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 std::string cRegName = "";
                 if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0F, false);
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0F, false); // Pixel Enable register - table 8 MPA2 manual
                     LOG(INFO) << BOLDMAGENTA << "Setting ENFLAGS_ALL on Chip#" << +cChip->getId() << " to enable both modes.." << RESET;
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
@@ -1146,8 +1198,8 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                     for(size_t cIndx = 0; cIndx < NSSACHANNELS; cIndx++)
                     {
                         std::stringstream cRegName;
-                        cRegName << "ENFLAGS_S" << +(cIndx + 1);
-                        fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x1, false);
+                        cRegName << "ENFLAGS_S" << +(cIndx + 1); // StripControl1 in SSA2 manual 
+                        fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x1, false); // THIS ENABLES!
                     }
                 }
             }
