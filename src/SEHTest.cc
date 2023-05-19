@@ -172,8 +172,8 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("USBBus", "USB device bus number", ArgvParser::OptionRequiresValue);
     cmd.defineOption("USBDev", "USB device device number", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("linkId", "Optical link Id", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("fmcId", "Optical fmc Id", ArgvParser::OptionRequiresValue);
+    // cmd.defineOption("linkId", "Optical link Id", ArgvParser::OptionRequiresValue);
+    // cmd.defineOption("fmcId", "Optical fmc Id", ArgvParser::OptionRequiresValue);
     cmd.defineOption("useGui",
                      "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
                      ArgvParser::NoOptionAttribute);
@@ -212,8 +212,8 @@ int main(int argc, char* argv[])
     uint8_t  cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
     bool     cGui    = (cmd.foundOption("useGui"));
 
-    uint8_t            linkId = (cmd.foundOption("linkId")) ? (uint32_t)(std::stoi(cmd.optionValue("linkId"))) : 0;
-    std::string        fmcId  = (cmd.foundOption("fmcId")) ? cmd.optionValue("fmcId") : "L12";
+    // uint8_t            linkId = (cmd.foundOption("linkId")) ? (uint32_t)(std::stoi(cmd.optionValue("linkId"))) : 0;
+    // std::string        fmcId  = (cmd.foundOption("fmcId")) ? cmd.optionValue("fmcId") : "L12";
     pugi::xml_document doc;
     if(!doc.load_file(cHWFile.c_str())) return -1;
     pugi::xml_node cDescription = doc.child("HwDescription");
@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
     {
         for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
         {
-            if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
+            /* if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
             {
                 if(static_cast<std::string>(ps.name()) == "OpticalGroup")
                 {
@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
                     attr = ps.attribute("FMCId");
                     attr.set_value(fmcId.c_str());
                 }
-            }
+            } */
             std::string stringID(ps.attribute("ID").value());
             std::string stringType(ps.attribute("Type").value());
             if(stringType == "LV")
@@ -305,7 +305,17 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDYELLOW << "Monitoring file name " << cTool.GetMonitorFileName() << RESET;
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
     // Initialize SEH tester
+    if(cGui)
+    {
+        gui::message("");
+        gui::status("Establishing optical link");
+        gui::progress(0 / 10.0);
 
+        gui::data("ResultsDirectory", cTool.getDirectoryName().c_str());
+        // gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
+        LOG(DEBUG) << BOLDBLUE << cTool.getDirectoryName().c_str() << RESET;
+        LOG(DEBUG) << BOLDBLUE << cTool.GetMonitorFileName().c_str() << RESET;
+    }
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
     // Choose USB interface by Dev and Bus, actually (only) works because of (evil) global variables in the tcusb
@@ -314,17 +324,7 @@ int main(int argc, char* argv[])
     cSEHTester.InitialiseTestCard(true);
     cSEHTester.RunHybridETest();
     cTool.fillSummaryTree("setup_type", (cGui) ? 1 : 0);
-    if(cGui)
-    {
-        gui::message("");
-        gui::status("Establishing optical link");
-        gui::progress(0 / 10.0);
 
-        gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
-        // gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
-        LOG(DEBUG) << BOLDBLUE << cSEHTester.getDirectoryName().c_str() << RESET;
-        LOG(DEBUG) << BOLDBLUE << cTool.GetMonitorFileName().c_str() << RESET;
-    }
     if(cmd.foundOption("measure-input-iv"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control and perform I-V scan" << RESET;
@@ -332,12 +332,14 @@ int main(int argc, char* argv[])
         if(!cSEHTester.CheckShort(cLVPowerSupplyId, cLVChannelId))
         {
             LOG(INFO) << BOLDBLUE << "Stop test due to possible short" << RESET;
+            cTool.fillSummaryTree("has_short", 1);
             cTool.SaveResults();
             cTool.WriteRootFile();
             cTool.CloseResultFile();
             cTool.Destroy();
             abort();
         }
+        cTool.fillSummaryTree("has_short", 0);
         cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
         cSEHTester.TurnOn(cRightLoad, cLeftLoad, true);
     }
@@ -409,8 +411,14 @@ int main(int argc, char* argv[])
     {
         cTool.ConfigureHw();
     }
-    catch(...)
+    catch(std::exception const& e)
     {
+        std::stringstream cExitMessage;
+        cExitMessage << "Exception Message : " << e.what();
+        cTool.fillSummaryTree(cExitMessage.str(), 1);
+        if(cGui) gui::data("Exception", e.what());
+        LOG(ERROR) << BOLDRED << "Exception: " << cExitMessage.str() << RESET;
+        LOG(INFO) << BOLDYELLOW << "Will save test results obtained so far and.. stop test procedure" << RESET;
         if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-leak-parallel"))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
@@ -647,6 +655,7 @@ int main(int argc, char* argv[])
 
             for(int i = 0; i < cFcmdTries; i++)
             {
+                // Check first with idle frame, then with specific patterns
                 if(!cSEHTester.LpGBTFastCommandChecker(7)) cFmcdCounter += 1;
             }
             LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +cFmcdCounter << " times" << RESET;
