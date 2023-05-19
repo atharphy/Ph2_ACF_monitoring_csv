@@ -550,7 +550,7 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool s
     {
         fTC_2SSEH->set_load2(true, false, pLeftLoadValue);
         fTC_2SSEH->set_load1(true, false, pRightLoadValue);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
         fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_R, I_P1V2_R);
         fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_L, I_P1V2_L);
         fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);
