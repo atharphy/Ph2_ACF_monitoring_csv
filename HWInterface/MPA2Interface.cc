@@ -178,7 +178,7 @@ void MPA2Interface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pIn
         uint32_t           cPixelIds = (uint32_t)(pInjection.fColumn) * NSSACHANNELS + (uint32_t)pInjection.fRow;
         std::ostringstream cRegName;
         cRegName << "DigitalSyncP" << std::to_string(cPixelIds);
-        LOG(DEBUG) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
         this->WriteChipReg(pChip, cRegName.str(), pPattern);
     } // injections
     LOG(INFO) << BOLDMAGENTA << "DigitalSync DONE" << RESET;

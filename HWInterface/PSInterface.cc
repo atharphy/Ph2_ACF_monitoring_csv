@@ -141,10 +141,12 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections, pPattern); }
     else if(pChip->getFrontEndType() == FrontEndType::MPA2)
     {
+        std::cout << " MPA2 digi injection " << std::endl;
         theMPA2Interface->digiInjection(pChip, pInjections, pPattern);
     }
     else if(pChip->getFrontEndType() == FrontEndType::SSA2 or pChip->getFrontEndType() == FrontEndType::SSA)
     {
+        std::cout << " SSA2 digi injection should throw an error " << std::endl;
         LOG(ERROR) << "No digiInjection for SSA for some reason";
     }
 }

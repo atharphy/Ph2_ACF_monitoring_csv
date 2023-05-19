@@ -122,9 +122,9 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("file", "f");
 
     cmd.defineOption("tuneOffsets", "tune offsets on readout chips connected to CIC.");
-    cmd.defineOptionAlternative("tuneOffsets", "t");
+    cmd.defineOptionAlternative("tuneOffsets", "t"); //trimming
     cmd.defineOption("linkTest", "Check data coming over link....", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
+    cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC."); //Scurve 
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
     cmd.defineOption("cmNoise", "measure common mode noise");
@@ -1046,7 +1046,7 @@ int main(int argc, char* argv[])
         }
     }
     // measure noise on FE chips
-    if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))
+    if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read")) // S-curves
     {
         // auto cSetting       = cTool.fSettingsMap.find("PedeNoisePulseAmplitude");
         // int  cInjectionAmpl = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 255;

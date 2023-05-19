@@ -57,7 +57,7 @@ uint32_t D19cPSCounterFWInterface::Compose_Id(const BeBoard* pBoard, const Optic
     return cId;
 }
 
-// method to read counter from regiseter
+// method to read counter from register
 void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
 {
     for(auto cOpticalGroup: *pBoard)
@@ -117,7 +117,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
                     cRegItems.push_back(cReg_Counters_LSB);
                 }
                 if(!fFEConfigurationInterface->MultiRead(cChip, cRegItems)) continue;
-                LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << "#" << +cId << RESET;
+                LOG(INFO) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << "#" << +cId << RESET;
                 // fill counter information
                 for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter += 2)
                 {
@@ -300,11 +300,13 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
 
 void D19cPSCounterFWInterface::GetCounterData(const BeBoard* pBoard)
 {
-    LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;
     auto cFrontEndTypes = pBoard->connectedFrontEndTypes();
-    LOG(DEBUG) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
+    LOG(INFO) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
     if(fPSCounterFast == 0) // readout over registers
-    { SlowRead(pBoard); }
+    { 
+        SlowRead(pBoard); 
+    }
     else // readout over fast interface
     {
     }
@@ -354,15 +356,18 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
 
     // // wait for trigger state machine to send all triggers
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
-    LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
 
     if(cTriggerSource == 10 || cTriggerSource == 12)
     {
-        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
+        LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
         return fTriggerInterface->RunTriggerFSM();
     }
     else
+    {
+        LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData  USING WRONG TRIGGER SOURCE FOR THIS TEST... "<< cTriggerSource << RESET;
         return false; // wrong trigger source for this type of readout
+    }
 }
 bool D19cPSCounterFWInterface::WaitForReadout()
 {
@@ -381,6 +386,7 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
     // make sure trigger mult is taken into account
     auto cMultiplicity = ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     fNEvents           = fNEvents * (cMultiplicity + 1);
+    std::cout << __LINE__ << "] " << __PRETTY_FUNCTION__ << "fNEvents: " << fNEvents<< " Multiplicity: " << cMultiplicity << std::endl;
 
     fTriggerInterface->SetNTriggersToAccept(fNEvents);
 

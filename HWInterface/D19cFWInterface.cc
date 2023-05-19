@@ -1036,7 +1036,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 {
     pData.clear();
     uint32_t cNEvents = 0;
-    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if(fL1ReadoutInterface == nullptr)
     {
         LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
@@ -1045,8 +1045,11 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 
     if(fL1ReadoutInterface->PollReadoutData(pBoard, pWait))
     {
+        LOG(INFO) << " calling fL1ReadoutInterface->getData() " << RESET;
         pData    = fL1ReadoutInterface->getData();
+        LOG(INFO) << " calling fL1ReadoutInterface->getNReadoutEvents() " << RESET;
         cNEvents = fL1ReadoutInterface->getNReadoutEvents();
+        LOG(INFO) << " cNEvents "<< cNEvents << RESET;
     }
     else
     {
@@ -1068,7 +1071,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
     pData.clear();
-    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if(fL1ReadoutInterface == nullptr) LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
 
     auto cTriggerRate = ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
@@ -1483,6 +1486,12 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
 
 bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool pVerify)
 {
+
+    // std::stringstream cOutput;
+    // // LOG(INFO) << __PRETTY_FUNCTION__ << " chip loop " << +pChip->getId() <<  " chip type " <<  RESET;
+    // pChip->printChipType(cOutput); 
+    // LOG(INFO) << BOLDBLUE << cOutput.str() << RESET;
+
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
     if(pVerify && pItem.fControlReg == 0) return SingleRegisterWriteRead(pChip, pItem);
 
@@ -1500,7 +1509,7 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
             pItem = pChip->getRegItem(cIterator->first);
         }
         else
-            LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILEd to write to Register " << cIterator->first << RESET;
+            LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILED to write to Register " << cIterator->first << RESET;
         return true;
     }
     else

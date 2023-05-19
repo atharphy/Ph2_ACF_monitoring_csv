@@ -1218,14 +1218,17 @@ void Tool::setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTP
 void Tool::enableTestPulse(bool enableTP)
 {
     fTestPulse = enableTP;
-    if(enableTP) setFWTestPulse();
+    if(enableTP) setFWTestPulse();//Setting 12 in fc7 trigger source for Async
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip: *cHybrid) { fReadoutChipInterface->enableInjection(cChip, enableTP); }
+                for(auto cChip: *cHybrid) 
+                { 
+                    fReadoutChipInterface->enableInjection(cChip, enableTP); 
+                }
             }
         }
     }
@@ -2191,7 +2194,10 @@ void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string& d
 // Measure occupancy
 void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
-    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) 
+    {
+        measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    }
 }
 
 class ScanBase
@@ -2245,11 +2251,17 @@ class ScanBase
 
 void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* groupScan)
 {
+    std::cout << __PRETTY_FUNCTION__<< std::endl;
     groupScan->setBoardId(boardIndex);
+    std::cout << __LINE__<< std::endl;
     groupScan->setNumberOfEvents(numberOfEvents);
+    std::cout << __LINE__<< std::endl;
     groupScan->setDetectorContainer(fDetectorContainer);
+    std::cout << __LINE__<< std::endl;
     groupScan->setNumberOfEventsPerBurst(numberOfEventsPerBurst);
+    std::cout << __LINE__<< std::endl;
     groupScan->setGroupHandlerContainer(getChannelGroupHandlerContainer(), fSameChannelGroupForAllChannels);
+    std::cout << __LINE__<< std::endl;
     if(!fAllChan)
     {
         uint16_t maxNumberOfGroups = getMaxNumberOfGroups();
@@ -2303,9 +2315,13 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     }
     else
     {
+        std::cout << __LINE__<< std::endl;
         groupScan->setGroup(-1);
+        std::cout << __LINE__<< std::endl;
         (*groupScan)();
+        std::cout << __LINE__<< std::endl;
     }
+    std::cout << "end " << std::endl;
 }
 
 class MeasureBeBoardDataPerGroup : public ScanBase
@@ -2340,7 +2356,10 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
             // LOG (INFO) << BOLDYELLOW << "Tool::ReadNEvents : number of events requested is " << +currentNumberOfEvents << RESET;
             if(fTool->ifUseReadNEvents())
+            {
+                std::cout << __LINE__ << __PRETTY_FUNCTION__ << " am I here?? " << std::endl;
                 fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
+            }
             else
             {
                 LOG(INFO) << BOLDYELLOW << "Will use measureBeBoardData with ReadData " << RESET;
@@ -2398,8 +2417,9 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     bool cUseReadNEvents = fUseReadNEvents;
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
     {
-        this->setSameGlobalDac("AnalogueAsync", 1);
-        //#FIXME the commented block bellow throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
+        std::cout << __LINE__ << "setSameGlobalDac" << std::endl;
+        this->setSameGlobalDac("AnalogueAsync", 1);//LORENZO This seems unnecessary since it is set already in the Initialise method but only for the readout chips no?
+        //#FIXME the commented block below throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
         // Error: implementation of virtual member function is absent"
         /*
                 for(auto cBoard: *fDetectorContainer)
@@ -2415,7 +2435,9 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
         */
         fUseReadNEvents = true;
     }
+    std::cout << __LINE__ << "doScanOnAllGroupsBeBoard" << std::endl;
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
+    std::cout << __LINE__ << "dDONE oScanOnAllGroupsBeBoard" << std::endl;
 
     // If in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
@@ -2427,7 +2449,11 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     // }
 
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
-    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
+    { 
+        std::cout << "READING EVENTS" << std::endl;
+        numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); 
+        std::cout << "DONE READING EVENTS" << std::endl;
+    }
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;
 
     if(fNormalize)
@@ -2546,14 +2572,29 @@ void Tool::setSameGlobalDac(const std::string& dacName, const uint16_t dacValue)
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
     if(fDoBoardBroadcast == false)
+    {
+        std::cout << __LINE__ << " fDoBoardBroadcast == false " << std::endl;
         for(auto cOpticalGroup: *pBoard)
             for(auto cHybrid: *cOpticalGroup)
                 if(fDoHybridBroadcast == false)
-                    for(auto cChip: *cHybrid) fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        std::cout << " chip write: " << dacName << " : " << dacValue << std::endl;
+                        fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
+                    }
+                }
                 else
+                {
+                    std::cout << " hybrid broadcast ?" << std::endl;
                     fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
+                }
+    }
     else
+    {
+        std::cout << __LINE__ << " fDoBoardBroadcast == true " << std::endl;
         fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
+    }
 }
 
 // Set same local dac for all BeBoard

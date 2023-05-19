@@ -135,7 +135,7 @@ void D19cTriggerInterface::Resume()
 
 bool D19cTriggerInterface::Start()
 {
-    LOG(DEBUG) << BOLDYELLOW << "................................Starting triggers  ... " << RESET;
+    LOG(INFO) << BOLDYELLOW << "................................Starting triggers  ... " << RESET;
     auto cTriggerState = GetTriggerState();
     LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET;
     // this stops triggers  + resets
