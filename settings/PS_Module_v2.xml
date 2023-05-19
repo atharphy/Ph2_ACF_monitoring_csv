@@ -21,12 +21,16 @@
                 <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <Latencies       stripLatency="296" pixelLatency="999999"/>
+                <Thresholds      stripThreshold="40" stripThresholdHigh="100" pixelThreshold="40"/> 
+                <HitLogic        stripMode="0" pixelMode="0"/>
+                <InjectedCharge  stripCharge="250" pixelCharge="250"/> 
                 <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
             </Global>
             
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-             <SSA2 Id="0" configfile="SSA2.txt" />
+            <SSA2 Id="0" configfile="SSA2.txt" />
             <SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
             <SSA2 Id="4" configfile="SSA2.txt" />
@@ -57,6 +61,10 @@
                 <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <Latencies       stripLatency="294" pixelLatency="297"/>
+                <Thresholds      stripThreshold="40" stripThresholdHigh="100" pixelThreshold="40"/>
+                <HitLogic        stripMode="0" pixelMode="0"/> 
+                <InjectedCharge  stripCharge="50000" pixelCharge="0"/> 
                 <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
             </Global>
             
@@ -85,7 +93,6 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-
     </OpticalGroup>
 
     
@@ -95,28 +102,28 @@
     <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
     <Register name="clock_source_u8">3</Register>
     <Register name="fc7_daq_cnfg">
-	<Register name="optical_block">
-		<Register name="lpgbt_sc_worker">
-                        <Register name="ic_retry"> 1 </Register>
-                        <Register name="i2c_retry"> 1 </Register>
-                        <Register name="fe_retry"> 1 </Register>
-                        <Register name="max_ic_retry"> 10 </Register>
-                        <Register name="max_i2c_retry"> 10 </Register>
-                        <Register name="max_fe_retry"> 10 </Register>
-		</Register>
+        <Register name="optical_block">
+            <Register name="lpgbt_sc_worker">
+                <Register name="ic_retry"> 1 </Register>
+                <Register name="i2c_retry"> 1 </Register>
+                <Register name="fe_retry"> 1 </Register>
+                <Register name="max_ic_retry"> 10 </Register>
+                <Register name="max_i2c_retry"> 10 </Register>
+                <Register name="max_fe_retry"> 10 </Register>
+            </Register>
         </Register>
-    <Register name="sync_block">
-        <Register name="enable"          >0</Register>
-        <Register name="is_bc0_enable"   >0</Register>
-        <Register name="is_resync_enable">1</Register>
-        <Register name="delay">10000</Register>
-        <Register name="num_triggers"    >99</Register>
-    </Register>
-      
-    <!-- Clock control -->
-    <Register name="clock">
-        <Register name="ext_clk_en"> 0 </Register>
-    </Register>
+        <Register name="sync_block">
+            <Register name="enable"          >0</Register>
+            <Register name="is_bc0_enable"   >0</Register>
+            <Register name="is_resync_enable">1</Register>
+            <Register name="delay">10000</Register>
+            <Register name="num_triggers"    >99</Register>
+        </Register>
+        
+        <!-- Clock control -->
+        <Register name="clock">
+            <Register name="ext_clk_en"> 0 </Register>
+        </Register>
         <!-- TTC -->
         <Register name="ttc">
             <Register name="ttc_enable"> 0 </Register>
@@ -131,9 +138,9 @@
             <Register name="stub_trigger_delay_value"> 0 </Register>
             <Register name="stub_trigger_veto_length"> 0 </Register>
             <Register name="test_pulse">
-                <Register name="delay_after_fast_reset"> 100 </Register>
+                <Register name="delay_after_fast_reset"> 300 </Register>
                 <Register name="delay_after_test_pulse"> 300 </Register>
-                <Register name="delay_before_next_pulse"> 200 </Register>
+                <Register name="delay_before_next_pulse"> 5000 </Register>
                 <Register name="en_fast_reset"> 0 </Register>
                 <Register name="en_test_pulse"> 1 </Register>
                 <Register name="en_l1a"> 1 </Register>
@@ -156,74 +163,73 @@
             <Register name="antenna_trigger_delay_value"> 1 </Register>
             <Register name="delay_between_two_consecutive"> 25 </Register>
             <Register name="misc">
-                    <Register name="backpressure_enable"> 0 </Register>
-                    <Register name="stubOR"> 1 </Register>
-                    <Register name="initial_fast_reset_enable"> 0 </Register>
-                    <Register name="trigger_timeout_enable"> 0 </Register>
-                   <Register name="trigger_multiplicity"> 0 </Register>
+                <Register name="backpressure_enable"> 0 </Register>
+                <Register name="stubOR"> 1 </Register>
+                <Register name="initial_fast_reset_enable"> 0 </Register>
+                <Register name="trigger_timeout_enable"> 0 </Register>
+                <Register name="trigger_multiplicity"> 0 </Register>
             </Register>
         </Register>
-    <!-- I2C manager -->
-        <Register name="command_processor_block">
-    </Register>
-    <!-- Phy Block -->
-    <Register name="physical_interface_block">
-        <Register name="cic">
-            <Register name = "clock_enable"> 1 </Register>
+        <!-- I2C manager -->
+        <Register name="command_processor_block"></Register>
+        <!-- Phy Block -->
+        <Register name="physical_interface_block">
+            <Register name="cic">
+                <Register name = "clock_enable"> 1 </Register>
+            </Register>
+            <Register name="stubs">
+                <Register name = "stub_package_delay"> 7 </Register>
+            </Register>
         </Register>
-        <Register name="stubs">
-            <Register name = "stub_package_delay"> 7 </Register>
-        </Register>
-    </Register>
-    <!-- Readout Block -->
+        <!-- Readout Block -->
         <Register name="readout_block">
             <Register name="packet_nbr"> 999 </Register>
             <Register name="global">
-                    <Register name="data_handshake_enable"> 0 </Register>
-                    <Register name="int_trig_enable"> 0 </Register>
-                    <Register name="int_trig_rate"> 0 </Register>
-                    <Register name="trigger_type"> 0 </Register>
-                    <Register name="data_type"> 0 </Register>
-                    <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 42 </Register>
+                <Register name="data_handshake_enable"> 0 </Register>
+                <Register name="int_trig_enable"> 0 </Register>
+                <Register name="int_trig_rate"> 0 </Register>
+                <Register name="trigger_type"> 0 </Register>
+                <Register name="data_type"> 0 </Register>
+                <!--this is what is commonly known as stub latency-->
+                <Register name="common_stubdata_delay"> 42 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
-    <!-- DIO5 Block -->
-    <Register name="dio5_block">
-        <Register name="dio5_en"> 1 </Register>
+        <!-- DIO5 Block -->
+        <Register name="dio5_block">
+            <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 0 </Register>
             </Register>
-        <Register name="ch2">
-                <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 0 </Register>
-                <Register name="threshold"> 50 </Register>
+            <Register name="ch2">
+                    <Register name="out_enable"> 0 </Register>
+                    <Register name="term_enable"> 0 </Register>
+                    <Register name="threshold"> 50 </Register>
             </Register>
-        <Register name="ch3">
-                <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 0 </Register>
-                <Register name="threshold"> 0 </Register>
+            <Register name="ch3">
+                    <Register name="out_enable"> 1 </Register>
+                    <Register name="term_enable"> 0 </Register>
+                    <Register name="threshold"> 0 </Register>
             </Register>
-        <Register name="ch4">
-                <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
-                <Register name="threshold"> 50 </Register>
+            <Register name="ch4">
+                    <Register name="out_enable"> 0 </Register>
+                    <Register name="term_enable"> 1 </Register>
+                    <Register name="threshold"> 50 </Register>
             </Register>
-        <Register name="ch5">
-                <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
-                <Register name="threshold"> 50 </Register>
+            <Register name="ch5">
+                    <Register name="out_enable"> 0 </Register>
+                    <Register name="term_enable"> 1 </Register>
+                    <Register name="threshold"> 50 </Register>
             </Register>
-    </Register>
-    <!-- TLU Block -->
-    <Register name="tlu_block">
-                <Register name="tlu_enabled"> 0 </Register>
-                <Register name="handshake_mode"> 2 </Register>
-                <Register name="trigger_id_delay"> 1 </Register>
-    </Register>
+        </Register>
+        <!-- TLU Block -->
+        <Register name="tlu_block">
+            <Register name="tlu_enabled"> 0 </Register>
+            <Register name="handshake_mode"> 2 </Register>
+            <Register name="trigger_id_delay"> 1 </Register>
+        </Register>
     </Register>
   </BeBoard>
 
@@ -233,15 +239,12 @@
     <Setting name="MaxStubPhase">8</Setting> -->
 
     <!-- 0 : digital; 1 : analogue --> 
-    <Setting name="InjectionType">0</Setting>
+    <Setting name="InjectionType">1</Setting>
 
     <Setting name="TriggerMultiplicity">0</Setting>
 
-
-
-
-    <Setting name="StartLatency">0</Setting>
-    <Setting name="LatencyRange">200</Setting>
+    <Setting name="StartLatency">270</Setting>
+    <Setting name="LatencyRange">50</Setting>
 
 
     <Setting name="PSmoduleSSAthreshold">150</Setting>
@@ -311,19 +314,19 @@
     <Setting name="Nevents">500</Setting>
     <Setting name="PedestalEqualizationFullScanStart">220</Setting>
     <Setting name="PedestalEqualizationOccupancy">0.5</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
+    <!-- <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
     <Setting name="PedeNoisePulseAmplitude">1</Setting>
 
     <Setting name="PedestalEqualizationPulseAmplitudePix">1</Setting>
-    <Setting name="PedeNoisePulseAmplitudePix">1</Setting>
+    <Setting name="PedeNoisePulseAmplitudePix">1</Setting> -->
 
     <Setting name="PedeNoiseMaskUntrimmed">0</Setting>
     <!--<Setting name="PedeNoiseUntrimmedLimit">3.9</Setting>Aligned to +/- one trimdac unit-->
     <Setting name="PedeNoiseUntrimmedLimit">4.95</Setting><!--Aligned to ~5sigma sigma~=0.98-->
 
-    <!-- <Setting name="PedeNoiseUseFixRange">1</Setting>
+    <Setting name="PedeNoiseUseFixRange">1</Setting>
     <Setting name="PedeNoiseMinThreshold">0</Setting>
-    <Setting name="PedeNoiseMaxThreshold">220</Setting> -->
+    <Setting name="PedeNoiseMaxThreshold">50</Setting>
     <Setting name="FullScan">0</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">70</Setting>
     <Setting name="PedeNoisePulseAmplitude">70</Setting>
