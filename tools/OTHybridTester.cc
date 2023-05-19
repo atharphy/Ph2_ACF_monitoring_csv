@@ -136,24 +136,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     uint8_t  cShift;
     uint8_t  cWrappedByte;
     uint32_t cWrappedData;
-    LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
 
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-    // for(uint8_t cPhase = 0; cPhase < 15; cPhase++)
-    // {
-    //     for(auto cBoard: *fDetectorContainer)
-    //     {
-    //         if(cBoard->at(0)->flpGBT == nullptr) continue;
-
-    //         for(auto cOpticalGroup: *cBoard)
-    //         {
-    //             for(uint8_t cGroup = 0; cGroup < 7; cGroup++)
-    //             {
-    //                 clpGBTInterface->ConfigureRxPhase(cOpticalGroup->flpGBT, cGroup, 0, cPhase);
-    //                 clpGBTInterface->ConfigureRxPhase(cOpticalGroup->flpGBT, cGroup, 2, cPhase);
-    //             }
-    //         }
-    //     }
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
@@ -927,72 +911,86 @@ bool OTHybridTester::LpGBTGetLinkLock()
 }
 bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
 {
-    uint8_t  cMatch;
-    uint8_t  cShift;
-    uint8_t  cWrappedByte;
-    uint32_t cWrappedData;
-    bool     res = false;
-
-    for(auto cBoard: *fDetectorContainer)
+    uint8_t                     cMatch;
+    uint8_t                     cShift;
+    uint8_t                     cWrappedByte;
+    uint32_t                    cWrappedData;
+    bool                        res             = true;
+    D19clpGBTInterface*         clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    const std::vector<uint8_t>& cPatternVec     = {0x07, 0x00, 0xff, 0xaa, 0xcc, 0xca};
+    for(const auto cPattern: cPatternVec)
     {
-        bool isElectricalFc7 = true;
-        for(auto cOpticalGroup: *cBoard)
+        for(auto cBoard: *fDetectorContainer)
         {
-            if(cOpticalGroup->flpGBT != nullptr)
+            for(auto cOpticalGroup: *cBoard)
             {
+                if(cPattern != 0x07)
+                {
+                    clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, cPattern << 24 | cPattern << 16 | cPattern << 8 | cPattern);
+                    clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 3); // 0 --> link data, 3 --> constant pattern   }
+                }
+            }
+        }
+
+        for(auto cBoard: *fDetectorContainer)
+        {
+            bool isElectricalFc7 = true;
+            for(auto cOpticalGroup: *cBoard)
+            {
+                std::ignore     = cOpticalGroup;
                 isElectricalFc7 = false;
                 break;
             }
-        }
-        if(isElectricalFc7)
-        {
-            fBeBoardInterface->setBoard(cBoard->getId());
-
-            std::map<std::string, std::string> fFCMDLines;
-
-            if(fIsSEH) { fFCMDLines = f2SSEHFCMDLines; }
-            else
+            if(isElectricalFc7)
             {
-                fFCMDLines = fPSROHFCMDLines;
-            }
+                fBeBoardInterface->setBoard(cBoard->getId());
 
-            auto cMapIterator = fFCMDLines.begin();
-            LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
-            res = true;
-            do
-            {
-                uint32_t cFCMDOutput = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second);
-                LOG(INFO) << BOLDBLUE << "Scoped output on " << cMapIterator->first << ": " << std::bitset<32>(cFCMDOutput) << RESET;
+                std::map<std::string, std::string> fFCMDLines;
 
-                cMatch = 32;
-                cShift = 0;
-                for(uint8_t shift = 0; shift < 8; shift++)
-                {
-                    cWrappedByte = (pPattern >> shift) | (pPattern << (8 - shift));
-                    cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
-                    LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
-                    LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
-                    int popcount = __builtin_popcountll(cWrappedData ^ cFCMDOutput);
-                    if(popcount < cMatch)
-                    {
-                        cMatch = popcount;
-                        cShift = shift;
-                    }
-                    LOG(DEBUG) << BOLDBLUE << "Line " << cMapIterator->first << " Shift " << +shift << " Match " << +popcount << RESET;
-                }
-                LOG(INFO) << BOLDBLUE << "Found for " << cMapIterator->first << " a minimal bit difference of " << +cMatch << " for a bit shift of " << +cShift << RESET;
-
-                fillSummaryTree(cMapIterator->first + "_match", cMatch);
-                fillSummaryTree(cMapIterator->first + "_shift", cShift);
-
-                if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "FCMD Test passed for " << cMapIterator->first << RESET; }
+                if(fIsSEH) { fFCMDLines = f2SSEHFCMDLines; }
                 else
                 {
-                    LOG(INFO) << BOLDRED << "FCMD Test failed for " << cMapIterator->first << RESET;
-                    res = false;
+                    fFCMDLines = fPSROHFCMDLines;
                 }
-                cMapIterator++;
-            } while(cMapIterator != fFCMDLines.end());
+
+                auto cMapIterator = fFCMDLines.begin();
+                LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(cPattern) << RESET;
+                do
+                {
+                    uint32_t cFCMDOutput = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second);
+                    LOG(INFO) << BOLDBLUE << "Scoped output on " << cMapIterator->first << ": " << std::bitset<32>(cFCMDOutput) << RESET;
+
+                    cMatch = 32;
+                    cShift = 0;
+                    for(uint8_t shift = 0; shift < 8; shift++)
+                    {
+                        cWrappedByte = (cPattern >> shift) | (cPattern << (8 - shift));
+                        cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+                        LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
+                        LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
+                        int popcount = __builtin_popcountll(cWrappedData ^ cFCMDOutput);
+                        if(popcount < cMatch)
+                        {
+                            cMatch = popcount;
+                            cShift = shift;
+                        }
+                        LOG(DEBUG) << BOLDBLUE << "Line " << cMapIterator->first << " Shift " << +shift << " Match " << +popcount << RESET;
+                    }
+                    LOG(INFO) << BOLDBLUE << "Found for " << cMapIterator->first << " a minimal bit difference of " << +cMatch << " for a bit shift of " << +cShift << RESET;
+                    LOG(INFO) << Form("_miss_match_0x%02X", cPattern) << RESET;
+
+                    fillSummaryTree(cMapIterator->first + Form("_miss_match_0x%02X", cPattern), cMatch);
+                    fillSummaryTree(cMapIterator->first + Form("_miss_shift_0x%02X", cPattern), cShift);
+
+                    if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "FCMD Test passed for " << cMapIterator->first << RESET; }
+                    else
+                    {
+                        LOG(INFO) << BOLDRED << "FCMD Test failed for " << cMapIterator->first << RESET;
+                        res &= false;
+                    }
+                    cMapIterator++;
+                } while(cMapIterator != fFCMDLines.end());
+            }
         }
     }
     return res;
