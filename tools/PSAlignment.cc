@@ -93,11 +93,17 @@ void PSAlignment::Initialise()
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3) continue;
                     std::cout << __PRETTY_FUNCTION__ << " make sure ReadoutMode is set correctly " << std::endl;
-                    if(cChip->getFrontEndType() == FrontEndType::SSA2)std::cout << " ssa2 control_1 before readout mode" << cChip->getReg("control_1")  << std::endl;
-                    fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", 0x00);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2)std::cout << " ssa2 control_1 before readout mode " << cChip->getReg("control_1")  << std::endl;
+                    uint16_t cReadoutMode = 0x0;
+                    // if(cChip->getFrontEndType() == FrontEndType::SSA2) cReadoutMode = cChip->getReg("control_1")  & 0xF8;
+                    std::cout << " cReadoutMode " << cReadoutMode << std::endl;
+                    fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", cReadoutMode);
                     // This write 0 for all bits but Irene thinks it is wrong, only the [2:0] bits should be set to zero for the readout mode of the SSA2 (accordinh to manual)
-                    if(cChip->getFrontEndType() == FrontEndType::SSA2)std::cout << " ssa2 control_1 after" << cChip->getReg("control_1")  << std::endl;
-
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                    {
+                        std::cout << " ssa2 control_1 after " << cChip->getReg("control_1")  << std::endl;
+                        std::cout << " ssa2 control_1 after " <<  fReadoutChipInterface->ReadChipReg(cChip, "control_1") << std::endl;
+                    }
                 }
             }
         }
