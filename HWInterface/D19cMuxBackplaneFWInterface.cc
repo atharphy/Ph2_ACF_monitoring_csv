@@ -219,7 +219,7 @@ void D19cMuxBackplaneFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, i
             {
                 // Otherwise, the card is not present in the system
                 LOG(INFO) << GREEN << "============================" << RESET;
-                LOG(INFO) << BOLDMAGENTA << "Setup is not configured. The card is not present in the firmware" << RESET;
+                LOG(INFO) << BOLDRED << "Setup is not configured." << BOLDMAGENTA << " The card is not present in the system" << RESET;
             }
         }
     }
