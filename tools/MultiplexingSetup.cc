@@ -20,9 +20,26 @@ void MultiplexingSetup::Initialise()
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->isOptical()) continue;
+
         auto     cBeBoard   = static_cast<BeBoard*>(cBoard);
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         fBeBoardInterface->setBoard(theBoardId);
+
+        // Interlock switch feature control.
+        // The Interlock feature is set when the tool is initialized
+        fInterlockEnabled = (this->findValueInSettings<double>("InterlockEnabled") == (double)1.0);
+        if(fInterlockEnabled)
+        {
+            LOG(INFO) << "Enabling the interlock feature. Now controlled by the interlock switch" << RESET;
+            fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.interlock_switch_feature", 0x1);
+        }
+        else
+        {
+            LOG(INFO) << "Disabling the interlock feature. Now controlled by the Backend" << RESET;
+            fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.interlock_switch_feature", 0x0);
+            fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.interlock_switch_output", 0x1);
+        }
+
         bool cSetupScanned = (fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
         // if its not been scanned.. then send a reset
         if(cSetupScanned) { LOG(INFO) << BOLDBLUE << "Set-up has already been scanned..." << RESET; }
@@ -76,7 +93,7 @@ void MultiplexingSetup::ConfigureSingleCard(uint8_t pBackPlaneId, uint8_t pCardI
         LOG(INFO) << BOLDBLUE << "Configuring backplane " << +pBackPlaneId << " card " << +pCardId << " on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
         D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        cInterface->ConfigureMultiplexingSetup(pBackPlaneId, pCardId);
+        cInterface->ConfigureMultiplexingSetup(pBackPlaneId, pCardId, fInterlockEnabled);
         parseAvailable();
         printAvailableCards();
     }
