@@ -40,7 +40,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
        MESSAGE(FATAL_ERROR "${BoldRed}PH2ACF_BASE_DIR not set. Did you source setup.sh${Reset}")
     endif()
 
-    cmake_minimum_required(VERSION 3.4)
+    cmake_minimum_required(VERSION 3.17)
     project(Ph2_ACF)
 
 # Set the output directory
@@ -321,6 +321,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWInterface)
     add_subdirectory(System)
     add_subdirectory(MonitorUtils)
+    add_subdirectory(MonitorDQM)
     add_subdirectory(Parser)
     add_subdirectory(MessageUtils/cpp)
     add_subdirectory(miniDAQ)

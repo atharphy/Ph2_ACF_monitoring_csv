@@ -40,19 +40,20 @@ void DQMHistogramCalibrationExample::fillCalibrationExamplePlots(DetectorDataCon
 {
     for(auto board: theHitContainer) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardId = board->getId();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getIndex();
+            size_t opticalGroupId = opticalGroup->getId();
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getIndex();
+                size_t hybridId = hybrid->getId();
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getIndex();
+                    size_t chipId = chip->getId();
                     // Retreive the corresponging chip histogram:
-                    TH1F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                    uint  channelBin       = 1;
+                    TH1F* chipHitHistogram =
+                        fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    uint channelBin = 1;
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
                     if(chip->getChannelContainer<uint32_t>() == nullptr) continue;
@@ -72,13 +73,13 @@ void DQMHistogramCalibrationExample::process()
     // otherwise they will be automatically saved
     for(auto board: fDetectorHitHistograms) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardId = board->getId();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getIndex();
+            size_t opticalGroupId = opticalGroup->getId();
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getIndex();
+                size_t hybridId = hybrid->getId();
 
                 std::string cCanvasName = "Hits_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
                 // Create a canvas do draw the plots
@@ -87,10 +88,11 @@ void DQMHistogramCalibrationExample::process()
 
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getIndex();
-                    cValidation->cd(chipIndex + 1);
+                    size_t chipId = chip->getId();
+                    cValidation->cd(chipId + 1);
                     // Retreive the corresponging chip histogram:
-                    TH1F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* chipHitHistogram =
+                        fDetectorHitHistograms.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                     // Format the histogram (here you are outside from the SoC so you can use all the ROOT functions you
                     // need)

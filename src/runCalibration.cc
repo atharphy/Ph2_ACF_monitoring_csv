@@ -157,6 +157,9 @@ int main(int argc, char* argv[])
             ConfigureInfo theConfigureInfo;
             theConfigureInfo.setConfigurationFiles(configurationFile);
             theConfigureInfo.setCalibrationName(calibrationName);
+            // theConfigureInfo.enableOpticalGroup(0,0,"pippo");
+            // theConfigureInfo.enableHybrid(0,0,0, "pippo");
+            // theConfigureInfo.enableHybrid(0,2,4, "pluto");
             theMiddlewareStateMachine.configure(theConfigureInfo);
             stateMachineStatus = CONFIGURED;
             break;

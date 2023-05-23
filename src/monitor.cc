@@ -91,8 +91,8 @@ void monitoring_workloop()
         cIGraph->GetHistogram()->GetXaxis()->SetTimeDisplay(1);
         cTGraph->GetHistogram()->GetYaxis()->SetTitle("Temperature [C]");
         cIGraph->GetHistogram()->GetYaxis()->SetTitle("Current [mA]");
-        cTGraph->GetHistogram()->GetXaxis()->SetTimeFormat("%H:%M");
-        cIGraph->GetHistogram()->GetXaxis()->SetTimeFormat("%H:%M");
+        cTGraph->GetHistogram()->GetXaxis()->SetTimeFormat(TIME_FORMAT);
+        cIGraph->GetHistogram()->GetXaxis()->SetTimeFormat(TIME_FORMAT);
 #ifdef __HTTP__
         gSystem->ProcessEvents();
         // gHttpServer->ProcessRequests();

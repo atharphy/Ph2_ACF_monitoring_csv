@@ -198,10 +198,10 @@ int main(int argc, char** argv)
         // ##################
         if(reset == true)
         {
-            if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
-                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");
+            if(mySysCntr.fDetectorContainer->getFirstObject()->getFirstObject()->flpGBT == nullptr)
+                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->getFirstObject()->getId()])->ResetSequence("160");
             else
-                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
+                static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->getFirstObject()->getId()])->ResetSequence("320");
             exit(EXIT_SUCCESS);
         }
 
@@ -308,19 +308,19 @@ int main(int argc, char** argv)
                     pa.fDetectorContainer->addBoardQueryFunction(boardSubset, "boardSubset");
                     doTwice = true;
                 }
-                else if(pa.fDetectorContainer->at(0)->size() != 1)
+                else if(pa.fDetectorContainer->getFirstObject()->size() != 1)
                 {
                     auto optoGroupSubset = [evenORodd](const OpticalGroupContainer* theOpticalGroup) { return (theOpticalGroup->getId() % 2 == evenORodd); };
                     pa.fDetectorContainer->addOpticalGroupQueryFunction(optoGroupSubset, "opticalGroupSubset");
                     doTwice = true;
                 }
-                else if(pa.fDetectorContainer->at(0)->at(0)->size() != 1)
+                else if(pa.fDetectorContainer->getFirstObject()->getFirstObject()->size() != 1)
                 {
                     auto hybridSubset = [evenORodd](const HybridContainer* theHybrid) { return (theHybrid->getId() % 2 == evenORodd); };
                     pa.fDetectorContainer->addHybridQueryFunction(hybridSubset, "moduleSubset");
                     doTwice = true;
                 }
-                else if(pa.fDetectorContainer->at(0)->at(0)->at(0)->size() != 1)
+                else if(pa.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->size() != 1)
                 {
                     auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
                     pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset, "readoutChipSubset");

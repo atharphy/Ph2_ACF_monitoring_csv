@@ -36,7 +36,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
     } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
-    if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state" + fPUSMStatusMap[cChipVersion][cPUSMState])); }
+    if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state " + fPUSMStatusMap[cChipVersion][cPUSMState])); }
     // Configuring chip
     bool cReconfigure = false;
     if(cReconfigure)
@@ -235,7 +235,11 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
 
             // Enable training
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
-            WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
+
+            // Assumption: write is stable enough that it sohuld never fail in normal condition
+            // If the fail occurs it means that the Chip has a major issue and this check avoids to be stuck in this loop for a very long time
+            bool writeSucceded = WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
+            if(!writeSucceded) return 15;
             std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
             std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));

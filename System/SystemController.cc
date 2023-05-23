@@ -10,6 +10,7 @@
 #include "System/SystemController.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/ExceptionHandler.h"
 #include "HWInterface/LinkInterface.h"
 #include "HWInterface/RD53AInterface.h"
 #include "HWInterface/RD53BInterface.h"
@@ -242,14 +243,14 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
-        const BeBoard* cFirstBoard = fDetectorContainer->at(0);
+        const BeBoard* cFirstBoard = fDetectorContainer->getFirstObject();
         fBoardType                 = cFirstBoard->getBoardType();
         if(fBoardType != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
             {
-                auto cFirstOpticalGroup = cFirstBoard->at(0);
+                auto cFirstOpticalGroup = cFirstBoard->getFirstObject();
                 LOG(INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." << +cFirstBoard->size() << " optical group(s) found ..." << RESET;
                 bool cWithLpGBT = (cFirstOpticalGroup->flpGBT != nullptr);
                 if(cWithLpGBT)
@@ -262,7 +263,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." << +cFirstOpticalGroup->size() << " hybrid(s) found ..." << RESET;
-                    auto cFirstHybrid = cFirstOpticalGroup->at(0);
+                    auto cFirstHybrid = cFirstOpticalGroup->getFirstObject();
                     auto cType        = FrontEndType::CBC3;
                     bool cWithCBC  = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     cType          = FrontEndType::SSA;
@@ -641,14 +642,16 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             if(cCic == NULL) continue;
 
             LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
-            fCicInterface->ConfigureChip(cCic);
-            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
+            if(!fCicInterface->ConfigureChip(cCic)) continue;
+            if(!fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false)) continue; // make sure all FEs are disabled by default
         }
         bool cSuccess = CicStartUp(cOpticalGroup, true);
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET;
-            throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
+            LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
+                      << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
+            ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
+            continue;
         }
     }
 
@@ -684,8 +687,10 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
                 if(fCicInterface->GetResyncRequest(cCic))
                 {
-                    LOG(INFO) << BOLDRED << "ReSync request ofrom CIC" << +cHybrid->getId() << RESET;
-                    throw std::runtime_error(std::string("FAILED to clear CIC ReSync request"));
+                    LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
+                              << " --- Hybrid will be disabled" << RESET;
+                    ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
+                    continue;
                 }
             }
         }
@@ -706,7 +711,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             if(clpGBT == nullptr) continue;
 
             uint8_t cSide = cHybrid->getId() % 2;
-            LOG(DEBUG) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
+            LOG(INFO) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
 
             if(cHybrid->getReset() == 0)
             {
@@ -766,9 +771,12 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             LOG(INFO) << BOLDMAGENTA << "Readout rate on PS-module (Hybrid# " << +cHybrid->getId() << ") is " << +cReadoutRate << " Mbps" << RESET;
 
             lpGBTClockConfig cClkCnfg;
-            cClkCnfg.fClkFreq         = 4;
-            cClkCnfg.fClkDriveStr     = cSsaClockDrive;
-            cClkCnfg.fClkInvert       = 1;
+            cClkCnfg.fClkFreq     = 4;
+            cClkCnfg.fClkDriveStr = cSsaClockDrive;
+            cClkCnfg.fClkInvert   = 0;
+
+            LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " << +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
+
             cClkCnfg.fClkPreEmphWidth = 0;
             cClkCnfg.fClkPreEmphMode  = 3; // 3;
             cClkCnfg.fClkPreEmphStr   = 7; // 7;
@@ -880,13 +888,20 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
 
 bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStartUpSequence)
 {
-    auto cBoardId    = pOpticalGroup->getBeBoardId();
-    auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    bool cWith2SFEH  = (*cBoardIter)->getEventType() == EventType::VR2S;
-    auto cSparsified = (*cBoardIter)->getSparsification();
+    auto cBoardId        = pOpticalGroup->getBeBoardId();
+    auto cOpticalGroupId = pOpticalGroup->getId();
+    auto cBoardIter      = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    bool cWith2SFEH      = (*cBoardIter)->getEventType() == EventType::VR2S;
+    auto cSparsified     = (*cBoardIter)->getSparsification();
+
+    auto exceptionHandleFunction = [cBoardId, cOpticalGroupId, this](uint16_t hybridId, const std::string&& failMode) {
+        LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
+        ExceptionHandler::getInstance()->disableHybrid(cBoardId, cOpticalGroupId, hybridId);
+        static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->EnableFrontEnds(fDetectorContainer->getObject(cBoardId));
+    };
 
     auto& clpGBT   = pOpticalGroup->flpGBT;
-    bool  cSuccess = true;
+    bool  cSuccess = false;
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     for(auto cHybrid: *pOpticalGroup)
     {
@@ -912,11 +927,10 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         uint8_t cModeSelect = (cIs2S) ? 0 : 1;
         uint8_t cBx0Delay   = (cIs2S) ? 8 : 22;
         // select CIC mode
-        cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
-        if(!cSuccess)
+        if(!fCicInterface->SelectMode(cCic, cModeSelect))
         {
-            LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-            throw std::runtime_error(std::string("FAILED to set CIC mode ... something is wrong... .. STOPPING"));
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC mode");
+            continue;
         }
         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << (cIs2S ? "2S" : "PS") << " readout." << RESET;
 
@@ -940,7 +954,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             uint8_t cFeConfigReg  = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
             auto    cClkFrequency = cCic->getClockFrequency();
             uint8_t cNewValue     = (cFeConfigReg & 0xFD) | ((uint8_t)(cClkFrequency == 640) << 1);
-            cSuccess              = fCicInterface->WriteChipReg(cCic, "FE_CONFIG", cNewValue);
+            fCicInterface->WriteChipReg(cCic, "FE_CONFIG", cNewValue);
         }
 
         // 2S-FEHs
@@ -952,42 +966,54 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             cClkTerm = 0;
             cRxTerm  = 1;
         }
-        cSuccess = fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
-        if(cSuccess)
+
+        if(!fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm))
         {
-            if(cStartUpSequence)
-            {
-                LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
-                cSuccess = fCicInterface->StartUp(cCic, cCic->getDriveStrength(), cCic->getEdgeSelect());
-            }
-            else
-            {
-                LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
-                if(fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength()))
-                    cSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
-                else
-                    cSuccess = false;
-            }
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC Termination");
+            continue;
+        }
+
+        bool startUpSuccess;
+        if(cStartUpSequence)
+        {
+            LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
+            startUpSuccess = fCicInterface->StartUp(cCic, cCic->getDriveStrength(), cCic->getEdgeSelect());
         }
         else
-            throw std::runtime_error(std::string("FAILED to start-up CIC ... something is wrong... .. STOPPING"));
+        {
+            LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
+            if(fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength()))
+                startUpSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
+            else
+                startUpSuccess = false;
+        }
 
-        if(cSuccess)
-            cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
-        else
-            throw std::runtime_error(std::string("FAILED to set CIC sparsification... .. STOPPING"));
+        if(!startUpSuccess)
+        {
+            exceptionHandleFunction(cHybrid->getId(), "start-up CIC");
+            continue;
+        }
 
-        if(cSuccess)
-            cSuccess = fCicInterface->ConfigureStubOutput(cCic);
-        else
-            throw std::runtime_error(std::string("FAILED to configure CIC stub output... .. STOPPING"));
+        if(!fCicInterface->SetSparsification(cCic, cSparsified))
+        {
+            exceptionHandleFunction(cHybrid->getId(), "set CIC sparsification");
+            continue;
+        }
 
-        if(cSuccess)
-            cSuccess = fCicInterface->ManualBx0Alignment(cCic, cBx0Delay);
-        else
-            throw std::runtime_error(std::string("FAILED to configure CIC Bx0 delay... .. STOPPING"));
+        if(!fCicInterface->ConfigureStubOutput(cCic))
+        {
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC stub output");
+            continue;
+        }
 
-    } // all hybrids connected to this OG
+        if(!fCicInterface->ManualBx0Alignment(cCic, cBx0Delay))
+        {
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC Bx0 delay");
+            continue;
+        }
+
+        cSuccess = true; // at least on hybrid is working fine
+    }                    // all hybrids connected to this OG
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
 }
@@ -1006,20 +1032,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         fBeBoardInterface->setBoard(0);
         fBeBoardInterface->ConfigureBoard(cBoard);
     }
-
-    // add query
-    std::string      cFunctionName = "opticalGroupSubset";
-    std::vector<int> cLockedIds;
-    for(const auto cBoard: *fDetectorContainer)
-    {
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            if(cOpticalGroup->fIsLocked) cLockedIds.push_back(cOpticalGroup->getId());
-        }
-    }
-    auto cSubset = [cLockedIds](const OpticalGroupContainer* cOpticalGroup) { return std::find(cLockedIds.begin(), cLockedIds.end(), cOpticalGroup->getId()) != cLockedIds.end(); };
-
-    this->fDetectorContainer->addOpticalGroupQueryFunction(cSubset, cFunctionName);
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -1097,8 +1109,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     bool cSuccess = CicStartUp(cOpticalGroup, false);
                     if(!cSuccess)
                     {
-                        LOG(INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET;
-                        throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
+                        LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +cBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
+                                  << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
+                        ExceptionHandler::getInstance()->disableOpticalGroup(cBoard->getId(), cOpticalGroup->getId());
+                        continue;
                     }
                 }
             }
@@ -1202,12 +1216,20 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
     theConfigureInfo.extractObjectNames(fNameContainer);
 
+    initializeExceptionHandler();
+
     // ########################################################
     // # Formatted printout on screen of the xml file content #
     // ########################################################
     std::cout << fParsedFile.str() << std::endl;
 
     ConfigureHw(false, true);
+}
+
+void SystemController::initializeExceptionHandler()
+{
+    ExceptionHandler::getInstance()->setDetectorContainer(fDetectorContainer);
+    ExceptionHandler::getInstance()->setFirmwareInterface(fBeBoardInterface->getFirmwareInterface());
 }
 
 void SystemController::Start(const StartInfo& theStartInfo)
@@ -1289,6 +1311,7 @@ void SystemController::SetFuture(const BeBoard* pBoard, const std::vector<uint32
 
 void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
 {
+    if(pData.size() == 0) return;
     // ####################
     // # Decoding IT data #
     // ####################
@@ -1306,8 +1329,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     else if(pType == BoardType::D19C && pBoard->getEventType() != EventType::PSAS)
     {
         bool cTLUconfig = 2;
-        // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
-        //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
+        // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
+        //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
         // for (auto L : pData) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();

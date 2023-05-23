@@ -218,15 +218,10 @@ class D19cCic2Event : public Event
         auto cHybridIterator = std::find(fHybridIds.begin(), fHybridIds.end(), pHybridId);
         if(cHybridIterator != fHybridIds.end()) { return std::distance(fHybridIds.begin(), cHybridIterator); }
         else
+        {
+            LOG(ERROR) << "D19cCic2Event::getHybridIndex Error : Hybrid id " << +pHybridId << " not found" << RESET;
             throw std::runtime_error(std::string("HybridId not found in D19cCIC2Event .. check xml!"));
-    }
-    size_t getChipIndex(const uint8_t pHybridIndex, const uint8_t pChipId) const
-    {
-        // first find feIndex
-        auto cChipIterator = std::find(fChipIds[pHybridIndex].begin(), fChipIds[pHybridIndex].end(), pChipId);
-        if(cChipIterator != fChipIds[pHybridIndex].end()) { return std::distance(fChipIds[pHybridIndex].begin(), cChipIterator); }
-        else
-            throw std::runtime_error(std::string("ChipId not found in D19cCIC2Event .. check xml!"));
+        }
     }
 
     void set8CBC3(bool pIs8CBC3) { fIs8CBC3 = pIs8CBC3; }

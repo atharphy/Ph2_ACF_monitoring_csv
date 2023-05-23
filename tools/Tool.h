@@ -257,7 +257,7 @@ class Tool : public Ph2_System::SystemController
                     int32_t                                          numberOfEventsPerBurst = -1);
 
     // Two dimensional dac scan per BeBoard
-    void scanBeBoardDacDac(uint16_t                                         boardIndex,
+    void scanBeBoardDacDac(uint16_t                                         boardId,
                            const std::string&                               dac1Name,
                            const std::vector<uint16_t>&                     dac1List,
                            const std::string&                               dac2Name,
@@ -274,7 +274,7 @@ class Tool : public Ph2_System::SystemController
                  int32_t                             numberOfEventsPerBurst = -1);
 
     // One dimensional dac scan per BeBoard
-    void scanBeBoardDac(uint16_t                             boardIndex,
+    void scanBeBoardDac(uint16_t                             boardId,
                         const std::string&                   dacName,
                         const std::vector<uint16_t>&         dacList,
                         uint32_t                             numberOfEvents,
@@ -283,11 +283,11 @@ class Tool : public Ph2_System::SystemController
     // Bit wise scan
     void bitWiseScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
     // Bit wise scan per BeBoard
-    void bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
+    void bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
     // Full scan
     void fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1, int32_t startVal = 110, bool mask = false);
     // Full scan per BeBoard
-    void fullScanBeBoard(uint16_t           boardIndex,
+    void fullScanBeBoard(uint16_t           boardId,
                          const std::string& dacName,
                          uint32_t           numberOfEvents,
                          const float&       targetOccupancy,
@@ -298,17 +298,17 @@ class Tool : public Ph2_System::SystemController
     // Set dac and measure data
     void setDacAndMeasureData(const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // Set dac and measure data per BeBoard
-    void setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
+    void setDacAndMeasureBeBoardData(uint16_t boardId, const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // Measure data
     void measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // Measure data per BeBoard
-    void measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
+    void measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // Measure data per BeBoard and per group
-    // void measureBeBoardDataPerGroup(uint16_t boardIndex, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
+    // void measureBeBoardDataPerGroup(uint16_t boardId, const uint16_t numberOfEvents, const ChannelGroupBase *cTestChannelGroup);
     // Set global DAC for all CBCs in the BeBoard
-    void setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer);
+    void setAllGlobalDacBeBoard(uint16_t boardId, const std::string& dacName, DetectorDataContainer& globalDACContainer);
     // Set global DAC for all Chips in the BeBoard
-    void setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer);
+    void setAllLocalDacBeBoard(uint16_t boardId, const std::string& dacName, DetectorDataContainer& globalDACContainer);
     // Set same global DAC for all Chips
     void setSameGlobalDac(const std::string& dacName, const uint16_t dacValue);
     // Set same global DAC for all Chips in the BeBoard
@@ -362,7 +362,7 @@ class Tool : public Ph2_System::SystemController
     void    resetOutputDirectoryName() { fDirectoryName = ""; }
 
   private:
-    void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
+    void doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
 
   protected:
     DetectorDataContainer* fDetectorDataContainer{nullptr};

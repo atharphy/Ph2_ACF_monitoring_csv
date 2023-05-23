@@ -101,17 +101,18 @@ if (CACTUS_FOUND)
             set_target_properties(CACTUS::${uhal_name} PROPERTIES
                 IMPORTED_LOCATION "${CACTUS_UHAL_${uhal_name}}"
                 INTERFACE_LINK_DIRECTORIES "${CACTUS_LIBDIR}"
-                INTERFACE_LINK_LIBRARIES "CACTUS::headers"
-            )
+                INTERFACE_LINK_LIBRARIES "CACTUS::headers;$<$<STREQUAL:${uhal_suffix},uhal>:CACTUS::uhal_grammars>"
+                )
         else()
             message(ERROR "Library ${uhal_name} not found")
         endif()
     endmacro()
 
+    add_lib_target(uhal_grammars grammars)
     add_lib_target(uhal uhal)
     add_lib_target(uhal_log log)
-    add_lib_target(uhal_grammars grammars)
 endif()
+
 
 if(${CACTUS_AMC13_FOUND})
     set(UHAL_AMC13_PREFIX ${CACTUS_ROOT})
@@ -123,7 +124,7 @@ include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set ZESTSC1_FOUND to TRUE
 # if all listed variables are TRUE
 find_package_handle_standard_args(CACTUS  DEFAULT_MSG CACTUS_ROOT ${CACTUS_LIBS})
-find_package_handle_standard_args(AMC13  DEFAULT_MSG CACTUS_AMC13_FOUND)
+find_package_handle_standard_args(AMC13 REQUIRED_VARS CACTUS_AMC13_FOUND NAME_MISMATCHED)
 
 mark_as_advanced(CACTUS_ROOT UHAL_AMC13_PREFIX)
 unset(CACTUS_LIBS)
