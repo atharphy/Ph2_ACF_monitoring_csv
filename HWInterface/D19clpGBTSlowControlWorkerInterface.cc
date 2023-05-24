@@ -162,8 +162,7 @@ void D19clpGBTSlowControlWorkerInterface::PrintState()
 
 bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
 {
-    // int cWaitCounter = 150000;
-    int cWaitCounter = 1000;
+    int cWaitCounter = 150000;
     while(!IsDone(pFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
