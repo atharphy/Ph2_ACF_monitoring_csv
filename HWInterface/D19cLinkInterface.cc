@@ -63,6 +63,7 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
     bool   cAllLocked   = false;
     size_t cMaxAttempts = fConfiguration.fReTry ? fConfiguration.fMaxAttempts : 1;
     size_t cAttempts    = 0;
+    bool   cLinkStatus  = false;
     do
     {
         cAllLocked = true;
@@ -70,14 +71,24 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
         ResetLinks();
         for(auto cOpticalReadout: *pBoard)
         {
-            bool cLinkStatus = cOpticalReadout->fIsLocked;
+            cLinkStatus = cOpticalReadout->fIsLocked;
             if(!cLinkStatus)
             {
                 cLinkStatus = GetLinkStatus(cOpticalReadout->getId());
-                if(cLinkStatus) cOpticalReadout->fIsLocked = true;
+                if(cLinkStatus)
+                {
+                    cOpticalReadout->fIsLocked = true;
+#ifdef __TCUSB__
+                    break;
+#endif
+                }
             }
             cAllLocked = cAllLocked && cLinkStatus;
         }
+#ifdef __TCUSB__
+        cAllLocked = false;
+        if(cLinkStatus) break;
+#endif
     } while(cAttempts < cMaxAttempts && !cAllLocked);
     if(!cAllLocked)
     {

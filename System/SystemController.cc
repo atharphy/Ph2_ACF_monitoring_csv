@@ -1014,6 +1014,9 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
 
         cSuccess = true; // at least on hybrid is working fine
     }                    // all hybrids connected to this OG
+#ifdef __TCUSB__
+    cSuccess = true; // No hybrids in the SEH/ROH test system
+#endif
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
 }
