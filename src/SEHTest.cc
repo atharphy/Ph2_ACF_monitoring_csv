@@ -172,8 +172,8 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("USBBus", "USB device bus number", ArgvParser::OptionRequiresValue);
     cmd.defineOption("USBDev", "USB device device number", ArgvParser::OptionRequiresValue);
-    // cmd.defineOption("linkId", "Optical link Id", ArgvParser::OptionRequiresValue);
-    // cmd.defineOption("fmcId", "Optical fmc Id", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("linkId", "Optical link Id", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("fmcId", "Optical fmc Id", ArgvParser::OptionRequiresValue);
     cmd.defineOption("useGui",
                      "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
                      ArgvParser::NoOptionAttribute);
@@ -212,8 +212,8 @@ int main(int argc, char* argv[])
     uint8_t  cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
     bool     cGui    = (cmd.foundOption("useGui"));
 
-    // uint8_t            linkId = (cmd.foundOption("linkId")) ? (uint32_t)(std::stoi(cmd.optionValue("linkId"))) : 0;
-    // std::string        fmcId  = (cmd.foundOption("fmcId")) ? cmd.optionValue("fmcId") : "L12";
+    uint8_t            linkId = (cmd.foundOption("linkId")) ? (uint32_t)(std::stoi(cmd.optionValue("linkId"))) : 0;
+    std::string        fmcId  = (cmd.foundOption("fmcId")) ? cmd.optionValue("fmcId") : "L12";
     pugi::xml_document doc;
     if(!doc.load_file(cHWFile.c_str())) return -1;
     pugi::xml_node cDescription = doc.child("HwDescription");
@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
     {
         for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
         {
-            /* if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
+            if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
             {
                 if(static_cast<std::string>(ps.name()) == "OpticalGroup")
                 {
@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
                     attr = ps.attribute("FMCId");
                     attr.set_value(fmcId.c_str());
                 }
-            } */
+            }
             std::string stringID(ps.attribute("ID").value());
             std::string stringType(ps.attribute("Type").value());
             if(stringType == "LV")
@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    doc.save_file((cHWFile + "_copy").c_str());
+    if(cmd.foundOption("linkId") && cmd.foundOption("fmcId")) doc.save_file((cHWFile + "_copy").c_str());
 
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
@@ -293,9 +293,17 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
-    cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
-    cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
-    remove((cHWFile + "_copy").c_str());
+    if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
+    {
+        cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
+        cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
+        remove((cHWFile + "_copy").c_str());
+    }
+    else
+    {
+        cTool.InitializeHw((cHWFile).c_str(), outp);
+        cTool.InitializeSettings((cHWFile).c_str(), outp);
+    }
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory, true, true);
@@ -386,7 +394,7 @@ int main(int argc, char* argv[])
     try
     {
         cTool.ConfigureHw();
-
+        cSEHTester.CheckConfiguredHw();
         cSEHTester.ReadChipIds();
         cSEHTester.Initialise();
 
@@ -644,7 +652,6 @@ int main(int argc, char* argv[])
         }
 
         cTool.StopMonitoring();
-        
 
         if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-leak-parallel"))
         {
@@ -775,7 +782,7 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     // Destroy Tools
     cTool.Destroy();
-    
+
     if(!MonitorFileName.empty())
     {
         LOG(INFO) << GREEN << "Attempting to copy monitoring file : " << BOLDYELLOW << MonitorFileName << RESET;
@@ -790,7 +797,6 @@ int main(int argc, char* argv[])
             LOG(ERROR) << BOLDRED << "Exceptin when trying to move Monitoring File to Directory: " << DirectoryName << RESET;
         }
     }
-    
 
     runCompleted = 1;
 

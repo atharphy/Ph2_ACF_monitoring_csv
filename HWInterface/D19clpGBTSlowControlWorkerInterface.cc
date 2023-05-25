@@ -176,7 +176,7 @@ bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
         Reset();
         LOG(INFO) << BOLDBLUE << "Status after reset:" << RESET;
         PrintState();
-        throw std::runtime_error("D19c lpGBT Slow Control Worker is stuck");
+        // throw std::runtime_error("D19c lpGBT Slow Control Worker is stuck"); //why?
         return false;
     }
     return true;

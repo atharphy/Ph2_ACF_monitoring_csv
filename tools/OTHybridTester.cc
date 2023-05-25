@@ -14,6 +14,20 @@ OTHybridTester::OTHybridTester() : Tool()
 
 OTHybridTester::~OTHybridTester() {}
 
+void OTHybridTester::CheckConfiguredHw()
+{
+    bool cSucess = false;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            std::ignore = cOpticalGroup;
+            cSucess     = true;
+        }
+    }
+    if(!cSucess) { throw std::runtime_error("Error: No optical hardware configured!"); }
+}
+
 void OTHybridTester::ReadChipIds()
 {
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -1550,8 +1564,6 @@ bool OTHybridTester::LpGBTCheckULPatternv2(bool pIsExternal, uint8_t pPattern)
         str.append(",");
         for(auto cBoard: *fDetectorContainer)
         {
-            if(cBoard->at(0)->flpGBT == nullptr) continue;
-
             for(auto cOpticalGroup: *cBoard)
             {
                 for(uint8_t cGroup = 0; cGroup < 7; cGroup++)
@@ -1563,8 +1575,6 @@ bool OTHybridTester::LpGBTCheckULPatternv2(bool pIsExternal, uint8_t pPattern)
         }
         for(auto cBoard: *fDetectorContainer)
         {
-            if(cBoard->at(0)->flpGBT == nullptr) continue;
-
             fBeBoardInterface->setBoard(cBoard->getId());
             D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             D19cTriggerInterface* cTriggerInterface = dynamic_cast<D19cTriggerInterface*>(cFWInterface->getTriggerInterface());
