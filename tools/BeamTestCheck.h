@@ -69,14 +69,42 @@ class BeamTestCheck : public OTTool
         for(auto container: fSCurveOccupancyMap) fRecycleBin.free(container.second);
         fSCurveOccupancyMap.clear();
     }
+    
+    //Method to create injection pixels/strips
     void defInjection()
     {
         Ph2_HwInterface::Injection cInjection;
         // inject one cluster into each MPA-SSA pair
+        fInjections.clear();
         cInjection.fRow    = 100;
         cInjection.fColumn = 12;
-        fInjections.clear();
         fInjections.push_back(cInjection); // 0
+        cInjection.fRow    = 98;
+        cInjection.fColumn = 12;
+        fInjections.push_back(cInjection); // 0
+
+        // cInjection.fRow    = 99;
+        // cInjection.fColumn = 12;
+        // fInjections.push_back(cInjection); // 0
+        // cInjection.fRow    = 101;
+        // cInjection.fColumn = 12;
+        // fInjections.push_back(cInjection); // 0
+        cInjection.fRow    = 102;
+        cInjection.fColumn = 12;
+        fInjections.push_back(cInjection); // 0
+        // cInjection.fRow    = 100;
+        // cInjection.fColumn = 11;
+        // fInjections.push_back(cInjection); // 0
+        // cInjection.fRow    = 100;
+        // cInjection.fColumn = 10;
+        // fInjections.push_back(cInjection); // 0
+        // cInjection.fRow    = 100;
+        // cInjection.fColumn = 13;
+        // fInjections.push_back(cInjection); // 0
+        // cInjection.fRow    = 100;
+        // cInjection.fColumn = 14;
+        // fInjections.push_back(cInjection); // 0
+      
     }
 
   private:

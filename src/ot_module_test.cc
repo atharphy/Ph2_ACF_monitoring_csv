@@ -584,7 +584,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub package in the BE  " << RESET;
         else
         {
-            LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+            LOG(INFO) << BOLDBLUE << __LINE__ << " Performing time alignment of stub data with L1 data in the BE " << RESET;
             LinkAlignmentOT cLinkAlignment;
             cLinkAlignment.Inherit(&cTool);
             cLinkAlignment.Initialise();
@@ -598,7 +598,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub data with L1 data in the BE " << RESET;
         else
         {
-            LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
+            LOG(INFO) << BOLDBLUE << __LINE__ << " Performing time alignment of stub data with L1 data in the BE " << RESET;
             StubBackEndAlignment cStubBackEndAligner;
             LOG(INFO) << BOLDBLUE << "1 " << RESET;
             cStubBackEndAligner.Inherit(&cTool);

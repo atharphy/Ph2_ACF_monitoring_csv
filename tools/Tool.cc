@@ -2253,15 +2253,11 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
 {
     std::cout << __PRETTY_FUNCTION__<< std::endl;
     groupScan->setBoardId(boardIndex);
-    std::cout << __LINE__<< std::endl;
     groupScan->setNumberOfEvents(numberOfEvents);
-    std::cout << __LINE__<< std::endl;
     groupScan->setDetectorContainer(fDetectorContainer);
-    std::cout << __LINE__<< std::endl;
     groupScan->setNumberOfEventsPerBurst(numberOfEventsPerBurst);
-    std::cout << __LINE__<< std::endl;
     groupScan->setGroupHandlerContainer(getChannelGroupHandlerContainer(), fSameChannelGroupForAllChannels);
-    std::cout << __LINE__<< std::endl;
+
     if(!fAllChan)
     {
         uint16_t maxNumberOfGroups = getMaxNumberOfGroups();
@@ -2315,13 +2311,9 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     }
     else
     {
-        std::cout << __LINE__<< std::endl;
         groupScan->setGroup(-1);
-        std::cout << __LINE__<< std::endl;
         (*groupScan)();
-        std::cout << __LINE__<< std::endl;
     }
-    std::cout << "end " << std::endl;
 }
 
 class MeasureBeBoardDataPerGroup : public ScanBase
@@ -2357,7 +2349,6 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             // LOG (INFO) << BOLDYELLOW << "Tool::ReadNEvents : number of events requested is " << +currentNumberOfEvents << RESET;
             if(fTool->ifUseReadNEvents())
             {
-                std::cout << __LINE__ << __PRETTY_FUNCTION__ << " am I here?? " << std::endl;
                 fTool->ReadNEvents(fDetectorContainer->at(fBoardIndex), currentNumberOfEvents);
             }
             else
@@ -2437,7 +2428,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     }
     std::cout << __LINE__ << "doScanOnAllGroupsBeBoard" << std::endl;
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
-    std::cout << __LINE__ << "dDONE oScanOnAllGroupsBeBoard" << std::endl;
+    std::cout << __LINE__ << "DONE oScanOnAllGroupsBeBoard" << std::endl;
 
     // If in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
@@ -2580,13 +2571,11 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        std::cout << " chip write: " << dacName << " : " << dacValue << std::endl;
                         fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
                     }
                 }
                 else
                 {
-                    std::cout << " hybrid broadcast ?" << std::endl;
                     fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
                 }
     }
@@ -2628,7 +2617,10 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string& dacName, c
 void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
     // Assumption: 1 BeBoard has only 1 chip flavor
-    if(static_cast<ReadoutChip*>(pBoard->at(0)->at(0)->at(0))->isDACLocal(dacName)) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
+    if(static_cast<ReadoutChip*>(pBoard->at(0)->at(0)->at(0))->isDACLocal(dacName)) 
+    { 
+        setSameLocalDacBeBoard(pBoard, dacName, dacValue); 
+    }
     else
     {
         setSameGlobalDacBeBoard(pBoard, dacName, dacValue);

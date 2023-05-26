@@ -161,7 +161,7 @@ ADC_output_MSB				0x0	0x900C	0	0
 * Row Registers -- include the broadcast row for now
 *--------------------------------------------------------------------------------
 * RegName                                    	Page	Addr	Defval	Value
-MemoryControl_1_ALL						0x0	0x0079		0xF3	0xF3
+MemoryControl_1_ALL						0x0	0x0079		0xF3	0x00
 MemoryControl_2_ALL						0x0	0x00F9		0xFF	0xFF
 PixelControl_ALL						0x0	0x0179		0x14	0x14
 RingOscillator_ALL						0x0	0x01F9		0x00	0x00

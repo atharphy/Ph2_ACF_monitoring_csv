@@ -10,21 +10,17 @@
     <OpticalGroup Id="0" FMCId="L12" reset="1">
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
         <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
-          <Settings
-          />
+          <Settings/>
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">
-            <Global>
-                <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
-                <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
-                <!-- Window in half pixels  -->
-                <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
-                <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <Latencies       stripLatency="296" pixelLatency="999999"/>
-                <Thresholds      stripThreshold="40" stripThresholdHigh="100" pixelThreshold="40"/> 
-                <HitLogic        stripMode="0" pixelMode="0"/>
-                <InjectedCharge  stripCharge="250" pixelCharge="250"/> 
+            <Global>                 
+                <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
+                <HitLogic        stripMode="0" pixelMode="0"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
+                <Latencies       stripLatency="296" pixelLatency="295"/>
+                <Thresholds      stripThreshold="100" stripThresholdHigh="100" pixelThreshold="120"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
+                <!-- <HipLogic        stripCut="7" pixelCut="7"/> MUST BE FIXED IN THE CODE BOTH SSA AND MPA LORE IRENE--> 
+                <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <InjectedCharge  stripCharge="80" pixelCharge="40"/> <!-- in DAC units for each chip type - their electron value is different though! -->
                 <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
             </Global>
             
@@ -33,7 +29,6 @@
             <SSA2 Id="0" configfile="SSA2.txt" />
             <SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
-            <SSA2 Id="4" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
             <SSA2 Id="7" configfile="SSA2.txt" />
@@ -53,19 +48,16 @@
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
         
-        <Hybrid Id="1" enable="0" reset="1">
+        <Hybrid Id="1" enable="1" reset="1">
             <Global>
-                <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
-                <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
-                <!-- Window in half pixels  -->
-                <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
-                <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <Latencies       stripLatency="294" pixelLatency="297"/>
-                <Thresholds      stripThreshold="40" stripThresholdHigh="100" pixelThreshold="40"/>
-                <HitLogic        stripMode="0" pixelMode="0"/> 
-                <InjectedCharge  stripCharge="50000" pixelCharge="0"/> 
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+                <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
+                <HitLogic        stripMode="0" pixelMode="0"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
+                <Latencies       stripLatency="296" pixelLatency="295"/>
+                <Thresholds      stripThreshold="100" stripThresholdHigh="100" pixelThreshold="120"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
+                <!-- <HipLogic        stripCut="7" pixelCut="7"/> MUST BE FIXED IN THE CODE BOTH SSA AND MPA LORE IRENE--> 
+                <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <InjectedCharge  stripCharge="80" pixelCharge="40"/> <!-- in DAC units for each chip type - their electron value is different though! -->
+                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/> 
             </Global>
             
             
@@ -191,7 +183,7 @@
                 <Register name="trigger_type"> 0 </Register>
                 <Register name="data_type"> 0 </Register>
                 <!--this is what is commonly known as stub latency-->
-                <Register name="common_stubdata_delay"> 42 </Register>
+                <Register name="common_stubdata_delay"> 217 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
@@ -243,8 +235,9 @@
 
     <Setting name="TriggerMultiplicity">0</Setting>
 
-    <Setting name="StartLatency">270</Setting>
-    <Setting name="LatencyRange">50</Setting>
+    <Setting name="StartLatency">290</Setting>
+    <Setting name="LatencyRange">10</Setting>
+    <Setting name="StubAlignmentScanStart">80</Setting>
 
 
     <Setting name="PSmoduleSSAthreshold">150</Setting>
@@ -324,9 +317,9 @@
     <!--<Setting name="PedeNoiseUntrimmedLimit">3.9</Setting>Aligned to +/- one trimdac unit-->
     <Setting name="PedeNoiseUntrimmedLimit">4.95</Setting><!--Aligned to ~5sigma sigma~=0.98-->
 
-    <Setting name="PedeNoiseUseFixRange">1</Setting>
-    <Setting name="PedeNoiseMinThreshold">0</Setting>
-    <Setting name="PedeNoiseMaxThreshold">50</Setting>
+    <!-- <Setting name="PedeNoiseUseFixRange">1</Setting>
+    <Setting name="PedeNoiseMinThreshold">40</Setting>
+    <Setting name="PedeNoiseMaxThreshold">240</Setting> -->
     <Setting name="FullScan">0</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">70</Setting>
     <Setting name="PedeNoisePulseAmplitude">70</Setting>
@@ -335,8 +328,8 @@
 
     <Setting name="StartPhase">0</Setting>
     <Setting name="PhaseRange">7</Setting>
-    <Setting name="PhaseStartLatency">270</Setting>
-    <Setting name="PhaseLatencyRange">40</Setting>
+    <Setting name="PhaseStartLatency">290</Setting>
+    <Setting name="PhaseLatencyRange">10</Setting>
 
     <!-- Sync Test --> 
     <Setting name="Attempts">1</Setting>

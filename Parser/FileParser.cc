@@ -530,12 +530,15 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
         // then hit logic mode
         pugi::xml_node cHitLogicNode = cGlobalSettingsNode.child("HitLogic");
+        std::cout << " cHitLogicNode " << cHitLogicNode << std::endl;
         if(cHitLogicNode != nullptr)
         {
             for(auto cChip: *pHybrid)
             {
+                if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 std::cout << __LINE__ << " " << __PRETTY_FUNCTION__ << " HitLogic " << std::endl;
                 uint8_t cMode = static_cast<uint8_t>(convertAnyInt(cHitLogicNode.attribute("stripMode").value()));
+                std::cout <<__LINE__<< " stripMode is " << +cMode << std::endl;
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     cChip->setReg("SAMPLINGMODE_ALL", cMode);
@@ -544,10 +547,15 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {              
-                    uint16_t control_1 = cChip->getReg("control_1");
-                    control_1 = (control_1 & 0xF8) + (cMode & 0x07) ;
-                    cChip->setReg("control_1", control_1);
-                    os << BOLDCYAN << "|\t|\t|----Applying global SSA hit logic settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
+                    std::cout << " strip mode SSA2" <<std::endl;
+                    uint16_t ENFLAGS = cChip->getReg("ENFLAGS");
+                    //LOG(INFO) << BOLDCYAN << " get ENFLAGS from memory " << std::hex << ENFLAGS << std::dec << RESET;
+                    //LOG(INFO) << BOLDCYAN << " (ENFLAGS & 0x1F) " << std::hex << (ENFLAGS & 0x1F) << std::dec << " (cMode & 0x03) " << std::hex << (cMode & 0x03) << std::dec << " ((cMode & 0x03)<<5) " << std::hex <<  ((cMode & 0x03)<<5) << std::dec <<  RESET;
+                    ENFLAGS = (ENFLAGS & 0x1F) + ((cMode & 0x03)<<5) ;
+                    // LOG(INFO) << BOLDCYAN << __LINE__ << __PRETTY_FUNCTION__ << " setReg(ENFLAGS): 0x" << std::hex << ENFLAGS << std::dec <<  RESET;
+                    cChip->setReg("ENFLAGS", ENFLAGS);
+                    // LOG(INFO) << BOLDCYAN << __LINE__ << __PRETTY_FUNCTION__ << " DONE setReg(ENFLAGS): 0x" << std::hex << ENFLAGS << std::dec <<  RESET;
+                    os << BOLDCYAN << "|\t|\t|----ENFLAGS to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
                     << std::dec << RESET << std::endl;
                 }
 
@@ -564,7 +572,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()); // / SSA2_ELECTRON_CALDAC; // conversion factor to electron with 1 CalDAC = 0.039 fC 
                 if (cInjStrps > 0xFF)
                 {
-                    throw std::runtime_error("The maximum charge that can be injected is 243x255. Acceptable values are between 0 and 61965.");
+                    throw std::runtime_error("The maximum charge that can be injected is 255. Acceptable values are between 0 and 255.");
                     exit(0);
                 }
                 cChip->setReg("Bias_CALDAC", cInjStrps);
@@ -602,7 +610,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             }
         }
 
-        // hip cut
+        // hip cut -> must be fixed! IRENE&LORENZO
         pugi::xml_node cHIPmode = cGlobalSettingsNode.child("HipLogic");
         if(cHIPmode != nullptr)
         {
@@ -616,7 +624,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             }
         }
 
-        // timing
+        // timing -> must be fixed! IRENE&LORENZO
         pugi::xml_node cSamplingDelay = cGlobalSettingsNode.child("SamplingDelay");
         if(cSamplingDelay != nullptr)
         {
@@ -625,11 +633,11 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("stripCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("stripFine").value());
-                cChip->setReg("PhaseShiftClock", cCoarse);
+                cChip->setReg("ClockDeskewing_coarse", cCoarse);
                 ChipRegMask cMask;
                 cMask.fNbits    = 3;
                 cMask.fBitShift = 0;
-                cChip->setRegBits("ClockDeskewing", cMask, cFine);
+                cChip->setRegBits("ClockDeskewing_fine", cMask, cFine);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
                    << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
@@ -751,7 +759,12 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cThresholdPxls = convertAnyInt(cThresholdNode.attribute("pixelThreshold").value());
-                cThresholdPxls     = (cThresholdPxls > 0xFF) ? 0xFF : cThresholdPxls;
+                if (cThresholdPxls > 0xFF)
+                {
+                    throw std::runtime_error("The pixelThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
+                    exit(0);
+                }
+                
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
                     std::stringstream cRegName;
@@ -774,9 +787,9 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 uint8_t cWindow = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("window").value()));
                 uint8_t cRegVal = (cMode << 6) | cWindow;
                 cChip->setReg("ECM", cRegVal);
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode << std::dec
-                   << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN << "|\t|\t|\t|---- register value [ECM] is 0x" << std::hex
-                   << +cRegVal << std::dec << RESET << std::endl;
+                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode << std::dec
+                   << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex
+                   << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET;
             }
         }
         // then hit logic mode
@@ -794,9 +807,14 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 }
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    cChip->setReg("Mask_ALL", 0x3);
-                    cChip->setReg("PixelControl_ALL", cMode); // Irene
-                    cChip->setReg("Mask_ALL", 0xFF);
+                    uint16_t pixelControl = cChip->getReg("PixelControl_ALL");
+                    pixelControl = (pixelControl & 0xFC) + (cMode & 0x03) ;
+                    //std::cout << __LINE__ << __PRETTY_FUNCTION__ << "SETTING REGISTER" << std::endl;
+                    cChip->setReg("PixelControl_ALL", pixelControl);
+
+                    // cChip->setReg("Mask_ALL", 0x3);
+                    // cChip->setReg("PixelControl_ALL", cMode); // Irene
+                    // cChip->setReg("Mask_ALL", 0xFF);
                 }
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
@@ -811,8 +829,12 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             for(auto cChip: *pHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
-                int cInjPxls = convertAnyInt(cInjectionNode.attribute("pixelCharge").value()) / 220.;
-                cInjPxls     = (cInjPxls > 0xFF) ? 0xFF : cInjPxls;
+                int cInjPxls = convertAnyInt(cInjectionNode.attribute("pixelCharge").value()); // / MPA2_ELECTRON_CALDAC. conversion factor from DAQ to electrons;
+                if (cInjPxls > 0xFF)
+                {
+                    throw std::runtime_error("The maximum charge that can be injected is 255. Acceptable values are between 0 and 255.");
+                    exit(0);
+                }
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
                     std::stringstream cRegName;
@@ -821,7 +843,6 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA injection settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjPxls
                    << std::dec << RESET << std::endl;
-                //
             }
         }
 
@@ -842,9 +863,13 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     cChip->setReg("MemoryControl_1_ALL", cLatency & 0xFF);
-                    cChip->setReg("Mask_ALL", 0x1);
-                    cChip->setReg("MemoryControl_2_ALL", ((cLatency >> 8)) & 0xFF);
-                    cChip->setReg("Mask_ALL", 0xFF);
+                    
+                    uint16_t memoryControl_2 = cChip->getReg("MemoryControl_2_ALL");
+                    memoryControl_2 = (memoryControl_2 & 0xFE) + ((cLatency >> 8) & 0x01) ;
+                    cChip->setReg("MemoryControl_2_ALL", memoryControl_2);
+                    // cChip->setReg("Mask_ALL", 0x1);
+                    // cChip->setReg("MemoryControl_2_ALL", ((cLatency >> 8)) & 0xFF);
+                    // cChip->setReg("Mask_ALL", 0xFF);
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
                    << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
@@ -859,12 +884,14 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCut = convertAnyInt(cHIPmode.attribute("pixelCut").value());
-                if(cChip->getFrontEndType() == FrontEndType::MPA) cChip->setReg("HipCut_ALL", cCut); // Irene
+                if(cChip->getFrontEndType() == FrontEndType::MPA) 
+                    cChip->setReg("HipCut_ALL", cCut); // Irene
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     cChip->setReg("Mask_ALL", 0xe0);
                     cChip->setReg("PixelControl_ALL", (cCut << 5)); // Irene
                     cChip->setReg("Mask_ALL", 0xFF);
+                    exit(0);//LORENZO THIS MUST BE FIXED IN THE XML AND HERE!!!!!!!
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
                    << RESET << std::endl;
@@ -886,13 +913,19 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 }
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    cChip->setReg("Mask", 0x70);
-                    cChip->setReg("Control_1", (cCoarse << 4));
-                    cChip->setReg("Mask", 0xFF);
+                    //cChip->setReg("Mask", 0x70);
+                    //cChip->setReg("Control_1", (cCoarse << 4));//LORENZO ONLY THE TOP 3 BITS?? WHAT IS Control_1?
+                    //LORENZO, IF SO THEN THIS IS THE WAY TO DO IT
+                    ChipRegMask cMask;
+                    cMask.fNbits    = 3;
+                    cMask.fBitShift = 4;
+                    cChip->setRegBits("Control_1", cMask, cCoarse);
 
-                    cChip->setReg("Mask", 0x0F);
+                    //cChip->setReg("Mask", 0xFF);
+
+                    //cChip->setReg("Mask", 0x0F);
                     cChip->setReg("ConfDLL", (cFine));
-                    cChip->setReg("Mask", 0xFF);
+                    //cChip->setReg("Mask", 0xFF);
                 }
                 cChip->setReg("ConfDLL", cFine);
 

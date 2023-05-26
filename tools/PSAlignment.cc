@@ -98,7 +98,6 @@ void PSAlignment::Initialise()
                     // if(cChip->getFrontEndType() == FrontEndType::SSA2) cReadoutMode = cChip->getReg("control_1")  & 0xF8;
                     std::cout << " cReadoutMode " << cReadoutMode << std::endl;
                     fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", cReadoutMode);
-                    // This write 0 for all bits but Irene thinks it is wrong, only the [2:0] bits should be set to zero for the readout mode of the SSA2 (accordinh to manual)
                     if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         std::cout << " ssa2 control_1 after " << cChip->getReg("control_1")  << std::endl;
@@ -162,7 +161,7 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
                         fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x3F);
                         fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", 0x02);
                         fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x00);
-                        fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x02);
+                        fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x02);//Irene
                     }
                 } // chip
             }     // hybrid

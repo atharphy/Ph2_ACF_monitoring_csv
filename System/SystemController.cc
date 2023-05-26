@@ -769,9 +769,9 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             lpGBTClockConfig cClkCnfg;
             cClkCnfg.fClkFreq         = 4;
             cClkCnfg.fClkDriveStr     = cSsaClockDrive;
-            cClkCnfg.fClkInvert       = 0;
+            cClkCnfg.fClkInvert       = 1;
 
-            LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " <<  +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
+            //LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " <<  +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
 
             cClkCnfg.fClkPreEmphWidth = 0;
             cClkCnfg.fClkPreEmphMode  = 3; // 3;

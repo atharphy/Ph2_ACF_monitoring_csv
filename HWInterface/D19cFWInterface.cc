@@ -1493,20 +1493,26 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
     // LOG(INFO) << BOLDBLUE << cOutput.str() << RESET;
 
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    if(pVerify && pItem.fControlReg == 0) return SingleRegisterWriteRead(pChip, pItem);
+    if(pVerify && pItem.fControlReg == 0) 
+        return SingleRegisterWriteRead(pChip, pItem);
 
     auto cRegisterMap = pChip->getRegMap();
     auto cIterator    = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
     if(cIterator != cRegisterMap.end())
     {
+        LOG(DEBUG) << BOLDRED << __LINE__ << "] " << "D19cFWInterface::SingleRegisterWrite Writing: 0x" << std::hex << pItem.fValue << std::dec << RESET;
         if(fFEConfigurationInterface->SingleWrite(pChip, pItem))
         {
             // update map
             auto cPreviousValue = cIterator->second.fValue;
             pChip->setReg(cIterator->first, pItem.fValue);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite successful write of 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
-                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            uint16_t readBackVal = pChip->getReg(cIterator->first);
+            LOG(DEBUG) << BOLDGREEN << __LINE__ << "]" << " D19cFWInterface::SingleRegisterWrite Succesful write of 0x" 
+                    << std::hex << +pItem.fValue << " to " << cIterator->first
+                    << "\t.. Memory is now 0x" << +readBackVal 
+                    << " it was 0x" << +cPreviousValue << std::dec << RESET;
             pItem = pChip->getRegItem(cIterator->first);
+            LOG(DEBUG) << BOLDGREEN << __LINE__ << "]" << " DONE D19cFWInterface::SingleRegisterWrite" << RESET;
         }
         else
             LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILED to write to Register " << cIterator->first << RESET;
