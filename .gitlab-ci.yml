@@ -23,7 +23,7 @@ workflow:
       allow_failure: true
 
 image:
-  name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_c7:test
+  name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_c7:latest
   entrypoint: ["/bin/sh","-c"]
 
 
@@ -51,7 +51,7 @@ include:
   stage: build_c7
   needs: []
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_c7:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_c7:latest
     entrypoint: ["/bin/sh","-c"]
   before_script:
     - source ./setup.sh ci
@@ -120,7 +120,7 @@ build:StandAlone_woDS_al8:
   extends: build:StandAlone_woDS_c7
   stage: build_al8
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Stand-alone application, with data streaming
@@ -128,7 +128,7 @@ build:StandAlone_wDS_al8:
   extends: build:StandAlone_wDS_c7
   stage: build_al8
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Herd application
@@ -136,7 +136,7 @@ build:HerdApplication_al8:
   extends: build:HerdApplication_c7
   stage: build_al8
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Shep application
@@ -144,7 +144,7 @@ build:ShepApplication_al8:
   extends: build:ShepApplication_c7
   stage: build_al8
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Compile with EUDAQ libraries
@@ -152,7 +152,7 @@ build:StandAlone_wEUDAQ_al8:
   extends: build:StandAlone_wEUDAQ_c7
   stage: build_al8
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Compile with TC_USB library
@@ -160,7 +160,7 @@ build:StandAlone_wTC_USB_al8:
   extends: build:StandAlone_wTC_USB_c7
   stage: build_al8
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
     entrypoint: ["/bin/sh","-c"]
 
 ## BUILD AL9 ##########
@@ -170,7 +170,7 @@ build:StandAlone_woDS_al9:
   extends: build:StandAlone_woDS_c7
   stage: build_al9
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Stand-alone application, with data streaming
@@ -178,7 +178,7 @@ build:StandAlone_wDS_al9:
   extends: build:StandAlone_wDS_c7
   stage: build_al9
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Herd application
@@ -186,7 +186,7 @@ build:HerdApplication_al9:
   extends: build:HerdApplication_c7
   stage: build_al9
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Shep application
@@ -194,7 +194,7 @@ build:ShepApplication_al9:
   extends: build:ShepApplication_c7
   stage: build_al9
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Compile with EUDAQ libraries
@@ -202,7 +202,7 @@ build:StandAlone_wEUDAQ_al9:
   extends: build:StandAlone_wEUDAQ_c7
   stage: build_al9
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
     entrypoint: ["/bin/sh","-c"]
 
 # Compile with TC_USB library
@@ -210,7 +210,7 @@ build:StandAlone_wTC_USB_al9:
   extends: build:StandAlone_wTC_USB_c7
   stage: build_al9
   image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:test
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
     entrypoint: ["/bin/sh","-c"]
 
 
@@ -227,9 +227,6 @@ build:StandAlone_wTC_USB_al9:
   stage: run
   needs:
     - build:StandAlone_woDS_c7
-  before_script:
-    - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
   rules:
     - if: $CI_MERGE_REQUEST_ID
       when: always
@@ -241,18 +238,19 @@ build:StandAlone_wTC_USB_al9:
 ## IT hybrid
 run:IT:
   extends: .run
+  before_script:
+    - cp settings/CMSIT_CI.xml .
+    - cp settings/RD53Files/CMSIT_RD53B.txt .
   script:
     - source ./setup.sh ci
-    - cd ci_tools
-    - cp CMSIT_RD53.txt CMSIT_RD53_default.txt
-    - CMSITminiDAQ -f CMSIT.xml -r
-    - CMSITminiDAQ -f CMSIT.xml -c pixelalive
-    - CMSITminiDAQ -f CMSIT.xml -c threqu
-    - CMSITminiDAQ -f CMSIT.xml -c scurve
+    - CMSITminiDAQ -f CMSIT_CI.xml -r
+    - CMSITminiDAQ -f CMSIT_CI.xml -c pixelalive
+    - CMSITminiDAQ -f CMSIT_CI.xml -c threqu
+    - CMSITminiDAQ -f CMSIT_CI.xml -c scurve
   after_script:
-    - cp ci_tools/Results/Run000000_PixelAlive.root .
-    - cp ci_tools/Results/Run000001_ThrEqualization.root .
-    - cp ci_tools/Results/Run000002_SCurve.root .
+    - cp Results/Run000000_PixelAlive.root .
+    - cp Results/Run000001_ThrEqualization.root .
+    - cp Results/Run000002_SCurve.root .
     - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysisRD53.log
     - cp coreAnalysisRD53.log .
   artifacts:
@@ -260,28 +258,22 @@ run:IT:
       - Run000000_PixelAlive.root
       - Run000001_ThrEqualization.root
       - Run000002_SCurve.root
-      - ci_tools/plot_canvas.py
-      - ci_tools/CMSIT*
       - coreAnalysisRD53.log
     expire_in: 1 week
 
-## 2S hybrid
+## 2S module
 run:2S:
   extends: .run
   script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./setup.sh ci
-    - cd ci_tools
-    - ot_module_test -f CMS2S.xml -t -m -a -b --reconfigure
+    - ot_module_test -f settings/CMS2S_CI.xml -t -m -a -b --reconfigure
   after_script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 0
-    - cp ci_tools/Results/*/Hybrid.root .
+    - cp Results/*/Hybrid.root .
     - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysis2S.log
     - cp coreAnalysis2S.log .
   artifacts:
     paths:
       - Hybrid.root
-      - ci_tools/plot_hist.py
       - coreAnalysis2S.log
       - MonitorResults/MonitorDQM*.root
     expire_in: 1 week
@@ -290,17 +282,13 @@ run:2S:
 run:2S:python:
   extends: .run
   script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./setup.sh ci
-    - cd ci_tools
-    - PythonController.py -f CMS2S.xml -c calibrationandpedenoise
+    - PythonController.py -f settings/CMS2S_CI.xml -c calibrationandpedenoise
   after_script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 0
-    - cp ci_tools/Results/* .
-    - ls -R ci_tools
+    - cp Results/*/*.root .
   artifacts:
     paths:
-      - ci_tools/*
+      - Result.root
     expire_in: 1 week
   needs:
     - job: build:StandAlone_woDS_c7
@@ -312,17 +300,13 @@ run:2S:python:
 run:2S:DS:
   extends: .run
   script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./setup.sh ci
-    - cd ci_tools
-    - supervisor -b -f CMS2S.xml -c calibrationandpedenoise
+    - supervisor -b -f settings/CMS2S_CI.xml -c calibrationandpedenoise
   after_script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 0
-    - cp ci_tools/Results/* .
-    - ls -R ci_tools
+    - cp Results/*/*.root .
   artifacts:
     paths:
-      - ci_tools/*
+      - Result.root
     expire_in: 1 week
   needs:
     - job: build:StandAlone_wDS_c7
@@ -351,16 +335,16 @@ check:IT:
   needs:
     - run:IT
   script:
-    - python3 ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
-    - python3 ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
-    - python3 ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_SCurves_Chip(0)" -o plots
+    - python3 pythonUtils/ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_15/D_B(0)_O(0)_H(0)_PixelAlive_Chip(15)" -o plots
+    - python3 pythonUtils/ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_15/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(15)" -o plots
+    - python3 pythonUtils/ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_15/D_B(0)_O(0)_H(0)_SCurves_Chip(15)" -o plots
 
 check:2S:
   extends: .check
   needs:
     - run:2S
   script:
-    - python3 ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_3/Hybrid_0/D_B(0)_O(3)_HybridNoiseDistribution_Hybrid(0)" -o plots
+    - python3 pythonUtils/ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_2/Hybrid_4/D_B(0)_O(2)_HybridNoiseDistribution_Hybrid(4)" -o plots
 
 
 ## DEPLOY ##########

@@ -93,22 +93,22 @@ void DQMHistogramCicFEAlignment::fillManualPhaseScan(uint8_t pPhase, uint8_t pLi
 {
     for(auto board: pErrors)
     {
-        auto& cBrdData = pData.at(board->getIndex());
-        auto& cBrdHist = fManualPhaseScan.at(board->getIndex());
+        auto& cBrdData = pData.getObject(board->getId());
+        auto& cBrdHist = fManualPhaseScan.getObject(board->getId());
         for(auto opticalGroup: *board)
         {
-            auto& cOGData = cBrdData->at(opticalGroup->getIndex());
-            auto& cOGHist = cBrdHist->at(opticalGroup->getIndex());
+            auto& cOGData = cBrdData->getObject(opticalGroup->getId());
+            auto& cOGHist = cBrdHist->getObject(opticalGroup->getId());
             for(auto hybrid: *opticalGroup)
             {
-                auto& cHybrdData = cOGData->at(hybrid->getIndex());
-                auto& cHybrdHist = cOGHist->at(hybrid->getIndex());
+                auto& cHybrdData = cOGData->getObject(hybrid->getId());
+                auto& cHybrdHist = cOGHist->getObject(hybrid->getId());
                 for(auto chip: *hybrid)
                 {
-                    auto& cChipData   = cHybrdData->at(chip->getIndex());
+                    auto& cChipData   = cHybrdData->getObject(chip->getId());
                     auto& cInputData  = cChipData->getSummary<std::string>();
                     auto& cErrors     = chip->getSummary<uint32_t>();
-                    TH2F* cChipHist   = cHybrdHist->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cChipHist   = cHybrdHist->getObject(chip->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     auto  cBin        = cChipHist->FindBin(pPhase, pLine);
                     auto  cBinContent = cChipHist->GetBinContent(cBin);
                     cChipHist->SetBinContent(cBin, cBinContent + cInputData.length() - cErrors);

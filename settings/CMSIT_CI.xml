@@ -2,68 +2,47 @@
 
 <HwDescription>
   <BeBoard Id="0" boardType="RD53" eventType="VR">
-    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=192.168.0.50:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/CMSIT_address_table.xml" />
-    <!---
-        <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://192.168.1.80:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/CMSIT_address_table.xml" />
-    -->
+    <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.75:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/CMSIT_address_table.xml" />
 
     <!-- Frontend chip configuration -->
     <OpticalGroup Id="0" FMCId="0">
-      <!--
-      <lpGBT_Files path="${PWD}/" />
-      <lpGBT Id="0" version="0" configfile="CMSIT_LpGBT-v0.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="0" TxDataRate="160" TxHSLPolarity="1">
-        <Settings
-            EPRX60ChnCntr_phase = "6"
-            />
-      </lpGBT>
-      -->
       <Hybrid Id="0" enable="1">
         <RD53_Files path="${PWD}/" />
 
         <!-- Available Comment fields are: 50x50, 25x100origR0C0, 25x100origR1C0, unknown, combined with RD53A, RD53B, dual, quad -->
-        <RD53A Id="0" Lane="0" configfile="CMSIT_RD53A.txt" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0" Comment="RD53A 50x50">
+        <RD53B Id="15" Lane="0" configfile="CMSIT_RD53B.txt" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0" Comment="RD53B 50x50">
+          <LaneConfig primary="1" outputLanes="0001" singleChannelInputs="0000" dualChannelInput="0000" />
           <!-- Overwrite .txt configuration file settings -->
           <Settings
-              PA_IN_BIAS_LIN         =   "350"
-              FC_BIAS_LIN            =    "20"
-              KRUM_CURR_LIN          =    "29"
-              LDAC_LIN               =   "130"
-              COMP_LIN               =   "110"
-              REF_KRUM_LIN           =   "300"
-              Vthreshold_LIN         =   "400"
+              DAC_PREAMP_L_LIN       =   "300"
+              DAC_PREAMP_R_LIN       =   "300"
+              DAC_PREAMP_TL_LIN      =   "300"
+              DAC_PREAMP_TR_LIN      =   "300"
+              DAC_PREAMP_T_LIN       =   "300"
+              DAC_PREAMP_M_LIN       =   "300"
+              DAC_FC_LIN             =    "20"
+              DAC_KRUM_CURR_LIN      =    "70"
+              DAC_REF_KRUM_LIN       =   "360"
+              DAC_COMP_LIN           =   "110"
+              DAC_COMP_TA_LIN        =   "110"
+              DAC_GDAC_L_LIN         =   "450"
+              DAC_GDAC_R_LIN         =   "450"
+              DAC_GDAC_M_LIN         =   "450"
+              DAC_LDAC_LIN           =   "140"
 
-              IBIASP1_SYNC           =   "100"
-              IBIASP2_SYNC           =   "150"
-              IBIAS_SF_SYNC          =    "80"
-              IBIAS_KRUM_SYNC        =    "55"
-              IBIAS_DISC_SYNC        =   "280"
-              ICTRL_SYNCT_SYNC       =   "100"
-              VBL_SYNC               =   "360"
-              VTH_SYNC               =   "150"
-              VREF_KRUM_SYNC         =   "450"
-              CONF_FE_SYNC           =     "2"
-
-              PRMP_DIFF              =   "511"
-              FOL_DIFF               =   "542"
-              PRECOMP_DIFF           =   "512"
-              COMP_DIFF              =  "1023"
-              VFF_DIFF               =    "40"
-              VTH1_DIFF              =   "400"
-              VTH2_DIFF              =   "100"
-              LCC_DIFF               =    "20"
-              CONF_FE_DIFF           =     "0"
-
-              VCAL_HIGH              =   "600"
+              VCAL_HIGH              =  "2000"
               VCAL_MED               =   "100"
 
-              GP_LVDS_ROUTE          =     "0"
-              LATENCY_CONFIG         =   "136"
+              GP_LVDS_ROUTE_0        =  "1495"
+              GP_LVDS_ROUTE_1        =  "1495"
+              TriggerConfig          =   "136"
               CLK_DATA_DELAY         =     "0"
               CAL_EDGE_FINE_DELAY    =     "0"
               ANALOG_INJ_MODE        =     "0"
+              SEL_CAL_RANGE          =     "0"
 
-              VOLTAGE_TRIM_DIG       =    "16"
-              VOLTAGE_TRIM_ANA       =    "16"
+              VOLTAGE_TRIM_DIG       =     "8"
+              VOLTAGE_TRIM_ANA       =     "8"
 
               CML_CONFIG_SER_EN_TAP  =  "0b00"
               CML_CONFIG_SER_INV_TAP =  "0b00"
@@ -71,63 +50,53 @@
               DAC_CML_BIAS_1         =     "0"
               DAC_CML_BIAS_2         =     "0"
 
-              MONITOR_CONFIG_ADC     =     "5"
-              MONITOR_CONFIG_BG      =    "12"
+              MON_ADC_TRIM           =     "5"
 
-              RESISTORI2V            = "10000"
+              ToT6to4Mapping         =     "0"
+              ToTDualEdgeCount       =     "0"
+
+              RESISTORI2V            =  "5000"
               ADC_OFFSET_VOLT        =    "63"
               ADC_MAXIMUM_VOLT       =   "839"
               TEMPSENS_IDEAL_FACTOR  =  "1225"
-              VREF_ADC               =   "900"
+              VREF_ADC               =   "800"
               />
-        </RD53A>
+        </RD53B>
 
         <Global
-            EN_CORE_COL_SYNC         =     "0"
-            EN_CORE_COL_LIN_1        = "65535"
-            EN_CORE_COL_LIN_2        =     "1"
-            EN_CORE_COL_DIFF_1       =     "0"
-            EN_CORE_COL_DIFF_2       =     "0"
+            EN_CORE_COL_0            = "65535"
+            EN_CORE_COL_1            = "65535"
+            EN_CORE_COL_2            = "65535"
+            EN_CORE_COL_3            =    "63"
 
-            EN_CORE_COL_CAL_LIN_1    = "65535"
-            EN_CORE_COL_CAL_LIN_2    = "65535"
-            EN_CORE_COL_CAL_LIN_3    = "65535"
-            EN_CORE_COL_CAL_LIN_4    = "65535"
-            EN_CORE_COL_CAL_LIN_5    =    "15"
+            EN_CORE_COL_CAL_0        = "65535"
+            EN_CORE_COL_CAL_1        = "65535"
+            EN_CORE_COL_CAL_2        = "65535"
+            EN_CORE_COL_CAL_3        =    "63"
 
-            EN_CORE_COL_CAL_SYNC_1   = "65535"
-            EN_CORE_COL_CAL_SYNC_2   = "65535"
-            EN_CORE_COL_CAL_SYNC_3   = "65535"
-            EN_CORE_COL_CAL_SYNC_4   = "65535"
+            HITOR_MASK_0             = "65535"
+            HITOR_MASK_1             = "65535"
+            HITOR_MASK_2             = "65535"
+            HITOR_MASK_3             =    "63"
 
-            EN_CORE_COL_CAL_DIFF_1   = "65535"
-            EN_CORE_COL_CAL_DIFF_2   = "65535"
-            EN_CORE_COL_CAL_DIFF_3   = "65535"
-            EN_CORE_COL_CAL_DIFF_4   = "65535"
-            EN_CORE_COL_CAL_DIFF_5   =    "15"
+            PrecisionToTEnable_0     =     "0"
+            PrecisionToTEnable_1     =     "0"
+            PrecisionToTEnable_2     =     "0"
+            PrecisionToTEnable_3     =     "0"
 
-            HITOR_0_MASK_LIN_0       =     "0"
-            HITOR_0_MASK_LIN_1       =     "0"
-            HITOR_1_MASK_LIN_0       =     "0"
-            HITOR_1_MASK_LIN_1       =     "0"
-            HITOR_2_MASK_LIN_0       =     "0"
-            HITOR_2_MASK_LIN_1       =     "0"
-            HITOR_3_MASK_LIN_0       =     "0"
-            HITOR_3_MASK_LIN_1       =     "0"
+            EnHitsRemoval_0          =     "0"
+            EnHitsRemoval_1          =     "0"
+            EnHitsRemoval_2          =     "0"
+            EnHitsRemoval_3          =     "0"
 
-            HITOR_0_MASK_SYNC        = "65535"
-            HITOR_1_MASK_SYNC        = "65535"
-            HITOR_2_MASK_SYNC        = "65535"
-            HITOR_3_MASK_SYNC        = "65535"
+            EnIsolatedHitRemoval_0   =     "0"
+            EnIsolatedHitRemoval_1   =     "0"
+            EnIsolatedHitRemoval_2   =     "0"
+            EnIsolatedHitRemoval_3   =     "0"
 
-            HITOR_0_MASK_DIFF_0      = "65535"
-            HITOR_0_MASK_DIFF_1      =     "1"
-            HITOR_1_MASK_DIFF_0      = "65535"
-            HITOR_1_MASK_DIFF_1      =     "1"
-            HITOR_2_MASK_DIFF_0      = "65535"
-            HITOR_2_MASK_DIFF_1      =     "1"
-            HITOR_3_MASK_DIFF_0      = "65535"
-            HITOR_3_MASK_DIFF_1      =     "1"
+            HIT_SAMPLE_MODE          =     "1"
+            EN_SEU_COUNT             =     "0"
+            CDR_CONFIG_SEL_PD        =     "0"
 
             LOCKLOSS_CNT             =     "0"
             BITFLIP_WNG_CNT          =     "0"
@@ -139,10 +108,10 @@
             HITOR_2_CNT              =     "0"
             HITOR_3_CNT              =     "0"
 
-            WNGFIFO_FULL_CNT_0       =     "0"
-            WNGFIFO_FULL_CNT_1       =     "0"
-            WNGFIFO_FULL_CNT_2       =     "0"
-            WNGFIFO_FULL_CNT_3       =     "0"
+            READTRIG_CNT             =     "0"
+            RDWRFIFOERROR_CNT        =     "0"
+            PIXELSEU_CNT             =     "0"
+            GLOBALCONFIGSEU_CNT      =     "0"
             />
       </Hybrid>
     </OpticalGroup>
@@ -159,8 +128,6 @@
                0b01 enables HitOr for the first (left-most) miniDP connector,
                0b10 enables HitOr for the second miniDP connector, ...
           -->
-          <Register name="tp_fsm_trigger_en"> 1 </Register>
-          <!-- Enable/Disable trigger in Test-FSM -->
         </Register>
 
         <Register name="ext_tlu_reg1">
@@ -206,6 +173,7 @@
             INJtype            = 5:  analog + X-talk decoupled pixels
          ResetMask             = 0:  do not enable masked pixels;        ResetMask             = 1: enable all pixels
          ResetTDAC             = -1: do not reset TDAC;                  ResetTDAC             >=0: reset all TDACs to value
+         DoDataIntegrity       = 0:  no data integrity detection;        DoDataIntegrity       = 1: run data integrity detection
          DoOnlyNGroups         = 0:  do not consider this option;        DoOnlyNGroups         = n: run only on the specified number of groups
          DisplayHisto          = 0:  don't display;                      DisplayHisto          = 1: display
          UpdateChipCfg         = 0:  don't update;                       UpdateChipCfg         = 1: update
@@ -232,38 +200,39 @@
     <Setting name="INJtype">               1 </Setting>
     <Setting name="ResetMask">             0 </Setting>
     <Setting name="ResetTDAC">            -1 </Setting>
+    <Setting name="DoDataIntegrity">       0 </Setting>
 
     <Setting name="ROWstart">              0 </Setting>
-    <Setting name="ROWstop">             191 </Setting>
-    <Setting name="COLstart">            128 </Setting>
-    <Setting name="COLstop">             263 </Setting>
+    <Setting name="ROWstop">             335 </Setting>
+    <Setting name="COLstart">              0 </Setting>
+    <Setting name="COLstop">             431 </Setting>
 
     <Setting name="LatencyStart">          0 </Setting>
     <Setting name="LatencyStop">         511 </Setting>
 
     <Setting name="VCalHstart">          100 </Setting>
-    <Setting name="VCalHstop">           600 </Setting>
+    <Setting name="VCalHstop">          1100 </Setting>
     <Setting name="VCalHnsteps">          50 </Setting>
     <Setting name="VCalMED">             100 </Setting>
 
     <Setting name="TargetCharge">      10000 </Setting>
     <Setting name="KrumCurrStart">         0 </Setting>
-    <Setting name="KrumCurrStop">        127 </Setting>
+    <Setting name="KrumCurrStop">        210 </Setting>
 
-    <Setting name="TDACGainStart">       130 </Setting>
-    <Setting name="TDACGainStop">        130 </Setting>
+    <Setting name="TDACGainStart">       140 </Setting>
+    <Setting name="TDACGainStop">        140 </Setting>
     <Setting name="TDACGainNSteps">        0 </Setting>
     <Setting name="DoNSteps">              0 </Setting>
 
-    <Setting name="ThrStart">            340 </Setting>
-    <Setting name="ThrStop">             440 </Setting>
+    <Setting name="ThrStart">            400 </Setting>
+    <Setting name="ThrStop">             450 </Setting>
     <Setting name="TargetThr">          2000 </Setting>
     <Setting name="TargetOcc">          1e-6 </Setting>
     <Setting name="OccPerPixel">        2e-5 </Setting>
     <Setting name="MaxMaskedPixels">       1 </Setting>
     <Setting name="UnstuckPixels">         0 </Setting>
 
-    <Setting name="VDDDTrimTarget">     1.30 </Setting>
+    <Setting name="VDDDTrimTarget">     1.20 </Setting>
     <Setting name="VDDATrimTarget">     1.20 </Setting>
     <Setting name="VDDDTrimTolerance">  0.02 </Setting>
     <Setting name="VDDATrimTolerance">  0.02 </Setting>
@@ -283,14 +252,14 @@
 
     <Setting name="TargetBER">          1e-5 </Setting>
 
-    <Setting name="RegNameDAC1">   VCAL_HIGH </Setting>
-    <Setting name="StartValueDAC1">      250 </Setting>
-    <Setting name="StopValueDAC1">       600 </Setting>
-    <Setting name="StepDAC1">             50 </Setting>
-    <Setting name="RegNameDAC2"> user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse </Setting>
-    <Setting name="StartValueDAC2">       28 </Setting>
-    <Setting name="StopValueDAC2">        50 </Setting>
-    <Setting name="StepDAC2">              1 </Setting>
+    <Setting name="RegNameDAC1"> user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse </Setting>
+    <Setting name="StartValueDAC1">       28 </Setting>
+    <Setting name="StopValueDAC1">        50 </Setting>
+    <Setting name="StepDAC1">              1 </Setting>
+    <Setting name="RegNameDAC2">   VCAL_HIGH </Setting>
+    <Setting name="StartValueDAC2">      300 </Setting>
+    <Setting name="StopValueDAC2">      1000 </Setting>
+    <Setting name="StepDAC2">             20 </Setting>
 
     <Setting name="DoOnlyNGroups">         0 </Setting>
     <Setting name="DisplayHisto">          0 </Setting>
@@ -308,27 +277,32 @@
     <Setting name="SaveBinaryData">        0 </Setting>
     <Setting name="nHITxCol">              1 </Setting>
     <Setting name="InjLatency">           32 </Setting>
-    <Setting name="nClkDelays">          280 </Setting>
+    <Setting name="nClkDelays">         1300 </Setting>
   </Settings>
 
   <!-- === Monitoring parameters ===
        MonitoringSleepTime: sleep for monitoring thread in milliseconds
   -->
   <MonitoringSettings>
-    <Monitoring type="RD53A" enable="0">
+    <Monitoring type="RD53B" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElement device="RD53"  register="VIN_ana_ShuLDO"  enable="1"/>
-      <MonitoringElement device="RD53"  register="VOUT_ana_ShuLDO" enable="1"/>
-      <MonitoringElement device="RD53"  register="VIN_dig_ShuLDO"  enable="1"/>
-      <MonitoringElement device="RD53"  register="VOUT_dig_ShuLDO" enable="1"/>
-      <MonitoringElement device="RD53"  register="ADCbandgap"      enable="1"/>
-      <MonitoringElement device="RD53"  register="Iref"            enable="1"/>
-      <MonitoringElement device="RD53"  register="TEMPSENS_1"      enable="1"/>
-      <MonitoringElement device="RD53"  register="TEMPSENS_4"      enable="1"/>
+      <MonitoringElement device="RD53"  register="VINA"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="VDDA"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="ANA_IN_CURR"          enable="1"/>
+      <MonitoringElement device="RD53"  register="VIND"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="VDDD"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="DIG_IN_CURR"          enable="1"/>
+      <MonitoringElement device="RD53"  register="Iref"                 enable="1"/>
+      <MonitoringElement device="RD53"  register="POLY_TEMPSENS_TOP"    enable="1"/>
+      <MonitoringElement device="RD53"  register="POLY_TEMPSENS_BOTTOM" enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_ANA_SLDO"    enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_DIG_SLDO"    enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_CENTER"      enable="1"/>
+      <MonitoringElement device="RD53"  register="INTERNAL_NTC"         enable="1"/>
 
-      <MonitoringElement device="LpGBT" register="TEMP"            enable="0"/>
-      <MonitoringElement device="LpGBT" register="VDD"             enable="0"/>
-      <MonitoringElement device="LpGBT" register="PUSMStatus"      enable="0"/>
+      <MonitoringElement device="LpGBT" register="TEMP"                 enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDD"                  enable="0"/>
+      <MonitoringElement device="LpGBT" register="PUSMStatus"           enable="0"/>
     </Monitoring>
   </MonitoringSettings>
 

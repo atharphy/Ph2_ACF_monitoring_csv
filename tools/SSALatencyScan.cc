@@ -20,7 +20,7 @@ void SSALatencyScan::Initialise(void) {}
 
 void SSALatencyScan::run(void)
 {
-    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+    ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
 
     cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
     cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
@@ -30,7 +30,7 @@ void SSALatencyScan::run(void)
 
     for(auto cBoard: theHitContainer)
     {
-        BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
+        BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->getObject(cBoard->getId()));
         if(cWithSSA) theBeBoard->setEventType(EventType::SSA);
         if(cWithMPA) theBeBoard->setEventType(EventType::MPA);
 
@@ -69,7 +69,8 @@ void SSALatencyScan::run(void)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                    ReadoutChip* theChip =
+                        static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
                     // this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_CALDAC", 120);
                     // this->fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 0x0);
                     // this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", 60);
@@ -105,7 +106,8 @@ void SSALatencyScan::run(void)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                        ReadoutChip* theChip =
+                            static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
                         if(cWithSSA) { this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_LSB", lat); }
                         if(cWithMPA)
 
@@ -165,7 +167,8 @@ void SSALatencyScan::run(void)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                    ReadoutChip* theChip =
+                        static_cast<ReadoutChip*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
 
                     if(cWithSSA) { this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_LSB", bestlat); }
 

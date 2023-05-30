@@ -276,6 +276,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
+    cTool.initializeExceptionHandler();
 
     std::ofstream cPowerLog;
 #ifdef __POWERSUPPLY__

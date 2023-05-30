@@ -9,6 +9,7 @@
 */
 
 #include "HWInterface/lpGBTInterface.h"
+#include "HWInterface/ExceptionHandler.h"
 
 using namespace Ph2_HwDescription;
 
@@ -49,7 +50,13 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
         cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerify);
     // TO-DO .. figure out what to do if piGBT is used
 
-    if(!cSuccess) throw Exception("[lpGBTInterface::WriteReg] LpGBT register writing issue");
+    if(!cSuccess)
+    {
+        LOG(INFO) << BOLDRED << "LpGBT register writing issue on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
+        ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
+        return false;
+    }
 
     pChip->setReg(pDacName, pDacValue);
     return cSuccess;
@@ -831,7 +838,13 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;
     } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
-    if(cIter == lpGBTconstants::MAXATTEMPTS) throw std::runtime_error(std::string("ADC conversion timed out"));
+    if(cIter == lpGBTconstants::MAXATTEMPTS)
+    {
+        LOG(INFO) << BOLDRED << "LpGBT ADC conversion timed out on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
+        ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
+        return 0;
+    }
 
     // Read ADC value
     uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
@@ -922,8 +935,10 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
     {
         // Stop BERT
         lpGBTInterface::StartBERT(pChip, false);
-        LOG(INFO) << BOLDRED << "BERT : All zeros at input ... exiting" << RESET;
-        throw std::runtime_error(std::string("BERT : All zeros at input"));
+        LOG(INFO) << BOLDRED << "LpGBT BERT : All zeros at input on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
+        ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
+        return 0.;
     }
 
     // Compute number of bits checked
@@ -998,7 +1013,10 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
         lpGBTInterface::StartBERT(pChip, false); // Stop
-        throw Exception("[lpGBTInterface::RunBERtest] All zeros at input");
+        LOG(INFO) << BOLDRED << "LpGBT BERT : All zeros at input on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
+        ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
+        return 0.;
     }
 
     // ########
@@ -1143,7 +1161,10 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
         // In the test system a run time error is undesired
         return false;
 #else
-        throw std::runtime_error(std::string("in D19clpGBTInterface::WriteI2C : I2C write transaction FAILED"));
+        LOG(INFO) << BOLDRED << "LpGBT I2C write transaction FAILED on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
+        ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
+        return false;
 #endif
     }
 
@@ -1182,7 +1203,10 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
         // In the test system a run time error is undesired
         return false;
 #else
-        throw std::runtime_error(std::string("in D19clpGBTInterface::ReadI2C : I2C Transaction failed"));
+        LOG(INFO) << BOLDRED << "LpGBT I2C read transaction FAILED on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+                  << RESET;
+        ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
+        return false;
 #endif
     }
 
