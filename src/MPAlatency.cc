@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     cTool.InitResultFile("Latency");
 
     if(batchMode) gROOT->SetBatch(true);
-    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->getFirstObject());
     pBoard->setFrontEndType(FrontEndType::MPA);
 
     PSAlignment cPSAlignment;

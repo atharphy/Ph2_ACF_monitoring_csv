@@ -218,10 +218,14 @@ void ClockDelay::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current =
-                            round(theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i) /
-                                  RD53Shared::PRECISION) *
-                            RD53Shared::PRECISION;
+                        auto current = round(theOccContainer.getObject(cBoard->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
+                                                 ->getSummary<std::vector<float>>()
+                                                 .at(i) /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if(current > best)
                         {
                             regVal = dacList[i];
@@ -282,7 +286,7 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i) =
+                        theContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<float>>().at(i) =
                             cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
         // ##############################################

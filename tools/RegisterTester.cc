@@ -44,7 +44,7 @@ void RegisterTester::Initialise()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    Registers&        cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cRegList = fRegList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     const ChipRegMap& cOriginalMap = cChip->getRegMap();
                     for(auto cMapItem: cOriginalMap) { cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second)); }
                     // registers sorted by ... all on page 0 then all on page 1
@@ -95,7 +95,7 @@ void RegisterTester::CheckReadRegisters(uint8_t pPageToSelect, uint8_t pNRegiste
         for(auto cOpticalGroup: *cBoard)
         {
             // here .. I need to send a hard reset to the Chips
-            SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
+            SendHardReset(cOpticalGroup, cOpticalGroup->getFirstObject()->getFirstObject());
         }
     } // board loop to save record of registers
 
@@ -110,7 +110,7 @@ void RegisterTester::CheckReadRegisters(uint8_t pPageToSelect, uint8_t pNRegiste
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    Registers& cRegList         = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cRegList = fRegList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     uint8_t    cDefPageRegValue = 0;
                     for(auto cItem: cRegList)
                     {
@@ -133,9 +133,12 @@ void RegisterTester::CheckReadRegisters(uint8_t pPageToSelect, uint8_t pNRegiste
                     size_t cNReads = 0;
                     size_t cIndex  = 0;
                     // read from register on a given page
-                    auto& cComparisons = cMismatches.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cToggles     = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t, uint8_t>>();
+                    auto& cComparisons =
+                        cMismatches.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    auto& cToggles =
+                        cPageToggles.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    auto& cMismatches =
+                        cMismatchValues.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint8_t, uint8_t>>();
                     for(auto cItem: cRegList)
                     {
                         if(cItem.second.fPage == pPageToSelect)
@@ -214,13 +217,14 @@ void RegisterTester::CheckWriteRegisters(uint8_t pPageToSelect, uint8_t pNRegist
         for(auto cOpticalGroup: *cBoard)
         {
             // here .. I need to send a hard reset to the Chips
-            SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
+            SendHardReset(cOpticalGroup, cOpticalGroup->getFirstObject()->getFirstObject());
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    Registers& cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                    Registers& cOrigRegList = cOriginalList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cRegList = fRegList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
+                    Registers& cOrigRegList =
+                        cOriginalList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     for(auto cMapItem: cRegList) { cOrigRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second)); }
                 }
             }
@@ -238,7 +242,7 @@ void RegisterTester::CheckWriteRegisters(uint8_t pPageToSelect, uint8_t pNRegist
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    Registers& cRegList         = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cRegList = fRegList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     uint8_t    cDefPageRegValue = 0;
                     for(auto cItem: cRegList)
                     {
@@ -267,9 +271,12 @@ void RegisterTester::CheckWriteRegisters(uint8_t pPageToSelect, uint8_t pNRegist
                     // cNWrites++;
 
                     // read from register on a given page
-                    auto& cComparisons = cMismatches.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cToggles     = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t, uint8_t>>();
+                    auto& cComparisons =
+                        cMismatches.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    auto& cToggles =
+                        cPageToggles.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    auto& cMismatches =
+                        cMismatchValues.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint8_t, uint8_t>>();
                     // std::map<uint32_t,uint8_t> cComparisons;
                     uint32_t cNReads = 0;
                     for(auto& cItem: cRegList)
@@ -345,8 +352,9 @@ void RegisterTester::CheckWriteRegisters(uint8_t pPageToSelect, uint8_t pNRegist
             {
                 for(auto cChip: *cHybrid)
                 {
-                    Registers& cOrigRegList = cOriginalList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                    Registers& cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cOrigRegList =
+                        cOriginalList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
+                    Registers& cRegList = fRegList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     for(auto& cMapItem: cRegList)
                     {
                         for(auto cItem: cOrigRegList)
@@ -386,7 +394,7 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
         for(auto cOpticalGroup: *cBoard)
         {
             // here .. I need to send a hard reset to the Chips
-            SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
+            SendHardReset(cOpticalGroup, cOpticalGroup->getFirstObject()->getFirstObject());
         }
     } // board loop to save record of registers
 
@@ -401,7 +409,7 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    Registers& cRegList         = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cRegList = fRegList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     uint8_t    cDefPageRegValue = 0;
                     for(auto cItem: cRegList)
                     {
@@ -414,8 +422,8 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
 
                     // set page that you want to check
                     // size_t cNPageToggles=0;
-                    auto& cNPageToggles  = cTotalPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
-                    cNPageToggles        = 0;
+                    auto& cNPageToggles = cTotalPageToggles.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<size_t>();
+                    cNPageToggles       = 0;
                     uint8_t cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7;
                     static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage(cChip, pPageToSelect, false);
                     uint8_t cNewPage = cChip->getReg("FeCtrl&TrgLat2") >> 7;
@@ -425,13 +433,16 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
                         cNPageToggles++;
                     }
 
-                    auto& cNReads = cTotalReadAttempts.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
+                    auto& cNReads = cTotalReadAttempts.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<size_t>();
                     cNReads       = 0;
                     size_t cIndex = 0;
                     // read from register on a given page
-                    auto& cComparisons = cMismatches.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cToggles     = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t, uint8_t>>();
+                    auto& cComparisons =
+                        cMismatches.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    auto& cToggles =
+                        cPageToggles.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    auto& cMismatches =
+                        cMismatchValues.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint8_t, uint8_t>>();
                     for(auto cItem: cRegList)
                     {
                         if(cItem.second.fPage == pPageToSelect)
@@ -528,13 +539,14 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
         for(auto cOpticalGroup: *cBoard)
         {
             // here .. I need to send a hard reset to the Chips
-            SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
+            SendHardReset(cOpticalGroup, cOpticalGroup->getFirstObject()->getFirstObject());
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    Registers& cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                    Registers& cOrigRegList = cOriginalList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cRegList = fRegList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
+                    Registers& cOrigRegList =
+                        cOriginalList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     for(auto cMapItem: cRegList) { cOrigRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second)); }
                 }
             }
@@ -552,7 +564,7 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    Registers& cRegList         = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cRegList = fRegList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     uint8_t    cDefPageRegValue = 0;
                     for(auto cItem: cRegList)
                     {
@@ -563,17 +575,20 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
                     uint8_t cDefPage = cDefPageRegValue >> 7;
                     LOG(INFO) << BOLDYELLOW << " After a hard reset default page " << +cDefPage << ".. running WRITE test on Chip#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
                     // read from register on a given page
-                    auto& cComparisons = cMismatches.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cToggles     = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t, uint32_t>>();
-                    auto& cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t, uint8_t>>();
+                    auto& cComparisons =
+                        cMismatches.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    auto& cToggles =
+                        cPageToggles.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint32_t, uint32_t>>();
+                    auto& cMismatches =
+                        cMismatchValues.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::map<uint8_t, uint8_t>>();
                     // std::map<uint32_t,uint8_t> cComparisons;
-                    auto& cNPageToggles  = cTotalPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
-                    cNPageToggles        = 0;
-                    auto& cNWrites       = cTotalWriteAttempts.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
-                    cNWrites             = 0;
-                    size_t cWriteCount   = 0;
-                    auto&  cNReads       = cTotalReadAttempts.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
-                    cNReads              = 0;
+                    auto& cNPageToggles = cTotalPageToggles.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<size_t>();
+                    cNPageToggles       = 0;
+                    auto& cNWrites = cTotalWriteAttempts.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<size_t>();
+                    cNWrites       = 0;
+                    size_t cWriteCount = 0;
+                    auto&  cNReads     = cTotalReadAttempts.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<size_t>();
+                    cNReads            = 0;
                     uint8_t cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7;
 
                     // set page that you want to check
@@ -670,8 +685,9 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
             {
                 for(auto cChip: *cHybrid)
                 {
-                    Registers& cOrigRegList = cOriginalList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                    Registers& cRegList     = fRegList.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cOrigRegList =
+                        cOriginalList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
+                    Registers& cRegList = fRegList.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     for(auto& cMapItem: cRegList)
                     {
                         for(auto cItem: cOrigRegList)
@@ -715,7 +731,8 @@ void RegisterTester::RegisterTest()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    Registers&        cRegList     = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cRegList =
+                        cRegListContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     const ChipRegMap& cOriginalMap = cChip->getRegMap();
                     for(auto cMapItem: cOriginalMap)
                     {
@@ -744,8 +761,10 @@ void RegisterTester::RegisterTest()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    Registers& cOriginaList = cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                    Registers& cList        = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+                    Registers& cOriginaList =
+                        cRegListContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
+                    Registers& cList =
+                        cDefRegListContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
                     // set page to that of the first register in the map
                     // if( cChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, 1);//(*cOriginalMap.begin()).second.fPage );
                     for(auto cListItem: cOriginaList)
@@ -777,8 +796,9 @@ void RegisterTester::RegisterTest()
                         if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
                         LOG(INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << " on hybrid" << +cHybrid->getId() << RESET;
-                        Registers& cExpectedLst = cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
-                        Registers  cSensitiveRegisters;
+                        Registers& cExpectedLst =
+                            cDefRegListContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
+                        Registers cSensitiveRegisters;
                         cSensitiveRegisters.clear();
                         std::vector<int> cPageToggles(0);
                         size_t           cMatches = 0;
@@ -872,7 +892,7 @@ void RegisterTester::RegisterTest()
     //                     for(auto cChip: *cHybrid)
     //                     {
     //                         Registers&        cRegList =
-    //                         cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+    //                         cRegListContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
     //                         const ChipRegMap& cOriginalMap = cChip->getRegMap(); for(auto cMapItem: cOriginalMap) {
     //                             if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first ) != cRegsToSkip.end() ) continue;
     //                             LOG (DEBUG) << BOLDMAGENTA << "Will configure register " << cMapItem.first
@@ -946,9 +966,9 @@ void RegisterTester::RegisterTest()
     //                     for(auto cChip: *cHybrid)
     //                     {
     //                         Registers& cOriginaList =
-    //                         cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+    //                         cRegListContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
     //                         Registers& cList =
-    //                         cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+    //                         cDefRegListContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
     //                         // set page to that of the first register in the map
     //                         // if( cChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip,
     //                         1);//(*cOriginalMap.begin()).second.fPage ); for(auto cListItem: cOriginaList)
@@ -981,7 +1001,7 @@ void RegisterTester::RegisterTest()
     //                     {
     //                         LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << RESET;
     //                         Registers& cListToCnfig =
-    //                         cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+    //                         cRegListContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
     //                         Registers  cCnfgList; size_t     cNPage0Regs, cNPage1Regs = 0; cNPage0Regs = cNPage1Regs; for(auto cItem: cListToCnfig)
     //                         {
     //                             if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cItem.first ) != cRegsToSkip.end() ) continue;
@@ -996,7 +1016,7 @@ void RegisterTester::RegisterTest()
 
     //                         LOG (DEBUG) << BOLDMAGENTA << "Going to test using " << +cNPage0Regs << " register(s) on Page0 and " << +cNPage1Regs << " register(s) on Page1 " << RESET;
     //                         Registers& cExpectedLst =
-    //                         cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+    //                         cDefRegListContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<Registers>();
     //                         Registers cSensitiveRegisters; cSensitiveRegisters.clear(); std::vector<int> cPageToggles(0); std::vector<std::string> cRegistersChecked; cRegistersChecked.clear();
 
     //                         uint8_t cPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);

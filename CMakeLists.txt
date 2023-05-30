@@ -321,6 +321,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWInterface)
     add_subdirectory(System)
     add_subdirectory(MonitorUtils)
+    add_subdirectory(MonitorDQM)
     add_subdirectory(Parser)
     add_subdirectory(MessageUtils/cpp)
     add_subdirectory(miniDAQ)

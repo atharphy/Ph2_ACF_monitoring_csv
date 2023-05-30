@@ -109,14 +109,7 @@ class ChipInterface
     // this does not need to be virtual as its the same for all types of readout chips
     bool lpGBTCheck(const Ph2_HwDescription::BeBoard* pBoard)
     {
-        fWithlpGBT = false;
-        for(auto cOpticalGroup: *pBoard)
-        {
-            if(cOpticalGroup->getIndex() > 0) break;
-
-            auto& clpGBT = cOpticalGroup->flpGBT;
-            fWithlpGBT   = (clpGBT != nullptr);
-        }
+        fWithlpGBT = (pBoard->getFirstObject()->flpGBT != nullptr);
         return fWithlpGBT;
     }
     //
