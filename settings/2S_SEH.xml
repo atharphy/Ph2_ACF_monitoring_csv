@@ -157,7 +157,8 @@
 
 
     <Settings>
-        
+        <!-- Interlock enabled. 1 is input to the backplane from the switch. 0 is input to the backplane by the firmware -->
+        <Setting name="InterlockEnabled">1</Setting>
     </Settings>
 
     <MonitoringSettings>
