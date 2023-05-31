@@ -55,7 +55,7 @@ export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 # These are git references for the dependencies that are included via CMake ExternalProjects #
 ##############################################################################################
 export PH2_TCUSB_REF=889b673e9d9582dab64cfeb60990800970ee47af
-export EUDAQ_REF=2a838af3022440f1fa120559052f15a2ed18fd42
+export EUDAQ_REF=fa186e2fc893db41b56d4eff390ba9355ebc9be2
 export PYBIND11_REF=v2.9.2
 
 #######
