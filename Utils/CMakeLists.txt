@@ -5,32 +5,44 @@
     MESSAGE(STATUS "    ${BoldYellow}UTILS${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/Utils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    # Includes
+    ############
+    # Includes #
+    ############
     include_directories(${PROJECT_SOURCE_DIR})
 
-    # Library
+    ###########
+    # Library #
+    ###########
 
-    # Find source files
+    #####################
+    # Find source files #
+    #####################
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
 
-    # Add the library
+    ###################
+    # Add the library #
+    ###################
     add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
     set(LIBS ${LIBS} pugixml boost_serialization boost_thread boost_date_time boost_iostreams boost_filesystem rt MessageUtils)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
 
-    # Boost also needs to be linked
-    #   include_directories(${Boost_INCLUDE_DIRS})
-    # link_directories(${Boost_LIBRARY_DIRS})
+    #################################
+    # Boost also needs to be linked #
+    #################################
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
 
-    # Find root and link against it
+    #################################
+    # Find root and link against it #
+    #################################
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
     endif()
 
-    # Check for ZMQ installed
+    ###########################
+    # Check for ZMQ installed #
+    ###########################
     if(ZMQ_FOUND)
         if(PH2_USBINSTLIB_FOUND)
             include_directories(${PH2_USBINSTLIB_INCLUDE_DIRS})
@@ -50,7 +62,7 @@
     ## EXECUTABLES #
     ################
 
-    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/Utils *.cc)
+    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/Utils *.cc *.cxx)
 
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
     foreach( sourcefile ${BINARIES} )

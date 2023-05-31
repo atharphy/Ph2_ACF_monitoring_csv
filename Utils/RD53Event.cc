@@ -813,6 +813,13 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     std::vector<uint16_t> RD53_hit_col;
     std::vector<uint8_t>  RD53_hit_tot;
 
+    // ###################################################################
+    // # Needed to split the hits per chip: jagged aray needs dictionary #
+    // ###################################################################
+    // std::vector<std::vector<uint16_t>> RD53_hit_row;
+    // std::vector<std::vector<uint16_t>> RD53_hit_col;
+    // std::vector<std::vector<uint8_t>>  RD53_hit_tot;
+
     theTree.Branch("RD53_hit_row", &RD53_hit_row);
     theTree.Branch("RD53_hit_col", &RD53_hit_col);
     theTree.Branch("RD53_hit_tot", &RD53_hit_tot);
@@ -865,12 +872,23 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
             RD53_frame_event_status.push_back(event.eventStatus);
             RD53_frame_event_nhits.push_back(event.hit_data.size());
 
+            // std::vector<uint16_t> hit_rows;
+            // std::vector<uint16_t> hit_cols;
+            // std::vector<uint8_t>  hit_tots;
+
             for(const auto& hit: event.hit_data)
             {
                 RD53_hit_row.push_back(hit.row);
                 RD53_hit_col.push_back(hit.col);
                 RD53_hit_tot.push_back(hit.tot);
+                // hit_rows.push_back(hit.row);
+                // hit_cols.push_back(hit.col);
+                // hit_tots.push_back(hit.tot);
             }
+
+            // RD53_hit_row.push_back(std::move(hit_rows));
+            // RD53_hit_col.push_back(std::move(hit_cols));
+            // RD53_hit_tot.push_back(std::move(hit_tots));
         }
 
         theTree.Fill();
