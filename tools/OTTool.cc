@@ -991,36 +991,45 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
     }
 
     // set thresholds
+    LOG(INFO) << BOLDRED << "Setting Thresholds" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
             for(auto cChip: *cHybrid)
             {
+                uint16_t cValueInMemory;
+                uint16_t cValueInChip;
                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
-                     uint32_t cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
-                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+                     cValueInMemory = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
+                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cValueInMemory);
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) 
                 {
-                    fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cChip->getReg("Bias_THDAC"));
-                    fReadoutChipInterface->WriteChipReg(cChip, "ThresholdHigh", cChip->getReg("Bias_THDACHIGH"));
+                    cValueInMemory = cChip->getReg("Bias_THDAC");
+                    fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cValueInMemory);
+                    cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set Threshold register to "  << cValueInMemory << "=" << cValueInChip << RESET;
+                    
+                    cValueInMemory = cChip->getReg("Bias_THDACHIGH");
+                    fReadoutChipInterface->WriteChipReg(cChip, "ThresholdHigh", cValueInMemory);
+                    cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, "ThresholdHigh");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set ThresholdHigh register to "  << cValueInMemory << "=" << cValueInChip << RESET;
                 }                    
                 else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cChip->getReg("ThDAC0"));
-                    auto  cThreshold = fReadoutChipInterface->ReadChipReg(cChip,"ThDAC0");
-                    LOG(INFO) << BOLDRED << __LINE__ << __PRETTY_FUNCTION__ << "REad back threshold. Set: " <<  cChip->getReg("ThDAC0") << " = " << cThreshold << RESET;
-
+                    cValueInMemory = cChip->getReg("ThDAC0");
+                    fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cValueInMemory);
+                    cValueInChip = fReadoutChipInterface->ReadChipReg(cChip,"Threshold");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set Threshold register to "  << cValueInMemory << "=" << cValueInChip << RESET;
                 }
-                uint16_t chipId = cChip->getId();
-                uint16_t threshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
-                LOG(INFO) << BOLDMAGENTA << "Threshold setting on Chip# " << +chipId << " to 0x" << std::hex << threshold << std::dec << RESET;
-                
             }
         }
     }
+    LOG(INFO) << BOLDRED << "Done Setting Thresholds" << RESET;
+
+    LOG(INFO) << BOLDRED << "Setting Stub Mode and Window" << RESET;
     // set stub mode from xml
     for(auto cOpticalGroup: *pBoard)
     {
@@ -1028,28 +1037,27 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
+                uint16_t cValueInChip;
                 if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    auto cECM    = cChip->getReg("ECM");
-                    std::cout << " cECM " << cECM << std::endl;
-                    auto cMode   = (cECM & 0xC0) >> 6 ;
-                    std::cout << " cMode " << cMode << std::endl;
-                    auto cWindow = cECM & 0x3F;
-                    std::cout << " cWindow " << cWindow << std::endl;
-                    fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
-                    fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cWindow);
-                    //fReadoutChipInterface->WriteChipReg(cChip, "ECM", cECM); // It is possible to write also the full register. Irene thinks like this is more clear.
-                    LOG(INFO) << BOLDMAGENTA << "Setting StubMode register on Chip#" << +cChip->getId() << " to " << cMode << " and stub window to " << cWindow << " i.e. " << (float)cWindow / 2. << " half-pixels. " << RESET;
-                    cECM = fReadoutChipInterface->ReadChipReg(cChip, "ECM");
-                    LOG(INFO) << BOLDMAGENTA << "Reading back for the full ECM register "<< cECM << RESET;
-                    cMode   = fReadoutChipInterface->ReadChipReg(cChip, "StubMode");
-                    cWindow = fReadoutChipInterface->ReadChipReg(cChip, "StubWindow");
-                    LOG(INFO) << BOLDMAGENTA << "Reading the single ECM parts-> StubMode: "<< cMode << " StubWindow: "<< cWindow << RESET;
+                    uint16_t cValueInMemory = cChip->getReg("ECM");
+                    uint16_t cModeMemory    = (cValueInMemory & 0xC0) >> 6 ;
+                    uint16_t cWindowMemory  = cValueInMemory & 0x3F;
+                    fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cModeMemory);
+                    cValueInChip = fReadoutChipInterface->ReadChipReg(cChip,"StubMode");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set StubMode register to "  << cModeMemory << "=" << cValueInChip << RESET;
+                    
+                    fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cWindowMemory);
+                    cValueInChip = fReadoutChipInterface->ReadChipReg(cChip, "StubWindow");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set StubWindow register to "  << cWindowMemory << "=" << cValueInChip << RESET;
                 }
             }
         }
     }
-    // set hit mode from xml
+    LOG(INFO) << BOLDRED << "Done Setting Stub Mode and Window" << RESET;
+   
+    // set hit sampling mode from xml
+    LOG(INFO) << BOLDRED << "Setting Sampling Mode" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
@@ -1064,17 +1072,14 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    auto cModeMem = cChip->getReg("PixelControl_ALL");
-                    fReadoutChipInterface->WriteChipReg(cChip, "ModeSel_ALL", cModeMem);
-                    auto cModeChip = fReadoutChipInterface->ReadChipReg(cChip, "PixelControl_ALL");
-                    LOG(INFO) << BOLDMAGENTA << __LINE__ << "] " << __PRETTY_FUNCTION__ << "Setting HitLogicMode register on Chip#" << +cChip->getId() << " to memory: " << cModeMem << " chip: " << cModeChip << RESET;
-                    
-                    
-                    auto cClusterMem = cChip->getReg("PixelControl_ALL");
-                    cClusterMem = 0x0;
-                    fReadoutChipInterface->WriteChipReg(cChip, "ClusterCut_ALL", cClusterMem);
-                    auto cClusterChip = fReadoutChipInterface->ReadChipReg(cChip, "PixelControl_ALL");
-                    LOG(INFO) << BOLDMAGENTA << __LINE__ << "] " << __PRETTY_FUNCTION__ << "Setting HitLogicMode register on Chip#" << +cChip->getId() << " to memory: " << cClusterMem << " chip: " << cClusterChip << RESET;
+                    auto cValueInMemory = cChip->getReg("PixelControl_ALL");
+                    LOG(INFO) << BOLDRED << "Chip # " << +cChip->getId() << " Set ModeSel and ClusterCut register to 0x"  << std::hex << cValueInMemory << std::dec << RESET;
+                    auto cModeInMemory = cValueInMemory & 0x03;
+                    auto cClusterCutInMemory = (cValueInMemory & 0x1C) >> 2;
+                    fReadoutChipInterface->WriteChipReg(cChip, "ModeSel_ALL", cModeInMemory);
+                    fReadoutChipInterface->WriteChipReg(cChip, "ClusterCut_ALL", cClusterCutInMemory);
+                    uint16_t cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, "PixelControl_ALL");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set ModeSel and ClusterCut register to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
@@ -1084,17 +1089,20 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    auto cMode = cChip->getReg("ENFLAGS"); 
-                    LOG(INFO) << BOLDMAGENTA <<  __LINE__ << "] " << __PRETTY_FUNCTION__ << " Retrieving ENFLAGS SSA2 Memory 0x" << std::hex << cMode << std::dec << RESET;
-                    cMode = (cMode & 0x60) >> 5;
+                    auto cValueInMemory = cChip->getReg("ENFLAGS"); 
+                    //LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Setting SamplingMode_ALL register to 0x" << std::hex << cValueInMemory << std::dec << RESET;
+                    auto cMode = (cValueInMemory & 0x60) >> 5;
                     fReadoutChipInterface->WriteChipReg(cChip, "SamplingMode_ALL", cMode);
-                    uint16_t readBack = fReadoutChipInterface->ReadChipReg(cChip, "SamplingMode_ALL");
-                    LOG(INFO) << BOLDMAGENTA <<  __LINE__ << "] " << __PRETTY_FUNCTION__ << " Set HitLogicMode register on Chip#" << +cChip->getId() << " to Memory" << readBack << RESET;
+                    uint16_t cValueInChip = fReadoutChipInterface->ReadChipReg(cChip, "ENFLAGS");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set ENFLAGS register to 0x" << std::hex << cValueInMemory << "=" << cValueInChip << std::dec << RESET;
                 }
             }
         }
     }
+    LOG(INFO) << BOLDRED << "Done Setting Sampling Mode" << RESET;
+
     // charge injection
+    LOG(INFO) << BOLDRED << "Setting Charge Injection" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
@@ -1114,66 +1122,78 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 {
                     cRegName = "MiscTestPulseCtrl&AnalogMux";
                 }
-                uint8_t cInjectedCharge = cChip->getReg(cRegName);
+                uint16_t cValueInMemory = cChip->getReg(cRegName);
                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
-                    cInjectedCharge = (cInjectedCharge >> 6) & 0x3F;
+                    cValueInMemory = (cValueInMemory >> 6) & 0x3F;
                 }
 
-                fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", cInjectedCharge);
-                LOG(INFO) << BOLDMAGENTA << "Setting Charge injection register on Chip#" 
-                          << +cChip->getId() << " to " 
-                          << +cInjectedCharge
-//                          << " from the chip: " << fReadoutChipInterface->ReadChipReg(cChip, "InjectedCharge")
-                          << RESET;
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2 ||
+                   cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2 || 
+                   cChip->getFrontEndType() == FrontEndType::CBC3)
+                {
+                    fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", cValueInMemory);
+                    uint16_t cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, "InjectedCharge");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set InjectedCharge register to "  << cValueInMemory << "=" << cValueInChip << RESET;
+                }
             }
         }
     }
+    LOG(INFO) << BOLDRED << "Done Setting Charge Injection" << RESET;
+
     // latency
+    LOG(INFO) << BOLDRED << "Setting Latency" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
             for(auto cChip: *cHybrid)
             {
-                uint16_t cLatency = 0;
+                uint16_t cValueInMemory = 0;
                 if(cChip->getFrontEndType() == FrontEndType::MPA) 
                 { 
-                    cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); 
+                    cValueInMemory = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); 
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    //cLatency = 296; //118;
-                    cLatency = (cChip->getReg("MemoryControl_2_ALL") & 0x1) << 8 | cChip->getReg("MemoryControl_1_ALL");
+                    cValueInMemory = (cChip->getReg("MemoryControl_2_ALL") & 0x1) << 8 | cChip->getReg("MemoryControl_1_ALL");
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    cLatency = cChip->getReg("L1-Latency_MSB") << 8 | cChip->getReg("L1-Latency_LSB");
+                    cValueInMemory = cChip->getReg("L1-Latency_MSB") << 8 | cChip->getReg("L1-Latency_LSB");
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    // cLatency = 297; //120;
-                    cLatency = ((cChip->getReg("control_1") & (1 << 4)) >>4) <<8 | cChip->getReg("control_3");
-                    // std::cout << " ssa2 control_1 " << cChip->getReg("control_1")  << std::endl;
-                    // std::cout << " ssa2 control_1 4th bit ?" << (cChip->getReg("control_1")& (1 << 4) >>4)  << std::endl;
-                    // std::cout << " ssa2 control_3 " << cChip->getReg("control_3") << std::endl;
-                    std::cout << " ssa2 cLatency " << cLatency << " " << std::hex << cLatency <<std::dec << std::endl;
+                    cValueInMemory = ((cChip->getReg("control_1") & (1 << 4)) >>4) <<8 | cChip->getReg("control_3");
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
                     auto cRegValueFirst  = cChip->getReg("FeCtrl&TrgLat2");
                     auto cRegValueSecond = cChip->getReg("TriggerLatency1");
-                    cLatency             = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
+                    cValueInMemory       = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
                 }
-                LOG(INFO) << BOLDYELLOW << "Setting latency on Chip#" << +cChip->getId() << " to " << cLatency << RESET;
-                fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-                uint16_t cChipLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
-                LOG(INFO) << BOLDYELLOW << "Set latency on Chip#" << +cChip->getId() << " to " << cChipLatency << RESET;
-               
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2 ||
+                   cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2 || 
+                   cChip->getFrontEndType() == FrontEndType::CBC3)
+                {
+                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cValueInMemory);
+                    uint16_t cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set TriggerLatency register to "  << cValueInMemory << "=" << cValueInChip << RESET;
+                }
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    cValueInMemory = cChip->getReg("Control_1");
+                    fReadoutChipInterface->WriteChipReg(cChip, "Control_1", cValueInMemory);
+                    uint16_t cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, "Control_1");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set Control_1 register for retimePix to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
+                }
             }
         }
     }
+    LOG(INFO) << BOLDRED << "Setting Latency" << RESET;
+
     // configure HIPs
+    LOG(INFO) << BOLDRED << "Setting HIP" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
@@ -1181,62 +1201,76 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             for(auto cChip: *cHybrid)
             {
                 if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2) continue;
-                uint16_t    cCut = 0;
                 std::string cRegName;
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     cRegName = "HipCut_ALL";
-                    cCut     = cChip->getReg(cRegName);
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     cRegName = "HIPCUT_ALL";
-                    cCut     = cChip->getReg(cRegName);
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
-                    cCut = cChip->getReg("HIP&TestMode");
+                    cRegName = "HIP&TestMode";
                 }
-                LOG(INFO) << BOLDYELLOW << "Setting HIP register on Chip#" << +cChip->getId() << " to " << cCut << RESET;
-                fReadoutChipInterface->WriteChipReg(cChip, cRegName, cCut);
-            }
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2 ||
+                   cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    uint16_t cValueInMemory = cChip->getReg(cRegName);
+                    fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
+                    uint16_t cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, cRegName);
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set HIP register " << cRegName << " to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
+                }
+           }
         }
     }
+    LOG(INFO) << BOLDRED << "Done Setting HIP" << RESET;
+
     // configure sampling delay
+    LOG(INFO) << BOLDRED << "Setting Sampling Delay" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
             for(auto cChip: *cHybrid)
             {
+                std::vector<std::string> cRegNames;
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    std::vector<std::string> cRegNames{"PhaseShiftClock", "ClockDeskewing"};
-                    for(auto cRegName: cRegNames)
-                    {
-                        auto cValueInMemory = cChip->getReg(cRegName);
-                        fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
-                    }
+                    cRegNames = {"PhaseShiftClock", "ClockDeskewing"};
+                }
+                else if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                {
+                    cRegNames = {"ClockDeskewing_coarse", "ClockDeskewing_fine"};
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
-                    std::vector<std::string> cRegNames{"PhaseShift", "ConfDLL"};
+                    cRegNames = {"PhaseShift", "ConfDLL"};
+                }
+                else if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    cRegNames = {"Control_1", "ConfDLL"};
+                }
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2 ||
+                   cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
                     for(auto cRegName: cRegNames)
                     {
-                        auto cValueInMemory = cChip->getReg(cRegName);
+                        uint16_t cValueInMemory = cChip->getReg(cRegName);
                         fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
+                        uint16_t cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, cRegName);
+                        LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set sampling delay register " << cRegName << " to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
                     }
                 }
-                // To-Do add CBC
-                // else if( cChip->getFrontEndType() == FrontEndType::CBC3 )
-                // {
-                // }
-            }
+           }
         }
     }
+    LOG(INFO) << BOLDRED << "Done Setting Sampling Delay" << RESET;
 
     // make sure MPAs have both modes enabled
     // and that the disabled strips in the SSAs are really disabled
+    LOG(INFO) << BOLDRED << "Enabling pixel strips" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
@@ -1246,8 +1280,11 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 std::string cRegName = "";
                 if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0F, false); // Pixel Enable register - table 8 MPA2 manual
-                    LOG(INFO) << BOLDMAGENTA << "Setting ENFLAGS_ALL on Chip#" << +cChip->getId() << " to enable both modes.." << RESET;
+                    std::string cRegName = "ENFLAGS_ALL";
+                    uint16_t cValueInMemory = cChip->getReg(cRegName);
+                    fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory, false); // Pixel Enable register - table 8 MPA2 manual
+                    uint16_t cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, cRegName);
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set enable pixels register " << cRegName << " to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
@@ -1261,6 +1298,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             }
         }
     }
+    LOG(INFO) << BOLDRED << "Done Enabling pixel strips" << RESET;
 
     // make sure all CBC logic registers are re-configured
     for(auto cOpticalGroup: *pBoard)

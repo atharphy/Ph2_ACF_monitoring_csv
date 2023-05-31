@@ -246,19 +246,23 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
     //LORENZO THIS TWO NEEDS TO BE DONBE BEFORE MultiRegisterRead OTHERWISE THEY ARE GETTING MESSED UP BECAUSE YOU CAN'T READ THEM DIRECTLY
     if(pRegNode == "SamplingMode_ALL")
     {
-        LOG(DEBUG) << BOLDGREEN << __LINE__ << "] ReadChipReg(): " << pRegNode << RESET;
-        uint8_t  cMode = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        uint16_t  cMode = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
         cMode = (cMode & 0x60) >> 5;
-        std::cout << " cMode " << +cMode << std::endl;
+        //LOG(INFO) << BOLDGREEN << __LINE__ << "] ReadChipReg(): " << pRegNode << " cMode=0x" << cMode << RESET;
         return cMode;
     }
     else if(pRegNode == "ENFLAGS" )
     {
         LOG(DEBUG) << BOLDGREEN << __LINE__ << "] ReadChipReg(): " << pRegNode << RESET;
-        uint8_t  cMode = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        uint16_t  cMode = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
         return cMode;
+    }   
+    else if(pRegNode == "InjectedCharge" || pRegNode == "Bias_CALDAC")
+    {
+        auto cRegItem  = cRegMap["Bias_CALDAC"];
+        return fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
     }
-    
+   
     auto cValues = fBoardFW->MultiRegisterRead(pSSA2, cRegItems);
     LOG(DEBUG) << BOLDGREEN << __LINE__ << "] ReadChipReg(): " << pRegNode << RESET;
     if(pRegNode.find("CounterStrip") != std::string::npos) 
@@ -275,7 +279,7 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         uint8_t  cLatencyReg1 = this->ReadChipReg(pSSA2, "control_1");
         // std::cout << " cValues[0] " << std::hex << +cValues[0] << " cValues[1] " << +cValues[1] << std::dec << std::endl;
         cLatencyReg1 = cLatencyReg1 & (0x10);// fourth bit is latency for SSA2
-        std::cout << " cLatencyReg1 " << std::hex << +cLatencyReg1 << " cLatencyReg1 << 4: " << +(cLatencyReg1 << 4 ) << std::dec << std::endl;
+        // std::cout << " cLatencyReg1 " << std::hex << +cLatencyReg1 << " cLatencyReg1 << 4: " << +(cLatencyReg1 << 4 ) << std::dec << std::endl;
         uint8_t cLatencyReg2 = this->ReadChipReg(pSSA2, "control_3");
         LOG(DEBUG) << __LINE__ << " reading SSA2 trying to read TriggerLatency " << +((cLatencyReg1<<4) | cLatencyReg2) << RESET;
         return +((cLatencyReg1<<4)| cLatencyReg2);
@@ -415,7 +419,7 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
 
     //uint16_t registerValue = pValue;
     uint16_t registerValue = pSSA2->getReg(pRegNode);
-    LOG(INFO) << BOLDYELLOW << __LINE__ << "] SSA2Interface::WriteChipRegBits() Reg name: " << pRegNode << " pValue 0x" << std::hex  << pValue << " registerValue memory 0x" << registerValue << std::dec << RESET;
+    //LOG(INFO) << BOLDYELLOW << __LINE__ << "] SSA2Interface::WriteChipRegBits() Reg name: " << pRegNode << " pValue 0x" << std::hex  << pValue << " registerValue memory 0x" << registerValue << std::dec << RESET;
     unsigned posOfFirstOne = 0;    
     //ASSUMING THAT MASK BITS ARE ALWAYS CONSECUTIVE. CANNOT BE MASK 0b101 BUT ONLY WORKS FOR 0b11000
     for(; posOfFirstOne<8; posOfFirstOne++)//8bits
@@ -425,7 +429,7 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
     }
     //LOG(INFO) << BOLDYELLOW << __LINE__ << " mask " << +mask << " posOfFirstOne " << posOfFirstOne << RESET;
     registerValue = (registerValue & ~mask) + (pValue << posOfFirstOne);
-    LOG(INFO) << BOLDYELLOW << __LINE__ << "] SSA2Interface::WriteChipRegBits() updated  registerValue 0x" << std::hex << registerValue << std::dec << RESET;
+    //LOG(INFO) << BOLDYELLOW << __LINE__ << "] SSA2Interface::WriteChipRegBits() updated  registerValue 0x" << std::hex << registerValue << std::dec << RESET;
     // write mask registers
     std::vector<std::string> cMaskRegs{"mask_strip", "mask_peri_A", "mask_peri_D"};
     std::vector<ChipRegItem> cRegItems{cRegMap[cMaskRegs[0]], cRegMap[cMaskRegs[1]], cRegMap[cMaskRegs[2]]};
@@ -436,18 +440,18 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
     LOG(DEBUG) << BOLDYELLOW << "] SSA2Interface::WriteChipRegBits() Writing mask ... Writing 0x" << std::hex << +mask << " to " << pMaskReg << std::dec << RESET;
     if(fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false))
     {
-        LOG(INFO) << BOLDYELLOW << __LINE__ << "] SSA2Interface::WriteChipRegBits().. Writing 0x" << std::hex << +pValue << " to " << pRegNode << std::dec << RESET;
+        // LOG(INFO) << BOLDYELLOW << __LINE__ << "] SSA2Interface::WriteChipRegBits().. Writing 0x" << std::hex << +pValue << " to " << pRegNode << std::dec << RESET;
         auto cRegItem   = cRegMap[pRegNode];
         cRegItem.fValue = registerValue;
         cSuccess        = fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
-    LOG(INFO) << BOLDYELLOW << __LINE__ << "] SSA2Interface::WriteChipRegBits().. Reading back " << pRegNode << RESET;
-    uint16_t chipRegisterValue = this->ReadChipReg(pSSA2, pRegNode);
-    uint16_t memoryRegisterValue = pSSA2->getReg(pRegNode);
-    if(memoryRegisterValue == chipRegisterValue)
-        LOG(INFO) << BOLDBLUE  << __LINE__ << "] SSA2Interface::WriteChipRegBits() Name: " << pRegNode << std::hex << " Register: " << registerValue << " ReadBack: " << memoryRegisterValue << " Chip: " << chipRegisterValue << std::dec << RESET;
-    else
-        LOG(INFO) << BOLDRED  << __LINE__ << "] SSA2Interface::WriteChipRegBits() Name: " << pRegNode << std::hex << " Register: " << registerValue << " ReadBack: " << memoryRegisterValue << " Chip: " << chipRegisterValue << std::dec << RESET;
+    //LOG(INFO) << BOLDYELLOW << __LINE__ << "] SSA2Interface::WriteChipRegBits().. Reading back " << pRegNode << RESET;
+    //uint16_t chipRegisterValue = this->ReadChipReg(pSSA2, pRegNode);
+    //uint16_t memoryRegisterValue = pSSA2->getReg(pRegNode);
+    // if(memoryRegisterValue == chipRegisterValue)
+    //     LOG(INFO) << BOLDBLUE  << __LINE__ << "] SSA2Interface::WriteChipRegBits() Name: " << pRegNode << std::hex << " Register: " << registerValue << " ReadBack: " << memoryRegisterValue << " Chip: " << chipRegisterValue << std::dec << RESET;
+    // else
+    //     LOG(INFO) << BOLDRED  << __LINE__ << "] SSA2Interface::WriteChipRegBits() Name: " << pRegNode << std::hex << " Register: " << registerValue << " ReadBack: " << memoryRegisterValue << " Chip: " << chipRegisterValue << std::dec << RESET;
        
 
     for(auto& cItem: cRegItems)
@@ -545,9 +549,9 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegNameMod == "SamplingMode")//AT THE TOP OF THIS METHOD _ALL IS REMOVED
     {
-        LOG(INFO) << BOLDGREEN << __LINE__ << "] " << __PRETTY_FUNCTION__ << " pRegNameMod " << pRegNameMod << std::hex << " pValue: " << pValue << std::dec << std::endl;
+        //LOG(INFO) << BOLDGREEN << __LINE__ << "] " << __PRETTY_FUNCTION__ << " pRegNameMod " << pRegNameMod << std::hex << " pValue: " << pValue << std::dec << std::endl;
         bool retVal = this->WriteChipRegBits(pSSA2, "ENFLAGS", pValue, "mask_strip", 0x60);
-        LOG(INFO) << BOLDGREEN << __LINE__ << "] " << __PRETTY_FUNCTION__ << " DONE pRegNameMod " << pRegNameMod << std::hex << " pValue: " << pValue << std::dec << std::endl;
+        //LOG(INFO) << BOLDGREEN << __LINE__ << "] " << __PRETTY_FUNCTION__ << " DONE pRegNameMod " << pRegNameMod << std::hex << " pValue: " << pValue << std::dec << std::endl;
         return retVal;
     }
     else if(pRegNameMod == "TriggerLatency")
@@ -929,7 +933,12 @@ bool SSA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerif
 { 
     return this->WriteChipReg(pChip, "AnalogueAsync", 1); 
 }
-bool SSA2Interface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerify) { return this->WriteChipReg(pChip, "InjectedCharge", injectionAmplitude, pVerify); }
+
+bool SSA2Interface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerify) 
+{ 
+    return this->WriteChipReg(pChip, "InjectedCharge", injectionAmplitude, pVerify); 
+}
+
 bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
     auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(pChip->getChipOriginalMask());
