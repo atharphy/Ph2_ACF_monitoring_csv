@@ -53,7 +53,6 @@
               SEL_CAL_RANGE          =      "0"
 
               SelfTriggerEn          =      "0"
-              SelfTriggerMultipler   =     "10"
               SelfTriggerDelay       =     "30"
               EnOutputDataChipId     =      "1"
 

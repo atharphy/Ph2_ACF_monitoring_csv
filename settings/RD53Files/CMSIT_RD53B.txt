@@ -332,7 +332,7 @@ EnCRC                     0x11C         0b0                     0b0             
 BinaryReadOut             0x11D         0b0                     0b0                                 1
 RawData                   0x11E         0b0                     0b0                                 1
 EnOutputDataChipId        0x11F         0b0                     0b0                                 1
-SelfTriggerMultipler      0x120         0d10                    0d10                                5
+SelfTriggerMultiplier     0x120         0d10                    0d10                                5
 SelfTriggerDelay          0x121         0d30                    0d30                               10
 SelfTriggerEn             0x122         0b0                     0b0                                 1
 

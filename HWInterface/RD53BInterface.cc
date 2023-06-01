@@ -112,6 +112,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
         }
 
+    // ###################################################
+    // # Impose SelfTriggerMultiplier = trigger_duration #
+    // ###################################################
+    RD53Interface::WriteChipReg(pChip, "SelfTriggerMultiplier", static_cast<RD53FWInterface*>(fBoardFW)->getLocalCfgFastCmd()->trigger_duration, pVerify);
+
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
