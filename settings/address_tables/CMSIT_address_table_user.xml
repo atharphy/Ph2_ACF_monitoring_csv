@@ -134,6 +134,7 @@
       <node id="error_cntr_module_addr" mask="0x0000000F"     permission="rw"      description="" />
       <node id="error_cntr_chip_addr"   mask="0x00000070"     permission="rw"      description="" />
       <node id="event_stream_timeout"   mask="0x007FFF80"     permission="rw"      description="" />
+      <node id="self_trigger_en"        mask="0x00800000"     permission="rw"      description="" />
       <node id="data_merging_en"        mask="0x01000000"     permission="rw"      description="" />
       <node id="rst_frame_cntr"         mask="0x02000000"     permission="rw"      description="" />
       <node id="start_frame_cntr"       mask="0x04000000"     permission="rw"      description="" />

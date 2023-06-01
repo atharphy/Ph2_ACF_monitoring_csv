@@ -87,7 +87,12 @@ class RD53BInterface : public RD53Interface
                                                                                 {"RawData", {"CoreColEncoderConf", 7}},
                                                                                 {"BinaryReadOut", {"CoreColEncoderConf", 8}},
 
-                                                                                {"EnOutputDataChipId", {"DataMerging", 8}}};
+                                                                                {"EnOutputDataChipId", {"DataMerging", 8}},
+
+                                                                                {"SelfTriggerMultipler", {"SelfTriggerConfig_0", 0}},
+                                                                                {"SelfTriggerDelay", {"SelfTriggerConfig_0", 5}},
+
+                                                                                {"SelfTriggerEn", {"SelfTriggerConfig_1", 5}}};
 
     // ###########################
     // # Dedicated to monitoring #

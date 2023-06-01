@@ -47,7 +47,7 @@ RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
 
 const DataFormatOptions& RD53B::getDataFormatOptions()
 {
-    dataFormatOptions = DataFormatOptions{!bool(this->getRegItem("EnOutputDataChipId").fValue),
+    dataFormatOptions = DataFormatOptions{bool(this->getRegItem("EnOutputDataChipId").fValue),
                                           !bool(this->getRegItem("BinaryReadOut").fValue),
                                           bool(this->getRegItem("EnBCId").fValue),
                                           bool(this->getRegItem("EnLv1Id").fValue),
@@ -130,7 +130,7 @@ void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const D
     }
 }
 
-void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t nWords)
+void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e)
 {
     if(i == 0)
         e.chip_id_mod4 = chipId;
@@ -163,7 +163,7 @@ auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const Da
         }
 
         if(options.enableChipId)
-            decodeChipId(bits.pop(RD53BEvtEncoder::NBIT_CHIPID), i, e, nWords);
+            decodeChipId(bits.pop(RD53BEvtEncoder::NBIT_CHIPID), i, e);
         else
             e.chip_id_mod4 = RD53Shared::setBits(RD53FWEvtEncoder::NBIT_CHIPID);
 
