@@ -89,7 +89,7 @@ class RD53BInterface : public RD53Interface
 
                                                                                 {"EnOutputDataChipId", {"DataMerging", 8}},
 
-                                                                                {"SelfTriggerMultipler", {"SelfTriggerConfig_0", 0}},
+                                                                                {"SelfTriggerMultiplier", {"SelfTriggerConfig_0", 0}},
                                                                                 {"SelfTriggerDelay", {"SelfTriggerConfig_0", 5}},
 
                                                                                 {"SelfTriggerEn", {"SelfTriggerConfig_1", 5}}};
