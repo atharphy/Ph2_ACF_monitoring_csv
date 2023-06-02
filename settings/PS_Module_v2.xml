@@ -14,34 +14,34 @@
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">
             <Global>                 
-                <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
+                <StubLogic       mode="2" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <Latencies       stripLatency="296" pixelLatency="295" retimePix="0"/>
-                <Thresholds      stripThreshold="100" stripThresholdHigh="100" pixelThreshold="120"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
+                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4"/>
+                <Thresholds      stripThreshold="250" stripThresholdHigh="250" pixelThreshold="250"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
                 <!-- <HipLogic        stripCut="7" pixelCut="7"/> MUST BE FIXED IN THE CODE BOTH SSA AND MPA LORE IRENE--> 
                 <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> <!-- in DAC units for each chip type - their electron value is different though! -->
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
             
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA2 Id="0" configfile="SSA2.txt" />
-            <SSA2 Id="1" configfile="SSA2.txt" />
+            <!-- <SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
-            <SSA2 Id="7" configfile="SSA2.txt" />
+            <SSA2 Id="7" configfile="SSA2.txt" /> -->
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA2 Id="8" configfile="MPA2.txt" />
-            <MPA2 Id="9" configfile="MPA2.txt" />
+            <!-- <MPA2 Id="9" configfile="MPA2.txt" />
             <MPA2 Id="10" configfile="MPA2.txt" />
             <MPA2 Id="11" configfile="MPA2.txt" />            
             <MPA2 Id="12" configfile="MPA2.txt" />
             <MPA2 Id="13" configfile="MPA2.txt" />
             <MPA2 Id="14" configfile="MPA2.txt" />
-            <MPA2 Id="15" configfile="MPA2.txt" />
+            <MPA2 Id="15" configfile="MPA2.txt" /> -->
 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
@@ -50,13 +50,13 @@
         
         <Hybrid Id="1" enable="1" reset="1">
             <Global>
-                <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
-                <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
+                <StubLogic       mode="1" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
+                <HitLogic        stripMode="2" pixelMode="2" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
                 <Latencies       stripLatency="296" pixelLatency="295" retimePix="4"/>
-                <Thresholds      stripThreshold="70" stripThresholdHigh="100" pixelThreshold="120"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
+                <Thresholds      stripThreshold="80" stripThresholdHigh="100" pixelThreshold="160"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
                 <!-- <HipLogic        stripCut="7" pixelCut="7"/> MUST BE FIXED IN THE CODE BOTH SSA AND MPA LORE IRENE--> 
-                <SamplingDelay   stripCoarse="6" stripFine="7" pixelCoarse="3" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <InjectedCharge  stripCharge="90" pixelCharge="30"/> <!-- in DAC units for each chip type - their electron value is different though! -->
+                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <InjectedCharge  stripCharge="90" pixelCharge="120"/> <!-- in DAC units for each chip type - their electron value is different though! -->
                 <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/> 
             </Global>
             
@@ -75,15 +75,25 @@
             <MPA2 Id="8" configfile="MPA2.txt" /> 
             <MPA2 Id="9" configfile="MPA2.txt" />
             <MPA2 Id="10" configfile="MPA2.txt" />
-            <MPA2 Id="11" configfile="MPA2.txt" />            
+            <MPA2 Id="11" configfile="MPA2.txt" />
             <MPA2 Id="12" configfile="MPA2.txt" />
             <MPA2 Id="13" configfile="MPA2.txt" />
             <MPA2 Id="14" configfile="MPA2.txt" />
             <MPA2 Id="15" configfile="MPA2.txt" />
+            <!-- <MPA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1468/" />
+            <MPA2 Id="8" configfile="BE0_OG0_FE1_Chip8.txt" />
+            <MPA2 Id="9" configfile="BE0_OG0_FE1_Chip9.txt" />
+            <MPA2 Id="10" configfile="BE0_OG0_FE1_Chip10.txt" />
+            <MPA2 Id="11" configfile="BE0_OG0_FE1_Chip11.txt" />            
+           <MPA2 Id="12" configfile="BE0_OG0_FE1_Chip12.txt" />
+            <MPA2 Id="13" configfile="BE0_OG0_FE1_Chip13.txt" />
+            <MPA2 Id="14" configfile="BE0_OG0_FE1_Chip14.txt" />
+            <MPA2 Id="15" configfile="BE0_OG0_FE1_Chip14.txt" />  -->
 
-
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <!-- <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" /> -->
+            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1468/" />
+            <CIC2 Id="8" configfile="BE0_OG0_FE1.txt" />
         </Hybrid>
     </OpticalGroup>
 
@@ -124,7 +134,7 @@
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 3 </Register>
-            <Register name="user_trigger_frequency"> 1000 </Register>
+            <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
@@ -189,7 +199,7 @@
         </Register>
         <!-- DIO5 Block -->
         <Register name="dio5_block">
-            <Register name="dio5_en"> 1 </Register>
+            <Register name="dio5_en"> 0 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
@@ -235,9 +245,9 @@
 
     <Setting name="TriggerMultiplicity">0</Setting>
 
-    <Setting name="StartLatency">290</Setting>
-    <Setting name="LatencyRange">10</Setting>
-    <Setting name="StubAlignmentScanStart">82</Setting>
+    <Setting name="StartLatency">285</Setting>
+    <Setting name="LatencyRange">20</Setting>
+    <Setting name="StubAlignmentScanStart">100</Setting>
 
 
     <Setting name="PSmoduleSSAthreshold">150</Setting>
@@ -304,7 +314,7 @@
 
 
     <!--Full search settings (lowcal) MPA-->
-    <Setting name="Nevents">500</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="PedestalEqualizationFullScanStart">220</Setting>
     <Setting name="PedestalEqualizationOccupancy">0.5</Setting>
     <!-- <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
@@ -394,9 +404,9 @@
 </MonitoringSettings>
 
 <CommunicationSettings>
-    <DQM               ip="127.0.0.1" port="6002" enableConnection="1"/>
-    <MonitorDQM        ip="127.0.0.1" port="8002" enableConnection="1"/>
-    <PowerSupplyClient ip="127.0.0.1" port="7002" enableConnection="1"/>
+    <DQM               ip="127.0.0.1" port="6003" enableConnection="1"/>
+    <MonitorDQM        ip="127.0.0.1" port="8003" enableConnection="1"/>
+    <PowerSupplyClient ip="127.0.0.1" port="7003" enableConnection="1"/>
 </CommunicationSettings>
 
 </HwDescription>
