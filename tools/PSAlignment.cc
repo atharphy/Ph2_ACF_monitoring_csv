@@ -103,6 +103,12 @@ void PSAlignment::Initialise()
                         std::cout << " ssa2 control_1 after " << cChip->getReg("control_1")  << std::endl;
                         std::cout << " ssa2 control_1 after " <<  fReadoutChipInterface->ReadChipReg(cChip, "control_1") << std::endl;
                     }
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                    {
+                        std::cout << " MPA2 Control_1 after " << cChip->getReg("Control_1")  << std::endl;
+                        std::cout << " MPA2 Control_1 after " << fReadoutChipInterface->ReadChipReg(cChip, "Control_1") << std::endl;
+    
+                    }                    
                 }
             }
         }
