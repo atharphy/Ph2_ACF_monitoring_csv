@@ -1073,13 +1073,15 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     auto cValueInMemory = cChip->getReg("PixelControl_ALL");
-                    LOG(INFO) << BOLDRED << "Chip # " << +cChip->getId() << " Set ModeSel and ClusterCut register to 0x"  << std::hex << cValueInMemory << std::dec << RESET;
+                    LOG(INFO) << BOLDRED << "Chip # " << +cChip->getId() << " Set ModeSel, ClusterCut and HipCut register to 0x"  << std::hex << cValueInMemory << std::dec << RESET;
                     auto cModeInMemory = cValueInMemory & 0x03;
                     auto cClusterCutInMemory = (cValueInMemory & 0x1C) >> 2;
+                    auto cHipCutInMemory = (cValueInMemory & 0xE0) >> 5;
                     fReadoutChipInterface->WriteChipReg(cChip, "ModeSel_ALL", cModeInMemory);
                     fReadoutChipInterface->WriteChipReg(cChip, "ClusterCut_ALL", cClusterCutInMemory);
+                    fReadoutChipInterface->WriteChipReg(cChip, "HipCut_ALL", cHipCutInMemory);
                     uint16_t cValueInChip   = fReadoutChipInterface->ReadChipReg(cChip, "PixelControl_ALL");
-                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set ModeSel and ClusterCut register to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set ModeSel, ClusterCut and HipCut register to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
@@ -1193,16 +1195,23 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
     LOG(INFO) << BOLDRED << "Setting Latency" << RESET;
 
     // configure HIPs
-    LOG(INFO) << BOLDRED << "Setting HIP" << RESET;
+    LOG(INFO) << BOLDRED << "Setting HIP for all chips except MPA2 that are set above" << RESET;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2) continue;
                 std::string cRegName;
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                {
+                    cRegName = "StripControl2";
+                }
+                else if( cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    continue; // it is done above!
+                }
+                else if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     cRegName = "HipCut_ALL";
                 }

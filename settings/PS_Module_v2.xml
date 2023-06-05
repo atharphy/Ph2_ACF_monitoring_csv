@@ -18,7 +18,7 @@
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
                 <Latencies       stripLatency="296" pixelLatency="295" retimePix="4"/>
                 <Thresholds      stripThreshold="250" stripThresholdHigh="250" pixelThreshold="250"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
-                <!-- <HipLogic        stripCut="7" pixelCut="7"/> MUST BE FIXED IN THE CODE BOTH SSA AND MPA LORE IRENE--> 
+                <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode -->
                 <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> <!-- in DAC units for each chip type - their electron value is different though! -->
                 <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
@@ -50,12 +50,12 @@
         
         <Hybrid Id="1" enable="1" reset="1">
             <Global>
-                <StubLogic       mode="1" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
-                <HitLogic        stripMode="2" pixelMode="2" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
+                <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
+                <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
                 <Latencies       stripLatency="296" pixelLatency="295" retimePix="4"/>
-                <Thresholds      stripThreshold="80" stripThresholdHigh="100" pixelThreshold="160"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
-                <!-- <HipLogic        stripCut="7" pixelCut="7"/> MUST BE FIXED IN THE CODE BOTH SSA AND MPA LORE IRENE--> 
-                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <Thresholds      stripThreshold="80" stripThresholdHigh="100" pixelThreshold="180"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
+                <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode, 0 means disabled for pixels -->
+                <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="0" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <InjectedCharge  stripCharge="90" pixelCharge="120"/> <!-- in DAC units for each chip type - their electron value is different though! -->
                 <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/> 
             </Global>
@@ -80,12 +80,12 @@
             <MPA2 Id="13" configfile="MPA2.txt" />
             <MPA2 Id="14" configfile="MPA2.txt" />
             <MPA2 Id="15" configfile="MPA2.txt" />
-            <!-- <MPA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1468/" />
+            <!-- <MPA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1585/" />
             <MPA2 Id="8" configfile="BE0_OG0_FE1_Chip8.txt" />
             <MPA2 Id="9" configfile="BE0_OG0_FE1_Chip9.txt" />
             <MPA2 Id="10" configfile="BE0_OG0_FE1_Chip10.txt" />
             <MPA2 Id="11" configfile="BE0_OG0_FE1_Chip11.txt" />            
-           <MPA2 Id="12" configfile="BE0_OG0_FE1_Chip12.txt" />
+            <MPA2 Id="12" configfile="BE0_OG0_FE1_Chip12.txt" />
             <MPA2 Id="13" configfile="BE0_OG0_FE1_Chip13.txt" />
             <MPA2 Id="14" configfile="BE0_OG0_FE1_Chip14.txt" />
             <MPA2 Id="15" configfile="BE0_OG0_FE1_Chip14.txt" />  -->
@@ -247,7 +247,7 @@
 
     <Setting name="StartLatency">285</Setting>
     <Setting name="LatencyRange">20</Setting>
-    <Setting name="StubAlignmentScanStart">100</Setting>
+    <Setting name="StubAlignmentScanStart">85</Setting>
 
 
     <Setting name="PSmoduleSSAthreshold">150</Setting>

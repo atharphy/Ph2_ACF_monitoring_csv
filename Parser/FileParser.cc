@@ -604,7 +604,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             }
         }
 
-        // hip cut -> must be fixed! IRENE&LORENZO
+        // hip cut
         pugi::xml_node cHIPmode = cGlobalSettingsNode.child("HipLogic");
         if(cHIPmode != nullptr)
         {
@@ -612,13 +612,24 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cCut = convertAnyInt(cHIPmode.attribute("stripCut").value());
-                cChip->setReg("HIPCUT_ALL", cCut);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
-                   << RESET << std::endl;
+                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                {
+                    cChip->setReg("HIPCUT_ALL", cCut);
+                    os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
+                    << RESET << std::endl;
+                }
+                else if (cChip->getFrontEndType() == FrontEndType::SSA2)
+                {
+                    uint16_t cMemStripControl2 = cChip->getReg("StripControl2");
+                    cMemStripControl2 = (cMemStripControl2 & 0xF8) + (cCut&0x7); // HipCut is the 3 LSB of the StripControl2 register
+                    cChip->setReg("StripControl2", cMemStripControl2);
+                    os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << " read for StripControl2 is 0x" << cChip->getReg("StripControl2") << std::dec
+                    << RESET << std::endl;  
+                }   
             }
         }
 
-        // timing -> must be fixed! IRENE&LORENZO
+        // timing
         pugi::xml_node cSamplingDelay = cGlobalSettingsNode.child("SamplingDelay");
         if(cSamplingDelay != nullptr)
         {
@@ -863,7 +874,10 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                     ChipRegMask cMask;
                     cMask.fNbits    = 3;
                     cMask.fBitShift = 2;
-                    cChip->setRegBits("Control_1", cMask, cRetimePix);                    
+                    cChip->setRegBits("Control_1", cMask, cRetimePix);
+                    uint16_t cValueInMemory = cChip->getReg("Control_1");
+
+                    LOG(INFO) << BOLDRED << __LINE__ << "RETIME PIX: 0x" << std::hex << cRetimePix << " CONTROL_1: 0x" << cValueInMemory  << std::dec << RESET;
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
                    << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
@@ -879,13 +893,13 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCut = convertAnyInt(cHIPmode.attribute("pixelCut").value());
                 if(cChip->getFrontEndType() == FrontEndType::MPA) 
-                    cChip->setReg("HipCut_ALL", cCut); // Irene
+                    cChip->setReg("HipCut_ALL", cCut);
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    cChip->setReg("Mask_ALL", 0xe0);
-                    cChip->setReg("PixelControl_ALL", (cCut << 5)); // Irene
-                    cChip->setReg("Mask_ALL", 0xFF);
-                    exit(0);//LORENZO THIS MUST BE FIXED IN THE XML AND HERE!!!!!!!
+                    ChipRegMask cMask;
+                    cMask.fNbits    = 3;
+                    cMask.fBitShift = 5;
+                    cChip->setRegBits("PixelControl_ALL", cMask, cCut);
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
                    << RESET << std::endl;
@@ -915,6 +929,9 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                     cMask.fBitShift = 5;
                     cChip->setRegBits("Control_1", cMask, cCoarse);
 
+                    uint16_t cValueInMemory = cChip->getReg("Control_1");
+
+                    LOG(INFO) << BOLDRED << __LINE__ << "COARSE: 0x" << std::hex << cCoarse << " CONTROL_1: 0x" << cValueInMemory  << std::dec << RESET;
                     cFine = (cFine & 0xCF) + 0x30;//Setting bit 4 and 5 to 1 (4->Enable DLL, 5->DoNot Bypass)
                     cChip->setReg("ConfDLL", (cFine));
                 }
