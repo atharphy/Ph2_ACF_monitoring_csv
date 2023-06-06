@@ -429,6 +429,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
     while(nAttempts < RD53Shared::MAXATTEMPTS)
     {
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
         LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "active" << BOLDBLUE << " data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << " i.e. "
                   << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
@@ -444,7 +445,6 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
                 for(const auto cOpticalGroup: *pBoard)
                     for(const auto cHybrid: *cOpticalGroup) RD53FWInterface::WriteChipCommand(initSequence, cHybrid->getId());
 
-            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             nAttempts++;
         }
         else
