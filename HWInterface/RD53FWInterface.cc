@@ -674,10 +674,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ####################
         RD53FWInterface::Start();
         while(RegManager::ReadReg("user.stat_regs.trigger_cntr") < pNEvents * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
-          {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
-            std::cout << "AAAAAAAAAAAAAAAAA " << RegManager::ReadReg("user.stat_regs.trigger_cntr") << " " << pNEvents << " " << RD53FWInterface::localCfgFastCmd.trigger_duration << std::endl;
-          }
         RD53FWInterface::ReadData(pBoard, false, pData, pWait);
         RD53FWInterface::Stop();
 
