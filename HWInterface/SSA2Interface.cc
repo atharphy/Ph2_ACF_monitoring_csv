@@ -256,6 +256,12 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         LOG(DEBUG) << BOLDGREEN << __LINE__ << "] ReadChipReg(): " << pRegNode << RESET;
         uint16_t  cMode = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
         return cMode;
+    }
+    else if(pRegNode == "StripControl2" )
+    {
+        LOG(DEBUG) << BOLDGREEN << __LINE__ << "] ReadChipReg(): " << pRegNode << RESET;
+        uint16_t  cMode = this->ReadChipReg(pSSA2, "StripControl2_S1");
+        return cMode;
     }   
     else if(pRegNode == "InjectedCharge" || pRegNode == "Bias_CALDAC")
     {
