@@ -193,7 +193,7 @@
                 <Register name="trigger_type"> 0 </Register>
                 <Register name="data_type"> 0 </Register>
                 <!--this is what is commonly known as stub latency-->
-                <Register name="common_stubdata_delay"> 218 </Register>
+                <Register name="common_stubdata_delay"> 217 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
