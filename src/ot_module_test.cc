@@ -141,7 +141,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("allChan", "Do pedestal and noise measurement using all channels? Default: false", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("allChan", "a");
 
-    cmd.defineOption("reconfigure", "Reconfigure Hardware");
+    cmd.defineOption("reconfigure", "Reconfigure Hardware and align");
+    cmd.defineOption("configure", "Configure Hardware");
     cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
     cmd.defineOption("phaseScan", "Phase Scan");
@@ -472,6 +473,10 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        auto clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "FE_CONFIG");
+        std::cout << " CLK CIC 0x" << std::hex << clkFr << std::dec << std::endl;
+        // cTool.fCicInterface->WriteChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "FE_CONFIG", 0x1D);
+        // // exit(0);
         // just to check
         // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         // for(const auto cBoard: *cTool.fDetectorContainer)
@@ -540,6 +545,12 @@ int main(int argc, char* argv[])
         //     cTool.ReadData(cBoard, cData, cWait);
         //     cTool.fBeBoardInterface->Stop(cBoard);
         // }
+    }
+    // reconfigure hardware (ie reload chip registers) without running the alignment
+    if(!cmd.foundOption("read") && cmd.foundOption("configure"))
+    {
+        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+
     }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
