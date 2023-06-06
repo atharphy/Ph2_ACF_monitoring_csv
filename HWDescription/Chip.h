@@ -241,7 +241,7 @@ class Chip : public FrontEndDescription
 
     std::string getFileName(const std::string& fName2Add) const
     {
-        std::string output = configFileName;
+        std::string output = "";//configFileName;
         output.insert(output.find_last_of("/\\") + 1, fName2Add);
         return output;
     }
