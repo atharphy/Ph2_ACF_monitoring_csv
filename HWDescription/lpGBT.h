@@ -68,6 +68,12 @@ class lpGBT : public Chip
     uint32_t getWriteCount(uint8_t pMasterId) { return fI2CWrites[pMasterId]; }
     uint32_t getReadCount(uint8_t pMasterId) { return fI2CReads[pMasterId]; }
 
+    void setTuneVrefADC(std::string pTuneVrefADC){fTuneVrefADC = pTuneVrefADC;}
+    void setTuneVrefVoltage(float pTuneVrefVoltage){fTuneVrefVoltage = pTuneVrefVoltage;}
+    std::string getTuneVrefADC(){return fTuneVrefADC;}
+    float getTuneVrefVoltage(){return fTuneVrefVoltage;}
+
+
   private:
     bool                 phaseRxAligned; // @TMP@
     uint8_t              fVersion;
@@ -78,6 +84,11 @@ class lpGBT : public Chip
     std::vector<uint32_t> fI2CWrites{0, 0, 0};
     // Number of read transactions - one element per master
     std::vector<uint32_t> fI2CReads{0, 0, 0};
+
+    //ADC Channel and Voltage to manually tune Vref to 1V
+    std::string fTuneVrefADC{"ADC4"};
+    float fTuneVrefVoltage{0.5};
+
 };
 } // namespace Ph2_HwDescription
 

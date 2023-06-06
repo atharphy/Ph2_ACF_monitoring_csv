@@ -251,6 +251,22 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
 
             theOpticalGroup->setOptical(cIsOptical);
             pBoard->setOptical(cIsOptical);
+
+            //Load settings to tune Vref with external voltage
+            for(pugi::xml_node lpGBTChild: theChild.children())
+            {
+                if(static_cast<std::string>(lpGBTChild.name()) == "TuneVrefSettings")
+                {
+                    std::string cADC = lpGBTChild.attribute("ADC").as_string();
+                    float cReferenceVoltage = std::stof(lpGBTChild.attribute("ReferenceVoltage").as_string());
+                    os << BOLDCYAN << "|\t|\t|---- LpGBT TuneVrefSettings:" << RESET << std::endl;
+                    os << GREEN << "|\t|\t|\t|---- ADC: " << RED << cADC << RESET<< std::endl;
+                    os << GREEN << "|\t|\t|\t|---- ReferenceVoltage: " << RED << +cReferenceVoltage << RESET<< std::endl;
+                    thelpGBT->setTuneVrefADC(cADC);
+                    thelpGBT->setTuneVrefVoltage(cReferenceVoltage);
+                }
+            }
+
             theOpticalGroup->addlpGBT(thelpGBT);
 
             // ####################################################
@@ -294,6 +310,13 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                     os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
                 }
             }
+        }
+        else if(static_cast<std::string>(theChild.name()) == "NTCProperties")
+        {
+            std::string   cNTCType           = std::string( theChild.attribute("type").value() );
+            std::string   cNTCLookUpTable    = std::string( theChild.attribute("lookUpTable").value() );
+            theOpticalGroup->setNTCType(cNTCType);
+            theOpticalGroup->setNTCLookUpTable(cNTCLookUpTable);
         }
     }
 }

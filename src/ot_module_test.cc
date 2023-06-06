@@ -192,6 +192,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("kiracalibration", "Perform KIRA calibration", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("tuneVref", "Tune lpGBT Vref with voltage using ADC input (ADC1, ADC2, ADC3, ADC4, ...)", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("tuneadc", "ADC to tune lpGBT Vref voltage (ADC1, ADC2, ADC3, ADC4, ...)", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("tunevoltage", "Voltage to tune lpGBT Vref voltage", ArgvParser::OptionRequiresValue);
+
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
@@ -272,6 +276,19 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
     cTool.initializeExceptionHandler();
+
+    if(cmd.foundOption("tuneVref"))
+    {
+        std::string cADC        = (cmd.foundOption("tuneadc")) ? cmd.optionValue("tuneadc") : "ADC2";
+        std::string cVADC_str       = (cmd.foundOption("tunevoltage")) ? cmd.optionValue("tunevoltage") : "0.5";
+        float cVADC = std::stof(cVADC_str);
+        auto          cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
+        OTTemperature cTemperatureReader;
+        cTemperatureReader.Inherit(&cTool);
+        cTemperatureReader.SetGain(cGain);
+        std::cout << "VREF: " << +cTemperatureReader.TuneLpGBTVref(cADC,cVADC) << std::endl;
+        //cTemperatureReader.waitForRunToBeCompleted();
+    }
 
     if(cmd.foundOption("readTemperatures"))
     {

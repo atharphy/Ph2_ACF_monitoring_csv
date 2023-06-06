@@ -874,6 +874,79 @@ bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnab
     return cSuccess;
 }
 
+
+bool lpGBTInterface::EnableInternalVref(Ph2_HwDescription::Chip* pChip, bool pEnable)
+{
+    return true;
+}
+bool lpGBTInterface::SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTune)
+{
+    uint8_t cNbits = (static_cast<lpGBT*>(pChip)->getVersion() == 0 ) ? 5 : 8 ;
+    std::string cRegName = (static_cast<lpGBT*>(pChip)->getVersion() == 0 ) ? "VREFCNTR" : "VREFTUNE";
+    ChipRegMask cMask;
+    cMask.fBitShift = 0;
+    cMask.fNbits    = cNbits;
+    pChip->setRegBits(cRegName, cMask, pVrefTune);
+    this->WriteChipReg(pChip,cRegName, pVrefTune);
+    std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+    auto cVrefTune = pChip->getRegItem(cRegName).fValue; 
+    return cVrefTune == pVrefTune;
+}
+
+uint8_t lpGBTInterface::GetVrefTune(Ph2_HwDescription::Chip* pChip)
+{
+    uint8_t cNbits = (static_cast<lpGBT*>(pChip)->getVersion() == 0 ) ? 5 : 8 ;
+    std::string cRegName = (static_cast<lpGBT*>(pChip)->getVersion() == 0 ) ? "VREFCNTR" : "VREFTUNE";
+    auto cVrefTune = pChip->getRegItem(cRegName).fValue;
+    uint8_t mask = (0xFF >> (8 - cNbits));
+    return (mask & cVrefTune);
+}
+
+float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput)
+{
+    auto cGain = GetADCGain(pChip,false);
+    auto cOffset = GetADCOffset(pChip,false);
+    auto cADC = ReadADC(pChip, pADC); 
+    return (pVinput*cGain*512)/(cADC - cOffset*(1-cGain/2.));
+}
+
+uint8_t  lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip)
+{
+    return TuneVref(pChip,static_cast<lpGBT*>(pChip)->getTuneVrefADC(),static_cast<lpGBT*>(pChip)->getTuneVrefVoltage());
+}
+
+uint8_t  lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput)
+{
+    uint8_t cNbits = (static_cast<lpGBT*>(pChip)->getVersion() == 0 ) ? 5 : 8 ;
+    uint8_t cCurrentStep = (0xFF >> (8 - cNbits));  //Start value
+    SetVrefTune(pChip, cCurrentStep);
+    auto cVrefTune = GetVrefTune(pChip);
+    float cCurrentVref = GetVref(pChip,pADC, pVinput);  //Returns a voltage. Goal: 1V
+    uint16_t cPreviousStep = cCurrentStep;
+    for(int iBit = cNbits -1 ; iBit >= 0; --iBit)
+    {
+        // flip bit 
+        cCurrentStep =cPreviousStep + (1 << iBit);
+        SetVrefTune(pChip, cCurrentStep);
+        cVrefTune = GetVrefTune(pChip);
+        cCurrentVref = GetVref(pChip,pADC, pVinput);
+
+        // Determine if it is better or not
+        if( cCurrentVref < 1. ) cPreviousStep = cCurrentStep;
+        SetVrefTune(pChip, cCurrentStep);
+        cVrefTune = GetVrefTune(pChip);
+        cCurrentVref = GetVref(pChip,pADC, pVinput);
+
+        if (static_cast<lpGBT*>(pChip)->getVersion() == 0 )
+            LOG (INFO) << BOLDYELLOW << " Flip Bit#" << +iBit << " Tune =  " << std::bitset<5>(cVrefTune) << " Vref = " << cCurrentVref << RESET;
+        else
+            LOG (INFO) << BOLDYELLOW << " Flip Bit#" << +iBit << " Tune =  " << std::bitset<8>(cVrefTune) << " Vref = " << cCurrentVref << RESET;
+
+    }
+    LOG (INFO) << BOLDYELLOW << "Vref tune set to " << +cVrefTune << " - Vref = " << cCurrentVref << RESET;
+    return cVrefTune;
+}
+
 // #######################
 // # Bit Error Rate test #
 // #######################

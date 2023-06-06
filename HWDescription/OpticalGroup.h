@@ -58,7 +58,18 @@ class OpticalGroup
     lpGBT* flpGBT    = nullptr;
     bool   fIsLocked = false;
 
+    void setNTCType(std::string pNTCType){fNTCType = pNTCType;}
+    void setNTCLookUpTable(std::string pNTCLookUpTable){fNTCLookUpTable = pNTCLookUpTable;}
+
+    //std::string getNTCType(){return fNTCType;}
+    //std::string getNTCLookUpTable(){return fNTCLookUpTable;}
+    std::string fNTCType{"1"};
+    std::string fNTCLookUpTable{"./settings/NTCFiles/ntc_1k.csv"};
+
   protected:
+
+  private:
+
 };
 } // namespace Ph2_HwDescription
 
