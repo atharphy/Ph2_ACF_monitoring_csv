@@ -945,16 +945,17 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                     {
                         for(auto cInjection: pInjections)
                         {
-
-                            LOG(INFO) << BOLDRED << __LINE__ << "] INJECTING STRIP: " << cInjection.fRow << " with ENFLAGS Memory ALL=0x " << std::hex << enflags << std::dec << RESET;
+                            uint8_t stripInj = cInjection.fRow;
+                            LOG(INFO) << BOLDRED << __LINE__ << "] INJECTING STRIP: " << +stripInj << " with ENFLAGS Memory ALL=0x " << std::hex << enflags << std::dec << RESET;
                             std::stringstream cRegNameEn;
-                            cRegNameEn << "ENFLAGS_S" << +cInjection.fRow;
+                            
+                            cRegNameEn << "ENFLAGS_S" << +stripInj;
                             enflags = (enflags & 0xFE) + 0x01;//Making sure to enable the strip
                             fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), enflags);
                             if(fInjectionType == 0)
                             {
                                 std::stringstream cRegNamePattern;
-                                cRegNamePattern << "DigCalibPattern_L_S" << +cInjection.fRow;
+                                cRegNamePattern << "DigCalibPattern_L_S" << +stripInj;
                                 fReadoutChipInterface->WriteChipReg(cChip, cRegNamePattern.str(), 0x01);
                             }
                         }
