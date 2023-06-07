@@ -27,11 +27,11 @@ void BeamTestCheck::Initialise()
         SetChipRegstoPerserve(FrontEndType::CBC3, {"TriggerLatency1", "FeCtrl&TrgLat2"});
 
         // list of board registers that can be modified by this tool
-        for(auto cBoard: *fDetectorContainer)
-        {
-            LOG(INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
-                      << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay") << RESET;
-        }
+        // for(auto cBoard: *fDetectorContainer)
+        // {
+        //     LOG(INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
+        //               << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay") << RESET;
+        // }
         std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay",
                                                 "fc7_daq_cnfg.readout_block.global.common_stubdata_delay",
                                                 "fc7_daq_cnfg.fast_command_block.trigger_source",

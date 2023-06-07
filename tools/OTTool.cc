@@ -135,7 +135,7 @@ void OTTool::Prepare()
         if(cBoard->at(0)->flpGBT == nullptr) continue;
 #endif
         uint32_t cSparsified = cBoard->getSparsification(); // this is set in the file parser .. so check using that
-        LOG(INFO) << BOLDYELLOW << +cSparsified << RESET;
+        LOG(INFO) << BOLDYELLOW << __LINE__ << "] Sparsification: " << +cSparsified << RESET;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
         // make sure I am in un-sparsified mode
         LOG(INFO) << BOLDGREEN << "Setting sparsification on BeBoard#" << +cBoard->getId() << ((cSparsified == 1) ? " ON" : " OFF") << RESET;
@@ -972,6 +972,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
 }
 void OTTool::UpdateFromRegMap(BeBoard* pBoard)
 {
+    LOG(INFO) << BOLDMAGENTA <<__PRETTY_FUNCTION__ << RESET;
     // important registers for beBoard
     std::vector<std::string> cBoardRegs
     {
@@ -990,6 +991,22 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "Setting " << cReg << " to " << +cRegMap[cReg] << RESET;
         fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]);
     }
+
+
+
+    // This allows to set the stub package delay from the xml (if alignment worked and one doesn't want to reconfigure)    
+    // std::string cStubPackageDelay = "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay";
+    // auto     cMemoryDelay = pBoard->getReg(cStubPackageDelay);
+    // LOG(INFO) << BOLDYELLOW <<" fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay " << cMemoryDelay <<RESET;
+
+
+    // fBeBoardInterface->WriteBoardReg(pBoard, cStubPackageDelay, cMemoryDelay);
+    // LOG(INFO) << BOLDYELLOW <<" WROTE fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay " << cMemoryDelay <<RESET;
+
+    // auto     cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, cStubPackageDelay);
+    // LOG(INFO) << BOLDYELLOW <<" ORIGINAL fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay " << cOriginalDelay <<RESET;
+    // exit(0);
+    // end of stub package delay rewriting
 
     // set thresholds
     LOG(INFO) << BOLDRED << "Setting Thresholds" << RESET;
