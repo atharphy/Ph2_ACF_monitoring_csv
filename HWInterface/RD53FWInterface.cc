@@ -105,6 +105,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################
+
     RD53FWInterface::DIO5Config                   cfgDIO5;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     LOG(INFO) << GREEN << "Initializing DIO5:" << RESET;

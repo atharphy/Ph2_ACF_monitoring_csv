@@ -239,7 +239,7 @@ class SystemController
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(const ConfigureInfo& theConfigureInfo);
+    virtual void Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize = true);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);

@@ -457,7 +457,6 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
     const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
-
     auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
 
     static_cast<RD53FWInterface*>(theBeBoardFW)
@@ -1017,6 +1016,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
 }
+
 void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
 {
     if(fDetectorContainer == nullptr)
@@ -1045,7 +1045,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             // make sure board is also set to the same thing
             bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
             cBoard->setSparsification(cSparsified);
-            if(pReInitialize)
+            if(pReInitialize == true)
                 InitializeOT(cBoard);
             else // lpGBT + CIC will need to be configured  (and also maybe reset)
             {
@@ -1122,8 +1122,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
-            ConfigureIT(cBoard);
-            ConfigureFrontendIT(cBoard);
+            if(pReInitialize == true)
+            {
+                ConfigureIT(cBoard);
+                ConfigureFrontendIT(cBoard);
+            }
 
             // ######################################
             // # Dispatch threads for data decoding #
@@ -1193,7 +1196,7 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
+void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
     fSettingsFileName      = theConfigureInfo.getSettingsFile();
@@ -1223,7 +1226,7 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     // ########################################################
     std::cout << fParsedFile.str() << std::endl;
 
-    ConfigureHw(false, true);
+    ConfigureHw(false, pReInitialize);
 }
 
 void SystemController::initializeExceptionHandler()
