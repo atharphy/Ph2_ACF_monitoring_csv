@@ -36,7 +36,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ##############
     // # Field data #
     // ##############
-    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false); // To be consistent with RD53B event decoder
+    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false);
     // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
     // # bit 11:   EnBCId        --> Map in FormatOptions: enableBCID
     // # bit 10:   EnLv1Id       --> Map in FormatOptions: enableTriggerId
