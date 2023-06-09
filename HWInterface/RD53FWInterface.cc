@@ -720,7 +720,7 @@ void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)
     RegManager::WriteStackReg({{cmdReg, 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}, {cmdReg, 0}});
 }
 
-void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
+void RD53FWInterface::SendFastCommands(const FastCommandsConfig* cfg)
 {
     const int GLOBAL_PULSE_WIDTH = 0x6; // @CONST@
 
@@ -771,12 +771,12 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
 
-void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard*            pBoard,
-                                                  const uint32_t            nTRIGxEvent,
-                                                  const RD53Shared::INJtype injType,
-                                                  const uint32_t            injLatency,
-                                                  const uint32_t            nClkDelays,
-                                                  const bool                enableAutozero)
+void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
+                                            const uint32_t            nTRIGxEvent,
+                                            const RD53Shared::INJtype injType,
+                                            const uint32_t            injLatency,
+                                            const uint32_t            nClkDelays,
+                                            const bool                enableAutozero)
 // ############################
 // # injType == 0 --> None    #
 // # injType == 1 --> Analog  #
@@ -892,10 +892,9 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard*            pBoa
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
 
-    // ##############################
-    // # Download the configuration #
-    // ##############################
-    RD53FWInterface::ConfigureFastCommands();
+    // ###################
+    // # Print FW status #
+    // ###################
     RD53FWInterface::PrintFWstatus();
 }
 

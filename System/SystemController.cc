@@ -448,24 +448,28 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
 // ######################################
 void SystemController::ConfigureIT(BeBoard* pBoard)
 {
-    // ###################
-    // # Configuring FSM #
-    // ###################
+    auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
+
+    // #################
+    // # Configure FSM #
+    // #################
     const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 1);
     const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype", 1));
     const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
     const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
     const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
-    LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
-    auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
+    static_cast<RD53FWInterface*>(theBeBoardFW)->ConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
 
-    static_cast<RD53FWInterface*>(theBeBoardFW)
-        ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
+    // ###############
+    // # Program FSM #
+    // ###############
+    LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
+    static_cast<RD53FWInterface*>(theBeBoardFW)->SendFastCommands();
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
-    // ########################
-    // # Configuring from XML #
-    // ########################
+    // ######################
+    // # Configure from XML #
+    // ######################
     static_cast<RD53FWInterface*>(theBeBoardFW)->ConfigureFromXML(pBoard);
 
     // ########################
@@ -1124,8 +1128,24 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         {
             if(pReInitialize == true)
             {
+                // #################################
+                // # Initialize board and frontend #
+                // #################################
                 ConfigureIT(cBoard);
                 ConfigureFrontendIT(cBoard);
+            }
+            else
+            {
+                // ###################
+                // # Configuring FSM #
+                // ###################
+                const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 1);
+                const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype", 1));
+                const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
+                const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
+                const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
+                    ->ConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
             }
 
             // ######################################

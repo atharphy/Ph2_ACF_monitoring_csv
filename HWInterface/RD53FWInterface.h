@@ -162,12 +162,13 @@ class RD53FWInterface : public BeBoardFWInterface
     };
 
     void ConfigureFromXML(const Ph2_HwDescription::BeBoard* pBoard);
-    void SetAndConfigureFastCommands(const Ph2_HwDescription::BeBoard* pBoard,
-                                     const uint32_t                    nTRIGxEvent,
-                                     const RD53Shared::INJtype         injType,
-                                     const uint32_t                    injLatency     = 0,
-                                     const uint32_t                    nClkDelays     = 0,
-                                     const bool                        enableAutozero = false);
+    void ConfigureFastCommands(const Ph2_HwDescription::BeBoard* pBoard,
+                               const uint32_t                    nTRIGxEvent,
+                               const RD53Shared::INJtype         injType,
+                               const uint32_t                    injLatency     = 0,
+                               const uint32_t                    nClkDelays     = 0,
+                               const bool                        enableAutozero = false);
+    void SendFastCommands(const FastCommandsConfig* config = nullptr);
 
     struct DIO5Config
     {
@@ -210,7 +211,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void     PrintFWstatus();
     void     TurnOffFMC();
     void     TurnOnFMC();
-    void     ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
     void     ConfigureDIO5(const DIO5Config* config);
     void     SendBoardCommandWithStrobe(const std::string& cmdReg);
     void     SendBoardCommand(const std::string& cmdReg);
