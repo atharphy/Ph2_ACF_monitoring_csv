@@ -27,11 +27,11 @@ void BeamTestCheck::Initialise()
         SetChipRegstoPerserve(FrontEndType::CBC3, {"TriggerLatency1", "FeCtrl&TrgLat2"});
 
         // list of board registers that can be modified by this tool
-        // for(auto cBoard: *fDetectorContainer)
-        // {
-        //     LOG(INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
-        //               << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay") << RESET;
-        // }
+        for(auto cBoard: *fDetectorContainer)
+        {
+            LOG(INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
+                      << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay") << RESET;
+        }
         std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay",
                                                 "fc7_daq_cnfg.readout_block.global.common_stubdata_delay",
                                                 "fc7_daq_cnfg.fast_command_block.trigger_source",
@@ -2101,7 +2101,8 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
     // enable DIO5
     cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x0});
     cRegVec.push_back({"fc7_daq_cnfg.dio5_block.dio5_en", 0x1});
-    cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 0});
+    cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 10});
+    cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 10});
     cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDaelay});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
@@ -2112,6 +2113,23 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
     UpdateFromRegMap(pBoard);
     // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
+
+
+//     LOG(INFO) << BOLDRED << " !!!!!! INJECTING!!!!!!!! " << RESET;
+//     LOG(INFO) << BOLDRED << " !!!!!! INJECTING!!!!!!!! " << RESET;
+//     LOG(INFO) << BOLDRED << " !!!!!! INJECTING!!!!!!!! " << RESET;
+//     LOG(INFO) << BOLDRED << " !!!!!! INJECTING!!!!!!!! " << RESET;
+//    // inject PS
+//     // if(!cWith2S)
+//     // {
+//         InjectPattern(pBoard, fInjections, -1);
+//     // }
+//     LOG(INFO) << BOLDRED << " !!!!!! INJECTING!!!!!!!! " << RESET;
+//     LOG(INFO) << BOLDRED << " !!!!!! INJECTING!!!!!!!! " << RESET;
+//     LOG(INFO) << BOLDRED << " !!!!!! INJECTING!!!!!!!! " << RESET;
+//     LOG(INFO) << BOLDRED << " !!!!!! INJECTING!!!!!!!! " << RESET;
+ 
+
 }
 void BeamTestCheck::Stop() {}
 

@@ -569,8 +569,12 @@ void OTTool::ContinuousReadout(BeBoard* pBoard)
         // check state of triggers FSM
         if(cTriggerInterface->GetTriggerState() != 1)
         {
+            LOG(INFO) << BOLDYELLOW << __LINE__ << "] Trigger state " << cTriggerInterface->GetTriggerState() << RESET;
             cTriggerInterface->Stop();
+            LOG(INFO) << BOLDYELLOW << __LINE__ << "] After Stop Trigger state " << cTriggerInterface->GetTriggerState() << RESET;
             cTriggerInterface->Start();
+            LOG(INFO) << BOLDYELLOW << __LINE__ << "] After Start Trigger state " << cTriggerInterface->GetTriggerState() << RESET;
+
         }
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
         auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -609,7 +613,8 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
         std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
         if(cWaitCounter % 10 == 0)
         {
-             LOG(INFO) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
+            LOG(INFO) << BOLDBLUE << "\t\t" << fMyName << " " << __PRETTY_FUNCTION__ << " cTriggerInterface->GetTriggerState() "<< cTriggerInterface->GetTriggerState() << RESET;
+            LOG(INFO) << BOLDBLUE << "\t\t" << fMyName << " " << __LINE__ << ": Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
         }
         cWaitCounter++;
         LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState() << " cWaitCounter " << cWaitCounter << " cMaxWait " << cMaxWait << RESET;
@@ -619,12 +624,14 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
     LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
     do
     {
-        //LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << "while loop  cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << "while loop  cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " nTriggers " << cInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
         if(cCounter >= fNevents || cTriggerInterface->GetTriggerState() == 0)
         { 
             LOG(INFO) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard" << +cBrdId << RESET; 
         }
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         cCounter = cInterface->GetEventCounter();
     } while(cCounter < fNevents);
     std::cout << "after  while loop cCounter " << cCounter << " fNevents " << fNevents << " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState() << std::endl;    
@@ -994,7 +1001,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
 
 
 
-    // This allows to set the stub package delay from the xml (if alignment worked and one doesn't want to reconfigure)    
+    // // This allows to set the stub package delay from the xml (if alignment worked and one doesn't want to reconfigure)    
     // std::string cStubPackageDelay = "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay";
     // auto     cMemoryDelay = pBoard->getReg(cStubPackageDelay);
     // LOG(INFO) << BOLDYELLOW <<" fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay " << cMemoryDelay <<RESET;
@@ -1005,8 +1012,8 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
 
     // auto     cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, cStubPackageDelay);
     // LOG(INFO) << BOLDYELLOW <<" ORIGINAL fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay " << cOriginalDelay <<RESET;
-    // exit(0);
-    // end of stub package delay rewriting
+    // // exit(0);
+    // // end of stub package delay rewriting
 
     // set thresholds
     LOG(INFO) << BOLDRED << "Setting Thresholds" << RESET;
@@ -1362,5 +1369,5 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 }
             }
         }
-    }
+    }    
 }
