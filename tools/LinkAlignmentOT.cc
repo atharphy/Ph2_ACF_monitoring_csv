@@ -936,10 +936,10 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         }
     }
     LOG(INFO) << BOLDBLUE << "LinkAlignmentOT::AlignStubPackage setting hybrid enable register to " << std::bitset<32>(cNewMask) << RESET;
+    auto     cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
 
     bool    cSkip         = false;
-    uint8_t cPackageDelay = 7;
-    uint8_t cFinalDelay   = cPackageDelay;
+    uint8_t cFinalDelay   = cOriginalDelay;
     if(!cSkip)
     {
         // gethybrid IDs
@@ -969,7 +969,8 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         // now try and find correct package delay
         uint16_t cMaxBxCounter  = 3564;
         uint32_t cNevents       = 10;
-        auto     cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+        uint8_t cPackageDelay = cOriginalDelay;
+
         LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
         LOG(DEBUG) << cMaxBxCounter << RESET;
         size_t cAttempt = 0;
@@ -1007,7 +1008,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                     }
                 }
 
-                // check that BxIds ae synchronous across single links
+                // check that BxIds are synchronous across single links
                 std::vector<uint8_t> cIdsToCompare(0);
                 for(auto cIter: cHybridIdsMap)
                 {
@@ -1113,6 +1114,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                     {
                         LOG(INFO) << BOLDGREEN << "All hybrids match for a package delay of " << +cPackageDelay << RESET;
                         cCorrectDelay = true;
+                        cFinalDelay   = cPackageDelay;
                     }
                     else
                         LOG(DEBUG) << BOLDRED << "For a package delay of " << +cPackageDelay << " found " << +cNFound << "/" << cMatchesFound.size()
@@ -1169,7 +1171,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         }
     }
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc);
-    LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
+    LOG(INFO) << BOLDMAGENTA << __LINE__ << "] Found package delay to be " << +cFinalDelay << RESET;
 
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
@@ -1313,7 +1315,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
     }
-    LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
+    LOG(INFO) << BOLDMAGENTA << __LINE__ << "] Found package delay to be " << +cFinalDelay << RESET;
     return cCorrectDelay;
 }
 // State machine control functions
