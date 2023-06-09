@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     cmd.defineOption("prog", "Just program the system components", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("prog", "p");
 
-    cmd.defineOption("skipcfg", "Skip configuration sequence", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOption("skipcfg", "Skip entire configuration sequence", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("skipcfg", "k");
 
     cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address (e.g. tcp://localhost:44000)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
