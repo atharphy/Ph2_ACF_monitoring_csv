@@ -660,7 +660,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // this->WriteReg("clock_source_u8", 3);
 
     // check status of clocks
-    bool cCheckLock = false;
+    bool cCheckLock = true;
     if(cCheckLock)
     {
         bool c40MhzLocked    = false;
@@ -688,7 +688,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         if(!c40MhzLocked || !cRefClockLocked)
         {
             LOG(ERROR) << BOLDRED << "One of the clocks failed to LOCK!" << RESET;
-            exit(0);
+            // exit(0);
         }
     }
     this->syncCDCE();
@@ -1036,7 +1036,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 {
     pData.clear();
     uint32_t cNEvents = 0;
-    LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    // LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if(fL1ReadoutInterface == nullptr)
     {
         LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
@@ -1045,11 +1045,11 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 
     if(fL1ReadoutInterface->PollReadoutData(pBoard, pWait))
     {
-        LOG(INFO) << " calling fL1ReadoutInterface->getData() " << RESET;
+        // LOG(INFO) << " calling fL1ReadoutInterface->getData() " << RESET;
         pData    = fL1ReadoutInterface->getData();
-        LOG(INFO) << " calling fL1ReadoutInterface->getNReadoutEvents() " << RESET;
+        // LOG(INFO) << " calling fL1ReadoutInterface->getNReadoutEvents() " << RESET;
         cNEvents = fL1ReadoutInterface->getNReadoutEvents();
-        LOG(INFO) << " cNEvents "<< cNEvents << RESET;
+        if(cNEvents != 0) LOG(INFO) << BOLDGREEN << " cNEvents "<< cNEvents << RESET;
     }
     else
     {
