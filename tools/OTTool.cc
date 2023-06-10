@@ -1015,6 +1015,44 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
     // // exit(0);
     // // end of stub package delay rewriting
 
+   // set MPA Sync with SSA
+    LOG(INFO) << BOLDRED << "Setting MPA Sync with SSA" << RESET;
+    if(true)
+    {
+        for(auto cOpticalGroup: *pBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                    uint16_t cValueInMemory;
+                    uint16_t cValueInChip;
+                    cValueInMemory = cChip->getReg("EdgeSelTrig");
+                    fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", cValueInMemory);
+                    cValueInChip = fReadoutChipInterface->ReadChipReg(cChip,"EdgeSelTrig");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set EdgeSelTrig register to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
+
+                    cValueInMemory = cChip->getReg("EdgeSelT1Raw");
+                    fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", cValueInMemory);
+                    cValueInChip = fReadoutChipInterface->ReadChipReg(cChip,"EdgeSelT1Raw");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set EdgeSelT1Raw register to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
+
+                    cValueInMemory = cChip->getReg("LatencyRx320");
+                    fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", cValueInMemory);
+                    cValueInChip = fReadoutChipInterface->ReadChipReg(cChip,"LatencyRx320");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set LatencyRx320 register to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
+
+                    cValueInMemory = cChip->getReg("LatencyRx40");
+                    fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", cValueInMemory);
+                    cValueInChip = fReadoutChipInterface->ReadChipReg(cChip,"LatencyRx40");
+                    LOG(INFO) << BOLDYELLOW << "Chip # " << +cChip->getId() << " Set LatencyRx40 register to 0x" << std::hex << cValueInMemory << "=0x" << cValueInChip << std::dec << RESET;
+                }
+            }
+        }
+        LOG(INFO) << BOLDRED << "Done Setting MPA Sync with SSA" << RESET;
+    }
+
     // set thresholds
     LOG(INFO) << BOLDRED << "Setting Thresholds" << RESET;
     for(auto cOpticalGroup: *pBoard)

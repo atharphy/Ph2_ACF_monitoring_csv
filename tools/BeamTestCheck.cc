@@ -692,6 +692,32 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
         LOG(INFO) << BOLDBLUE << "Latency Step#" << +cLatStep << RESET;
         ContinuousReadout();
 
+        for(auto board : *fDetectorContainer)
+        {
+            for(auto opticalGroup : *board)
+            {
+                for(auto hybrid : *opticalGroup)
+                {
+                    for(auto chip : *hybrid)
+                    {
+                        if(chip->getFrontEndType() == FrontEndType::MPA2)
+                        {
+                            auto registerVal = fReadoutChipInterface->ReadChipReg(chip, "L1_miss_strip");
+                            LOG(INFO) << BOLDRED << __LINE__ << "] L1missingStrip = 0x" << std::hex << registerVal << std::dec << RESET;
+                            registerVal = fReadoutChipInterface->ReadChipReg(chip, "LatencyRx320");
+                            LOG(INFO) << BOLDRED << __LINE__ << "] LatencyRx320 = 0x" << std::hex << registerVal << std::dec << RESET;
+                            registerVal = fReadoutChipInterface->ReadChipReg(chip, "LatencyRx40");
+                            LOG(INFO) << BOLDRED << __LINE__ << "] LatencyRx40 = 0x" << std::hex << registerVal << std::dec << RESET;
+                            registerVal = fReadoutChipInterface->ReadChipReg(chip, "EdgeSelTrig");
+                            LOG(INFO) << BOLDRED << __LINE__ << "] EdgeSelTrig = 0x" << std::hex << registerVal << std::dec << RESET;
+                            registerVal = fReadoutChipInterface->ReadChipReg(chip, "EdgeSelT1Raw");
+                            LOG(INFO) << BOLDRED << __LINE__ << "] EdgeSelT1Raw = 0x" << std::hex << registerVal << std::dec << RESET;
+                        }
+                    }
+                }
+            }
+        }
+
         // check read-back events
         for(auto cBoard: *fDetectorContainer)
         {
@@ -1287,7 +1313,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                            << +cRow << " Column " << +cCol << RESET;
                             }
                             bool cValidCoords = (cRow < cMaxRows && cCol < cMaxCols);
-                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Filling occupancy" << std::endl;
+                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Filling occupancy" << std::endl;
 
                             if(cSensorID == 0)
                             {
@@ -1302,7 +1328,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             else if(cChip->getFrontEndType() != FrontEndType::CBC3 && cSSAExists)
                             {
                                 cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndex)->getSummary<uint32_t>()++;
-                                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Filling fHitContainerS1" << std::endl;
+                                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Filling fHitContainerS1" << std::endl;
                                 // cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndices[cIndx])->getSummary<uint32_t>()++;
                                 // update hit container for each TDC phase
                                 fHitContainerTDC.at(cBoard->getIndex())

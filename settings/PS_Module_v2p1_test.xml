@@ -4,37 +4,40 @@
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1">
     <!-- <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!--<connection id="board" uri="chtcp-2.0://outertracker03.dhcp.fnal.gov:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <connection id="board" uri="chtcp-2.0://athenanu.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+<!--    <connection id="board" uri="chtcp-2.0://athenanu.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+
     <CDCE configure="0" clockRate="320"/>
         
-    <OpticalGroup Id="0" FMCId="L12" reset="1">
-        <lpGBT_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1702/" />
-        <lpGBT Id="0" version="1" optical="1" configfile="BE0_OG0_lpGBT0.txt">
-        <!-- <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt"> -->
-
+    <OpticalGroup Id="1" FMCId="L12" reset="1">
+<!--        <lpGBT_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1702/" /> -->
+<!--        <lpGBT Id="0" version="1" optical="1" configfile="BE0_OG0_lpGBT0.txt"> -->
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" /> <!-- default -->
+        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt"> <!-- default -->
           <Settings/>
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">
             <Global>                 
-                <StubLogic       mode="2" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
+                <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4"/>
-                <Thresholds      stripThreshold="250" stripThresholdHigh="250" pixelThreshold="250"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
+                <Latencies       stripLatency="295" pixelLatency="294" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" />
+		        <Thresholds      stripThreshold="50" stripThresholdHigh="100" pixelThreshold="160"/> 
                 <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode -->
                 <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <InjectedCharge  stripCharge="0" pixelCharge="0"/> <!-- in DAC units for each chip type - their electron value is different though! -->
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
+                <InjectedCharge  stripCharge="70" pixelCharge="70"/> <!-- in DAC units for each chip type - their electron value is different though! -->
+		        <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+
+<!--                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/> -->
             </Global>
             
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA2 Id="0" configfile="SSA2.txt" />
-            <SSA2 Id="1" configfile="SSA2.txt" />
-            <SSA2 Id="2" configfile="SSA2.txt" />
-            <SSA2 Id="5" configfile="SSA2.txt" />
-            <SSA2 Id="6" configfile="SSA2.txt" />
-            <SSA2 Id="7" configfile="SSA2.txt" />
+            <SSA2 Id="0" configfile="SSA2p1.txt" />
+            <SSA2 Id="1" configfile="SSA2p1.txt" />
+            <SSA2 Id="2" configfile="SSA2p1.txt" />
+            <SSA2 Id="5" configfile="SSA2p1.txt" />
+            <SSA2 Id="6" configfile="SSA2p1.txt" />
+            <SSA2 Id="7" configfile="SSA2p1.txt" /> 
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA2 Id="8" configfile="MPA2.txt" />
@@ -44,8 +47,7 @@
             <MPA2 Id="12" configfile="MPA2.txt" />
             <MPA2 Id="13" configfile="MPA2.txt" />
             <MPA2 Id="14" configfile="MPA2.txt" />
-            <MPA2 Id="15" configfile="MPA2.txt" />
-
+            <MPA2 Id="15" configfile="MPA2.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -55,24 +57,24 @@
             <Global>
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4"/>
-                <Thresholds      stripThreshold="80" stripThresholdHigh="100" pixelThreshold="180"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
+                <Latencies       stripLatency="295" pixelLatency="294" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" />
+                <Thresholds      stripThreshold="50" stripThresholdHigh="100" pixelThreshold="160"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
                 <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode, 0 means disabled for pixels -->
                 <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="0" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <InjectedCharge  stripCharge="90" pixelCharge="120"/> <!-- in DAC units for each chip type - their electron value is different though! -->
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/> 
+                <InjectedCharge  stripCharge="70" pixelCharge="70"/> <!-- in DAC units for each chip type - their electron value is different though! -->
+                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/> 
             </Global>
             
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA2 Id="0" configfile="SSA2.txt" />
-            <SSA2 Id="1" configfile="SSA2.txt" />
-            <SSA2 Id="2" configfile="SSA2.txt" />
-            <SSA2 Id="3" configfile="SSA2.txt" />
-            <SSA2 Id="4" configfile="SSA2.txt" />
-            <SSA2 Id="5" configfile="SSA2.txt" />
-            <SSA2 Id="6" configfile="SSA2.txt" />
-            <SSA2 Id="7" configfile="SSA2.txt" />
+            <SSA2 Id="0" configfile="SSA2p1.txt" />
+            <SSA2 Id="1" configfile="SSA2p1.txt" />
+            <SSA2 Id="2" configfile="SSA2p1.txt" />
+            <SSA2 Id="3" configfile="SSA2p1.txt" />
+            <SSA2 Id="4" configfile="SSA2p1.txt" />
+            <SSA2 Id="5" configfile="SSA2p1.txt" />
+            <SSA2 Id="6" configfile="SSA2p1.txt" />
+            <SSA2 Id="7" configfile="SSA2p1.txt" />
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA2 Id="8" configfile="MPA2.txt" /> 
@@ -93,10 +95,10 @@
             <MPA2 Id="14" configfile="BE0_OG0_FE1_Chip14.txt" />
             <MPA2 Id="15" configfile="BE0_OG0_FE1_Chip14.txt" />  -->
 
-            <!-- <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" /> -->
-            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1788/" />
-            <CIC2 Id="8" configfile="BE0_OG0_FE1.txt" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" /> <!-- default -->
+            <CIC2 Id="8" configfile="CIC2_default.txt" /> <!-- default -->
+<!--            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1788/" />
+            <CIC2 Id="8" configfile="BE0_OG0_FE1.txt" /> -->
         </Hybrid>
     </OpticalGroup>
 
@@ -146,7 +148,7 @@
                 <Register name="delay_after_fast_reset"> 300 </Register>
                 <Register name="delay_after_test_pulse"> 300 </Register>
                 <Register name="delay_before_next_pulse"> 5000 </Register>
-                <Register name="en_fast_reset"> 0 </Register>
+                <Register name="en_fast_reset"> 1 </Register>
                 <Register name="en_test_pulse"> 1 </Register>
                 <Register name="en_l1a"> 1 </Register>
                 <Register name="en_shutter"> 0 </Register>
@@ -243,14 +245,14 @@
     <!--<Setting name="MinStubPhase">1</Setting>
     <Setting name="MaxStubPhase">8</Setting> -->
 
-    <!-- 0 : digital; 1 : analogue --> 
+    <!-- 0 : digital; 1 : analog --> 
     <Setting name="InjectionType">1</Setting>
 
     <Setting name="TriggerMultiplicity">0</Setting>
 
     <Setting name="StartLatency">290</Setting>
-    <Setting name="LatencyRange">20</Setting>
-    <Setting name="StubAlignmentScanStart">85</Setting>
+    <Setting name="LatencyRange">10</Setting>
+    <Setting name="StubAlignmentScanStart">84</Setting>
 
 
     <Setting name="PSmoduleSSAthreshold">150</Setting>
@@ -317,7 +319,7 @@
 
 
     <!--Full search settings (lowcal) MPA-->
-    <Setting name="Nevents">10</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="PedestalEqualizationFullScanStart">220</Setting>
     <Setting name="PedestalEqualizationOccupancy">0.5</Setting>
     <!-- <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
@@ -407,9 +409,9 @@
 </MonitoringSettings>
 
 <CommunicationSettings>
-    <DQM               ip="127.0.0.1" port="6004" enableConnection="1"/>
-    <MonitorDQM        ip="127.0.0.1" port="8004" enableConnection="1"/>
-    <PowerSupplyClient ip="127.0.0.1" port="7004" enableConnection="1"/>
+    <DQM               ip="127.0.0.1" port="6050" enableConnection="0"/>
+    <MonitorDQM        ip="127.0.0.1" port="8050" enableConnection="0"/>
+    <PowerSupplyClient ip="127.0.0.1" port="7050" enableConnection="0"/>
 </CommunicationSettings>
 
 </HwDescription>

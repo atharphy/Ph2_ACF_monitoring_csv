@@ -164,11 +164,11 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
                     // mapping for probe station/etc. can be different
                     if(pSetupType.find("PSModule") != std::string::npos)
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", 0x4);
-                        fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x3F);  //0011 1111
-                        fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", 0x02);
-                        fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x00);
-                        fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x00);//Irene
+                        //fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", 0x4);
+                        //fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x36);  //0110110 FOR IRRADIATED //0011 1111 FOR UNIRRADIATED
+                        //fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", 0x02);
+                        //fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x00);
+                        //fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x00);//Irene
                     }
                 } // chip
             }     // hybrid

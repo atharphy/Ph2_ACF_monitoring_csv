@@ -855,8 +855,9 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             for(auto cChip: *pHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
-                int cLatency   = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
-                int cRetimePix = convertAnyInt(cLatencyNode.attribute("retimePix").value());
+                int cLatency      = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
+                int cRetimePix    = convertAnyInt(cLatencyNode.attribute("retimePix").value());
+                int cLatencyRx320 = ((convertAnyInt(cLatencyNode.attribute("LatencyRx320L1").value())) & 0x7) + ((convertAnyInt(cLatencyNode.attribute("LatencyRx320Trigger").value()) & 0x7)<< 3);
 
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
@@ -878,6 +879,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                     uint16_t cValueInMemory = cChip->getReg("Control_1");
 
                     LOG(INFO) << BOLDRED << __LINE__ << "RETIME PIX: 0x" << std::hex << cRetimePix << " CONTROL_1: 0x" << cValueInMemory  << std::dec << RESET;
+                    cChip->setReg("LatencyRx320", cLatencyRx320 & 0x3F);
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
                    << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;

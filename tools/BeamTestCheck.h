@@ -79,7 +79,7 @@ class BeamTestCheck : public OTTool
         cInjection.fRow    = 98;
         cInjection.fColumn = 12;
         fInjections.push_back(cInjection); // 0
-        //return;
+        return;
         cInjection.fRow    = 100;
         cInjection.fColumn = 12;
         fInjections.push_back(cInjection); // 0
