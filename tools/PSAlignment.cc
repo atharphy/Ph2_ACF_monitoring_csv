@@ -101,12 +101,13 @@ void PSAlignment::Initialise()
                     if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         std::cout << " ssa2 control_1 after " << cChip->getReg("control_1")  << std::endl;
-                        std::cout << " ssa2 control_1 after " <<  fReadoutChipInterface->ReadChipReg(cChip, "control_1") << std::endl;
+                        std::cout << " ssa2 control_1 after " <<  fReadoutChipInterface->ReadChipReg(cChip, "control_1") << std::endl; //FIXME! If Read is removed it doesn't work because the wrong value is stored
+    
                     }
                     if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         std::cout << " MPA2 Control_1 after " << cChip->getReg("Control_1")  << std::endl;
-                        std::cout << " MPA2 Control_1 after " << fReadoutChipInterface->ReadChipReg(cChip, "Control_1") << std::endl;
+                        std::cout << " MPA2 Control_1 after " << fReadoutChipInterface->ReadChipReg(cChip, "Control_1") << std::endl; //FIXME! If Read is removed it doesn't work because the wrong value is stored
     
                     }                    
                 }
@@ -126,7 +127,7 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
                 // map MPA outputs
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue; // MPA2 OutSetting written during the previous configure hardware step.
 
                     // mapping for PS module
                     // mapping for probe station/etc. can be different
@@ -164,17 +165,17 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
                     if(pSetupType.find("PSModule") != std::string::npos)
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", 0x4);
-                        fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x3F);
+                        fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x3F);  //0011 1111
                         fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", 0x02);
                         fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x00);
-                        fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x02);//Irene
+                        fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x00);//Irene
                     }
                 } // chip
             }     // hybrid
         }         // optical group
     }
 
-    // make sure that we save the values at the end
+    // make sure that we save the values at the end for PSv1 ?!
 
     std::vector<std::string> cRegsMod{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw", "Control_1"};
     for(size_t cIndx = 0; cIndx <= 5; cIndx++)

@@ -234,6 +234,8 @@ void DQMHistogramLatencyScan::process()
 void DQMHistogramLatencyScan::reset(void) {}
 void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
 {
+    
+    LOG(INFO) << BOLDMAGENTA << __LINE__ << "]\t\t.Fillling plots" << RESET;
     for(auto board: pOccupancy)
     {
         TH1F* boardTriggerTDCHistogram = fTriggerTDCHistograms.getObject(board->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;

@@ -229,7 +229,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
             cIndx++;
         }
     }
-    LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
+    LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << " " << __LINE__ << "] Found package delay to be " << +cFinalDelay << RESET;
     return cCorrectDelay;
 }
 bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)

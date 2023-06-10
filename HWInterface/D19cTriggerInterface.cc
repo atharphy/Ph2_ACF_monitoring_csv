@@ -137,7 +137,7 @@ bool D19cTriggerInterface::Start()
 {
     LOG(INFO) << BOLDYELLOW << "................................Starting triggers  ... " << RESET;
     auto cTriggerState = GetTriggerState();
-    LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET;
     // this stops triggers  + resets
     this->ResetTriggerFSM();
 

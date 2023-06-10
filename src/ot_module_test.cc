@@ -495,7 +495,7 @@ int main(int argc, char* argv[])
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
         cPSAlignment.Initialise();
-        cPSAlignment.MapMPAOutputs();
+        cPSAlignment.MapMPAOutputs(); // for MPA only. MPA2 OutSetting writtent during the configure hardware step above.
         cPSAlignment.ConfigureDefaultAlignmentParameters();
         cPSAlignment.Reset();
 
@@ -1270,8 +1270,23 @@ int main(int argc, char* argv[])
         BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
-
+    
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
+
+        // reading CIC registers
+        std::cout << " cTool" << std::endl;
+        auto clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "FE_CONFIG");
+        std::cout << " CLK CIC 0x" << std::hex << clkFr << std::dec << std::endl;
+        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "scPhaseSelectB0o");
+        // std::cout << " scPhaseSelectB0o 0x" << std::hex << clkFr << std::dec << std::endl;
+        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "scPhaseSelectB1o");
+        // std::cout << " scPhaseSelectB1o 0x" << std::hex << clkFr << std::dec << std::endl;
+        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "scPhaseSelectB2o");
+        // std::cout << " scPhaseSelectB2o 0x" << std::hex << clkFr << std::dec << std::endl;
+        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "scPhaseSelectB3o");
+        // std::cout << " scPhaseSelectB3o 0x" << std::hex << clkFr << std::dec << std::endl;
+
+
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
         cBeamTestCheck.writeObjects();

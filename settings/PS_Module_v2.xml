@@ -8,8 +8,11 @@
     <CDCE configure="0" clockRate="320"/>
         
     <OpticalGroup Id="0" FMCId="L12" reset="1">
-        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1702/" />
+        <lpGBT Id="0" version="1" optical="1" configfile="BE0_OG0_lpGBT0.txt">
+        <!-- <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt"> -->
+
           <Settings/>
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">
@@ -92,7 +95,7 @@
 
             <!-- <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" /> -->
-            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1468/" />
+            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1788/" />
             <CIC2 Id="8" configfile="BE0_OG0_FE1.txt" />
         </Hybrid>
     </OpticalGroup>
@@ -180,7 +183,7 @@
                 <Register name = "clock_enable"> 1 </Register>
             </Register>
             <Register name="stubs">
-                <Register name = "stub_package_delay"> 7 </Register>
+                <Register name = "stub_package_delay"> 4 </Register>
             </Register>
         </Register>
         <!-- Readout Block -->
@@ -193,7 +196,7 @@
                 <Register name="trigger_type"> 0 </Register>
                 <Register name="data_type"> 0 </Register>
                 <!--this is what is commonly known as stub latency-->
-                <Register name="common_stubdata_delay"> 217 </Register>
+                <Register name="common_stubdata_delay"> 219 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
@@ -245,8 +248,8 @@
 
     <Setting name="TriggerMultiplicity">0</Setting>
 
-    <Setting name="StartLatency">285</Setting>
-    <Setting name="LatencyRange">20</Setting>
+    <Setting name="StartLatency">290</Setting>
+    <Setting name="LatencyRange">10</Setting>
     <Setting name="StubAlignmentScanStart">85</Setting>
 
 

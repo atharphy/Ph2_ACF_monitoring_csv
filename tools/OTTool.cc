@@ -174,7 +174,7 @@ void OTTool::Prepare()
                 for(auto cChip: *cHybrid)
                 {
                     cChip->setRegisterTracking(1);
-                    cChip->ClearModifiedRegisterMap();
+                    cChip->ClearModifiedRegisterMap(); // Irene and Javier ignoring this for now
                     LOG(DEBUG) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
                 } // chips
             }     // hybrids

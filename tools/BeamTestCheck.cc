@@ -778,7 +778,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                             if(cChip->getFrontEndType() == FrontEndType::CBC3 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 uint8_t cS1Index  = cChip->getIndex();
-                                std::cout << " cS1Index " << +cS1Index << std::endl;
+                                LOG(INFO) << BOLDRED << __LINE__  << "] FILLING cS1Index " << +cS1Index << std::endl;
                                 bool    cUpdateS1 = (cChip->getFrontEndType() == FrontEndType::CBC3) ? true : (std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8) != cSSAIds.end());
                                 if(cUpdateS1 && cChip->getFrontEndType() == FrontEndType::CBC3)
                                     cS1Index = std::distance(cSSAIds.begin(), std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8));
@@ -1287,6 +1287,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                            << +cRow << " Column " << +cCol << RESET;
                             }
                             bool cValidCoords = (cRow < cMaxRows && cCol < cMaxCols);
+                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Filling occupancy" << std::endl;
+
                             if(cSensorID == 0)
                             {
                                 cHitContainerS0->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint32_t>()++;
@@ -1300,6 +1302,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             else if(cChip->getFrontEndType() != FrontEndType::CBC3 && cSSAExists)
                             {
                                 cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndex)->getSummary<uint32_t>()++;
+                                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Filling fHitContainerS1" << std::endl;
                                 // cHitContainerS1->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cSSAIndices[cIndx])->getSummary<uint32_t>()++;
                                 // update hit container for each TDC phase
                                 fHitContainerTDC.at(cBoard->getIndex())
@@ -1307,6 +1310,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                     ->at(cHybrid->getIndex())
                                     ->at(cSSAIndex)
                                     ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal]++;
+                                
                             }
                             else
                             {

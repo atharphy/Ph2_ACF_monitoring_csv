@@ -168,12 +168,13 @@ void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
 
 void lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate)
 {
+    LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << RESET;
     for(const auto& cGroup: pGroups)
     {
         // Configure Tx Group Data Rate value for specified group
         uint8_t cValueDataRate = ReadChipReg(pChip, "EPTXDataRate");
         WriteChipReg(pChip, "EPTXDataRate", (cValueDataRate & ~(0x03 << 2 * cGroup)) | (pDataRate << 2 * cGroup));
-
+            LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
         // Enable given channels for specified group
         std::string cEnableTxReg;
         if(cGroup == 0 || cGroup == 1)
@@ -182,8 +183,10 @@ void lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_t>& 
             cEnableTxReg = "EPTX32Enable";
 
         uint8_t cValueEnableTx = ReadChipReg(pChip, cEnableTxReg);
+            LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
         for(const auto cChannel: pChannels) cValueEnableTx |= (1 << (cChannel + 4 * (cGroup % 2)));
         WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
+            LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     }
 }
 

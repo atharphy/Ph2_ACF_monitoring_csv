@@ -30,21 +30,21 @@
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA2 Id="0" configfile="SSA2.txt" />
-            <!-- <SSA2 Id="1" configfile="SSA2.txt" />
+            <SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
-            <SSA2 Id="7" configfile="SSA2.txt" /> -->
+            <SSA2 Id="7" configfile="SSA2.txt" />
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA2 Id="8" configfile="MPA2.txt" />
-            <!-- <MPA2 Id="9" configfile="MPA2.txt" />
+            <MPA2 Id="9" configfile="MPA2.txt" />
             <MPA2 Id="10" configfile="MPA2.txt" />
             <MPA2 Id="11" configfile="MPA2.txt" />            
             <MPA2 Id="12" configfile="MPA2.txt" />
             <MPA2 Id="13" configfile="MPA2.txt" />
             <MPA2 Id="14" configfile="MPA2.txt" />
-            <MPA2 Id="15" configfile="MPA2.txt" /> -->
+            <MPA2 Id="15" configfile="MPA2.txt" />
 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
@@ -317,7 +317,7 @@
 
 
     <!--Full search settings (lowcal) MPA-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">10000</Setting>
     <Setting name="PedestalEqualizationFullScanStart">220</Setting>
     <Setting name="PedestalEqualizationOccupancy">0.5</Setting>
     <!-- <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
@@ -407,9 +407,9 @@
 </MonitoringSettings>
 
 <CommunicationSettings>
-    <DQM               ip="127.0.0.1" port="6003" enableConnection="1"/>
-    <MonitorDQM        ip="127.0.0.1" port="8003" enableConnection="1"/>
-    <PowerSupplyClient ip="127.0.0.1" port="7003" enableConnection="1"/>
+    <DQM               ip="127.0.0.1" port="6004" enableConnection="1"/>
+    <MonitorDQM        ip="127.0.0.1" port="8004" enableConnection="1"/>
+    <PowerSupplyClient ip="127.0.0.1" port="7004" enableConnection="1"/>
 </CommunicationSettings>
 
 </HwDescription>
