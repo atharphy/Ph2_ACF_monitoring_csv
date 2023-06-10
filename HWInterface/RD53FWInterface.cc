@@ -777,12 +777,6 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
                                             const uint32_t            injLatency,
                                             const uint32_t            nClkDelays,
                                             const bool                enableAutozero)
-// ############################
-// # injType == 0 --> None    #
-// # injType == 1 --> Analog  #
-// # injType == 2 --> Digital #
-// # injType == 3 --> Custom  #
-// ############################
 // ##################################################################################
 // # Finite state machine                                                           #
 // ##################################################################################
@@ -798,7 +792,8 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
     {
         AfterInjectCal = 32,
         BeforePrimeCal = 1,
-        Loop           = 460
+        Loop           = 460,
+        SelfTrigger    = 1500
     };
 
     // #############################
@@ -826,11 +821,11 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
-    else if(injType != RD53Shared::INJtype::None)
+    else if((injType == RD53Shared::INJtype::Analog) || (injType == RD53Shared::INJtype::Custom) || (injType == RD53Shared::INJtype::XtalkCoupled) || (injType == RD53Shared::INJtype::XtalkDeCoupled))
     {
-        // ######################################
-        // # Configuration for analog injection #
-        // ######################################
+        // ###################################################################################
+        // # Configuration for analog, custom, XtalkDeCoupled, abd XtalkDeCoupled injections #
+        // ###################################################################################
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = RD53Shared::firstChip->getCalCmd(1, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(0, 0, 2, 0, 0);
 
@@ -845,8 +840,30 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
+    else if(injType == RD53Shared::INJtype::SelfTrigger)
+    {
+        // ###################################
+        // # Configuration for self triggers #
+        // ###################################
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(1, 0, 16, 0, 0);
+
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays) % (RD53Shared::setBits(NbitsInitPrime) + 1);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = (injLatency == 0 ? (uint32_t)INJdelay::AfterInjectCal : injLatency);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::SelfTrigger;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en  = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
+    }
     else if(injType == RD53Shared::INJtype::None)
     {
+        // ##################################
+        // # Configuration for no injection #
+        // ##################################
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = 0;
 
