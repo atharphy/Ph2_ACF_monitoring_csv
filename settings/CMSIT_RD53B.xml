@@ -189,9 +189,10 @@
             INJtype            = 0:  no injection
             INJtype            = 1:  analog
             INJtype            = 2:  digital
-            INJtype            = 3:  analog + custom from txt file
-            INJtype            = 4:  analog + X-talk coupled pixels
-            INJtype            = 5:  analog + X-talk decoupled pixels
+            INJtype            = 3:  readout chip self-trigger
+            INJtype            = 4:  analog + custom from txt file
+            INJtype            = 5:  analog + X-talk coupled pixels
+            INJtype            = 6:  analog + X-talk decoupled pixels
          ResetMask             = 0:  do not enable masked pixels;        ResetMask             = 1: enable all pixels
          ResetTDAC             = -1: do not reset TDAC;                  ResetTDAC             >=0: reset all TDACs to value
          DoDataIntegrity       = 0:  no data integrity detection;        DoDataIntegrity       = 1: run data integrity detection
