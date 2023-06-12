@@ -2,7 +2,7 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.13.205:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.13.204:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
 
     <OpticalGroup Id="0" FMCId="L12" reset="1">
@@ -12,7 +12,7 @@
         <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
           <Settings
           />
-          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "0.501" />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "0.499" />
 
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">
