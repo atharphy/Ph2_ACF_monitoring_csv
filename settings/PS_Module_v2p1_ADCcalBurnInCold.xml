@@ -70,6 +70,8 @@
             <SSA2 Id="0" configfile="BE0_OG1_FE3_Chip0SSA.txt" />
             <SSA2 Id="1" configfile="BE0_OG1_FE3_Chip1SSA.txt" />
             <SSA2 Id="2" configfile="BE0_OG1_FE3_Chip2SSA.txt" />
+            <SSA2 Id="3" configfile="BE0_OG1_FE3_Chip3SSA.txt" />
+            <SSA2 Id="4" configfile="BE0_OG1_FE3_Chip4SSA.txt" />
             <SSA2 Id="5" configfile="BE0_OG1_FE3_Chip5SSA.txt" />
             <SSA2 Id="6" configfile="BE0_OG1_FE3_Chip6SSA.txt" />
             <SSA2 Id="7" configfile="BE0_OG1_FE3_Chip7SSA.txt" />
