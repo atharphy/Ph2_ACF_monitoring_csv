@@ -877,7 +877,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         //std::cout << __LINE__ << __PRETTY_FUNCTION__ << "SingleWriteRegister: " << pRegNameMod << " value: " << pValue << std::endl;
         if(cRegMap.find(pRegNameMod) == cRegMap.end())
         {
-            std::cout << __LINE__ << __PRETTY_FUNCTION__ << "Cannot find register: " << pRegNameMod << std::endl; exit(0);
+            std::cout << __LINE__ << __PRETTY_FUNCTION__ << "Cannot find register: " << pRegNameMod << std::endl; // exit(0);
         }
         cRegItem        = cRegMap[pRegNameMod];
         cRegItem.fValue = pValue;

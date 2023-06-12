@@ -161,6 +161,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     uint8_t cBoardReset = convertAnyInt(pBeBordNode.attribute("boardReset").value());
     cBeBoard->setReset(cBoardReset);
 
+    uint8_t configureBoardFlag = convertAnyInt(pBeBordNode.attribute("configure").value());
+    cBeBoard->setToConfigure(configureBoardFlag);
+
     uint8_t cReset = convertAnyInt(pBeBordNode.attribute("linkReset").value());
     cBeBoard->setLinkReset(cReset);
 

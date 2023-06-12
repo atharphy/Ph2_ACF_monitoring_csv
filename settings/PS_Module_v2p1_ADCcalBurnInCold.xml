@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
-  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1">
-    <!-- <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
+  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="0">
+    <!-- <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file:///home/modtest/Programming/Ph2_ACF_Irene/settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!--<connection id="board" uri="chtcp-2.0://outertracker03.dhcp.fnal.gov:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
 <!--    <connection id="board" uri="chtcp-2.0://athenanu.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file:///home/modtest/Programming/Ph2_ACF_Irene/settings/address_tables/uDTC_OT_address_table.xml" />
 
     <CDCE configure="0" clockRate="320"/>
         
     <OpticalGroup Id="1" FMCId="L12" reset="1">
-<!--        <lpGBT_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1702/" /> -->
-<!--        <lpGBT Id="0" version="1" optical="1" configfile="BE0_OG0_lpGBT0.txt"> -->
-        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" /> <!-- default -->
-        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt"> <!-- default -->
+       <lpGBT_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
+       <lpGBT Id="0" version="1" optical="1" configfile="BE0_OG1_lpGBT0.txt">
+        <!--<lpGBT_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/lpGBTFiles/" /> 
+        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt"> --><!-- default -->
           <Settings/>
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">
@@ -31,7 +31,8 @@
             </Global>
             
             
-            <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/ADCcal_BurnInCold/" />
+            <!-- <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/SSAFiles/ADCcal_BurnInCold/" /> -->
+            <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
             <SSA2 Id="0" configfile="BE0_OG1_FE2_Chip0SSA.txt" />
             <SSA2 Id="1" configfile="BE0_OG1_FE2_Chip1SSA.txt" />
             <SSA2 Id="2" configfile="BE0_OG1_FE2_Chip2SSA.txt" />
@@ -39,7 +40,8 @@
             <SSA2 Id="6" configfile="BE0_OG1_FE2_Chip6SSA.txt" />
             <SSA2 Id="7" configfile="BE0_OG1_FE2_Chip7SSA.txt" />
 
-            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/ADCcal_BurnInCold/" />
+            <!-- <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/MPAFiles/ADCcal_BurnInCold/" /> -->
+            <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
             <MPA2 Id="8" configfile="BE0_OG1_FE2_Chip8.txt" />
             <MPA2 Id="9" configfile="BE0_OG1_FE2_Chip9.txt" />
             <MPA2 Id="10" configfile="BE0_OG1_FE2_Chip10.txt" />
@@ -49,8 +51,10 @@
             <MPA2 Id="14" configfile="BE0_OG1_FE2_Chip14.txt" />
             <MPA2 Id="15" configfile="BE0_OG1_FE2_Chip14.txt" /> 
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <!-- <CIC_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" /> -->
+            <CIC_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
+            <CIC2 Id="8" configfile="BE0_OG1_FE2.txt" />
         </Hybrid>
         
         <Hybrid Id="1" enable="1" reset="1">
@@ -66,7 +70,8 @@
             </Global>
             
             
-            <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/ADCcal_BurnInCold/" />
+            <!-- <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/SSAFiles/ADCcal_BurnInCold/" /> -->
+            <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
             <SSA2 Id="0" configfile="BE0_OG1_FE3_Chip0SSA.txt" />
             <SSA2 Id="1" configfile="BE0_OG1_FE3_Chip1SSA.txt" />
             <SSA2 Id="2" configfile="BE0_OG1_FE3_Chip2SSA.txt" />
@@ -76,7 +81,8 @@
             <SSA2 Id="6" configfile="BE0_OG1_FE3_Chip6SSA.txt" />
             <SSA2 Id="7" configfile="BE0_OG1_FE3_Chip7SSA.txt" />
 
-            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/ADCcal_BurnInCold/" />
+            <!-- <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/MPAFiles/ADCcal_BurnInCold/" /> -->
+            <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
             <MPA2 Id="8" configfile="BE0_OG1_FE3_Chip8.txt" />
             <MPA2 Id="9" configfile="BE0_OG1_FE3_Chip9.txt" />
             <MPA2 Id="10" configfile="BE0_OG1_FE3_Chip10.txt" />
@@ -86,10 +92,10 @@
             <MPA2 Id="14" configfile="BE0_OG1_FE3_Chip14.txt" />
             <MPA2 Id="15" configfile="BE0_OG1_FE3_Chip14.txt" /> 
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" /> <!-- default -->
-            <CIC2 Id="8" configfile="CIC2_default.txt" /> <!-- default -->
-<!--            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1788/" />
-            <CIC2 Id="8" configfile="BE0_OG0_FE1.txt" /> -->
+            <!-- <CIC_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" /> -->
+            <CIC_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
+            <CIC2 Id="8" configfile="BE0_OG1_FE3.txt" /> 
         </Hybrid>
     </OpticalGroup>
 
@@ -176,7 +182,7 @@
                 <Register name = "clock_enable"> 1 </Register>
             </Register>
             <Register name="stubs">
-                <Register name = "stub_package_delay"> 3 </Register>
+                <Register name = "stub_package_delay"> 2 </Register>
             </Register>
         </Register>
         <!-- Readout Block -->
@@ -375,6 +381,8 @@
     <Setting name="SyncDebug">0</Setting>
 
     <Setting name="PSOccupancyPulseAmplitude">200</Setting>
+
+    <Setting name="SkipConfigureHW">1</Setting>
 
 </Settings>
 

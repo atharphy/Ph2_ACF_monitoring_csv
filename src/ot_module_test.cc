@@ -550,7 +550,6 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("configure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
-
     }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))

@@ -1008,7 +1008,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
     {
         cBoard->printBoardType();
         fBeBoardInterface->setBoard(0);
-        fBeBoardInterface->ConfigureBoard(cBoard);
+        if(cBoard->getToConfigure()) fBeBoardInterface->ConfigureBoard(cBoard);
         if(cBoard->getBoardType() == BoardType::D19C)
         {
             // Set board sparisification
@@ -1199,7 +1199,8 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     // ########################################################
     std::cout << fParsedFile.str() << std::endl;
 
-    ConfigureHw(false, true);
+    auto skipConfigureHW = findValueInSettings<double>("SkipConfigureHW", 0);
+    if(!skipConfigureHW) ConfigureHw(false, true);
 }
 
 void SystemController::Start(const StartInfo& theStartInfo)

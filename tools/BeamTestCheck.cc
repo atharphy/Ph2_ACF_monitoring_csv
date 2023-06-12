@@ -192,6 +192,21 @@ void BeamTestCheck::ValidateRaw()
 }
 void BeamTestCheck::Validate()
 {
+
+    auto     stubDelay = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+
+    fDetectorContainer->at(0)->dumpRegisters();
+    
     // validate
     // read events
     if(fReadoutMode == 0)
