@@ -39,9 +39,11 @@ class OTTemperature : public OTTool
     void Set2SInputVoltage(float pInput) { fVinput2S = pInput; }
     void SetCurrents(std::vector<uint8_t> pCurrents);
     uint8_t TuneLpGBTVref(std::string pADC, float pVoltage);
+    void LoopReadout(bool pLoopReadout){fLoopReadout = pLoopReadout;}
 
   protected:
   private:
+    bool                 fLoopReadout{false};
     float                ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC);
     void                 ReadModuleTemperatures();
     float                fVref{1};     // reference voltage for lpgBT

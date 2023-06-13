@@ -192,6 +192,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("kiracalibration", "Perform KIRA calibration", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("loopTemperatureReadout", "Loop temperature readout of sensor thermistor", ArgvParser::NoOptionAttribute);
     cmd.defineOption("tuneVref", "Tune lpGBT Vref with voltage using ADC input (ADC1, ADC2, ADC3, ADC4, ...)", ArgvParser::NoOptionAttribute);
     cmd.defineOption("tuneadc", "ADC to tune lpGBT Vref voltage (ADC1, ADC2, ADC3, ADC4, ...)", ArgvParser::OptionRequiresValue);
     cmd.defineOption("tunevoltage", "Voltage to tune lpGBT Vref voltage", ArgvParser::OptionRequiresValue);
@@ -222,6 +223,7 @@ int main(int argc, char* argv[])
     bool        cKiraCalibration = cmd.foundOption("kiracalibration");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+    bool        cLoopTemperatureReadout = (cmd.foundOption("loopTemperatureReadout")) ? true : false;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -299,6 +301,7 @@ int main(int argc, char* argv[])
         cTemperatureReader.SetGain(cGain);
         StartInfo theStartInfo;
         theStartInfo.setRunNumber(cRunNumber);
+        cTemperatureReader.LoopReadout(cLoopTemperatureReadout);
         cTemperatureReader.Start(theStartInfo);
         cTemperatureReader.waitForRunToBeCompleted();
     }

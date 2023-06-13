@@ -12,7 +12,7 @@
         <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
           <Settings
           />
-          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "0.499" />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "0.501" />
 
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">

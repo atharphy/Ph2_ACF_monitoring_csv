@@ -135,11 +135,12 @@ void OTTemperature::ReadModuleTemperatures()
             // read temperature sensor
             auto cLpgbtTemp = flpGBTInterface->GetInternalTemperature(clpGBT);
             LOG(INFO) << BOLDBLUE << "Internal temperature sensor of lpGBT reads " << cLpgbtTemp << " which converts to " << cLpgbtTemp * (fVref / 1023) << RESET;
-            for (int i=0; i<=100000;i++)
+
+            do
             {
-                LOG(INFO) << i << RESET;
-                ReadThermistor(cOpticalGroup, "ADC4");
+               ReadThermistor(cOpticalGroup, "ADC4");
             }
+            while(fLoopReadout);
         }
     }
 }
