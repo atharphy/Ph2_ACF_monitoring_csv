@@ -31,8 +31,8 @@
             </Global>
             
             
-            <!-- <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/SSAFiles/ADCcal_BurnInCold/" /> -->
-            <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
+            <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/PS_16_10_FNL-00004_BiasCal_Trimmed_BurnInCold/" />
+            <!-- <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" /> -->
             <SSA2 Id="0" configfile="BE0_OG1_FE2_Chip0SSA.txt" />
             <SSA2 Id="1" configfile="BE0_OG1_FE2_Chip1SSA.txt" />
             <SSA2 Id="2" configfile="BE0_OG1_FE2_Chip2SSA.txt" />
@@ -40,8 +40,8 @@
             <SSA2 Id="6" configfile="BE0_OG1_FE2_Chip6SSA.txt" />
             <SSA2 Id="7" configfile="BE0_OG1_FE2_Chip7SSA.txt" />
 
-            <!-- <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/MPAFiles/ADCcal_BurnInCold/" /> -->
-            <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
+            <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/PS_16_10_FNL-00004_BiasCal_Trimmed_BurnInCold/" />
+            <!-- <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" /> -->
             <MPA2 Id="8" configfile="BE0_OG1_FE2_Chip8.txt" />
             <MPA2 Id="9" configfile="BE0_OG1_FE2_Chip9.txt" />
             <MPA2 Id="10" configfile="BE0_OG1_FE2_Chip10.txt" />
@@ -70,8 +70,8 @@
             </Global>
             
             
-            <!-- <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/SSAFiles/ADCcal_BurnInCold/" /> -->
-            <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
+            <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/PS_16_10_FNL-00004_BiasCal_Trimmed_BurnInCold/" />
+            <!-- <SSA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" /> -->
             <SSA2 Id="0" configfile="BE0_OG1_FE3_Chip0SSA.txt" />
             <SSA2 Id="1" configfile="BE0_OG1_FE3_Chip1SSA.txt" />
             <SSA2 Id="2" configfile="BE0_OG1_FE3_Chip2SSA.txt" />
@@ -81,8 +81,8 @@
             <SSA2 Id="6" configfile="BE0_OG1_FE3_Chip6SSA.txt" />
             <SSA2 Id="7" configfile="BE0_OG1_FE3_Chip7SSA.txt" />
 
-            <!-- <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/MPAFiles/ADCcal_BurnInCold/" /> -->
-            <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
+            <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/PS_16_10_FNL-00004_BiasCal_Trimmed_BurnInCold/" />
+            <!-- <MPA_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" /> -->
             <MPA2 Id="8" configfile="BE0_OG1_FE3_Chip8.txt" />
             <MPA2 Id="9" configfile="BE0_OG1_FE3_Chip9.txt" />
             <MPA2 Id="10" configfile="BE0_OG1_FE3_Chip10.txt" />
