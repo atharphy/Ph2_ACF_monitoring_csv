@@ -88,7 +88,7 @@ class lpGBT : public Chip
     //ADC Channel and Voltage to manually tune Vref to 1V
     std::string fTuneVrefADC{"ADC4"};
     float fTuneVrefVoltage{0.5};
-    std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021,0.475)}; //in mV per °C and Volt
+    std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021,0.475)}; //in V per °C and Volt coming from the lpGBTv0 manual
 
 };
 } // namespace Ph2_HwDescription
