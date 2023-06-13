@@ -36,12 +36,12 @@ float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::stri
 
     uint16_t cOffset = flpGBTInterface->GetADCOffset(clpGBT,0);
     float cGain = flpGBTInterface->GetADCGain(clpGBT,0);
-    LOG(INFO) << "Offset: " << +cOffset << " --- Gain: " << cGain << RESET;
+    LOG(DEBUG) << "Offset: " << +cOffset << " --- Gain: " << cGain << RESET;
 
     auto cLSQResistance = flpGBTInterface->ReadResistance(clpGBT, pADC, fCurrentDACs, fGain); // in ADC units
-    LOG(INFO) << "Resistance in ADC units: " << cLSQResistance << RESET;
+    LOG(DEBUG) << "Resistance in ADC units: " << cLSQResistance << RESET;
     cLSQResistance = ( cLSQResistance - cOffset * ( 1 - cGain / 2 ) ) / ( cGain * 512 ) * 1e-3; // in kOhms
-    LOG(INFO) << "Resistance in kOhms: " << cLSQResistance << RESET;
+    LOG(DEBUG) << "Resistance in kOhms: " << cLSQResistance << RESET;
     
     // get them from file
     float cFirstTemp = 0, cSecondTemp = 0, cFirstResistance = 0, cSecondResistance = 0;
@@ -74,7 +74,7 @@ float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::stri
                 cSecondTemp = cTemp;
                 cFirstResistance = cPrevResistance;
                 cSecondResistance = cResistance;
-                LOG(INFO) << "Resistance between " << cFirstResistance << " and " << cSecondResistance
+                LOG(DEBUG) << "Resistance between " << cFirstResistance << " and " << cSecondResistance
                         << " --- Interpolate between " << cFirstTemp << "°C and " << cSecondTemp << "°C" << RESET;
             }
             cPrevTemp = cTemp;
@@ -89,7 +89,7 @@ float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::stri
     float cSlope = ( cSecondTemp - cFirstTemp ) / ( cSecondResistance - cFirstResistance );
     float cIntercept = cSecondTemp - cSlope * cSecondResistance;
     float cTemp = cSlope * cLSQResistance + cIntercept;
-    LOG(INFO) << BOLDBLUE << "Resistance is " << cLSQResistance << " kOhms ---- Temperature is " << cTemp << "°C" << RESET;
+    LOG(INFO) << BOLDBLUE << "NTC Resistance is " << cLSQResistance << " kOhms ---- Temperature of NTC is " << cTemp << "°C" << RESET;
 
     // Current time
     auto t = std::time(nullptr);
@@ -106,6 +106,30 @@ float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::stri
     cOutputfile << cTime << "," << cTemp << "," << cLSQResistance << "\n";
 
     return cTemp;
+
+}
+
+float  OTTemperature::ReadInternalThermistor(const OpticalGroup* pOpticalGroup)
+{
+    auto& clpGBT = pOpticalGroup->flpGBT;
+    if(clpGBT == nullptr) return -1;
+    auto cLpgbtTempInADC = flpGBTInterface->GetInternalTemperature(clpGBT);
+
+    uint16_t cOffset = flpGBTInterface->GetADCOffset(clpGBT,0);
+    float cGain = flpGBTInterface->GetADCGain(clpGBT,0);
+    LOG(DEBUG) << "Offset: " << +cOffset << " --- Gain: " << cGain << RESET;
+    float vPos = ( cLpgbtTempInADC- cOffset*(1 - cGain / 2.0 ) )/ ( cGain * 512 );
+    // V = m * T + V0  where V0 is voltage at zero degrees and m is temperature coefficien and T the current temperature, resulting in a Voltage V
+    // -> T = (V-V0 ) / m
+    std::pair<float,float> coeff = clpGBT->getTemperatureCoefficients();
+    float m = coeff.first;
+    float v0 = coeff.second;
+    LOG(DEBUG) <<" V0: " << v0 << RESET;
+    LOG(DEBUG) <<" vPos: " << vPos << RESET;
+
+    float temperature = (vPos - v0) /m;
+    LOG(INFO)<<BOLDBLUE << "APPROXIMATED internal lpGBT Temperature: " << +temperature << "°C"<< RESET;
+    return temperature;
 
 }
 // Read module temperatures
@@ -131,13 +155,11 @@ void OTTemperature::ReadModuleTemperatures()
                 LOG(INFO) << BOLDBLUE << "Gain of " << +fGain << "\t" << cVoltageADC << " ADC reading " << cMean << " converted voltage " << cVoltage << RESET;
                 cVoltageADCReadings.push_back(cMean);
             }
-            flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
-            // read temperature sensor
-            auto cLpgbtTemp = flpGBTInterface->GetInternalTemperature(clpGBT);
-            LOG(INFO) << BOLDBLUE << "Internal temperature sensor of lpGBT reads " << cLpgbtTemp << " which converts to " << cLpgbtTemp * (fVref / 1023) << RESET;
-
             do
             {
+               ReadInternalThermistor(cOpticalGroup);
+                flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
+                // read ADC value of temperature sensor
                ReadThermistor(cOpticalGroup, "ADC4");
             }
             while(fLoopReadout);

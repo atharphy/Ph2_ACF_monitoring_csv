@@ -72,7 +72,7 @@ class lpGBT : public Chip
     void setTuneVrefVoltage(float pTuneVrefVoltage){fTuneVrefVoltage = pTuneVrefVoltage;}
     std::string getTuneVrefADC(){return fTuneVrefADC;}
     float getTuneVrefVoltage(){return fTuneVrefVoltage;}
-
+    std::pair<float,float> getTemperatureCoefficients(){return fTemperatureCoefficients;}
 
   private:
     bool                 phaseRxAligned; // @TMP@
@@ -88,6 +88,7 @@ class lpGBT : public Chip
     //ADC Channel and Voltage to manually tune Vref to 1V
     std::string fTuneVrefADC{"ADC4"};
     float fTuneVrefVoltage{0.5};
+    std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021,0.475)}; //in mV per °C and Volt
 
 };
 } // namespace Ph2_HwDescription
