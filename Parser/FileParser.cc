@@ -314,9 +314,9 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         else if(static_cast<std::string>(theChild.name()) == "NTCProperties")
         {
             std::string   cNTCType           = std::string( theChild.attribute("type").value() );
+            std::string   cNTCADC           = std::string( theChild.attribute("ADC").value() );
             std::string   cNTCLookUpTable    = std::string( theChild.attribute("lookUpTable").value() );
-            theOpticalGroup->setNTCType(cNTCType);
-            theOpticalGroup->setNTCLookUpTable(cNTCLookUpTable);
+            theOpticalGroup->addNTC(cNTCType, cNTCADC, cNTCLookUpTable);
         }
     }
 }

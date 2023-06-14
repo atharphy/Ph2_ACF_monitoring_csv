@@ -6,10 +6,11 @@
     <CDCE configure="0" clockRate="320"/>
 
     <OpticalGroup Id="0" FMCId="L12" reset="1">
-        <NTCProperties type="10" lookUpTable = "./settings/NTCFiles/ntc_10k.csv"/> <!--type = 1 or 10 (kOhm)-->
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "./settings/NTCFiles/ntc_1k.csv"/>
+        <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "./settings/NTCFiles/vtrx_ntc_1k.csv"/>-->
 
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
           <Settings
           />
           <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "0.501" />

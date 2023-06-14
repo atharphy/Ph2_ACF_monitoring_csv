@@ -28,8 +28,23 @@ void OTTemperature::SetCurrents(std::vector<uint8_t> pCurrents)
     fCurrentDACs.clear();
     for(auto cCurrent: pCurrents) fCurrentDACs.push_back(cCurrent);
 }
+void OTTemperature::ReadThermistors(const OpticalGroup* pOpticalGroup)
+{
+    //auto& clpGBT = pOpticalGroup->flpGBT;
+    std::map<std::string, std::pair<std::string, std::string>> cNTCMap = pOpticalGroup->fNTCMap;
+    //std::map<std::string, std::string>::iterator it;
+    for (auto it = cNTCMap.begin(); it != cNTCMap.end(); it++)
+    {
+        std::string type = it->first;
+        std::string adc = it->second.first;
+        std::string lut = it->second.second;
+        float temperature = ReadThermistor(pOpticalGroup, adc, lut);
+        LOG (INFO) << BOLDBLUE << type << " (" << adc<< ") Temperature: " << temperature <<"°C"<< RESET;
+    }
+}
+
 // Read thermistor temperature
-float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC)
+float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC, std::string pLUT)
 {
     auto& clpGBT = pOpticalGroup->flpGBT;
     if(clpGBT == nullptr) return -1;
@@ -47,7 +62,7 @@ float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::stri
     float cFirstTemp = 0, cSecondTemp = 0, cFirstResistance = 0, cSecondResistance = 0;
 
     // read file line by line
-    std::string cFilename = pOpticalGroup->fNTCLookUpTable;
+    std::string cFilename = pLUT;
     std::ifstream file(cFilename);
     if (file.is_open()) {
         std::string line;
@@ -89,7 +104,7 @@ float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::stri
     float cSlope = ( cSecondTemp - cFirstTemp ) / ( cSecondResistance - cFirstResistance );
     float cIntercept = cSecondTemp - cSlope * cSecondResistance;
     float cTemp = cSlope * cLSQResistance + cIntercept;
-    LOG(INFO) << BOLDBLUE << "NTC Resistance is " << cLSQResistance << " kOhms ---- Temperature of NTC is " << cTemp << "°C" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "NTC Resistance is " << cLSQResistance << " kOhms ---- Temperature of NTC is " << cTemp << "°C" << RESET;
 
     // Current time
     auto t = std::time(nullptr);
@@ -159,8 +174,8 @@ void OTTemperature::ReadModuleTemperatures()
             {
                ReadInternalThermistor(cOpticalGroup);
                 flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
-                // read ADC value of temperature sensor
-               ReadThermistor(cOpticalGroup, "ADC4");
+                // read ADC value of temperature sensor on the sensor
+                ReadThermistors(cOpticalGroup);
             }
             while(fLoopReadout);
         }
