@@ -182,7 +182,7 @@ void OTTemperature::ReadModuleTemperatures()
     }
 }
 
-uint8_t OTTemperature::TuneLpGBTVref(std::string pADC, float pVoltage)
+uint8_t OTTemperature::TuneLpGBTVref()
 {
     uint8_t vref = 0;
     for(const auto cBoard: *fDetectorContainer)
@@ -192,18 +192,11 @@ uint8_t OTTemperature::TuneLpGBTVref(std::string pADC, float pVoltage)
             auto& clpGBT = cOpticalGroup->flpGBT;
             if(clpGBT == nullptr) continue;
             flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
-            if ((pADC == "") && (pVoltage == 0))
-            {
-                vref = flpGBTInterface->TuneVref(clpGBT);
-            }
-            else{
-                vref = flpGBTInterface->TuneVref(clpGBT, pADC, pVoltage);
-            }
+            vref = flpGBTInterface->TuneVref(clpGBT);
         }
     }
     return vref;
 }
-
 
 void OTTemperature::Stop() {}
 

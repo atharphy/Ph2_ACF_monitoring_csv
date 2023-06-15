@@ -38,7 +38,7 @@ class OTTemperature : public OTTool
     void SetVref(float pVref) { fVref = pVref; }
     void Set2SInputVoltage(float pInput) { fVinput2S = pInput; }
     void SetCurrents(std::vector<uint8_t> pCurrents);
-    uint8_t TuneLpGBTVref(std::string pADC, float pVoltage);
+    uint8_t TuneLpGBTVref();
     void LoopReadout(bool pLoopReadout){fLoopReadout = pLoopReadout;}
 
   protected:

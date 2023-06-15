@@ -169,7 +169,6 @@ class lpGBTInterface : public ChipInterface
     uint8_t GetVrefTune(Ph2_HwDescription::Chip* pChip);
     float GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput);
     uint8_t TuneVref(Ph2_HwDescription::Chip* pChip);
-    uint8_t TuneVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput);
 
     // #############################
     // # LpGBT Phase configuration #

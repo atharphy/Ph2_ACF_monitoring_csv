@@ -86,7 +86,7 @@ class lpGBT : public Chip
     std::vector<uint32_t> fI2CReads{0, 0, 0};
 
     //ADC Channel and Voltage to manually tune Vref to 1V
-    std::string fTuneVrefADC{"ADC4"};
+    std::string fTuneVrefADC{"ADC2"}; //ADC2 = LV monitor line of 2S module, ADC7 for PS modules (2.55V line monitor)
     float fTuneVrefVoltage{0.5};
     std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021,0.475)}; //in V per °C and Volt coming from the lpGBTv0 manual
 

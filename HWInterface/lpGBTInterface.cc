@@ -912,11 +912,9 @@ float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string&
 
 uint8_t  lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip)
 {
-    return TuneVref(pChip,static_cast<lpGBT*>(pChip)->getTuneVrefADC(),static_cast<lpGBT*>(pChip)->getTuneVrefVoltage());
-}
-
-uint8_t  lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput)
-{
+    const std::string pADC = static_cast<lpGBT*>(pChip)->getTuneVrefADC();
+    float pVinput = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
+    LOG (INFO) << BOLDYELLOW << "Tune Vref of lpGBT using input of " << pADC << " and " << pVinput << "V" <<RESET;
     uint8_t cNbits = (static_cast<lpGBT*>(pChip)->getVersion() == 0 ) ? 5 : 8 ;
     uint8_t cCurrentStep = (0xFF >> (8 - cNbits));  //Start value
     SetVrefTune(pChip, cCurrentStep);
