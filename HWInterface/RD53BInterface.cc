@@ -251,7 +251,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # TAP0 optimization for modules # // @TMP@ : temporary for CROC v1
     // #################################
     auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
-    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", fwInterface->ReadReg("user.ctrl_regs.Aurora_block.slave_en"));
+    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.master);
     if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
     {
         LOG(INFO) << GREEN << "Optimizing TAP0 setting for chip ID " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW << +pRD53->getChipLane() << RESET;
