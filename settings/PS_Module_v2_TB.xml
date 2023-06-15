@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
-  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
+  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="0">
     <!-- <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file:///home/modtest/Programming/Ph2_ACF_Irene/settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!--<connection id="board" uri="chtcp-2.0://outertracker03.dhcp.fnal.gov:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
    <connection id="board" uri="chtcp-2.0://athenanu.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
@@ -200,7 +200,7 @@
                 <Register name="trigger_type"> 0 </Register>
                 <Register name="data_type"> 0 </Register>
                 <!--this is what is commonly known as stub latency-->
-                <Register name="common_stubdata_delay"> 218 </Register>
+                <Register name="common_stubdata_delay"> 216 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
@@ -252,8 +252,8 @@
 
     <Setting name="TriggerMultiplicity">0</Setting>
 
-    <Setting name="StartLatency">300</Setting>
-    <Setting name="LatencyRange">30</Setting>
+    <Setting name="StartLatency">290</Setting>
+    <Setting name="LatencyRange">10</Setting>
     <Setting name="StubAlignmentScanStart">84</Setting>
 
 

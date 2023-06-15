@@ -160,7 +160,9 @@ void BeamTestCheck::CheckWithTP(uint8_t pContinuousReadout)
 #endif
     // validate
     Validate();
-
+    // uint32_t  cDelayAfterReset = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");;
+    // LOG(INFO) << BOLDRED << " cDelayAfterReset " << cDelayAfterReset << RESET;
+    // exit(0);
     // for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
 void BeamTestCheck::ValidateTP()
@@ -206,7 +208,7 @@ void BeamTestCheck::Validate()
     LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
 
     fDetectorContainer->at(0)->dumpRegisters();
-    
+
     // validate
     // read events
     if(fReadoutMode == 0)
@@ -1959,7 +1961,8 @@ void BeamTestCheck::PrepareForTP(BeBoard* pBoard)
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
     // Save Trigger register value
-    //uint8_t  cOriginalTriggerSource = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");;
+    uint32_t  cDelayAfterReset = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");;
+    LOG(INFO) << BOLDRED << " cDelayAfterReset " << cDelayAfterReset << RESET;
 
     //SUGGESTED VALUES THAT SHOULD BE ALREADY IN THE XML
     // uint32_t cDelayAfterReset = 300;

@@ -600,17 +600,20 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegNameMod == "AnalogueSync")
     {
-        //std::cout << __LINE__ << __PRETTY_FUNCTION__ << "EXIT" << std::endl; exit(0);
+        // LOG(INFO)<< BOLDYELLOW << __LINE__ << __PRETTY_FUNCTION__ << RESET;
         uint8_t cReadoutMode = 0x0;
         uint8_t cEdgeSel_T1  = 0x0;
         // readout mode
         bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7, pVerify);
         // edge select
         cSuccess = cSuccess && this->WriteChipRegBits(pSSA2, "control_1", (cEdgeSel_T1 << 3), "mask_peri_D", 0x8);
-        // duration
-        uint8_t cDuration = 0x8;
-        cSuccess          = cSuccess && this->WriteChipRegBits(pSSA2, "control_2", (cDuration << 4), "mask_peri_D", 0xF0);
+        // duration in multiple of 25ns, set by CalPulse_duration corresponding to bits [7:4] of control_2 
+        uint8_t cDuration = 0x8; 
+        // LOG(INFO) << YELLOW << " cDuration 0x" << std::hex<<  +cDuration << " then shifting is 0x" << +(cDuration << 4)<< std::dec << RESET;
+        // cSuccess          = cSuccess && this->WriteChipRegBits(pSSA2, "control_2", (cDuration << 4), "mask_peri_D", 0xF0);
+        cSuccess          = cSuccess && this->WriteChipRegBits(pSSA2, "control_2", cDuration , "mask_peri_D", 0xF0);
 
+        // LOG(INFO) << YELLOW << " Wrote cDuration" << RESET;
         // sampling mode
         // sampling mode
         uint8_t cSamplingMode = 0;
@@ -937,7 +940,23 @@ bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, boo
 /////////// ALIAS CALLS:
 bool SSA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify) 
 { 
-    return this->WriteChipReg(pChip, "AnalogueAsync", 1); 
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << RESET;
+
+    return this->WriteChipReg(pChip, "AnalogueAsync", 1);
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for SSA" << RESET;
+
+    // return this->WriteChipReg(pChip, "AnalogueSync", 1);    
+    
+ 
 }
 
 bool SSA2Interface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerify) 

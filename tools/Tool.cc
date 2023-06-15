@@ -1257,6 +1257,7 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 
 void Tool::setFWTestPulse()
 {
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " start" << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
@@ -1266,10 +1267,22 @@ void Tool::setFWTestPulse()
         {
             EventType cEventType = cBoard->getEventType();
             bool      cAsync     = (cEventType == EventType::PSAS);
+            // cAsync = false; // TESTING SYNC MODE FOR SCUEVES
+            // LOG(INFO) << BOLDRED << " HARDCODED SYNC MODE!!!!!! " << RESET;
+            // LOG(INFO) << BOLDRED << " HARDCODED SYNC MODE!!!!!! " << RESET;
+            // LOG(INFO) << BOLDRED << " HARDCODED SYNC MODE!!!!!! " << RESET;
+            // LOG(INFO) << BOLDRED << " HARDCODED SYNC MODE!!!!!! " << RESET;
+            // LOG(INFO) << BOLDRED << " HARDCODED SYNC MODE!!!!!! " << RESET;
+            // LOG(INFO) << BOLDRED << " HARDCODED SYNC MODE!!!!!! " << RESET;
+            // LOG(INFO) << BOLDRED << " HARDCODED SYNC MODE!!!!!! " << RESET;
+            // LOG(INFO) << BOLDRED << " HARDCODED SYNC MODE!!!!!! " << RESET;
+
             if(!cAsync)
             {
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+                // LOG(INFO) << BOLDGREEN << " SET TRIGGER SOURCE 6 " << RESET;
+
             }
             else
             {
@@ -1290,6 +1303,8 @@ void Tool::setFWTestPulse()
 
         fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
     }
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end" << RESET;
+
 }
 
 void Tool::CreateReport()
@@ -2402,6 +2417,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
 
 void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " start " << RESET;
     MeasureBeBoardDataPerGroup theScan(this);
     theScan.setDataContainer(fDetectorDataContainer);
     // make sure async mode uses ReadNEvents
@@ -2409,7 +2425,20 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
     {
         std::cout << __LINE__ << "setSameGlobalDac" << std::endl;
-        this->setSameGlobalDac("AnalogueAsync", 1);//LORENZO This seems unnecessary since it is set already in the Initialise method but only for the readout chips no?
+       this->setSameGlobalDac("AnalogueAsync", 1);//LORENZO This seems unnecessary since it is set already in the Initialise method but only for the readout chips no?
+
+        // LOG(INFO) << BOLDRED << " HARDCODED  this->setSameGlobalDac(AnalogueSync, 1) " << RESET;
+        // LOG(INFO) << BOLDRED << " HARDCODED  this->setSameGlobalDac(AnalogueSync, 1) " << RESET;
+        // LOG(INFO) << BOLDRED << " HARDCODED  this->setSameGlobalDac(AnalogueSync, 1) " << RESET;
+        // LOG(INFO) << BOLDRED << " HARDCODED  this->setSameGlobalDac(AnalogueSync, 1) " << RESET;
+        // LOG(INFO) << BOLDRED << " HARDCODED  this->setSameGlobalDac(AnalogueSync, 1) " << RESET;
+        // LOG(INFO) << BOLDRED << " HARDCODED  this->setSameGlobalDac(AnalogueSync, 1) " << RESET;
+        // LOG(INFO) << BOLDRED << " HARDCODED  this->setSameGlobalDac(AnalogueSync, 1) " << RESET;
+        // LOG(INFO) << BOLDRED << " HARDCODED  this->setSameGlobalDac(AnalogueSync, 1) " << RESET;
+        // LOG(INFO) << BOLDRED << " HARDCODED  this->setSameGlobalDac(AnalogueSync, 1) " << RESET;
+
+        // this->setSameGlobalDac("AnalogueSync", 1);//LORENZO This seems unnecessary since it is set already in the Initialise method but only for the readout chips no?
+
         //#FIXME the commented block below throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
         // Error: implementation of virtual member function is absent"
         /*
@@ -2453,6 +2482,8 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
         LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << cTmp << RESET;
     }
     fUseReadNEvents = cUseReadNEvents;
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end " << RESET;
+
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup

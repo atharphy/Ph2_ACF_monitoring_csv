@@ -230,6 +230,7 @@ bool D19cTriggerInterface::WaitForNTriggers(uint32_t pNTriggers)
 }
 bool D19cTriggerInterface::RunTriggerFSM()
 {
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " start " << RESET;
     this->Start();
     auto cRunningTime      = 0;
     bool cCheckRunningTime = true;
@@ -262,6 +263,9 @@ bool D19cTriggerInterface::RunTriggerFSM()
     if(cFailed) LOG(WARNING) << BOLDRED << "D19cTriggerInterface::RunTriggerFSM " << cNtriggers << " triggers received. FAILED set to " << cFailed << RESET;
     this->Stop();
     // return true;
+
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end " << RESET;
+
     return !cFailed;
 }
 
