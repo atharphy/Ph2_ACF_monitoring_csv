@@ -288,7 +288,19 @@ int main(int argc, char* argv[])
         OTTemperature cTemperatureReader;
         cTemperatureReader.Inherit(&cTool);
         cTemperatureReader.SetGain(cGain);
-        std::cout << "VREF: " << +cTemperatureReader.TuneLpGBTVref(cADC,cVADC) << std::endl;
+        if ((cmd.foundOption("tuneadc") && cmd.foundOption("tunevoltage")))
+        {
+            std::string cADC        = cmd.optionValue("tuneadc");
+            std::string cVADC_str       = cmd.optionValue("tunevoltage");
+            cTemperatureReader.TuneLpGBTVref(cADC,cVADC);
+
+        }
+        else
+        {
+            std::string cADC        = "";
+            float  v=0;
+            cTemperatureReader.TuneLpGBTVref(cADC,v);
+        }
         //cTemperatureReader.waitForRunToBeCompleted();
     }
 
