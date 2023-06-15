@@ -148,28 +148,44 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
-    // ###################################
-    // # Check if DataMerging is enabled #
-    // ###################################
-    size_t primaryLane       = 0;
+    size_t primaries[4]      = {0};
+    size_t slaveEn           = 0;
     bool   enableDataMerging = false;
+    bool   enableChipID      = false;
     for(const auto cOpticalGroup: *pBoard)
         for(const auto cHybrid: *cOpticalGroup)
             for(const auto cChip: *cHybrid)
             {
+                // ###################################
+                // # Check if DataMerging is enabled #
+                // ###################################
+                auto lane = static_cast<RD53*>(cChip)->getChipLane();
                 if(static_cast<RD53*>(cChip)->laneConfig.isPrimary == false)
                     enableDataMerging = true;
                 else
-                    primaryLane = static_cast<RD53*>(cChip)->getChipLane();
+                {
+                    slaveEn |= 1 << lane;
+                    primaries[lane] = static_cast<RD53*>(cChip)->laneConfig.master;
+                }
+
+                // ##############################
+                // # Check if ChipID is enabled #
+                // ##############################
+                if(static_cast<RD53*>(cChip)->getDataFormatOptions().enableChipId == true) enableChipID = true;
             }
 
-    RegManager::WriteReg("user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging);
+    RegManager::WriteStackReg({{"user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging}, {"user.ctrl_regs.i2c_block.chip_id_en", enableChipID}});
 
     if(enableDataMerging == true)
     {
         for(const auto cChip: *pBoard->getFirstObject()->getFirstObject())
-            WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(static_cast<RD53*>(cChip)->getChipLane()) + "_id", cChip->getId() & 3);
-        RegManager::WriteReg("user.ctrl_regs.Aurora_block.active_lane", primaryLane);
+        {
+            auto lane = static_cast<RD53*>(cChip)->getChipLane();
+            WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
+            WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
+        }
+
+        RegManager::WriteReg("user.ctrl_regs.Aurora_block.slave_en", slaveEn);
     }
 
     // ################################
@@ -282,8 +298,6 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
-        RD53FWInterface::ResetSlowCmdFIFO();                                              // @TMP@ : temporary fix untill FIFO error FW fix
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP)); // @TMP@ : temporary fix untill FIFO error FW fix
     }
     if(nAttempts == RD53Shared::MAXATTEMPTS)
         LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
@@ -350,7 +364,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
         if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
     }
 
-    // if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIFO error FW fix
+    if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
 
     return regReadback;
 }

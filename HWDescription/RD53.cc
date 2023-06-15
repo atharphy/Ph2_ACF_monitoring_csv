@@ -11,8 +11,8 @@
 
 namespace Ph2_HwDescription
 {
-LaneConfig::LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes)
-    : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(isPrimary)
+LaneConfig::LaneConfig(bool isPrimary, uint8_t master, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes)
+    : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), master(master), isPrimary(isPrimary)
 {
     const int nLanes = 4; // @CONST@
 
