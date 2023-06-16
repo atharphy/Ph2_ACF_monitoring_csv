@@ -685,12 +685,17 @@ void OTTool::ContinuousReadoutTh(uint8_t cBrdId)
         cTriggerState   = cTriggerInterface->GetTriggerState();
         cAccumulatedWaits += fReadoutPause;
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
-        auto                  cTriggerSource  = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
-        auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_stat.fast_command_block.trigger_in_counter");
+        auto cTriggerSource  = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
+        auto cTriggerCounter = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_stat.fast_command_block.trigger_in_counter");
         std::vector<uint32_t> cData(0);
         // cLclEvntCntr += ReadData(*cBoardIter, cData, cWait);
         cLclEvntCntr += fBeBoardInterface->ReadData((*cBoardIter), false, cData, cWait);
-        if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(fReadoutData[cBrdId]));
+        if(cData.size() != 0)
+        {
+            std::move(cData.begin(), cData.end(), std::back_inserter(fReadoutData[cBrdId]));
+            LOG(INFO) << BOLDBLUE << " Data size = " << cData.size() << RESET;
+        }
+           
         cTriggerCounters.push_back(cTriggerCounter);
         if(cWaitCounter % 100 == 0 && cWaitCounter > 0)
         {

@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
-  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="0">
+  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
     <!-- <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file:///home/modtest/Programming/Ph2_ACF_Irene/settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!--<connection id="board" uri="chtcp-2.0://outertracker03.dhcp.fnal.gov:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-   <connection id="board" uri="chtcp-2.0://athenanu.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+   <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
    <!-- <connection id="board" uri="chtcp-2.0://athenanu.dhcp.fnal.gov:10203?target=192.168.0.11:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!-- <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file:///home/modtest/Programming/Ph2_ACF_Irene/settings/address_tables/uDTC_OT_address_table.xml" /> -->
 
     <CDCE configure="0" clockRate="320"/>
         
-    <OpticalGroup Id="0" FMCId="L12" reset="1" invertClock="1">
+    <OpticalGroup Id="1" FMCId="L12" reset="1">
        <!-- <lpGBT_Files path="/home/modtest/Programming/Ph2_ACF_Irene/Results/OT_ModuleTest_ModuleOT_Run2101/" />
        <lpGBT Id="0" version="1" optical="1" configfile="BE0_OG1_lpGBT0.txt"> -->
         <lpGBT_Files path="/home/modtest/Programming/Ph2_ACF_Irene/settings/lpGBTFiles/" /> 
         <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt"> <!-- default -->
           <Settings/>
         </lpGBT>
-        <Hybrid Id="0" enable="1" reset="1">
+        <Hybrid Id="0" enable="1" reset="1" invertClock="1">
             <Global>                 
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
@@ -141,7 +141,7 @@
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 5 </Register> <!-- 5 external trigger, 3 internal trigger-->
-            <Register name="user_trigger_frequency"> 10 </Register> <!-- kHz-->
+            <Register name="user_trigger_frequency"> 1 </Register> <!-- kHz-->
             <Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
@@ -321,7 +321,7 @@
 
 
     <!--Full search settings (lowcal) MPA-->
-    <Setting name="Nevents">200</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="PedestalEqualizationFullScanStart">220</Setting>
     <Setting name="PedestalEqualizationOccupancy">0.5</Setting>
     <!-- <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
