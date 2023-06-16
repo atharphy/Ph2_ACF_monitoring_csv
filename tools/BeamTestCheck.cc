@@ -720,15 +720,15 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                         if(chip->getFrontEndType() == FrontEndType::MPA2)
                         {
                             auto registerVal = fReadoutChipInterface->ReadChipReg(chip, "L1_miss_strip");
-                            LOG(INFO) << BOLDRED << __LINE__ << "] L1missingStrip = 0x" << std::hex << registerVal << std::dec << RESET;
-                            registerVal = fReadoutChipInterface->ReadChipReg(chip, "LatencyRx320");
-                            LOG(INFO) << BOLDRED << __LINE__ << "] LatencyRx320 = 0x" << std::hex << registerVal << std::dec << RESET;
-                            registerVal = fReadoutChipInterface->ReadChipReg(chip, "LatencyRx40");
-                            LOG(INFO) << BOLDRED << __LINE__ << "] LatencyRx40 = 0x" << std::hex << registerVal << std::dec << RESET;
-                            registerVal = fReadoutChipInterface->ReadChipReg(chip, "EdgeSelTrig");
-                            LOG(INFO) << BOLDRED << __LINE__ << "] EdgeSelTrig = 0x" << std::hex << registerVal << std::dec << RESET;
-                            registerVal = fReadoutChipInterface->ReadChipReg(chip, "EdgeSelT1Raw");
-                            LOG(INFO) << BOLDRED << __LINE__ << "] EdgeSelT1Raw = 0x" << std::hex << registerVal << std::dec << RESET;
+                            if(registerVal > 0) LOG(INFO) << BOLDRED << __LINE__ << "] MISSING STRIP L1!!!!!! L1missingStrip = 0x" << std::hex << registerVal << std::dec << RESET;
+                            // registerVal = fReadoutChipInterface->ReadChipReg(chip, "LatencyRx320");
+                            // LOG(INFO) << BOLDRED << __LINE__ << "] LatencyRx320 = 0x" << std::hex << registerVal << std::dec << RESET;
+                            // registerVal = fReadoutChipInterface->ReadChipReg(chip, "LatencyRx40");
+                            // LOG(INFO) << BOLDRED << __LINE__ << "] LatencyRx40 = 0x" << std::hex << registerVal << std::dec << RESET;
+                            // registerVal = fReadoutChipInterface->ReadChipReg(chip, "EdgeSelTrig");
+                            // LOG(INFO) << BOLDRED << __LINE__ << "] EdgeSelTrig = 0x" << std::hex << registerVal << std::dec << RESET;
+                            // registerVal = fReadoutChipInterface->ReadChipReg(chip, "EdgeSelT1Raw");
+                            // LOG(INFO) << BOLDRED << __LINE__ << "] EdgeSelT1Raw = 0x" << std::hex << registerVal << std::dec << RESET;
                         }
                     }
                 }
@@ -797,7 +797,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                                 cIndices.push_back(cChip->getIndex());
                             else
                             {
-                                std::cout << __PRETTY_FUNCTION__ << " Getting SSA ids " << std::endl;
+                                // std::cout << __PRETTY_FUNCTION__ << " Getting SSA ids " << std::endl;
                                 cSSAIds.push_back(cChip->getId());
                             }
                         }
@@ -821,12 +821,12 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                             if(cChip->getFrontEndType() == FrontEndType::CBC3 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 uint8_t cS1Index  = cChip->getIndex();
-                                LOG(INFO) << BOLDRED << __LINE__  << "] FILLING cS1Index " << +cS1Index << std::endl;
+                                // LOG(INFO) << BOLDRED << __LINE__  << "] FILLING cS1Index " << +cS1Index << std::endl;
                                 bool    cUpdateS1 = (cChip->getFrontEndType() == FrontEndType::CBC3) ? true : (std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8) != cSSAIds.end());
                                 if(cUpdateS1 && cChip->getFrontEndType() == FrontEndType::CBC3)
                                     cS1Index = std::distance(cSSAIds.begin(), std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8));
 
-                                std::cout << " cS1Index " << +cS1Index << std::endl;
+                                // std::cout << " cS1Index " << +cS1Index << std::endl;
                             
                                 auto& cHitsS1 = cHitContainerS1->at(cS1Index)->getSummary<uint32_t>();
                                 cLatencyContainerS1->at(cOpticalGroup->getIndex())
