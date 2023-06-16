@@ -161,9 +161,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // ###################################
                 auto lane = static_cast<RD53*>(cChip)->getChipLane();
                 if(static_cast<RD53*>(cChip)->laneConfig.isPrimary == false)
-                    enableDataMerging = true;
-                else
                 {
+                    enableDataMerging = true;
                     slaveEn |= 1 << lane;
                     primaries[lane] = static_cast<RD53*>(cChip)->laneConfig.master;
                 }
@@ -176,17 +175,14 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
 
     RegManager::WriteStackReg({{"user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging}, {"user.ctrl_regs.i2c_block.chip_id_en", enableChipID}});
 
-    if(enableDataMerging == true)
+    for(const auto cChip: *pBoard->getFirstObject()->getFirstObject())
     {
-        for(const auto cChip: *pBoard->getFirstObject()->getFirstObject())
-        {
-            auto lane = static_cast<RD53*>(cChip)->getChipLane();
-            WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
-            WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
-        }
-
-        RegManager::WriteReg("user.ctrl_regs.Aurora_block.slave_en", slaveEn);
+        auto lane = static_cast<RD53*>(cChip)->getChipLane();
+        WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
+        WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
     }
+
+    RegManager::WriteReg("user.ctrl_regs.Aurora_block.slave_en", slaveEn);
 
     // ################################
     // # Enabling hybrids and chips   #
