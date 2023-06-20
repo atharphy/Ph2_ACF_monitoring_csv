@@ -89,6 +89,7 @@ class OTHybridTester : public Tool
 
     void InitialiseTestCard(bool cIsSEH);
     void ReadChipIds();
+    void CheckConfiguredHw();
 
   private:
     float       getMeasurement(std::string name);
