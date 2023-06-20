@@ -134,7 +134,6 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
     WriteChipReg(pChip, "FUSEControl", 2);
     int      cReadBack = 0;
     uint32_t cResult   = 0;
-
     while(cReadBack != 4)
     {
         cReadBack = ReadChipReg(pChip, "FUSEStatus");
