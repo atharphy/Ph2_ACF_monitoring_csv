@@ -268,7 +268,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                         }
 
-                        if(newValue < TARGETEFF)
+                        if((newValue < TARGETEFF) && (newValue > oldValue)) // The second condition avoids to enter in the low efficiency region at low threshold
 
                             maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
