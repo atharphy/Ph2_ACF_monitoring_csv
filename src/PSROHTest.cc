@@ -261,6 +261,7 @@ int main(int argc, char* argv[])
     outp.str("");
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
+    cTool.initializeExceptionHandler();
     cTool.bookSummaryTree();
     if(cGui) gui::data("ResultsDirectory", cTool.getDirectoryName().c_str());
 
