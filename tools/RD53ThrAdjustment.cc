@@ -195,7 +195,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 1);
 
     // #########################################
     // # Set VCAL_HIGH to get target threshold #
@@ -260,7 +260,8 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
                         // ########################
                         float oldValue = bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
 
-                        if(fabs(newValue - TARGETEFF) <= fabs(oldValue - TARGETEFF))
+                        if((fabs(newValue - TARGETEFF) <= fabs(oldValue - TARGETEFF)) &&
+                           !((oldValue < TARGETEFF) && (newValue < oldValue))) // The second condition avoids to save best value if we are in the low efficiency region at low threshold
                         {
                             bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = newValue;
 
@@ -268,7 +269,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                         }
 
-                        if((newValue < TARGETEFF) && (newValue > oldValue)) // The second condition avoids to enter in the low efficiency region at low threshold
+                        if((newValue < TARGETEFF) && !((oldValue < TARGETEFF) && (newValue < oldValue))) // The second condition avoids to enter in the low efficiency region at low threshold
 
                             maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
