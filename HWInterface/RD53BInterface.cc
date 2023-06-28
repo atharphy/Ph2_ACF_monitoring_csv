@@ -257,6 +257,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
         LOG(INFO) << GREEN << "Optimizing TAP0 setting for chip ID " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW << +pRD53->getChipLane() << RESET;
 
         const auto            maxTAP0value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_CML_BIAS_0"));
+        const float           timeLimit    = 1;   // @CONST@
         const int             nSteps       = 100; // @CONST@
         const int             nFrames2Read = 100; // @CONST@
         const int             step         = floor(maxTAP0value / nSteps);
@@ -273,7 +274,12 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
             fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 1);
             fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 0);
 
-            while(fwInterface->ReadReg("user.stat_regs.aurora_frame_cntr") < nFrames2Read) std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+            float elapsedSeconds = 0.;
+            while((fwInterface->ReadReg("user.stat_regs.aurora_frame_cntr") < nFrames2Read) && (elapsedSeconds < timeLimit))
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+                elapsedSeconds += RD53Shared::DEEPSLEEP * 1e-6;
+            }
 
             vecFrameCounter.push_back(fwInterface->ReadReg("user.stat_regs.aurora_service_blk_cntr"));
         }
