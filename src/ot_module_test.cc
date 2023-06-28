@@ -192,6 +192,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("kiracalibration", "Perform KIRA calibration", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("loopTemperatureReadout", "Loop temperature readout of sensor thermistor", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("tuneVref", "Tune lpGBT Vref with voltage using ADC input (ADC1, ADC2, ADC3, ADC4, ...)", ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
@@ -218,6 +221,7 @@ int main(int argc, char* argv[])
     bool        cKiraCalibration = cmd.foundOption("kiracalibration");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+    bool        cLoopTemperatureReadout = (cmd.foundOption("loopTemperatureReadout")) ? true : false;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -273,6 +277,15 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.initializeExceptionHandler();
 
+    if(cmd.foundOption("tuneVref"))
+    {
+        auto          cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
+        OTTemperature cTemperatureReader;
+        cTemperatureReader.Inherit(&cTool);
+        cTemperatureReader.SetGain(cGain);
+        cTemperatureReader.TuneLpGBTVref();
+    }
+
     if(cmd.foundOption("readTemperatures"))
     {
         LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
@@ -282,6 +295,7 @@ int main(int argc, char* argv[])
         cTemperatureReader.SetGain(cGain);
         StartInfo theStartInfo;
         theStartInfo.setRunNumber(cRunNumber);
+        cTemperatureReader.LoopReadout(cLoopTemperatureReadout);
         cTemperatureReader.Start(theStartInfo);
         cTemperatureReader.waitForRunToBeCompleted();
     }

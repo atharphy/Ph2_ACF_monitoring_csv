@@ -162,8 +162,17 @@ class lpGBTInterface : public ChipInterface
     // #######################
     // # LpGBT Vref function #
     // #######################
-    bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
+    bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection); //deprecated?
 
+    bool EnableInternalVref(Ph2_HwDescription::Chip* pChip, bool pEnable);
+    bool SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTune);
+    uint8_t GetVrefTune(Ph2_HwDescription::Chip* pChip);
+    float GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput);
+    uint8_t TuneVref(Ph2_HwDescription::Chip* pChip);
+
+    // #############################
+    // # LpGBT Phase configuration #
+    // #############################
     void    ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     void    ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
                                 const std::vector<uint8_t>& pGroups,

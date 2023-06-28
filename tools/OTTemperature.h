@@ -38,14 +38,19 @@ class OTTemperature : public OTTool
     void SetVref(float pVref) { fVref = pVref; }
     void Set2SInputVoltage(float pInput) { fVinput2S = pInput; }
     void SetCurrents(std::vector<uint8_t> pCurrents);
+    uint8_t TuneLpGBTVref();
+    void LoopReadout(bool pLoopReadout){fLoopReadout = pLoopReadout;}
 
   protected:
   private:
-    float                ReadThermistor(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::string pADC, float pR0, float pB);
+    bool                 fLoopReadout{false};
+    void                 ReadThermistors(const OpticalGroup* pOpticalGroup);
+    float                ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC, std::string pLUT);
+    float                ReadInternalThermistor(const OpticalGroup* pOpticalGroup);
     void                 ReadModuleTemperatures();
-    float                fVref{0.87};     // reference voltage for lpgBT
+    float                fVref{1};     // reference voltage for lpgBT
     uint8_t              fGain{0};        // gain
-    float                fVinput2S{10.4}; // input voltage to 2S-SEH
+    float                fVinput2S{10.5}; // input voltage to 2S-SEH
     std::vector<uint8_t> fCurrentDACs{0x01, 0x02, 0x03, 0x04, 0x05, 0x07, 0x10, 0x12, 0x15};
 };
 #endif
