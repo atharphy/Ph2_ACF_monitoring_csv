@@ -335,6 +335,8 @@ EnOutputDataChipId        0x11F         0b0                     0b0             
 SelfTriggerMultiplier     0x120         0d10                    0d10                                5
 SelfTriggerDelay          0x121         0d30                    0d30                               10
 SelfTriggerEn             0x122         0b0                     0b0                                 1
+ServiceFrameSkip          0x123         0b0                     0b0                                 8
+EnServiceData             0x124         0b0                     0b0                                 1
 
 RESISTORI2V               0x1A0         0d5000                  0d5000                             16
 ADC_OFFSET_VOLT           0x1A1         0d63                    0d63                               16

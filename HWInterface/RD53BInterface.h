@@ -92,7 +92,10 @@ class RD53BInterface : public RD53Interface
                                                                                 {"SelfTriggerMultiplier", {"SelfTriggerConfig_0", 0}},
                                                                                 {"SelfTriggerDelay", {"SelfTriggerConfig_0", 5}},
 
-                                                                                {"SelfTriggerEn", {"SelfTriggerConfig_1", 5}}};
+                                                                                {"SelfTriggerEn", {"SelfTriggerConfig_1", 5}},
+
+                                                                                {"ServiceDataConf", {"ServiceFrameSkip",0}},
+                                                                                {"ServiceDataConf", {"EnServiceData",8}}};
 
     // ###########################
     // # Dedicated to monitoring #
