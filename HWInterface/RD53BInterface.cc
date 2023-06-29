@@ -259,7 +259,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
         const auto            maxTAP0value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_CML_BIAS_0"));
         const float           timeLimit    = 1;   // @CONST@
         const int             nSteps       = 100; // @CONST@
-        const int             nFrames2Read = 100; // @CONST@
+        const int             nFrames2Read = 1e7; // @CONST@
         const int             step         = floor(maxTAP0value / nSteps);
         std::vector<uint16_t> vecFrameCounter;
         std::vector<uint16_t> vecTAP0Values(nSteps);
