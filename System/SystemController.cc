@@ -514,7 +514,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Initializing communication to/from RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
                 static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
             }
         }
