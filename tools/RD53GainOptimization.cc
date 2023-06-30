@@ -260,6 +260,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
                         // # Save best DAC values #
                         // ########################
                         float oldValue = bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
+
                         if(fabs(newValue - targetToT) < fabs(oldValue - targetToT))
                         {
                             bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = newValue;

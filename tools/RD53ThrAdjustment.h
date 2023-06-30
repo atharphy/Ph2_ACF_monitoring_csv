@@ -46,7 +46,7 @@ class ThrAdjustment : public PixelAlive
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
     {
-        uint16_t nIterationsThr = floor(log2(stopValue - startValue + 1) + 2);
+        uint16_t nIterationsThr = floor(log2(stopValue - startValue + 1) + 2) + floor(log2(stopValue - startValue + 1) + 3);
         uint16_t moreIterations = 1;
         return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
     }
@@ -58,7 +58,8 @@ class ThrAdjustment : public PixelAlive
   private:
     void fillHisto() override;
 
-    void bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal_Maximum(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal_Zero(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue);
 
     DetectorDataContainer theThrContainer;
 
