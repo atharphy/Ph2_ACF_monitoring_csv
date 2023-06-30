@@ -94,8 +94,8 @@ class RD53BInterface : public RD53Interface
 
                                                                                 {"SelfTriggerEn", {"SelfTriggerConfig_1", 5}},
 
-                                                                                {"ServiceDataConf", {"ServiceFrameSkip",0}},
-                                                                                {"ServiceDataConf", {"EnServiceData",8}}};
+                                                                                {"ServiceDataConf", {"ServiceFrameSkip", 0}},
+                                                                                {"ServiceDataConf", {"EnServiceData", 8}}};
 
     // ###########################
     // # Dedicated to monitoring #
