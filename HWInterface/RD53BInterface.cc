@@ -21,6 +21,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     auto* pRD53       = static_cast<RD53*>(pChip);
     auto& pRD53RegMap = pChip->getRegMap();
 
+    // #######################
+    // # Enable Service Data #
+    // #######################
+    RD53Interface::WriteChipReg(pChip, "EnServiceData", 1);
+
     // ########################################################################
     // # Switching to pixel-register configuration, instead of the hard-wired #
     // ########################################################################
@@ -47,11 +52,6 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # bit 8:    RawData       --> Map in FormatOptions: enableRawMap
     // # bits 4-7: MaxHits[3:0]
     // # bits 1-3: MaxToT[2:0]
-
-    // #######################
-    // # Enable Service Data #
-    // #######################
-    RD53Interface::WriteChipReg(pChip, "EnServiceData", 1);
 
     // #######################################
     // # Programming CLK_DATA_DELAY register #
@@ -179,6 +179,13 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // # bit 9:    RingOscAClear
     // # bits 1:8: RingOscAEnable[7:0]
 
+    // ########################
+    // # Disable Service Data #
+    // ########################
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "ServiceDataConf", 0x000 | 50); // How many Data frames to skip before sending a Monitor Frame
+    // # bit 9:    EnServiceData
+    // # bits 1-8: ServiceFrameSkip [7:0]
+
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
@@ -238,9 +245,6 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 5-6:   DataMergingOutMux_2[1:0]
     // # bits 3-4:   DataMergingOutMux_1[1:0]
     // # bits 1-2:   DataMergingOutMux_0[1:0]
-    RD53Interface::WriteChipReg(pChip, "ServiceDataConf", 0x000 | 50, false); // How many Data frames to skip before sending a Monitor Frame
-    // # bit 9:    EnServiceData
-    // # bits 1-8: ServiceFrameSkip [7:0]
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1, false);
     // # bits 5-16: CBWait[11:0]
     // # bits 1-4:  CBSend[3:0]
@@ -257,18 +261,19 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #################################
     auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
     fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.master);
-    if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
+    // if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
     {
         RD53Interface::WriteChipReg(pChip, "EnServiceData", 1, false);
 
-        LOG(INFO) << GREEN << "Optimizing TAP0 setting for chip ID " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW << +pRD53->getChipLane() << RESET;
+        LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW
+                  << +pRD53->getChipLane() << RESET;
 
         const auto            maxTAP0value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_CML_BIAS_0"));
         const float           timeLimit    = 1;   // @CONST@
-        const int             nSteps       = 100; // @CONST@
+        const int             nSteps       = 20;  // @CONST@
         const int             nFrames2Read = 1e7; // @CONST@
         const int             step         = floor(maxTAP0value / nSteps);
-        std::vector<uint16_t> vecFrameCounter;
+        std::vector<uint32_t> vecFrameCounter;
         std::vector<uint16_t> vecTAP0Values(nSteps);
         uint16_t              value = 0;
         std::generate(vecTAP0Values.begin(), vecTAP0Values.end(), [&value, &step]() { return value += step; });
@@ -288,7 +293,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
                 elapsedSeconds += RD53Shared::DEEPSLEEP * 1e-6;
             }
 
-            vecFrameCounter.push_back(fwInterface->ReadReg("user.stat_regs.aurora_service_blk_cntr"));
+            vecFrameCounter.push_back(round(fwInterface->ReadReg("user.stat_regs.aurora_service_blk_cntr") * RD53Shared::PRECISION) / RD53Shared::PRECISION);
         }
 
         // ########################
@@ -299,9 +304,9 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
         it += (maxRange.second - maxRange.first) / 2;
         auto bestTAP0 = vecTAP0Values[it - vecFrameCounter.begin()];
 
-        RD53Interface::WriteChipReg(pChip, "EnServiceData", 0);
-        RD53Interface::WriteChipReg(pChip, "DAC_CML_BIAS_0", bestTAP0);
-        LOG(INFO) << BOLDBLUE << "\t--> Best TAP0 setting is " << BOLDYELLOW << +bestTAP0 << RESET;
+        RD53Interface::WriteChipReg(pChip, "EnServiceData", 0, false);
+        RD53Interface::WriteChipReg(pChip, "DAC_CML_BIAS_0", bestTAP0, false);
+        LOG(INFO) << BOLDBLUE << "\t--> Best TAP0 setting is: " << BOLDYELLOW << +bestTAP0 << RESET;
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
