@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    doc.save_file((cHWFile + "_copy").c_str());
+    if(cmd.foundOption("linkId") && cmd.foundOption("fmcId")) doc.save_file((cHWFile + "_copy").c_str());
 
     TApplication cApp("Root Application", &argc, argv);
     if(batchMode)
@@ -246,13 +246,22 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
-    cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
-    cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
-    remove((cHWFile + "_copy").c_str());
+    if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
+    {
+        cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
+        cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
+        remove((cHWFile + "_copy").c_str());
+    }
+    else
+    {
+        cTool.InitializeHw((cHWFile).c_str(), outp);
+        cTool.InitializeSettings((cHWFile).c_str(), outp);
+    }
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
+    cTool.initializeExceptionHandler();
     cTool.bookSummaryTree();
     if(cGui) gui::data("ResultsDirectory", cTool.getDirectoryName().c_str());
 
@@ -270,6 +279,7 @@ int main(int argc, char* argv[])
         if(cMeasureInputIV) cPSROHTester.MeasureInputIV("BEFORE_CONFIG");
         LOG(INFO) << BOLDMAGENTA << " ------------------------------------------- " << RESET;
         cTool.ConfigureHw(); // Link is stablished
+        cPSROHTester.CheckConfiguredHw();
         cPSROHTester.ReadChipIds();
         // Initialise tester
         cPSROHTester.Initialise();

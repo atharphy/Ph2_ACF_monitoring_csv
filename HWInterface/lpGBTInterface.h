@@ -113,9 +113,14 @@ class lpGBTInterface : public ChipInterface
     // ####################################
     // # LpGBT specific routine functions #
     // ####################################
-    bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
-    void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
-    void ResetRxDll(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
+    bool    ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
+    bool    EnableInternalVref(Ph2_HwDescription::Chip* pChip, bool pEnable);
+    bool    SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTune);
+    uint8_t GetVrefTune(Ph2_HwDescription::Chip* pChip);
+    float   GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput);
+    uint8_t TuneVref(Ph2_HwDescription::Chip* pChip);
+    void    PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
+    void    ResetRxDll(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
 
     // ################################
     // # LpGBT block status functions #

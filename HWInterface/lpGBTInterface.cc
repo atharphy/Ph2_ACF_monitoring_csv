@@ -144,7 +144,6 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
     WriteChipReg(pChip, "FUSEControl", 2);
     int      cReadBack = 0;
     uint32_t cResult   = 0;
-
     while(cReadBack != 4)
     {
         cReadBack = ReadChipReg(pChip, "FUSEStatus");
@@ -228,6 +227,7 @@ uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
 uint8_t lpGBTInterface::GetChipRate(Chip* pChip)
 {
     uint8_t cValueConfigPins = ((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4);
+
     if(cValueConfigPins <= 7)
         return 5;
     else if(cValueConfigPins <= 15)
@@ -438,6 +438,17 @@ void lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8_t>&
     }
 }
 
+void lpGBTInterface::SetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
+{
+    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
+    auto        cIt  = fPhaseTapMap.find(cKey);
+    if(cIt != fPhaseTapMap.end()) { cIt->second = pPhase; }
+    else
+    {
+        throw std::runtime_error(std::string("Unused Channel or Group!"));
+    }
+}
+
 uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel)
 {
     std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
@@ -447,17 +458,6 @@ uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChanne
     {
         throw std::runtime_error(std::string("Unused Channel or Group!"));
         return 15;
-    }
-}
-
-void lpGBTInterface::SetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
-{
-    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
-    auto        cIt  = fPhaseTapMap.find(cKey);
-    if(cIt != fPhaseTapMap.end()) { cIt->second = pPhase; }
-    else
-    {
-        throw std::runtime_error(std::string("Unused Channel or Group!"));
     }
 }
 
@@ -471,7 +471,84 @@ bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnab
     bool    cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
     LOG(DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex << +cVal << std::dec << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+
     return cSuccess;
+}
+
+bool lpGBTInterface::EnableInternalVref(Ph2_HwDescription::Chip* pChip, bool pEnable) { return true; }
+
+bool lpGBTInterface::SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTune)
+{
+    uint8_t     cNbits   = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
+    std::string cRegName = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? "VREFCNTR" : "VREFTUNE";
+    ChipRegMask cMask;
+    cMask.fBitShift = 0;
+    cMask.fNbits    = cNbits;
+    pChip->setRegBits(cRegName, cMask, pVrefTune);
+    WriteChipReg(pChip, cRegName, pVrefTune);
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+    auto cVrefTune = pChip->getRegItem(cRegName).fValue;
+
+    return cVrefTune == pVrefTune;
+}
+
+uint8_t lpGBTInterface::GetVrefTune(Ph2_HwDescription::Chip* pChip)
+{
+    uint8_t     cNbits    = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
+    std::string cRegName  = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? "VREFCNTR" : "VREFTUNE";
+    auto        cVrefTune = pChip->getRegItem(cRegName).fValue;
+    uint8_t     mask      = (0xFF >> (8 - cNbits));
+
+    return (mask & cVrefTune);
+}
+
+float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput)
+{
+    auto cGain   = GetADCGain(pChip, false);
+    auto cOffset = GetADCOffset(pChip, false);
+    auto cADC    = ReadADC(pChip, pADC);
+
+    return (pVinput * cGain * 512) / (cADC - cOffset * (1 - cGain / 2.));
+}
+
+uint8_t lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip)
+{
+    const std::string pADC    = static_cast<lpGBT*>(pChip)->getTuneVrefADC();
+    float             pVinput = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
+    LOG(INFO) << BOLDYELLOW << "Tune Vref of lpGBT using input of " << pADC << " and " << pVinput << "V" << RESET;
+    uint8_t cNbits       = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
+    uint8_t cCurrentStep = (0xFF >> (8 - cNbits));
+    SetVrefTune(pChip, cCurrentStep);
+    auto     cVrefTune     = GetVrefTune(pChip);
+    float    cCurrentVref  = GetVref(pChip, pADC, pVinput);
+    uint16_t cPreviousStep = cCurrentStep;
+
+    for(int iBit = cNbits - 1; iBit >= 0; --iBit)
+    {
+        // ############
+        // # Flip bit #
+        // ############
+        cCurrentStep = cPreviousStep + (1 << iBit);
+        SetVrefTune(pChip, cCurrentStep);
+        cVrefTune    = GetVrefTune(pChip);
+        cCurrentVref = GetVref(pChip, pADC, pVinput);
+
+        // ####################################
+        // # Determine if it is better or not #
+        // ####################################
+        if(cCurrentVref < 1.) cPreviousStep = cCurrentStep;
+        SetVrefTune(pChip, cCurrentStep);
+        cVrefTune    = GetVrefTune(pChip);
+        cCurrentVref = GetVref(pChip, pADC, pVinput);
+
+        if(static_cast<lpGBT*>(pChip)->getVersion() == 0)
+            LOG(INFO) << BOLDYELLOW << " Flip Bit#" << +iBit << " Tune =  " << std::bitset<5>(cVrefTune) << " Vref = " << cCurrentVref << RESET;
+        else
+            LOG(INFO) << BOLDYELLOW << " Flip Bit#" << +iBit << " Tune =  " << std::bitset<8>(cVrefTune) << " Vref = " << cCurrentVref << RESET;
+    }
+
+    LOG(INFO) << BOLDYELLOW << "Vref tune set to " << +cVrefTune << " - Vref = " << cCurrentVref << RESET;
+    return cVrefTune;
 }
 
 void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups)
@@ -498,9 +575,9 @@ void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups
     std::string cRegName = "RST1";
     uint8_t     cValue   = 0x00;
     for(auto cGroup: pGroups) { cValue = cValue | (1 << cGroup); }
-    this->WriteChipReg(pChip, "RST1", cValue);
+    WriteChipReg(pChip, "RST1", cValue);
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
-    this->WriteChipReg(pChip, "RST1", 0x00);
+    WriteChipReg(pChip, "RST1", 0x00);
 }
 
 // ################################
@@ -800,10 +877,10 @@ uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
     return cMeasurement;
 }
 
+float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose)
 // #############################################################################################
 // # Implements the ADC master formula for the a basic measurement  assuming a calibrated Vref #
 // #############################################################################################
-float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose)
 {
     uint16_t cMeasurement = ReadADC(pChip, pADCInputP, "VREF/2");
     return (cMeasurement - cOffset * (1. - cGain / 2.)) / cGain / 512.;
@@ -867,27 +944,39 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
 
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
-    // Read differential (converted) data on two ADC inputs
+    // ########################################################
+    // # Read differential (converted) data on two ADC inputs #
+    // ########################################################
     uint8_t cADCInputP = lpGBTInterface::fADCInputMap[pADCInputP];
     uint8_t cADCInputN = lpGBTInterface::fADCInputMap[pADCInputN];
 
     LOG(DEBUG) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInputP << RESET;
 
-    // Select ADC Input
+    // ####################
+    // # Select ADC Input #
+    // ####################
     WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
 
-    // Enable ADC Input without starting conversion
+    // ################################################
+    // # Enable ADC Input without starting conversion #
+    // ################################################
     lpGBTInterface::ConfigureADC(pChip, pGain, true, false);
 
-    // Enable Internal VREF
+    // ########################
+    // # Enable Internal VREF #
+    // ########################
     uint8_t cVrefcntrContent = ReadChipReg(pChip, "VREFCNTR");
     WriteChipReg(pChip, "VREFCNTR", 1 << 7 | (0x3f & cVrefcntrContent));
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
-    // Start ADC conversion
+    // ########################
+    // # Start ADC conversion #
+    // ########################
     lpGBTInterface::ConfigureADC(pChip, pGain, true, true);
 
-    // Check conversion status
+    // ###########################
+    // # Check conversion status #
+    // ###########################
     uint8_t cIter    = 0;
     bool    cSuccess = false;
     do
@@ -906,14 +995,20 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
         return 0;
     }
 
-    // Read ADC value
+    // ##################
+    // # Read ADC value #
+    // ##################
     uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
     uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
 
-    // Clear ADC conversion bit and disable ADC
+    // ############################################
+    // # Clear ADC conversion bit and disable ADC #
+    // ############################################
     lpGBTInterface::ConfigureADC(pChip, pGain, false, false);
 
-    // disable Internal VREF
+    // #########################
+    // # Disable Internal VREF #
+    // #########################
     WriteChipReg(pChip, "VREFCNTR", 0 << 7 | (0x3f & cVrefcntrContent));
 
     return (cADCvalue1 << 8 | cADCvalue2);
