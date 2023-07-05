@@ -30,8 +30,7 @@ void MultiplexingSetup::Initialise()
         else
         {
             LOG(INFO) << BOLDBLUE << "Set-up has not been scanned..." << RESET;
-            LOG(INFO) << BOLDBLUE << "Sending a global reset to the FC7 ..... " << RESET;
-            fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_ctrl.command_processor_block.global.reset", 0x1);
+            LOG(INFO) << BOLDBLUE << "To send a global reset to the FC7 use mux_scan... " << RESET;
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
 

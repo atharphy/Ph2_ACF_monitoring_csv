@@ -21,11 +21,6 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     auto* pRD53       = static_cast<RD53*>(pChip);
     auto& pRD53RegMap = pChip->getRegMap();
 
-    // #######################
-    // # Enable Service Data #
-    // #######################
-    RD53Interface::WriteChipReg(pChip, "EnServiceData", 1);
-
     // ########################################################################
     // # Switching to pixel-register configuration, instead of the hard-wired #
     // ########################################################################
@@ -180,7 +175,7 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // ########################
     // # Disable Service Data #
     // ########################
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "ServiceDataConf", 0x000 | 50); // How many Data frames to skip before sending a Monitor Frame
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "ServiceDataConf", 0x100 | 50); // How many Data frames to skip before sending a Monitor Frame
     // # bit 9:    EnServiceData
     // # bits 1-8: ServiceFrameSkip [7:0]
 
@@ -252,14 +247,14 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
 }
 
-void RD53BInterface::TAP0slaveOptimization(const Hybrid* pHybrid) // @TMP@ : temporary for CROC v1
+void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for CROC v1
 {
     this->setBoard(pHybrid->getId());
 
     // ########################
     // # Disable Service Data #
     // ########################
-    for(const auto cChip: *pHybrid) RD53Interface::WriteChipReg(cChip, "EnServiceData", 0, false);
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "EnServiceData", 0);
 
     for(const auto cChip: *pHybrid)
     {
@@ -315,16 +310,16 @@ void RD53BInterface::TAP0slaveOptimization(const Hybrid* pHybrid) // @TMP@ : tem
             RD53Interface::WriteChipReg(cChip, "EnServiceData", 0, false);
             RD53Interface::WriteChipReg(cChip, "DAC_CML_BIAS_0", bestTAP0, false);
             if(bestTAP0 != 0)
-                LOG(INFO) << BOLDBLUE << "\t--> Best TAP0 setting is: " << BOLDYELLOW << +bestTAP0 << RESET;
+                LOG(INFO) << BOLDBLUE << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " setting is: " << BOLDYELLOW << +bestTAP0 << RESET;
             else
-                LOG(INFO) << BOLDRED << "\t--> Best TAP0 not found" << RESET;
+                LOG(INFO) << BOLDRED << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " not found" << RESET;
         }
     }
 
     // #######################
     // # Enable Service Data #
     // #######################
-    for(const auto cChip: *pHybrid) RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "EnServiceData", 1);
 }
 
 std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)
