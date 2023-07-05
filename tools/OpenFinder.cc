@@ -260,15 +260,14 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
                     auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                     for(auto cConnectedChannel: cConnectedChannels)
                     {
-                        if(std::find(cHits.begin(), cHits.end(), cConnectedChannel) == cHits.end())
-                        { cSummaryThisChip->getChannelContainer<Occupancy>()->getObject(cConnectedChannel).fOccupancy += 1; }
+                        if(std::find(cHits.begin(), cHits.end(), cConnectedChannel) == cHits.end()) { cSummaryThisChip->getChannelContainer<Occupancy>()->at(cConnectedChannel).fOccupancy += 1; }
                     }
                 }
 
                 auto& cOpensThisChip = cOpensThisHybrid->getObject(cChip->getId())->getSummary<ChannelList>();
                 for(auto cConnectedChannel: cConnectedChannels)
                 {
-                    if(cSummaryThisChip->getChannelContainer<Occupancy>()->getObject(cConnectedChannel).fOccupancy > THRESHOLD_OPEN * fEventsPerPoint)
+                    if(cSummaryThisChip->getChannelContainer<Occupancy>()->at(cConnectedChannel).fOccupancy > THRESHOLD_OPEN * fEventsPerPoint)
                     {
                         cOpensThisChip.push_back(cConnectedChannel);
                         LOG(DEBUG) << BOLDRED << "Possible open found.."

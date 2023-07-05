@@ -172,6 +172,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
                     PREFIX ${EXTERNAL_INSTALL_LOCATION}
                     INSTALL_COMMAND : # This will skip the install step
                 )
+            set(PH2_TCUSB_FOUND TRUE)
+            set(PH2_TCUSB_INCLUDE_DIRS ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/src)
+            set(PH2_TCUSB_LIBRARY_DIRS ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/lib)
+            set(PH2_TCUSB_LIBRARIES ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/lib/libcmsph2_tcusb.so  ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/lib/libcmsph2_tcusb_utils.so)
         endif(NOT PH2_TCUSB_FOUND)
 
     endif($ENV{CompileWithTCUSB})

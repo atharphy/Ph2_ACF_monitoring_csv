@@ -141,9 +141,9 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(const ConfigureInfo& theConfigureInfo)
+void Tool::Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize)
 {
-    SystemController::Configure(theConfigureInfo);
+    SystemController::Configure(theConfigureInfo, pReInitialize);
     ConfigureCalibration();
 }
 

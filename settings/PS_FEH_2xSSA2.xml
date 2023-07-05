@@ -178,6 +178,8 @@
     <!-- number of triggers to send in the case of L1A data -->
     <!-- L1 triggers sent once every 10 ms -->
     <Setting name="PSHybridDebugDuration">1</Setting>
+    <!-- Interlock enabled. 1 is input to the backplane from the switch. 0 is input to the backplane by the firmware -->
+    <Setting name="InterlockEnabled">1</Setting>
 </Settings>
 
 <CommunicationSettings>

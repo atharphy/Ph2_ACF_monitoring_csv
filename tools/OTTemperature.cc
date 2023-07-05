@@ -28,19 +28,125 @@ void OTTemperature::SetCurrents(std::vector<uint8_t> pCurrents)
     fCurrentDACs.clear();
     for(auto cCurrent: pCurrents) fCurrentDACs.push_back(cCurrent);
 }
+void OTTemperature::ReadThermistors(const OpticalGroup* pOpticalGroup)
+{
+    // auto& clpGBT = pOpticalGroup->flpGBT;
+    std::map<std::string, std::pair<std::string, std::string>> cNTCMap = pOpticalGroup->fNTCMap;
+    // std::map<std::string, std::string>::iterator it;
+    for(auto it = cNTCMap.begin(); it != cNTCMap.end(); it++)
+    {
+        std::string type        = it->first;
+        std::string adc         = it->second.first;
+        std::string lut         = it->second.second;
+        float       temperature = ReadThermistor(pOpticalGroup, adc, lut);
+        LOG(INFO) << BOLDBLUE << type << " (" << adc << ") Temperature: " << temperature << "°C" << RESET;
+    }
+}
+
 // Read thermistor temperature
-float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC, float pR0, float pB)
+float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC, std::string pLUT)
 {
     auto& clpGBT = pOpticalGroup->flpGBT;
     if(clpGBT == nullptr) return -1;
 
+    uint16_t cOffset = flpGBTInterface->GetADCOffset(clpGBT, 0);
+    float    cGain   = flpGBTInterface->GetADCGain(clpGBT, 0);
+    LOG(DEBUG) << "Offset: " << +cOffset << " --- Gain: " << cGain << RESET;
+
     auto cLSQResistance = flpGBTInterface->ReadResistance(clpGBT, pADC, fCurrentDACs, fGain); // in ADC units
-    cLSQResistance      = (cLSQResistance * fVref / 1023) * 1e-3;                             // in kOhms
-    float cTinvK        = 1.0 / (25 + 273.5) + (1. / pB) * std::log(cLSQResistance / pR0);
-    float cT            = 1.0 / cTinvK - 273.5;
-    LOG(INFO) << BOLDBLUE << "Resistance is " << cLSQResistance << " kOhms"
-              << " R[25°C] is " << pR0 << " temperature [inv K ] " << cTinvK << " temperature in celsius is " << cT << RESET;
-    return cT;
+    LOG(DEBUG) << "Resistance in ADC units: " << cLSQResistance << RESET;
+    cLSQResistance = (cLSQResistance - cOffset * (1 - cGain / 2)) / (cGain * 512) * 1e-3; // in kOhms
+    LOG(DEBUG) << "Resistance in kOhms: " << cLSQResistance << RESET;
+
+    // get them from file
+    float cFirstTemp = 0, cSecondTemp = 0, cFirstResistance = 0, cSecondResistance = 0;
+
+    // read file line by line
+    std::string   cFilename = pLUT;
+    std::ifstream file(cFilename);
+    if(file.is_open())
+    {
+        std::string line;
+        float       cPrevTemp       = -40;   // Min temperature
+        float       cPrevResistance = 41.78; // Max resistance
+        std::string delimiter       = ",";
+        while(std::getline(file, line))
+        {
+            // get temp and resistance from line string
+            size_t             pos = 0;
+            std::string        token;
+            std::vector<float> cLineValues(0);
+            while((pos = line.find(delimiter)) != std::string::npos)
+            {
+                token = line.substr(0, pos);
+                line.erase(0, pos + delimiter.length());
+                cLineValues.push_back(stof(token));
+            }
+
+            float cTemp       = cLineValues.at(0);
+            float cResistance = cLineValues.at(2);
+            LOG(DEBUG) << "Temperature: " << cTemp << " --- Resistance: " << cResistance << RESET;
+
+            if(cLSQResistance <= cPrevResistance && cLSQResistance > cResistance)
+            {
+                cFirstTemp        = cPrevTemp;
+                cSecondTemp       = cTemp;
+                cFirstResistance  = cPrevResistance;
+                cSecondResistance = cResistance;
+                LOG(DEBUG) << "Resistance between " << cFirstResistance << " and " << cSecondResistance << " --- Interpolate between " << cFirstTemp << "°C and " << cSecondTemp << "°C" << RESET;
+            }
+            cPrevTemp       = cTemp;
+            cPrevResistance = cResistance;
+        }
+        file.close();
+    }
+    else
+    {
+        LOG(INFO) << BOLDRED << "File " << cFilename << " could not be opened! Resistance to temperature translation not possible!" << RESET;
+    }
+    float cSlope     = (cSecondTemp - cFirstTemp) / (cSecondResistance - cFirstResistance);
+    float cIntercept = cSecondTemp - cSlope * cSecondResistance;
+    float cTemp      = cSlope * cLSQResistance + cIntercept;
+    LOG(DEBUG) << BOLDBLUE << "NTC Resistance is " << cLSQResistance << " kOhms ---- Temperature of NTC is " << cTemp << "°C" << RESET;
+
+    // Current time
+    auto               t  = std::time(nullptr);
+    auto               tm = *std::localtime(&t);
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+    auto cTime = oss.str();
+
+    // Write temperature to file
+    std::ofstream cOutputfile;
+    int           cOGID           = pOpticalGroup->getId();
+    std::string   cOutputfilename = "./Temperatures/Temps_OG" + std::to_string(cOGID) + ".txt";
+    cOutputfile.open(cOutputfilename, std::ios_base::app); // append instead of overwrite
+    cOutputfile << cTime << "," << cTemp << "," << cLSQResistance << "\n";
+
+    return cTemp;
+}
+
+float OTTemperature::ReadInternalThermistor(const OpticalGroup* pOpticalGroup)
+{
+    auto& clpGBT = pOpticalGroup->flpGBT;
+    if(clpGBT == nullptr) return -1;
+    auto cLpgbtTempInADC = flpGBTInterface->GetInternalTemperature(clpGBT);
+
+    uint16_t cOffset = flpGBTInterface->GetADCOffset(clpGBT, 0);
+    float    cGain   = flpGBTInterface->GetADCGain(clpGBT, 0);
+    LOG(DEBUG) << "Offset: " << +cOffset << " --- Gain: " << cGain << RESET;
+    float vPos = (cLpgbtTempInADC - cOffset * (1 - cGain / 2.0)) / (cGain * 512);
+    // V = m * T + V0  where V0 is voltage at zero degrees and m is temperature coefficien and T the current temperature, resulting in a Voltage V
+    // -> T = (V-V0 ) / m
+    std::pair<float, float> coeff = clpGBT->getTemperatureCoefficients();
+    float                   m     = coeff.first;
+    float                   v0    = coeff.second;
+    LOG(DEBUG) << " V0: " << v0 << RESET;
+    LOG(DEBUG) << " vPos: " << vPos << RESET;
+
+    float temperature = (vPos - v0) / m;
+    LOG(INFO) << BOLDBLUE << "APPROXIMATED internal lpGBT Temperature: " << +temperature << "°C" << RESET;
+    return temperature;
 }
 // Read module temperatures
 void OTTemperature::ReadModuleTemperatures()
@@ -65,34 +171,31 @@ void OTTemperature::ReadModuleTemperatures()
                 LOG(INFO) << BOLDBLUE << "Gain of " << +fGain << "\t" << cVoltageADC << " ADC reading " << cMean << " converted voltage " << cVoltage << RESET;
                 cVoltageADCReadings.push_back(cMean);
             }
-            flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
-            // read temperature sensor
-            auto cLpgbtTemp = flpGBTInterface->GetInternalTemperature(clpGBT);
-            LOG(INFO) << BOLDBLUE << "Internal temperature sensor of lpGBT reads " << cLpgbtTemp << " which converts to " << cLpgbtTemp * (fVref / 1023) << RESET;
-
-            bool                     cWith2S       = true;
-            std::vector<std::string> cReferenceADC = {"ADC2"};
-            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
+            do
             {
-                cWith2S = false;
-                cReferenceADC.clear();
-            }
-            for(auto cRefADC: cReferenceADC)
-            {
-                float              cExpected = (fVinput2S * 0.49 / 10.); // for 2S modules powered at 10.4 V
-                std::vector<float> cMeasurements(0);
-                for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(flpGBTInterface->ReadADC(clpGBT, cRefADC, "VREF/2", fGain)); }
-                float cMean    = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                float cVoltage = (cMean) * (fVref / 1023);
-                LOG(INFO) << BOLDBLUE << "Gain of " << +fGain << "\t" << cRefADC << " ADC reading " << cMean << " converted voltage " << cVoltage << " expected voltage is " << cExpected
-                          << " offset is " << std::fabs(cVoltage - cExpected) << RESET;
-            }
-
-            float cR0 = cWith2S ? 10.0 : 1.0;
-            float cB  = cWith2S ? 3950 : 3500;
-            ReadThermistor(cOpticalGroup, "ADC4", cR0, cB);
+                ReadInternalThermistor(cOpticalGroup);
+                flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
+                // read ADC value of temperature sensor on the sensor
+                ReadThermistors(cOpticalGroup);
+            } while(fLoopReadout);
         }
     }
+}
+
+uint8_t OTTemperature::TuneLpGBTVref()
+{
+    uint8_t vref = 0;
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& clpGBT = cOpticalGroup->flpGBT;
+            if(clpGBT == nullptr) continue;
+            flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
+            vref = flpGBTInterface->TuneVref(clpGBT);
+        }
+    }
+    return vref;
 }
 
 void OTTemperature::Stop() {}

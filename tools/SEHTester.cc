@@ -493,10 +493,10 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     double xval, yval, y_allowed_min, y_allowed_max, yvalConvert = 0;
     for(int n = 0; n < 2; n++)
     {
-        for(int i = 0; i < myGraphs_vec4->getObject(n).GetN(); i++)
+        for(int i = 0; i < myGraphs_vec4->at(n).GetN(); i++)
         { // check that every point is within the allowed min/max curves
-            xval          = myGraphs_vec4->getObject(n).GetX()[i];
-            yval          = myGraphs_vec4->getObject(n).GetY()[i];
+            xval          = myGraphs_vec4->at(n).GetX()[i];
+            yval          = myGraphs_vec4->at(n).GetY()[i];
             yvalConvert   = (yval - 1.) * 1000.;
             y_allowed_min = fit_grading_HV_test->Eval(xval) * 0.99 - 25.; // Offset, da bei kleinen Werten der relative Fehler größer sein kann
             y_allowed_max = fit_grading_HV_test->Eval(xval) * 1.01 + 50.;
@@ -550,7 +550,7 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool s
     {
         fTC_2SSEH->set_load2(true, false, pLeftLoadValue);
         fTC_2SSEH->set_load1(true, false, pRightLoadValue);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
         fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_R, I_P1V2_R);
         fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_L, I_P1V2_L);
         fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);

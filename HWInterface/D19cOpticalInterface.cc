@@ -311,8 +311,14 @@ uint8_t D19cOpticalInterface::SingleSingleByteReadI2C(Ph2_HwDescription::Chip* p
 {
     std::vector<uint32_t> cMasterData;
     cMasterData.push_back(pSlaveAddress << 0);
-    auto cReadBackData  = ReadI2C(pChip, pMasterId, pMasterConfig, cMasterData);
+    auto cReadBackData = ReadI2C(pChip, pMasterId, pMasterConfig, cMasterData);
+    if(cReadBackData.size() == 0)
+    {
+        LOG(INFO) << BOLDGREEN << "D19cOpticalInterface::SingleSingleByteReadI2C No data in read back, returning 0" << RESET;
+        return 0;
+    }
     auto cReadBackValue = (cReadBackData[0] & 0xFF);
+
     return cReadBackValue;
 }
 
