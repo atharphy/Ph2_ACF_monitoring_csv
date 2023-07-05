@@ -988,9 +988,11 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     rxStatus  = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.rx_ready");
     mgtStatus = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.mgt_ready");
 
+    std::cout << std::fixed << std::setprecision(0);
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << txStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << rxStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
+    RD53Shared::resetDefaultFloat();
 }
 
 bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify)
