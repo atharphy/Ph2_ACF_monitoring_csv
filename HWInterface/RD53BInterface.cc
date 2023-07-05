@@ -306,7 +306,10 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
 
         RD53Interface::WriteChipReg(pChip, "EnServiceData", 0, false);
         RD53Interface::WriteChipReg(pChip, "DAC_CML_BIAS_0", bestTAP0, false);
-        LOG(INFO) << BOLDBLUE << "\t--> Best TAP0 setting is: " << BOLDYELLOW << +bestTAP0 << RESET;
+        if(bestTAP0 != 0)
+            LOG(INFO) << BOLDBLUE << "\t--> Best TAP0 setting is: " << BOLDYELLOW << +bestTAP0 << RESET;
+        else
+            LOG(INFO) << BOLDRED << "\t--> Best TAP0 not found" << RESET;
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
