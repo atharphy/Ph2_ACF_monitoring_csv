@@ -36,8 +36,8 @@ uint16_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNod
 
 bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify)
 {
-    const uint16_t maxRegValue   = 0xFF;  // @CONST@
-    const uint16_t maxRegAddress = 0x13C; // @CONST@
+    const uint16_t maxRegValue      = 0xFF;                                                            // @CONST@
+    const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
 
     this->setBoard(pChip->getBeBoardId());
 
@@ -47,9 +47,9 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
         return false;
     }
 
-    if(pAddress >= maxRegAddress)
+    if(pAddress >= cMaxWriteAddress)
     {
-        LOG(ERROR) << "LpGBT read-write registers end at " << maxRegAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
+        LOG(ERROR) << "LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
         return false;
     }
 
