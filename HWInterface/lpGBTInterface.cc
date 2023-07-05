@@ -15,9 +15,22 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-// ################################################
-// # LpGBT chip register write and read functions #
-// ################################################
+void lpGBTInterface::StartPRBSpattern(Chip* pChip)
+{
+    lpGBTInterface::ConfigureRxPRBS(pChip, {lpGBTconstants::fictitiousGroup}, {lpGBTconstants::fictitiousChannel}, true);
+    lpGBTInterface::ConfigureRxSource(pChip, {lpGBTconstants::fictitiousGroup}, lpGBTconstants::PATTERN_PRBS);
+}
+
+void lpGBTInterface::StopPRBSpattern(Chip* pChip)
+{
+    lpGBTInterface::ConfigureRxPRBS(pChip, {lpGBTconstants::fictitiousGroup}, {lpGBTconstants::fictitiousChannel}, false);
+    lpGBTInterface::ConfigureRxSource(pChip, {lpGBTconstants::fictitiousGroup}, lpGBTconstants::PATTERN_NORMAL);
+}
+
+// ################################
+// # Chip configuration functions #
+// ################################
+
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
@@ -205,11 +218,22 @@ void lpGBTInterface::ConfigureRxAlignmentMode(Chip* pChip, const std::vector<uin
 
 uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
 {
-    uint16_t    cChipRate   = GetChipRate(pChip);
+    uint16_t    cChipRate   = lpGBTInterface::GetChipRate(pChip);
     std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
     auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
     uint16_t    cValue      = (cRegValue & 0xC);
     return (cChipRate / 5.) * (int)cValue * (float)lpGBTconstants::ACCELERATOR_CLK / 1e6;
+}
+
+uint8_t lpGBTInterface::GetChipRate(Chip* pChip)
+{
+    uint8_t cValueConfigPins = ((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4);
+    if(cValueConfigPins <= 7)
+        return 5;
+    else if(cValueConfigPins <= 15)
+        return 10;
+    else
+        throw std::runtime_error(std::string("lpGBT hard wired configuration doesn't exist"));
 }
 
 void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
@@ -414,9 +438,41 @@ void lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8_t>&
     }
 }
 
+uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel)
+{
+    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
+    auto        cIt  = fPhaseTapMap.find(cKey);
+    if(cIt != fPhaseTapMap.end()) { return cIt->second; }
+    else
+    {
+        throw std::runtime_error(std::string("Unused Channel or Group!"));
+        return 15;
+    }
+}
+
+void lpGBTInterface::SetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
+{
+    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
+    auto        cIt  = fPhaseTapMap.find(cKey);
+    if(cIt != fPhaseTapMap.end()) { cIt->second = pPhase; }
+    else
+    {
+        throw std::runtime_error(std::string("Unused Channel or Group!"));
+    }
+}
+
 // ####################################
 // # LpGBT specific routine functions #
 // ####################################
+
+bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
+{
+    uint8_t cVal     = pEnable << 7 | (pCorrection & 0x3F);
+    bool    cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
+    LOG(DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex << +cVal << std::dec << RESET;
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+    return cSuccess;
+}
 
 void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups)
 {
@@ -445,29 +501,6 @@ void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups
     this->WriteChipReg(pChip, "RST1", cValue);
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     this->WriteChipReg(pChip, "RST1", 0x00);
-}
-
-uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel)
-{
-    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
-    auto        cIt  = fPhaseTapMap.find(cKey);
-    if(cIt != fPhaseTapMap.end()) { return cIt->second; }
-    else
-    {
-        throw std::runtime_error(std::string("Unused Channel or Group!"));
-        return 15;
-    }
-}
-
-void lpGBTInterface::SetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
-{
-    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
-    auto        cIt  = fPhaseTapMap.find(cKey);
-    if(cIt != fPhaseTapMap.end()) { cIt->second = pPhase; }
-    else
-    {
-        throw std::runtime_error(std::string("Unused Channel or Group!"));
-    }
 }
 
 // ################################
@@ -546,17 +579,6 @@ void lpGBTInterface::PrintChipMode(Chip* pChip)
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     }
-}
-
-uint8_t lpGBTInterface::GetChipRate(Chip* pChip)
-{
-    uint8_t cValueConfigPins = ((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4);
-    if(cValueConfigPins <= 7)
-        return 5;
-    else if(cValueConfigPins <= 15)
-        return 10;
-    else
-        throw std::runtime_error(std::string("lpGBT hard wired configuration doesn't exist"));
 }
 
 uint8_t lpGBTInterface::GetPUSMStatus(Chip* pChip) { return ReadChipReg(pChip, "PUSMStatus"); }
@@ -899,22 +921,9 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
 bool lpGBTInterface::IsReadADCDone(Chip* pChip) { return (((ReadChipReg(pChip, "ADCStatusH") & 0x40) >> 6) == 1); }
 
-// ########################
-// # LpGBT Vref functions #
-// ########################
-
-bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
-{
-    uint8_t cVal     = pEnable << 7 | (pCorrection & 0x3F);
-    bool    cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
-    LOG(DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex << +cVal << std::dec << RESET;
-    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
-    return cSuccess;
-}
-
-// #######################
-// # Bit Error Rate test #
-// #######################
+// #############################
+// # LpGBT Bit Error Rate test #
+// #############################
 
 void lpGBTInterface::ConfigureBERT(Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable)
 {
@@ -1083,18 +1092,6 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors / frames2run;
-}
-
-void lpGBTInterface::StartPRBSpattern(Chip* pChip)
-{
-    lpGBTInterface::ConfigureRxPRBS(pChip, {lpGBTconstants::fictitiousGroup}, {lpGBTconstants::fictitiousChannel}, true);
-    lpGBTInterface::ConfigureRxSource(pChip, {lpGBTconstants::fictitiousGroup}, lpGBTconstants::PATTERN_PRBS);
-}
-
-void lpGBTInterface::StopPRBSpattern(Chip* pChip)
-{
-    lpGBTInterface::ConfigureRxPRBS(pChip, {lpGBTconstants::fictitiousGroup}, {lpGBTconstants::fictitiousChannel}, false);
-    lpGBTInterface::ConfigureRxSource(pChip, {lpGBTconstants::fictitiousGroup}, lpGBTconstants::PATTERN_NORMAL);
 }
 
 // ####################################

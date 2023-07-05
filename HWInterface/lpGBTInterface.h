@@ -72,114 +72,45 @@ class lpGBTInterface : public ChipInterface
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
-    void    ConfigureRxChannels(Ph2_HwDescription::Chip*    pChip,
-                                const std::vector<uint8_t>& pGroups,
-                                const std::vector<uint8_t>& pChannels,
-                                uint8_t                     pEqual,
-                                uint8_t                     pTerm,
-                                uint8_t                     pAcBias,
-                                uint8_t                     pInvert,
-                                uint8_t                     pPhase);
-    void    ConfigureDPPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
-    void    ConfigureRxPRBS(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, bool pEnable);
-    void    ConfigureRxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
-    void    ConfigureTxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
-    void    ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate);
-    void    ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
-    void    ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
-                                const std::vector<uint8_t>& pGroups,
-                                const std::vector<uint8_t>& pChannels,
-                                uint8_t                     pDriveStr,
-                                uint8_t                     pPreEmphMode,
-                                uint8_t                     pPreEmphStr,
-                                uint8_t                     pPreEmphWidth,
-                                uint8_t                     pInvert);
-    void    SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
-    uint8_t GetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel); // To-Do: change to a map
-    void    SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone);
-    void    ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
-    void    ConfigureRxAlignmentMode(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode);
-    void    ConfigureClocks(Ph2_HwDescription::Chip*    pChip,
-                            const std::vector<uint8_t>& pClock,
-                            uint8_t                     pFreq,
-                            uint8_t                     pDriveStr,
-                            uint8_t                     pInvert,
-                            uint8_t                     pPreEmphWidth,
-                            uint8_t                     pPreEmphMode,
-                            uint8_t                     pPreEmphStr);
-    void    ConfigureHighSpeedPolarity(Ph2_HwDescription::Chip* pChip, uint8_t pOutPolarity, uint8_t pInPolarity);
-    void    ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay);
-
-    // ########################
-    // # LpGBT GPIO functions #
-    // ########################
-    void ConfigureGPIODirection(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir);
-    void ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pOut);
-    bool ReadGPIO(Ph2_HwDescription::Chip* pChip, uint8_t pGPIO);
-    void ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr);
-    void ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pPullEn, uint8_t pPullUpDown);
-
-    // ###########################
-    // # LpGBT ADC-DAC functions #
-    // ###########################
-    uint16_t GetADCOffset(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
-    float    GetADCGain(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
-    float    GetADCVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose = true);
-    float    GetADCVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, bool pVerbose = true);
-    float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose = true);
-    float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose = true);
-    void     ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion);
-    void     ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
-    bool     IsReadADCDone(Ph2_HwDescription::Chip* pChip);
-    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
-    void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
-
-    // ##############################
-    // # LpGBT retreive temperature #
-    // ##############################
-    float GetInternalTemperature(Ph2_HwDescription::Chip* pChip);
-    float ReadResistance(Ph2_HwDescription::Chip* pChip, const std::string& pADC, const std::vector<uint8_t>& pCurrents, uint8_t pGain = 0);
-
-    // ####################################
-    // # LpGBT eye opening monitor tester #
-    // ####################################
-    void     ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator = false, bool pEnableEOM = true);
-    void     SelectEOMVof(Ph2_HwDescription::Chip* pChip, uint8_t pVof);
-    void     SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase);
-    void     StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM = true);
-    uint8_t  GetEOMStatus(Ph2_HwDescription::Chip* pChip);
-    uint16_t GetEOMCounter(Ph2_HwDescription::Chip* pChip);
-
-    // ##############
-    // # LpGBT BERT #
-    // ##############
-    void     ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
-    void     ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
-    double   GetBERTResult(Ph2_HwDescription::Chip* pChip);
-    double   RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
-    void     StartBERT(Ph2_HwDescription::Chip* pChip, bool pStartBERT = true);
-    uint8_t  GetBERTStatus(Ph2_HwDescription::Chip* pChip);
-    bool     IsBERTDone(Ph2_HwDescription::Chip* pChip);
-    bool     IsBERTEmptyData(Ph2_HwDescription::Chip* pChip);
-    uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
-
-    // ##############################################
-    // # LpGBT I2C Masters functions (Slow Control) #
-    // ##############################################
-    void        ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
-    void        ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
-    uint8_t     GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-    bool        WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
-    uint32_t    ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
-    uint8_t     GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-    std::string GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
-    bool        IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-
-    // ################################
-    // # LpGBT retreive configuration #
-    // ################################
+    void     SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone);
+    void     ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
+    void     ConfigureRxAlignmentMode(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode);
     uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t  GetChipRate(Ph2_HwDescription::Chip* pChip);
+    void     ConfigureRxChannels(Ph2_HwDescription::Chip*    pChip,
+                                 const std::vector<uint8_t>& pGroups,
+                                 const std::vector<uint8_t>& pChannels,
+                                 uint8_t                     pEqual,
+                                 uint8_t                     pTerm,
+                                 uint8_t                     pAcBias,
+                                 uint8_t                     pInvert,
+                                 uint8_t                     pPhase);
+    void     ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate);
+    void     ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
+                                 const std::vector<uint8_t>& pGroups,
+                                 const std::vector<uint8_t>& pChannels,
+                                 uint8_t                     pDriveStr,
+                                 uint8_t                     pPreEmphMode,
+                                 uint8_t                     pPreEmphStr,
+                                 uint8_t                     pPreEmphWidth,
+                                 uint8_t                     pInvert);
+    void     ConfigureClocks(Ph2_HwDescription::Chip*    pChip,
+                             const std::vector<uint8_t>& pClock,
+                             uint8_t                     pFreq,
+                             uint8_t                     pDriveStr,
+                             uint8_t                     pInvert,
+                             uint8_t                     pPreEmphWidth,
+                             uint8_t                     pPreEmphMode,
+                             uint8_t                     pPreEmphStr);
+    void     ConfigureHighSpeedPolarity(Ph2_HwDescription::Chip* pChip, uint8_t pOutPolarity, uint8_t pInPolarity);
+    void     ConfigureDPPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
+    void     ConfigureRxPRBS(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, bool pEnable);
+    void     ConfigureRxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
+    void     ConfigureTxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
+    void     ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
+    void     ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay);
+    void     SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
+    uint8_t  GetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel); // To-Do: change to a map
 
     // ####################################
     // # LpGBT specific routine functions #
@@ -197,6 +128,67 @@ class lpGBTInterface : public ChipInterface
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
     bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
     uint8_t GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
+
+    // ########################
+    // # LpGBT GPIO functions #
+    // ########################
+    void ConfigureGPIODirection(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDir);
+    void ConfigureGPIOLevel(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pOut);
+    void ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr);
+    void ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pPullEn, uint8_t pPullUpDown);
+    bool ReadGPIO(Ph2_HwDescription::Chip* pChip, uint8_t pGPIO);
+
+    // ###########################
+    // # LpGBT ADC-DAC functions #
+    // ###########################
+    void     ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion);
+    void     ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
+    void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
+    float    GetInternalTemperature(Ph2_HwDescription::Chip* pChip);
+    float    ReadResistance(Ph2_HwDescription::Chip* pChip, const std::string& pADC, const std::vector<uint8_t>& pCurrents, uint8_t pGain = 0);
+    uint16_t GetADCOffset(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
+    float    GetADCVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose = true);
+    float    GetADCVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, bool pVerbose = true);
+    float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose = true);
+    float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose = true);
+    float    GetADCGain(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
+    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
+    bool     IsReadADCDone(Ph2_HwDescription::Chip* pChip);
+
+    // #############################
+    // # LpGBT Bit Error Rate test #
+    // #############################
+    void     ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
+    void     StartBERT(Ph2_HwDescription::Chip* pChip, bool pStartBERT = true);
+    void     ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
+    uint8_t  GetBERTStatus(Ph2_HwDescription::Chip* pChip);
+    bool     IsBERTDone(Ph2_HwDescription::Chip* pChip);
+    bool     IsBERTEmptyData(Ph2_HwDescription::Chip* pChip);
+    uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
+    double   GetBERTResult(Ph2_HwDescription::Chip* pChip);
+    double   RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
+
+    // ####################################
+    // # LpGBT eye opening monitor tester #
+    // ####################################
+    void     ConfigureEOM(Ph2_HwDescription::Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator = false, bool pEnableEOM = true);
+    void     StartEOM(Ph2_HwDescription::Chip* pChip, bool pStartEOM = true);
+    void     SelectEOMPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase);
+    void     SelectEOMVof(Ph2_HwDescription::Chip* pChip, uint8_t pVof);
+    uint8_t  GetEOMStatus(Ph2_HwDescription::Chip* pChip);
+    uint16_t GetEOMCounter(Ph2_HwDescription::Chip* pChip);
+
+    // ##############################################
+    // # LpGBT I2C Masters functions (Slow Control) #
+    // ##############################################
+    void        ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
+    void        ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
+    uint8_t     GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    bool        WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
+    uint32_t    ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
+    uint8_t     GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    std::string GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
+    bool        IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
 
     // #############
     // # LpGBT map #
