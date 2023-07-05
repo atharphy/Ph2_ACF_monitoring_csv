@@ -261,7 +261,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #################################
     auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
     fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.master);
-    // if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
+    if(static_cast<Ph2_HwDescription::RD53*>(pChip)->laneConfig.isPrimary == false)
     {
         RD53Interface::WriteChipReg(pChip, "EnServiceData", 1, false);
 

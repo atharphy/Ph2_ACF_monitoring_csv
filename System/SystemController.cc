@@ -137,12 +137,12 @@ void SystemController::Destroy()
     LOG(INFO) << GREEN << "Trying to shutdown Calibration DQM Server..." << RESET;
     delete fDQMStreamer;
     fDQMStreamer = nullptr;
-    LOG(INFO) << GREEN << "Operation completed" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
     LOG(INFO) << GREEN << "Trying to shutdown Monitor DQM Server..." << RESET;
     delete fMonitorDQMStreamer;
     fMonitorDQMStreamer = nullptr;
-    LOG(INFO) << GREEN << "Operation completed" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
@@ -239,7 +239,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
     }
 
-    LOG(INFO) << GREEN << "Operation completed" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
