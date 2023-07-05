@@ -28,9 +28,7 @@ const uint8_t  PATTERN_PRBS      = 0x1;    // Start PRBS pattern
 const uint8_t  PATTERN_NORMAL    = 0x0;    // Start normal-mode pattern
 const uint8_t  PATTERN_CONST     = 0x4;    // Constant pattern set by DP pattern
 const uint8_t  PATTERN_CONST_INV = 0x5;    // Inverted constant pattern
-const uint8_t  fictitiousGroup   = 6;      // Fictitious group used when no need to speficy frontend chip
-const uint8_t  fictitiousChannel = 0;      // Fictitious channel used when no need to speficy frontend chip
-const uint8_t  rxPhaseTracking   = 2;      // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
+const uint8_t  RxPhaseTracking   = 2;      // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
 const uint32_t DEEPSLEEP         = 100000; // [microseconds]
 const uint8_t  MAXATTEMPTS       = 40;     // Maximum number of attempts
 const float    ACCELERATOR_CLK   = 40e6;   // Accelerator clock frequency [Hz]

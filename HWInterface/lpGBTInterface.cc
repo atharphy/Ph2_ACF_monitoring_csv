@@ -17,14 +17,14 @@ namespace Ph2_HwInterface
 {
 void lpGBTInterface::StartPRBSpattern(Chip* pChip)
 {
-    lpGBTInterface::ConfigureRxPRBS(pChip, {lpGBTconstants::fictitiousGroup}, {lpGBTconstants::fictitiousChannel}, true);
-    lpGBTInterface::ConfigureRxSource(pChip, {lpGBTconstants::fictitiousGroup}, lpGBTconstants::PATTERN_PRBS);
+    lpGBTInterface::ConfigureRxPRBS(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), true);
+    lpGBTInterface::ConfigureRxSource(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), lpGBTconstants::PATTERN_PRBS);
 }
 
 void lpGBTInterface::StopPRBSpattern(Chip* pChip)
 {
-    lpGBTInterface::ConfigureRxPRBS(pChip, {lpGBTconstants::fictitiousGroup}, {lpGBTconstants::fictitiousChannel}, false);
-    lpGBTInterface::ConfigureRxSource(pChip, {lpGBTconstants::fictitiousGroup}, lpGBTconstants::PATTERN_NORMAL);
+    lpGBTInterface::ConfigureRxPRBS(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), false);
+    lpGBTInterface::ConfigureRxSource(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), lpGBTconstants::PATTERN_NORMAL);
 }
 
 // ################################
