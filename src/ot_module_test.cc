@@ -208,19 +208,19 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
-    bool        batchMode        = (cmd.foundOption("batch")) ? true : false;
-    bool        cCheckData       = (cmd.foundOption("checkData"));
-    bool        cSaveToFile      = cmd.foundOption("save");
-    std::string cSkip            = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
-    std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
-    std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
-    std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    int         cKiraPort        = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
-    std::string cKiraID          = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
-    bool        cKiraCalibration = cmd.foundOption("kiracalibration");
-    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+    std::string cHWFile                 = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
+    bool        batchMode               = (cmd.foundOption("batch")) ? true : false;
+    bool        cCheckData              = (cmd.foundOption("checkData"));
+    bool        cSaveToFile             = cmd.foundOption("save");
+    std::string cSkip                   = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
+    std::string cInjectionSource        = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
+    std::string cSrcLnkTst              = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
+    std::string cModuleId               = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
+    int         cKiraPort               = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
+    std::string cKiraID                 = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
+    bool        cKiraCalibration        = cmd.foundOption("kiracalibration");
+    std::string cDirectory              = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    bool        cPulseShape             = (cmd.foundOption("pulseShape")) ? true : false;
     bool        cLoopTemperatureReadout = (cmd.foundOption("loopTemperatureReadout")) ? true : false;
 
     uint16_t cRunNumber = 666;

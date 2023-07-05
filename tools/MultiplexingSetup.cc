@@ -33,7 +33,6 @@ void MultiplexingSetup::Initialise()
             LOG(INFO) << BOLDBLUE << "To send a global reset to the FC7 use mux_scan... " << RESET;
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
-        
 
         // Interlock switch feature control.
         // The Interlock feature is set when the tool is initialized
@@ -49,7 +48,6 @@ void MultiplexingSetup::Initialise()
             fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.interlock_switch_feature", 0x0);
             fBeBoardInterface->WriteBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.interlock_switch_output", 0x1);
         }
-
     }
 }
 
