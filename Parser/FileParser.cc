@@ -252,16 +252,16 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             theOpticalGroup->setOptical(cIsOptical);
             pBoard->setOptical(cIsOptical);
 
-            //Load settings to tune Vref with external voltage
+            // Load settings to tune Vref with external voltage
             for(pugi::xml_node lpGBTChild: theChild.children())
             {
                 if(static_cast<std::string>(lpGBTChild.name()) == "TuneVrefSettings")
                 {
-                    std::string cADC = lpGBTChild.attribute("ADC").as_string();
-                    float cReferenceVoltage = std::stof(lpGBTChild.attribute("ReferenceVoltage").as_string());
+                    std::string cADC              = lpGBTChild.attribute("ADC").as_string();
+                    float       cReferenceVoltage = std::stof(lpGBTChild.attribute("ReferenceVoltage").as_string());
                     os << BOLDCYAN << "|\t|\t|---- LpGBT TuneVrefSettings:" << RESET << std::endl;
-                    os << GREEN << "|\t|\t|\t|---- ADC: " << RED << cADC << RESET<< std::endl;
-                    os << GREEN << "|\t|\t|\t|---- ReferenceVoltage: " << RED << +cReferenceVoltage << RESET<< std::endl;
+                    os << GREEN << "|\t|\t|\t|---- ADC: " << RED << cADC << RESET << std::endl;
+                    os << GREEN << "|\t|\t|\t|---- ReferenceVoltage: " << RED << +cReferenceVoltage << RESET << std::endl;
                     thelpGBT->setTuneVrefADC(cADC);
                     thelpGBT->setTuneVrefVoltage(cReferenceVoltage);
                 }
@@ -313,9 +313,9 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         }
         else if(static_cast<std::string>(theChild.name()) == "NTCProperties")
         {
-            std::string   cNTCType           = std::string( theChild.attribute("type").value() );
-            std::string   cNTCADC           = std::string( theChild.attribute("ADC").value() );
-            std::string   cNTCLookUpTable    = std::string( theChild.attribute("lookUpTable").value() );
+            std::string cNTCType        = std::string(theChild.attribute("type").value());
+            std::string cNTCADC         = std::string(theChild.attribute("ADC").value());
+            std::string cNTCLookUpTable = std::string(theChild.attribute("lookUpTable").value());
             theOpticalGroup->addNTC(cNTCType, cNTCADC, cNTCLookUpTable);
         }
     }

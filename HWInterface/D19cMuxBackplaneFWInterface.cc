@@ -128,7 +128,7 @@ void D19cMuxBackplaneFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, i
 {
     bool InitialStatusPowerGood = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.flag_power_good_dropped") == 1);
     LOG(INFO) << BOLDCYAN << "Power good monitoring flag : " << InitialStatusPowerGood << RESET;
-    
+
     // Disconnect any selected cards
     this->DisconnectMultiplexingSetup();
 
@@ -142,7 +142,7 @@ void D19cMuxBackplaneFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, i
     WriteReg("fc7_daq_cnfg.physical_interface_block.multiplexing_bp.card_num", 0xF & ~(1 << (3 - CardNum)));
     std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
     bool BackplaneValid = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_valid") == 1);
-    bool CardValid = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_valid") == 1);
+    bool CardValid      = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_valid") == 1);
     LOG(INFO) << BOLDMAGENTA << "backplane_valid ->" << BackplaneValid << RESET;
     LOG(INFO) << BOLDMAGENTA << "card_valid ->" << CardValid << RESET;
     bool ConfigurationRequired = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.configuration_required") == 1);
@@ -193,7 +193,7 @@ void D19cMuxBackplaneFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, i
             NTrials++;
         }
 
-        bool PowerGoodFlagTripped = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.flag_power_good_dropped") == 1);
+        bool PowerGoodFlagTripped     = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.flag_power_good_dropped") == 1);
         auto PowerGoodGlitchesCounter = ReadReg("fc7_daq_stat.physical_interface_block.counter_powergood_glitches");
         LOG(INFO) << BOLDCYAN << "Powergood dropped flag: " << PowerGoodFlagTripped << RESET;
         LOG(INFO) << BOLDCYAN << "Powergood dropped counter: " << PowerGoodGlitchesCounter << RESET;
@@ -204,16 +204,14 @@ void D19cMuxBackplaneFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, i
             LOG(INFO) << BOLDGREEN << "Setup with backplane " << BackplaneNum << " and card " << CardNum << " is configured" << RESET;
         }
         else
-        { // The card was not configured. Check all possibles issues
-            if (PowerGoodFlagTripped) // Did the power good flag drop?
+        {                            // The card was not configured. Check all possibles issues
+            if(PowerGoodFlagTripped) // Did the power good flag drop?
             {
                 LOG(INFO) << GREEN << "============================" << RESET;
                 LOG(INFO) << BOLDRED << "Setup is not configured. Problems with card power good signal! Check the HW!" << RESET;
-                
-                if (InterlockEnabled)// Is the interlock feature enabled?
-                {
-                    LOG(INFO) << BOLDMAGENTA << " !! The interlock feature is ENABLED -> the interlock switch might be open !!" << RESET;
-                }
+
+                if(InterlockEnabled) // Is the interlock feature enabled?
+                { LOG(INFO) << BOLDMAGENTA << " !! The interlock feature is ENABLED -> the interlock switch might be open !!" << RESET; }
             }
             else
             {

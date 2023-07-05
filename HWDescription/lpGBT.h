@@ -68,11 +68,11 @@ class lpGBT : public Chip
     uint32_t getWriteCount(uint8_t pMasterId) { return fI2CWrites[pMasterId]; }
     uint32_t getReadCount(uint8_t pMasterId) { return fI2CReads[pMasterId]; }
 
-    void setTuneVrefADC(std::string pTuneVrefADC){fTuneVrefADC = pTuneVrefADC;}
-    void setTuneVrefVoltage(float pTuneVrefVoltage){fTuneVrefVoltage = pTuneVrefVoltage;}
-    std::string getTuneVrefADC(){return fTuneVrefADC;}
-    float getTuneVrefVoltage(){return fTuneVrefVoltage;}
-    std::pair<float,float> getTemperatureCoefficients(){return fTemperatureCoefficients;}
+    void                    setTuneVrefADC(std::string pTuneVrefADC) { fTuneVrefADC = pTuneVrefADC; }
+    void                    setTuneVrefVoltage(float pTuneVrefVoltage) { fTuneVrefVoltage = pTuneVrefVoltage; }
+    std::string             getTuneVrefADC() { return fTuneVrefADC; }
+    float                   getTuneVrefVoltage() { return fTuneVrefVoltage; }
+    std::pair<float, float> getTemperatureCoefficients() { return fTemperatureCoefficients; }
 
   private:
     bool                 phaseRxAligned; // @TMP@
@@ -85,11 +85,10 @@ class lpGBT : public Chip
     // Number of read transactions - one element per master
     std::vector<uint32_t> fI2CReads{0, 0, 0};
 
-    //ADC Channel and Voltage to manually tune Vref to 1V
-    std::string fTuneVrefADC{"ADC2"}; //ADC2 = LV monitor line of 2S module, ADC7 for PS modules (2.55V line monitor)
-    float fTuneVrefVoltage{0.5};
-    std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021,0.475)}; //in V per °C and Volt coming from the lpGBTv0 manual
-
+    // ADC Channel and Voltage to manually tune Vref to 1V
+    std::string             fTuneVrefADC{"ADC2"}; // ADC2 = LV monitor line of 2S module, ADC7 for PS modules (2.55V line monitor)
+    float                   fTuneVrefVoltage{0.5};
+    std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021, 0.475)}; // in V per °C and Volt coming from the lpGBTv0 manual
 };
 } // namespace Ph2_HwDescription
 
