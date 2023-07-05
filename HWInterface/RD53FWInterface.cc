@@ -432,7 +432,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     // ########################################
     uint32_t chips_en = RD53FWInterface::GetBoardEnabledChips(pBoard, true);
     if(chips_en == 0) throw Exception("[RD53FWInterface::CheckChipCommunication] No data lane is enabled: aborting");
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << " i.e. "
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << ", i.e. "
               << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
 
     uint32_t              channel_up;
@@ -442,7 +442,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     {
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
-        LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "active" << BOLDBLUE << " data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << " i.e. "
+        LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "active" << BOLDBLUE << " data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << ", i.e. "
                   << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
 
         if(chips_en & ~channel_up)
@@ -988,11 +988,9 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     rxStatus  = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.rx_ready");
     mgtStatus = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.mgt_ready");
 
-    std::cout << std::fixed << std::setprecision(0);
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << txStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << rxStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
-    RD53Shared::resetDefaultFloat();
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << std::setw(2) << txStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << std::setw(2) << rxStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << std::setw(2) << mgtStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
 }
 
 bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify)
