@@ -503,11 +503,17 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
     static_cast<RD53FWInterface*>(theBeBoardFW)->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
-    // ######################################################
-    // # Configure down and up links to/from frontend chips #
-    // ######################################################
+    // ##########################################
+    // # Configure down-links to frontend chips #
+    // ##########################################
     LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
+    LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
     static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(pBoard);
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+    // ##########################################
+    // # Configure up-links from frontend chips #
+    // ##########################################
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
@@ -515,9 +521,12 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             for(const auto cChip: *cHybrid)
             {
                 LOG(INFO) << GREEN << "Initializing communication to/from RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
                 static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
+                LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
             }
         }
+
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
     // ####################################
@@ -549,6 +558,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
             LOG(INFO) << GREEN << "Configuring chips of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+
             for(const auto cChip: *cHybrid)
             {
                 LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
@@ -563,6 +573,10 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 LOG(INFO) << GREEN << "Fused ID: " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET;
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
+
+            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(cHybrid);
+            LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
         }
 
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;

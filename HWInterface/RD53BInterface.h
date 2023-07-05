@@ -27,10 +27,12 @@ class RD53BInterface : public RD53Interface
     void     ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip) override;
     void     InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard) override;
     void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void     TAP0slaveOptimization(const Ph2_HwDescription::Hybrid* pHybrid) override;
     void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
+
 
   private:
     void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault) override;
