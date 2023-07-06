@@ -1118,7 +1118,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
     }
 }
 
-// So far implemented for MPA/SSA/CBC
 void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
 {
     os << BOLDCYAN << "|"
@@ -1562,13 +1561,17 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
             std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
 
-            // Retrieve links, groups and channels from CIC node attirbutes and propagate to LpGBT class
+            // #############################################################################################
+            // # Retrieve links, groups and channels from CIC node attirbutes and propagate to LpGBT class #
+            // #############################################################################################
             plpGBT->addRxGroups(cRxGroups);
             plpGBT->addRxChannels(cRxChannels);
             plpGBT->addTxGroups(cTxGroups);
             plpGBT->addTxChannels(cTxChannels);
 
-            // In the case of IT propagate LpGBT mapping the front-end chip
+            // ################################################################
+            // # In the case of IT propagate LpGBT mapping the front-end chip #
+            // ################################################################
             uint8_t cChipId = cChild.attribute("Id").as_uint();
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxGroup(cRxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannels[0]);
@@ -1637,13 +1640,14 @@ void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHy
         {
             std::string regname  = attr.name();
             uint16_t    regvalue = convertAnyInt(attr.value());
-            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 
             for(auto theChip: *pHybrid)
             {
-                static_cast<ReadoutChip*>(theChip)->getRegItem(regname).fDefValue = regvalue;
-                static_cast<ReadoutChip*>(theChip)->getRegItem(regname).fPrmptCfg = true;
+                theChip->getRegItem(regname).fDefValue = regvalue;
+                theChip->getRegItem(regname).fPrmptCfg = true;
             }
+
+            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
         }
     }
 }
@@ -1691,12 +1695,13 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 
         for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
         {
-            std::string regname                    = attr.name();
-            uint16_t    regvalue                   = convertAnyInt(attr.value());
-            theChip->getRegItem(regname).fDefValue = regvalue;
+            std::string regname = attr.name();
+
+            if(static_cast<std::string>(attr.value()).empty() == false) theChip->getRegItem(regname).fDefValue = convertAnyInt(attr.value());
             theChip->getRegItem(regname).fPrmptCfg = true;
 
-            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
+            os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << theChip->getRegItem(regname).fDefValue << std::dec << " ("
+               << theChip->getRegItem(regname).fDefValue << ")" << RESET << std::endl;
         }
     }
 }
