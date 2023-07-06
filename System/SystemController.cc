@@ -575,7 +575,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
             }
 
             LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
-            static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(cHybrid);
+            static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
             LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
         }
 
