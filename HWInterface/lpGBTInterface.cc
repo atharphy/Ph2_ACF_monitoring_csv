@@ -147,10 +147,9 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
     while(cReadBack != 4)
     {
         cReadBack = ReadChipReg(pChip, "FUSEStatus");
-        std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEStatus = " << +cReadBack << RESET;
     }
-
     WriteChipReg(pChip, "FUSEBlowAddH", cFuseH);
     WriteChipReg(pChip, "FUSEBlowAddL", cFuseL);
 
@@ -158,19 +157,19 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEBlowAddL = " << +cFuseL << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesA");
-    cResult   = cResult | (cReadBack << 24);
+    cResult   = cResult | (cReadBack);
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesA = " << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesB");
-    cResult   = cResult | (cReadBack << 16);
+    cResult   = cResult | (cReadBack << 8);
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesB = " << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesC");
-    cResult   = cResult | (cReadBack << 8);
+    cResult   = cResult | (cReadBack << 16);
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesC = " << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesD");
-    cResult   = cResult | (cReadBack);
+    cResult   = cResult | (cReadBack << 24);
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesD = " << +cReadBack << RESET;
 
     WriteChipReg(pChip, "FUSEControl", 0);
