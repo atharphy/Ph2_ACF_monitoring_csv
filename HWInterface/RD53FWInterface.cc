@@ -105,6 +105,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################
+
     RD53FWInterface::DIO5Config                   cfgDIO5;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     LOG(INFO) << GREEN << "Initializing DIO5:" << RESET;
@@ -147,29 +148,41 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
-    // ###################################
-    // # Check if DataMerging is enabled #
-    // ###################################
-    size_t primaryLane       = 0;
+    size_t primaries[4]      = {0};
+    size_t slaveEn           = 0;
     bool   enableDataMerging = false;
+    bool   enableChipID      = false;
     for(const auto cOpticalGroup: *pBoard)
         for(const auto cHybrid: *cOpticalGroup)
             for(const auto cChip: *cHybrid)
             {
+                // ###################################
+                // # Check if DataMerging is enabled #
+                // ###################################
+                auto lane = static_cast<RD53*>(cChip)->getChipLane();
                 if(static_cast<RD53*>(cChip)->laneConfig.isPrimary == false)
+                {
                     enableDataMerging = true;
-                else
-                    primaryLane = static_cast<RD53*>(cChip)->getChipLane();
+                    slaveEn |= 1 << lane;
+                    primaries[lane] = static_cast<RD53*>(cChip)->laneConfig.master;
+                }
+
+                // ##############################
+                // # Check if ChipID is enabled #
+                // ##############################
+                if(static_cast<RD53*>(cChip)->getDataFormatOptions().enableChipId == true) enableChipID = true;
             }
 
-    RegManager::WriteReg("user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging);
+    RegManager::WriteStackReg({{"user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging}, {"user.ctrl_regs.i2c_block.chip_id_en", enableChipID}});
 
-    if(enableDataMerging == true)
+    for(const auto cChip: *pBoard->getFirstObject()->getFirstObject())
     {
-        for(const auto cChip: *pBoard->getFirstObject()->getFirstObject())
-            WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(static_cast<RD53*>(cChip)->getChipLane()) + "_id", cChip->getId() & 3);
-        RegManager::WriteReg("user.ctrl_regs.Aurora_block.active_lane", primaryLane);
+        auto lane = static_cast<RD53*>(cChip)->getChipLane();
+        WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
+        WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
     }
+
+    RegManager::WriteReg("user.ctrl_regs.Aurora_block.slave_en", slaveEn);
 
     // ################################
     // # Enabling hybrids and chips   #
@@ -281,8 +294,6 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
-        RD53FWInterface::ResetSlowCmdFIFO();                                              // @TMP@ : temporary fix untill FIFO error FW fix
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP)); // @TMP@ : temporary fix untill FIFO error FW fix
     }
     if(nAttempts == RD53Shared::MAXATTEMPTS)
         LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
@@ -349,7 +360,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
         if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
     }
 
-    // if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIFO error FW fix
+    if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
 
     return regReadback;
 }
@@ -421,7 +432,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     // ########################################
     uint32_t chips_en = RD53FWInterface::GetBoardEnabledChips(pBoard, true);
     if(chips_en == 0) throw Exception("[RD53FWInterface::CheckChipCommunication] No data lane is enabled: aborting");
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << " i.e. "
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << ", i.e. "
               << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
 
     uint32_t              channel_up;
@@ -429,8 +440,9 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
     while(nAttempts < RD53Shared::MAXATTEMPTS)
     {
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
-        LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "active" << BOLDBLUE << " data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << " i.e. "
+        LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "active" << BOLDBLUE << " data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << ", i.e. "
                   << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
 
         if(chips_en & ~channel_up)
@@ -444,7 +456,6 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
                 for(const auto cOpticalGroup: *pBoard)
                     for(const auto cHybrid: *cOpticalGroup) RD53FWInterface::WriteChipCommand(initSequence, cHybrid->getId());
 
-            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             nAttempts++;
         }
         else
@@ -719,7 +730,7 @@ void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)
     RegManager::WriteStackReg({{cmdReg, 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}, {cmdReg, 0}});
 }
 
-void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
+void RD53FWInterface::SendFastCommands(const FastCommandsConfig* cfg)
 {
     const int GLOBAL_PULSE_WIDTH = 0x6; // @CONST@
 
@@ -770,18 +781,12 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
 
-void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard*            pBoard,
-                                                  const uint32_t            nTRIGxEvent,
-                                                  const RD53Shared::INJtype injType,
-                                                  const uint32_t            injLatency,
-                                                  const uint32_t            nClkDelays,
-                                                  const bool                enableAutozero)
-// ############################
-// # injType == 0 --> None    #
-// # injType == 1 --> Analog  #
-// # injType == 2 --> Digital #
-// # injType == 3 --> Custom  #
-// ############################
+void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
+                                            const uint32_t            nTRIGxEvent,
+                                            const RD53Shared::INJtype injType,
+                                            const uint32_t            injLatency,
+                                            const uint32_t            nClkDelays,
+                                            const bool                enableAutozero)
 // ##################################################################################
 // # Finite state machine                                                           #
 // ##################################################################################
@@ -797,7 +802,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard*            pBoa
     {
         AfterInjectCal = 32,
         BeforePrimeCal = 1,
-        Loop           = 460
+        Loop           = 460,
+        SelfTrigger    = 1500
     };
 
     // #############################
@@ -825,11 +831,11 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard*            pBoa
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
-    else if(injType != RD53Shared::INJtype::None)
+    else if((injType == RD53Shared::INJtype::Analog) || (injType == RD53Shared::INJtype::Custom) || (injType == RD53Shared::INJtype::XtalkCoupled) || (injType == RD53Shared::INJtype::XtalkDeCoupled))
     {
-        // ######################################
-        // # Configuration for analog injection #
-        // ######################################
+        // ###################################################################################
+        // # Configuration for analog, custom, XtalkDeCoupled, abd XtalkDeCoupled injections #
+        // ###################################################################################
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = RD53Shared::firstChip->getCalCmd(1, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(0, 0, 2, 0, 0);
 
@@ -844,8 +850,30 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard*            pBoa
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = true;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
     }
+    else if(injType == RD53Shared::INJtype::SelfTrigger)
+    {
+        // ###################################
+        // # Configuration for self triggers #
+        // ###################################
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(1, 0, 16, 0, 0);
+
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays) % (RD53Shared::setBits(NbitsInitPrime) + 1);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = (injLatency == 0 ? (uint32_t)INJdelay::AfterInjectCal : injLatency);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::SelfTrigger;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime       = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en  = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en = true;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en    = false;
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en        = false;
+    }
     else if(injType == RD53Shared::INJtype::None)
     {
+        // ##################################
+        // # Configuration for no injection #
+        // ##################################
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = 0;
 
@@ -891,10 +919,9 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard*            pBoa
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
 
-    // ##############################
-    // # Download the configuration #
-    // ##############################
-    RD53FWInterface::ConfigureFastCommands();
+    // ###################
+    // # Print FW status #
+    // ###################
     RD53FWInterface::PrintFWstatus();
 }
 
@@ -961,9 +988,9 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     rxStatus  = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.rx_ready");
     mgtStatus = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.mgt_ready");
 
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << txStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << rxStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << std::setw(2) << txStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << std::setw(2) << rxStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << std::setw(2) << mgtStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
 }
 
 bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify)

@@ -50,6 +50,7 @@ enum class INJtype : uint8_t
     None,
     Analog,
     Digital,
+    SelfTrigger,
     Custom,
     XtalkCoupled,
     XtalkDeCoupled

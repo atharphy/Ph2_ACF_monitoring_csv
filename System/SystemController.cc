@@ -137,12 +137,12 @@ void SystemController::Destroy()
     LOG(INFO) << GREEN << "Trying to shutdown Calibration DQM Server..." << RESET;
     delete fDQMStreamer;
     fDQMStreamer = nullptr;
-    LOG(INFO) << GREEN << "Operation completed" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
     LOG(INFO) << GREEN << "Trying to shutdown Monitor DQM Server..." << RESET;
     delete fMonitorDQMStreamer;
     fMonitorDQMStreamer = nullptr;
-    LOG(INFO) << GREEN << "Operation completed" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
@@ -239,7 +239,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
     }
 
-    LOG(INFO) << GREEN << "Operation completed" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
@@ -448,25 +448,28 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
 // ######################################
 void SystemController::ConfigureIT(BeBoard* pBoard)
 {
-    // ###################
-    // # Configuring FSM #
-    // ###################
+    auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
+
+    // #################
+    // # Configure FSM #
+    // #################
     const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 1);
-    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"), 1);
+    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype", 1));
     const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
     const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
     const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
+    static_cast<RD53FWInterface*>(theBeBoardFW)->ConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
+
+    // ###############
+    // # Program FSM #
+    // ###############
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
-
-    auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
-
-    static_cast<RD53FWInterface*>(theBeBoardFW)
-        ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
+    static_cast<RD53FWInterface*>(theBeBoardFW)->SendFastCommands();
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
-    // ########################
-    // # Configuring from XML #
-    // ########################
+    // ######################
+    // # Configure from XML #
+    // ######################
     static_cast<RD53FWInterface*>(theBeBoardFW)->ConfigureFromXML(pBoard);
 
     // ########################
@@ -500,21 +503,30 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
     static_cast<RD53FWInterface*>(theBeBoardFW)->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
-    // ######################################################
-    // # Configure down and up links to/from frontend chips #
-    // ######################################################
+    // ##########################################
+    // # Configure down-links to frontend chips #
+    // ##########################################
     LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
+    LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
     static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(pBoard);
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+    // ##########################################
+    // # Configure up-links from frontend chips #
+    // ##########################################
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
             LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Initializing communication to/from RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
                 static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
+                LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
             }
         }
+
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
     // ####################################
@@ -545,18 +557,26 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
-            LOG(INFO) << GREEN << "Configuring chip of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Configuring chips of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+
             for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET << GREEN " (fused ID " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET
-                          << GREEN << ")" << RESET;
+                LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
+
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                 if(resetTDAC >= 0)
                     static_cast<RD53*>(cChip)->resetTDAC(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->nTDACvalues / 2);
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
+
+                LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+                LOG(INFO) << GREEN << "Fused ID: " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET;
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
+
+            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
+            LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
         }
 
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
@@ -1020,6 +1040,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
 }
+
 void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
 {
     if(fDetectorContainer == nullptr)
@@ -1048,7 +1069,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             // make sure board is also set to the same thing
             bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
             cBoard->setSparsification(cSparsified);
-            if(pReInitialize)
+            if(pReInitialize == true)
                 InitializeOT(cBoard);
             else // lpGBT + CIC will need to be configured  (and also maybe reset)
             {
@@ -1125,8 +1146,27 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
-            ConfigureIT(cBoard);
-            ConfigureFrontendIT(cBoard);
+            if(pReInitialize == true)
+            {
+                // #################################
+                // # Initialize board and frontend #
+                // #################################
+                ConfigureIT(cBoard);
+                ConfigureFrontendIT(cBoard);
+            }
+            else
+            {
+                // ###################
+                // # Configuring FSM #
+                // ###################
+                const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 1);
+                const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype", 1));
+                const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
+                const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
+                const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
+                    ->ConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
+            }
 
             // ######################################
             // # Dispatch threads for data decoding #
@@ -1196,7 +1236,7 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
+void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
     fSettingsFileName      = theConfigureInfo.getSettingsFile();
@@ -1226,7 +1266,7 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     // ########################################################
     std::cout << fParsedFile.str() << std::endl;
 
-    ConfigureHw(false, true);
+    ConfigureHw(false, pReInitialize);
 }
 
 void SystemController::initializeExceptionHandler()

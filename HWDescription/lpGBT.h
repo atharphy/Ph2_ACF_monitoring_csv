@@ -80,15 +80,20 @@ class lpGBT : public Chip
     uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate, fChipAddress;
     uint8_t              fRxHSLPolarity, fTxHSLPolarity;
     std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;
-    // Number of write transactions - one element per master
+    // #########################################################
+    // # Number of write transactions - one element per master #
+    // #########################################################
     std::vector<uint32_t> fI2CWrites{0, 0, 0};
-    // Number of read transactions - one element per master
+    // ########################################################
+    // # Number of read transactions - one element per master #
+    // ########################################################
     std::vector<uint32_t> fI2CReads{0, 0, 0};
-
-    // ADC Channel and Voltage to manually tune Vref to 1V
+    // #######################################################
+    // # ADC Channel and Voltage to manually tune Vref to 1V #
+    // #######################################################
     std::string             fTuneVrefADC{"ADC2"}; // ADC2 = LV monitor line of 2S module, ADC7 for PS modules (2.55V line monitor)
     float                   fTuneVrefVoltage{0.5};
-    std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021, 0.475)}; // in V per °C and Volt coming from the lpGBTv0 manual
+    std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021, 0.475)}; // In V per Celsius and Volt coming from the lpGBTv0 manual
 };
 } // namespace Ph2_HwDescription
 

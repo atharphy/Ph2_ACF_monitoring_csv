@@ -240,9 +240,9 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             // If the fail occurs it means that the Chip has a major issue and this check avoids to be stuck in this loop for a very long time
             bool writeSucceded = WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
             if(!writeSucceded) return 15;
-            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+            std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+            std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
             // Check for lock
             std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
             uint8_t     cLockShift   = cChannel + 4;
@@ -253,14 +253,14 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             uint8_t     cIter        = 0;
             do
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+                std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
                 cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
                 cContinue = cLock == 0;
                 cIter++;
             } while(cContinue && cIter < cMaxIters);
             if(cLock) cAligned[cIndx] += 1;
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+            std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
             cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
             LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
             cPhases.push_back(cCurrPhase);

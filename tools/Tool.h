@@ -102,7 +102,7 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void Configure(const ConfigureInfo& theConfigureInfo) override;
+    void Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize = true) override;
 
     void Start(const StartInfo& theStartInfo) override;
     // void InformImDone();
