@@ -101,6 +101,36 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
 
 uint32_t lpGBTInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip) { return ReadChipID(pChip, 1); }
 
+uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
+{
+    uint32_t cChipId        = 0;
+    uint8_t  cReadBackValue = 0;
+    ResetI2C(pChip, {0, 1, 2});
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+
+    // Configuring I2C Master pull-ups
+    WriteChipReg(pChip, "I2CM1Config", 1 << 4 | 1 << 6);
+
+    uint8_t cMasterId = 1, cSlaveAddress = 0x50, cNbyte = 1, cFrequency = 2;
+
+    bool cRecent = WriteI2C(pChip, cMasterId, cSlaveAddress, 0x1, cNbyte, cFrequency);
+    if(cRecent) { cReadBackValue = ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency); }
+    if(cReadBackValue == 0x15)
+    {
+        LOG(INFO) << BOLDYELLOW << "VTRx+ with LDD version 1.3!" << RESET;
+
+        for(int i = 0; i < 4; i++)
+        {
+            WriteI2C(pChip, cMasterId, cSlaveAddress, i + 0x16, cNbyte, cFrequency);
+            cReadBackValue = ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency);
+            cChipId        = cChipId | cReadBackValue << (i * 8);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+    LOG(INFO) << BOLDYELLOW << "VTRx+ ID: 0x" << std::hex << +cChipId << std::dec << RESET;
+    return cChipId;
+}
+
 uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t version)
 {
     if(version == 1)

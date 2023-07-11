@@ -240,6 +240,10 @@ void Tool::initMetadataAndFillInitialConditions()
     DetectorDataContainer theLpGBTFuseIdContainer;
     ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theLpGBTFuseIdContainer);
     fillLpGBTFuseIdContainer(theLpGBTFuseIdContainer);
+
+    DetectorDataContainer theVTRxFuseIdContainer;
+    ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theVTRxFuseIdContainer);
+    fillVTRxFuseIdContainer(theVTRxFuseIdContainer);
     bool isInitialValue = true;
 
 #ifdef __USE_ROOT__
@@ -266,6 +270,7 @@ void Tool::initMetadataAndFillInitialConditions()
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTFuseId(theLpGBTFuseIdContainer);
+    fDQMMetadata->fillVTRxFuseId(theVTRxFuseIdContainer);
 #else
     if(fDQMStreamerEnabled)
     {
@@ -301,6 +306,9 @@ void Tool::initMetadataAndFillInitialConditions()
 
         ContainerSerialization theLpGBTFuseIdSerialization("MetadataLpGBTFuseId");
         theLpGBTFuseIdSerialization.streamByBoardContainer(fDQMStreamer, theLpGBTFuseIdContainer);
+
+        ContainerSerialization theVTRxFuseIdSerialization("MetadataVTRxFuseId");
+        theVTRxFuseIdSerialization.streamByBoardContainer(fDQMStreamer, theVTRxFuseIdContainer);
     }
 #endif
 
@@ -495,8 +503,24 @@ void Tool::fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContain
         {
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
-            uint32_t chipFuseId                                                                                                              = flpGBTInterface->ReadChipFuseID(theLpGBT);
+            uint32_t chipFuseId = flpGBTInterface->ReadChipFuseID(theLpGBT);
+
             theLpGBTFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
+        }
+    }
+}
+
+void Tool::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto theLpGBT = cOpticalGroup->flpGBT;
+            if(theLpGBT == nullptr) continue;
+            uint32_t chipFuseId = flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
+            // Temporary function in lpgbt interface until VTRx interface is implemented
+            theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
         }
     }
 }
