@@ -99,6 +99,8 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     return cValue;
 }
 
+uint32_t lpGBTInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip) { return ReadChipID(pChip, 1); }
+
 uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t version)
 {
     if(version == 1)
