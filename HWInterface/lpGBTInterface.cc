@@ -127,7 +127,7 @@ uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
-    LOG(INFO) << BOLDYELLOW << "VTRx+ ID: 0x" << std::hex << +cChipId << std::dec << RESET;
+    LOG(INFO) << BOLDYELLOW << "FuseID from VTRx+ 0x" << std::hex << +cChipId << std::dec << RESET;
     return cChipId;
 }
 
@@ -164,7 +164,7 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
             LOG(INFO) << BOLDYELLOW << "No redundant lpgbt ID, only use first register" << RESET;
             cChipID = cChipID_0;
         }
-
+        LOG(INFO) << BOLDYELLOW << "FuseID from lpgbt 0x" << std::hex << +cChipID << std::dec << RESET;
         return cChipID;
     }
 
