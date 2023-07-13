@@ -1171,7 +1171,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             // ######################################
             // # Dispatch threads for data decoding #
             // ######################################
-            LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
+            LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding at runtime" << RESET;
             RD53Event::ForkDecodingThreads();
         }
     }
