@@ -1,0 +1,774 @@
+*-------------------------------------------------------------------------------------------------------
+* CHIPID registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                           BitSize
+*-------------------------------------------------------------------------------------------------------
+CHIPID0                   0x000         0x00              0x00                          8
+CHIPID1                   0x001         0x00              0x00                          8
+CHIPID2                   0x002         0x00              0x00                          8
+CHIPID3                   0x003         0x00              0x00                          8
+USERID0                   0x004         0x00              0x00                          8
+USERID1                   0x005         0x00              0x00                          8
+USERID2                   0x006         0x00              0x00                          8
+USERID3                   0x007         0x00              0x00                          8
+
+*-------------------------------------------------------------------------------------------------------
+* Calibration Data registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+DACCal0                   0x008         0x00              0x00                          8
+DACCal1                   0x009         0x00              0x00                          8
+DACCal2                   0x00A         0x00              0x00                          8
+ADCCal0                   0x00B         0x00              0x00                          8
+ADCCal1                   0x00C         0x00              0x00                          8
+ADCCal2                   0x00D         0x00              0x00                          8
+ADCCal3                   0x00E         0x00              0x00                          8
+ADCCal4                   0x00F         0x00              0x00                          8
+ADCCal5                   0x010         0x00              0x00                          8
+ADCCal6                   0x011         0x00              0x00                          8
+ADCCal7                   0x012         0x00              0x00                          8
+ADCCal8                   0x013         0x00              0x00                          8
+ADCCal9                   0x014         0x00              0x00                          8
+ADCCal10                  0x015         0x00              0x00                          8
+ADCCal11                  0x016         0x00              0x00                          8
+ADCCal12                  0x017         0x00              0x00                          8
+ADCCal13                  0x018         0x00              0x00                          8
+ADCCal14                  0x019         0x00              0x00                          8
+TEMPCalH                  0x01A         0x00              0x00                          8
+TEMPCalL                  0x01B         0x00              0x00                          8
+VREFCNTR                  0x01C         0x00              0x00                          8
+VREFTUNE                  0x01D         0x00              0x00                          8
+CURDACCalH                0x01E         0x00              0x00                          8
+CURDACCalL                0x01F         0x00              0x00                          8
+
+*------------------------------------------------------------------------------------------------------------
+* Clock Generator registers : Read/Write/Fuse
+*------------------------------------------------------------------------------------------------------------
+* RegName                       Addr          Defval            Value                         BitSize
+*------------------------------------------------------------------------------------------------------------
+CLKGConfig0               0x020         0x00              0xE8                          8
+CLKGConfig1               0x021         0x00              0x38                          8
+CLKGPllRes                0x022         0x00              0x22                          8
+CLKGPLLIntCur             0x023         0x00              0x99                          8
+CLKGPLLPropCur            0x024         0x00              0x99                          8
+CLKGCDRPropCur            0x025         0x00              0x55                          8
+CLKGCDRIntCur             0x026         0x00              0x55                          8
+CLKGCDRFFPropCur          0x027         0x00              0x66                          8
+CLKGFLLIntCur             0x028         0x00              0x55                          8
+CLKGFFCAP                 0x029         0x00              0x1B                          8
+CLKGCntOverride           0x02A         0x00              0x00                          8
+CLKGOverrideCapBank       0x02B         0x00              0x00                          8
+CLKGWaitTime              0x02C         0x00              0x88                          8
+CLKGLFConfig0             0x02D         0x00              0x8F                          8
+CLKGLFConfig1             0x02E         0x00              0xFF                          8
+FAMaxHeaderFoundCount     0x02F         0x00              0x10                          8
+FAMaxHeaderFoundCountAfterNF  0x030     0x00              0x10                          8
+FAMaxHeaderNotFoundCount  0x031         0x00              0x10                          8
+PSDllConfig               0x033         0x00              0x00                          8
+FORCEEnable               0x035         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* CHIP Config registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+ChipConfig                0x036         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Equalizer registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+EQConfig                  0x037         0x00              0x18                          8
+EQRes                     0x038         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Line Driver registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+LDConfigH                 0x039         0x00              0x7F                          8
+LDConfigL                 0x03A         0x00              0x00                          8
+REFCLK                    0x03B         0x00              0x00                          8
+SCCONFIG                  0x03C         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Reset registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+RESETConfig               0x03D         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Power Good registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+PGConfig                  0x03E         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* I2C Masters registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+I2CMTransConfig           0x03F         0x00              0x00                          8
+I2CMTransAddress          0x040         0x00              0x00                          8
+I2CMTransCtrl             0x041         0x00              0x00                          8
+I2CMTransData0            0x042         0x00              0x00                          8
+I2CMTransData1            0x043         0x00              0x00                          8
+I2CMTransData2            0x044         0x00              0x00                          8
+I2CMTransData3            0x045         0x00              0x00                          8
+I2CMTransData4            0x046         0x00              0x00                          8
+I2CMTransData5            0x047         0x00              0x00                          8
+I2CMTransData6            0x048         0x00              0x00                          8
+I2CMTransData7            0x049         0x00              0x00                          8
+I2CMTransData8            0x04A         0x00              0x00                          8
+I2CMTransData9            0x04B         0x00              0x00                          8
+I2CMTransData10           0x04C         0x00              0x00                          8
+I2CMTransData11           0x04D         0x00              0x00                          8
+I2CMTransData12           0x04E         0x00              0x00                          8
+I2CMTransData13           0x04F         0x00              0x00                          8
+I2CMTransData14           0x050         0x00              0x00                          8
+I2CMTransData15           0x051         0x00              0x00                          8
+I2CMClkDisable            0x052         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Parallel IO registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+PIODirH                   0x053         0x00              0x12                          8
+PIODirL                   0x054         0x00              0x4B                          8
+PIOOutH                   0x055         0x00              0x12                          8
+PIOOutL                   0x056         0x00              0x4B                          8
+PIOPullEnaH               0x057         0x00              0x00                          8
+PIOPullEnaL               0x058         0x00              0x00                          8
+PIOUpDownL                0x05A         0x00              0x00                          8
+PIODriveStrengthH         0x05B         0x00              0x00                          8
+PIODriveStrengthL         0x05C         0x00              0x00                          8
+PS0Config                 0x05D         0x00              0x1C                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Phase Shifter registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+PS0Delay                  0x05E         0x00              0x00                          8
+PS0OutDriver              0x05F         0x00              0x00                          8
+PS1Config                 0x060         0x00              0x00                          8
+PS1Delay                  0x061         0x00              0x00                          8
+PS1OutDriver              0x062         0x00              0x00                          8
+PS2Config                 0x063         0x00              0x1C                          8
+PS2Delay                  0x064         0x00              0x00                          8
+PS2OutDriver              0x065         0x00              0x00                          8
+PS3Config                 0x066         0x00              0x00                          8
+PS3Delay                  0x067         0x00              0x00                          8
+PS3OutDriver              0x068         0x00              0x00                          8
+PSLowRes                  0x069         0x00              0x00                          8
+DACConfigH                0x06A         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Voltage DAC registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+DACConfigL                0x06B         0x00              0x00                          8
+CURDACValue               0x06C         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* CURDAC registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+CURDACCHN                 0x06D         0x00              0x00                          8
+EPCLK0ChnCntrH            0x06E         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* ePortClk registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+EPCLK0ChnCntrL            0x06F         0x00              0x00                          8
+EPCLK1ChnCntrH            0x070         0x00              0x3C                          8
+EPCLK1ChnCntrL            0x071         0x00              0xF8                          8
+EPCLK2ChnCntrH            0x072         0x00              0x00                          8
+EPCLK2ChnCntrL            0x073         0x00              0x00                          8
+EPCLK3ChnCntrH            0x074         0x00              0x00                          8
+EPCLK3ChnCntrL            0x075         0x00              0x00                          8
+EPCLK4ChnCntrH            0x076         0x00              0x00                          8
+EPCLK4ChnCntrL            0x077         0x00              0x00                          8
+EPCLK5ChnCntrH            0x078         0x00              0x00                          8
+EPCLK5ChnCntrL            0x079         0x00              0x00                          8
+EPCLK6ChnCntrH            0x07A         0x00              0x3C                          8
+EPCLK6ChnCntrL            0x07B         0x00              0xF8                          8
+EPCLK7ChnCntrH            0x07C         0x00              0x00                          8
+EPCLK7ChnCntrL            0x07D         0x00              0x00                          8
+EPCLK8ChnCntrH            0x07E         0x00              0x00                          8
+EPCLK8ChnCntrL            0x07F         0x00              0x00                          8
+EPCLK9ChnCntrH            0x080         0x00              0x00                          8
+EPCLK9ChnCntrL            0x081         0x00              0x00                          8
+EPCLK10ChnCntrH           0x082         0x00              0x00                          8
+EPCLK10ChnCntrL           0x083         0x00              0x00                          8
+EPCLK11ChnCntrH           0x084         0x00              0x3C                          8
+EPCLK11ChnCntrL           0x085         0x00              0xF8                          8
+EPCLK12ChnCntrH           0x086         0x00              0x00                          8
+EPCLK12ChnCntrL           0x087         0x00              0x00                          8
+EPCLK13ChnCntrH           0x088         0x00              0x00                          8
+EPCLK13ChnCntrL           0x089         0x00              0x00                          8
+EPCLK14ChnCntrH           0x08A         0x00              0x00                          8
+EPCLK14ChnCntrL           0x08B         0x00              0x00                          8
+EPCLK15ChnCntrH           0x08C         0x00              0x00                          8
+EPCLK15ChnCntrL           0x08D         0x00              0x00                          8
+EPCLK16ChnCntrH           0x08E         0x00              0x00                          8
+EPCLK16ChnCntrL           0x08F         0x00              0x00                          8
+EPCLK17ChnCntrH           0x090         0x00              0x00                          8
+EPCLK17ChnCntrL           0x091         0x00              0x00                          8
+EPCLK18ChnCntrH           0x092         0x00              0x00                          8
+EPCLK18ChnCntrL           0x093         0x00              0x00                          8
+EPCLK19ChnCntrH           0x094         0x00              0x00                          8
+EPCLK19ChnCntrL           0x095         0x00              0x00                          8
+EPCLK20ChnCntrH           0x096         0x00              0x00                          8
+EPCLK20ChnCntrL           0x097         0x00              0x00                          8
+EPCLK21ChnCntrH           0x098         0x00              0x00                          8
+EPCLK21ChnCntrL           0x099         0x00              0x00                          8
+EPCLK22ChnCntrH           0x09A         0x00              0x00                          8
+EPCLK22ChnCntrL           0x09B         0x00              0x00                          8
+EPCLK23ChnCntrH           0x09C         0x00              0x00                          8
+EPCLK23ChnCntrL           0x09D         0x00              0x00                          8
+EPCLK24ChnCntrH           0x09E         0x00              0x00                          8
+EPCLK24ChnCntrL           0x09F         0x00              0x00                          8
+EPCLK25ChnCntrH           0x0A0         0x00              0x00                          8
+EPCLK25ChnCntrL           0x0A1         0x00              0x00                          8
+EPCLK26ChnCntrH           0x0A2         0x00              0x3C                          8
+EPCLK26ChnCntrL           0x0A3         0x00              0xF8                          8
+EPCLK27ChnCntrH           0x0A4         0x00              0x00                          8
+EPCLK27ChnCntrL           0x0A5         0x00              0x00                          8
+EPCLK28ChnCntrH           0x0A6         0x00              0x00                          8
+EPCLK28ChnCntrL           0x0A7         0x00              0x00                          8
+EPTXDataRate              0x0A8         0x00              0xFF                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* ePortTx registers : Read/Write/Fuse
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+EPTXControl               0x0A9         0x00              0x00                          8
+EPTX10Enable              0x0AA         0x00              0x11                          8
+EPTX32Enable              0x0AB         0x00              0x11                          8
+EPTXEcChnCntr             0x0AC         0x00              0x00                          8
+EPTXEcChnCntr2            0x0AD         0x00              0x00                          8
+EPTX00ChnCntr             0x0AE         0x00              0x8F                          8
+EPTX01ChnCntr             0x0AF         0x00              0x00                          8
+EPTX02ChnCntr             0x0B0         0x00              0x00                          8
+EPTX03ChnCntr             0x0B1         0x00              0x00                          8
+EPTX10ChnCntr             0x0B2         0x00              0x8F                          8
+EPTX11ChnCntr             0x0B3         0x00              0x00                          8
+EPTX12ChnCntr             0x0B4         0x00              0x00                          8
+EPTX13ChnCntr             0x0B5         0x00              0x00                          8
+EPTX20ChnCntr             0x0B6         0x00              0x8F                          8
+EPTX21ChnCntr             0x0B7         0x00              0x00                          8
+EPTX22ChnCntr             0x0B8         0x00              0x00                          8
+EPTX23ChnCntr             0x0B9         0x00              0x00                          8
+EPTX30ChnCntr             0x0BA         0x00              0x8F                          8
+EPTX31ChnCntr             0x0BB         0x00              0x00                          8
+EPTX32ChnCntr             0x0BC         0x00              0x00                          8
+EPTX33ChnCntr             0x0BD         0x00              0x00                          8
+EPTX01_00ChnCntr          0x0BE         0x00              0x08                          8
+EPTX03_02ChnCntr          0x0BF         0x00              0x00                          8
+EPTX11_10ChnCntr          0x0C0         0x00              0x00                          8
+EPTX13_12ChnCntr          0x0C1         0x00              0x00                          8
+EPTX21_20ChnCntr          0x0C2         0x00              0x08                          8
+EPTX23_22ChnCntr          0x0C3         0x00              0x00                          8
+EPTX31_30ChnCntr          0x0C4         0x00              0x00                          8
+EPTX33_32ChnCntr          0x0C5         0x00              0x00                          8
+EPTXLowRes0               0x0C6         0x00              0x00                          8
+EPTXLowRes1               0x0C7         0x00              0x00                          8
+EPRX0Control              0x0C8         0x00              0x58                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* ePortRx registers : Read/Write/Fuses
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+EPRX1Control              0x0C9         0x00              0x58                          8
+EPRX2Control              0x0CA         0x00              0x58                          8
+EPRX3Control              0x0CB         0x00              0x58                          8
+EPRX4Control              0x0CC         0x00              0x58                          8
+EPRX5Control              0x0CD         0x00              0x58                          8
+EPRX6Control              0x0CE         0x00              0x58                          8
+EPRXEcControl             0x0CF         0x00              0x00                          8
+EPRX00ChnCntr             0x0D0         0x00              0xBA                          8
+EPRX01ChnCntr             0x0D1         0x00              0x00                          8
+EPRX02ChnCntr             0x0D2         0x00              0xBA                          8
+EPRX03ChnCntr             0x0D3         0x00              0x00                          8
+EPRX10ChnCntr             0x0D4         0x00              0xBA                          8
+EPRX11ChnCntr             0x0D5         0x00              0x00                          8
+EPRX12ChnCntr             0x0D6         0x00              0xB2                          8
+EPRX13ChnCntr             0x0D7         0x00              0x00                          8
+EPRX20ChnCntr             0x0D8         0x00              0xBA                          8
+EPRX21ChnCntr             0x0D9         0x00              0x00                          8
+EPRX22ChnCntr             0x0DA         0x00              0xBA                          8
+EPRX23ChnCntr             0x0DB         0x00              0x00                          8
+EPRX30ChnCntr             0x0DC         0x00              0xBA                          8
+EPRX31ChnCntr             0x0DD         0x00              0x00                          8
+EPRX32ChnCntr             0x0DE         0x00              0xBA                          8
+EPRX33ChnCntr             0x0DF         0x00              0x00                          8
+EPRX40ChnCntr             0x0E0         0x00              0xB2                          8
+EPRX41ChnCntr             0x0E1         0x00              0x00                          8
+EPRX42ChnCntr             0x0E2         0x00              0xB2                          8
+EPRX43ChnCntr             0x0E3         0x00              0x00                          8
+EPRX50ChnCntr             0x0E4         0x00              0xB2                          8
+EPRX51ChnCntr             0x0E5         0x00              0x00                          8
+EPRX52ChnCntr             0x0E6         0x00              0xB2                          8
+EPRX53ChnCntr             0x0E7         0x00              0x00                          8
+EPRX60ChnCntr             0x0E8         0x00              0xB2                          8
+EPRX61ChnCntr             0x0E9         0x00              0x00                          8
+EPRX62ChnCntr             0x0EA         0x00              0xB2                          8
+EPRX63ChnCntr             0x0EB         0x00              0x00                          8
+EPRXEcChnCntr             0x0EC         0x00              0x00                          8
+EPRXEq10Control           0x0ED         0x00              0x00                          8
+EPRXEq32Control           0x0EE         0x00              0x00                          8
+EPRXEq54Control           0x0EF         0x00              0x00                          8
+EPRXEq6Control            0x0F0         0x00              0x00                          8
+EPRXDllConfig             0x0F1         0x00              0x00                          8
+EPRXLockFilter            0x0F2         0x00              0x00                          8
+EPRXLockFilter2           0x0F3         0x00              0x00                          8
+READYConfig               0x0F7         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Power Up State Machine registers : Read/Write/Fuses
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval         Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+WATCHDOG                  0x0F8         0x00              0x00                          8
+POWERUP0                  0x0F9         0x00              0x00                          8
+POWERUP1                  0x0FA         0x00              0x00                          8
+POWERUP2                  0x0FB         0x00              0x06                          8
+CRC0                      0x0FC         0x00              0x00                          8
+CRC1                      0x0FD         0x00              0x00                          8
+CRC2                      0x0FE         0x00              0x00                          8
+CRC3                      0x0FF         0x00              0x00                          8
+I2CM0Config               0x100         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* I2C Masters registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+I2CM0Address              0x101         0x00              0x47                          8
+I2CM0Data0                0x102         0x00              0x88                          8
+I2CM0Data1                0x103         0x00              0x2D                          8
+I2CM0Data2                0x104         0x00              0xC8                          8
+I2CM0Data3                0x105         0x00              0x00                          8
+I2CM0Cmd                  0x106         0x00              0x0C                          8
+I2CM1Config               0x107         0x00              0x50                          8
+I2CM1Address              0x108         0x00              0x00                          8
+I2CM1Data0                0x109         0x00              0x00                          8
+I2CM1Data1                0x10A         0x00              0x00                          8
+I2CM1Data2                0x10B         0x00              0x00                          8
+I2CM1Data3                0x10C         0x00              0x00                          8
+I2CM1Cmd                  0x10D         0x00              0x00                          8
+I2CM2Config               0x10E         0x00              0x00                          8
+I2CM2Address              0x10F         0x00              0x47                          8
+I2CM2Data0                0x110         0x00              0x88                          8
+I2CM2Data1                0x111         0x00              0x2D                          8
+I2CM2Data2                0x112         0x00              0xC8                          8
+I2CM2Data3                0x113         0x00              0x00                          8
+I2CM2Cmd                  0x114         0x00              0x0C                          8
+EPRXTrain10               0x115         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* ePortRx registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+EPRXTrain32               0x116         0x00              0x00                          8
+EPRXTrain54               0x117         0x00              0x00                          8
+EPRXTrainEc6              0x118         0x00              0x00                          8
+FUSEControl               0x119         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* E-FUSES registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+FUSEBlowDataA             0x11A         0x00              0x00                          8
+FUSEBlowDataB             0x11B         0x00              0x00                          8
+FUSEBlowDataC             0x11C         0x00              0x00                          8
+FUSEBlowDataD             0x11D         0x00              0x00                          8
+FUSEBlowAddH              0x11E         0x00              0x00                          8
+FUSEBlowAddL              0x11F         0x00              0x00                          8
+FuseMagic                 0x120         0x00              0x00                          8
+ADCSelect                 0x121         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* ADC registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+ADCMon                    0x122         0x00              0x00                          8
+ADCConfig                 0x123         0x00              0x00                          8
+EOMConfigH                0x124         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Eye Opening Monitor registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+EOMConfigL                0x125         0x00              0x00                          8
+EOMvofSel                 0x126         0x00              0x00                          8
+ProcessAndSeuMonitor      0x127         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Process Monitor registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+ULDataSource0             0x128         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Testing registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+ULDataSource1             0x129         0x00              0x00                          8
+ULDataSource2             0x12A         0x00              0x00                          8
+ULDataSource3             0x12B         0x00              0x00                          8
+ULDataSource4             0x12C         0x00              0x00                          8
+ULDataSource5             0x12D         0x00              0x00                          8
+DPDataPattern3            0x12E         0x00              0x00                          8
+DPDataPattern2            0x12F         0x00              0x00                          8
+DPDataPattern1            0x130         0x00              0x00                          8
+DPDataPattern0            0x131         0x00              0x00                          8
+EPRXPRBS3                 0x132         0x00              0x00                          8
+EPRXPRBS2                 0x133         0x00              0x00                          8
+EPRXPRBS1                 0x134         0x00              0x00                          8
+EPRXPRBS0                 0x135         0x00              0x00                          8
+BERTSource                0x136         0x00              0x00                          8
+BERTConfig                0x137         0x00              0x00                          8
+BERTDataPattern3          0x138         0x00              0x00                          8
+BERTDataPattern2          0x139         0x00              0x00                          8
+BERTDataPattern1          0x13A         0x00              0x00                          8
+BERTDataPattern0          0x13B         0x00              0x00                          8
+RST0                      0x13C         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Reset Manager registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+RST1                      0x13D         0x00              0x00                          8
+RST2                      0x13E         0x00              0x00                          8
+POWERUP3                  0x13F         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Power Up registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+POWERUP4                  0x140         0x00              0x00                          8
+CLKTree                   0x141         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Debug registers : Read/Write
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+DataPath                  0x142         0x00              0x00                          8
+TO0Sel                    0x143         0x00              0x00                          8
+TO1Sel                    0x144         0x00              0x00                          8
+TO2Sel                    0x145         0x00              0x00                          8
+TO3Sel                    0x146         0x00              0x00                          8
+TO4Sel                    0x147         0x00              0x00                          8
+TO5Sel                    0x148         0x00              0x00                          8
+TODrivingStrength         0x149         0x00              0x00                          8
+TO4Driver                 0x14A         0x00              0x00                          8
+TO5Driver                 0x14B         0x00              0x00                          8
+TOPreEmp                  0x14C         0x00              0x00                          8
+ConfigPins                0x150         0x00              0x32                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* LPGBTSettings registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+I2CSlaveAddress           0x151         0x00              0x70                          8
+EPRX0Locked               0x152         0x00              0xF2                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* ePortRx registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+EPRX0CurrentPhase10       0x153         0x00              0x0B                          8
+EPRX0CurrentPhase32       0x154         0x00              0x0B                          8
+EPRX1Locked               0x155         0x00              0xF2                          8
+EPRX1CurrentPhase10       0x156         0x00              0x0B                          8
+EPRX1CurrentPhase32       0x157         0x00              0x0B                          8
+EPRX2Locked               0x158         0x00              0xF2                          8
+EPRX2CurrentPhase10       0x159         0x00              0x0B                          8
+EPRX2CurrentPhase32       0x15A         0x00              0x0B                          8
+EPRX3Locked               0x15B         0x00              0xF2                          8
+EPRX3CurrentPhase10       0x15C         0x00              0x0B                          8
+EPRX3CurrentPhase32       0x15D         0x00              0x0B                          8
+EPRX4Locked               0x15E         0x00              0xF2                          8
+EPRX4CurrentPhase10       0x15F         0x00              0x0B                          8
+EPRX4CurrentPhase32       0x160         0x00              0x0B                          8
+EPRX5Locked               0x161         0x00              0xF2                          8
+EPRX5CurrentPhase10       0x162         0x00              0x0B                          8
+EPRX5CurrentPhase32       0x163         0x00              0x0B                          8
+EPRX6Locked               0x164         0x00              0xF2                          8
+EPRX6CurrentPhase10       0x165         0x00              0x0B                          8
+EPRX6CurrentPhase32       0x166         0x00              0x0B                          8
+EPRXEcCurrentPhase        0x167         0x00              0x00                          8
+EPRX0DllStatus            0x168         0x00              0xC0                          8
+EPRX1DllStatus            0x169         0x00              0xC0                          8
+EPRX2DllStatus            0x16A         0x00              0xC0                          8
+EPRX3DllStatus            0x16B         0x00              0xC0                          8
+EPRX4DllStatus            0x16C         0x00              0xC0                          8
+EPRX5DllStatus            0x16D         0x00              0xC0                          8
+EPRX6DllStatus            0x16E         0x00              0xC0                          8
+I2CM0Ctrl                 0x16F         0x00              0x0F                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* I2C Masters registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+I2CM0Mask                 0x170         0x00              0x00                          8
+I2CM0Status               0x171         0x00              0x04                          8
+I2CM0TranCnt              0x172         0x00              0xC6                          8
+I2CM0ReadByte             0x173         0x00              0x35                          8
+I2CM0Read0                0x174         0x00              0x00                          8
+I2CM0Read1                0x175         0x00              0xC8                          8
+I2CM0Read2                0x176         0x00              0x2D                          8
+I2CM0Read3                0x177         0x00              0x88                          8
+I2CM0Read4                0x178         0x00              0x00                          8
+I2CM0Read5                0x179         0x00              0x00                          8
+I2CM0Read6                0x17A         0x00              0x00                          8
+I2CM0Read7                0x17B         0x00              0x00                          8
+I2CM0Read8                0x17C         0x00              0x00                          8
+I2CM0Read9                0x17D         0x00              0x00                          8
+I2CM0Read10               0x17E         0x00              0x00                          8
+I2CM0Read11               0x17F         0x00              0x00                          8
+I2CM0Read12               0x180         0x00              0x00                          8
+I2CM0Read13               0x181         0x00              0x00                          8
+I2CM0Read14               0x182         0x00              0x00                          8
+I2CM0Read15               0x183         0x00              0x00                          8
+I2CM1Ctrl                 0x184         0x00              0x00                          8
+I2CM1Mask                 0x185         0x00              0x00                          8
+I2CM1Status               0x186         0x00              0x00                          8
+I2CM1TranCnt              0x187         0x00              0x00                          8
+I2CM1ReadByte             0x188         0x00              0x00                          8
+I2CM1Read0                0x189         0x00              0x00                          8
+I2CM1Read1                0x18A         0x00              0x00                          8
+I2CM1Read2                0x18B         0x00              0x00                          8
+I2CM1Read3                0x18C         0x00              0x00                          8
+I2CM1Read4                0x18D         0x00              0x00                          8
+I2CM1Read5                0x18E         0x00              0x00                          8
+I2CM1Read6                0x18F         0x00              0x00                          8
+I2CM1Read7                0x190         0x00              0x00                          8
+I2CM1Read8                0x191         0x00              0x00                          8
+I2CM1Read9                0x192         0x00              0x00                          8
+I2CM1Read10               0x193         0x00              0x00                          8
+I2CM1Read11               0x194         0x00              0x00                          8
+I2CM1Read12               0x195         0x00              0x00                          8
+I2CM1Read13               0x196         0x00              0x00                          8
+I2CM1Read14               0x197         0x00              0x00                          8
+I2CM1Read15               0x198         0x00              0x00                          8
+I2CM2Ctrl                 0x199         0x00              0x0F                          8
+I2CM2Mask                 0x19A         0x00              0x00                          8
+I2CM2Status               0x19B         0x00              0x04                          8
+I2CM2TranCnt              0x19C         0x00              0xE0                          8
+I2CM2ReadByte             0x19D         0x00              0x35                          8
+I2CM2Read0                0x19E         0x00              0x00                          8
+I2CM2Read1                0x19F         0x00              0xC8                          8
+I2CM2Read2                0x1A0         0x00              0x2D                          8
+I2CM2Read3                0x1A1         0x00              0x88                          8
+I2CM2Read4                0x1A2         0x00              0x00                          8
+I2CM2Read5                0x1A3         0x00              0x00                          8
+I2CM2Read6                0x1A4         0x00              0x00                          8
+I2CM2Read7                0x1A5         0x00              0x00                          8
+I2CM2Read8                0x1A6         0x00              0x00                          8
+I2CM2Read9                0x1A7         0x00              0x00                          8
+I2CM2Read10               0x1A8         0x00              0x00                          8
+I2CM2Read11               0x1A9         0x00              0x00                          8
+I2CM2Read12               0x1AA         0x00              0x00                          8
+I2CM2Read13               0x1AB         0x00              0x00                          8
+I2CM2Read14               0x1AC         0x00              0x00                          8
+I2CM2Read15               0x1AD         0x00              0x00                          8
+PSStatus                  0x1AE         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* ECLK registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+PIOInH                    0x1AF         0x00              0x12                          8
+PIOInL                    0x1B0         0x00              0x4B                          8
+FUSEStatus                0x1B1         0x00              0x00                          8
+FUSEValuesA               0x1B2         0x00              0x00                          8
+FUSEValuesB               0x1B3         0x00              0x00                          8
+FUSEValuesC               0x1B4         0x00              0x00                          8
+FUSEValuesD               0x1B5         0x00              0x00                          8
+ProcessMonitorStatus      0x1B6         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Process Monitor registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+PMFreqA                   0x1B7         0x00              0x00                          8
+PMFreqB                   0x1B8         0x00              0x00                          8
+PMFreqC                   0x1B9         0x00              0x00                          8
+SEUCountH                 0x1BA         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* SEU registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+SEUCountL                 0x1BB         0x00              0x00                          8
+CLKGStatus0               0x1BC         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Clock Generator registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+CLKGStatus1               0x1BD         0x00              0x55                          8
+CLKGStatus2               0x1BE         0x00              0x65                          8
+CLKGStatus3               0x1BF         0x00              0x15                          8
+CLKGStatus4               0x1C0         0x00              0x08                          8
+CLKGStatus5               0x1C1         0x00              0x0D                          8
+CLKGStatus6               0x1C2         0x00              0xE8                          8
+CLKGStatus7               0x1C3         0x00              0xB8                          8
+CLKGStatus8               0x1C4         0x00              0xFB                          8
+CLKGStatus9               0x1C5         0x00              0x2C                          8
+DLDPFecCorrectionCount0   0x1C6         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* FEC registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+DLDPFecCorrectionCount1   0x1C7         0x00              0x00                          8
+DLDPFecCorrectionCount2   0x1C8         0x00              0x00                          8
+DLDPFecCorrectionCount3   0x1C9         0x00              0x00                          8
+ADCStatusH                0x1CA         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* ADC registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+ADCStatusL                0x1CB         0x00              0x00                          8
+EOMStatus                 0x1CC         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Eye Opening Monitor registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+EOMCounterValueH          0x1CD         0x00              0x00                          8
+EOMCounterValueL          0x1CE         0x00              0x00                          8
+EOMCounter40MH            0x1CF         0x00              0x00                          8
+EOMCounter40ML            0x1D0         0x00              0x00                          8
+BERTStatus                0x1D1         0x00              0x04                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* BERT Tester registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+BERTResult4               0x1D2         0x00              0x00                          8
+BERTResult3               0x1D3         0x00              0x00                          8
+BERTResult2               0x1D4         0x00              0x00                          8
+BERTResult1               0x1D5         0x00              0x00                          8
+BERTResult0               0x1D6         0x00              0x00                          8
+ROM                       0x1D7         0x00              0xA6                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* ROM registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+PORBOR                    0x1D8         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* POR registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+PUSMStatus                0x1D9         0x00              0x13                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Power Up State Machine registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+PUSMPLLWATCHDOG           0x1DA         0x00              0x0F                          8
+PUSMDLLWATCHDOG           0x1DC         0x00              0x00                          8
+PUSMBROWNOUTWATCHDOG      0x1DD         0x00              0x01                          8
+PUSMPLLTIMEOUT            0x1DE         0x00              0x11                          8
+PUSMDLLTIMEOUT            0x1DF         0x00              0x00                          8
+PUSMCHANNELSTIMEOUT       0x1E0         0x00              0x00                          8
+CRCValue0                 0x1E1         0x00              0x77                          8
+CRCValue1                 0x1E2         0x00              0x1C                          8
+CRCValue2                 0x1E3         0x00              0xDB                          8
+CRCValue3                 0x1E4         0x00              0x72                          8
+FailedCRC                 0x1E5         0x00              0xFF                          8
+TOValue                   0x1E6         0x00              0x00                          8
+SCStatus                  0x1E7         0x00              0x01                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Debug registers : Read Only
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+FAState                   0x1E8         0x00              0x05                          8
+FAHeaderFoundCount        0x1E9         0x00              0x00                          8
+FAHeaderNotFoundCount     0x1EA         0x00              0x00                          8
+FALossOfLockCount         0x1EB         0x00              0x18                          8
+ConfigErrorCounterH       0x1EC         0x00              0x00                          8
+ConfigErrorCounterL       0x1ED         0x00              0x00                          8
