@@ -66,7 +66,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
 }
 std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
 {
-    LOG(DEBUG) << BOLDBLUE << "D19cDebugFWInterface::StubDebug ...." << RESET;
+    LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::StubDebug ...." << RESET;
 
     uint8_t cReSync   = 0;
     uint8_t cCalPulse = 0;
@@ -86,7 +86,7 @@ std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, ui
     WriteReg("fc7_daq_ctrl.fast_command_block.control", final_command);
 
     auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
-    LOG(DEBUG) << BOLDBLUE << "Captured stub debug  ...." << RESET;
+    LOG(INFO) << BOLDBLUE << "Captured stub debug  ...." << RESET;
 
     std::vector<std::string> cLines(0);
     size_t                   cLine = 0;

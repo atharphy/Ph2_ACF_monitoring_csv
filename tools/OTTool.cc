@@ -115,7 +115,7 @@ void OTTool::Reset()
 void OTTool::Prepare()
 {
     // retreive number of events from settings file
-    fNevents = findValueInSettings<double>("Nevents", 10);
+    fNevents = findValueInSettings<double>("Nevents", 100); //Was 10, trying to increase to make it more reliable
 
     if(fReadoutMode == 1) return;
     // retreive original settings for all chips and all back-end boards
@@ -693,7 +693,7 @@ void OTTool::ContinuousReadoutTh(uint8_t cBrdId)
         if(cData.size() != 0)
         {
             std::move(cData.begin(), cData.end(), std::back_inserter(fReadoutData[cBrdId]));
-            LOG(INFO) << BOLDBLUE << " Data size = " << cData.size() << RESET;
+            // LOG(INFO) << BOLDBLUE << " Data size = " << cData.size() << RESET;
         }
            
         cTriggerCounters.push_back(cTriggerCounter);
@@ -963,10 +963,23 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                             uint8_t stripInj = cInjection.fRow;
                             LOG(INFO) << BOLDRED << __LINE__ << "] INJECTING STRIP: " << +stripInj << " with ENFLAGS Memory ALL=0x " << std::hex << enflags << std::dec << RESET;
                             std::stringstream cRegNameEn;
-                            
+                             
                             cRegNameEn << "ENFLAGS_S" << +stripInj;
                             enflags = (enflags & 0xFE) + 0x01;//Making sure to enable the strip
+                            uint16_t readReg = fReadoutChipInterface->ReadChipReg(cChip, cRegNameEn.str());
+                            LOG(INFO) << BOLDRED << __LINE__ << "] is STRIP disabled? Checking number "<< +stripInj << " 0x" << std::hex << readReg << std::dec << RESET;
+
                             fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), enflags);
+                            readReg = fReadoutChipInterface->ReadChipReg(cChip, cRegNameEn.str());
+                            LOG(INFO) << BOLDRED << __LINE__ << "] !!! Enable STRIP, Checking number "<< +stripInj << " 0x" << std::hex << readReg << std::dec << RESET;
+                            // LOG(INFO) << BOLDRED << __LINE__ << "] Then trying to disable it "<<  RESET;
+                            // fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), 0x00);
+                            // readReg = fReadoutChipInterface->ReadChipReg(cChip, cRegNameEn.str());
+                            // LOG(INFO) << BOLDRED << __LINE__ << "] is it disabled, Checking number "<< +stripInj << " 0x" << std::hex << readReg << std::dec << RESET;
+                            // fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), enflags);
+                            readReg = fReadoutChipInterface->ReadChipReg(cChip, cRegNameEn.str());
+                            LOG(INFO) << BOLDRED << __LINE__ << "] !!! Enable STRIP, Checking number "<< +stripInj << " 0x" << std::hex << readReg << std::dec << RESET;
+
                             if(fInjectionType == 0)
                             {
                                 std::stringstream cRegNamePattern;
