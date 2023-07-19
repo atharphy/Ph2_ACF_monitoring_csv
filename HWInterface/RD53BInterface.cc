@@ -346,6 +346,14 @@ std::pair<std::string, uint16_t> RD53BInterface::SetSpecialRegister(std::string 
         return {regName, value};
     else
     {
+        try
+        {
+            pRD53RegMap.at(regName);
+        }
+        catch(const std::out_of_range& error)
+        {
+            throw std::out_of_range("Register " + regName + " not found in RD53 register-map file. I can not proceed. Please verify that you are using the latest RD53 registre-map.");
+        }
         ChipRegItem& specialReg = pRD53RegMap.at(regName);
         ChipRegItem& Reg        = pRD53RegMap.at(it->second.regName);
         return {it->second.regName, RD53Interface::SetFieldValue(Reg.fValue, value, it->second.start, specialReg.fBitSize)};
