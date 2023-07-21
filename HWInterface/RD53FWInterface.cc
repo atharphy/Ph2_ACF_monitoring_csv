@@ -1182,7 +1182,7 @@ void RD53FWInterface::ReadClockGenerator()
 
 float RD53FWInterface::ReadHybridTemperature(int hybridId)
 {
-    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
+    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%] @CONST@
 
     RegManager::WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
@@ -1200,7 +1200,7 @@ float RD53FWInterface::ReadHybridTemperature(int hybridId)
 
 float RD53FWInterface::ReadHybridVoltage(int hybridId)
 {
-    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
+    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%] @CONST@
 
     RegManager::WriteReg("user.ctrl_regs.i2c_block.dp_addr", hybridId);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
