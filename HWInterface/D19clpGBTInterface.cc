@@ -72,6 +72,20 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
+
+    LoadCalibrationData(pChip, 0x00244200); // ReadChipID(pChip, static_cast<lpGBT*>(pChip)->getVersion()));
+    // LoadCalibrationData(pChip, ReadChipID(pChip, static_cast<lpGBT*>(pChip)->getVersion()));
+
+    AutoTuneVref(pChip);
+
+    AdcGetVin(pChip, "ADC0", "VREF/2", 0);
+    AdcGetVin(pChip, "ADC1", "VREF/2", 0);
+    AdcGetVin(pChip, "ADC2", "VREF/2", 0);
+    AdcGetVin(pChip, "ADC3", "VREF/2", 0);
+    AdcGetVin(pChip, "ADC4", "VREF/2", 0);
+    AdcGetVin(pChip, "ADC5", "VREF/2", 0);
+    AdcGetVin(pChip, "ADC6", "VREF/2", 0);
+    AdcGetVin(pChip, "ADC7", "VREF/2", 0);
     return cReady;
 } //
 

@@ -1411,4 +1411,208 @@ std::string lpGBTInterface::GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t 
 
 bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
 
+void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_t cChipId, std::string cFileName)
+{
+    // # Load calibration data from a local CSV file based for the specific chipid.
+
+    // # Arguments:
+    // # cFileName: Path of CSV file containing calibration data.
+    // # cChipId: ChipID for which calibration data should be loaded.
+
+    // # Raises:
+    // # LpgbtCalibrationError: If loading calibration data failed.
+    // # FileNotFoundError: If the file does not exis
+
+    LOG(INFO) << BOLDGREEN << "Loading calibration data for 0x" << std::hex << +cChipId << std::dec << " chip from " << cFileName << RESET;
+    bool cCalibrationLoaded = false;
+
+    std::ifstream                         file(cFileName.c_str(), std::ios::in);
+    std::vector<std::vector<std::string>> content;
+    std::vector<std::string>              row;
+    std::vector<std::string>              cHeaderRow;
+    std::string                           line, word;
+    uint32_t                              cRowCounter = 0;
+    if(file.is_open())
+    {
+        while(getline(file, line))
+        {
+            cRowCounter++;
+            if(cRowCounter < 5)
+            { // skip header (version check possible)
+                if(cRowCounter == 4)
+                { // read field names
+                    cHeaderRow.clear();
+                    std::stringstream str(line);
+                    while(getline(str, word, ',')) { cHeaderRow.push_back(word); }
+                }
+                continue;
+            }
+            row.clear();
+            std::stringstream str(line);
+
+            while(getline(str, word, ',')) { row.push_back(word); }
+            uint32_t cRowChipId = strtoul(row[0].c_str(), 0, 16);
+            // for(uint32_t i=0;i<32;i++){
+            //     if(cRowChipId == 0x00244200){
+            //     LOG(INFO) << BOLDBLUE << std::hex << (cRowChipId ^ (1 << i )) << std::dec << RESET;
+            // }
+            if(cRowChipId == cChipId)
+            {
+                for(uint32_t j = 1; j < row.size(); j++)
+                {
+                    LOG(INFO) << BOLDBLUE << cHeaderRow[j] << RESET;
+                    LOG(INFO) << BOLDBLUE << row[j] << RESET;
+                    calibration[cHeaderRow[j]] = std::stof(row[j]);
+                }
+                cCalibrationLoaded = true;
+                break;
+            }
+
+            // else:
+            //     if row[0] == chipid:
+            //         self.calibration = {header: float(value) for header, value in zip(headers[1:], row[1:])}
+            //         calibration_loaded = True
+            //         break
+        }
+        if(!cCalibrationLoaded)
+        {
+            LOG(ERROR) << BOLDRED << "lpGBTInterface::LoadCalibrationData: Calibration data not available for the 0x" << std::hex << +cChipId << std::dec << " chip" << RESET;
+            throw std::runtime_error(std::string("LpgbtCalibrationError"));
+        }
+        for(auto it = calibration.cbegin(); it != calibration.cend(); ++it) { std::cout << it->first << " " << it->second << "\n"; }
+    }
+    else
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::LoadCalibrationData: " << cFileName << " could not be opened. Check file path!" << RESET;
+        throw std::runtime_error(std::string("FileNotFoundError"));
+    }
+    file.close();
+}
+
+// # Set the junction temperature. It should be updated by the user based on:
+// # - thermal simulations and measurements performed in the final system, or
+// # - data of its internal temperature sensor obtained during production testing
+// #   (estimate_temperature_uncalib_vref)
+void lpGBTInterface::SetTemperature(Ph2_HwDescription::Chip* pChip, float cTemperature)
+{
+    // # Set junction temperature.
+    // # Arguments:
+    // # cTemperature: Estimate of junction temperature [C]
+    // #
+    fTemperature = cTemperature;
+}
+
+float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pChip, bool cResetTempSensor)
+{
+    // # Estimate temperature using internal temperature sensor and uncalibrated VREF.
+    // # WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
+    // # Side effects:
+    // #    ADC configuration.
+    // # Arguments:
+    // #    cResetTempSensor: Reset temperature sensor before using it.
+
+    // # Return:
+    // #    Temperature estimate in degree C.
+
+    uint8_t cVrefCode = (uint32_t)std::round(calibration["VREF_OFFSET"]);
+    LOG(INFO) << BOLDGREEN << "Enable VREF at code: 0x" << std::hex << +cVrefCode << std::dec << " [LSB]" << RESET;
+
+    EnableInternalVref(pChip, true);
+    SetVrefTune(pChip, cVrefCode);
+    if(cResetTempSensor)
+    {
+        auto cVal = ReadChipReg(pChip, "ADCMon");
+        // ######################################
+        // # Enable reset on temperature sensor #
+        // ######################################
+        WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
+        std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+        // #######################################
+        // # Disable reset on temperature sensor #
+        // #######################################
+        WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
+    }
+
+    std::vector<float> cMeasurements(0);
+    for(uint8_t cIndx = 0; cIndx < 10; cIndx++)
+    {
+        uint16_t cAdcVal = ReadADC(pChip, "TEMP", "VREF/2", 0);
+        LOG(INFO) << BOLDGREEN << "Temperature readout: 0x" << std::hex << +cAdcVal << std::dec << " [LSB]" << RESET;
+
+        // estimate the junction temperature
+        cMeasurements.push_back(cAdcVal * calibration["TEMPERATURE_UNCALVREF_SLOPE"] + calibration["TEMPERATURE_UNCALVREF_OFFSET"]);
+    }
+    float cTemperature = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+    LOG(INFO) << BOLDGREEN << "Temperature estimate: " << cTemperature << " [C]" << RESET;
+    return cTemperature;
+}
+
+void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::Chip* pChip, bool cEnable)
+{
+    /*  Calculate the optimum VREFTUNE code based on the junction temperature
+           and apply the setting to the chip. Prior calling this method, the user
+           is expected to set the temperature estimate (set_temperature) first if it
+           is know or to to use estimate_temperature_uncalib_vref in order to
+           estimate it automatically. In the later case, it is advice to use
+           auto_tune_vref method instead.
+
+        Arguments:
+            cEnable: Enable VREF generator
+    */
+
+    uint8_t cCodeOpt = (uint32_t)std::round(calibration["VREF_SLOPE"] * fTemperature + calibration["VREF_OFFSET"]);
+    LOG(INFO) << BOLDGREEN << "REFTune = 0x" << std::hex << +cCodeOpt << std::dec << RESET;
+    EnableInternalVref(pChip, cEnable);
+    SetVrefTune(pChip, cCodeOpt);
+}
+
+void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::Chip* pChip, bool cResetTempSensor)
+{
+    /*  Auto tune VREF based on the internal temperature sensor.
+
+        WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
+
+        Side effects:
+            ADC configuration.
+            Junction temperature.
+
+        Arguments:
+            cResetTempSensor: Reset temperature sensor before using it.
+    */
+    float cTemperature = EstimateTemperatureUncalibVref(pChip, cResetTempSensor = cResetTempSensor);
+
+    // update temperature estimate
+    SetTemperature(pChip, cTemperature);
+
+    // tune VREF
+    TuneVrefControlLib(pChip);
+}
+
+float lpGBTInterface::AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
+{
+    /* Get input voltage.
+
+        Prerequisites:
+            VREF should be tuned to 1V.
+
+        Returns:
+            Calibrated voltage reading.
+
+        Raises:
+            LpgbtException: in case the conversion timeout is exceeded
+    */
+
+    uint16_t cResult = ReadADC(pChip, pADCInputP, pADCInputN, pGain);
+
+    // gain = self.read_reg(self.ADCCONFIG) & self.ADCCONFIG.ADCGAINSELECT.bit_mask
+    // gain_str = self.AdcGainSelect(gain).name
+    // calibrated_results = []
+    std::string cAdcStr = "ADC_" + fADCGainMap[pGain];
+
+    float cCalRes =
+        ((calibration[cAdcStr + "_SLOPE"] + fTemperature * calibration[cAdcStr + "_SLOPE_TEMP"]) * cResult + calibration[cAdcStr + "_OFFSET"] + fTemperature * calibration[cAdcStr + "_OFFSET_TEMP"]);
+
+    LOG(INFO) << BOLDGREEN << "Measured calibrated Vin for " << pADCInputP << " and " << pADCInputN << " is " << cCalRes << " [V]" << RESET;
+    return cCalRes;
+}
 } // namespace Ph2_HwInterface
