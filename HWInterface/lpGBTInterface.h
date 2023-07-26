@@ -295,12 +295,22 @@ class lpGBTInterface : public ChipInterface
         {"TEMPERATURE_UNCALVREF_SLOPE", 4.5960e-01},
         {"TEMPERATURE_UNCALVREF_OFFSET", -2.1253e+02},
     };
-    void  LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_t cChipId, std::string cFileName = "./settings/lpGBTFiles/lpgbt_calibration_test.csv");
-    void  SetTemperature(Ph2_HwDescription::Chip* pChip, float cTemperature);
-    float EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pChip, bool cResetTempSensor = true);
-    void  TuneVrefControlLib(Ph2_HwDescription::Chip* pChip, bool cEnable = true);
-    void  AutoTuneVref(Ph2_HwDescription::Chip* pChip, bool cResetTempSensor = true);
-    float AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain);
+    void    LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_t pChipId, std::string pFileName = "./settings/lpGBTFiles/lpgbt_calibration_test.csv");
+    void    SetTemperature(Ph2_HwDescription::Chip* pChip, float pTemperature);
+    float   EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor = true);
+    void    TuneVrefControlLib(Ph2_HwDescription::Chip* pChip, bool pEnable = true);
+    void    AutoTuneVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor = true);
+    float   AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples = 1);
+    float   _CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, uint8_t pCode);
+    float   _CdacCodeToRout(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, uint8_t pCode);
+    uint8_t _CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, float pCurrentA);
+    void    CdacSetCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, float pCurrentA);
+    float   MeasureResistance(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, bool pImprovePrecision = true);
+    float   MeasureResistance(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, float pExpectedROhm, bool pImprovePrecision = true);
+    void    VdacSetVout(Ph2_HwDescription::Chip* pChip, float pVoltageV, bool pEnable = true);
+    float   MeasureTemperature(Ph2_HwDescription::Chip* pChip, uint8_t pSamples = 1, bool pResetTempSensor = true);
+    float   MeasurePowerSupplyVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pPowerSupply, uint8_t pSamples = 1, bool pDisableMonitorAfterMeasurement = true);
+
     float fTemperature = 0.0;
 
   protected:
