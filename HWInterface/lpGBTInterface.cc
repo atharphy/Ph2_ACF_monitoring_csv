@@ -1652,7 +1652,7 @@ float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, const s
         Returns:
             Estimate of the output current in Amps.
     """ */
-    uint8_t cChannel=fADCInputMap[pChannel];
+    uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
         LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacCodeToCurrent: Invalid CDAC channel" << RESET;
@@ -1673,7 +1673,7 @@ float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::Chip* pChip, const std:
         Returns:
             Estimate of the output resistance in Ohms.
     """ */
-    uint8_t cChannel=fADCInputMap[pChannel];
+    uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
         LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacCodeToRout: Invalid CDAC channel" << RESET;
@@ -1701,7 +1701,7 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* p
         Raises:
             LpgbtOutOfRangeError: If the requested current cannot be achieved.
     """ */
-    uint8_t cChannel=fADCInputMap[pChannel];
+    uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
         LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacGetOptimumCodeForCurrent: Invalid CDAC channel" << RESET;
@@ -1746,7 +1746,7 @@ void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::Chip* pChip, const std::s
             pChannel: ADC channel to connect to current DAC to
             pCurrentA: Output current [A]
     """ */
-    uint8_t cChannel=fADCInputMap[pChannel];
+    uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
         LOG(ERROR) << BOLDRED << "lpGBTInterface::CdacSetCurrent: Invalid CDAC channel" << RESET;
