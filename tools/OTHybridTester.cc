@@ -1323,6 +1323,7 @@ uint16_t OTHybridTester::calibrateADC()
         fTC_2SSEH->read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
         fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
         fTC_2SSEH->set_AMUX(3303, 3303);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
     else
     {
