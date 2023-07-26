@@ -301,12 +301,12 @@ class lpGBTInterface : public ChipInterface
     void    TuneVrefControlLib(Ph2_HwDescription::Chip* pChip, bool pEnable = true);
     void    AutoTuneVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor = true);
     float   AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples = 1);
-    float   _CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, uint8_t pCode);
-    float   _CdacCodeToRout(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, uint8_t pCode);
-    uint8_t _CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, float pCurrentA);
-    void    CdacSetCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, float pCurrentA);
-    float   MeasureResistance(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, bool pImprovePrecision = true);
-    float   MeasureResistance(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, float pExpectedROhm, bool pImprovePrecision = true);
+    float   _CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode);
+    float   _CdacCodeToRout(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode);
+    uint8_t _CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA);
+    void    CdacSetCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA);
+    float   MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, bool pImprovePrecision = true);
+    float   MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pExpectedROhm, bool pImprovePrecision = true);
     void    VdacSetVout(Ph2_HwDescription::Chip* pChip, float pVoltageV, bool pEnable = true);
     float   MeasureTemperature(Ph2_HwDescription::Chip* pChip, uint8_t pSamples = 1, bool pResetTempSensor = true);
     float   MeasurePowerSupplyVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pPowerSupply, uint8_t pSamples = 1, bool pDisableMonitorAfterMeasurement = true);

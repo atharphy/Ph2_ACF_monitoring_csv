@@ -1510,7 +1510,7 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pC
     // #    Temperature estimate in degree C.
 
     uint8_t cVrefCode = (uint32_t)std::round(calibration["VREF_OFFSET"]);
-    LOG(INFO) << BOLDGREEN << "Enable VREF at code: 0x" << std::hex << +cVrefCode << std::dec << " [LSB]" << RESET;
+    LOG(DEBUG) << BOLDGREEN << "Enable VREF at code: 0x" << std::hex << +cVrefCode << std::dec << " [LSB]" << RESET;
 
     EnableInternalVref(pChip, true);
     SetVrefTune(pChip, cVrefCode);
@@ -1532,7 +1532,7 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pC
     for(uint8_t cIndx = 0; cIndx < 10; cIndx++)
     {
         uint16_t cAdcVal = ReadADC(pChip, "TEMP", "VREF/2", 0);
-        LOG(INFO) << BOLDGREEN << "Temperature readout: 0x" << std::hex << +cAdcVal << std::dec << " [LSB]" << RESET;
+        LOG(DEBUG) << BOLDGREEN << "Temperature readout: 0x" << std::hex << +cAdcVal << std::dec << " [LSB]" << RESET;
 
         // estimate the junction temperature
         cMeasurements.push_back(cAdcVal * calibration["TEMPERATURE_UNCALVREF_SLOPE"] + calibration["TEMPERATURE_UNCALVREF_OFFSET"]);
@@ -1637,11 +1637,11 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::strin
     float cCalRes =
         ((calibration[cAdcStr + "_SLOPE"] + fTemperature * calibration[cAdcStr + "_SLOPE_TEMP"]) * cResult + calibration[cAdcStr + "_OFFSET"] + fTemperature * calibration[cAdcStr + "_OFFSET_TEMP"]);
 
-    LOG(INFO) << BOLDGREEN << "Measured calibrated Vin for " << pADCInputP << " and " << pADCInputN << " is " << cCalRes << " [V]" << RESET;
+    LOG(DEBUG) << BOLDGREEN << "Measured calibrated Vin for " << pADCInputP << " and " << pADCInputN << " is " << cCalRes << " [V]" << RESET;
     return cCalRes;
 }
 
-float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, uint8_t pCode)
+float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode)
 {
     /* """Return estimate of the CDAC current for specific code.
 
@@ -1652,16 +1652,17 @@ float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, uint8_t
         Returns:
             Estimate of the output current in Amps.
     """ */
-    if(pChannel > 8)
+    uint8_t cChannel=fADCInputMap[pChannel];
+    if(cChannel > 8)
     {
         LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacCodeToCurrent: Invalid CDAC channel" << RESET;
         throw std::runtime_error(std::string("Invalid CDAC channel"));
     }
-    return (pCode - calibration["CDAC" + std::to_string(pChannel) + "_OFFSET"] - fTemperature * calibration["CDAC" + std::to_string(pChannel) + "_OFFSET_TEMP"]) /
-           (calibration["CDAC" + std::to_string(pChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(pChannel) + "_SLOPE_TEMP"]);
+    return (pCode - calibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] - fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]) /
+           (calibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]);
 }
 
-float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, uint8_t pCode)
+float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode)
 {
     /*  """Return estimate of the CDAC output resistance for specific code.
 
@@ -1672,7 +1673,8 @@ float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::Chip* pChip, uint8_t pC
         Returns:
             Estimate of the output resistance in Ohms.
     """ */
-    if(pChannel > 8)
+    uint8_t cChannel=fADCInputMap[pChannel];
+    if(cChannel > 8)
     {
         LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacCodeToRout: Invalid CDAC channel" << RESET;
         throw std::runtime_error(std::string("Invalid CDAC channel"));
@@ -1681,11 +1683,11 @@ float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::Chip* pChip, uint8_t pC
     // Return the rout estimate for code 1 instead.
     if(pCode == 0) { pCode = 1; }
 
-    float cR0 = (calibration["CDAC" + std::to_string(pChannel) + "_R0"] + fTemperature * calibration["CDAC" + std::to_string(pChannel) + "_R0_TEMP"]);
+    float cR0 = (calibration["CDAC" + std::to_string(cChannel) + "_R0"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_R0_TEMP"]);
     return cR0 / pCode;
 }
 
-uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, float pCurrentA)
+uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA)
 {
     /*  """Return optimum CDAC code for the requested current (in amps)
 
@@ -1699,7 +1701,8 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* p
         Raises:
             LpgbtOutOfRangeError: If the requested current cannot be achieved.
     """ */
-    if(pChannel > 8)
+    uint8_t cChannel=fADCInputMap[pChannel];
+    if(cChannel > 8)
     {
         LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacGetOptimumCodeForCurrent: Invalid CDAC channel" << RESET;
         throw std::runtime_error(std::string("Invalid CDAC channel"));
@@ -1710,8 +1713,8 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* p
         throw std::runtime_error(std::string("Invalid CDAC current"));
     }
 
-    uint16_t cCode = (uint16_t)std::round((calibration["CDAC" + std::to_string(pChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(pChannel) + "_SLOPE_TEMP"]) * pCurrentA +
-                                          calibration["CDAC" + std::to_string(pChannel) + "_OFFSET"] + fTemperature * calibration["CDAC" + std::to_string(pChannel) + "_OFFSET_TEMP"]);
+    uint16_t cCode = (uint16_t)std::round((calibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]) * pCurrentA +
+                                          calibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]);
 
     /* code = round(
             (
@@ -1732,7 +1735,7 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* p
     return (uint16_t)cCode;
 }
 
-void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, float pCurrentA)
+void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA)
 {
     /*   """Configure the lpGBT current DAC.
 
@@ -1743,7 +1746,8 @@ void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pCha
             pChannel: ADC channel to connect to current DAC to
             pCurrentA: Output current [A]
     """ */
-    if(pChannel > 8)
+    uint8_t cChannel=fADCInputMap[pChannel];
+    if(cChannel > 8)
     {
         LOG(ERROR) << BOLDRED << "lpGBTInterface::CdacSetCurrent: Invalid CDAC channel" << RESET;
         throw std::runtime_error(std::string("Invalid CDAC channel"));
@@ -1754,26 +1758,26 @@ void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::Chip* pChip, uint8_t pCha
         throw std::runtime_error(std::string("Invalid CDAC current"));
     }
     uint8_t cCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, pCurrentA);
-    ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC" + std::to_string(pChannel)}, {cCode});
+    ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cCode});
 }
-float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, bool pImprovePrecision)
+float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, bool pImprovePrecision)
 {
-    LOG(INFO) << BOLDBLUE << "pExpectedROhm not provided. Performing auto ranging." << RESET;
+    LOG(INFO) << BOLDYELLOW << "pExpectedROhm not provided. Performing auto ranging." << RESET;
 
     uint8_t cCdacCode = 1;
     float   cVAdc     = 0;
     while(true)
     {
-        ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC" + std::to_string(pChannel)}, {cCdacCode});
-        cVAdc = AdcGetVin(pChip, "ADC" + std::to_string(pChannel), "VREF/2", 0);
+        ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cCdacCode});
+        cVAdc = AdcGetVin(pChip, pChannel, "VREF/2", 0);
         if(cVAdc > 0.5 or cCdacCode >= 128) { break; }
         cCdacCode *= 2.;
     }
     float cExpectedROhm = cVAdc / _CdacCodeToCurrent(pChip, pChannel, cCdacCode);
-    LOG(INFO) << BOLDBLUE << "First estimate of resistance: " << cExpectedROhm / 1e3 << " kOhm" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "First estimate of resistance: " << cExpectedROhm / 1e3 << " kOhm" << RESET;
     return MeasureResistance(pChip, pChannel, cExpectedROhm, pImprovePrecision);
 }
-float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, uint8_t pChannel, float pExpectedROhm, bool pImprovePrecision)
+float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pExpectedROhm, bool pImprovePrecision)
 {
     /* """Measure resistance connected between the ground (VSS) and a given ADC channel.
        If the pExpectedROhm is provided (see oberloaded function), it will be used to set the current source
@@ -1811,7 +1815,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, uint8_t 
 
     float   cCurrentA = 0.5 / pExpectedROhm;
     uint8_t cCdacCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, cCurrentA);
-    LOG(INFO) << BOLDBLUE << "Optimum cdac code: " << +cCdacCode << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Optimum cdac code: " << +cCdacCode << RESET;
 
     std::vector<uint8_t> cCdacCodesVec;
     std::vector<float>   cRloadsVec;
@@ -1826,19 +1830,19 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, uint8_t 
 
     for(auto cdac_code: cCdacCodesVec)
     {
-        ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC" + std::to_string(pChannel)}, {cdac_code});
+        ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cdac_code});
 
         float iout = _CdacCodeToCurrent(pChip, pChannel, cdac_code);
         float rout = _CdacCodeToRout(pChip, pChannel, cdac_code);
 
-        float vadc = AdcGetVin(pChip, "ADC" + std::to_string(pChannel), "VREF/2", 0, 10);
+        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 10);
 
         float rmeas = vadc / iout;
-        LOG(INFO) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
+        LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
         if(vadc < 0.25) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too high" << RESET; }
         if(vadc > 0.75) { LOG(INFO) << BOLDBLUE << "Warning: nitial estimate of the resistance was too low" << RESET; }
         float rload = rmeas / (1 - rmeas / rout);
-        LOG(INFO) << BOLDBLUE << "CODE: " << +cdac_code << " IOUT: " << 1e3 * iout << " [mA] ROUT: " << rout * 1e-3 << " [kOhm] VADC: " << vadc << " [V] LOAD: " << rload << " [Ohm]" << RESET;
+        LOG(DEBUG) << BOLDBLUE << "CODE: " << +cdac_code << " IOUT: " << 1e3 * iout << " [mA] ROUT: " << rout * 1e-3 << " [kOhm] VADC: " << vadc << " [V] LOAD: " << rload << " [Ohm]" << RESET;
 
         cRloadsVec.push_back(rload);
     }
@@ -1924,7 +1928,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::Chip* pChip, 
 
     // disable VDD monitor (if requested)
     if(pDisableMonitorAfterMeasurement) { ConfigureInternalMonitoring(pChip, false); }
-    LOG(INFO) << BOLDGREEN << "lpGBTInterface::MeasurePowerSupplyVoltage: " << pPowerSupply << " " << cVsup << " V" << RESET;
+    LOG(DEBUG) << BOLDGREEN << "lpGBTInterface::MeasurePowerSupplyVoltage: " << pPowerSupply << " " << cVsup << " V" << RESET;
 
     return cVsup;
 }
