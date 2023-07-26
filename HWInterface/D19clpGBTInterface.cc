@@ -73,8 +73,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
 
-    LoadCalibrationData(pChip, 0x00244200); // ReadChipID(pChip, static_cast<lpGBT*>(pChip)->getVersion()));
-    // LoadCalibrationData(pChip, ReadChipID(pChip, static_cast<lpGBT*>(pChip)->getVersion()));
+    // LoadCalibrationData(pChip, 0x00244200);
+    LoadCalibrationData(pChip, ReadChipID(pChip, static_cast<lpGBT*>(pChip)->getVersion()));
 
     AutoTuneVref(pChip);
 

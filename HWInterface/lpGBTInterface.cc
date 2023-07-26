@@ -1420,7 +1420,7 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_
     // # cChipId: ChipID for which calibration data should be loaded.
 
     // # Raises:
-    // # LpgbtCalibrationError: If loading calibration data failed.
+    // # LpgbtCalibrationWarning: If loading calibration data failed.
     // # FileNotFoundError: If the file does not exis
 
     LOG(INFO) << BOLDGREEN << "Loading calibration data for 0x" << std::hex << +cChipId << std::dec << " chip from " << cFileName << RESET;
@@ -1460,8 +1460,8 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_
             {
                 for(uint32_t j = 1; j < row.size(); j++)
                 {
-                    LOG(INFO) << BOLDBLUE << cHeaderRow[j] << RESET;
-                    LOG(INFO) << BOLDBLUE << row[j] << RESET;
+                    LOG(DEBUG) << BOLDBLUE << cHeaderRow[j] << RESET;
+                    LOG(DEBUG) << BOLDBLUE << row[j] << RESET;
                     calibration[cHeaderRow[j]] = std::stof(row[j]);
                 }
                 cCalibrationLoaded = true;
@@ -1476,10 +1476,11 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_
         }
         if(!cCalibrationLoaded)
         {
-            LOG(ERROR) << BOLDRED << "lpGBTInterface::LoadCalibrationData: Calibration data not available for the 0x" << std::hex << +cChipId << std::dec << " chip" << RESET;
-            throw std::runtime_error(std::string("LpgbtCalibrationError"));
+            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Calibration data not available for the 0x" << std::hex << +cChipId << std::dec << " chip" << RESET;
+            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Using default calibration data" << RESET;
+            // throw std::runtime_error(std::string("LpgbtCalibrationError"));
         }
-        for(auto it = calibration.cbegin(); it != calibration.cend(); ++it) { std::cout << it->first << " " << it->second << "\n"; }
+        for(auto it = calibration.cbegin(); it != calibration.cend(); ++it) { LOG(DEBUG) << BOLDBLUE << it->first << " = " << it->second << RESET; }
     }
     else
     {
