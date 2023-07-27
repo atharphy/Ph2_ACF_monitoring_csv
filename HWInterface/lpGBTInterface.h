@@ -295,7 +295,7 @@ class lpGBTInterface : public ChipInterface
         {"TEMPERATURE_UNCALVREF_SLOPE", 4.5960e-01},
         {"TEMPERATURE_UNCALVREF_OFFSET", -2.1253e+02},
     };
-    void    LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_t pChipId, std::string pFileName = "./settings/lpGBTFiles/lpgbt_calibration_test.csv");
+    void    LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_t pChipId, std::string pFileName = "./settings/lpGBTFiles/lpgbt_calibration.csv");
     void    SetTemperature(Ph2_HwDescription::Chip* pChip, float pTemperature);
     float   EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor = true);
     void    TuneVrefControlLib(Ph2_HwDescription::Chip* pChip, bool pEnable = true);
