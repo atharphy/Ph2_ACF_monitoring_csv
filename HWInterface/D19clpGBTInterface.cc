@@ -96,7 +96,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
     LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
 
-    LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\") " << RESET;
+    LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
     LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;
     LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
     LOG(INFO) << BOLDGREEN << MeasureTemperature(pChip) << " C" << RESET;

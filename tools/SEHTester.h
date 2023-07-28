@@ -60,7 +60,7 @@ class SEHTester : public OTHybridTester
     void Resume();
     void RunHybridETest();
     void SEHInputsDebug();
-    void TurnOn(uint32_t pRightLoadValue = 0, uint32_t pLeftLoadValue = 0, bool setLoad = false);
+    void TurnOn(uint32_t pRightLoadValue = 0, uint32_t pLeftLoadValue = 0, bool setLoad = false, bool measureTemperature = false);
     bool CheckShort(std::string powerSupplyId, std::string channelId);
 
     void TurnOff();
