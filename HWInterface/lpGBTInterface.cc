@@ -501,20 +501,19 @@ uint8_t lpGBTInterface::GetVrefTune(Ph2_HwDescription::Chip* pChip)
     return (mask & cVrefTune);
 }
 
-float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput)
+float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, uint16_t pVinput) //pVinput in mV!
 {
     auto cGain   = GetADCGain(pChip, false);
     auto cOffset = GetADCOffset(pChip, false);
     auto cADC    = ReadADC(pChip, pADC);
-
-    return (pVinput * cGain * 512) / (cADC - cOffset * (1 - cGain / 2.));
+    return ((int)pVinput / 1000. * cGain * 512) / (cADC - cOffset * (1 - cGain / 2.));
 }
 
 uint8_t lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip)
 {
     const std::string pADC    = static_cast<lpGBT*>(pChip)->getTuneVrefADC();
-    float             pVinput = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
-    LOG(INFO) << BOLDYELLOW << "Tune Vref of lpGBT using input of " << pADC << " and " << pVinput << "V" << RESET;
+    uint16_t          pVinput = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
+    LOG(INFO) << BOLDYELLOW << "Tune Vref of lpGBT using input of " << pADC << " and " << pVinput << "mV" << RESET;
     uint8_t cNbits       = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
     uint8_t cCurrentStep = (0xFF >> (8 - cNbits));
     SetVrefTune(pChip, cCurrentStep);

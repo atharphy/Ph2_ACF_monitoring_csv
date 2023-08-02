@@ -217,9 +217,9 @@ void Tool::initMetadataAndFillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationNameContainer);
     theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName;
 
-    DetectorDataContainer theFirmwareVersionContainer;
-    ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
-    for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
+    //DetectorDataContainer theFirmwareVersionContainer;
+    //ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
+    //for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
 
     DetectorDataContainer theDetectorConfigurationContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
@@ -259,7 +259,7 @@ void Tool::initMetadataAndFillInitialConditions()
     fDQMMetadata->fillUsername(theUsernameContainer);
     fDQMMetadata->fillHostName(theHostNameContainer);
     fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
-    fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
+    //fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
     fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
     fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
     fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
@@ -281,8 +281,8 @@ void Tool::initMetadataAndFillInitialConditions()
         ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
         theGitCommitHashSerialization.streamByDetectorContainer(fDQMStreamer, theGitCommitHashContainer);
 
-        ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
-        theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
+        //ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
+        //theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
 
         ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
         theCalibrationNameSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationNameContainer);
