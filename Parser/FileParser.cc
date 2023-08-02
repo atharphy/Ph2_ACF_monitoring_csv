@@ -260,7 +260,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 if(static_cast<std::string>(lpGBTChild.name()) == "TuneVrefSettings")
                 {
                     std::string cADC              = lpGBTChild.attribute("ADC").as_string();
-                    float       cReferenceVoltage = std::stof(lpGBTChild.attribute("ReferenceVoltage").as_string());
+                    uint16_t       cReferenceVoltage = lpGBTChild.attribute("ReferenceVoltage").as_uint();
                     os << BOLDCYAN << "|\t|\t|---- LpGBT TuneVrefSettings:" << RESET << std::endl;
                     os << GREEN << "|\t|\t|\t|---- ADC: " << RED << cADC << RESET << std::endl;
                     os << GREEN << "|\t|\t|\t|---- ReferenceVoltage: " << RED << +cReferenceVoltage << RESET << std::endl;
