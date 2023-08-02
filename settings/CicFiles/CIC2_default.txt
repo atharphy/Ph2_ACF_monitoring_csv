@@ -3,8 +3,8 @@
 *--------------------------------------------------------------------------------
 * RegName                                       Block   Addr    Defval  Value
 *--------------------------------------------------------------------------------
-MUX_CTRL                                     	0x00    0x00    0x00    0x00
-MISC_CTRL                                     	0x02    0x44    0x02    0x02
+MUX_CTRL                                        0x00    0x00    0x00    0x00
+MISC_CTRL                                       0x02    0x44    0x02    0x02
 SLVS_PADS_CONFIG                                0x02    0x45    0x18    0x07
 *--------------------------------------------------------------------------------
 * Front-end configuration 
@@ -49,6 +49,7 @@ EXT_WA_DELAY16                                  0x03    0x62    0x44    0x44
 EXT_WA_DELAY17                                  0x03    0x63    0x44    0x44
 EXT_WA_DELAY18                                  0x03    0x64    0x44    0x44
 EXT_WA_DELAY19                                  0x03    0x65    0x44    0x44
+EFUSEMODE                                       0x03    0x67    0x00    0x00
 *--------------------------------------------------------------------------------
 * PhyPort registers
 *--------------------------------------------------------------------------------
@@ -112,22 +113,29 @@ scPhaseSelectB3i5                               0x01    0x3C    0x66    0x00
 *--------------------------------------------------------------------------------
 * Clock Tree configuration  
 *--------------------------------------------------------------------------------
-CLKTREE_CONFIG                                 	0x03    0x66    0x00    0x50
+CLKTREE_CONFIG                                  0x03    0x66    0x00    0x50
 *--------------------------------------------------------------------------------
 * Mask Registers - determines which bits are refreshed by the new value
 *--------------------------------------------------------------------------------
-MASK_BLOCK0                                 	0x00    0x1D    0x00    0xFF
-MASK_BLOCK1                                 	0x01    0x3D    0x00    0xFF
-MASK_BLOCK2                                 	0x02    0x5D    0x00    0xFF
-MASK_BLOCK3                                 	0x03    0x7D    0x00    0xFF
+MASK_BLOCK0                                     0x00    0x1D    0x00    0xFF
+MASK_BLOCK1                                     0x01    0x3D    0x00    0xFF
+MASK_BLOCK2                                     0x02    0x5D    0x00    0xFF
+MASK_BLOCK3                                     0x03    0x7D    0x00    0xFF
 *--------------------------------------------------------------------------------
 * SEU Counters ( these are actually read only... so here only for reference  )
-* ASYNC_CNTL_BLOCK0							0x00    0x1E    0x00    0x00
-* ASYNC_CNTL_BLOCK1							0x00    0x3E    0x00    0x00
-* ASYNC_CNTL_BLOCK2							0x00    0x5E    0x00    0x00
-* ASYNC_CNTL_BLOCK3							0x00    0x7E    0x00    0x00
-* SYNC_CNTL_BLOCK0							0x00    0x1F    0x00    0x00
-* SYNC_CNTL_BLOCK1							0x00    0x3F    0x00    0x00
-* SYNC_CNTL_BLOCK2							0x00    0x5F    0x00    0x00
-* SYNC_CNTL_BLOCK3							0x00    0x7F    0x00    0x00
+* ASYNC_CNTL_BLOCK0                             0x00    0x1E    0x00    0x00
+* ASYNC_CNTL_BLOCK1                             0x00    0x3E    0x00    0x00
+* ASYNC_CNTL_BLOCK2                             0x00    0x5E    0x00    0x00
+* ASYNC_CNTL_BLOCK3                             0x00    0x7E    0x00    0x00
+* SYNC_CNTL_BLOCK0                              0x00    0x1F    0x00    0x00
+* SYNC_CNTL_BLOCK1                              0x00    0x3F    0x00    0x00
+* SYNC_CNTL_BLOCK2                              0x00    0x5F    0x00    0x00
+* SYNC_CNTL_BLOCK3                              0x00    0x7F    0x00    0x00
 *--------------------------------------------------------------------------------
+* Fused ID specific 
+*--------------------------------------------------------------------------------
+EFUSEMODE                                       0x03    0x67    0x00    0x00
+EfuseValue0                                     0x05    0xBC    0x00    0x00
+EfuseValue1                                     0x05    0xBD    0x00    0x00
+EfuseValue2                                     0x05    0xBE    0x00    0x00
+EfuseValue3                                     0x05    0xBF    0x00    0x00

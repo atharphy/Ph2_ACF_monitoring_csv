@@ -24,6 +24,7 @@ class DQMMetadata : public DQMHistogramBase
     void fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool initialValue);
     void fillLpGBTConfiguration(const DetectorDataContainer& theLpGBTConfigurationContainer, bool initialValue);
     void fillLpGBTFuseId(const DetectorDataContainer& theLpGBTFuseIdContainer);
+    void fillVTRxFuseId(const DetectorDataContainer& theVTRxFuseIdContainer);
 
     virtual bool fill(std::string& inputStream) override;
     virtual void process() override;
@@ -47,6 +48,7 @@ class DQMMetadata : public DQMHistogramBase
     DetectorDataContainer fInitialLpGBTConfigurationContainer;
     DetectorDataContainer fFinalLpGBTConfigurationContainer;
     DetectorDataContainer fLpGBTFuseIdContainer;
+    DetectorDataContainer fVTRxFuseIdContainer;
 };
 
 #endif

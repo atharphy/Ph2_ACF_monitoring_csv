@@ -122,6 +122,7 @@ class Tool : public Ph2_System::SystemController
     void fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer);
     void fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer);
     void fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContainer);
+    void fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer);
     void fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer);
     void fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurationContainer);
 
