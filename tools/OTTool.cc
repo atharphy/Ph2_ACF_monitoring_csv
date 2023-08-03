@@ -624,8 +624,11 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
     LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
     do
     {
+        auto nTrigger = cInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << "while loop  cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
-        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " nTriggers " << cInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " nTriggers " << nTrigger << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Delta " << nTrigger-cCounter << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
+
         if(cCounter >= fNevents || cTriggerInterface->GetTriggerState() == 0)
         { 
             LOG(INFO) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard" << +cBrdId << RESET; 
@@ -892,7 +895,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                         fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                         (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, pInjections, 0x01);
                     }
-                    else
+                    else // analog injection
                     {
                         int inj = 0;
                         fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);//disable all pixels :)
@@ -905,6 +908,23 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                             std::stringstream cRegName;
                             cRegName << "ENFLAGS_P" << +cPxl;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x4F, false);
+
+                            /* Multi strips injection*/
+                            /*
+			                LOG(INFO) << BOLDBLUE << " Injecting in pixel " << +(cPxl+1) << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET;
+			                // Inject in a second pixel
+			                std::stringstream cRegName2;
+			                cRegName2 << "ENFLAGS_P" << +(cPxl+1);
+			                fReadoutChipInterface->WriteChipReg(cChip, cRegName2.str(), 0x4F, false);
+
+
+			                LOG(INFO) << BOLDBLUE << " Injecting in pixel " << +(cPxl+2) << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET; 
+			                // Inject in a third pixel                                                                                                   
+			                std::stringstream cRegName3;
+                            cRegName3 << "ENFLAGS_P" << +(cPxl+2);
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegName3.str(), 0x4F, false);
+                            */
+
                             inj += 1;
                         }
                         if(cInjectAll)
@@ -954,16 +974,35 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                         {
                             uint8_t stripInj = cInjection.fRow;
                             LOG(INFO) << BOLDRED << __LINE__ << "] INJECTING STRIP: " << +stripInj << " with ENFLAGS Memory ALL=0x " << std::hex << enflags << std::dec << RESET;
+
+			    // Inject in one strip
                             std::stringstream cRegNameEn;
-                            
-                            cRegNameEn << "ENFLAGS_S" << +stripInj;
+			    cRegNameEn << "ENFLAGS_S" << +stripInj;
+			    std::cout << cRegNameEn.str() << std::endl;
                             enflags = (enflags & 0xFE) + 0x01;//Making sure to enable the strip
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), enflags);
-                            if(fInjectionType == 0)
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), enflags); 
+			    /*
+			    LOG(INFO) << BOLDRED << __LINE__ << "] INJECTING STRIP: " << +(stripInj+1) << " with ENFLAGS Memory ALL=0x " << std::hex << enflags << std::dec << RESET;
+			   
+			    // Inject in a second strip
+			    std::stringstream cRegNameEn2;
+			    cRegNameEn2 << "ENFLAGS_S" << +(stripInj+1);
+			    std::cout << cRegNameEn2.str() << std::endl;
+			    fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn2.str(), enflags);
+
+                            // Inject in a third strip                                                                                                                                           
+			    std::stringstream cRegNameEn3;
+                            cRegNameEn3 << "ENFLAGS_S" << +(stripInj+2);
+			    std::cout << cRegNameEn3.str() << std::endl;
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn3.str(), enflags);
+			    */
+
+                            if(fInjectionType == 0) // this is digital, we are doing analog
                             {
                                 std::stringstream cRegNamePattern;
                                 cRegNamePattern << "DigCalibPattern_L_S" << +stripInj;
                                 fReadoutChipInterface->WriteChipReg(cChip, cRegNamePattern.str(), 0x01);
+				
                             }
                         }
                     }
