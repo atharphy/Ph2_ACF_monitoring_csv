@@ -20,7 +20,10 @@
             <Global>                 
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" />
+                <!-- LatencyRx320: MPA register for phase selction of Strip input, L1 should be 7 for v2 and 6 for v2.1 -->
+                <!-- EdgeSelT1Raw selects the sampling edge for the T1 and Raw Input, it should be 2 for PSv2 and 0 for PSv2.1 --> 
+                <!-- EdgeSelTrig selects the sampling edge for the Strip Input -->
+                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" EdgeSelT1Raw="0" EdgeSelTrig="0"/> 
 		        <Thresholds      stripThreshold="60" stripThresholdHigh="100" pixelThreshold="120"/> 
                 <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode -->
                 <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
@@ -79,7 +82,7 @@
             <Global>
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <Latencies       stripLatency="298" pixelLatency="297" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" />
+                <Latencies       stripLatency="298" pixelLatency="297" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" EdgeSelT1Raw="0" EdgeSelTrig="0"/> <!-- LatencyRx320: MPA register for phase selction of Strip input, L1 should be 7 for v2 and 6 for v2.1 --><!-- EdgeSelT1Raw selects the sampling edge for the T1 and Raw Input, it should be 2 for PSv2 and 0 for PSv2.1 --> <!-- EdgeSelTrig selects the sampling edge for the Strip Input -->
                 <Thresholds      stripThreshold="60" stripThresholdHigh="100" pixelThreshold="120"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
                 <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode, 0 means disabled for pixels -->
                 <SamplingDelay   stripCoarse="7" stripFine="0" pixelCoarse="7" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->

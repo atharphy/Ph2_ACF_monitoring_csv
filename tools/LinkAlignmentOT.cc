@@ -133,7 +133,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
                 cChannels = {2, 0, 2, 0, 2, 2};
             }
         }
-        else
+        else // PS
         {
             if(cHybrid->getId() % 2 == 0)
             {
@@ -152,7 +152,10 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
     auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
     cAligned   = cAligned && (cMode != 15);
     // cMode      = ( cMode > 8 ) ? 5 : cMode;
-    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); }
+    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) 
+    { 
+        flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); 
+    }
 
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx = 0;

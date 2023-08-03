@@ -161,6 +161,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     uint8_t cBoardReset = convertAnyInt(pBeBordNode.attribute("boardReset").value());
     cBeBoard->setReset(cBoardReset);
 
+    uint8_t configureBoardFlag = convertAnyInt(pBeBordNode.attribute("configure").value());
+    cBeBoard->setToConfigure(configureBoardFlag);
+
     uint8_t cReset = convertAnyInt(pBeBordNode.attribute("linkReset").value());
     cBeBoard->setLinkReset(cReset);
 
@@ -858,7 +861,9 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 int cLatency      = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
                 int cRetimePix    = convertAnyInt(cLatencyNode.attribute("retimePix").value());
                 int cLatencyRx320 = ((convertAnyInt(cLatencyNode.attribute("LatencyRx320L1").value())) & 0x7) + ((convertAnyInt(cLatencyNode.attribute("LatencyRx320Trigger").value()) & 0x7)<< 3);
-
+                int cEdgeSelT1Raw = convertAnyInt(cLatencyNode.attribute("EdgeSelT1Raw").value());
+                int cEdgeSelTrig  = convertAnyInt(cLatencyNode.attribute("EdgeSelTrig").value());
+                if (cEdgeSelTrig == 1) cEdgeSelTrig = 255; // 255 is 0xFF in hex and sets 1 for all SSAs.
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     cChip->setReg("L1Offset_1_ALL", cLatency & 0xFF);        // Irene
@@ -880,6 +885,13 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
                     LOG(INFO) << BOLDRED << __LINE__ << "RETIME PIX: 0x" << std::hex << cRetimePix << " CONTROL_1: 0x" << cValueInMemory  << std::dec << RESET;
                     cChip->setReg("LatencyRx320", cLatencyRx320 & 0x3F);
+
+                    LOG(INFO) << BOLDRED << __LINE__ << "cEdgeSelT1Raw: 0x" << std::hex << cEdgeSelT1Raw << std::dec << RESET;
+                    cChip->setReg("EdgeSelT1Raw", cEdgeSelT1Raw);
+
+                    LOG(INFO) << BOLDRED << __LINE__ << "cEdgeSelTrig: 0x" << std::hex << cEdgeSelTrig << std::dec << RESET;
+                    cChip->setReg("EdgeSelTrig", cEdgeSelTrig);
+
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
                    << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
@@ -988,11 +1000,17 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             if(pHybridNode.attribute("i2cMaster")) { cMasterId = pHybridNode.attribute("i2cMaster").as_int(); } // can overwrite default from xml
             else
                 cMasterId = (cHybridId % 2 == 0) ? 2 : 0; // default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
+            os << BOLDBLUE << "I2C Master Id is " << +cMasterId << RESET << std::endl;
 
-            os << BOLDBLUE << "I2C Master Id is " << +cMasterId << RESET;
+            uint8_t invertClock;
+            if(pHybridNode.attribute("invertClock")) { invertClock = pHybridNode.attribute("invertClock").as_int(); } // can overwrite default from xml
+            else invertClock = 1; // default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
+            os << BOLDBLUE << "invertClock " << +invertClock << RESET << std::endl;
+
             cHybrid = pOpticalGroup->addHybridContainer(cHybridId, new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), cHybridId));
 
             cHybrid->setMasterId(cMasterId);
+            cHybrid->setInvertClock(invertClock);
 
             cHybrid->setOptical(pBoard->isOptical());
             os << BOLDBLUE << "|       |       | HybridOpticalId is " << +cHybrid->getOpticalGroupId() << RESET;

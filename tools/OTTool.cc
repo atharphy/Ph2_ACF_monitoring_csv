@@ -115,7 +115,7 @@ void OTTool::Reset()
 void OTTool::Prepare()
 {
     // retreive number of events from settings file
-    fNevents = findValueInSettings<double>("Nevents", 10);
+    fNevents = findValueInSettings<double>("Nevents", 100); //Was 10, trying to increase to make it more reliable
 
     if(fReadoutMode == 1) return;
     // retreive original settings for all chips and all back-end boards
@@ -681,17 +681,24 @@ void OTTool::ContinuousReadoutTh(uint8_t cBrdId)
     size_t cLclEvntCntr = 0;
     auto   cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
     size_t cAccumulatedWaits = 0;
+
+    auto cTriggerState   = cTriggerInterface->GetTriggerState();
     do
     {
+        cTriggerState   = cTriggerInterface->GetTriggerState();
         cAccumulatedWaits += fReadoutPause;
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
-        auto                  cTriggerState   = cTriggerInterface->GetTriggerState();
-        auto                  cTriggerSource  = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
-        auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_stat.fast_command_block.trigger_in_counter");
+        auto cTriggerSource  = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
+        auto cTriggerCounter = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_stat.fast_command_block.trigger_in_counter");
         std::vector<uint32_t> cData(0);
         // cLclEvntCntr += ReadData(*cBoardIter, cData, cWait);
         cLclEvntCntr += fBeBoardInterface->ReadData((*cBoardIter), false, cData, cWait);
-        if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(fReadoutData[cBrdId]));
+        if(cData.size() != 0)
+        {
+            std::move(cData.begin(), cData.end(), std::back_inserter(fReadoutData[cBrdId]));
+            // LOG(INFO) << BOLDBLUE << " Data size = " << cData.size() << RESET;
+        }
+           
         cTriggerCounters.push_back(cTriggerCounter);
         if(cWaitCounter % 100 == 0 && cWaitCounter > 0)
         {
@@ -700,7 +707,8 @@ void OTTool::ContinuousReadoutTh(uint8_t cBrdId)
                        << " trigger source is " << +cTriggerSource << " trigger state is " << +cTriggerState << " and " << cLclEvntCntr << " events in the readout so far ... " << RESET;
         }
         cWaitCounter++;
-    } while(cTriggerInterface->GetTriggerState() == 1);
+        // LOG(INFO) << BOLDBLUE << " Trigger State = " << cTriggerState << RESET;
+    } while(cTriggerState == 1);
     // now decode data
     cAccumulatedWaits += 100 * 1e3;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -977,27 +985,24 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
 
 			    // Inject in one strip
                             std::stringstream cRegNameEn;
-			    cRegNameEn << "ENFLAGS_S" << +stripInj;
-			    std::cout << cRegNameEn.str() << std::endl;
+                             
+                            cRegNameEn << "ENFLAGS_S" << +stripInj;
                             enflags = (enflags & 0xFE) + 0x01;//Making sure to enable the strip
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), enflags); 
-			    /*
-			    LOG(INFO) << BOLDRED << __LINE__ << "] INJECTING STRIP: " << +(stripInj+1) << " with ENFLAGS Memory ALL=0x " << std::hex << enflags << std::dec << RESET;
-			   
-			    // Inject in a second strip
-			    std::stringstream cRegNameEn2;
-			    cRegNameEn2 << "ENFLAGS_S" << +(stripInj+1);
-			    std::cout << cRegNameEn2.str() << std::endl;
-			    fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn2.str(), enflags);
+                            uint16_t readReg = fReadoutChipInterface->ReadChipReg(cChip, cRegNameEn.str());
+                            LOG(INFO) << BOLDRED << __LINE__ << "] is STRIP disabled? Checking number "<< +stripInj << " 0x" << std::hex << readReg << std::dec << RESET;
 
-                            // Inject in a third strip                                                                                                                                           
-			    std::stringstream cRegNameEn3;
-                            cRegNameEn3 << "ENFLAGS_S" << +(stripInj+2);
-			    std::cout << cRegNameEn3.str() << std::endl;
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn3.str(), enflags);
-			    */
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), enflags);
+                            readReg = fReadoutChipInterface->ReadChipReg(cChip, cRegNameEn.str());
+                            LOG(INFO) << BOLDRED << __LINE__ << "] !!! Enable STRIP, Checking number "<< +stripInj << " 0x" << std::hex << readReg << std::dec << RESET;
+                            // LOG(INFO) << BOLDRED << __LINE__ << "] Then trying to disable it "<<  RESET;
+                            // fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), 0x00);
+                            // readReg = fReadoutChipInterface->ReadChipReg(cChip, cRegNameEn.str());
+                            // LOG(INFO) << BOLDRED << __LINE__ << "] is it disabled, Checking number "<< +stripInj << " 0x" << std::hex << readReg << std::dec << RESET;
+                            // fReadoutChipInterface->WriteChipReg(cChip, cRegNameEn.str(), enflags);
+                            readReg = fReadoutChipInterface->ReadChipReg(cChip, cRegNameEn.str());
+                            LOG(INFO) << BOLDRED << __LINE__ << "] !!! Enable STRIP, Checking number "<< +stripInj << " 0x" << std::hex << readReg << std::dec << RESET;
 
-                            if(fInjectionType == 0) // this is digital, we are doing analog
+                            if(fInjectionType == 0)
                             {
                                 std::stringstream cRegNamePattern;
                                 cRegNamePattern << "DigCalibPattern_L_S" << +stripInj;

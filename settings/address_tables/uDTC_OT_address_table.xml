@@ -143,13 +143,15 @@
                         <node id="master_en"                        mask="0x00000100"/>
                 </node>
                 <node id="multiplexing_bp"                    address="0x038">
-                    <node id="backplane_num"                 mask="0x0000000f"/>
-                    <node id="card_num"                      mask="0x000000f0"/>
-                    <node id="ssa_pair_select"                  mask="0x00000f00"/>
-                    <node id="rtn_fcmd_test"                    mask="0x00001000" description="return fast commands from SSAs test regime, predefined number of trigger commands is sent"/>
-                    <node id="backplane_select_tri"             mask="0x00002000" description="control tri-state buffer"/>
-                    <node id="card_select_tri"                  mask="0x00004000" description="control tri-state buffer"/>
-                </node>
+                <node id="backplane_num"                 mask="0x0000000f"/>
+                <node id="card_num"                      mask="0x000000f0"/>
+                <node id="ssa_pair_select"                  mask="0x00000f00"/>
+                <node id="rtn_fcmd_test"                    mask="0x00001000" description="return fast commands from SSAs test regime, predefined number of trigger commands is sent"/>
+                <!-- <node id="backplane_select_tri"             mask="0x00002000" description="control tri-state buffer"/> -->
+                <!-- <node id="card_select_tri"                  mask="0x00004000" description="control tri-state buffer"/> -->
+                <node id="interlock_switch_feature"         mask="0x00002000" description="enabling of the interlock switch feature. O sets the control from the firmware, 1 sets the monitoring from the firmware"/>
+                <node id="interlock_switch_output"          mask="0x00004000" description="output to the interlock switch when the firmware is controlling the line"/>
+            </node>
 
                  <node id="data_player"                    address="0x03A">
                     <node id="pattern_320MHz"                 mask="0x000000ff"/>
@@ -308,10 +310,12 @@
             </node>
             <node id="cpb_command_fifo"         address="0x004" permission="w" mode="non-incremental" description="command fifo to new cpb"/>
             <node id="cpb_reply_fifo"         address="0x005" permission="r" mode="non-incremental" description="reply fifo to new cpb"/>
-            <node id="cpb_ctrl_reg"         address="0x006"/>
+            <node id="cpb_ctrl_reg"         address="0x006">
                 <node id="command_fifo_reset"         mask="0x00000001" description="reset command fifo of new cpb"/>
                 <node id="reply_fifo_reset"         mask="0x00000002" description="reset reply fifo of new cpb"/>
                 <node id="core_reset"         mask="0x00000004" description="core reset of the new cpb"/>
+                <node id="state_reset"         mask="0x80000000" description="state reset of the new cpb"/>
+            </node>
         </node>
 
         <node id="fast_command_block"           address="0x2000">
@@ -354,7 +358,8 @@
                 <node id="setup_disconnect"                 mask="0x00000002"/>
                 <node id="check_return_clock"               mask="0x00000004" description="user request to check the return clock from SSAs"/>
                 <node id="check_payload_ntriggers"          mask="0x00000ff0" description="user required number of trigger commands to test the paylaod of the return fast command from SSAs"/>
-                <node id="setup_scan"                  mask="0x00010000"/>
+                <node id="setup_scan"                       mask="0x00010000"/>
+                <node id="reset_powergood_flag"     mask="0x00020000" description="set to 1 for flag_power_good_dropped to be cleared."/>
             </node>
 
             <node id="data_player"              address="0x019">
@@ -538,7 +543,10 @@
                 <node id="available_backplanes_cards"                  mask="0x0fffff00" description="list of all available backplanes and cards      "/>
                 <node id="backplanes_disconnected"                  mask="0x20000000" description="backplanes are disconnected after running       "/>
                 <node id="cards_disconnected"                mask="0x40000000" description="cards are disconnected after running            "/>
+                <node id="status_interlock_switch"                mask="0x80000000" description="Status of the interlock switch when the control is enabled"/>
+                <node id="flag_power_good_dropped"             mask="0x00000080" description="Flag raised if the power good signal of test card or backplane drops. Has to be cleared manually."/>
             </node>
+            <node id="counter_powergood_glitches" address="0x122"></node>
 
             <node id="data_player"              address="0x00E">
                 <node id="stat_roh_data_player"                  mask="0x00001000"/>

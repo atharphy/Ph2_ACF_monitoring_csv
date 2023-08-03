@@ -1,0 +1,122 @@
+*--------------------------------------------------------------------------------
+* Control Registers
+*--------------------------------------------------------------------------------
+* RegName                                       Block   Addr    Defval  Value
+*--------------------------------------------------------------------------------
+MUX_CTRL                                        0x00	0x00	0x00	0x00
+scDllCurrentSet0                                0x00	0x01	0x00	0x55
+scDllCurrentSet1                                0x00	0x02	0x00	0x55
+*--------------------------------------------------------------------------------
+* Front-end configuration 
+*--------------------------------------------------------------------------------
+scDllCurrentSet2                                0x00	0x03	0x00	0x55
+scDllConfirmCountSelect0                        0x00	0x04	0x55	0xFF
+*--------------------------------------------------------------------------------
+* Stub packing configuration 
+*--------------------------------------------------------------------------------
+scDllConfirmCountSelect1                        0x00	0x05	0x55	0xFF
+scDllConfirmCountSelect2                        0x00	0x06	0x55	0xFF
+*--------------------------------------------------------------------------------
+* Hit data packing configuration 
+*--------------------------------------------------------------------------------
+scDllResetReq0                                  0x00	0x07	0x00	0x00
+scDllResetReq1                                  0x00	0x08	0x00	0x00
+*--------------------------------------------------------------------------------
+* Word-aligner configuration 
+*--------------------------------------------------------------------------------
+scDllCoarseLockDetection0                       0x00	0x09	0x00	0x00
+scDllCoarseLockDetection1                       0x00	0x0A	0x00	0x00
+scDllnitSMForceClockEnable0                     0x00	0x0B	0x00	0x00
+scDllnitSMForceClockEnable1                     0x00	0x0C	0x00	0x00
+PHY_PORT_CONFIG                                 0x00	0x0D	0x01	0x03
+scEnableLine0                                   0x00	0x0E	0xFF	0xFF
+scEnableLine1                                   0x00	0x0F	0xFF	0xFF
+scEnableLine2                                   0x00	0x10	0xFF	0xFF
+scEnableLine3                                   0x00	0x11	0xFF	0xFF
+scEnableLine4                                   0x00	0x12	0xFF	0xFF
+scEnableLine5                                   0x00	0x13	0xFF	0xFF
+scResetChannels0                                0x00	0x14	0x00	0x00
+scResetChannels1                                0x00	0x15	0x00	0x00
+scTrainLine0                                    0x00	0x16	0x00	0x00
+scTrainLine1                                    0x00	0x17	0x00	0x00
+scTrainLine2                                    0x00	0x18	0x00	0x00
+scTrainLine3                                    0x00	0x19	0x00	0x00
+scTrainLine4                                    0x00	0x1A	0x00	0x00
+scTrainLine5                                    0x00	0x1B	0x00	0x00
+scAnalogBypass0                                 0x00	0x1C	0x00	0x00
+MASK_BLOCK0                                     0x00	0x1D	0x00	0xFF
+scAnalogBypass1                                 0x01	0x20	0x00	0x00
+scAnalogBypass2                                 0x01	0x21	0x00	0x00
+scAnalogBypass3                                 0x01	0x22	0x00	0x00
+scAnalogBypass4                                 0x01	0x23	0x00	0x00
+*--------------------------------------------------------------------------------
+* PhyPort registers
+*--------------------------------------------------------------------------------
+scAnalogBypass5                                 0x01	0x24	0x00	0x00
+scPhaseSelectB0i0                               0x01	0x25	0x66	0x97
+scPhaseSelectB0i1                               0x01	0x26	0x66	0x89
+scPhaseSelectB0i2                               0x01	0x27	0x66	0x89
+scPhaseSelectB0i3                               0x01	0x28	0x66	0x9B
+scPhaseSelectB0i4                               0x01	0x29	0x66	0x76
+scPhaseSelectB0i5                               0x01	0x2A	0x66	0x88
+scPhaseSelectB1i0                               0x01	0x2B	0x66	0x98
+scPhaseSelectB1i1                               0x01	0x2C	0x66	0x8A
+scPhaseSelectB1i2                               0x01	0x2D	0x66	0x99
+scPhaseSelectB1i3                               0x01	0x2E	0x66	0x99
+scPhaseSelectB1i4                               0x01	0x2F	0x66	0x67
+scPhaseSelectB1i5                               0x01	0x30	0x66	0xA8
+scPhaseSelectB2i0                               0x01	0x31	0x66	0x98
+scPhaseSelectB2i1                               0x01	0x32	0x66	0x88
+scPhaseSelectB2i2                               0x01	0x33	0x66	0x98
+scPhaseSelectB2i3                               0x01	0x34	0x66	0x69
+scPhaseSelectB2i4                               0x01	0x35	0x66	0x76
+scPhaseSelectB2i5                               0x01	0x36	0x66	0x79
+scPhaseSelectB3i0                               0x01	0x37	0x66	0x98
+scPhaseSelectB3i1                               0x01	0x38	0x66	0x78
+scPhaseSelectB3i2                               0x01	0x39	0x66	0x99
+scPhaseSelectB3i3                               0x01	0x3A	0x66	0x6A
+scPhaseSelectB3i4                               0x01	0x3B	0x66	0x88
+scPhaseSelectB3i5                               0x01	0x3C	0x66	0x78
+MASK_BLOCK1                                     0x01	0x3D	0x00	0xFF
+FE_CONFIG                                       0x02	0x40	0xFF	0x1D
+FE_ENABLE                                       0x02	0x41	0xFF	0xFF
+BX0_ALIGN_CONFIG                                0x02	0x42	0x80	0x80
+EXT_BX0_DELAY                                   0x02	0x43	0x16	0x16
+MISC_CTRL                                       0x02	0x44	0x02	0x0A
+SLVS_PADS_CONFIG                                0x02	0x45	0x18	0x1F
+L1_DATA_TIMEOUT_VALUE0                          0x02	0x46	0x00	0x00
+L1_DATA_TIMEOUT_VALUE1                          0x02	0x47	0x04	0x0F
+CALIB_PATTERN0                                  0x02	0x4A	0xA1	0x7A
+CALIB_PATTERN1                                  0x02	0x4B	0xA1	0x7A
+CALIB_PATTERN2                                  0x02	0x4C	0xA1	0x7A
+CALIB_PATTERN3                                  0x02	0x4D	0xA1	0x7A
+CALIB_PATTERN4                                  0x02	0x4E	0xA1	0x7A
+EXT_WA_DELAY00                                  0x02	0x4F	0x44	0x00
+EXT_WA_DELAY01                                  0x02	0x50	0x44	0x00
+EXT_WA_DELAY02                                  0x02	0x51	0x44	0x00
+EXT_WA_DELAY03                                  0x02	0x52	0x44	0x00
+EXT_WA_DELAY04                                  0x02	0x53	0x44	0x00
+EXT_WA_DELAY05                                  0x02	0x54	0x44	0x00
+EXT_WA_DELAY06                                  0x02	0x55	0x44	0x00
+EXT_WA_DELAY07                                  0x02	0x56	0x44	0x00
+EXT_WA_DELAY08                                  0x02	0x57	0x44	0x00
+EXT_WA_DELAY09                                  0x02	0x58	0x44	0x00
+EXT_WA_DELAY10                                  0x02	0x59	0x44	0x00
+EXT_WA_DELAY11                                  0x02	0x5A	0x44	0x00
+EXT_WA_DELAY12                                  0x02	0x5B	0x44	0x00
+EXT_WA_DELAY13                                  0x02	0x5C	0x44	0x00
+MASK_BLOCK2                                     0x02	0x5D	0x00	0xFF
+EXT_WA_DELAY14                                  0x03	0x60	0x44	0x00
+EXT_WA_DELAY15                                  0x03	0x61	0x44	0x00
+EXT_WA_DELAY16                                  0x03	0x62	0x44	0x00
+*--------------------------------------------------------------------------------
+* Clock Tree configuration  
+*--------------------------------------------------------------------------------
+EXT_WA_DELAY17                                  0x03	0x63	0x44	0x00
+*--------------------------------------------------------------------------------
+* Mask Registers - determines which bits are refreshed by the new value
+*--------------------------------------------------------------------------------
+EXT_WA_DELAY18                                  0x03	0x64	0x44	0x00
+EXT_WA_DELAY19                                  0x03	0x65	0x44	0x00
+CLKTREE_CONFIG                                  0x03	0x66	0x00	0x50
+MASK_BLOCK3                                     0x03	0x7D	0x00	0xFF

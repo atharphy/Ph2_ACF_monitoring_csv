@@ -212,8 +212,8 @@ enum class SLinkDebugMode
 };
 enum class EventType
 {
-    ZS    = 1,
-    VR    = 2,
+    ZS    = 1, // ZeroSuppression
+    VR    = 2, // VirginRaw
     SSA   = 3,
     MPA   = 4,
     SCAS  = 5,

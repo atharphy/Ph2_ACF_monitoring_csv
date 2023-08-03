@@ -363,6 +363,11 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
         LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
         return fTriggerInterface->RunTriggerFSM();
     }
+    // else if(cTriggerSource == 6)
+    // {
+    //     LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ... IRENE ADDED OPTION FOR SYNC SCURVES" << RESET;
+    //     return fTriggerInterface->RunTriggerFSM();
+    // }
     else
     {
         LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData  USING WRONG TRIGGER SOURCE FOR THIS TEST... "<< cTriggerSource << RESET;

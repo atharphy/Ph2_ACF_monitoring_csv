@@ -190,6 +190,7 @@ uint32_t BeBoardInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::ve
     {
         setBoard(pBoard->getId());
         dataSize = fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
+        LOG(INFO) << __LINE__ << "] " << __PRETTY_FUNCTION__ << RESET;
         theGuard.unlock();
     }
 

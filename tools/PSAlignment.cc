@@ -1679,9 +1679,9 @@ bool PSAlignment::Align()
     LOG(INFO) << BOLDBLUE << "Starting MPA-SSA alignment procedure .... " << RESET;
     // not sure I need this here .. lets check
     // auto     cSetting       = fSettingsMap.find("TxDrive");
-    uint32_t cTxDriveStr = 4;
+    uint32_t cTxDriveStr = 7;
     // cSetting                = fSettingsMap.find("PreEmph");
-    uint32_t cTxPreEmphMode = 1;
+    uint32_t cTxPreEmphMode = 1;//Don't know what it is
     // configure TxDrive for lpGBT
     for(auto cBoard: *fDetectorContainer)
     {

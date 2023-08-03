@@ -1303,7 +1303,23 @@ void MPA2Interface::ReadASEvent(ReadoutChip* pMPA2, std::vector<uint32_t>& pData
 bool MPA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << RESET;
+
+
     return this->WriteChipReg(pChip, "AnalogueAsync", 1);
+
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
+
+    // return this->WriteChipReg(pChip, "AnalogueSync", 1);
 }
 
 uint32_t MPA2Interface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
