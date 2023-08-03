@@ -5,11 +5,11 @@
     <!-- <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!--<connection id="board" uri="chtcp-2.0://outertracker03.dhcp.fnal.gov:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
 <!--    <connection id="board" uri="chtcp-2.0://athenanu.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://athenanu.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
 
     <CDCE configure="0" clockRate="320"/>
         
-    <OpticalGroup Id="1" FMCId="L12" reset="1">
+    <OpticalGroup Id="0" FMCId="L12" reset="1">
 <!--        <lpGBT_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run1702/" /> -->
 <!--        <lpGBT Id="0" version="1" optical="1" configfile="BE0_OG0_lpGBT0.txt"> -->
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" /> <!-- default -->
@@ -20,7 +20,7 @@
             <Global>                 
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <Latencies       stripLatency="295" pixelLatency="294" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" />
+                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" />
 		        <Thresholds      stripThreshold="50" stripThresholdHigh="100" pixelThreshold="160"/> 
                 <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode -->
                 <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
@@ -57,7 +57,7 @@
             <Global>
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <Latencies       stripLatency="295" pixelLatency="294" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" />
+                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" />
                 <Thresholds      stripThreshold="50" stripThresholdHigh="100" pixelThreshold="160"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
                 <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode, 0 means disabled for pixels -->
                 <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="0" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
@@ -166,7 +166,7 @@
                 <Register name="antenna"> 0 </Register>
                 <Register name="clear_counters"> 0 </Register>
             </Register>
-            <Register name="ext_trigger_delay_value"> 100 </Register>
+            <Register name="ext_trigger_delay_value"> 269 </Register>
             <Register name="antenna_trigger_delay_value"> 1 </Register>
             <Register name="delay_between_two_consecutive"> 25 </Register>
             <Register name="misc">
@@ -198,7 +198,7 @@
                 <Register name="trigger_type"> 0 </Register>
                 <Register name="data_type"> 0 </Register>
                 <!--this is what is commonly known as stub latency-->
-                <Register name="common_stubdata_delay"> 219 </Register>
+                <Register name="common_stubdata_delay"> 216 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
