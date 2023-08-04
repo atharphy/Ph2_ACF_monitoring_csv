@@ -1296,8 +1296,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         cTmpS0.assign(cMaxRows, 0);
                         cTmpS1.assign(cMaxRows, 0);
                         bool    cSSAExists = std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8) != cSSAIds.end();
-                        uint8_t cSSAId     = (cSSAExists) ? std::distance(cSSAIds.begin(), std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8)) : 0;
-                        if(cSSAExists) LOG(DEBUG) << BOLDYELLOW << "MPA#" << +cChip->getId() << " SSA Id " << +cSSAId << RESET;
+                        uint8_t cSSAId     = (cSSAExists) ? (cChip->getId() % 8) : -1;                
+                        LOG(DEBUG) << BOLDYELLOW << "MPA#" << +cChip->getId() << " SSA Id " << +cSSAId << RESET;
 
                         // loop over hits and count
                         auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
