@@ -35,13 +35,14 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 ### Suggested software and firmware versions:
-- Software git branch / tag : `Dev` / `v4-13`
-- Firmware tag: `v4-06`
+- Software git branch / tag : `Dev` / `v4-15`
+- Firmware tag: `v4-07`
 
 ### Important webpages and information:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 - Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
+- ROC tuning sequence: https://www.overleaf.com/read/ffpkqnjjjscd
 - Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
 - Mask converter from `Ph2_ACF` to `Alki's` code: `pyUtilsIT/ConvertPh2ACFMask2Alkis.py`
 
@@ -116,23 +117,7 @@ For more information on the firmware, please check the doc directory of https://
 
 
 ### Gitlab CI setup for Developers (required to submit merge requests!!!)
-1. Make sure you are subscribed to the cms-tracker-phase2-DAQ e-group
-
-2. Add predefined variables
-
-    i. from your fork go to `Ph2_ACF > settings > CI/CD`
-
-    ii. expand the `Variables` section
-
-    iii. click the `Add variable` button
-        - add key: USER_NAME and value: <your CERN user name>
-
-    iv. click the `Add variable` button
-        - select the flag `Mask variable`
-        - add key: USER_PASS and value: <your CERN password encoded to base64>
-          e.g encode "thisword": printf "thisword" | base64
-
-3. Enable shared Runners (if not enabled)
+1. Enable shared Runners (if not enabled)
     i. from `settings > CI/CD` expand the `Runners` section
     ii. click the `Allow shared Runners` button
 
@@ -343,7 +328,7 @@ sudo yum install -y git-extras
 Install devtoolset 10
 ```bash
 sudo yum makecache --refresh
-sudo yum -y install gcc-toolset-10-gcc
+sudo yum -y install gcc-toolset-10
 ```
 
 Install python3
@@ -414,7 +399,7 @@ sudo yum install -y cmake3 clang-tools-extra git-extras
 **devtoolset 12**
 ```bash
 sudo yum makecache --refresh
-sudo yum -y install gcc-toolset-12-gcc
+sudo yum -y install gcc-toolset-12
 ```
 
 **python3**

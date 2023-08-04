@@ -84,21 +84,22 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
                     for(const auto& regName: regNames)
                     {
                         if(((checkAgainst == true) &&
-                            (DACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() != value)) ||
+                            (DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() != value)) ||
                            (checkAgainst == false))
                         {
                             static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                                ->PackWriteCommand(cChip,
-                                                   regName,
-                                                   DACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
-                                                   chipCommandList,
-                                                   true);
+                                ->PackWriteCommand(
+                                    cChip,
+                                    regName,
+                                    DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>(),
+                                    chipCommandList,
+                                    true);
 
                             LOG(INFO) << BOLDMAGENTA << ">>> " << (checkAgainst == true ? "Best " : "") << BOLDYELLOW << regName << BOLDMAGENTA
                                       << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                       << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
-                                      << DACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA
-                                      << " <<<" << RESET;
+                                      << DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()
+                                      << BOLDMAGENTA << " <<<" << RESET;
                         }
                         else
                         {
@@ -142,28 +143,28 @@ void CalibBase::saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*
                         for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                             for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                                 if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                       ->at(cBoard->getIndex())
-                                                                                                                       ->at(cOpticalGroup->getIndex())
-                                                                                                                       ->at(cHybrid->getIndex())
-                                                                                                                       ->at(cChip->getIndex())
+                                                                                                                       ->getObject(cBoard->getId())
+                                                                                                                       ->getObject(cOpticalGroup->getId())
+                                                                                                                       ->getObject(cHybrid->getId())
+                                                                                                                       ->getObject(cChip->getId())
                                                                                                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                        ->allChannelGroup()
                                                                                                                        ->isChannelEnabled(row, col))
                                     fileOutID << "r " << row << " c " << col << " h "
                                               << detectorContainerVector[i]
-                                                         ->at(cBoard->getIndex())
-                                                         ->at(cOpticalGroup->getIndex())
-                                                         ->at(cHybrid->getIndex())
-                                                         ->at(cChip->getIndex())
+                                                         ->getObject(cBoard->getId())
+                                                         ->getObject(cOpticalGroup->getId())
+                                                         ->getObject(cHybrid->getId())
+                                                         ->getObject(cChip->getId())
                                                          ->getChannel<OccupancyAndPh>(row, col)
                                                          .fOccupancy *
                                                      nEvents
                                               << " a "
                                               << detectorContainerVector[i]
-                                                     ->at(cBoard->getIndex())
-                                                     ->at(cOpticalGroup->getIndex())
-                                                     ->at(cHybrid->getIndex())
-                                                     ->at(cChip->getIndex())
+                                                     ->getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
                                                      ->getChannel<OccupancyAndPh>(row, col)
                                                      .fPh
                                               << std::endl;
@@ -184,4 +185,13 @@ uint8_t CalibBase::assignGroupType(RD53Shared::INJtype injType) const
         groupType = RD53GroupType::Custom;
 
     return groupType;
+}
+
+void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
+{
+    auto chipSubset = [](const ChipContainer* theChip) { return theChip->isEnabled(); };
+
+    fDetectorContainer->resetReadoutChipQueryFunction();
+    fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryName);
+    fDetectorContainer->setEnabledAll(true);
 }

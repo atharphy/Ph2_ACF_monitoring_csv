@@ -36,7 +36,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
     } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
-    if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state" + fPUSMStatusMap[cChipVersion][cPUSMState])); }
+    if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state " + fPUSMStatusMap[cChipVersion][cPUSMState])); }
     // Configuring chip
     bool cReconfigure = false;
     if(cReconfigure)
@@ -148,7 +148,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // Setting GPIO levels Uncomment this for Skeleton test
     // Setting GPIO levels for Skeleton test
     ConfigureGPIODirection(pChip, {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}, 1);
-    ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}, 1);
+    ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC, fReset_VTRx}, 1);
     // hold resets
     for(uint8_t cSide = 0; cSide < 2; cSide++)
     {
@@ -235,10 +235,14 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
 
             // Enable training
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
-            WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+
+            // Assumption: write is stable enough that it sohuld never fail in normal condition
+            // If the fail occurs it means that the Chip has a major issue and this check avoids to be stuck in this loop for a very long time
+            bool writeSucceded = WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
+            if(!writeSucceded) return 15;
+            std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+            std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
             // Check for lock
             std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
             uint8_t     cLockShift   = cChannel + 4;
@@ -249,14 +253,14 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             uint8_t     cIter        = 0;
             do
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+                std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
                 cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
                 cContinue = cLock == 0;
                 cIter++;
             } while(cContinue && cIter < cMaxIters);
             if(cLock) cAligned[cIndx] += 1;
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+            std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
             cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
             LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
             cPhases.push_back(cCurrPhase);
@@ -375,7 +379,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for PS ROH
     ConfigureGPIODirection(pChip, {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}, 1);
-    ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}, 1);
+    ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA, fReset_VTRx}, 1);
     // hold resets
     for(uint8_t cSide = 0; cSide < 2; cSide++)
     {

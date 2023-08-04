@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    doc.save_file((cHWFile + "_copy").c_str());
+    if(cmd.foundOption("linkId") && cmd.foundOption("fmcId")) doc.save_file((cHWFile + "_copy").c_str());
 
     TApplication cApp("Root Application", &argc, argv);
     if(batchMode)
@@ -246,318 +246,346 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
-    cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
-    cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
-    remove((cHWFile + "_copy").c_str());
+    if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
+    {
+        cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
+        cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
+        remove((cHWFile + "_copy").c_str());
+    }
+    else
+    {
+        cTool.InitializeHw((cHWFile).c_str(), outp);
+        cTool.InitializeSettings((cHWFile).c_str(), outp);
+    }
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
+    cTool.initializeExceptionHandler();
     cTool.bookSummaryTree();
+    if(cGui) gui::data("ResultsDirectory", cTool.getDirectoryName().c_str());
 
-    // Initilaise PSROH tester
-    PSROHTester cPSROHTester;
-    cPSROHTester.Inherit(&cTool);
-    cPSROHTester.InitialiseTestCard(false);
-    uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
-    cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-
-    // Initialize BackEnd & Control LpGBT Tester
-    LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
-    if(cMeasureInputIV) cPSROHTester.MeasureInputIV("BEFORE_CONFIG");
-    LOG(INFO) << BOLDMAGENTA << " ------------------------------------------- " << RESET;
-    cTool.ConfigureHw();
-
-    // Initialise tester
-    cPSROHTester.Initialise();
-
-    if(cMeasureInputIV) cPSROHTester.MeasureInputIV("AFTER_CONFIG");
-
-    /***************/
-    /* TEST UPLINK */
-    /***************/
-    if(cmd.foundOption("test-internal-pattern") || cmd.foundOption("test-external-pattern"))
+    try
     {
-        if(cGui)
-        {
-            gui::message("");
-            gui::status("Testing uplink");
-            gui::progress(1 / 10.0);
+        // Initilaise PSROH tester
+        PSROHTester cPSROHTester;
+        cPSROHTester.Inherit(&cTool);
+        cPSROHTester.InitialiseTestCard(false);
+        uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
+        cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
 
-            gui::data("ResultsDirectory", cPSROHTester.getDirectoryName().c_str());
-        }
-        /* INTERNALLY GENERATED PATTERN */
-        if(cmd.foundOption("test-internal-pattern"))
+        // Initialize BackEnd & Control LpGBT Tester
+        LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
+        if(cMeasureInputIV) cPSROHTester.MeasureInputIV("BEFORE_CONFIG");
+        LOG(INFO) << BOLDMAGENTA << " ------------------------------------------- " << RESET;
+        cTool.ConfigureHw(); // Link is stablished
+        cPSROHTester.CheckConfiguredHw();
+        cPSROHTester.ReadChipIds();
+        // Initialise tester
+        cPSROHTester.Initialise();
+
+        if(cMeasureInputIV) cPSROHTester.MeasureInputIV("AFTER_CONFIG");
+
+        /***************/
+        /* TEST UPLINK */
+        /***************/
+        if(cmd.foundOption("test-internal-pattern") || cmd.foundOption("test-external-pattern"))
         {
-            uint8_t  cInternalPattern8  = (cmd.foundOption("test-internal-pattern")) ? convertAnyInt(cmd.optionValue("test-internal-pattern").c_str()) : 0;
-            uint32_t cInternalPattern32 = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
-            cPSROHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
-            cPSROHTester.LpGBTCheckULPattern(false, cInternalPattern8);
-        }
-        /* EXTERNALLY GENERATED PATTERN */
-        else if(cmd.foundOption("test-external-pattern"))
-        {
-            uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
-            // cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-            bool cStatus = cPSROHTester.LpGBTCheckULPattern(true, cExternalPattern);
-#ifdef __USE_ROOT__
-            cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
-#endif
-            cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
-            if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
-            else
+            if(cGui)
             {
-                LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
+                gui::message("");
+                gui::status("Testing uplink");
+                gui::progress(1 / 10.0);
             }
+            /* INTERNALLY GENERATED PATTERN */
+            if(cmd.foundOption("test-internal-pattern"))
+            {
+                uint8_t  cInternalPattern8  = (cmd.foundOption("test-internal-pattern")) ? convertAnyInt(cmd.optionValue("test-internal-pattern").c_str()) : 0;
+                uint32_t cInternalPattern32 = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
+                cPSROHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
+                cPSROHTester.LpGBTCheckULPattern(false, cInternalPattern8);
+            }
+            /* EXTERNALLY GENERATED PATTERN */
+            else if(cmd.foundOption("test-external-pattern"))
+            {
+                uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
+                // cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
+                bool cStatus = cPSROHTester.LpGBTCheckULPattern(true, cExternalPattern);
+#ifdef __USE_ROOT__
+                cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
+#endif
+                cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
+                if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
+                }
+                if(cGui)
+                {
+                    gui::message("CIC OUT test finished");
+                    gui::status("Finished testing uplink");
+                    gui::progress(3 / 10.0);
+                }
+            }
+        }
+        /****************************/
+        /* TEST RESET LINES (GPIOs) */
+        /****************************/
+        if(cmd.foundOption("test-reset"))
+        {
             if(cGui)
             {
                 gui::message("CIC OUT test finished");
-                gui::status("Finished testing uplink");
-                gui::progress(3 / 10.0);
+                gui::status("Testing reset lines");
+                gui::progress(3.5 / 10.0);
             }
-        }
-    }
-    /****************************/
-    /* TEST RESET LINES (GPIOs) */
-    /****************************/
-    if(cmd.foundOption("test-reset"))
-    {
-        if(cGui)
-        {
-            gui::message("CIC OUT test finished");
-            gui::status("Testing reset lines");
-            gui::progress(3.5 / 10.0);
-        }
-        bool cStatus = cPSROHTester.LpGBTTestResetLines();
+            bool cStatus = cPSROHTester.LpGBTTestResetLines();
 #ifdef __USE_ROOT__
-        cTool.fillSummaryTree("status_ResetTest", (cStatus) ? 1 : 0);
+            cTool.fillSummaryTree("status_ResetTest", (cStatus) ? 1 : 0);
 #endif
-        if(cStatus) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
-        else
-        {
-            LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
-        }
-        cStatus = cPSROHTester.LpGBTTestGPILines();
-#ifdef __USE_ROOT__
-        cTool.fillSummaryTree("status_PowerGoodTest", (cStatus) ? 1 : 0);
-#endif
-        if(cStatus) { LOG(INFO) << BOLDGREEN << "Power Good test passed." << RESET; }
-        else
-        {
-            LOG(INFO) << BOLDRED << "Power Good test failed." << RESET;
-        }
-    }
-
-    // Test VTRx+ slow control
-
-    if(cmd.foundOption("test-vtrx"))
-    {
-        if(cGui)
-        {
-            gui::message("Reset lines test finished");
-            gui::status("Testing VTRX+ slow control lines");
-            gui::progress(4.5 / 10.0);
-        }
-        bool cStatus = cPSROHTester.LpGBTTestVTRx();
-#ifdef __USE_ROOT__
-        cTool.fillSummaryTree("status_vtrxplusslowcontrol", (cStatus) ? 1 : 0);
-#endif
-        if(cStatus)
-            LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
-        else
-            LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
-    }
-
-    /********************/
-    /* TEST I2C MASTERS */
-    /********************/
-    if(cmd.foundOption("test-i2c"))
-    {
-        if(cGui)
-        {
-            gui::message("VTRX+ test finished");
-            gui::status("Testing I2C Masters on the lpGBT");
-            gui::progress(5.5 / 10.0);
-        }
-        int                  pNTries  = convertAnyInt(cmd.optionValue("test-i2c").c_str());
-        std::vector<uint8_t> cMasters = {0, 2};
-        bool                 cStatus  = cPSROHTester.LpGBTTestI2CMaster(cMasters, pNTries);
-#ifdef __USE_ROOT__
-        cTool.fillSummaryTree("status_i2cmasters", (cStatus) ? 1 : 0);
-#endif
-        if(cStatus)
-            LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
-        else
-        {
-            LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
-        }
-    }
-
-    /**********************************/
-    /* TEST ANALOG-DIGITAL-CONVERTERS */
-    /**********************************/
-    if(cmd.foundOption("test-adc"))
-    {
-        if(cGui)
-        {
-            gui::message("I2C Masters test finished");
-            gui::status("Testing ADC lines on the lpGBT");
-            gui::progress(6.5 / 10.0);
-        }
-        cPSROHTester.LpGBTTestFixedADCs();
-
-        std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
-        cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
-    }
-
-    /********************/
-    /* TEST EYE OPENING */
-    /********************/
-    if(cmd.foundOption("test-eom"))
-    {
-        if(cGui)
-        {
-            gui::message("ADC test finished");
-            gui::status("Measuring eye opening");
-            gui::progress(7.5 / 10.0);
-        }
-        uint8_t cEQAttenuation = cmd.foundOption("eq-attenuation") ? convertAnyInt(cmd.optionValue("eq-attenuation").c_str()) : 3;
-        cPSROHTester.LpGBTRunEyeOpeningMonitor(7, cEQAttenuation);
-    }
-
-    /***********************/
-    /* TEST BIT ERROR RATE */
-    /***********************/
-    if(cmd.foundOption("test-ber"))
-    {
-        uint32_t cBERTPattern32 = cmd.foundOption("ber-pattern") ? convertAnyInt(cmd.optionValue("ber-pattern").c_str()) : 0x00000000;
-        // FIXME still hard coded
-        uint8_t cCoarseSource = 1, cFineSource = 4, cMeasTime = 5;
-        cPSROHTester.LpGBTRunBitErrorRateTest(cCoarseSource, cFineSource, cMeasTime, cBERTPattern32);
-    }
-
-    /***************/
-    /* TEST CLOCKS */
-    /***************/
-    if(cmd.foundOption("test-clock"))
-    {
-        if(cGui)
-        {
-            gui::message("Eye opening monitoring finished");
-            gui::status("Testing clock lines");
-            gui::progress(8.5 / 10.0);
-        }
-        LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        bool cStatus = cPSROHTester.LpGBTCheckClocks();
-        if(cStatus)
-            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDGREEN << " passed" << RESET;
-        else
-        {
-            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET;
-        }
-#ifdef __USE_ROOT__
-        cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
-#endif
-    }
-
-    /*********************/
-    /* TEST FAST COMMAND */
-    /*********************/
-    if(cmd.foundOption("test-fcmd"))
-    {
-        if(cGui)
-        {
-            gui::message("Clock line test finished");
-            gui::status("Testing FCMD lines");
-            gui::progress(9.5 / 10.0);
-        }
-        if(cmd.foundOption("fcmd-pattern"))
-        {
-            int     cFmcdCounter = 0, cFcmdTries = 100;
-            uint8_t cFCMDPattern = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
-            LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
-            cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
-            for(int i = 0; i < cFcmdTries; i++)
-            {
-                if(!cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern)) cFmcdCounter += 1;
-            }
-            LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +cFmcdCounter << " times" << RESET;
-#ifdef __USE_ROOT__
-            cTool.fillSummaryTree("fcmd_tries", cFcmdTries);
-            cTool.fillSummaryTree("fcmd_failures", cFmcdCounter);
-#endif
-        }
-        else
-        {
-            if(cPSROHTester.FastCommandScope())
-                LOG(INFO) << BOLDBLUE << "FCMD test " << BOLDGREEN << "passed" << RESET;
+            if(cStatus) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
             else
-                LOG(INFO) << BOLDBLUE << "FDMC test " << BOLDRED << "failed" << RESET;
+            {
+                LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+            }
+            cStatus = cPSROHTester.LpGBTTestGPILines();
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("status_PowerGoodTest", (cStatus) ? 1 : 0);
+#endif
+            if(cStatus) { LOG(INFO) << BOLDGREEN << "Power Good test passed." << RESET; }
+            else
+            {
+                LOG(INFO) << BOLDRED << "Power Good test failed." << RESET;
+            }
+        }
+
+        // Test VTRx+ slow control
+
+        if(cmd.foundOption("test-vtrx"))
+        {
+            if(cGui)
+            {
+                gui::message("Reset lines test finished");
+                gui::status("Testing VTRX+ slow control lines");
+                gui::progress(4.5 / 10.0);
+            }
+            bool cStatus = cPSROHTester.LpGBTTestVTRx();
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("status_vtrxplusslowcontrol", (cStatus) ? 1 : 0);
+#endif
+            if(cStatus)
+                LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
+            else
+                LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
+        }
+
+        /********************/
+        /* TEST I2C MASTERS */
+        /********************/
+        if(cmd.foundOption("test-i2c"))
+        {
+            if(cGui)
+            {
+                gui::message("VTRX+ test finished");
+                gui::status("Testing I2C Masters on the lpGBT");
+                gui::progress(5.5 / 10.0);
+            }
+            int                  pNTries  = convertAnyInt(cmd.optionValue("test-i2c").c_str());
+            std::vector<uint8_t> cMasters = {0, 2};
+            bool                 cStatus  = cPSROHTester.LpGBTTestI2CMaster(cMasters, pNTries);
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("status_i2cmasters", (cStatus) ? 1 : 0);
+#endif
+            if(cStatus)
+                LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
+            else
+            {
+                LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
+            }
+        }
+
+        /**********************************/
+        /* TEST ANALOG-DIGITAL-CONVERTERS */
+        /**********************************/
+        if(cmd.foundOption("test-adc"))
+        {
+            if(cGui)
+            {
+                gui::message("I2C Masters test finished");
+                gui::status("Testing ADC lines on the lpGBT");
+                gui::progress(6.5 / 10.0);
+            }
+            cPSROHTester.LpGBTTestFixedADCs();
+
+            std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
+            cPSROHTester.LpGBTTestADC(cADCs, 0, 1000, 20);
+        }
+
+        /********************/
+        /* TEST EYE OPENING */
+        /********************/
+        if(cmd.foundOption("test-eom"))
+        {
+            if(cGui)
+            {
+                gui::message("ADC test finished");
+                gui::status("Measuring eye opening");
+                gui::progress(7.5 / 10.0);
+            }
+            uint8_t cEQAttenuation = cmd.foundOption("eq-attenuation") ? convertAnyInt(cmd.optionValue("eq-attenuation").c_str()) : 3;
+            cPSROHTester.LpGBTRunEyeOpeningMonitor(7, cEQAttenuation);
+        }
+
+        /***********************/
+        /* TEST BIT ERROR RATE */
+        /***********************/
+        if(cmd.foundOption("test-ber"))
+        {
+            uint32_t cBERTPattern32 = cmd.foundOption("ber-pattern") ? convertAnyInt(cmd.optionValue("ber-pattern").c_str()) : 0x00000000;
+            // FIXME still hard coded
+            uint8_t cCoarseSource = 1, cFineSource = 4, cMeasTime = 5;
+            cPSROHTester.LpGBTRunBitErrorRateTest(cCoarseSource, cFineSource, cMeasTime, cBERTPattern32);
+        }
+
+        /***************/
+        /* TEST CLOCKS */
+        /***************/
+        if(cmd.foundOption("test-clock"))
+        {
+            if(cGui)
+            {
+                gui::message("Eye opening monitoring finished");
+                gui::status("Testing clock lines");
+                gui::progress(8.5 / 10.0);
+            }
+            LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
+            bool cStatus = cPSROHTester.LpGBTCheckClocks();
+            if(cStatus)
+                LOG(INFO) << BOLDBLUE << "Clock test " << BOLDGREEN << " passed" << RESET;
+            else
+            {
+                LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET;
+            }
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
+#endif
+        }
+
+        /*********************/
+        /* TEST FAST COMMAND */
+        /*********************/
+        if(cmd.foundOption("test-fcmd"))
+        {
+            if(cGui)
+            {
+                gui::message("Clock line test finished");
+                gui::status("Testing FCMD lines");
+                gui::progress(9.5 / 10.0);
+            }
+            if(cmd.foundOption("fcmd-pattern"))
+            {
+                int     cFmcdCounter = 0, cFcmdTries = 100;
+                uint8_t cFCMDPattern = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
+                LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
+                cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+                for(int i = 0; i < cFcmdTries; i++)
+                {
+                    if(!cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern)) cFmcdCounter += 1;
+                }
+                LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +cFmcdCounter << " times" << RESET;
+#ifdef __USE_ROOT__
+                cTool.fillSummaryTree("fcmd_tries", cFcmdTries);
+                cTool.fillSummaryTree("fcmd_failures", cFmcdCounter);
+#endif
+            }
+            else
+            {
+                if(cPSROHTester.FastCommandScope())
+                    LOG(INFO) << BOLDBLUE << "FCMD test " << BOLDGREEN << "passed" << RESET;
+                else
+                    LOG(INFO) << BOLDBLUE << "FDMC test " << BOLDRED << "failed" << RESET;
+            }
+        }
+
+        if(cDebug)
+        {
+            LOG(INFO) << "Start debugging" << RESET;
+            cPSROHTester.PSROHInputsDebug();
+        }
+
+        if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())
+        {
+            LOG(INFO) << BOLDBLUE << "Fast command test" << RESET;
+            cPSROHTester.CheckFastCommands(cFCMDTestStartPattern, cFCMDTestUserFileName);
+        }
+
+        if(cmd.foundOption("bramfcmd-check") && !cBRAMFCMDLine.empty())
+        {
+            LOG(INFO) << BOLDBLUE << "Access to written data in BRAM" << RESET;
+            cPSROHTester.CheckFastCommandsBRAM(cBRAMFCMDLine);
+        }
+
+        if(cmd.foundOption("bramreffcmd-write") && !cBRAMFCMDFileName.empty())
+        {
+            LOG(INFO) << BOLDBLUE << "Write reference patterns to BRAM" << RESET;
+            cPSROHTester.WritePatternToBRAM(cBRAMFCMDFileName);
+        }
+
+        if(cmd.foundOption("convert-userfile") && !cConvertUserFileName.empty())
+        {
+            LOG(INFO) << BOLDBLUE << "Convert user file to fw compliant format" << RESET;
+            cPSROHTester.UserFCMDTranslate(cConvertUserFileName);
+        }
+
+        if(cmd.foundOption("read-ref-bram"))
+        {
+            int cAddr = std::atoi(cRefBRAMAddr.c_str());
+            LOG(INFO) << BOLDBLUE << "Read single ref FCMD BRAM address: " << cmd.optionValue("read-ref-bram") << RESET;
+            cPSROHTester.ReadRefAddrBRAM(cAddr);
+        }
+
+        if(cmd.foundOption("read-check-bram"))
+        {
+            int cAddr = std::atoi(cCheckBRAMAddr.c_str());
+            LOG(INFO) << BOLDBLUE << "Read single check FCMD BRAM address: " << cmd.optionValue("read-check-bram") << RESET;
+            cPSROHTester.ReadCheckAddrBRAM(cAddr);
+        }
+
+        if(cmd.foundOption("clear-ref-bram"))
+        {
+            LOG(INFO) << BOLDBLUE << "Flushing ref BRAM!" << RESET;
+            cPSROHTester.ClearBRAM(std::string("ref"));
+        }
+
+        if(cmd.foundOption("clear-check-bram"))
+        {
+            LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
+            cPSROHTester.ClearBRAM(std::string("test"));
+        }
+
+        if(cGui)
+        {
+            gui::message("FCMD lines test finished");
+            gui::status("Test finished");
+            gui::progress(10.0 / 10.0);
         }
     }
-
-    if(cDebug)
+    catch(std::exception const& e)
     {
-        LOG(INFO) << "Start debugging" << RESET;
-        cPSROHTester.PSROHInputsDebug();
+        std::stringstream cExitMessage;
+        cExitMessage << "Exception Message : " << e.what();
+        cTool.fillSummaryTree(cExitMessage.str(), 1);
+        if(cGui) gui::data("Exception", e.what());
+        LOG(ERROR) << BOLDRED << "Exception: " << cExitMessage.str() << RESET;
+        LOG(INFO) << BOLDYELLOW << "Will save test results obtained so far and.. stop test procedure" << RESET;
     }
-
-    if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())
-    {
-        LOG(INFO) << BOLDBLUE << "Fast command test" << RESET;
-        cPSROHTester.CheckFastCommands(cFCMDTestStartPattern, cFCMDTestUserFileName);
-    }
-
-    if(cmd.foundOption("bramfcmd-check") && !cBRAMFCMDLine.empty())
-    {
-        LOG(INFO) << BOLDBLUE << "Access to written data in BRAM" << RESET;
-        cPSROHTester.CheckFastCommandsBRAM(cBRAMFCMDLine);
-    }
-
-    if(cmd.foundOption("bramreffcmd-write") && !cBRAMFCMDFileName.empty())
-    {
-        LOG(INFO) << BOLDBLUE << "Write reference patterns to BRAM" << RESET;
-        cPSROHTester.WritePatternToBRAM(cBRAMFCMDFileName);
-    }
-
-    if(cmd.foundOption("convert-userfile") && !cConvertUserFileName.empty())
-    {
-        LOG(INFO) << BOLDBLUE << "Convert user file to fw compliant format" << RESET;
-        cPSROHTester.UserFCMDTranslate(cConvertUserFileName);
-    }
-
-    if(cmd.foundOption("read-ref-bram"))
-    {
-        int cAddr = std::atoi(cRefBRAMAddr.c_str());
-        LOG(INFO) << BOLDBLUE << "Read single ref FCMD BRAM address: " << cmd.optionValue("read-ref-bram") << RESET;
-        cPSROHTester.ReadRefAddrBRAM(cAddr);
-    }
-
-    if(cmd.foundOption("read-check-bram"))
-    {
-        int cAddr = std::atoi(cCheckBRAMAddr.c_str());
-        LOG(INFO) << BOLDBLUE << "Read single check FCMD BRAM address: " << cmd.optionValue("read-check-bram") << RESET;
-        cPSROHTester.ReadCheckAddrBRAM(cAddr);
-    }
-
-    if(cmd.foundOption("clear-ref-bram"))
-    {
-        LOG(INFO) << BOLDBLUE << "Flushing ref BRAM!" << RESET;
-        cPSROHTester.ClearBRAM(std::string("ref"));
-    }
-
-    if(cmd.foundOption("clear-check-bram"))
-    {
-        LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
-        cPSROHTester.ClearBRAM(std::string("test"));
-    }
-
     if(cGui)
     {
-        gui::message("FCMD lines test finished");
-        gui::status("Test finished");
+        gui::message("Done");
+        gui::status("Test complete");
         gui::progress(10.0 / 10.0);
     }
+
     // Save Result File
     cTool.SaveResults();
     cTool.WriteRootFile();

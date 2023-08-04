@@ -421,7 +421,7 @@ void DQMHistogramLatencyScan::fillTriggerTDCPlots(DetectorDataContainer& theTrig
     {
         for(uint32_t tdcValue = 0; tdcValue < TDCBINS; ++tdcValue)
         {
-            auto  sum                      = board->getObject(0)->getObject(0)->getSummary<GenericDataArray<TDCBINS, uint16_t>>();
+            auto  sum                      = board->getFirstObject()->getFirstObject()->getSummary<GenericDataArray<TDCBINS, uint16_t>>();
             TH1F* boardTriggerTDCHistogram = fTriggerTDCHistograms.getObject(board->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             boardTriggerTDCHistogram->SetBinContent(tdcValue + 1, sum[tdcValue]);
         }

@@ -10,6 +10,7 @@
 #include "System/SystemController.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/ExceptionHandler.h"
 #include "HWInterface/LinkInterface.h"
 #include "HWInterface/RD53AInterface.h"
 #include "HWInterface/RD53BInterface.h"
@@ -136,12 +137,12 @@ void SystemController::Destroy()
     LOG(INFO) << GREEN << "Trying to shutdown Calibration DQM Server..." << RESET;
     delete fDQMStreamer;
     fDQMStreamer = nullptr;
-    LOG(INFO) << GREEN << "Operation completed" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
     LOG(INFO) << GREEN << "Trying to shutdown Monitor DQM Server..." << RESET;
     delete fMonitorDQMStreamer;
     fMonitorDQMStreamer = nullptr;
-    LOG(INFO) << GREEN << "Operation completed" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
@@ -238,18 +239,18 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
     }
 
-    LOG(INFO) << GREEN << "Operation completed" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
     if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
-        const BeBoard* cFirstBoard = fDetectorContainer->at(0);
+        const BeBoard* cFirstBoard = fDetectorContainer->getFirstObject();
         fBoardType                 = cFirstBoard->getBoardType();
         if(fBoardType != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
             {
-                auto cFirstOpticalGroup = cFirstBoard->at(0);
+                auto cFirstOpticalGroup = cFirstBoard->getFirstObject();
                 LOG(INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." << +cFirstBoard->size() << " optical group(s) found ..." << RESET;
                 bool cWithLpGBT = (cFirstOpticalGroup->flpGBT != nullptr);
                 if(cWithLpGBT)
@@ -262,7 +263,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." << +cFirstOpticalGroup->size() << " hybrid(s) found ..." << RESET;
-                    auto cFirstHybrid = cFirstOpticalGroup->at(0);
+                    auto cFirstHybrid = cFirstOpticalGroup->getFirstObject();
                     auto cType        = FrontEndType::CBC3;
                     bool cWithCBC  = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     cType          = FrontEndType::SSA;
@@ -447,25 +448,28 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
 // ######################################
 void SystemController::ConfigureIT(BeBoard* pBoard)
 {
-    // ###################
-    // # Configuring FSM #
-    // ###################
+    auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
+
+    // #################
+    // # Configure FSM #
+    // #################
     const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 1);
-    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype"), 1);
+    const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype", 1));
     const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
     const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
     const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
+    static_cast<RD53FWInterface*>(theBeBoardFW)->ConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
+
+    // ###############
+    // # Program FSM #
+    // ###############
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
-
-    auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
-
-    static_cast<RD53FWInterface*>(theBeBoardFW)
-        ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
+    static_cast<RD53FWInterface*>(theBeBoardFW)->SendFastCommands();
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
-    // ########################
-    // # Configuring from XML #
-    // ########################
+    // ######################
+    // # Configure from XML #
+    // ######################
     static_cast<RD53FWInterface*>(theBeBoardFW)->ConfigureFromXML(pBoard);
 
     // ########################
@@ -499,21 +503,30 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
     static_cast<RD53FWInterface*>(theBeBoardFW)->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
-    // ######################################################
-    // # Configure down and up links to/from frontend chips #
-    // ######################################################
+    // ##########################################
+    // # Configure down-links to frontend chips #
+    // ##########################################
     LOG(INFO) << CYAN << "=== Configuring frontend chip communication ===" << RESET;
+    LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
     static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Downlink(pBoard);
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+    // ##########################################
+    // # Configure up-links from frontend chips #
+    // ##########################################
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
             LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Initializing communication to/from RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
                 static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
+                LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
             }
         }
+
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
     // ####################################
@@ -544,18 +557,26 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
-            LOG(INFO) << GREEN << "Configuring chip of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Configuring chips of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+
             for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET << GREEN " (fused ID " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET
-                          << GREEN << ")" << RESET;
+                LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
+
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                 if(resetTDAC >= 0)
                     static_cast<RD53*>(cChip)->resetTDAC(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->nTDACvalues / 2);
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
+
+                LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+                LOG(INFO) << GREEN << "Fused ID: " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET;
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
+
+            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
+            LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
         }
 
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
@@ -567,11 +588,10 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
+    LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << RESET;
 
     for(auto cOpticalGroup: *pBoard)
     {
-        if(cOpticalGroup->flpGBT == nullptr) continue;
-
         LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << int(pBoard->getId()) << RESET;
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         if(cOpticalGroup->getReset() == 0)
@@ -642,14 +662,16 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             if(cCic == NULL) continue;
 
             LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
-            fCicInterface->ConfigureChip(cCic);
-            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
+            if(!fCicInterface->ConfigureChip(cCic)) continue;
+            if(!fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false)) continue; // make sure all FEs are disabled by default
         }
         bool cSuccess = CicStartUp(cOpticalGroup, true);
         if(!cSuccess)
         {
-            LOG(INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET;
-            throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
+            LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
+                      << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
+            ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
+            continue;
         }
     }
 
@@ -685,8 +707,10 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
                 if(fCicInterface->GetResyncRequest(cCic))
                 {
-                    LOG(INFO) << BOLDRED << "ReSync request ofrom CIC" << +cHybrid->getId() << RESET;
-                    throw std::runtime_error(std::string("FAILED to clear CIC ReSync request"));
+                    LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
+                              << " --- Hybrid will be disabled" << RESET;
+                    ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
+                    continue;
                 }
             }
         }
@@ -707,7 +731,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             if(clpGBT == nullptr) continue;
 
             uint8_t cSide = cHybrid->getId() % 2;
-            LOG(DEBUG) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
+            LOG(INFO) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
 
             if(cHybrid->getReset() == 0)
             {
@@ -771,7 +795,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             cClkCnfg.fClkDriveStr     = cSsaClockDrive;
             cClkCnfg.fClkInvert       = cHybrid->getInvertClock();
 
-            //LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " <<  +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
+            LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " << +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
 
             cClkCnfg.fClkPreEmphWidth = 0;
             cClkCnfg.fClkPreEmphMode  = 3; // 3;
@@ -884,13 +908,20 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
 
 bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStartUpSequence)
 {
-    auto cBoardId    = pOpticalGroup->getBeBoardId();
-    auto cBoardIter  = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    bool cWith2SFEH  = (*cBoardIter)->getEventType() == EventType::VR2S;
-    auto cSparsified = (*cBoardIter)->getSparsification();
+    auto cBoardId        = pOpticalGroup->getBeBoardId();
+    auto cOpticalGroupId = pOpticalGroup->getId();
+    auto cBoardIter      = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    bool cWith2SFEH      = (*cBoardIter)->getEventType() == EventType::VR2S;
+    auto cSparsified     = (*cBoardIter)->getSparsification();
+
+    auto exceptionHandleFunction = [cBoardId, cOpticalGroupId, this](uint16_t hybridId, const std::string&& failMode) {
+        LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
+        ExceptionHandler::getInstance()->disableHybrid(cBoardId, cOpticalGroupId, hybridId);
+        static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->EnableFrontEnds(fDetectorContainer->getObject(cBoardId));
+    };
 
     auto& clpGBT   = pOpticalGroup->flpGBT;
-    bool  cSuccess = true;
+    bool  cSuccess = false;
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     for(auto cHybrid: *pOpticalGroup)
     {
@@ -916,11 +947,10 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         uint8_t cModeSelect = (cIs2S) ? 0 : 1;
         uint8_t cBx0Delay   = (cIs2S) ? 8 : 22;
         // select CIC mode
-        cSuccess = fCicInterface->SelectMode(cCic, cModeSelect);
-        if(!cSuccess)
+        if(!fCicInterface->SelectMode(cCic, cModeSelect))
         {
-            LOG(INFO) << BOLDRED << "FAILED " << BOLDBLUE << " to configure CIC mode.." << RESET;
-            throw std::runtime_error(std::string("FAILED to set CIC mode ... something is wrong... .. STOPPING"));
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC mode");
+            continue;
         }
         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << (cIs2S ? "2S" : "PS") << " readout." << RESET;
 
@@ -944,7 +974,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             uint8_t cFeConfigReg  = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
             auto    cClkFrequency = cCic->getClockFrequency();
             uint8_t cNewValue     = (cFeConfigReg & 0xFD) | ((uint8_t)(cClkFrequency == 640) << 1);
-            cSuccess              = fCicInterface->WriteChipReg(cCic, "FE_CONFIG", cNewValue);
+            fCicInterface->WriteChipReg(cCic, "FE_CONFIG", cNewValue);
         }
 
         // 2S-FEHs
@@ -956,45 +986,61 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             cClkTerm = 0;
             cRxTerm  = 1;
         }
-        cSuccess = fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm);
-        if(cSuccess)
+
+        if(!fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm))
         {
-            if(cStartUpSequence)
-            {
-                LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
-                cSuccess = fCicInterface->StartUp(cCic, cCic->getDriveStrength(), cCic->getEdgeSelect());
-            }
-            else
-            {
-                LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
-                if(fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength()))
-                    cSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
-                else
-                    cSuccess = false;
-            }
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC Termination");
+            continue;
+        }
+
+        bool startUpSuccess;
+        if(cStartUpSequence)
+        {
+            LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
+            startUpSuccess = fCicInterface->StartUp(cCic, cCic->getDriveStrength(), cCic->getEdgeSelect());
         }
         else
-            throw std::runtime_error(std::string("FAILED to start-up CIC ... something is wrong... .. STOPPING"));
+        {
+            LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
+            if(fCicInterface->ConfigureDriveStrength(cCic, cCic->getDriveStrength()))
+                startUpSuccess = fCicInterface->ConfigureFCMDEdge(cCic, cCic->getEdgeSelect());
+            else
+                startUpSuccess = false;
+        }
 
-        if(cSuccess)
-            cSuccess = fCicInterface->SetSparsification(cCic, cSparsified);
-        else
-            throw std::runtime_error(std::string("FAILED to set CIC sparsification... .. STOPPING"));
+        if(!startUpSuccess)
+        {
+            exceptionHandleFunction(cHybrid->getId(), "start-up CIC");
+            continue;
+        }
 
-        if(cSuccess)
-            cSuccess = fCicInterface->ConfigureStubOutput(cCic);
-        else
-            throw std::runtime_error(std::string("FAILED to configure CIC stub output... .. STOPPING"));
+        if(!fCicInterface->SetSparsification(cCic, cSparsified))
+        {
+            exceptionHandleFunction(cHybrid->getId(), "set CIC sparsification");
+            continue;
+        }
 
-        if(cSuccess)
-            cSuccess = fCicInterface->ManualBx0Alignment(cCic, cBx0Delay);
-        else
-            throw std::runtime_error(std::string("FAILED to configure CIC Bx0 delay... .. STOPPING"));
+        if(!fCicInterface->ConfigureStubOutput(cCic))
+        {
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC stub output");
+            continue;
+        }
 
-    } // all hybrids connected to this OG
+        if(!fCicInterface->ManualBx0Alignment(cCic, cBx0Delay))
+        {
+            exceptionHandleFunction(cHybrid->getId(), "configure CIC Bx0 delay");
+            continue;
+        }
+
+        cSuccess = true; // at least on hybrid is working fine
+    }                    // all hybrids connected to this OG
+#ifdef __TCUSB__
+    cSuccess = true; // No hybrids in the SEH/ROH test system
+#endif
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
 }
+
 void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
 {
     if(fDetectorContainer == nullptr)
@@ -1098,12 +1144,16 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     bool cSuccess = CicStartUp(cOpticalGroup, false);
                     if(!cSuccess)
                     {
-                        LOG(INFO) << BOLDRED << "Failed start-up sequence on OG" << +cOpticalGroup->getId() << RESET;
-                        throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
+                        LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +cBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
+                                  << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
+                        ExceptionHandler::getInstance()->disableOpticalGroup(cBoard->getId(), cOpticalGroup->getId());
+                        continue;
                     }
                 }
             }
-            if(!cBoard->isOptical() && cBoard->at(0)->flpGBT != nullptr)
+            const BeBoard* cFirstBoard = fDetectorContainer->getFirstObject();
+            auto cFirstOpticalGroup = cFirstBoard->getFirstObject();
+            if(!cBoard->isOptical() && cFirstOpticalGroup->flpGBT != nullptr)
             {
                 LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
                 auto cLinkInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getLinkInterface();
@@ -1118,8 +1168,27 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
-            ConfigureIT(cBoard);//Mauro sucks
-            ConfigureFrontendIT(cBoard);
+            if(pReInitialize == true)
+            {
+                // #################################
+                // # Initialize board and frontend #
+                // #################################
+                ConfigureIT(cBoard);
+                ConfigureFrontendIT(cBoard);
+            }
+            else
+            {
+                // ###################
+                // # Configuring FSM #
+                // ###################
+                const size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent", 1);
+                const auto   injType     = static_cast<RD53Shared::INJtype>(SystemController::findValueInSettings<double>("INJtype", 1));
+                const size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency", 32);
+                const size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays", 1000);
+                const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
+                    ->ConfigureFastCommands(cBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
+            }
 
             // ######################################
             // # Dispatch threads for data decoding #
@@ -1189,7 +1258,7 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
+void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize)
 {
     fConfigurationFileName = theConfigureInfo.getConfigurationFile();
     fSettingsFileName      = theConfigureInfo.getSettingsFile();
@@ -1212,13 +1281,21 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo)
     ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(*fDetectorContainer, *fNameContainer);
     theConfigureInfo.extractObjectNames(fNameContainer);
 
+    initializeExceptionHandler();
+
     // ########################################################
     // # Formatted printout on screen of the xml file content #
     // ########################################################
     std::cout << fParsedFile.str() << std::endl;
 
     auto skipConfigureHW = findValueInSettings<double>("SkipConfigureHW", 0);
-    if(!skipConfigureHW) ConfigureHw(false, true);
+    if(!skipConfigureHW) ConfigureHw(false, pReInitialize);
+}
+
+void SystemController::initializeExceptionHandler()
+{
+    ExceptionHandler::getInstance()->setDetectorContainer(fDetectorContainer);
+    ExceptionHandler::getInstance()->setFirmwareInterface(fBeBoardInterface->getFirmwareInterface());
 }
 
 void SystemController::Start(const StartInfo& theStartInfo)
@@ -1282,10 +1359,7 @@ void SystemController::ReadNEvents(uint32_t pNEvents)
 void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
     fBeBoardInterface->ReadNEvents(pBoard, pNEvents, pData, pWait);
-
-    uint32_t cMultiplicity = 0;
-    if(fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C) cMultiplicity = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    pNEvents = pNEvents * (cMultiplicity + 1);
+    if(fBeBoardInterface->getBoardType(pBoard) == BoardType::D19C) pNEvents = pNEvents * (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
 }
 
@@ -1317,8 +1391,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     else if(pType == BoardType::D19C && pBoard->getEventType() != EventType::PSAS)
     {
         bool cTLUconfig = 2;
-        // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
-        //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
+        // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
+        //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
         // for (auto L : pData) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();

@@ -88,6 +88,8 @@ class OTHybridTester : public Tool
     std::pair<bool, uint8_t> PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId);
 
     void InitialiseTestCard(bool cIsSEH);
+    void ReadChipIds();
+    void CheckConfiguredHw();
 
   private:
     float       getMeasurement(std::string name);

@@ -128,6 +128,7 @@ class D19clpGBTInterface : public lpGBTInterface
     FrontEndType         getFrontEndType() { return fFeType; }
     std::vector<uint8_t> getPSResetGPIOs() { return {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}; }
     std::vector<uint8_t> get2SResetGPIOs() { return {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}; }
+    uint8_t              getVtrxResetGPIO() { return fReset_VTRx; }
     std::vector<uint8_t> getGroups()
     {
         std::vector<uint8_t> cGroups;
@@ -180,6 +181,7 @@ class D19clpGBTInterface : public lpGBTInterface
     uint8_t fReset_RHS_MPA = 9;
     uint8_t fReset_RHS_SSA = 12;
     uint8_t fReset_RHS_CBC = 8;
+    uint8_t fReset_VTRx    = 15;
 
     // Rx Groups for both 2S+PS hybrids with lpGBT
     std::map<uint8_t, std::vector<uint8_t>> fRxChannelMap = {{0, {0, 2}}, {1, {0, 2}}, {3, {0, 2}}, {4, {0, 2}}, {5, {0, 2}}, {6, {0, 2}}};

@@ -68,16 +68,32 @@ class lpGBT : public Chip
     uint32_t getWriteCount(uint8_t pMasterId) { return fI2CWrites[pMasterId]; }
     uint32_t getReadCount(uint8_t pMasterId) { return fI2CReads[pMasterId]; }
 
+    void                    setTuneVrefADC(std::string pTuneVrefADC) { fTuneVrefADC = pTuneVrefADC; }
+    void                    setTuneVrefVoltage(uint16_t pTuneVrefVoltage) { fTuneVrefVoltage = pTuneVrefVoltage; }
+    std::string             getTuneVrefADC() { return fTuneVrefADC; }
+    uint16_t                getTuneVrefVoltage() { return fTuneVrefVoltage; }
+    std::pair<float, float> getTemperatureCoefficients() { return fTemperatureCoefficients; }
+
   private:
     bool                 phaseRxAligned; // @TMP@
     uint8_t              fVersion;
     uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate, fChipAddress;
     uint8_t              fRxHSLPolarity, fTxHSLPolarity;
     std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;
-    // Number of write transactions - one element per master
+    // #########################################################
+    // # Number of write transactions - one element per master #
+    // #########################################################
     std::vector<uint32_t> fI2CWrites{0, 0, 0};
-    // Number of read transactions - one element per master
+    // ########################################################
+    // # Number of read transactions - one element per master #
+    // ########################################################
     std::vector<uint32_t> fI2CReads{0, 0, 0};
+    // #######################################################
+    // # ADC Channel and Voltage to manually tune Vref to 1V #
+    // #######################################################
+    std::string             fTuneVrefADC{"ADC2"}; // ADC2 = LV monitor line of 2S module, ADC7 for PS modules (2.55V line monitor)
+    uint16_t                fTuneVrefVoltage{500}; // Voltage is given in mV!
+    std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021, 0.475)}; // In V per Celsius and Volt coming from the lpGBTv0 manual
 };
 } // namespace Ph2_HwDescription
 

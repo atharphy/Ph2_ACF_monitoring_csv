@@ -176,22 +176,28 @@ void ThrEqualization::run()
                 for(const auto cChip: *cHybrid)
                 {
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
-                        static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                        static_cast<RD53*>(cChip),
+                        "PIX_PORTAL",
+                        *theTDACContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
 
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
-                                                                                                                     ->at(cBoard->getIndex())
-                                                                                                                     ->at(cOpticalGroup->getIndex())
-                                                                                                                     ->at(cHybrid->getIndex())
-                                                                                                                     ->at(cChip->getIndex())
+                                                                                                                     ->getObject(cBoard->getId())
+                                                                                                                     ->getObject(cOpticalGroup->getId())
+                                                                                                                     ->getObject(cHybrid->getId())
+                                                                                                                     ->getObject(cChip->getId())
                                                                                                                      ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                      ->allChannelGroup()
                                                                                                                      ->isChannelEnabled(row, col))
                             {
-                                theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fStatus =
-                                    RD53Shared::ISDISABLED;
-                                theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+                                theOccContainer->getObject(cBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getChannel<OccupancyAndPh>(row, col)
+                                    .fStatus = RD53Shared::ISDISABLED;
+                                theTDACContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row, col) =
                                     frontEnd->nTDACvalues;
                             }
                 }
@@ -244,28 +250,43 @@ void ThrEqualization::analyze()
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->at(cBoard->getIndex())
-                                                                                                                   ->at(cOpticalGroup->getIndex())
-                                                                                                                   ->at(cHybrid->getIndex())
-                                                                                                                   ->at(cChip->getIndex())
+                                                                                                                   ->getObject(cBoard->getId())
+                                                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                                                   ->getObject(cHybrid->getId())
+                                                                                                                   ->getObject(cChip->getId())
                                                                                                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
                             {
-                                static_cast<RD53*>(cChip)->setTDAC(
-                                    row, col, theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col));
+                                static_cast<RD53*>(cChip)->setTDAC(row,
+                                                                   col,
+                                                                   theTDACContainer.getObject(cBoard->getId())
+                                                                       ->getObject(cOpticalGroup->getId())
+                                                                       ->getObject(cHybrid->getId())
+                                                                       ->getObject(cChip->getId())
+                                                                       ->getChannel<uint16_t>(row, col));
 
-                                avgTDAC += theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                avgTDAC += theTDACContainer.getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
+                                               ->getChannel<uint16_t>(row, col);
                                 counter++;
 
-                                counterMinBin +=
-                                    (theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) == 0 ? 1
-                                                                                                                                                                                                 : 0);
-                                counterMaxBin +=
-                                    (theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) ==
-                                             frontEnd->nTDACvalues - 1
-                                         ? 1
-                                         : 0);
+                                counterMinBin += (theTDACContainer.getObject(cBoard->getId())
+                                                              ->getObject(cOpticalGroup->getId())
+                                                              ->getObject(cHybrid->getId())
+                                                              ->getObject(cChip->getId())
+                                                              ->getChannel<uint16_t>(row, col) == 0
+                                                      ? 1
+                                                      : 0);
+                                counterMaxBin += (theTDACContainer.getObject(cBoard->getId())
+                                                              ->getObject(cOpticalGroup->getId())
+                                                              ->getObject(cHybrid->getId())
+                                                              ->getObject(cChip->getId())
+                                                              ->getChannel<uint16_t>(row, col) == frontEnd->nTDACvalues - 1
+                                                      ? 1
+                                                      : 0);
                             }
 
                     avgTDAC /= counter;
@@ -305,10 +326,14 @@ void ThrEqualization::analyzeDuringRun()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current =
-                            round(theContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i) /
-                                  RD53Shared::PRECISION) *
-                            RD53Shared::PRECISION;
+                        auto current = round(theContainer.getObject(cBoard->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
+                                                 ->getSummary<std::vector<float>>()
+                                                 .at(i) /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if(current < best)
                         {
                             regVal = dacList[i];
@@ -322,7 +347,7 @@ void ThrEqualization::analyzeDuringRun()
                     // ########################################################
                     // # Fill TDAC gain container and download new DAC values #
                     // ########################################################
-                    theTDACGainContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
+                    theTDACGainContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->TDACGainReg, regVal);
                 }
 }
@@ -372,17 +397,17 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         size_t cnt    = 0;
                         for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                             for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                if(fDetectorContainer->at(cBoard->getIndex())
-                                       ->at(cOpticalGroup->getIndex())
-                                       ->at(cHybrid->getIndex())
-                                       ->at(cChip->getIndex())
+                                if(fDetectorContainer->getObject(cBoard->getId())
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
                                        ->getChipOriginalMask()
                                        ->isChannelEnabled(row, col) &&
                                    this->getChannelGroupHandlerContainer()
-                                       ->at(cBoard->getIndex())
-                                       ->at(cOpticalGroup->getIndex())
-                                       ->at(cHybrid->getIndex())
-                                       ->at(cChip->getIndex())
+                                       ->getObject(cBoard->getId())
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                        ->allChannelGroup()
                                        ->isChannelEnabled(row, col) &&
@@ -397,7 +422,8 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // ###############
                         // # Save output #
                         // ###############
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<float>>().at(i) = stdDev;
+                        theContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<float>>().at(i) =
+                            stdDev;
 
                         // ##############################################
                         // # Send periodic data to monitor the progress #
@@ -436,9 +462,9 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                            (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
-                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
+                        midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                            (minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
+                             maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) /
                             2;
         CalibBase::downloadNewDACvalues(midDACcontainer, {regName.c_str()});
 
@@ -470,25 +496,25 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
                         // ########################
                         // # Save best DAC values #
                         // ########################
-                        float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>();
+                        float oldValue = bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
 
                         if(fabs(newValue - target) < fabs(oldValue - target))
                         {
-                            bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = newValue;
+                            bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = newValue;
 
-                            bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            bestDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                         }
 
                         if(newValue > target)
 
-                            maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
                         else
 
-                            minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                     }
     }
 
@@ -531,7 +557,7 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
-                        static_cast<RD53*>(cChip), "", *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                        static_cast<RD53*>(cChip), "", *midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
 
     for(auto i = 0u; i <= (doNSteps != 0 ? doNSteps : numberOfBits); i++)
     {
@@ -543,7 +569,7 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                         this->fReadoutChipInterface->WriteChipAllLocalReg(
-                            static_cast<RD53*>(cChip), "", *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                            static_cast<RD53*>(cChip), "", *midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
 
         // ################
         // # Run analysis #
@@ -565,17 +591,17 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
                     for(const auto cChip: *cHybrid)
                         for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                             for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                if(fDetectorContainer->at(cBoard->getIndex())
-                                       ->at(cOpticalGroup->getIndex())
-                                       ->at(cHybrid->getIndex())
-                                       ->at(cChip->getIndex())
+                                if(fDetectorContainer->getObject(cBoard->getId())
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
                                        ->getChipOriginalMask()
                                        ->isChannelEnabled(row, col) &&
                                    this->getChannelGroupHandlerContainer()
-                                       ->at(cBoard->getIndex())
-                                       ->at(cOpticalGroup->getIndex())
-                                       ->at(cHybrid->getIndex())
-                                       ->at(cChip->getIndex())
+                                       ->getObject(cBoard->getId())
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                        ->allChannelGroup()
                                        ->isChannelEnabled(row, col))
@@ -588,34 +614,77 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
                                     // ########################
                                     // # Save best DAC values #
                                     // ########################
-                                    float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col);
+                                    float oldValue = bestContainer.getObject(cBoard->getId())
+                                                         ->getObject(cOpticalGroup->getId())
+                                                         ->getObject(cHybrid->getId())
+                                                         ->getObject(cChip->getId())
+                                                         ->getChannel<float>(row, col);
 
                                     if(fabs(newValue - target) <= fabs(oldValue - target))
                                     {
-                                        bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col) = newValue;
-                                        bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                        bestContainer.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getChannel<float>(row, col) = newValue;
+                                        bestDACcontainer.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getChannel<uint16_t>(row, col) = midDACcontainer.getObject(cBoard->getId())
+                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                   ->getObject(cHybrid->getId())
+                                                                                   ->getObject(cChip->getId())
+                                                                                   ->getChannel<uint16_t>(row, col);
                                     }
 
                                     if(newValue < target)
 
-                                        minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                        minDACcontainer.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getChannel<uint16_t>(row, col) = midDACcontainer.getObject(cBoard->getId())
+                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                   ->getObject(cHybrid->getId())
+                                                                                   ->getObject(cChip->getId())
+                                                                                   ->getChannel<uint16_t>(row, col);
 
                                     else
 
-                                        maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                        maxDACcontainer.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getChannel<uint16_t>(row, col) = midDACcontainer.getObject(cBoard->getId())
+                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                   ->getObject(cHybrid->getId())
+                                                                                   ->getObject(cChip->getId())
+                                                                                   ->getChannel<uint16_t>(row, col);
 
                                     if(doNSteps == 0)
-                                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                            (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
-                                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col)) /
-                                            2;
+                                        midDACcontainer.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getChannel<uint16_t>(row, col) = (minDACcontainer.getObject(cBoard->getId())
+                                                                                    ->getObject(cOpticalGroup->getId())
+                                                                                    ->getObject(cHybrid->getId())
+                                                                                    ->getObject(cChip->getId())
+                                                                                    ->getChannel<uint16_t>(row, col) +
+                                                                                maxDACcontainer.getObject(cBoard->getId())
+                                                                                    ->getObject(cOpticalGroup->getId())
+                                                                                    ->getObject(cHybrid->getId())
+                                                                                    ->getObject(cChip->getId())
+                                                                                    ->getChannel<uint16_t>(row, col)) /
+                                                                               2;
                                     else
                                     {
-                                        auto& midDAC =
-                                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+                                        auto& midDAC = midDACcontainer.getObject(cBoard->getId())
+                                                           ->getObject(cOpticalGroup->getId())
+                                                           ->getObject(cHybrid->getId())
+                                                           ->getObject(cChip->getId())
+                                                           ->getChannel<uint16_t>(row, col);
                                         if(newValue < target)
                                         {
                                             midDAC += 1;
@@ -638,7 +707,7 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
                 for(const auto cChip: *cHybrid)
                 {
                     this->fReadoutChipInterface->WriteChipAllLocalReg(
-                        static_cast<RD53*>(cChip), "", *bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                        static_cast<RD53*>(cChip), "", *bestDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
                     if(updateDACs == true) static_cast<RD53*>(cChip)->copyMaskToDefault("td");
                 }
 

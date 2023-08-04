@@ -81,7 +81,7 @@ class MonitorDQMPlotBase
     {
         struct tm* timeinfo = localtime(&rawTime);
         char       timeStampString[80];
-        strftime(timeStampString, sizeof(timeStampString), "%Y-%m-%d %H:%M:%S", timeinfo);
+        strftime(timeStampString, sizeof(timeStampString), TIME_FORMAT, timeinfo);
 
         TDatime rootTime(timeStampString);
         return rootTime.Convert();
@@ -97,8 +97,8 @@ class MonitorDQMPlotBase
     {
         graphContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
         graphContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-        graphContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M:%S");
-        graphContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+        graphContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
+        graphContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
         if(XTitle != nullptr) graphContainer.fTheGraph->GetXaxis()->SetTitle(XTitle);
         if(YTitle != nullptr)
         {

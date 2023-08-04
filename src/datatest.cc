@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
         t.show("Time for changing VCth on all CBCs:");
     }
 
-    BeBoard* pBoard = static_cast<BeBoard*>(cSystemController.fDetectorContainer->at(0));
+    BeBoard* pBoard = static_cast<BeBoard*>(cSystemController.fDetectorContainer->getFirstObject());
     t.start();
     // make event counter start at 1 as does the L1A counter
     uint32_t cN      = 1;

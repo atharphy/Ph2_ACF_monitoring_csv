@@ -195,6 +195,8 @@ class SystemController
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool cStartUpSequence);
 
+    void initializeExceptionHandler();
+
     /*!
      * \brief Run Bit Error Rate test
      * \param chain2test     : which part of the chain to be tested
@@ -237,7 +239,7 @@ class SystemController
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(const ConfigureInfo& theConfigureInfo);
+    virtual void Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize = true);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);
@@ -268,7 +270,7 @@ class SystemController
      */
     void ReadNEvents(uint32_t pNEvents);
 
-    const Ph2_HwDescription::BeBoard* getBoard(int index) const { return (index < static_cast<int>(fDetectorContainer->size()) ? fDetectorContainer->at(index) : nullptr); }
+    const Ph2_HwDescription::BeBoard* getBoard(int boardId) const { return fDetectorContainer->getObject(boardId); }
 
     const std::vector<Ph2_HwInterface::Event*>& GetEvents()
     {
@@ -350,7 +352,7 @@ class SystemController
 
     inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber)
     {
-        return fChannelGroupHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
+        return fChannelGroupHandlerContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
     }
 
     void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }

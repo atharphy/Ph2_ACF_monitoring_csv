@@ -66,28 +66,67 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
 
     StringContainer theLpGBTFuseIdStringContainer("LpGBTFuseId");
     RootContainerFactory::bookOpticalGroupHistograms<StringContainer>(theOutputFile, theDetectorStructure, fLpGBTFuseIdContainer, theLpGBTFuseIdStringContainer);
+
+    StringContainer theVTRxFuseIdStringContainer("VTRxFuseId");
+    RootContainerFactory::bookOpticalGroupHistograms<StringContainer>(theOutputFile, theDetectorStructure, fVTRxFuseIdContainer, theVTRxFuseIdStringContainer);
 }
 
 void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
 {
+    // Try and catch are required because this is (hopefully) the only case in which the container is created before the histogram booking
     for(const auto board: theNameContainer)
     {
-        auto* theTreeContainerBoard = fNameContainer.getObject(board->getId());
+        BoardDataContainer* theTreeContainerBoard;
+        try
+        {
+            theTreeContainerBoard = fNameContainer.getObject(board->getId());
+        }
+        catch(const std::exception& e)
+        {
+            continue;
+        }
+
         theTreeContainerBoard->getSummary<StringContainer, StringContainer>().saveString(board->getSummary<std::string, std::string>().c_str());
 
         for(const auto opticalGroup: *board)
         {
-            auto* theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
+            OpticalGroupDataContainer* theTreeContainerOpticalGroup;
+            try
+            {
+                theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
+            }
+            catch(const std::exception& e)
+            {
+                continue;
+            }
+
             theTreeContainerOpticalGroup->getSummary<StringContainer, StringContainer>().saveString(opticalGroup->getSummary<std::string, std::string>().c_str());
 
             for(const auto hybrid: *opticalGroup)
             {
-                auto* theTreeContainerHybrid = theTreeContainerOpticalGroup->getObject(hybrid->getId());
+                HybridDataContainer* theTreeContainerHybrid;
+                try
+                {
+                    theTreeContainerHybrid = theTreeContainerOpticalGroup->getObject(hybrid->getId());
+                }
+                catch(const std::exception& e)
+                {
+                    continue;
+                }
+
                 theTreeContainerHybrid->getSummary<StringContainer, StringContainer>().saveString(hybrid->getSummary<std::string, std::string>().c_str());
 
                 for(const auto chip: *hybrid)
                 {
-                    auto* theTreeContainerChip = theTreeContainerHybrid->getObject(chip->getId());
+                    ChipDataContainer* theTreeContainerChip;
+                    try
+                    {
+                        theTreeContainerChip = theTreeContainerHybrid->getObject(chip->getId());
+                    }
+                    catch(const std::exception& e)
+                    {
+                        continue;
+                    }
                     theTreeContainerChip->getSummary<StringContainer>().saveString(chip->getSummary<std::string>().c_str());
                 }
             }
@@ -192,6 +231,20 @@ void DQMMetadata::fillLpGBTFuseId(const DetectorDataContainer& theLpGBTFuseIdCon
     }
 }
 
+void DQMMetadata::fillVTRxFuseId(const DetectorDataContainer& theVTRxFuseIdContainer)
+{
+    for(const auto board: theVTRxFuseIdContainer)
+    {
+        auto* theTreeContainerBoard = fVTRxFuseIdContainer.getObject(board->getId());
+        for(const auto opticalGroup: *board)
+        {
+            auto* theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
+            if(!opticalGroup->hasSummary()) continue;
+            theTreeContainerOpticalGroup->getSummary<StringContainer>().saveString(opticalGroup->getSummary<std::string>().c_str());
+        }
+    }
+}
+
 void DQMMetadata::process() {}
 
 void DQMMetadata::reset() {}
@@ -209,6 +262,7 @@ bool DQMMetadata::fill(std::string& inputStream)
     ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
     ContainerSerialization theLpGBTConfigurationSerialization("MetadataLpGBTConfiguration");
     ContainerSerialization theLpGBTFuseIdSerialization("MetadataLpGBTFuseId");
+    ContainerSerialization theVTRxFuseIdSerialization("MetadataVTRxFuseId");
 
     if(theNameSerialization.attachDeserializer(inputStream))
     {
@@ -301,6 +355,13 @@ bool DQMMetadata::fill(std::string& inputStream)
         std::cout << "Matched Metadata LpGBTFuseId!!!!!\n";
         DetectorDataContainer theDetectorData = theLpGBTFuseIdSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
         fillLpGBTFuseId(theDetectorData);
+        return true;
+    }
+    if(theVTRxFuseIdSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched Metadata VTRxFuseId!!!!!\n";
+        DetectorDataContainer theDetectorData = theVTRxFuseIdSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+        fillVTRxFuseId(theDetectorData);
         return true;
     }
 

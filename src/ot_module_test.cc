@@ -18,6 +18,7 @@
 #include "tools/MemoryCheck2S.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
+#include "tools/OTVTRXLightOff.h"
 #include "tools/PSAlignment.h"
 #include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
@@ -193,9 +194,14 @@ int main(int argc, char* argv[])
     cmd.defineOption("kiracalibration", "Perform KIRA calibration", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("loopTemperatureReadout", "Loop temperature readout of sensor thermistor", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("tuneVref", "Tune lpGBT Vref with voltage using ADC input (ADC1, ADC2, ADC3, ADC4, ...)", ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("vtrxLightOff", "Turnoff the light output of the VTRX+ to perform an IV curve while the LV is still powered", ArgvParser::NoOptionAttribute);
+
 
     int result = cmd.parse(argc, argv);
 
@@ -206,19 +212,20 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
-    bool        batchMode        = (cmd.foundOption("batch")) ? true : false;
-    bool        cCheckData       = (cmd.foundOption("checkData"));
-    bool        cSaveToFile      = cmd.foundOption("save");
-    std::string cSkip            = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
-    std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
-    std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
-    std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    int         cKiraPort        = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
-    std::string cKiraID          = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
-    bool        cKiraCalibration = cmd.foundOption("kiracalibration");
-    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+    std::string cHWFile                 = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
+    bool        batchMode               = (cmd.foundOption("batch")) ? true : false;
+    bool        cCheckData              = (cmd.foundOption("checkData"));
+    bool        cSaveToFile             = cmd.foundOption("save");
+    std::string cSkip                   = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
+    std::string cInjectionSource        = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
+    std::string cSrcLnkTst              = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
+    std::string cModuleId               = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
+    int         cKiraPort               = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
+    std::string cKiraID                 = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
+    bool        cKiraCalibration        = cmd.foundOption("kiracalibration");
+    std::string cDirectory              = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    bool        cPulseShape             = (cmd.foundOption("pulseShape")) ? true : false;
+    bool        cLoopTemperatureReadout = (cmd.foundOption("loopTemperatureReadout")) ? true : false;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -266,12 +273,33 @@ int main(int argc, char* argv[])
         cTool.addFileHandler(cRawFile, 'w');
         LOG(INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile;
     }
-
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
+    cTool.initializeExceptionHandler();
+
+
+    if(cmd.foundOption("vtrxLightOff"))
+    {
+        cTool.ConfigureHw(true, true);
+        LOG(INFO) << BOLDBLUE << "Turn off light output of VTRX..." << RESET;
+        OTVTRXLightOff cLightOff;
+        cLightOff.Inherit(&cTool);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cLightOff.Start(theStartInfo);
+        cLightOff.waitForRunToBeCompleted();
+    }
+    if(cmd.foundOption("tuneVref"))
+    {
+        auto          cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
+        OTTemperature cTemperatureReader;
+        cTemperatureReader.Inherit(&cTool);
+        cTemperatureReader.SetGain(cGain);
+        cTemperatureReader.TuneLpGBTVref();
+    }
 
     if(cmd.foundOption("readTemperatures"))
     {
@@ -282,6 +310,7 @@ int main(int argc, char* argv[])
         cTemperatureReader.SetGain(cGain);
         StartInfo theStartInfo;
         theStartInfo.setRunNumber(cRunNumber);
+        cTemperatureReader.LoopReadout(cLoopTemperatureReadout);
         cTemperatureReader.Start(theStartInfo);
         cTemperatureReader.waitForRunToBeCompleted();
     }
@@ -478,9 +507,9 @@ int main(int argc, char* argv[])
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
         
-        //auto clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "FE_CONFIG");
+        //auto clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "FE_CONFIG");
         //std::cout << " CLK CIC 0x" << std::hex << clkFr << std::dec << std::endl;
-        // cTool.fCicInterface->WriteChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "FE_CONFIG", 0x1D);
+        // cTool.fCicInterface->WriteChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "FE_CONFIG", 0x1D);
         // // exit(0);
         // just to check
         // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
@@ -1118,7 +1147,7 @@ int main(int argc, char* argv[])
         //                 cTool.ReadNEvents(cBoard, 42);
         //                 //const std::vector<Event*>& cEvents = cTool.GetEvents();
         //                 //LOG (INFO) << BOLDYELLOW << "Read-back " << +cEvents.size() << " events from the FC7 when 42 were requested" << RESET;
-        //                 //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->at(fBoardIndex)), fTestChannelGroup);
+        //                 //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->getObject(fBoardIndex)), fTestChannelGroup);
 
         //             //}
         //         // for( size_t cAttempt = 0 ; cAttempt < 1; cAttempt++ )
@@ -1288,15 +1317,15 @@ int main(int argc, char* argv[])
 
         // reading CIC registers
         std::cout << " cTool" << std::endl;
-        auto clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "FE_CONFIG");
+        auto clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "FE_CONFIG");
         std::cout << " CLK CIC 0x" << std::hex << clkFr << std::dec << std::endl;
-        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "scPhaseSelectB0o");
+        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "scPhaseSelectB0o");
         // std::cout << " scPhaseSelectB0o 0x" << std::hex << clkFr << std::dec << std::endl;
-        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "scPhaseSelectB1o");
+        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "scPhaseSelectB1o");
         // std::cout << " scPhaseSelectB1o 0x" << std::hex << clkFr << std::dec << std::endl;
-        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "scPhaseSelectB2o");
+        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "scPhaseSelectB2o");
         // std::cout << " scPhaseSelectB2o 0x" << std::hex << clkFr << std::dec << std::endl;
-        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->at(0)->at(0)->at(0))->fCic, "scPhaseSelectB3o");
+        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "scPhaseSelectB3o");
         // std::cout << " scPhaseSelectB3o 0x" << std::hex << clkFr << std::dec << std::endl;
 
 

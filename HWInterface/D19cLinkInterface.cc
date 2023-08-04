@@ -1,4 +1,5 @@
 #include "HWInterface/D19cLinkInterface.h"
+#include "HWInterface/ExceptionHandler.h"
 
 using namespace Ph2_HwDescription;
 
@@ -62,19 +63,44 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
     bool   cAllLocked   = false;
     size_t cMaxAttempts = fConfiguration.fReTry ? fConfiguration.fMaxAttempts : 1;
     size_t cAttempts    = 0;
+    bool   cLinkStatus  = false;
     do
     {
         cAllLocked = true;
         LOG(INFO) << BOLDMAGENTA << "D19cLinkInterface::GeneralLinkReset Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << " [Attempt#" << cAttempts++ << "]" << RESET;
         ResetLinks();
-        for(auto cOpticalReadout: *pBoard) { cAllLocked = cAllLocked && GetLinkStatus(cOpticalReadout->getId()); }
+        for(auto cOpticalReadout: *pBoard)
+        {
+            cLinkStatus = cOpticalReadout->fIsLocked;
+            if(!cLinkStatus)
+            {
+                cLinkStatus = GetLinkStatus(cOpticalReadout->getId());
+                if(cLinkStatus)
+                {
+                    cOpticalReadout->fIsLocked = true;
+#ifdef __TCUSB__
+                    break;
+#endif
+                }
+            }
+            cAllLocked = cAllLocked && cLinkStatus;
+        }
+#ifdef __TCUSB__
+        cAllLocked = false;
+        if(cLinkStatus) break;
+#endif
     } while(cAttempts < cMaxAttempts && !cAllLocked);
-
     if(!cAllLocked)
     {
-        LOG(ERROR) << BOLDRED << "Failed to lock all links after a general reset" << RESET;
-        throw Exception("Failed to lock all links after a general reset");
+        LOG(ERROR) << BOLDRED << "Failed to lock all links after a general reset, disabling problematic OpticalGroups and continuing" << RESET;
+        for(auto cOpticalReadout: *pBoard)
+        {
+            if(!GetLinkStatus(cOpticalReadout->getId()))
+            {
+                LOG(ERROR) << BOLDRED << "Disabling Board " << RESET;
+                ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalReadout->getId());
+            }
+        }
     }
 }
-
 } // namespace Ph2_HwInterface

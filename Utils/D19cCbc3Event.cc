@@ -195,11 +195,11 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
         {
             // just use board to figure out how many CBCs there are
             size_t cHybridIndex = 0;
-            for(auto cHybrid: *pBoard->at(0))
+            for(const auto cHybrid: *pBoard->getFirstObject())
             {
-                if(cHybrid->getId() == cHybridId) cHybridIndex = cHybrid->getIndex();
+                if(cHybrid->getId() == cHybridId) cHybridIndex = cHybrid->getId();
             }
-            auto                  cReadoutChips = pBoard->at(0)->at(cHybridIndex);
+            auto                  cReadoutChips = pBoard->getFirstObject()->getObject(cHybridIndex);
             std::vector<uint32_t> cCbcData(cIterator, cIterator + cDataSize);
             fEventDataVector[encodeVectorIndex(cHybridId, cCbcId, cReadoutChips->fullSize())] = cCbcData;
         }
@@ -672,7 +672,7 @@ SLinkEvent D19cCbc3Event::GetSLinkEvent(BeBoard* pBoard) const
     GenericPayload cPayload;
     GenericPayload cStubPayload;
 
-    for(auto cHybrid: *pBoard->at(0))
+    for(auto cHybrid: *pBoard->getFirstObject())
     {
         uint8_t cHybridId = cHybrid->getId();
 

@@ -151,6 +151,7 @@ int main(int argc, char* argv[])
     cHybridTester.InitializeSettings(cHWFile, outp);
     cHybridTester.CreateResultDirectory(cDirectory);
     cHybridTester.InitResultFile(cResultfile);
+    cHybridTester.initializeExceptionHandler();
     cHybridTester.bookSummaryTree();
     // set voltage  on PS FEH
     if(cGui)

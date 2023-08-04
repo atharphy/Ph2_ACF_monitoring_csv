@@ -281,7 +281,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
         // ###################
         // # Fill containers #
         // ###################
-        for(const auto cOpticalGroup: *fOccupancyContainer.at(cBoard->getIndex()))
+        for(const auto cOpticalGroup: *fOccupancyContainer.getObject(cBoard->getId()))
         {
             for(const auto cHybrid: *cOpticalGroup)
             {
@@ -291,7 +291,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                 for(const auto cChip: *cHybrid)
                 {
                     // std::cout<<__LINE__<<std::endl;
-                    auto currentChip = fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
+                    auto currentChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     if(currentChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                     // std::cout<<__LINE__<<std::endl;
@@ -310,7 +310,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     }
 
                     // std::cout<<__LINE__<<std::endl;
-                    ChipDataContainer* theStubChipContainer = fStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
+                    ChipDataContainer* theStubChipContainer = fStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     // std::cout<<__LINE__<<std::endl;
                     for(auto& stub: stubList)
                     {
@@ -342,20 +342,20 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     if(currentChip->getId() == 3) continue; // patch for bug in the FEH I2C address
 
                     // std::cout<<__LINE__<<std::endl;
-                    uint16_t theCorrespondingSSAIndex = 9999;
-                    for(auto theCorrespondingSSA: *fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))
+                    uint16_t theCorrespondingSSAId = 9999;
+                    for(auto theCorrespondingSSA: *fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId()))
                     {
                         if(theCorrespondingSSA->getFrontEndType() != FrontEndType::SSA) continue;
                         if(theCorrespondingSSA->getId() == currentChip->getId())
                         {
-                            theCorrespondingSSAIndex = theCorrespondingSSA->getIndex();
+                            theCorrespondingSSAId = theCorrespondingSSA->getId();
                             break;
                         }
                     }
 
                     // std::cout<<__LINE__<<std::endl;
 
-                    ChipDataContainer* theSSAContainer = cHybrid->at(theCorrespondingSSAIndex);
+                    ChipDataContainer* theSSAContainer = cHybrid->getObject(theCorrespondingSSAId);
 
                     for(auto& stripCluster: stripClusterList)
                     {
@@ -379,7 +379,7 @@ void PSPhysics::clearContainers(BoardContainer* theBoard)
     // ####################
     // # Clear containers #
     // ####################
-    for(const auto cOpticalGroup: *fOccupancyContainer.at(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fOccupancyContainer.getObject(theBoard->getId()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {
@@ -390,7 +390,7 @@ void PSPhysics::clearContainers(BoardContainer* theBoard)
         }
     }
 
-    for(const auto cOpticalGroup: *fStubContainer.at(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fStubContainer.getObject(theBoard->getId()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {

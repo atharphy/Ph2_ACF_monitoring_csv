@@ -50,8 +50,8 @@ void MonitorDQMPlotSEH::book(TFile* theOutputFile, DetectorContainer& theDetecto
 //     theTGraphPedestalContainer.setNameTitle("LpGBT_DQM_" + registerName, "LpGBT_DQM_" + registerName);
 //     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
 //     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-//     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
-//     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+//     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
+//     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
 //     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
 //     theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((registerName + " [V]").c_str());
 //     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
@@ -71,8 +71,8 @@ void MonitorDQMPlotSEH::bookPowerSupplyPlots(TFile* theOutputFile, const Detecto
     theTGraphPedestalContainer.setNameTitle("PowerSupply_DQM_" + registerName, "PowerSupply_DQM_" + registerName);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
     theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((registerName).c_str());
     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
@@ -92,8 +92,8 @@ void MonitorDQMPlotSEH::bookTestCardPlots(TFile* theOutputFile, const DetectorCo
     theTGraphPedestalContainer.setNameTitle("TestCard_DQM_" + registerName, "TestCard_DQM_" + registerName);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
     theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((registerName).c_str());
     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
@@ -116,12 +116,12 @@ void MonitorDQMPlotSEH::bookTestCardPlots(TFile* theOutputFile, const DetectorCo
 
 //     for(auto board: theThresholdContainer) // for on boards - begin
 //     {
-//         size_t boardIndex = board->getIndex();
+//         size_t boardId = board->getId();
 //         for(auto opticalGroup: *board) // for on opticalGroup - begin
 //         {
 //             if(!opticalGroup->hasSummary()) continue;
-//             size_t  opticalGroupIndex = opticalGroup->getIndex();
-//             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+//             size_t  opticalGroupId = opticalGroup->getId();
+//             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardId)->getObject(opticalGroupId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
 //             auto theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
 //             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue * CONVERSION_FACTOR);
 //         } // for on opticalGroup - end

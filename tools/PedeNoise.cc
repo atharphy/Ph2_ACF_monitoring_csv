@@ -140,7 +140,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                cBoardRegNap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
@@ -196,7 +196,7 @@ void PedeNoise::Reset()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                                         cBeRegMap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
@@ -255,9 +255,9 @@ void PedeNoise::disableStubLogic()
                     {
                         LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET;
                         static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(cChip, false, true, 0);
-                        fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                        fStubLogicValue->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cChip), "Pipe&StubInpSel&Ptwidth");
-                        fHIPCountValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
+                        fHIPCountValue->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cChip), "HIP&TestMode");
                         // fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "Pipe&StubInpSel&Ptwidth", 0x23);
                         // fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "HIP&TestMode", 0x00);
@@ -284,10 +284,12 @@ void PedeNoise::reloadStubLogic()
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
                         LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                        cRegVec.push_back({"Pipe&StubInpSel&Ptwidth",
-                                           fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()});
                         cRegVec.push_back(
-                            {"HIP&TestMode", fHIPCountValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()});
+                            {"Pipe&StubInpSel&Ptwidth",
+                             fStubLogicValue->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()});
+                        cRegVec.push_back(
+                            {"HIP&TestMode",
+                             fHIPCountValue->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()});
                         fReadoutChipInterface->WriteChipMultReg(cChip, cRegVec);
                     }
                 }
@@ -440,8 +442,12 @@ void PedeNoise::Validate()
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
                         // LOG (INFO) << RED << "Ch " << iChan << RESET ;
-                        float occupancy =
-                            theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
+                        float occupancy = theOccupancyContainer.getObject(cBoard->getId())
+                                              ->getObject(cOpticalGroup->getId())
+                                              ->getObject(cHybrid->getId())
+                                              ->getObject(cChip->getId())
+                                              ->getChannel<Occupancy>(iChan)
+                                              .fOccupancy;
                         if(occupancy > fMaskingThreshold)
                         {
                             std::string message = "Found a noisy channel on Chip " + getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()) + " Channel " +
@@ -497,8 +503,8 @@ void PedeNoise::findPedestal(bool forceAllChannels)
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of hybrid 0 = " << fDetectorContainer->at(0)->at(0)->at(0)->size() << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of hybrid 0 = " << fDetectorDataContainer->at(0)->at(0)->at(0)->size() << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of hybrid 0 = " << fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->size() << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of hybrid 0 = " << fDetectorDataContainer->getFirstObject()->getFirstObject()->getFirstObject()->size() << std::endl;
     this->bitWiseScan("Threshold", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
 
@@ -598,18 +604,19 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
             uint8_t cNStripChips = 0, cNPixelChips = 0;
             for(auto cBoard: *fDetectorContainer)
             {
-                auto cBoardIdx = cBoard->getIndex();
+                auto cBoardIdx = cBoard->getId();
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto cOpticalGroupIdx = cOpticalGroup->getIndex();
+                    auto cOpticalGroupIdx = cOpticalGroup->getId();
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto cHybridIdx = cHybrid->getIndex();
+                        auto cHybridIdx = cHybrid->getId();
                         for(auto cChip: *cHybrid)
                         {
-                            auto cChipIdx       = cChip->getIndex();
-                            auto cType          = cChip->getFrontEndType();
-                            auto cChipOccupancy = theOccupancyContainer->at(cBoardIdx)->at(cOpticalGroupIdx)->at(cHybridIdx)->at(cChipIdx)->getSummary<Occupancy, Occupancy>().fOccupancy;
+                            auto cChipIdx = cChip->getId();
+                            auto cType    = cChip->getFrontEndType();
+                            auto cChipOccupancy =
+                                theOccupancyContainer->getObject(cBoardIdx)->getObject(cOpticalGroupIdx)->getObject(cHybridIdx)->getObject(cChipIdx)->getSummary<Occupancy, Occupancy>().fOccupancy;
                             if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                             {
                                 cNStripChips++;
@@ -784,14 +791,18 @@ void PedeNoise::extractPedeNoise()
                                     continue;
                                 }
                                 previousOccupancy = (previousStripIterator)
-                                                        ->second->at(board->getIndex())
-                                                        ->at(opticalGroup->getIndex())
-                                                        ->at(hybrid->getIndex())
-                                                        ->at(chip->getIndex())
+                                                        ->second->getObject(board->getId())
+                                                        ->getObject(opticalGroup->getId())
+                                                        ->getObject(hybrid->getId())
+                                                        ->getObject(chip->getId())
                                                         ->getChannel<Occupancy>(iChannel)
                                                         .fOccupancy;
-                                currentOccupancy =
-                                    mStripIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
+                                currentOccupancy = mStripIt->second->getObject(board->getId())
+                                                       ->getObject(opticalGroup->getId())
+                                                       ->getObject(hybrid->getId())
+                                                       ->getObject(chip->getId())
+                                                       ->getChannel<Occupancy>(iChannel)
+                                                       .fOccupancy;
                                 binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
                             }
                             else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
@@ -802,37 +813,41 @@ void PedeNoise::extractPedeNoise()
                                     continue;
                                 }
                                 previousOccupancy = (previousPixelIterator)
-                                                        ->second->at(board->getIndex())
-                                                        ->at(opticalGroup->getIndex())
-                                                        ->at(hybrid->getIndex())
-                                                        ->at(chip->getIndex())
+                                                        ->second->getObject(board->getId())
+                                                        ->getObject(opticalGroup->getId())
+                                                        ->getObject(hybrid->getId())
+                                                        ->getObject(chip->getId())
                                                         ->getChannel<Occupancy>(iChannel)
                                                         .fOccupancy;
-                                currentOccupancy =
-                                    mPixelIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
+                                currentOccupancy = mPixelIt->second->getObject(board->getId())
+                                                       ->getObject(opticalGroup->getId())
+                                                       ->getObject(hybrid->getId())
+                                                       ->getObject(chip->getId())
+                                                       ->getChannel<Occupancy>(iChannel)
+                                                       .fOccupancy;
                                 binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;
                                 if(previousOccupancy > currentOccupancy) { continue; }
                             }
 
-                            fThresholdAndNoiseContainer->at(board->getIndex())
-                                ->at(opticalGroup->getIndex())
-                                ->at(hybrid->getIndex())
-                                ->at(chip->getIndex())
+                            fThresholdAndNoiseContainer->getObject(board->getId())
+                                ->getObject(opticalGroup->getId())
+                                ->getObject(hybrid->getId())
+                                ->getObject(chip->getId())
                                 ->getChannel<ThresholdAndNoise>(iChannel)
                                 .fThreshold += binCenter * (previousOccupancy - currentOccupancy);
 
                             // if (iChannel>1800){
-                            fThresholdAndNoiseContainer->at(board->getIndex())
-                                ->at(opticalGroup->getIndex())
-                                ->at(hybrid->getIndex())
-                                ->at(chip->getIndex())
+                            fThresholdAndNoiseContainer->getObject(board->getId())
+                                ->getObject(opticalGroup->getId())
+                                ->getObject(hybrid->getId())
+                                ->getObject(chip->getId())
                                 ->getChannel<ThresholdAndNoise>(iChannel)
                                 .fNoise += binCenter * binCenter * (previousOccupancy - currentOccupancy); //}
 
-                            fThresholdAndNoiseContainer->at(board->getIndex())
-                                ->at(opticalGroup->getIndex())
-                                ->at(hybrid->getIndex())
-                                ->at(chip->getIndex())
+                            fThresholdAndNoiseContainer->getObject(board->getId())
+                                ->getObject(opticalGroup->getId())
+                                ->getObject(hybrid->getId())
+                                ->getObject(chip->getId())
                                 ->getChannel<ThresholdAndNoise>(iChannel)
                                 .fThresholdError += previousOccupancy - currentOccupancy;
                         }
@@ -896,16 +911,16 @@ void PedeNoise::extractPedeNoise()
         }
         if(cNormalize == 0)
         {
-            // auto& cDataContainerThisBrd = fDetectorDataContainer->at(cBoard->getIndex());
+            // auto& cDataContainerThisBrd = fDetectorDataContainer->getObject(cBoard->getId());
             // for(auto cOpticalGroup: *cBoard)
             // {
-            //     auto& cDataContainerThisOG = cDataContainerThisBrd->at(cOpticalGroup->getIndex());
+            //     auto& cDataContainerThisOG = cDataContainerThisBrd->getObject(cOpticalGroup->getId());
             //     for(auto cHybrid: *cOpticalGroup)
             //     {
-            //         auto& cDataContainerThisHybrid = cDataContainerThisOG->at(cHybrid->getIndex());
+            //         auto& cDataContainerThisHybrid = cDataContainerThisOG->getObject(cHybrid->getId());
             //         for(auto cChip: *cHybrid)
             //         {
-            //             auto& cDataContainerThisChip = cDataContainerThisHybrid->at(cChip->getIndex());
+            //             auto& cDataContainerThisChip = cDataContainerThisHybrid->getObject(cChip->getId());
             //             auto& cSummary = cDataContainerThisChip->getSummary<Occupancy,Occupancy>();
             //             ChannelGroupHandler* cHandler;
             //             if( cChip->getFrontEndType() == FrontEndType::MPA ) cHandler = new MPAChannelGroupHandler();
@@ -934,7 +949,7 @@ void PedeNoise::extractPedeNoise()
             // }
         }
         else
-            board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
+            board->normalizeAndAverageContainers(fDetectorContainer->getObject(board->getId()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
     }
     setNormalization(cNormalizationOrig);
 }
@@ -981,16 +996,16 @@ void PedeNoise::setThresholdtoNSigma(BoardContainer* board, float pNSigma)
             {
                 uint32_t cChipId = chip->getId();
 
-                float cPedestal = fThresholdAndNoiseContainer->at(board->getIndex())
-                                      ->at(opticalGroup->getIndex())
-                                      ->at(hybrid->getIndex())
-                                      ->at(chip->getIndex())
+                float cPedestal = fThresholdAndNoiseContainer->getObject(board->getId())
+                                      ->getObject(opticalGroup->getId())
+                                      ->getObject(hybrid->getId())
+                                      ->getObject(chip->getId())
                                       ->getSummary<ThresholdAndNoise, ThresholdAndNoise>()
                                       .fThreshold;
-                float cNoise = fThresholdAndNoiseContainer->at(board->getIndex())
-                                   ->at(opticalGroup->getIndex())
-                                   ->at(hybrid->getIndex())
-                                   ->at(chip->getIndex())
+                float cNoise = fThresholdAndNoiseContainer->getObject(board->getId())
+                                   ->getObject(opticalGroup->getId())
+                                   ->getObject(hybrid->getId())
+                                   ->getObject(chip->getId())
                                    ->getSummary<ThresholdAndNoise, ThresholdAndNoise>()
                                    .fNoise;
 
@@ -1023,7 +1038,7 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
             for(auto chip: *hybrid)
             {
                 LOG(INFO) << BOLDYELLOW << chip->getId() << RESET;
-                auto chipDC = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                auto chipDC = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                 // auto cType = chipDC->getFrontEndType();
 
                 // uint32_t       NCH = NCHANNELS;

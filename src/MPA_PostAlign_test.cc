@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
     cTool.InitializeSettings(cHWFile, outp);
 
     cTool.ConfigureHw();
-    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
+    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->getFirstObject());
     // align ASICs on PS module
 
     // pBoard->setEventType(EventType::VR);
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 
     // pBoard->setEventType(EventType::PSAS);
 
-    HybridContainer* ChipVec = pBoard->at(0)->at(0);
+    HybridContainer* ChipVec = pBoard->getFirstObject()->getFirstObject();
 
     std::chrono::milliseconds LongPOWait(500);
     std::chrono::milliseconds ShortWait(10);
