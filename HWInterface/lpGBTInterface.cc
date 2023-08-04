@@ -127,7 +127,7 @@ uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
-    LOG(INFO) << BOLDYELLOW << "VTRx+ ID: 0x" << std::hex << +cChipId << std::dec << RESET;
+    LOG(INFO) << BOLDYELLOW << "FuseID from VTRx+ 0x" << std::hex << +cChipId << std::dec << RESET;
     return cChipId;
 }
 
@@ -164,7 +164,7 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
             LOG(INFO) << BOLDYELLOW << "No redundant lpgbt ID, only use first register" << RESET;
             cChipID = cChipID_0;
         }
-
+        LOG(INFO) << BOLDYELLOW << "FuseID from lpgbt 0x" << std::hex << +cChipID << std::dec << RESET;
         return cChipID;
     }
 
@@ -533,20 +533,19 @@ uint8_t lpGBTInterface::GetVrefTune(Ph2_HwDescription::Chip* pChip)
     return (mask & cVrefTune);
 }
 
-float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput)
+float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, uint16_t pVinput) //pVinput in mV!
 {
     auto cGain   = GetADCGain(pChip, false);
     auto cOffset = GetADCOffset(pChip, false);
     auto cADC    = ReadADC(pChip, pADC);
-
-    return (pVinput * cGain * 512) / (cADC - cOffset * (1 - cGain / 2.));
+    return ((int)pVinput / 1000. * cGain * 512) / (cADC - cOffset * (1 - cGain / 2.));
 }
 
 uint8_t lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip)
 {
     const std::string pADC    = static_cast<lpGBT*>(pChip)->getTuneVrefADC();
-    float             pVinput = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
-    LOG(INFO) << BOLDYELLOW << "Tune Vref of lpGBT using input of " << pADC << " and " << pVinput << "V" << RESET;
+    uint16_t          pVinput = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
+    LOG(INFO) << BOLDYELLOW << "Tune Vref of lpGBT using input of " << pADC << " and " << pVinput << "mV" << RESET;
     uint8_t cNbits       = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
     uint8_t cCurrentStep = (0xFF >> (8 - cNbits));
     SetVrefTune(pChip, cCurrentStep);

@@ -119,7 +119,7 @@ class lpGBTInterface : public ChipInterface
     bool    EnableInternalVref(Ph2_HwDescription::Chip* pChip, bool pEnable);
     bool    SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTune);
     uint8_t GetVrefTune(Ph2_HwDescription::Chip* pChip);
-    float   GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput);
+    float   GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, uint16_t pVinput);
     uint8_t TuneVref(Ph2_HwDescription::Chip* pChip);
     void    PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
     void    ResetRxDll(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);

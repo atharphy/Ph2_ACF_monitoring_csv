@@ -1133,7 +1133,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                                    << " pairs of hybrids with a constant difference in BxIds" << RESET;
                 } // Ids are synchronous across each link
                 else
-                    LOG(INFO) << BOLDRED << "For a pakcage delay of " << +cPackageDelay << " DE-SYNC in one of the links..." << RESET;
+                    LOG(INFO) << BOLDRED << "For a package delay of " << +cPackageDelay << " DE-SYNC in one of the links..." << RESET;
             } // pkg delay
             cAttempt++;
         } while(cAttempt < 1 && !cCorrectDelay);
