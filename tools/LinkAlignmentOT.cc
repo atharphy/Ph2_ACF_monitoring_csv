@@ -964,9 +964,12 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         std::map<uint8_t, std::vector<uint8_t>> cHybridIdsMap;
         for(auto cOpticalGroup: *pBoard)
         {
+            LOG(INFO) << BOLDMAGENTA << " cOpticalGroup->getId() " << cOpticalGroup->getId() << RESET;
             auto cIter = cHybridIdsMap.find(cOpticalGroup->getId());
             if(cIter == cHybridIdsMap.end())
             {
+                LOG(INFO) << BOLDMAGENTA << " cIter == cHybridIdsMap.end() " << RESET;
+
                 std::vector<uint8_t> cDummy;
                 cDummy.clear();
                 cHybridIdsMap[cOpticalGroup->getId()] = cDummy;
@@ -1029,22 +1032,25 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                 std::vector<uint8_t> cIdsToCompare(0);
                 for(auto cIter: cHybridIdsMap)
                 {
+                    LOG(INFO) << BOLDRED << " cHybridIdsMap has cIter.second.size() " << cIter.second.size() << RESET;
                     LOG(INFO) << BOLDBLUE << "\t..Checking Sync for hybrids on Link#" << +cIter.first << RESET;
                     bool cSyncThisLink = true;  // if there's only one hybrid by definition you are in sync
                     if(cIter.second.size() > 1) // either 1 or 2 hybrids per link
                     {
                         // check if the two hybrids are synchronous
-                        LOG(DEBUG) << BOLDYELLOW << "\t.. checking sync between " << +cIter.second[0] << " and " << +cIter.second[1] << RESET;
+                        LOG(INFO) << BOLDYELLOW << "\t.. checking sync between " << +cIter.second[0] << " and " << +cIter.second[1] << RESET;
                         auto& cBxIdsFirst  = cBxIds[cIter.second[0]];
                         auto& cBxIdsSecond = cBxIds[cIter.second[1]];
                         cSyncThisLink      = (cBxIdsFirst == cBxIdsSecond);
-                        if(cSyncThisLink) LOG(DEBUG) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
+                        LOG(INFO) << BOLDRED << " cBxIdsFirst " << cBxIds[cIter.second[0]].size() << " cBxIdsSecond "<< cBxIds[cIter.second[1]].size() << " cSyncThisLink " << cSyncThisLink << RESET;
+                        if(cSyncThisLink) LOG(INFO) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                         // if in sync.. add first hybrid id to list
                         if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
                         else
                             LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                     }
                 }
+                LOG(INFO) << BOLDRED << " cIdsToCompare.size() " << cIdsToCompare.size() << " cHybridIdsMap.size() " << cHybridIdsMap.size() << RESET;
                 // if all the links are synchronous then.. check if we are
                 // in sync across the multiple links
                 if(cIdsToCompare.size() == cHybridIdsMap.size())
