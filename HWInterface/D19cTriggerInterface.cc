@@ -135,9 +135,9 @@ void D19cTriggerInterface::Resume()
 
 bool D19cTriggerInterface::Start()
 {
-    LOG(INFO) << BOLDYELLOW << "................................Starting triggers  ... " << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "................................Starting triggers  ... " << RESET;
     auto cTriggerState = GetTriggerState();
-    LOG(INFO) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET;
     // this stops triggers  + resets
     this->ResetTriggerFSM();
 
@@ -230,7 +230,6 @@ bool D19cTriggerInterface::WaitForNTriggers(uint32_t pNTriggers)
 }
 bool D19cTriggerInterface::RunTriggerFSM()
 {
-    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " start " << RESET;
     this->Start();
     auto cRunningTime      = 0;
     bool cCheckRunningTime = true;
@@ -263,9 +262,6 @@ bool D19cTriggerInterface::RunTriggerFSM()
     if(cFailed) LOG(WARNING) << BOLDRED << "D19cTriggerInterface::RunTriggerFSM " << cNtriggers << " triggers received. FAILED set to " << cFailed << RESET;
     this->Stop();
     // return true;
-
-    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end " << RESET;
-
     return !cFailed;
 }
 

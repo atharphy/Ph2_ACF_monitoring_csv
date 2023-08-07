@@ -320,35 +320,29 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Forcing driver attenuation to be 1
     uint8_t cEQAttenuation = 3;
     WriteChipReg(pChip, "EQConfig", cEQAttenuation << 3);
-    LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     // Configuring I2C Master pull-ups for VTRx+
     WriteChipReg(pChip, "I2CM1Config", 1 << 4 | 1 << 6);
-        LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     // Clocks
     std::vector<uint8_t> cClocks = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
     // clock frequency set to 0 to disable it at first and only later configure what is needed
     uint8_t cClkFreq = 0, cClkDriveStr = 0, cClkInvert = 0;
     uint8_t cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
-    LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
     // uint8_t              cTxDataRate = 3, cTxDriveStr = 4  , cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
-    LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     for(const auto& cGroup: cTxGroups)
     {
         cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
         for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
-        LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     }
     // Rx configuration and Phase Align
     // Configure Rx Groups
     std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
-        LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     // Configure Rx Channels
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9; // cRxInvert = 0 ;
     // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
@@ -361,7 +355,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         uint8_t cChannel  = cChnlsLeft[cIndx];
         uint8_t cRxInvert = cInvrtLeft[cIndx];
         ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-    LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     }
     std::vector<uint8_t> cGrpsRight{4, 4, 5, 5, 6, 6, 0};
     std::vector<uint8_t> cChnlsRight{2, 0, 2, 0, 2, 0, 0};
@@ -372,9 +365,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         uint8_t cChannel  = cChnlsRight[cIndx];
         uint8_t cRxInvert = cInvrtRight[cIndx];
         ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-    LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     }
-        LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for PS ROH

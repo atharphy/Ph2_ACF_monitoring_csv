@@ -74,14 +74,9 @@ uint16_t Chip::getReg(const std::string& pReg) const
 
 void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)
 {
-    if(pReg == "ENFLAGS")
-    {
-        LOG(INFO) << BOLDRED << __LINE__ << "] Chip::setReg() ENFLAG REG SET TO 0x" << std::hex << psetValue << std::dec << " for chip " << +fChipId << RESET;
-    }
     ChipRegMap::iterator i = fRegMap.find(pReg);
 
-    if(i == fRegMap.end()) 
-        LOG(INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg;
+    if(i == fRegMap.end()) LOG(INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg;
     if(psetValue > fMaxRegValue)
         LOG(ERROR) << "Chip register are at most " << fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg;
     else

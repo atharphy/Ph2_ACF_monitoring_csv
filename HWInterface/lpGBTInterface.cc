@@ -310,10 +310,8 @@ void lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_t>& 
             cEnableTxReg = "EPTX32Enable";
 
         uint8_t cValueEnableTx = ReadChipReg(pChip, cEnableTxReg);
-            LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
         for(const auto cChannel: pChannels) cValueEnableTx |= (1 << (cChannel + 4 * (cGroup % 2)));
         WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
-            LOG(INFO) << BOLDMAGENTA << __LINE__ << RESET;
     }
 }
 

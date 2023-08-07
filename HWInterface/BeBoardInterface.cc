@@ -184,6 +184,7 @@ void BeBoardInterface::Resume(BeBoard* pBoard)
 uint32_t BeBoardInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {
     uint32_t dataSize = 0;
+
     std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
     if(theGuard.try_lock() == true)
     {
