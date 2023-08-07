@@ -199,7 +199,7 @@ bool CicInterface::GetResyncRequest(Chip* pChip)
     cRegItem.fStatusReg = 0x01;
     auto cRegValue      = fBoardFW->SingleRegisterRead(pChip, cRegItem);
 
-    LOG(INFO) << BOLDBLUE << "Read back value of " << std::bitset<5>(cRegValue) << " from RO status register" << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cRegValue) << " from RO status register" << RESET;
     auto cResyncNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? cRegValue : ((cRegValue & 0x8) >> 3);
     return (cResyncNeeded == 1);
 }
@@ -1039,9 +1039,9 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         auto cCheckValue = (pCheckValue & (0x1 << cFeCounter)) >> cFeCounter;
         for(cInputLineCounter = 0; cInputLineCounter < (1 + cNStubLines); cInputLineCounter++)
         {
-            LOG(DEBUG) << BOLDYELLOW << "FE [CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << " Line#" << +cInputLineCounter << " alignment value "
+            LOG(INFO) << BOLDYELLOW << "FE [CIC internal counter : " << +cFeCounter << " , position on hybrid : " << +cChipId_onyHybrid << " Line#" << +cInputLineCounter << " alignment value "
                       << +fFeStates[cFeCounter][cInputLineCounter] << RESET;
-            LOG(DEBUG) << BOLDYELLOW << "cCheckValue " << cCheckValue << "  fFeStates[cFeCounter][cInputLineCounter]  " << fFeStates[cFeCounter][cInputLineCounter] << RESET;
+            LOG(INFO) << BOLDYELLOW << "cCheckValue " << cCheckValue << "  fFeStates[cFeCounter][cInputLineCounter]  " << fFeStates[cFeCounter][cInputLineCounter] << RESET;
 
             cLocked = cLocked & (fFeStates[cFeCounter][cInputLineCounter] == cCheckValue);
         }

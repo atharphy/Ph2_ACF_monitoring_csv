@@ -18,7 +18,7 @@ D19cL1ReadoutInterface::~D19cL1ReadoutInterface() {}
 
 bool D19cL1ReadoutInterface::ResetReadout()
 {
-    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << "D19cL1ReadoutInterface Resetting readout..." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "D19cL1ReadoutInterface Resetting readout..." << RESET;
     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x0);
@@ -231,7 +231,7 @@ bool D19cL1ReadoutInterface::PollReadoutData(const BeBoard* pBoard, bool pWait)
 }
 bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
 {
-    LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents " << fNEvents << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents " << fNEvents << RESET;
     fReadoutAttempt = 0;
     bool cSuccess   = true;
     do
@@ -263,7 +263,7 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
         {
             FillData();
             CountFwEvents();
-            LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvent " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
+            LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvent " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
         }
         WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cOriginalHandshakeMode);
         WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", cOriginalPackNbr);
