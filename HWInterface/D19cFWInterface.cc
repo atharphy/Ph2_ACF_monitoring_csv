@@ -1038,7 +1038,6 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     {
         pData    = fL1ReadoutInterface->getData();
         cNEvents = fL1ReadoutInterface->getNReadoutEvents();
-    
     }
     else
     {

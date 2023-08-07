@@ -84,7 +84,6 @@ void CicFEAlignment::writeObjects()
 bool CicFEAlignment::AlignInputs()
 {
     LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << RESET;
-    LOG(INFO) << BOLDMAGENTA << __LINE__ << "] CicFEAlignment::Aligning Inputs " << RESET;
     // align CIC inputs - first phase
     bool cPhaseAligned = this->PhaseAlignment();
     if(!cPhaseAligned)
@@ -408,32 +407,6 @@ void CicFEAlignment::SetStaticPhaseAlignment()
                     {
                         cPhaseAlignmentVals[cLineId] = cPhaseTapsThisFE[cLineId];
                         cOutput << +cPhaseAlignmentVals[cLineId] << " ";
-//                         cCic->setReg("")
-
-// scPhaseSelectB0i0
-// scPhaseSelectB0i1
-// scPhaseSelectB0i2
-// scPhaseSelectB0i3
-// scPhaseSelectB0i4
-// scPhaseSelectB0i5
-// scPhaseSelectB1i0
-// scPhaseSelectB1i1
-// scPhaseSelectB1i2
-// scPhaseSelectB1i3
-// scPhaseSelectB1i4
-// scPhaseSelectB1i5
-// scPhaseSelectB2i0
-// scPhaseSelectB2i1
-// scPhaseSelectB2i2
-// scPhaseSelectB2i3
-// scPhaseSelectB2i4
-// scPhaseSelectB2i5
-// scPhaseSelectB3i0
-// scPhaseSelectB3i1
-// scPhaseSelectB3i2
-// scPhaseSelectB3i3
-// scPhaseSelectB3i4
-// scPhaseSelectB3i5
                     }
                     LOG(INFO) << BOLDBLUE << "Optimal tap found on CIC#" << +cChip->getHybridId() << " FE" << +cChip->getId() << " : " << cOutput.str() << RESET;
                 }

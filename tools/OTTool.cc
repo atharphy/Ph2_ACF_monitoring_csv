@@ -115,7 +115,7 @@ void OTTool::Reset()
 void OTTool::Prepare()
 {
     // retreive number of events from settings file
-    fNevents = findValueInSettings<double>("Nevents", 100); //Was 10, trying to increase to make it more reliable
+    fNevents = findValueInSettings<double>("Nevents", 10);
 
     if(fReadoutMode == 1) return;
     // retreive original settings for all chips and all back-end boards
@@ -135,7 +135,7 @@ void OTTool::Prepare()
         if(cBoard->getFirstObject()->flpGBT == nullptr) continue;
 #endif
         uint32_t cSparsified = cBoard->getSparsification(); // this is set in the file parser .. so check using that
-        LOG(INFO) << BOLDYELLOW << __LINE__ << "] Sparsification: " << +cSparsified << RESET;
+        LOG(DEBUG) << BOLDYELLOW << " Sparsification: " << +cSparsified << RESET;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
         // make sure I am in un-sparsified mode
         LOG(INFO) << BOLDGREEN << "Setting sparsification on BeBoard#" << +cBoard->getId() << ((cSparsified == 1) ? " ON" : " OFF") << RESET;
@@ -174,7 +174,7 @@ void OTTool::Prepare()
                 for(auto cChip: *cHybrid)
                 {
                     cChip->setRegisterTracking(1);
-                    cChip->ClearModifiedRegisterMap(); // Irene and Javier ignoring this for now
+                    cChip->ClearModifiedRegisterMap();
                     LOG(DEBUG) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
                 } // chips
             }     // hybrids
@@ -431,7 +431,6 @@ void OTTool::CatchStop()
 // one thread per BeBoard connected to this computer
 void OTTool::ContinuousReadout()
 {
-    LOG(INFO) << __PRETTY_FUNCTION__ << " starting function " << RESET;
     // std::vector<uint32_t> cBrdEvntCntrs(fDetectorContainer->size(), 0);
     // reset all event counters
     for(auto cBoard: *fDetectorContainer)
@@ -448,7 +447,6 @@ void OTTool::ContinuousReadout()
     std::thread* cStartThreads = new std::thread[fDetectorContainer->size()];
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG(INFO) << BLUE << __LINE__ << "] " << __PRETTY_FUNCTION__ << " launch threads for continuous readout Start" << RESET;
         // launch threads for continuous readout
         cStartThreads[cBoard->getId()] = std::thread(&OTTool::StartReadoutTh, this, cBoard->getId());
     }
@@ -457,14 +455,12 @@ void OTTool::ContinuousReadout()
         // launch threads for continuous readout
         cStartThreads[cBoard->getId()].join(); // pauses until first finishes
     }
-    LOG(INFO) << BLUE << __LINE__ << "] " << __PRETTY_FUNCTION__ << " Done with StartReadoutTh." << RESET;
 
     // temporary thread object representing a new thread
     // there will be one check thread per board
     std::thread* cCheckDoneThreads = new std::thread[fDetectorContainer->size()];
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG(INFO) << BLUE << __PRETTY_FUNCTION__ << " launch threads for continuous readout Finish" << RESET;
         // launch threads for continuous readout
         cCheckDoneThreads[cBoard->getId()] = std::thread(&OTTool::CheckFinishedTh, this, cBoard->getId());
     }
@@ -474,7 +470,6 @@ void OTTool::ContinuousReadout()
     std::thread* cReadoutThreads = new std::thread[fDetectorContainer->size()];
     for(auto cBoard: *fDetectorContainer)
     {
-        LOG(INFO) << BLUE << __PRETTY_FUNCTION__ << " launch threads for continuous readout Continuos" << RESET;
         // launch threads for continuous readout
         cReadoutThreads[cBoard->getId()] = std::thread(&OTTool::ContinuousReadoutTh, this, cBoard->getId());
     }
@@ -541,7 +536,7 @@ void OTTool::StartReadoutTh(uint8_t cBrdId)
     auto cReadoutInterface = cInterface->getL1ReadoutInterface();
     cReadoutInterface->ResetReadout();
     cTriggerInterface->Start();
-    LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << " Started triggers on BeBoard#" << +cBrdId << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Started triggers on BeBoard#" << +cBrdId << RESET;
 }
 // continuous readout
 // this will continue to read data until the stop triggers command
@@ -567,12 +562,8 @@ void OTTool::ContinuousReadout(BeBoard* pBoard)
         // check state of triggers FSM
         if(cTriggerInterface->GetTriggerState() != 1)
         {
-            LOG(INFO) << BOLDYELLOW << __LINE__ << "] Trigger state " << cTriggerInterface->GetTriggerState() << RESET;
             cTriggerInterface->Stop();
-            LOG(INFO) << BOLDYELLOW << __LINE__ << "] After Stop Trigger state " << cTriggerInterface->GetTriggerState() << RESET;
             cTriggerInterface->Start();
-            LOG(INFO) << BOLDYELLOW << __LINE__ << "] After Start Trigger state " << cTriggerInterface->GetTriggerState() << RESET;
-
         }
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
         auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -619,13 +610,11 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
     } while(cTriggerInterface->GetTriggerState() != 1 && cWaitCounter < cMaxWait);
 
     auto cCounter = cInterface->GetEventCounter();
-    LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
     do
     {
         auto nTrigger = cInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << "while loop  cCounter " << cCounter << " fNevents " << fNevents << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
-        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " nTriggers " << nTrigger << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
-        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Delta " << nTrigger-cCounter << RESET; // " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState()  << RESET;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " nTriggers " << nTrigger << RESET;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Delta " << nTrigger-cCounter << RESET;
 
         if(cCounter >= fNevents || cTriggerInterface->GetTriggerState() == 0)
         { 
@@ -635,7 +624,6 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         cCounter = cInterface->GetEventCounter();
     } while(cCounter < fNevents);
-    std::cout << "after  while loop cCounter " << cCounter << " fNevents " << fNevents << " cTriggerInterface->GetTriggerState() " << cTriggerInterface->GetTriggerState() << std::endl;    
     LOG(INFO) << BOLDBLUE << fMyName << ": check finished thread ... finished collecting all requested events from BeBoard" << +cBrdId << " .. will stop triggers.. " << RESET;
     cInterface->Stop();
 }
@@ -871,7 +859,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, int pChipId)
 {
     bool cInjectAll = false;
-    LOG(INFO) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET;
     // inject pixel clusters
     bool cLastFive = true;
     for(auto cOpticalReadout: *pBoard)

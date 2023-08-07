@@ -199,7 +199,7 @@ class Chip : public FrontEndDescription
     void setRegBits(const std::string& pReg, ChipRegMask pMask, uint16_t pValue)
     {
         uint16_t cMask = 0x00;
-        for(uint8_t cIndx = 0; cIndx < pMask.fNbits; cIndx++) { cMask = cMask | (1 << cIndx); }
+        for(uint8_t cIndx = 0; cIndx < pMask.fNbits; cIndx++) cMask = cMask | (1 << cIndx);
         uint16_t cRegMask = (cMask << pMask.fBitShift);
         cRegMask          = ~(cRegMask);
         setReg(pReg, (getReg(pReg) & cRegMask) | (pValue << pMask.fBitShift));
