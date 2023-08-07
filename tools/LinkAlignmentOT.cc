@@ -1035,11 +1035,11 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                         auto& cBxIdsSecond = cBxIds[cIter.second[1]];
                         cSyncThisLink      = (cBxIdsFirst == cBxIdsSecond);
                         if(cSyncThisLink) LOG(DEBUG) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
-                        // if in sync.. add first hybrid id to list
-                        if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
-                        else
-                            LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                     }
+                    // if in sync.. add first hybrid id to list
+                    if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
+                    else
+                        LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;   
                 }
                 // if all the links are synchronous then.. check if we are
                 // in sync across the multiple links
