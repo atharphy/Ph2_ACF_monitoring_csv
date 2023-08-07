@@ -514,8 +514,8 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
         uint32_t                 shift = iDAC[point];
 
         uint32_t MtoWr = (1 << shift);
-        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB", MtoWr & 0xff);
-        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB", (MtoWr >> 8) & 0xff);
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_lsb", MtoWr & 0xff);
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_msb", (MtoWr >> 8) & 0xff);
         DAC = nameDAC[point];
         // regIndex = ADCcontrolIndex[point];
     }
@@ -552,8 +552,8 @@ void PSBiasCal::DisableTest(Chip* cChip)
     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
     {
         LOG(DEBUG) << BOLDMAGENTA << "SSA2 Disable " << RESET;
-        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB", 0x0);
-        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB", 0x0);
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_lsb", 0x0);
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_msb", 0x0);
     }
 }
 
