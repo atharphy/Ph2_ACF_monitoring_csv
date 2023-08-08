@@ -291,7 +291,6 @@ void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
 
 void lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate)
 {
-    LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << RESET;
     for(const auto& cGroup: pGroups)
     {
         // ##########################################################
