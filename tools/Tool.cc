@@ -460,7 +460,8 @@ void Tool::fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
+                uint32_t chipFuseId = 0; 
+                if(cCic->getFrontEndType() == FrontEndType::CIC2) chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
                 theCICFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::string>() = std::to_string(chipFuseId);
             }
         }
