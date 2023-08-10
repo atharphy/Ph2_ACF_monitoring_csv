@@ -126,6 +126,30 @@ void CicInterface::CheckConfig(Chip* pChip)
         }
     }
 }
+
+uint32_t CicInterface::ReadChipFuseID(Chip* pCic)
+{
+    /*
+    CIC ID = AABBBCCCD
+    AA : LOT number
+    BBB : WAFER number
+    CCC : RETICLE number
+    D : DIE number
+    */
+    this->WriteChipReg(pCic, "EFUSEMODE", 0x0);
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    this->WriteChipReg(pCic, "EFUSEMODE", 0xF);
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    this->WriteChipReg(pCic, "EFUSEMODE", 0x0);
+
+    uint32_t val =
+        (this->ReadChipReg(pCic, "EfuseValue3") << 24) | (this->ReadChipReg(pCic, "EfuseValue2") << 16) | (this->ReadChipReg(pCic, "EfuseValue1") << 8) | (this->ReadChipReg(pCic, "EfuseValue0") << 0);
+    // pCic->pChipFuseID.SetId(val);
+
+    LOG(INFO) << BOLDYELLOW << "FuseID from CIC2 " << +val << " LOT " << +(int)val / (int)1e7 << " Wafer " << +(int)(val % (int)1e7) / (int)1e4 << " RETICLE " << +(int)(val % (int)1e4) / 10 << " DIE "
+              << +(int)(val % 10) << RESET;
+    return val;
+}
 bool CicInterface::ConfigureChip(Chip* pCic, bool pVerify, uint32_t pBlockSize)
 {
     std::stringstream cOutput;

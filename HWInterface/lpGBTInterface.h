@@ -63,6 +63,8 @@ class lpGBTInterface : public ChipInterface
     // ################################
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
+    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip);
+    uint32_t ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip);
     uint32_t ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t version);
     uint32_t ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
@@ -117,7 +119,7 @@ class lpGBTInterface : public ChipInterface
     bool    EnableInternalVref(Ph2_HwDescription::Chip* pChip, bool pEnable);
     bool    SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTune);
     uint8_t GetVrefTune(Ph2_HwDescription::Chip* pChip);
-    float   GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, float pVinput);
+    float   GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, uint16_t pVinput);
     uint8_t TuneVref(Ph2_HwDescription::Chip* pChip);
     void    PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
     void    ResetRxDll(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);

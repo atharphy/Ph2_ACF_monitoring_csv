@@ -18,6 +18,7 @@
 #include "tools/MemoryCheck2S.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
+#include "tools/OTVTRXLightOff.h"
 #include "tools/PSAlignment.h"
 #include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
@@ -198,6 +199,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("vtrxLightOff", "Turnoff the light output of the VTRX+ to perform an IV curve while the LV is still powered", ArgvParser::NoOptionAttribute);
+
 
     int result = cmd.parse(argc, argv);
 
@@ -269,7 +272,6 @@ int main(int argc, char* argv[])
         cTool.addFileHandler(cRawFile, 'w');
         LOG(INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile;
     }
-
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
@@ -277,6 +279,18 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.initializeExceptionHandler();
 
+
+    if(cmd.foundOption("vtrxLightOff"))
+    {
+        cTool.ConfigureHw(true, true);
+        LOG(INFO) << BOLDBLUE << "Turn off light output of VTRX..." << RESET;
+        OTVTRXLightOff cLightOff;
+        cLightOff.Inherit(&cTool);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cLightOff.Start(theStartInfo);
+        cLightOff.waitForRunToBeCompleted();
+    }
     if(cmd.foundOption("tuneVref"))
     {
         auto          cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
