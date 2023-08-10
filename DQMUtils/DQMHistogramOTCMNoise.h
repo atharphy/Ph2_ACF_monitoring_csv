@@ -45,8 +45,10 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
      */
     bool fill(std::string& inputStream) override;
 
-    bool fillHitPlots(DetectorDataContainer& theHitData);
+    bool fillHitPlots(DetectorDataContainer& theHitDataSum, DetectorDataContainer& theHitDataOdd, DetectorDataContainer& theHitDataEven);
     bool fill2DHitPlots(DetectorDataContainer& theHitData);
+    bool fillCorrelationPlots(DetectorDataContainer& theHybridData,DetectorDataContainer& theSensorData);
+    bool fillHitProfile(DetectorDataContainer& theHitData);
 
     /*!
      * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
@@ -61,7 +63,11 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
   private:
     DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fChipHitHistograms;
+    DetectorDataContainer fChipHitHistogramsEven;
+    DetectorDataContainer fChipHitHistogramsOdd;
     DetectorDataContainer fHybridHitHistograms;
+    DetectorDataContainer fHybridHitHistogramsEven;
+    DetectorDataContainer fHybridHitHistogramsOdd;
     DetectorDataContainer fModuleHitHistograms;
     DetectorDataContainer fModuleHitHistogramsEven;
     DetectorDataContainer fModuleHitHistogramsOdd;
@@ -74,6 +80,12 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     DetectorDataContainer f2DModuleHitHistograms_chip;
     DetectorDataContainer f2DModuleHitHistogramsEven_chip;
     DetectorDataContainer f2DModuleHitHistogramsOdd_chip;
+    DetectorDataContainer f2DModuleSensorCorrelation;
+    DetectorDataContainer f2DHybridSensorCorrelation;
+    DetectorDataContainer f2DChipSensorCorrelation;
+    DetectorDataContainer f2DHybridCorrelation;
+    DetectorDataContainer f2DChipCorrelation;
+
 
     uint32_t fNevents;
     bool     f2DHistograms;
