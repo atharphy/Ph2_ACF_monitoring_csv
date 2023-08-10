@@ -123,7 +123,7 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, false);                  // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0b1111, false);                // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false);          // 0x30 = reset Aurora AND Serializer
     RD53Interface::SendCommand(pChip, RD53ACmd::GlobalPulse{pChip->getId(), 0x04}); // Reset Channel Synchronizer
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
