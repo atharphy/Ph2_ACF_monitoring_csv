@@ -262,23 +262,24 @@ uint8_t D19cBackendAlignmentFWInterface::GetLineStatus(AlignerObject pAlignerObj
     ConfigureCommandType(0);
     uint32_t command_final = fAlignerObject.fCommand;
     WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-
-    //std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
-    uint8_t cStatus = ParseStatus();
-    if(true)// && fVerbose == 1)
+    if(fVerbose == 1)
         LOG(INFO) << BOLDBLUE << "D19cBackendAlignmentFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
     else if(fVerbose == 2)
         LOG(INFO) << BOLDBLUE << "D19cBackendAlignmentFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
+
+    //std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
+    uint8_t cStatus = ParseStatus();
     //
     ConfigureCommandType(1);
     command_final = fAlignerObject.fCommand;
     WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-    //std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
-    cStatus = ParseStatus();
-    if(true)// fVerbose == 1)
+    if(fVerbose == 1)
         LOG(INFO) << BOLDBLUE << "D19cBackendAlignmentFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
     else if(fVerbose == 2)
         LOG(DEBUG) << BOLDBLUE << "D19cBackendAlignmentFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
+    std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
+    cStatus = ParseStatus();
+
     return cStatus;
 }
 void D19cBackendAlignmentFWInterface::TunePhase(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration)
@@ -294,10 +295,7 @@ void D19cBackendAlignmentFWInterface::TunePhase(AlignerObject pAlignerObject, Li
 void D19cBackendAlignmentFWInterface::AlignWord(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration, bool pChangePattern)
 {
     SetLineMode(pAlignerObject, pLineConfiguration);
-    if(pChangePattern) 
-    { 
-        SetLinePattern(fAlignerObject, fLineConfiguration);//LORENZO-IRENE This should be pLineConfiguration? 
-    }
+    if(pChangePattern) { SetLinePattern(fAlignerObject, fLineConfiguration); }
     // perform word alignment
     if(fVerbose == 1)
         LOG(INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;

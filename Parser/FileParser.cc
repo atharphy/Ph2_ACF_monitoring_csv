@@ -618,14 +618,10 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    // std::bitset<9> b_latency(cLatency);
-                    // std::cout << " cLatency for strips is " << cLatency << " binary " << b_latency << std::endl;
-                    // std::cout << " initial control_1 value " << cChip->getReg("control_1") << std::endl;
                     uint16_t control_1 = cChip->getReg("control_1");
                     control_1 = (control_1 & 0xEF) + (((cLatency>>8)&0x1) <<4);
                     cChip->setReg("control_1", control_1);
                     cChip->setReg("control_3", cLatency&0xFF);
-                    //std::cout << std::hex << "Latency: " << cLatency << " control 1  " <<  cChip->getReg("control_1") << " control_3 " << cChip->getReg("control_3") << std::dec << std::endl;
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA latency settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
                    << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
@@ -957,13 +953,10 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("pixelFine").value());
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
-                    cChip->setReg("PhaseShift", cCoarse); // Irene
+                    cChip->setReg("PhaseShift", cCoarse);
                 }
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
-                    //cChip->setReg("Mask", 0x70);
-                    //cChip->setReg("Control_1", (cCoarse << 4));//LORENZO ONLY THE TOP 3 BITS?? WHAT IS Control_1?
-                    //LORENZO, IF SO THEN THIS IS THE WAY TO DO IT
                     ChipRegMask cMask;
                     cMask.fNbits    = 3;
                     cMask.fBitShift = 5;
@@ -971,7 +964,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
                     uint16_t cValueInMemory = cChip->getReg("Control_1");
 
-                    LOG(INFO) << BOLDRED << __LINE__ << "COARSE: 0x" << std::hex << cCoarse << " CONTROL_1: 0x" << cValueInMemory  << std::dec << RESET;
+                    LOG(DEBUG) << BOLDRED << __LINE__ << "COARSE: 0x" << std::hex << cCoarse << " CONTROL_1: 0x" << cValueInMemory  << std::dec << RESET;
                     cFine = (cFine & 0xCF) + 0x30;//Setting bit 4 and 5 to 1 (4->Enable DLL, 5->DoNot Bypass)
                     cChip->setReg("ConfDLL", (cFine));
                 }
@@ -1001,7 +994,6 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
 void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
     bool cEnable = pHybridNode.attribute("enable").as_bool();
 
     if(cEnable)
@@ -1205,9 +1197,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         parseMPAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseMPASettings(pHybridNode, cHybrid, os);
                     }
-                    else if(cName == "MPA2") // Irene
+                    else if(cName == "MPA2")
                     {
-                        std::cout << " MPA2 "<<std::endl;
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
                         pBoard->setFrontEndType(FrontEndType::MPA2);
                         parseMPA2Container(cChild, cHybrid, cConfigFileDirectory, os);

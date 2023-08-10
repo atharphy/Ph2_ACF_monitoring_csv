@@ -210,7 +210,7 @@ void MPA2Interface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pIn
         uint32_t           cPixelIds = (uint32_t)(pInjection.fColumn) * NSSACHANNELS + (uint32_t)pInjection.fRow;
         std::ostringstream cRegName;
         cRegName << "DigitalSyncP" << std::to_string(cPixelIds);
-        LOG(INFO) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
         this->WriteChipReg(pChip, cRegName.str(), pPattern);
     } // injections
     LOG(INFO) << BOLDMAGENTA << "DigitalSync DONE" << RESET;
@@ -741,19 +741,13 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     else if(pRegName == "StubMode")
     {
         uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
-        // LOG(INFO) << BLUE << __LINE__ << "] cBitShift for " <<  pRegName << " is " << +cBitShift << RESET;
-        uint8_t cRegMask  = (0x3 << cBitShift);
-        // LOG(INFO) << BLUE << __LINE__ << "] cRegMask for " <<  pRegName << " is " << +cRegMask << " and in hex " << std::hex << +cRegMask << std::dec <<  RESET;
-        // LOG(INFO) << BLUE << " pValue before " << pValue << " after " << (pValue << cBitShift) << RESET;
+        uint8_t cRegMask  = (0x3 << cBitShift); //
         return this->WriteChipRegBits(pMPA2, "ECM", (pValue << cBitShift), "Mask", cRegMask, pVerify);
     }
     else if(pRegName == "StubWindow")
     {
         uint8_t cBitShift = ECM_TABLE.find("StubWindow")->second;
-        // LOG(INFO) << BLUE << __LINE__ << "] cBitShift for " <<  pRegName << " is " << +cBitShift << RESET;
         uint8_t cRegMask  = (0x3F << cBitShift);
-        // LOG(INFO) << BLUE << __LINE__ << "] cRegMask for " <<  pRegName << " is " << +cRegMask << " and in hex " << std::hex << +cRegMask << std::dec <<  RESET;
-
         return this->WriteChipRegBits(pMPA2, "ECM", (pValue << cBitShift), "Mask", cRegMask, pVerify);
     }
     else if(pRegName == "DigitalPattern")
@@ -819,8 +813,6 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         LOG(INFO) << BOLDMAGENTA << "HipCut_ALL" << RESET;
         uint8_t cBitShift = 5;
         bool cSuccess = this->WriteChipRegBits(pMPA2, "PixelControl_ALL", (pValue << cBitShift), "Mask_ALL", 0xE0, pVerify);
-        // auto cReadValue = this->ReadChipReg(pMPA2, "PixelControl_ALL");
-        // LOG(INFO) << BOLDRED << __LINE__ << "] " << __PRETTY_FUNCTION__ << " PixelControl_ALL: " << cReadValue << RESET;
         return cSuccess;
     }
 
@@ -1303,23 +1295,7 @@ void MPA2Interface::ReadASEvent(ReadoutChip* pMPA2, std::vector<uint32_t>& pData
 bool MPA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
-    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << RESET;
-
-
     return this->WriteChipReg(pChip, "AnalogueAsync", 1);
-
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-    // LOG(INFO) << BOLDRED << " HARDCODED ANALOGUE SYNC for MPA" << RESET;
-
-    // return this->WriteChipReg(pChip, "AnalogueSync", 1);
 }
 
 uint32_t MPA2Interface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
