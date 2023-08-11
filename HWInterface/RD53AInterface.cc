@@ -58,6 +58,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
                                                             "ADC_OFFSET_VOLT",
                                                             "ADC_MAXIMUM_VOLT",
                                                             "TEMPSENS_IDEAL_FACTOR",
+                                                            "SAMPLE_N_TIMES",
                                                             "VREF_ADC",
                                                             "CLK_DATA_DELAY",
                                                             "CLK_DATA_DELAY_DATA",

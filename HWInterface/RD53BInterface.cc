@@ -81,7 +81,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Programmig global registers #
     // ###############################
     static const std::set<std::string> registerBlackList = {
-        "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+        "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
     static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
                                                             "DAC_PREAMP_R_LIN",
                                                             "DAC_PREAMP_TL_LIN",
