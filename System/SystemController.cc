@@ -1052,21 +1052,18 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
     LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
-
-        bool configureBoard = true;
-        bool configureLPGBT = true;
-        bool configureCIC   = true;
-        
-        bool configureOT    = true; // configures readout chip
-        bool reInitialize   = true; // configures CIC & clocks but doesn't write CIC registers!
         cBoard->printBoardType();
         fBeBoardInterface->setBoard(0);
 
         //Configure board
-        if(configureBoard && cBoard->getToConfigure())
+        if(cBoard->getToConfigure())
         {
             fBeBoardInterface->ConfigureBoard(cBoard);
         }
+    }
+
+    for(const auto cBoard: *fDetectorContainer)
+    {
         if(cBoard->getBoardType() == BoardType::D19C)
         {
             // Set board sparisification
@@ -1075,7 +1072,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             // make sure board is also set to the same thing
             bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
             cBoard->setSparsification(cSparsified);
-            if(reInitialize && pReInitialize)
+            if(pReInitialize)
             {
                 InitializeOT(cBoard); // sets the clocks and configures the CICs, enables the FE readout chips (same as below?!)
             }
@@ -1084,8 +1081,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                 // lpGBT config
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    if(!configureLPGBT || cOpticalGroup->flpGBT == nullptr) continue;
-
+                    if(cOpticalGroup->flpGBT == nullptr) continue;
                     LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << +cBoard->getId() << RESET;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     if(cOpticalGroup->getReset() == 0)
@@ -1111,7 +1107,6 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     {
                         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                         if(cCic == NULL) continue;
-                        LOG(INFO) << BOLDMAGENTA << " Sending RESET to CICs " << RESET;
                         uint8_t cSide = cHybrid->getId() % 2;
                         if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
                         else if(!cBrokenPS)
@@ -1135,7 +1130,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                        if(!configureCIC || cCic == NULL) continue;
+                        if(cCic == NULL) continue;
 
                         LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
                         fCicInterface->ConfigureChip(cCic);
@@ -1151,6 +1146,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     }
                 }
             }
+            ConfigureOT(cBoard);
+            /*
             const BeBoard* cFirstBoard = fDetectorContainer->getFirstObject();
             auto cFirstOpticalGroup = cFirstBoard->getFirstObject();
             if(!cBoard->isOptical() && cFirstOpticalGroup->flpGBT != nullptr)
@@ -1163,7 +1160,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             {
                 ConfigureOT(cBoard); // Configures the readout chips but the CIC is done above in the InitializeOT function
             }
-
+            */
+           
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
         else if(cBoard->getBoardType() == BoardType::RD53)

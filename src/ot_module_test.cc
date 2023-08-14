@@ -498,19 +498,10 @@ int main(int argc, char* argv[])
     // align CIC-lpGBT-BE
 
     bool cIgnoreI2c    = false;
-
-    // this below should be set to true to get the default reconfigure procedureS
     bool cReInitialize = true;
-    bool doLinkAlignment = true;
-    bool do_MPA_SSA_CBC_CIC_Alignment = true;
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
-        
-        //auto clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "FE_CONFIG");
-        //std::cout << " CLK CIC 0x" << std::hex << clkFr << std::dec << std::endl;
-        // cTool.fCicInterface->WriteChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "FE_CONFIG", 0x1D);
-        // // exit(0);
         // just to check
         // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         // for(const auto cBoard: *cTool.fDetectorContainer)
@@ -526,58 +517,53 @@ int main(int argc, char* argv[])
         // }
 
         // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        //LORENZO 2023_06_29 
+        cPSAlignment.MapMPAOutputs(); // for MPA only. MPA2 OutSetting writtent during the configure hardware step above.
+        //LORENZO 2023_06_29 
+        cPSAlignment.ConfigureDefaultAlignmentParameters();
+        cPSAlignment.Reset();
+
         //Alignment of a pattern between CIC and FC7
-        if(doLinkAlignment)
+        LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+        try
         {
-            PSAlignment cPSAlignment;
-            cPSAlignment.Inherit(&cTool);
-            cPSAlignment.Initialise();
-            //LORENZO 2023_06_29 cPSAlignment.MapMPAOutputs(); // for MPA only. MPA2 OutSetting writtent during the configure hardware step above.
-            //LORENZO 2023_06_29 cPSAlignment.ConfigureDefaultAlignmentParameters();
-            cPSAlignment.Reset();
-
-            LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
-
-            LinkAlignmentOT cLinkAlignment;
-            cLinkAlignment.Inherit(&cTool);
-            try
-            {
-                StartInfo theStartInfo;
-                theStartInfo.setRunNumber(cRunNumber);
-                cLinkAlignment.Start(theStartInfo);
-            }
-            catch(const std::exception& e)
-            {
-                LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
-                return (666);
-            }
-            cLinkAlignment.waitForRunToBeCompleted();
-            cLinkAlignment.dumpConfigFiles();
-            if(!cLinkAlignment.getStatus())
-            {
-                LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
-                return (666);
-            }
-
-        }
-
-        
-        if(do_MPA_SSA_CBC_CIC_Alignment)
-        {
-            // align FEs - CIC
-            LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
-            CicFEAlignment cCicAligner;
-            cCicAligner.Inherit(&cTool);
-
-            // Doesnt work PSv2
             StartInfo theStartInfo;
             theStartInfo.setRunNumber(cRunNumber);
-            cCicAligner.Start(theStartInfo);
-            cCicAligner.waitForRunToBeCompleted();
-            //\Doesnt work PSv2
-
-            cCicAligner.dumpConfigFiles();
+            cLinkAlignment.Start(theStartInfo);
         }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+
+
+        // align FEs - CIC
+        LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit(&cTool);
+
+        // Doesnt work PSv2
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cCicAligner.Start(theStartInfo);
+        cCicAligner.waitForRunToBeCompleted();
+        //\Doesnt work PSv2
+
+        cCicAligner.dumpConfigFiles();
+        
         // quickly check ReadData
         // for(const auto cBoard: *cTool.fDetectorContainer)
         // {
