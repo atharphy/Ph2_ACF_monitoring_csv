@@ -267,7 +267,7 @@ uint8_t D19cBackendAlignmentFWInterface::GetLineStatus(AlignerObject pAlignerObj
     else if(fVerbose == 2)
         LOG(INFO) << BOLDBLUE << "D19cBackendAlignmentFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
 
-    //std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
+    std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
     uint8_t cStatus = ParseStatus();
     //
     ConfigureCommandType(1);
@@ -279,7 +279,6 @@ uint8_t D19cBackendAlignmentFWInterface::GetLineStatus(AlignerObject pAlignerObj
         LOG(DEBUG) << BOLDBLUE << "D19cBackendAlignmentFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
     cStatus = ParseStatus();
-
     return cStatus;
 }
 void D19cBackendAlignmentFWInterface::TunePhase(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration)
