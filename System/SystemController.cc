@@ -245,7 +245,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     {
         const BeBoard* cFirstBoard = fDetectorContainer->getFirstObject();
         fBoardType                 = cFirstBoard->getBoardType();
-        if(fBoardType != BoardType::RD53)
+        if(fBoardType == BoardType::D19C)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
@@ -336,7 +336,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     fCicInterface->setWithLpGBT(false);
             }
         }
-        else
+        else if(fBoardType == BoardType::RD53)
         {
             flpGBTInterface = new RD53lpGBTInterface(fBeBoardFWMap);
             if(cFirstBoard->getFrontEndType() == FrontEndType::RD53A)
@@ -345,13 +345,13 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
             RD53Shared::setFirstChip(*fDetectorContainer);
         }
-    } // if there is something to create an interface for
+    }
 
     if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
 
-    // ####################
-    // # Set module type  #
-    // ####################
+    // ###################
+    // # Set module type #
+    // ###################
     DetectorMonitorConfig theDetectorMonitorConfig;
     std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os);
 

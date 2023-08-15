@@ -105,9 +105,12 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################
-
-    RD53FWInterface::DIO5Config                   cfgDIO5;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
+
+    // ##################
+    // # Configure DIO5 #
+    // ##################
+    RD53FWInterface::DIO5Config cfgDIO5;
     LOG(INFO) << GREEN << "Initializing DIO5:" << RESET;
     for(const auto& it: pBoard->getBeBoardRegMap())
         if((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
@@ -141,13 +144,13 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
             }
         }
 
-    // ##################
-    // # Configure DIO5 #
-    // ##################
     RD53FWInterface::ConfigureDIO5(&cfgDIO5);
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
+    // #########################
+    // # Configure DataMerging #
+    // #########################
     size_t primaries[4]      = {0};
     size_t slaveEn           = 0;
     bool   enableDataMerging = false;
@@ -178,8 +181,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     for(const auto cChip: *pBoard->getFirstObject()->getFirstObject())
     {
         auto lane = static_cast<RD53*>(cChip)->getChipLane();
-        WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
-        WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
+        RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
+        RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
     }
 
     RegManager::WriteReg("user.ctrl_regs.Aurora_block.slave_en", slaveEn);
