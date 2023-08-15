@@ -152,6 +152,13 @@ class BeBoardInterface
     void ReadBoardMultReg(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::pair<std::string, uint32_t>>& pRegVec);
 
     /*!
+     * \brief Update Config File with the value in the Board register
+     * \param pBoard
+     * \param pRegNode : Node of the register to update
+     */
+    uint32_t ReadonlyBoardReg(Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode);
+
+    /*!
      * \brief Get the board infos
      * \param pBoard
      */
@@ -308,7 +315,6 @@ class BeBoardInterface
      */
     std::pair<std::vector<uint32_t>, std::vector<uint32_t>> ReadData(Ph2_HwDescription::BeBoard* pBoard, int buffernum, int mpa);
 
-    void     selectLink(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLinkId, uint32_t pWait_ms = 100);
     uint16_t ParseEvents(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData);
 };
 } // namespace Ph2_HwInterface

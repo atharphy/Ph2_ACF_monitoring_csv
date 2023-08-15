@@ -102,12 +102,12 @@ void BeBoardInterface::ReadBoardMultReg(BeBoard* pBoard, std::vector<std::pair<s
         }
 }
 
-void BeBoardInterface::selectLink(BeBoard* pBoard, uint8_t pLinkId, uint32_t pWait_ms)
+uint32_t BeBoardInterface::ReadonlyBoardReg(BeBoard* pBoard, const std::string& pRegNode)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
 
     setBoard(pBoard->getId());
-    return fBoardFW->selectLink(pLinkId, pWait_ms);
+    return static_cast<uint32_t>(fBoardFW->ReadReg(pRegNode));
 }
 
 std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg(BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize)

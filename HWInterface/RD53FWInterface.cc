@@ -1085,8 +1085,6 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
     }
 }
 
-uint32_t RD53FWInterface::ReadArbitraryRegister(const std::string& regName) { return RegManager::ReadReg(regName); }
-
 // ###################
 // # Clock generator #
 // ###################

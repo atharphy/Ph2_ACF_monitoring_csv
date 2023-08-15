@@ -78,18 +78,18 @@ class RD53FWInterface : public BeBoardFWInterface
     void SetOptoLinkVersion(uint8_t version) override;
     // #############################
 
-    void     SelectBERcheckBitORFrame(const uint8_t bitORframe);
-    void     WriteArbitraryRegister(const std::string&                regName,
-                                    const uint32_t                    value,
-                                    const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
-                                    ReadoutChipInterface*             pReadoutChipInterface = nullptr,
-                                    const bool                        doReset               = false);
-    uint32_t ReadArbitraryRegister(const std::string& regName);
-    void     ResetBoard();
-    void     ResetFastCmdBlk();
-    void     ResetSlowCmdFIFO();
-    void     ResetReadBkFIFO();
-    void     ResetReadoutBlk();
+    void SelectBERcheckBitORFrame(const uint8_t bitORframe);
+    void WriteArbitraryRegister(const std::string&                regName,
+                                const uint32_t                    value,
+                                const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
+                                ReadoutChipInterface*             pReadoutChipInterface = nullptr,
+                                const bool                        doReset               = false);
+    void ResetBoard();
+    void ResetFastCmdBlk();
+    void ResetSlowCmdFIFO();
+    void ResetReadBkFIFO();
+    void ResetReadoutBlk();
+    void ReadConfigFromBoard() { this->singleChip = RegManager::ReadReg("user.stat_regs.aurora_rx.Module_type") == 1; }
 
     // ####################################
     // # Check AURORA lock on data stream #

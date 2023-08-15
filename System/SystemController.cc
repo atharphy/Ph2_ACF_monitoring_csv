@@ -224,7 +224,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     LOG(INFO) << GREEN << "Trying to connect to the Power Supply Server..." << RESET;
 
-    if(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fEnable)
+    if(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fEnable == true)
     {
         fPowerSupplyClient = new TCPClient(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fIP, theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fPort);
         if(!fPowerSupplyClient->connect(1))
@@ -241,7 +241,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
 
-    if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
+    if((fDetectorContainer->size() > 0) && (fInitializeInterfaces == 1))
     {
         const BeBoard* cFirstBoard = fDetectorContainer->getFirstObject();
         fBoardType                 = cFirstBoard->getBoardType();
@@ -1569,16 +1569,17 @@ void SystemController::DumpRegisters()
     {
         LOG(INFO) << GREEN << "Firmware register content for [board = " << BOLDYELLOW << cBoard->getId() << GREEN << "]" << RESET;
 
-        const auto theBeBoardFW = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()]);
+        const auto theBeBoardFW = this->fBeBoardFWMap[cBoard->getId()];
         const auto hwInterface  = theBeBoardFW->getHardwareInterface();
+        static_cast<RD53FWInterface*>(theBeBoardFW)->ReadConfigFromBoard();
 
         for(const auto& path: hwInterface->getNodes("user.+"))
         {
-            auto& node = hwInterface->getNode(path);
+            const auto& node = hwInterface->getNode(path);
 
             if((node.getMode() == uhal::defs::BlockReadWriteMode::SINGLE) && ((int)node.getPermission() & true) && (++node.begin() == node.end()))
             {
-                auto value = static_cast<RD53FWInterface*>(theBeBoardFW)->ReadArbitraryRegister(path);
+                const auto value = fBeBoardInterface->ReadonlyBoardReg(cBoard, path);
                 std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(56) << path << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
                           << std::endl;
             }
