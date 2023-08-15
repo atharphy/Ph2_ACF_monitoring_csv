@@ -528,6 +528,7 @@ int main(int argc, char* argv[])
 
         //Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
+
         LinkAlignmentOT cLinkAlignment;
         cLinkAlignment.Inherit(&cTool);
         try
@@ -548,8 +549,6 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
-
-
         // align FEs - CIC
         LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
         CicFEAlignment cCicAligner;
@@ -563,7 +562,7 @@ int main(int argc, char* argv[])
         //\Doesnt work PSv2
 
         cCicAligner.dumpConfigFiles();
-        
+
         // quickly check ReadData
         // for(const auto cBoard: *cTool.fDetectorContainer)
         // {
@@ -623,7 +622,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub package in the BE  " << RESET;
         else
         {
-            LOG(INFO) << BOLDBLUE << __LINE__ << " Performing time alignment of stub data with L1 data in the BE " << RESET;
+            LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
             LinkAlignmentOT cLinkAlignment;
             cLinkAlignment.Inherit(&cTool);
             cLinkAlignment.Initialise();
@@ -637,7 +636,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "Will skip time alignment of stub data with L1 data in the BE " << RESET;
         else
         {
-            LOG(INFO) << BOLDBLUE << __LINE__ << " Performing time alignment of stub data with L1 data in the BE " << RESET;
+            LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
             StubBackEndAlignment cStubBackEndAligner;
             LOG(INFO) << BOLDBLUE << "1 " << RESET;
             cStubBackEndAligner.Inherit(&cTool);
@@ -1298,23 +1297,8 @@ int main(int argc, char* argv[])
         BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
-    
+
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
-
-        // reading CIC registers
-        std::cout << " cTool" << std::endl;
-        auto clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "FE_CONFIG");
-        std::cout << " CLK CIC 0x" << std::hex << clkFr << std::dec << std::endl;
-        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "scPhaseSelectB0o");
-        // std::cout << " scPhaseSelectB0o 0x" << std::hex << clkFr << std::dec << std::endl;
-        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "scPhaseSelectB1o");
-        // std::cout << " scPhaseSelectB1o 0x" << std::hex << clkFr << std::dec << std::endl;
-        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "scPhaseSelectB2o");
-        // std::cout << " scPhaseSelectB2o 0x" << std::hex << clkFr << std::dec << std::endl;
-        // clkFr = cTool.fCicInterface->ReadChipReg(static_cast<OuterTrackerHybrid*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject())->fCic, "scPhaseSelectB3o");
-        // std::cout << " scPhaseSelectB3o 0x" << std::hex << clkFr << std::dec << std::endl;
-
-
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
         cBeamTestCheck.writeObjects();

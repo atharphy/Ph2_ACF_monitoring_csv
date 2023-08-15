@@ -1064,6 +1064,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
 
     for(const auto cBoard: *fDetectorContainer)
     {
+        fBeBoardInterface->setBoard(0);
         if(cBoard->getBoardType() == BoardType::D19C)
         {
             // Set board sparisification
@@ -1072,7 +1073,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             // make sure board is also set to the same thing
             bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
             cBoard->setSparsification(cSparsified);
-            if(pReInitialize)
+            if(pReInitialize == true)
             {
                 InitializeOT(cBoard); // sets the clocks and configures the CICs, enables the FE readout chips (same as below?!)
             }
@@ -1161,7 +1162,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                 ConfigureOT(cBoard); // Configures the readout chips but the CIC is done above in the InitializeOT function
             }
             */
-           
+
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
