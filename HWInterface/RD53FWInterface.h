@@ -62,6 +62,7 @@ class RD53FWInterface : public BeBoardFWInterface
 
     void ResetSequence(const std::string& refClockRate);
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
+    void PrintFWstatus() override;
 
     void Start() override;
     void Stop() override;
@@ -89,7 +90,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void ResetSlowCmdFIFO();
     void ResetReadBkFIFO();
     void ResetReadoutBlk();
-    void ReadConfigFromBoard() { this->singleChip = RegManager::ReadReg("user.stat_regs.aurora_rx.Module_type") == 1; }
 
     // ####################################
     // # Check AURORA lock on data stream #
@@ -208,7 +208,6 @@ class RD53FWInterface : public BeBoardFWInterface
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
   private:
-    void     PrintFWstatus();
     void     TurnOffFMC();
     void     TurnOnFMC();
     void     ConfigureDIO5(const DIO5Config* config);

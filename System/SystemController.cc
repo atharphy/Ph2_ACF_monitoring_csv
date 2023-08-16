@@ -338,6 +338,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
         else if(fBoardType == BoardType::RD53)
         {
+            // ################################
+            // # Instantiate proper inerfaces #
+            // ################################
             flpGBTInterface = new RD53lpGBTInterface(fBeBoardFWMap);
             if(cFirstBoard->getFrontEndType() == FrontEndType::RD53A)
                 fReadoutChipInterface = new RD53AInterface(fBeBoardFWMap);
@@ -374,23 +377,19 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fDetectorMonitor->forkMonitor();
     }
 
-    // ###########################################
-    // # Make sure all interfaces are configured #
-    // ###########################################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() == BoardType::RD53) continue;
+
+        // ###########################################
+        // # Make sure all interfaces are configured #
+        // ###########################################
         fBeBoardInterface->setBoard(cBoard->getId());
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureInterfaces(cBoard);
-    }
 
-    // ##########################
-    // # Set module type for OT #
-    // ##########################
-    for(const auto cBoard: *fDetectorContainer)
-    {
-        if(cBoard->getBoardType() != BoardType::D19C) continue;
-
+        // ##########################
+        // # Set module type for OT #
+        // ##########################
         auto cConnectedFeTypes = cBoard->connectedFrontEndTypes();
         bool cMPAfound =
             (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::MPA || x == FrontEndType::MPA2); }) != cConnectedFeTypes.end());
@@ -1041,25 +1040,25 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     return cSuccess;
 }
 
-void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
+void SystemController::ConfigureHw(bool pReInitialize)
 {
     if(fDetectorContainer == nullptr)
     {
         LOG(ERROR) << BOLDRED << "Hardware not initialized: run SystemController::InitializeHw first" << RESET;
-        return;
+        exit(EXIT_FAILURE);
     }
 
     LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
         cBoard->printBoardType();
-        fBeBoardInterface->setBoard(0);
+        fBeBoardInterface->setBoard(cBoard->getId());
         fBeBoardInterface->ConfigureBoard(cBoard);
     }
 
     for(const auto cBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->setBoard(0);
+        fBeBoardInterface->setBoard(cBoard->getId());
 
         if(cBoard->getBoardType() == BoardType::D19C)
         {
@@ -1266,7 +1265,7 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pRe
     // ########################################################
     std::cout << fParsedFile.str() << std::endl;
 
-    ConfigureHw(false, pReInitialize);
+    ConfigureHw(pReInitialize);
 }
 
 void SystemController::initializeExceptionHandler()
@@ -1571,7 +1570,7 @@ void SystemController::DumpRegisters()
 
         const auto theBeBoardFW = this->fBeBoardFWMap[cBoard->getId()];
         const auto hwInterface  = theBeBoardFW->getHardwareInterface();
-        static_cast<RD53FWInterface*>(theBeBoardFW)->ReadConfigFromBoard();
+        theBeBoardFW->PrintFWstatus();
 
         for(const auto& path: hwInterface->getNodes("user.+"))
         {

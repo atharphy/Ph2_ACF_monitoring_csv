@@ -482,11 +482,10 @@ int main(int argc, char* argv[])
 
     // align CIC-lpGBT-BE
 
-    bool cIgnoreI2c    = false;
     bool cReInitialize = true;
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
-        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        cTool.ConfigureHw(cReInitialize);
         // just to check
         // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         // for(const auto cBoard: *cTool.fDetectorContainer)
@@ -560,8 +559,7 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
     {
         // //cReInitialize=false;
-        // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
-        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        cTool.ConfigureHw(cReInitialize);
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
