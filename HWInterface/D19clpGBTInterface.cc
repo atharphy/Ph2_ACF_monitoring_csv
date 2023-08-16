@@ -123,9 +123,10 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     // Rx configuration and Phase Align
     // Configure Rx Groups
     // WriteChipReg(pChip, "EPRXDllConfig", , false);
-    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
+    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5}, cRxChannels = {0, 2};
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0; // manual mode by default
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
+    ConfigureRxGroups2(pChip, {6}, cRxChannels, 0, cRxTrackMode);
     // Configure Rx Channels
     // module/skeleton
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 5;
@@ -142,7 +143,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
             else
                 cRxInvert = 1;
 
-            if(!((cGroup == 6 && cChannel == 2))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 6 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
     // Reset I2C Masters

@@ -125,7 +125,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         {
             if(cHybrid->getId() % 2 == 0)
             {
-                cGroups   = {0, 4, 4, 5, 5, 6};
+                cGroups   = {0, 4, 4, 5, 5, 3};
                 cChannels = {0, 0, 2, 0, 2, 0};
             }
             else

@@ -222,6 +222,20 @@ bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std:
 
 void lpGBTInterface::SetPUSMDone(Chip* pChip, bool pPllConfigDone, bool pDllConfigDone) { WriteChipReg(pChip, "POWERUP2", pDllConfigDone << 2 | pPllConfigDone << 1); }
 
+void lpGBTInterface::ConfigureRxGroups2(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
+{
+    for(const auto& cGroup: pGroups)
+    {
+        // #######################################################################
+        // # Enable Rx Groups Channels and set Data Rate and Phase Tracking mode #
+        // #######################################################################
+        uint8_t cValueEnableRx = 0;
+        for(const auto cChannel: pChannels) cValueEnableRx |= (0 << cChannel);
+        std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
+        WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
+    }
+}
+
 void lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
 {
     for(const auto& cGroup: pGroups)
