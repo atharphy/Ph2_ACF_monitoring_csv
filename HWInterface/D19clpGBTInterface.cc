@@ -137,10 +137,12 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
                 cRxInvert = 0;
             else if(cGroup == 5 && cChannel == 0)
                 cRxInvert = 0;
+            else if(cGroup == 3 && cChannel == 0)
+                cRxInvert = 1; // can toggle between static "0" and "1" on this e-link
             else
                 cRxInvert = 1;
 
-            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+            if(!((cGroup == 6 && cChannel == 2))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
     // Reset I2C Masters
