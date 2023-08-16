@@ -1579,7 +1579,7 @@ void SystemController::DumpRegisters()
 
             if((node.getMode() == uhal::defs::BlockReadWriteMode::SINGLE) && ((int)node.getPermission() & true) && (++node.begin() == node.end()))
             {
-                const auto value = fBeBoardInterface->ReadonlyBoardReg(cBoard, path);
+                const auto value = fBeBoardInterface->ReadBoardReg(cBoard, path, false);
                 std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(56) << path << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
                           << std::endl;
             }

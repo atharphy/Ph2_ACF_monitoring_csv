@@ -75,13 +75,13 @@ void BeBoardInterface::WriteBoardMultReg(BeBoard* pBoard, const std::vector<std:
     for(const auto& cReg: pRegVec) pBoard->setReg(cReg.first, cReg.second);
 }
 
-uint32_t BeBoardInterface::ReadBoardReg(BeBoard* pBoard, const std::string& pRegNode)
+  uint32_t BeBoardInterface::ReadBoardReg(BeBoard* pBoard, const std::string& pRegNode, bool updateRegs)
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
 
     setBoard(pBoard->getId());
     uint32_t cRegValue = static_cast<uint32_t>(fBoardFW->ReadReg(pRegNode));
-    pBoard->setReg(pRegNode, cRegValue);
+    if(updateRegs == true) pBoard->setReg(pRegNode, cRegValue);
     return cRegValue;
 }
 
@@ -100,14 +100,6 @@ void BeBoardInterface::ReadBoardMultReg(BeBoard* pBoard, std::vector<std::pair<s
             std::cerr << "Error while reading: " + cReg.first;
             throw;
         }
-}
-
-uint32_t BeBoardInterface::ReadonlyBoardReg(BeBoard* pBoard, const std::string& pRegNode)
-{
-    std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
-
-    setBoard(pBoard->getId());
-    return static_cast<uint32_t>(fBoardFW->ReadReg(pRegNode));
 }
 
 std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg(BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize)

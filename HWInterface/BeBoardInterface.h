@@ -134,7 +134,7 @@ class BeBoardInterface
      * \param pBoard
      * \param pRegNode : Node of the register to update
      */
-    uint32_t ReadBoardReg(Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode);
+    uint32_t ReadBoardReg(Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, bool updateRegs = true);
 
     /*!
      * \brief Read a block of a given size from the board
@@ -150,13 +150,6 @@ class BeBoardInterface
      * \param pRegVec : Vector of Register/Value pairs
      */
     void ReadBoardMultReg(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::pair<std::string, uint32_t>>& pRegVec);
-
-    /*!
-     * \brief Update Config File with the value in the Board register
-     * \param pBoard
-     * \param pRegNode : Node of the register to update
-     */
-    uint32_t ReadonlyBoardReg(Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode);
 
     /*!
      * \brief Get the board infos
