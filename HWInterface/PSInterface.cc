@@ -152,8 +152,9 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     }
     else if(pChip->getFrontEndType() == FrontEndType::SSA2 or pChip->getFrontEndType() == FrontEndType::SSA)
     {
-        std::cout << " SSA2 digi injection should throw an error " << std::endl;
-        LOG(ERROR) << "No digiInjection for SSA for some reason";
+        LOG(ERROR) << BOLDRED << "No digiInjection implemented for SSA for some reason " << RESET;
+        throw std::runtime_error(std::string("No digiInjection implemented for SSA for some reason "));
+
     }
 }
 

@@ -142,10 +142,9 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     }
     else if(pRegNode == "PixelControl_ALL" || pRegNode == "PixelControl")
     {
-        //LORE IRENE -- The pixel control register is written for all pixels (broacast) and must be read for the individual rows
+        //LORE IRENE -- The pixel control register is written for all pixels (broadcast) and must be read for the individual rows
         // in this case we are hardcoding row 1 and reading it back to prove that we actually set the register.
         //This read gives a warning saying that the register for that row is not in the list of registers MPA2.txt
-        //We should add them (see DigPattern_P) with names like PixelControl_P.
         // The register is however read correctly because the address exist on the chip.
         cRegItem = pMPA2->getRegItem("PixelControl_ALL");
         uint16_t row = 1;
