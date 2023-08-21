@@ -1042,15 +1042,13 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                         auto& cBxIdsFirst  = cBxIds[cIter.second[0]];
                         auto& cBxIdsSecond = cBxIds[cIter.second[1]];
                         cSyncThisLink      = (cBxIdsFirst == cBxIdsSecond);
-                        LOG(INFO) << BOLDRED << " cBxIdsFirst " << cBxIds[cIter.second[0]].size() << " cBxIdsSecond "<< cBxIds[cIter.second[1]].size() << " cSyncThisLink " << cSyncThisLink << RESET;
-                        if(cSyncThisLink) LOG(INFO) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
+                        if(cSyncThisLink) LOG(DEBUG) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                     }
                     // if in sync.. add first hybrid id to list
                     if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
                     else
                         LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;   
                 }
-                LOG(INFO) << BOLDRED << " cIdsToCompare.size() " << cIdsToCompare.size() << " cHybridIdsMap.size() " << cHybridIdsMap.size() << RESET;
                 // if all the links are synchronous then.. check if we are
                 // in sync across the multiple links
                 if(cIdsToCompare.size() == cHybridIdsMap.size())
