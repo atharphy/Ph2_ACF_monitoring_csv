@@ -573,9 +573,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {              
                     uint16_t cValueInMemory = cChip->getReg("ENFLAGS");
-                    // LOG(INFO) << BOLDCYAN << __LINE__ << "] ENFLAGS from memory 0x" << std::hex << cValueInMemory << std::dec << RESET;
                     cValueInMemory = (cValueInMemory & 0x1F) + ((cMode & 0x03)<<5) ;
-                    // LOG(INFO) << BOLDCYAN << __LINE__ << "] cMode ENFLAGS from memory 0x" << std::hex << cValueInMemory << std::dec << RESET;
                     cChip->setReg("ENFLAGS", cValueInMemory);
                     os << BOLDCYAN << "|\t|\t|----ENFLAGS to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
                     << std::dec << RESET << std::endl;
@@ -594,7 +592,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()); // / SSA2_ELECTRON_CALDAC; // conversion factor to electron with 1 CalDAC = 0.039 fC 
                 if (cInjStrps > 0xFF)
                 {
-                    throw std::runtime_error("The maximum charge that can be injected is 255. Acceptable values are between 0 and 255.");
+                    throw std::runtime_error("The maximum strip charge that can be injected is 255. Acceptable values are between 0 and 255.");
                     exit(0);
                 }
                 cChip->setReg("Bias_CALDAC", cInjStrps);
@@ -859,7 +857,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 int cInjPxls = convertAnyInt(cInjectionNode.attribute("pixelCharge").value()); // / MPA2_ELECTRON_CALDAC. conversion factor from DAQ to electrons;
                 if (cInjPxls > 0xFF)
                 {
-                    throw std::runtime_error("The maximum charge that can be injected is 255. Acceptable values are between 0 and 255.");
+                    throw std::runtime_error("The maximum pixel charge that can be injected is 255. Acceptable values are between 0 and 255.");
                     exit(0);
                 }
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
@@ -870,6 +868,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA injection settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjPxls
                    << std::dec << RESET << std::endl;
+                //
             }
         }
 
@@ -1022,7 +1021,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 
             uint8_t invertClock;
             if(pHybridNode.attribute("invertClock")) { invertClock = pHybridNode.attribute("invertClock").as_int(); } // can overwrite default from xml
-            else invertClock = 1; // default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
+            else invertClock = 1;
             os << BOLDBLUE << "invertClock " << +invertClock << RESET << std::endl;
 
             cHybrid = pOpticalGroup->addHybridContainer(cHybridId, new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), cHybridId));
