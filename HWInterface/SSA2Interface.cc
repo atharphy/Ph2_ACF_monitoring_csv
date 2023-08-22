@@ -483,6 +483,9 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegNameMod == "AmuxHigh")
     {
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         return this->ConfigureAmux(pSSA2, "HighZ");
     }
     // need to re-name threshold here..
@@ -492,6 +495,9 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     // }
     else if(pRegNameMod == "MonitorBandgap")
     {
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         return this->ConfigureAmux(pSSA2, "Bandgap");
     }
     else if(pRegNameMod == "MonitorGround")
@@ -519,12 +525,18 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         uint8_t cBitShift = 0;
         uint8_t cRegMask  = (0xF << cBitShift); //
 
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         return this->WriteChipRegBits(pSSA2, "ClockDeskewing_fine", (pValue << cBitShift), "mask_peri_D", cRegMask);
     }
     else if(pRegName == "PhaseShift")
     {
         uint8_t cBitShift = 0;
         uint8_t cRegMask  = (0x7 << cBitShift); //
+
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
 
         return this->WriteChipRegBits(pSSA2, "ClockDeskewing_coarse", (pValue << cBitShift), "mask_peri_D", cRegMask);
     }
@@ -540,6 +552,9 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
             cRegItem.fValue = (cRegName == "AsyncRead_StartDel_LSB") ? cLSB : cMSB;
             cRegItems.push_back(cRegItem);
         }
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         return fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerify);
     }
     else if(pRegNameMod == "AnalogueSync")
@@ -610,6 +625,9 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         // cRegItem = cRegMap["ENFLAGS_S1"];
         // cRegValue = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
         // LOG(INFO) << BOLDYELLOW  << "ENFLAGS_S1 set to 0x" << std::hex << +cRegValue << std::dec << RESET;
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         return cSuccess && this->WriteChipRegBits(pSSA2, "control_1", (1 - pValue), "mask_peri_D", 0x7);
     }
     else if(pRegNameMod == "DigitalAsync")
@@ -638,6 +656,9 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         uint8_t cDigitalCalib = 1;
         uint8_t cAnalogCalib  = pValue;
         uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         cSuccess              = cSuccess && this->WriteChipRegBits(pSSA2, "ENFLAGS", cEnFlags, "mask_strip", 0x1F);
         // cRegItem = cRegMap["ENFLAGS_S1"];
         // cRegValue = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
@@ -656,10 +677,16 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         uint8_t cDigitalCalib = pValue;
         uint8_t cAnalogCalib  = 0;
         uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         bool    cSuccess      = this->WriteChipRegBits(pSSA2, "ENFLAGS", cEnFlags, "mask_strip", 0x1F);
         auto    cRegItem      = cRegMap["ENFLAGS_S1"];
         auto    cRegValue     = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
         LOG(INFO) << BOLDYELLOW << "ENFLAGS_S1 set to 0x" << std::hex << +cRegValue << std::dec << RESET;
+
+
         return cSuccess;
     }
     else if(pRegNameMod == "PulseDuration" || pRegNameMod == "DigitalDuration" )
@@ -696,6 +723,10 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         auto cRegItem  = pSSA2->getRegItem(cRegName.str());
         auto cRegValue = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
         LOG(INFO) << BOLDYELLOW << cRegName.str() << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
+
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         return cSuccess;
     }
     else if(pRegNameMod == "EnableSLVSTestOutput")
@@ -736,6 +767,10 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         uint8_t cDigitalCalib = 1;
         uint8_t cAnalogCalib  = pValue;
         uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         bool    cSuccess      = this->WriteChipRegBits(pSSA2, "ENFLAGS", cEnFlags, "mask_strip", 0x1F);
         uint8_t cRegValue     = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
         LOG(DEBUG) << BOLDYELLOW << "Strip register set to 0x" << std::hex << +cRegValue << std::dec << RESET;
@@ -758,6 +793,10 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         uint8_t cDigitalCalib = 1;
         uint8_t cAnalogCalib  = pValue;
         uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+
         bool    cSuccess      = this->WriteChipRegBits(pSSA2, "ENFLAGS", cEnFlags, "mask_strip", 0x1F);
         auto    cRegValue     = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
         LOG(DEBUG) << BOLDYELLOW << "Strip register set to 0x" << std::hex << +cRegValue << std::dec << RESET;
@@ -792,10 +831,17 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegNameMod == "LateralRX_L_PhaseData")
     {
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+        // you probably only need to change (pValue << 4) to pValue but I could not test it
+
         return this->WriteChipRegBits(pSSA2, "LateralRX_sampling", pValue, "mask_peri_A", 0x07);
     }
     else if(pRegNameMod == "LateralRX_R_PhaseData")
     {
+        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+        // you probably only need to change (pValue << 4) to pValue but I could not test it
         return this->WriteChipRegBits(pSSA2, "LateralRX_sampling", (pValue << 4), "mask_peri_A", (0x7 << 4));
     }
     else
