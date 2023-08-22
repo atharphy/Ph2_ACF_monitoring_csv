@@ -153,10 +153,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
     auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
     cAligned   = cAligned && (cMode != 15);
     // cMode      = ( cMode > 8 ) ? 5 : cMode;
-    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) 
-    { 
-        flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); 
-    }
+    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); }
 
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx = 0;
@@ -964,12 +961,9 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         std::map<uint8_t, std::vector<uint8_t>> cHybridIdsMap;
         for(auto cOpticalGroup: *pBoard)
         {
-            LOG(INFO) << BOLDMAGENTA << " cOpticalGroup->getId() " << cOpticalGroup->getId() << RESET;
             auto cIter = cHybridIdsMap.find(cOpticalGroup->getId());
             if(cIter == cHybridIdsMap.end())
             {
-                LOG(INFO) << BOLDMAGENTA << " cIter == cHybridIdsMap.end() " << RESET;
-
                 std::vector<uint8_t> cDummy;
                 cDummy.clear();
                 cHybridIdsMap[cOpticalGroup->getId()] = cDummy;
@@ -1032,13 +1026,12 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                 std::vector<uint8_t> cIdsToCompare(0);
                 for(auto cIter: cHybridIdsMap)
                 {
-                    LOG(INFO) << BOLDRED << " cHybridIdsMap has cIter.second.size() " << cIter.second.size() << RESET;
                     LOG(INFO) << BOLDBLUE << "\t..Checking Sync for hybrids on Link#" << +cIter.first << RESET;
                     bool cSyncThisLink = true;  // if there's only one hybrid by definition you are in sync
                     if(cIter.second.size() > 1) // either 1 or 2 hybrids per link
                     {
                         // check if the two hybrids are synchronous
-                        LOG(INFO) << BOLDYELLOW << "\t.. checking sync between " << +cIter.second[0] << " and " << +cIter.second[1] << RESET;
+                        LOG(DEBUG) << BOLDYELLOW << "\t.. checking sync between " << +cIter.second[0] << " and " << +cIter.second[1] << RESET;
                         auto& cBxIdsFirst  = cBxIds[cIter.second[0]];
                         auto& cBxIdsSecond = cBxIds[cIter.second[1]];
                         cSyncThisLink      = (cBxIdsFirst == cBxIdsSecond);
@@ -1192,7 +1185,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         }
     }
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc);
-    LOG(INFO) << BOLDMAGENTA << __LINE__ << "] Found package delay to be " << +cFinalDelay << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
 
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
@@ -1331,7 +1324,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
     }
-    LOG(INFO) << BOLDMAGENTA << __LINE__ << "] Found package delay to be " << +cFinalDelay << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
     return cCorrectDelay;
 }
 // State machine control functions
