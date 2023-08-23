@@ -811,7 +811,11 @@ bool OTHybridTester::LpGBTTestVTRx()
 
             // Configuring I2C Master pull-ups
             clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 1 << 4 | 1 << 6);
-
+            
+            LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 1);
+            
             uint8_t cMasterId = 1, cSlaveAddress = 0x50, cSlaveData = 0x15, cNbyte = 1, cFrequency = 2;
             uint8_t cMasterConfig = (cNbyte << 2) | (cFrequency << 0);
             cRecent               = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData);
@@ -1460,6 +1464,13 @@ void OTHybridTester::calibrateCurrentDAC()
     fResultFile->cd();
     cCalibrationTree->Fill();
     cCalibrationTree->Write();
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0x1c);
+        }
+    }
 }
 
 #endif
