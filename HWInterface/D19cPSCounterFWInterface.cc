@@ -363,7 +363,7 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
     }
     else
     {
-        LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData  USING WRONG TRIGGER SOURCE FOR THIS TEST... "<< cTriggerSource << RESET;
+        LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData  USING WRONG TRIGGER SOURCE FOR THIS TEST... " << cTriggerSource << RESET;
         return false; // wrong trigger source for this type of readout
     }
 }

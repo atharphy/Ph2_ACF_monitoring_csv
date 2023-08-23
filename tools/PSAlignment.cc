@@ -102,7 +102,7 @@ void PSAlignment::Initialise()
                         cChip->setRegBits("Control_1", cMask, cReadoutMode);
                         cReadoutMode = cChip->getReg("Control_1");
                     }
-                    fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", cReadoutMode);                    
+                    fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", cReadoutMode);
                 }
             }
         }
@@ -158,11 +158,11 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
                     if(pSetupType.find("PSModule") != std::string::npos)
                     {
                         // These are now set in the XML because they are different for differen PS versions!!!
-                        //fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", 0x4);
-                        //fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x36); // different for PSv2 /2.1 
-                        //fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", 0x02);
-                        //fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x00);
-                        //fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x00); // different for PSv2 /2.1 
+                        // fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", 0x4);
+                        // fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x36); // different for PSv2 /2.1
+                        // fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", 0x02);
+                        // fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x00);
+                        // fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x00); // different for PSv2 /2.1
                     }
                 } // chip
             }     // hybrid

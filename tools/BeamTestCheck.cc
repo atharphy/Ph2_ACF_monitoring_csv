@@ -109,9 +109,9 @@ void BeamTestCheck::Initialise()
 #ifdef __USE_ROOT__
     fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
-    //Method to define an injection pixels/strips
-    //cInjection.fRow    = 98;
-    //cInjection.fColumn = 12;
+    // Method to define an injection pixels/strips
+    // cInjection.fRow    = 98;
+    // cInjection.fColumn = 12;
     defInjection();
 }
 
@@ -189,8 +189,7 @@ void BeamTestCheck::ValidateRaw()
 }
 void BeamTestCheck::Validate()
 {
-
-    auto     stubDelay = fBeBoardInterface->ReadBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+    auto stubDelay = fBeBoardInterface->ReadBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
     fDetectorContainer->getFirstObject()->dumpRegisters();
 
@@ -1246,7 +1245,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         cTmpS0.assign(cMaxRows, 0);
                         cTmpS1.assign(cMaxRows, 0);
                         bool    cSSAExists = std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8) != cSSAIds.end();
-                        uint8_t cSSAId     = (cSSAExists) ? (cChip->getId() % 8) : -1;                
+                        uint8_t cSSAId     = (cSSAExists) ? (cChip->getId() % 8) : -1;
                         LOG(DEBUG) << BOLDYELLOW << "MPA#" << +cChip->getId() << " SSA Id " << +cSSAId << RESET;
 
                         // loop over hits and count
@@ -1946,16 +1945,17 @@ void BeamTestCheck::PrepareForExternalTP(BeBoard* pBoard)
 void BeamTestCheck::PrepareForTP(BeBoard* pBoard)
 {
     // Save Trigger register value
-    uint32_t  cDelayAfterReset = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");;
+    uint32_t cDelayAfterReset = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
+    ;
     LOG(INFO) << BOLDRED << " cDelayAfterReset " << cDelayAfterReset << RESET;
 
-    //SUGGESTED VALUES THAT SHOULD BE ALREADY IN THE XML
+    // SUGGESTED VALUES THAT SHOULD BE ALREADY IN THE XML
     // delay_after_fast_reset  = 300
     // delay_after_test_pulse  = 300
     // delay_before_next_pulse = 5000
     // triggers_to_accept      = 0
 
-    uint8_t  cTriggerSource         = 6;//SYNC MODE WHILE 12 IS ASYNC
+    uint8_t cTriggerSource = 6; // SYNC MODE WHILE 12 IS ASYNC
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSource);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
@@ -1997,11 +1997,8 @@ void BeamTestCheck::PrepareForTP(BeBoard* pBoard)
     }
 
     // inject PS
-    if(!cWith2S)
-    {
-        InjectPattern(pBoard, fInjections, -1);
-    }
-    
+    if(!cWith2S) { InjectPattern(pBoard, fInjections, -1); }
+
     // fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSource);
 }
 
@@ -2121,7 +2118,7 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
     // update registers
     UpdateFromRegMap(pBoard);
     // send a ReSync
-    fBeBoardInterface->ChipReSync(pBoard); 
+    fBeBoardInterface->ChipReSync(pBoard);
 }
 void BeamTestCheck::Stop() {}
 

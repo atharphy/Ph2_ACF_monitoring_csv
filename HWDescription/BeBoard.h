@@ -155,8 +155,8 @@ class BeBoard : public BoardContainer
     void    setReset(uint8_t pReset) { fReset = pReset; }
     uint8_t getReset() const { return fReset; }
 
-    void    setToConfigure(uint8_t pToConfigure) { fToConfigure = pToConfigure; }
-    bool    getToConfigure() const { return fToConfigure; }
+    void setToConfigure(uint8_t pToConfigure) { fToConfigure = pToConfigure; }
+    bool getToConfigure() const { return fToConfigure; }
 
     void        setConnectionId(std::string theConnectionId) { fConnectionId = theConnectionId; }
     std::string getConnectionId() const { return fConnectionId; }
@@ -172,7 +172,7 @@ class BeBoard : public BoardContainer
 
     void dumpRegisters()
     {
-      for(auto reg : fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
+        for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
     }
 
   protected:

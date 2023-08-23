@@ -263,7 +263,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 if(static_cast<std::string>(lpGBTChild.name()) == "TuneVrefSettings")
                 {
                     std::string cADC              = lpGBTChild.attribute("ADC").as_string();
-                    uint16_t       cReferenceVoltage = lpGBTChild.attribute("ReferenceVoltage").as_uint();
+                    uint16_t    cReferenceVoltage = lpGBTChild.attribute("ReferenceVoltage").as_uint();
                     os << BOLDCYAN << "|\t|\t|---- LpGBT TuneVrefSettings:" << RESET << std::endl;
                     os << GREEN << "|\t|\t|\t|---- ADC: " << RED << cADC << RESET << std::endl;
                     os << GREEN << "|\t|\t|\t|---- ReferenceVoltage: " << RED << +cReferenceVoltage << RESET << std::endl;
@@ -537,12 +537,12 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 unsigned cStripThreshold     = convertAnyInt(cThresholdNode.attribute("stripThreshold").value());
                 unsigned cStripThresholdHigh = convertAnyInt(cThresholdNode.attribute("stripThresholdHigh").value());
-                if (cStripThreshold > 0xFF)
+                if(cStripThreshold > 0xFF)
                 {
                     throw std::runtime_error("The stripThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
                     exit(0);
                 }
-                if (cStripThresholdHigh > 0xFF)
+                if(cStripThresholdHigh > 0xFF)
                 {
                     throw std::runtime_error("The cStripThresholdHigh register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
                     exit(0);
@@ -568,17 +568,15 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 {
                     cChip->setReg("SAMPLINGMODE_ALL", cMode);
                     os << BOLDCYAN << "|\t|\t|----Applying global SSA hit logic settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
-                    << std::dec << RESET << std::endl;
+                       << std::dec << RESET << std::endl;
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
-                {              
+                {
                     uint16_t cValueInMemory = cChip->getReg("ENFLAGS");
-                    cValueInMemory = (cValueInMemory & 0x1F) + ((cMode & 0x03)<<5) ;
+                    cValueInMemory          = (cValueInMemory & 0x1F) + ((cMode & 0x03) << 5);
                     cChip->setReg("ENFLAGS", cValueInMemory);
-                    os << BOLDCYAN << "|\t|\t|----ENFLAGS to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
-                    << std::dec << RESET << std::endl;
+                    os << BOLDCYAN << "|\t|\t|----ENFLAGS to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec << RESET << std::endl;
                 }
-
             }
         }
 
@@ -589,8 +587,8 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             for(auto cChip: *pHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
-                int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()); // / SSA2_ELECTRON_CALDAC; // conversion factor to electron with 1 CalDAC = 0.039 fC 
-                if (cInjStrps > 0xFF)
+                int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()); // / SSA2_ELECTRON_CALDAC; // conversion factor to electron with 1 CalDAC = 0.039 fC
+                if(cInjStrps > 0xFF)
                 {
                     throw std::runtime_error("The maximum strip charge that can be injected is 255. Acceptable values are between 0 and 255.");
                     exit(0);
@@ -617,9 +615,9 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     uint16_t control_1 = cChip->getReg("control_1");
-                    control_1 = (control_1 & 0xEF) + (((cLatency>>8)&0x1) <<4);
+                    control_1          = (control_1 & 0xEF) + (((cLatency >> 8) & 0x1) << 4);
                     cChip->setReg("control_1", control_1);
-                    cChip->setReg("control_3", cLatency&0xFF);
+                    cChip->setReg("control_3", cLatency & 0xFF);
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA latency settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
                    << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
@@ -638,16 +636,16 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 {
                     cChip->setReg("HIPCUT_ALL", cCut);
                     os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
-                    << RESET << std::endl;
+                       << RESET << std::endl;
                 }
-                else if (cChip->getFrontEndType() == FrontEndType::SSA2)
+                else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     uint16_t cMemStripControl2 = cChip->getReg("StripControl2");
-                    cMemStripControl2 = (cMemStripControl2 & 0xF8) + (cCut&0x7); // HipCut is the 3 LSB of the StripControl2 register
+                    cMemStripControl2          = (cMemStripControl2 & 0xF8) + (cCut & 0x7); // HipCut is the 3 LSB of the StripControl2 register
                     cChip->setReg("StripControl2", cMemStripControl2);
-                    os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << " read for StripControl2 is 0x" << cChip->getReg("StripControl2") << std::dec
-                    << RESET << std::endl;  
-                }   
+                    os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut
+                       << " read for StripControl2 is 0x" << cChip->getReg("StripControl2") << std::dec << RESET << std::endl;
+                }
             }
         }
 
@@ -787,12 +785,12 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cThresholdPxls = convertAnyInt(cThresholdNode.attribute("pixelThreshold").value());
-                if (cThresholdPxls > 0xFF)
+                if(cThresholdPxls > 0xFF)
                 {
                     throw std::runtime_error("The pixelThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
                     exit(0);
                 }
-                
+
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
                     std::stringstream cRegName;
@@ -815,9 +813,9 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 uint8_t cWindow = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("window").value()));
                 uint8_t cRegVal = (cMode << 6) | cWindow;
                 cChip->setReg("ECM", cRegVal);
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode << std::dec
-                   << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex
-                   << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET;
+                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode
+                          << std::dec << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN
+                          << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET;
             }
         }
         // then hit logic mode
@@ -837,9 +835,10 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     uint16_t pixelControl = cChip->getReg("PixelControl_ALL");
-                    pixelControl = (pixelControl & 0xE0) + ((cClusterCut & 0x07) << 2) + (cMode & 0x03);
+                    pixelControl          = (pixelControl & 0xE0) + ((cClusterCut & 0x07) << 2) + (cMode & 0x03);
                     cChip->setReg("PixelControl_ALL", pixelControl);
-                    LOG(INFO) << BOLDRED << "PixelControl_ALL 0x" << std::hex << pixelControl << std::dec << " getting from memory 0x"<< std::hex << cChip->getReg("PixelControl_ALL") << std::dec <<RESET;
+                    LOG(INFO) << BOLDRED << "PixelControl_ALL 0x" << std::hex << pixelControl << std::dec << " getting from memory 0x" << std::hex << cChip->getReg("PixelControl_ALL") << std::dec
+                              << RESET;
                 }
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
@@ -855,7 +854,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cInjPxls = convertAnyInt(cInjectionNode.attribute("pixelCharge").value()); // / MPA2_ELECTRON_CALDAC. conversion factor from DAQ to electrons;
-                if (cInjPxls > 0xFF)
+                if(cInjPxls > 0xFF)
                 {
                     throw std::runtime_error("The maximum pixel charge that can be injected is 255. Acceptable values are between 0 and 255.");
                     exit(0);
@@ -881,10 +880,10 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cLatency      = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
                 int cRetimePix    = convertAnyInt(cLatencyNode.attribute("retimePix").value());
-                int cLatencyRx320 = ((convertAnyInt(cLatencyNode.attribute("LatencyRx320L1").value())) & 0x7) + ((convertAnyInt(cLatencyNode.attribute("LatencyRx320Trigger").value()) & 0x7)<< 3);
+                int cLatencyRx320 = ((convertAnyInt(cLatencyNode.attribute("LatencyRx320L1").value())) & 0x7) + ((convertAnyInt(cLatencyNode.attribute("LatencyRx320Trigger").value()) & 0x7) << 3);
                 int cEdgeSelT1Raw = convertAnyInt(cLatencyNode.attribute("EdgeSelT1Raw").value());
                 int cEdgeSelTrig  = convertAnyInt(cLatencyNode.attribute("EdgeSelTrig").value());
-                if (cEdgeSelTrig == 1) cEdgeSelTrig = 255; // 255 is 0xFF in hex and sets 1 for all SSAs.
+                if(cEdgeSelTrig == 1) cEdgeSelTrig = 255; // 255 is 0xFF in hex and sets 1 for all SSAs.
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     cChip->setReg("L1Offset_1_ALL", cLatency & 0xFF);        // Irene
@@ -893,18 +892,18 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     cChip->setReg("MemoryControl_1_ALL", cLatency & 0xFF);
-                    
+
                     uint16_t memoryControl_2 = cChip->getReg("MemoryControl_2_ALL");
-                    memoryControl_2 = (memoryControl_2 & 0xFE) + ((cLatency >> 8) & 0x01) ;
+                    memoryControl_2          = (memoryControl_2 & 0xFE) + ((cLatency >> 8) & 0x01);
                     cChip->setReg("MemoryControl_2_ALL", memoryControl_2);
-                    
+
                     ChipRegMask cMask;
                     cMask.fNbits    = 3;
                     cMask.fBitShift = 2;
                     cChip->setRegBits("Control_1", cMask, cRetimePix);
                     uint16_t cValueInMemory = cChip->getReg("Control_1");
 
-                    LOG(INFO) << BOLDRED << __LINE__ << "RETIME PIX: 0x" << std::hex << cRetimePix << " CONTROL_1: 0x" << cValueInMemory  << std::dec << RESET;
+                    LOG(INFO) << BOLDRED << __LINE__ << "RETIME PIX: 0x" << std::hex << cRetimePix << " CONTROL_1: 0x" << cValueInMemory << std::dec << RESET;
                     cChip->setReg("LatencyRx320", cLatencyRx320 & 0x3F);
 
                     LOG(INFO) << BOLDRED << __LINE__ << "cEdgeSelT1Raw: 0x" << std::hex << cEdgeSelT1Raw << std::dec << RESET;
@@ -912,7 +911,6 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
                     LOG(INFO) << BOLDRED << __LINE__ << "cEdgeSelTrig: 0x" << std::hex << cEdgeSelTrig << std::dec << RESET;
                     cChip->setReg("EdgeSelTrig", cEdgeSelTrig);
-
                 }
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
                    << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
@@ -927,8 +925,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCut = convertAnyInt(cHIPmode.attribute("pixelCut").value());
-                if(cChip->getFrontEndType() == FrontEndType::MPA) 
-                    cChip->setReg("HipCut_ALL", cCut);
+                if(cChip->getFrontEndType() == FrontEndType::MPA) cChip->setReg("HipCut_ALL", cCut);
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     ChipRegMask cMask;
@@ -950,10 +947,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("pixelFine").value());
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
-                {
-                    cChip->setReg("PhaseShift", cCoarse);
-                }
+                if(cChip->getFrontEndType() == FrontEndType::MPA) { cChip->setReg("PhaseShift", cCoarse); }
                 if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     ChipRegMask cMask;
@@ -963,8 +957,8 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
                     uint16_t cValueInMemory = cChip->getReg("Control_1");
 
-                    LOG(DEBUG) << BOLDRED << __LINE__ << "COARSE: 0x" << std::hex << cCoarse << " CONTROL_1: 0x" << cValueInMemory  << std::dec << RESET;
-                    cFine = (cFine & 0xCF) + 0x30;//Setting bit 4 and 5 to 1 (4->Enable DLL, 5->DoNot Bypass)
+                    LOG(DEBUG) << BOLDRED << __LINE__ << "COARSE: 0x" << std::hex << cCoarse << " CONTROL_1: 0x" << cValueInMemory << std::dec << RESET;
+                    cFine = (cFine & 0xCF) + 0x30; // Setting bit 4 and 5 to 1 (4->Enable DLL, 5->DoNot Bypass)
                     cChip->setReg("ConfDLL", (cFine));
                 }
                 cChip->setReg("ConfDLL", cFine);
@@ -1021,7 +1015,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 
             uint8_t invertClock;
             if(pHybridNode.attribute("invertClock")) { invertClock = pHybridNode.attribute("invertClock").as_int(); } // can overwrite default from xml
-            else invertClock = 1;
+            else
+                invertClock = 1;
             os << BOLDBLUE << "invertClock " << +invertClock << RESET << std::endl;
 
             cHybrid = pOpticalGroup->addHybridContainer(cHybridId, new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), cHybridId));

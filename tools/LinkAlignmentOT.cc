@@ -950,10 +950,10 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         }
     }
     LOG(INFO) << BOLDBLUE << "LinkAlignmentOT::AlignStubPackage setting hybrid enable register to " << std::bitset<32>(cNewMask) << RESET;
-    auto     cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
 
-    bool    cSkip         = false;
-    uint8_t cFinalDelay   = cOriginalDelay;
+    bool    cSkip       = false;
+    uint8_t cFinalDelay = cOriginalDelay;
     if(!cSkip)
     {
         // gethybrid IDs
@@ -981,9 +981,9 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         // unique ids for each hybrid
         bool cCorrectDelay = false;
         // now try and find correct package delay
-        uint16_t cMaxBxCounter  = 3564;
-        uint32_t cNevents       = 10;
-        uint8_t cPackageDelay = cOriginalDelay;
+        uint16_t cMaxBxCounter = 3564;
+        uint32_t cNevents      = 10;
+        uint8_t  cPackageDelay = cOriginalDelay;
 
         LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
         LOG(DEBUG) << cMaxBxCounter << RESET;
@@ -1040,7 +1040,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                     // if in sync.. add first hybrid id to list
                     if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
                     else
-                        LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;   
+                        LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                 }
                 // if all the links are synchronous then.. check if we are
                 // in sync across the multiple links

@@ -217,9 +217,9 @@ void Tool::initMetadataAndFillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationNameContainer);
     theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName;
 
-    //DetectorDataContainer theFirmwareVersionContainer;
-    //ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
-    //for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
+    // DetectorDataContainer theFirmwareVersionContainer;
+    // ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
+    // for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
 
     DetectorDataContainer theDetectorConfigurationContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
@@ -263,7 +263,7 @@ void Tool::initMetadataAndFillInitialConditions()
     fDQMMetadata->fillUsername(theUsernameContainer);
     fDQMMetadata->fillHostName(theHostNameContainer);
     fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
-    //fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
+    // fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
     fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
     fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
     fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
@@ -286,8 +286,8 @@ void Tool::initMetadataAndFillInitialConditions()
         ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
         theGitCommitHashSerialization.streamByDetectorContainer(fDQMStreamer, theGitCommitHashContainer);
 
-        //ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
-        //theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
+        // ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
+        // theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
 
         ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
         theCalibrationNameSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationNameContainer);
@@ -460,8 +460,9 @@ void Tool::fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t chipFuseId = 0; 
-                if(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic->getFrontEndType() == FrontEndType::CIC2) chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
+                uint32_t chipFuseId = 0;
+                if(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic->getFrontEndType() == FrontEndType::CIC2)
+                    chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
                 theCICFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::string>() = std::to_string(chipFuseId);
             }
         }
@@ -2478,7 +2479,6 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
     }
     fUseReadNEvents = cUseReadNEvents;
     // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end " << RESET;
-
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
@@ -2595,10 +2595,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
             for(auto cHybrid: *cOpticalGroup)
                 if(fDoHybridBroadcast == false)
                 {
-                    for(auto cChip: *cHybrid)
-                    {
-                        fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
-                    }
+                    for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue); }
                 }
                 else
                 {

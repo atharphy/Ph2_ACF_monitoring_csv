@@ -82,7 +82,7 @@ class Hybrid
      */
     uint8_t getMasterId() const { return fMasterId; };
 
-    void setInvertClock(uint8_t pInvertClock) { fInvertClock = pInvertClock; };
+    void    setInvertClock(uint8_t pInvertClock) { fInvertClock = pInvertClock; };
     uint8_t getInvertClock() const { return fInvertClock; };
 
   protected:

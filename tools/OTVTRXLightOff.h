@@ -38,6 +38,5 @@ class OTVTRXLightOff : public OTTool
 
   protected:
   private:
-
 };
 #endif

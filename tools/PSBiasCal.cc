@@ -396,7 +396,7 @@ uint8_t PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string 
                     uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck)));
 
             uint8_t DAC_up_val = std::min(uint8_t(DAC_max), uint8_t(DAC_new_val + 1));
-            LOG(DEBUG) << MAGENTA << "DAC_up_val "<< +DAC_up_val << RESET;
+            LOG(DEBUG) << MAGENTA << "DAC_up_val " << +DAC_up_val << RESET;
 
             fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_up_val);
             std::this_thread::sleep_for(std::chrono::milliseconds(2));
@@ -418,12 +418,12 @@ uint8_t PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string 
                 LOG(INFO) << BOLDRED << "Bad extrapolation in PSBiasCal: expdiffdown:" << expdiffdown << ", expdiffup:" << expdiffup << ", expdiff:" << expdiff << ", iteration:" << niter << RESET;
                 if((expdiffdown < expdiff))
                 {
-                    DAC_val = DAC_down_val;
+                    DAC_val     = DAC_down_val;
                     DAC_new_val = DAC_new_val - 1;
                 }
                 if((expdiffup < expdiff))
                 {
-                    DAC_val = DAC_up_val;
+                    DAC_val     = DAC_up_val;
                     DAC_new_val = std::min(uint8_t(DAC_max), uint8_t(DAC_new_val + 1));
                 }
             }
@@ -702,7 +702,8 @@ void PSBiasCal::CalibrateBias()
                     }
                     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
-                        ADC_VBG = uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), "VBG")));
+                        ADC_VBG =
+                            uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), "VBG")));
                         measured_VBG = SSA2_VBG_EXPECTED;
                         // auto theRegister = SSA2_VBG_MEASURED_TABLE.find(std::make_pair(cChip->getHybridId(),cChip->getId()));
                         // if (theRegister ==  SSA2_VBG_MEASURED_TABLE.end())

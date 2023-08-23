@@ -1544,10 +1544,8 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
             auto cPreviousValue = cIterator->second.fValue;
             pChip->setReg(cIterator->first, pItem.fValue);
             uint16_t readBackVal = pChip->getReg(cIterator->first);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite Succesful write of 0x" 
-                    << std::hex << +pItem.fValue << " to " << cIterator->first
-                    << "\t.. Memory is now 0x" << +readBackVal 
-                    << " it was 0x" << +cPreviousValue << std::dec << RESET;
+            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite Succesful write of 0x" << std::hex << +pItem.fValue << " to " << cIterator->first << "\t.. Memory is now 0x"
+                       << +readBackVal << " it was 0x" << +cPreviousValue << std::dec << RESET;
             pItem = pChip->getRegItem(cIterator->first);
             LOG(DEBUG) << BOLDGREEN << " DONE D19cFWInterface::SingleRegisterWrite" << RESET;
         }

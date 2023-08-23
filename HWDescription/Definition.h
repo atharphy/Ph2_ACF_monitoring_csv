@@ -97,13 +97,13 @@
 
 // SSA2
 // in float
-#define SSA2_VBG_EXPECTED 0.275  // [V] this will need to be taken from database
-#define SSA2_VREF_EXPECTED 0.850 // [V] this is true if ADC_VREF is tuned
-#define SSA2_VREF_MIN 0.750      // [V] should be verified once we have numbers/manual is updated
-#define SSA2_VREF_MAX 1.0        // [V] should be verified once we have numbers/manual is updated
-#define SSA2_ADC_PRECISION 0.010 // [V] from skeleton testing: changing by 1 bit ADC_VREF, VREF measured on skeleton changes by 7-8 mV. Here we are rounding up the precision.
-#define SSA2_ELECTRON_CALDAC 243. // 1 CalDAC = 0.039 fC = 243 electrons - confirmed by Davide  
-#define SSA2_ELECTRON_THDAC  250. // 1 ThDAC  = 0.040 fC = 250 electrons - confirmed by Davide 
+#define SSA2_VBG_EXPECTED 0.275   // [V] this will need to be taken from database
+#define SSA2_VREF_EXPECTED 0.850  // [V] this is true if ADC_VREF is tuned
+#define SSA2_VREF_MIN 0.750       // [V] should be verified once we have numbers/manual is updated
+#define SSA2_VREF_MAX 1.0         // [V] should be verified once we have numbers/manual is updated
+#define SSA2_ADC_PRECISION 0.010  // [V] from skeleton testing: changing by 1 bit ADC_VREF, VREF measured on skeleton changes by 7-8 mV. Here we are rounding up the precision.
+#define SSA2_ELECTRON_CALDAC 243. // 1 CalDAC = 0.039 fC = 243 electrons - confirmed by Davide
+#define SSA2_ELECTRON_THDAC 250.  // 1 ThDAC  = 0.040 fC = 250 electrons - confirmed by Davide
 
 // MPA
 // in uint32_t words
@@ -112,13 +112,13 @@
 
 // MPA2
 // in float
-#define MPA2_VBG_EXPECTED 0.280  // FIXMEEEE
-#define MPA2_VREF_EXPECTED 0.850 // FIXMEEEE
-#define MPA2_VREF_MIN 0.750      // FIXMEEEE
-#define MPA2_VREF_MAX 1.0        // FIXMEEE
-#define MPA2_ADC_PRECISION 0.010 // FIXME
-#define MPA2_ELECTRON_CALDAC 220. // 1 CalDAC = 0.035 fC = 220 electrons - confirmed by Davide  
-#define MPA2_ELECTRON_THDAC   94. // 1 ThDAC  = 0.015 fC =  94 electrons - confirmed by Davide 
+#define MPA2_VBG_EXPECTED 0.280   // FIXMEEEE
+#define MPA2_VREF_EXPECTED 0.850  // FIXMEEEE
+#define MPA2_VREF_MIN 0.750       // FIXMEEEE
+#define MPA2_VREF_MAX 1.0         // FIXMEEE
+#define MPA2_ADC_PRECISION 0.010  // FIXME
+#define MPA2_ELECTRON_CALDAC 220. // 1 CalDAC = 0.035 fC = 220 electrons - confirmed by Davide
+#define MPA2_ELECTRON_THDAC 94.   // 1 ThDAC  = 0.015 fC =  94 electrons - confirmed by Davide
 
 // points to bufferoverlow
 #define D19C_OFFSET_ERROR_CBC3 2 * 32 + 0

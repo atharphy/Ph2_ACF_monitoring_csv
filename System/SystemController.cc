@@ -1055,11 +1055,8 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         cBoard->printBoardType();
         fBeBoardInterface->setBoard(0);
 
-        //Configure board
-        if(cBoard->getToConfigure())
-        {
-            fBeBoardInterface->ConfigureBoard(cBoard);
-        }
+        // Configure board
+        if(cBoard->getToConfigure()) { fBeBoardInterface->ConfigureBoard(cBoard); }
     }
 
     for(const auto cBoard: *fDetectorContainer)

@@ -123,9 +123,9 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("file", "f");
 
     cmd.defineOption("tuneOffsets", "tune offsets on readout chips connected to CIC.");
-    cmd.defineOptionAlternative("tuneOffsets", "t"); //trimming
+    cmd.defineOptionAlternative("tuneOffsets", "t"); // trimming
     cmd.defineOption("linkTest", "Check data coming over link....", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC."); //Scurve 
+    cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC."); // Scurve
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
     cmd.defineOption("cmNoise", "measure common mode noise");
@@ -201,7 +201,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
     cmd.defineOption("vtrxLightOff", "Turnoff the light output of the VTRX+ to perform an IV curve while the LV is still powered", ArgvParser::NoOptionAttribute);
-
 
     int result = cmd.parse(argc, argv);
 
@@ -279,7 +278,6 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
     cTool.initializeExceptionHandler();
-
 
     if(cmd.foundOption("vtrxLightOff"))
     {
@@ -520,13 +518,13 @@ int main(int argc, char* argv[])
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
         cPSAlignment.Initialise();
-        //LORENZO 2023_06_29 
+        // LORENZO 2023_06_29
         cPSAlignment.MapMPAOutputs(); // for MPA only. MPA2 OutSetting writtent during the configure hardware step above.
-        //LORENZO 2023_06_29 
+        // LORENZO 2023_06_29
         cPSAlignment.ConfigureDefaultAlignmentParameters();
         cPSAlignment.Reset();
 
-        //Alignment of a pattern between CIC and FC7
+        // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
 
         LinkAlignmentOT cLinkAlignment;
@@ -575,10 +573,7 @@ int main(int argc, char* argv[])
         // }
     }
     // reconfigure hardware (ie reload chip registers) without running the alignment
-    if(!cmd.foundOption("read") && cmd.foundOption("configure"))
-    {
-        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
-    }
+    if(!cmd.foundOption("read") && cmd.foundOption("configure")) { cTool.ConfigureHw(cIgnoreI2c, cReInitialize); }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
     {

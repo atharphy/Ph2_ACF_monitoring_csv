@@ -113,17 +113,17 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
     fPulseAmplitudePix           = findValueInSettings<double>("PedeNoisePulseAmplitudePix", fPulseAmplitude);
-    std::cout <<__PRETTY_FUNCTION__ << " fPulseAmplitude "<< +fPulseAmplitudePix << std::endl;
-    fPedeNoiseLimit          = findValueInSettings<double>("PedeNoiseLimit", 10);//NOT IN XML
-    fPedeNoiseMask           = findValueInSettings<double>("PedeNoiseMask", 0); //NOT IN XML
+    std::cout << __PRETTY_FUNCTION__ << " fPulseAmplitude " << +fPulseAmplitudePix << std::endl;
+    fPedeNoiseLimit          = findValueInSettings<double>("PedeNoiseLimit", 10); // NOT IN XML
+    fPedeNoiseMask           = findValueInSettings<double>("PedeNoiseMask", 0);   // NOT IN XML
     fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoiseMaskUntrimmed", 0);
     fPedeNoiseUntrimmedLimit = findValueInSettings<double>("PedeNoiseUntrimmedLimit", 0.0);
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
     fUseFixRange             = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
     fMinThreshold            = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
     fMaxThreshold            = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
-    fNeventsForValidation    = findValueInSettings<double>("NeventsForValidation", 10000);//NOT IN XML
-    fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);//NOT IN XML
+    fNeventsForValidation    = findValueInSettings<double>("NeventsForValidation", 10000); // NOT IN XML
+    fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
     // if you forget to use the PedeNoiseUseFixRange setting but instead declare
     // min and max threshold ... will still work
     if(!fUseFixRange && fMinThreshold != fMaxThreshold) { fUseFixRange = true; }
@@ -176,10 +176,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip: *cHybrid) 
-                { 
-                    fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1); 
-                }
+                for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1); }
             }
         }
     }

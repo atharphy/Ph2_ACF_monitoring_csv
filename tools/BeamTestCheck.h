@@ -69,8 +69,8 @@ class BeamTestCheck : public OTTool
         for(auto container: fSCurveOccupancyMap) fRecycleBin.free(container.second);
         fSCurveOccupancyMap.clear();
     }
-    
-    //Method to create injection pixels/strips
+
+    // Method to create injection pixels/strips
     void defInjection()
     {
         Ph2_HwInterface::Injection cInjection;
@@ -78,7 +78,7 @@ class BeamTestCheck : public OTTool
         fInjections.clear();
         cInjection.fRow    = 98;
         cInjection.fColumn = 12;
-        fInjections.push_back(cInjection);    
+        fInjections.push_back(cInjection);
     }
 
   private:

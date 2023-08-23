@@ -46,7 +46,6 @@ ReadoutChipInterface* PSInterface::getInterface(Chip* pPS)
         exit(EXIT_FAILURE);
     }
 
-
     // return (CHIP_INTERFACE.find(pPS->getFrontEndType()))->second;
 }
 
@@ -154,7 +153,6 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     {
         LOG(ERROR) << BOLDRED << "No digiInjection implemented for SSA for some reason " << RESET;
         throw std::runtime_error(std::string("No digiInjection implemented for SSA for some reason "));
-
     }
 }
 
