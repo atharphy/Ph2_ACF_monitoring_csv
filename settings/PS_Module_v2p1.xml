@@ -122,7 +122,7 @@
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 3 </Register> <!-- 5 external trigger, 3 internal trigger-->
-            <Register name="user_trigger_frequency"> 500 </Register>
+            <Register name="user_trigger_frequency"> 1000 </Register>  <!-- DO NOT COMMENT OR TRIMMING AND SCURVES DO NOT WORK!!-->
             <Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>

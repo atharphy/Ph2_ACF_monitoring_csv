@@ -23,7 +23,7 @@
                 <InjectedCharge  stripCharge="200" pixelCharge="200"/> <!-- in DAC units for each chip type - their electron value is different though! -->
                 <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
-            
+
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA2 Id="0" configfile="SSA2.txt" />
             <SSA2 Id="1" configfile="SSA2.txt" />
@@ -59,7 +59,7 @@
                 <InjectedCharge  stripCharge="200" pixelCharge="200"/> <!-- in DAC units for each chip type - their electron value is different though! -->
                 <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/> 
             </Global>
-            
+
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA2 Id="0" configfile="SSA2.txt" />
@@ -123,7 +123,7 @@
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 3 </Register> <!-- 5 external trigger, 3 internal trigger-->
-            <Register name="user_trigger_frequency"> 100 </Register> <!-- kHz--> <!-- DO NOT COMMENT OR TRIMMING AND SCURVES DO NOT WORK!!-->
+            <Register name="user_trigger_frequency"> 1000 </Register> <!-- DO NOT COMMENT OR TRIMMING AND SCURVES DO NOT WORK!!-->
             <Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
