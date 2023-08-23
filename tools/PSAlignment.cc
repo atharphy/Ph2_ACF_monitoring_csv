@@ -92,24 +92,17 @@ void PSAlignment::Initialise()
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3) continue;
-                    std::cout << __PRETTY_FUNCTION__ << " make sure ReadoutMode is set correctly " << std::endl;
-                    if(cChip->getFrontEndType() == FrontEndType::SSA2)std::cout << " ssa2 control_1 before readout mode " << cChip->getReg("control_1")  << std::endl;
+
                     uint16_t cReadoutMode = 0x0;
-                    // if(cChip->getFrontEndType() == FrontEndType::SSA2) cReadoutMode = cChip->getReg("control_1")  & 0xF8;
-                    std::cout << " cReadoutMode " << cReadoutMode << std::endl;
-                    fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", cReadoutMode);
-                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2) // Something must be fixed somewhere! If not done like this RetimePix is overwritten and stubs lost!
                     {
-                        std::cout << " ssa2 control_1 after " << cChip->getReg("control_1")  << std::endl;
-                        std::cout << " ssa2 control_1 after " <<  fReadoutChipInterface->ReadChipReg(cChip, "control_1") << std::endl; //FIXME! If Read is removed it doesn't work because the wrong value is stored
-    
+                        ChipRegMask cMask;
+                        cMask.fNbits    = 2;
+                        cMask.fBitShift = 0;
+                        cChip->setRegBits("Control_1", cMask, cReadoutMode);
+                        cReadoutMode = cChip->getReg("Control_1");
                     }
-                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
-                    {
-                        std::cout << " MPA2 Control_1 after " << cChip->getReg("Control_1")  << std::endl;
-                        std::cout << " MPA2 Control_1 after " << fReadoutChipInterface->ReadChipReg(cChip, "Control_1") << std::endl; //FIXME! If Read is removed it doesn't work because the wrong value is stored
-    
-                    }                    
+                    fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", cReadoutMode);                    
                 }
             }
         }
@@ -127,7 +120,7 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
                 // map MPA outputs
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue; // MPA2 OutSetting written during the previous configure hardware step.
+                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                     // mapping for PS module
                     // mapping for probe station/etc. can be different
@@ -164,18 +157,19 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
                     // mapping for probe station/etc. can be different
                     if(pSetupType.find("PSModule") != std::string::npos)
                     {
+                        // These are now set in the XML because they are different for differen PS versions!!!
                         //fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", 0x4);
-                        //fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x36);  //0110110 FOR IRRADIATED //0011 1111 FOR UNIRRADIATED
+                        //fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x36); // different for PSv2 /2.1 
                         //fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", 0x02);
                         //fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x00);
-                        //fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x00);//Irene
+                        //fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x00); // different for PSv2 /2.1 
                     }
                 } // chip
             }     // hybrid
         }         // optical group
     }
 
-    // make sure that we save the values at the end for PSv1 ?!
+    // make sure that we save the values at the end
 
     std::vector<std::string> cRegsMod{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw", "Control_1"};
     for(size_t cIndx = 0; cIndx <= 5; cIndx++)
@@ -1679,9 +1673,9 @@ bool PSAlignment::Align()
     LOG(INFO) << BOLDBLUE << "Starting MPA-SSA alignment procedure .... " << RESET;
     // not sure I need this here .. lets check
     // auto     cSetting       = fSettingsMap.find("TxDrive");
-    uint32_t cTxDriveStr = 7;
+    uint32_t cTxDriveStr = 4;
     // cSetting                = fSettingsMap.find("PreEmph");
-    uint32_t cTxPreEmphMode = 1;//Don't know what it is
+    uint32_t cTxPreEmphMode = 1;
     // configure TxDrive for lpGBT
     for(auto cBoard: *fDetectorContainer)
     {

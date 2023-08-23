@@ -555,7 +555,11 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "ReadoutMode")
     {
-        return this->configPeri(pMPA2, "ReadoutMode", pValue);
+        uint8_t cBitShift = CONTROL_TABLE.find("ReadoutMode")->second;
+        uint8_t cRegMask  = (0x3 << cBitShift);
+        return this->WriteChipRegBits(pMPA2, "Control_1", (pValue << cBitShift), "Mask", cRegMask, pVerify);
+
+        //return this->configPeri(pMPA2, "ReadoutMode", pValue);
     }
 
     else if(pRegName == "RetimePix")
