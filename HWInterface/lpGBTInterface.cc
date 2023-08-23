@@ -137,19 +137,19 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
     {
         uint32_t cChipID   = 0;
         uint32_t cChipID_0 = ReadChipFusedBlock(pChip, 0, 0);
-
-        uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 4);
+        LOG(DEBUG) << BOLDYELLOW << "1st FuseID from lpgbt 0x" << std::hex << +cChipID_0 << std::dec << RESET;
+        uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 8);
         cChipID_1          = ((cChipID_1 & 0xFFFFFFC0) >> 6) | ((cChipID_1 & 0x3f) << 26);
-
-        uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 8);
+        LOG(DEBUG) << BOLDYELLOW << "2nd FuseID from lpgbt 0x" << std::hex << +cChipID_1 << std::dec << RESET;
+        uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 12);
         cChipID_2          = ((cChipID_2 & 0xFFFFF000) >> 12) | ((cChipID_2 & 0xfff) << 20);
-
-        uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 12);
+        LOG(DEBUG) << BOLDYELLOW << "3rd FuseID from lpgbt 0x" << std::hex << +cChipID_2 << std::dec << RESET;
+        uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 16);
         cChipID_3          = ((cChipID_3 & 0xFFFC0000) >> 18) | ((cChipID_3 & 0x3ffff) << 14);
-
-        uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 16);
+        LOG(DEBUG) << BOLDYELLOW << "4th FuseID from lpgbt 0x" << std::hex << +cChipID_3 << std::dec << RESET;
+        uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 20);
         cChipID_4          = ((cChipID_4 & 0xFF000000) >> 24) | ((cChipID_4 & 0xffffff) << 8);
-
+        LOG(DEBUG) << BOLDYELLOW << "5th FuseID from lpgbt 0x" << std::hex << +cChipID_4 << std::dec << RESET;
         for(int i = 0; i < 32; i++)
         {
             uint8_t cTemp = 0;
@@ -1839,7 +1839,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, const st
         float rmeas = vadc / iout;
         LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
         if(vadc < 0.25) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too high" << RESET; }
-        if(vadc > 0.75) { LOG(INFO) << BOLDBLUE << "Warning: nitial estimate of the resistance was too low" << RESET; }
+        if(vadc > 0.75) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too low" << RESET; }
         float rload = rmeas / (1 - rmeas / rout);
         LOG(DEBUG) << BOLDBLUE << "CODE: " << +cdac_code << " IOUT: " << 1e3 * iout << " [mA] ROUT: " << rout * 1e-3 << " [kOhm] VADC: " << vadc << " [V] LOAD: " << rload << " [Ohm]" << RESET;
 
