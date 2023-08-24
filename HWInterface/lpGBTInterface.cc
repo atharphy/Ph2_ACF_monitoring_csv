@@ -934,6 +934,7 @@ float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, f
 // Resistor values also valid for PS ROH v2
 // R1=1k; Voltage divider 680k and 1000k
 // Typical responsivity 0.45-0.55 A/W
+// For SEHv5 its 47k and 100k
 float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
 {
     float cAdcMeasurement = GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
