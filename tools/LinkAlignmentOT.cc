@@ -292,6 +292,9 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
     {
         for(auto cHybrid: *pOpticalGroup)
         {
+            if(((cHybrid->getId()%2)==0 )& ((cLineId - 1)==4)){
+                continue;
+            }
             auto& cBeBitSlipHybrd = cBeBitSlipOG->getObject(cHybrid->getId());
             auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
 
