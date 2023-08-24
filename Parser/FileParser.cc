@@ -540,12 +540,10 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cStripThreshold > 0xFF)
                 {
                     throw std::runtime_error("The stripThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
-                    exit(0);
                 }
                 if(cStripThresholdHigh > 0xFF)
                 {
                     throw std::runtime_error("The cStripThresholdHigh register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
-                    exit(0);
                 }
 
                 cChip->setReg("Bias_THDAC", cStripThreshold);
@@ -591,7 +589,6 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cInjStrps > 0xFF)
                 {
                     throw std::runtime_error("The maximum strip charge that can be injected is 255. Acceptable values are between 0 and 255.");
-                    exit(0);
                 }
                 cChip->setReg("Bias_CALDAC", cInjStrps);
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA injection settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjStrps
@@ -788,7 +785,6 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cThresholdPxls > 0xFF)
                 {
                     throw std::runtime_error("The pixelThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
-                    exit(0);
                 }
 
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
@@ -857,7 +853,6 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cInjPxls > 0xFF)
                 {
                     throw std::runtime_error("The maximum pixel charge that can be injected is 255. Acceptable values are between 0 and 255.");
-                    exit(0);
                 }
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
