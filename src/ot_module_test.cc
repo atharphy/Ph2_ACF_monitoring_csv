@@ -123,9 +123,9 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("file", "f");
 
     cmd.defineOption("tuneOffsets", "tune offsets on readout chips connected to CIC.");
-    cmd.defineOptionAlternative("tuneOffsets", "t");
+    cmd.defineOptionAlternative("tuneOffsets", "t"); // trimming
     cmd.defineOption("linkTest", "Check data coming over link....", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
+    cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC."); // Scurve
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
     cmd.defineOption("cmNoise", "measure common mode noise");
@@ -142,7 +142,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("allChan", "Do pedestal and noise measurement using all channels? Default: false", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("allChan", "a");
 
-    cmd.defineOption("reconfigure", "Reconfigure Hardware");
+    cmd.defineOption("reconfigure", "Reconfigure Hardware and align");
+    cmd.defineOption("configure", "Configure Hardware");
     cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
     cmd.defineOption("phaseScan", "Phase Scan");
@@ -200,7 +201,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
     cmd.defineOption("vtrxLightOff", "Turnoff the light output of the VTRX+ to perform an IV curve while the LV is still powered", ArgvParser::NoOptionAttribute);
-
 
     int result = cmd.parse(argc, argv);
 
@@ -278,7 +278,6 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
     cTool.initializeExceptionHandler();
-
 
     if(cmd.foundOption("vtrxLightOff"))
     {
@@ -519,10 +518,13 @@ int main(int argc, char* argv[])
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
         cPSAlignment.Initialise();
-        cPSAlignment.MapMPAOutputs();
+        // LORENZO 2023_06_29
+        cPSAlignment.MapMPAOutputs(); // for MPA only. MPA2 OutSetting writtent during the configure hardware step above.
+        // LORENZO 2023_06_29
         cPSAlignment.ConfigureDefaultAlignmentParameters();
         cPSAlignment.Reset();
 
+        // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
 
         LinkAlignmentOT cLinkAlignment;
@@ -570,6 +572,8 @@ int main(int argc, char* argv[])
         //     cTool.fBeBoardInterface->Stop(cBoard);
         // }
     }
+    // reconfigure hardware (ie reload chip registers) without running the alignment
+    if(!cmd.foundOption("read") && cmd.foundOption("configure")) { cTool.ConfigureHw(cIgnoreI2c, cReInitialize); }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
     {
@@ -1075,7 +1079,7 @@ int main(int argc, char* argv[])
         }
     }
     // measure noise on FE chips
-    if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))
+    if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read")) // S-curves
     {
         // auto cSetting       = cTool.fSettingsMap.find("PedeNoisePulseAmplitude");
         // int  cInjectionAmpl = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 255;

@@ -35,11 +35,11 @@ class BeamTestCheck : public OTTool
     BeamTestCheck();
     ~BeamTestCheck();
 
-    void CheckWithTP(uint8_t pContinousReadout = 1);
+    void CheckWithTP(uint8_t pContinuousReadout = 1);
     void ValidateTP();
-    void CheckWithInternal(uint8_t pContinousReadout = 1);
-    void CheckWithExternal(uint8_t pContinousReadout = 1);
-    void CheckWithTLU(uint8_t pContinousReadout = 1);
+    void CheckWithInternal(uint8_t pContinuousReadout = 1);
+    void CheckWithExternal(uint8_t pContinuousReadout = 1);
+    void CheckWithTLU(uint8_t pContinuousReadout = 1);
     void ValidateRaw();
     void ValidateExternal();
     void ValidateTLU();
@@ -53,8 +53,8 @@ class BeamTestCheck : public OTTool
     // void ReadDataFromFile(std::string pRawFileName);
     // void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void DisableAllFEs();
-    void ScanStubLatency(uint8_t pContinousReadout);
-    void ScanL1Latency(uint8_t pContinousReadout);
+    void ScanStubLatency(uint8_t pContinuousReadout);
+    void ScanL1Latency(uint8_t pContinuousReadout);
 
     void ConfigureScans(uint8_t pStatusL1, uint8_t pStatusStubs)
     {
@@ -69,14 +69,16 @@ class BeamTestCheck : public OTTool
         for(auto container: fSCurveOccupancyMap) fRecycleBin.free(container.second);
         fSCurveOccupancyMap.clear();
     }
+
+    // Method to create injection pixels/strips
     void defInjection()
     {
         Ph2_HwInterface::Injection cInjection;
         // inject one cluster into each MPA-SSA pair
-        cInjection.fRow    = 100;
-        cInjection.fColumn = 12;
         fInjections.clear();
-        fInjections.push_back(cInjection); // 0
+        cInjection.fRow    = 98;
+        cInjection.fColumn = 12;
+        fInjections.push_back(cInjection);
     }
 
   private:
@@ -112,28 +114,28 @@ class BeamTestCheck : public OTTool
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
 
-    uint8_t  fTPamplitude{255};
-    uint8_t  fTPdelay{0};
-    uint16_t fThreshold{0};
-    uint16_t fStartLatency{0};
-    uint16_t fLatencyRange{0};
-    uint16_t fOptimalLatency;
-
     void PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 0);
     void PrepareForExternalTP(Ph2_HwDescription::BeBoard* pBoard);
     void PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
     void PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
     void PrepareForTLU(Ph2_HwDescription::BeBoard* pBoard);
-    void ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinousReadout);
+    void ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinuousReadout);
     void ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
     void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
     void ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
     void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations = 0, uint8_t pPrintOut = 0);
     void Validate();
 
-    size_t fThStep{0};
-
     std::vector<Ph2_HwInterface::Injection> fInjections;
+
+    // calibration parameters
+    uint8_t  fTPamplitude{255};
+    uint8_t  fTPdelay{0};
+    uint16_t fThreshold{0};
+    uint16_t fStartLatency{0};
+    uint16_t fLatencyRange{0};
+    uint16_t fOptimalLatency;
+    size_t   fThStep{0};
 
     // configure checks
     uint8_t fScanL1Latency{0};

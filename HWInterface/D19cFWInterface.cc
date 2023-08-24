@@ -1493,10 +1493,10 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
                        << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
         }
         else if(pItem.fStatusReg == 0x00)
-            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << std::dec << RESET;
     }
     else
-        LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " FAILED " << RESET;
+        LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " FAILED " << std::dec << RESET;
     return cValue;
 }
 
@@ -1543,12 +1543,14 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
             // update map
             auto cPreviousValue = cIterator->second.fValue;
             pChip->setReg(cIterator->first, pItem.fValue);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite successful write of 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
-                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            uint16_t readBackVal = pChip->getReg(cIterator->first);
+            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite Succesful write of 0x" << std::hex << +pItem.fValue << " to " << cIterator->first << "\t.. Memory is now 0x"
+                       << +readBackVal << " it was 0x" << +cPreviousValue << std::dec << RESET;
             pItem = pChip->getRegItem(cIterator->first);
+            LOG(DEBUG) << BOLDGREEN << " DONE D19cFWInterface::SingleRegisterWrite" << RESET;
         }
         else
-            LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILEd to write to Register " << cIterator->first << RESET;
+            LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILED to write to Register " << cIterator->first << RESET;
         return true;
     }
     else
@@ -1735,7 +1737,7 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
                 cItem = pChip->getRegItem(cIterator->first);
             }
             else
-                LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Register 0x" << std::hex << +cItem.fAddress << " not in register map " << RESET;
+                LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Register 0x" << std::hex << +cItem.fAddress << " not in register map " << std::dec << RESET;
         }
         return true;
     }

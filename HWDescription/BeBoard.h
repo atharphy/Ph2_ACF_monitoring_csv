@@ -155,6 +155,9 @@ class BeBoard : public BoardContainer
     void    setReset(uint8_t pReset) { fReset = pReset; }
     uint8_t getReset() const { return fReset; }
 
+    void setToConfigure(uint8_t pToConfigure) { fToConfigure = pToConfigure; }
+    bool getToConfigure() const { return fToConfigure; }
+
     void        setConnectionId(std::string theConnectionId) { fConnectionId = theConnectionId; }
     std::string getConnectionId() const { return fConnectionId; }
 
@@ -166,6 +169,11 @@ class BeBoard : public BoardContainer
 
     std::vector<FrontEndType> connectedFrontEndTypes() const;
     int                       dummyValue_ = 1989;
+
+    void dumpRegisters()
+    {
+        for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
+    }
 
   protected:
     BoardType    fBoardType;
@@ -181,6 +189,7 @@ class BeBoard : public BoardContainer
     uint8_t           fResetLink{1};
     uint16_t          fStubOffset{0};
     uint8_t           fReset{0};
+    bool              fToConfigure{true};
 
     std::string fConnectionId{""};
     std::string fConnectionUri{""};
