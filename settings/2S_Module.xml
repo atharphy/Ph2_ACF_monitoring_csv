@@ -2,21 +2,21 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="ipbusudp-2.0://192.168.0.169:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.13.202:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
 
-    <OpticalGroup Id="4" FMCId="L12" reset="1">
+    <OpticalGroup Id="0" FMCId="L12" reset="1">
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
         <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
 
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
           <Settings
           />
           <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
 
         </lpGBT>
-        <!-- <Hybrid Id="0" enable="1" reset="1">
+        <Hybrid Id="0" enable="1" reset="1">
             <Global>
                 <Settings threshold="520" latency="108"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -38,7 +38,7 @@
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid> -->
+        </Hybrid>
         <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
             <Global>
                 <Settings threshold="520" latency="108"/>
