@@ -39,6 +39,13 @@ class RD53lpGBTInterface : public lpGBTInterface
                               Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
                               ReadoutChipInterface*                  pReadoutChipInterface);
 
+    // #####################################################################
+    // # RD53 specific routine functions NOT overriden from LGBT interface #
+    // #####################################################################
+    void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pDataRate, uint8_t pTrackMode);
+    void ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pDataRate);
+    bool IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
+
   private:
     bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify = true);
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);

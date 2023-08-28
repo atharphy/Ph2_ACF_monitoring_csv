@@ -290,7 +290,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                     else if(std::string(attr.name()) == "TxDataRate")
                         thelpGBT->setTxDataRate(theChild.attribute("TxDataRate").as_uint());
                     else if(std::string(attr.name()) == "ClockFrequency")
-                        thelpGBT->setClocksFrequency(theChild.attribute("ClockFrequency").as_uint());
+                        thelpGBT->setClockFrequency(theChild.attribute("ClockFrequency").as_uint());
                 }
             }
             else
@@ -1555,30 +1555,39 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
     {
         std::string cChildName = cChild.name();
         if(cChildName.find("_Files") != std::string::npos) continue;
-        if(cChildName.find("RD53") != std::string::npos)
-        {
-            std::vector<uint8_t> cRxGroups   = splitToVector(cChild.attribute("RxGroups").value(), ',');
-            std::vector<uint8_t> cRxChannels = splitToVector(cChild.attribute("RxChannels").value(), ',');
-            std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
-            std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
 
-            // #############################################################################################
-            // # Retrieve links, groups and channels from CIC node attirbutes and propagate to LpGBT class #
-            // #############################################################################################
-            plpGBT->addRxGroups(cRxGroups);
-            plpGBT->addRxChannels(cRxChannels);
-            plpGBT->addTxGroups(cTxGroups);
-            plpGBT->addTxChannels(cTxChannels);
+        std::vector<uint8_t> cRxGroups     = splitToVector(cChild.attribute("RxGroups").value(), ',');
+        std::vector<uint8_t> cRxChannels   = splitToVector(cChild.attribute("RxChannels").value(), ',');
+        std::vector<uint8_t> cRxPolarities = splitToVector(cChild.attribute("RxPolarities").value(), ',');
+        std::vector<uint8_t> cTxGroups     = splitToVector(cChild.attribute("TxGroups").value(), ',');
+        std::vector<uint8_t> cTxChannels   = splitToVector(cChild.attribute("TxChannels").value(), ',');
+        std::vector<uint8_t> cTxPolarities = splitToVector(cChild.attribute("TxPolarities").value(), ',');
 
-            // ################################################################
-            // # In the case of IT propagate LpGBT mapping the front-end chip #
-            // ################################################################
-            uint8_t cChipId = cChild.attribute("Id").as_uint();
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxGroup(cRxGroups[0]);
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannels[0]);
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
-        }
+        // ################################################################################
+        // # Retrieve links, groups, channels and polarities and propagate to LpGBT class #
+        // ################################################################################
+        plpGBT->addRxGroups(cRxGroups);
+        plpGBT->addRxChannels(cRxChannels);
+        plpGBT->addRxPolarities(cRxPolarities);
+        plpGBT->addRxProperty(cRxGroups[0], cRxChannels[0], cRxPolarities[0]);
+
+        plpGBT->addTxGroups(cTxGroups);
+        plpGBT->addTxChannels(cTxChannels);
+        plpGBT->addTxPolarities(cTxPolarities);
+        plpGBT->addTxProperty(cTxGroups[0], cTxChannels[0], cTxPolarities[0]);
+
+        // ###################################################################
+        // # In the case of IT propagate LpGBT mapping to the front-end chip #
+        // ###################################################################
+        uint8_t cChipId = cChild.attribute("Id").as_uint();
+
+        static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxGroup(cRxGroups[0]);
+        static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannels[0]);
+        static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxPolarity(cRxPolarities[0]);
+
+        static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
+        static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
+        static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxPolarity(cTxPolarities[0]);
     }
 }
 

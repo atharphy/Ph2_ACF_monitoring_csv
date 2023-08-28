@@ -190,20 +190,6 @@ bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std:
 
 void lpGBTInterface::SetPUSMDone(Chip* pChip, bool pPllConfigDone, bool pDllConfigDone) { WriteChipReg(pChip, "POWERUP2", pDllConfigDone << 2 | pPllConfigDone << 1); }
 
-void lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
-{
-    for(const auto& cGroup: pGroups)
-    {
-        // #######################################################################
-        // # Enable Rx Groups Channels and set Data Rate and Phase Tracking mode #
-        // #######################################################################
-        uint8_t cValueEnableRx = 0;
-        for(const auto cChannel: pChannels) cValueEnableRx |= (1 << cChannel);
-        std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
-        WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
-    }
-}
-
 void lpGBTInterface::ConfigureRxAlignmentMode(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode)
 {
     for(const auto& cGroup: pGroups)
@@ -235,26 +221,27 @@ uint8_t lpGBTInterface::GetChipRate(Chip* pChip)
         throw std::runtime_error(std::string("lpGBT hard wired configuration doesn't exist"));
 }
 
-void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
-                                         const std::vector<uint8_t>& pGroups,
-                                         const std::vector<uint8_t>& pChannels,
-                                         uint8_t                     pEqual,
-                                         uint8_t                     pTerm,
-                                         uint8_t                     pAcBias,
-                                         uint8_t                     pInvert,
-                                         uint8_t                     pPhase)
+void lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
 {
     for(const auto& cGroup: pGroups)
     {
-        for(const auto& cChannel: pChannels)
-        {
-            // #######################################################################################################
-            // # Configure Rx Channel Phase, Inversion, AcBias enabling, Termination enabling, Equalization enabling #
-            // #######################################################################################################
-            std::string cRXChnCntrReg = "EPRX" + std::to_string(cGroup) + std::to_string(cChannel) + "ChnCntr";
-            WriteChipReg(pChip, cRXChnCntrReg, (pPhase << 4) | (pInvert << 3) | (pAcBias << 2) | (pTerm << 1) | (pEqual << 0));
-        }
+        // #######################################################################
+        // # Enable Rx Groups Channels and set Data Rate and Phase Tracking mode #
+        // #######################################################################
+        uint8_t cValueEnableRx = 0;
+        for(const auto cChannel: pChannels) cValueEnableRx |= (1 << cChannel);
+        std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
+        WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
     }
+}
+
+void lpGBTInterface::ConfigureRxChannel(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pEqual, uint8_t pTerm, uint8_t pAcBias, uint8_t pInvert, uint8_t pPhase)
+{
+    // #######################################################################################################
+    // # Configure Rx Channel Phase, Inversion, AcBias enabling, Termination enabling, Equalization enabling #
+    // #######################################################################################################
+    std::string cRXChnCntrReg = "EPRX" + std::to_string(pGroup) + std::to_string(pChannel) + "ChnCntr";
+    WriteChipReg(pChip, cRXChnCntrReg, (pPhase << 4) | (pInvert << 3) | (pAcBias << 2) | (pTerm << 1) | (pEqual << 0));
 }
 
 void lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate)
@@ -282,38 +269,25 @@ void lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_t>& 
     }
 }
 
-void lpGBTInterface::ConfigureTxChannels(Chip*                       pChip,
-                                         const std::vector<uint8_t>& pGroups,
-                                         const std::vector<uint8_t>& pChannels,
-                                         uint8_t                     pDriveStr,
-                                         uint8_t                     pPreEmphMode,
-                                         uint8_t                     pPreEmphStr,
-                                         uint8_t                     pPreEmphWidth,
-                                         uint8_t                     pInvert)
+void lpGBTInterface::ConfigureTxChannel(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDriveStr, uint8_t pPreEmphMode, uint8_t pPreEmphStr, uint8_t pPreEmphWidth, uint8_t pInvert)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        for(const auto& cChannel: pChannels)
-        {
-            // ############################################################################
-            // # Configure Tx Channel PreEmphasisStrenght, PreEmphasisMode, DriveStrength #
-            // ############################################################################
-            std::string cTXChnCntrl = "EPTX" + std::to_string(cGroup) + std::to_string(cChannel) + "ChnCntr";
-            WriteChipReg(pChip, cTXChnCntrl, (pPreEmphStr << 5) | (pPreEmphMode << 3) | (pDriveStr << 0));
+    // ############################################################################
+    // # Configure Tx Channel PreEmphasisStrenght, PreEmphasisMode, DriveStrength #
+    // ############################################################################
+    std::string cTXChnCntrl = "EPTX" + std::to_string(pGroup) + std::to_string(pChannel) + "ChnCntr";
+    WriteChipReg(pChip, cTXChnCntrl, (pPreEmphStr << 5) | (pPreEmphMode << 3) | (pDriveStr << 0));
 
-            // ####################################################
-            // # Configure Tx Channel PreEmphasisWidth, Inversion #
-            // ####################################################
-            std::string cTXChnCntr;
-            if(cChannel == 0 || cChannel == 1)
-                cTXChnCntr = "EPTX" + std::to_string(cGroup) + "1_" + std::to_string(cGroup) + "0ChnCntr";
-            else if(cChannel == 2 || cChannel == 3)
-                cTXChnCntr = "EPTX" + std::to_string(cGroup) + "3_" + std::to_string(cGroup) + "2ChnCntr";
+    // ####################################################
+    // # Configure Tx Channel PreEmphasisWidth, Inversion #
+    // ####################################################
+    std::string cTXChnCntr;
+    if(pChannel == 0 || pChannel == 1)
+        cTXChnCntr = "EPTX" + std::to_string(pGroup) + "1_" + std::to_string(pGroup) + "0ChnCntr";
+    else if(pChannel == 2 || pChannel == 3)
+        cTXChnCntr = "EPTX" + std::to_string(pGroup) + "3_" + std::to_string(pGroup) + "2ChnCntr";
 
-            uint8_t cValueChnCntr = ReadChipReg(pChip, cTXChnCntr);
-            WriteChipReg(pChip, cTXChnCntr, (cValueChnCntr & ~(0x0F << 4 * (cChannel % 2))) | ((pInvert << 3 | pPreEmphWidth << 0) << 4 * (cChannel % 2)));
-        }
-    }
+    uint8_t cValueChnCntr = ReadChipReg(pChip, cTXChnCntr);
+    WriteChipReg(pChip, cTXChnCntr, (cValueChnCntr & ~(0x0F << 4 * (pChannel % 2))) | ((pInvert << 3 | pPreEmphWidth << 0) << 4 * (pChannel % 2)));
 }
 
 void lpGBTInterface::ConfigureClocks(Chip*                       pChip,

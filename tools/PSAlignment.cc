@@ -1680,7 +1680,7 @@ bool PSAlignment::Align()
             for(const auto& cGroup: cTxGroups)
             {
                 cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
-                for(const auto& cChannel: cTxChannels) flpGBTInterface->ConfigureTxChannels(clpGBT, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+                for(const auto& cChannel: cTxChannels) flpGBTInterface->ConfigureTxChannel(clpGBT, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
             }
         }
     }

@@ -118,7 +118,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     {
         if(cGroup == 0) cTxInvert = 1;
         if(cGroup == 2) cTxInvert = 0;
-        for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+        for(const auto& cChannel: cTxChannels) ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
     }
     // Rx configuration and Phase Align
     // Configure Rx Groups
@@ -140,7 +140,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
             else
                 cRxInvert = 1;
 
-            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
         }
     }
     // Reset I2C Masters
@@ -337,7 +337,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     for(const auto& cGroup: cTxGroups)
     {
         cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
-        for(const auto& cChannel: cTxChannels) ConfigureTxChannels(pChip, {cGroup}, {cChannel}, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+        for(const auto& cChannel: cTxChannels) ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
     }
     // Rx configuration and Phase Align
     // Configure Rx Groups
@@ -355,7 +355,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         uint8_t cGroup    = cGrpsLeft[cIndx];
         uint8_t cChannel  = cChnlsLeft[cIndx];
         uint8_t cRxInvert = cInvrtLeft[cIndx];
-        ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+        ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
     }
     std::vector<uint8_t> cGrpsRight{4, 4, 5, 5, 6, 6, 0};
     std::vector<uint8_t> cChnlsRight{2, 0, 2, 0, 2, 0, 0};
@@ -365,7 +365,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         uint8_t cGroup    = cGrpsRight[cIndx];
         uint8_t cChannel  = cChnlsRight[cIndx];
         uint8_t cRxInvert = cInvrtRight[cIndx];
-        ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+        ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
     }
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});

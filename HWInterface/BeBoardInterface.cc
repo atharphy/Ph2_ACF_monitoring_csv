@@ -75,7 +75,7 @@ void BeBoardInterface::WriteBoardMultReg(BeBoard* pBoard, const std::vector<std:
     for(const auto& cReg: pRegVec) pBoard->setReg(cReg.first, cReg.second);
 }
 
-  uint32_t BeBoardInterface::ReadBoardReg(BeBoard* pBoard, const std::string& pRegNode, bool updateRegs)
+uint32_t BeBoardInterface::ReadBoardReg(BeBoard* pBoard, const std::string& pRegNode, bool updateRegs)
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
 
