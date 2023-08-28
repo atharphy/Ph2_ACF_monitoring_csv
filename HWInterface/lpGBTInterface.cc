@@ -533,7 +533,7 @@ uint8_t lpGBTInterface::GetVrefTune(Ph2_HwDescription::Chip* pChip)
     return (mask & cVrefTune);
 }
 
-float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, uint16_t pVinput) //pVinput in mV!
+float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, uint16_t pVinput) // pVinput in mV!
 {
     auto cGain   = GetADCGain(pChip, false);
     auto cOffset = GetADCOffset(pChip, false);

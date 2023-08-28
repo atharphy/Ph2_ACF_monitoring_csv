@@ -209,7 +209,7 @@ bool D19cOpticalInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMas
             // Send command to worker
             flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
             // Wait for worker to be done
-            if (pWaitToBeDone)  //Skip this block if no response is expected due to a switched off light
+            if(pWaitToBeDone) // Skip this block if no response is expected due to a switched off light
             {
                 if(!flpGBTSlowControlWorkerInterface->WaitDone(cFunctionId))
                 {
@@ -233,7 +233,8 @@ bool D19cOpticalInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMas
                     uint8_t cReadBack  = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
                     if(cErrorCode != 0)
                     {
-                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::WriteI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << LpGBTSlowControlWorker::I2C_STATUS_MAP.at(cReadBack) << RESET;
+                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::WriteI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << LpGBTSlowControlWorker::I2C_STATUS_MAP.at(cReadBack)
+                                   << RESET;
                         cSuccess &= false;
                     }
                 }

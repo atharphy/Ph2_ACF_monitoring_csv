@@ -217,9 +217,9 @@ void Tool::initMetadataAndFillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationNameContainer);
     theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName;
 
-    //DetectorDataContainer theFirmwareVersionContainer;
-    //ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
-    //for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
+    // DetectorDataContainer theFirmwareVersionContainer;
+    // ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
+    // for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
 
     DetectorDataContainer theDetectorConfigurationContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
@@ -263,7 +263,7 @@ void Tool::initMetadataAndFillInitialConditions()
     fDQMMetadata->fillUsername(theUsernameContainer);
     fDQMMetadata->fillHostName(theHostNameContainer);
     fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
-    //fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
+    // fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
     fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
     fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
     fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
@@ -286,8 +286,8 @@ void Tool::initMetadataAndFillInitialConditions()
         ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
         theGitCommitHashSerialization.streamByDetectorContainer(fDQMStreamer, theGitCommitHashContainer);
 
-        //ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
-        //theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
+        // ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
+        // theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
 
         ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
         theCalibrationNameSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationNameContainer);
@@ -460,8 +460,9 @@ void Tool::fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t chipFuseId = 0; 
-                if(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic->getFrontEndType() == FrontEndType::CIC2) chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
+                uint32_t chipFuseId = 0;
+                if(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic->getFrontEndType() == FrontEndType::CIC2)
+                    chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
                 theCICFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::string>() = std::to_string(chipFuseId);
             }
         }
@@ -1285,6 +1286,7 @@ void Tool::setFWTestPulse()
         {
             EventType cEventType = cBoard->getEventType();
             bool      cAsync     = (cEventType == EventType::PSAS);
+
             if(!cAsync)
             {
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
@@ -2441,7 +2443,7 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
     if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
     {
         this->setSameGlobalDac("AnalogueAsync", 1);
-        //#FIXME the commented block bellow throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
+        //#FIXME the commented block below throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
         // Error: implementation of virtual member function is absent"
         /*
                 for(auto cBoard: *fDetectorContainer)
@@ -2479,6 +2481,7 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
         LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << cTmp << RESET;
     }
     fUseReadNEvents = cUseReadNEvents;
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end " << RESET;
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
@@ -2590,14 +2593,22 @@ void Tool::setSameGlobalDac(const std::string& dacName, const uint16_t dacValue)
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
     if(fDoBoardBroadcast == false)
+    {
         for(auto cOpticalGroup: *pBoard)
             for(auto cHybrid: *cOpticalGroup)
                 if(fDoHybridBroadcast == false)
-                    for(auto cChip: *cHybrid) fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
+                {
+                    for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue); }
+                }
                 else
+                {
                     fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
+                }
+    }
     else
+    {
         fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
+    }
 }
 
 // Set same local dac for all BeBoard
