@@ -812,6 +812,10 @@ bool OTHybridTester::LpGBTTestVTRx()
             // Configuring I2C Master pull-ups
             clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 1 << 4 | 1 << 6);
 
+            LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 1);
+
             uint8_t cMasterId = 1, cSlaveAddress = 0x50, cSlaveData = 0x15, cNbyte = 1, cFrequency = 2;
             uint8_t cMasterConfig = (cNbyte << 2) | (cFrequency << 0);
             cRecent               = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData);
@@ -1323,6 +1327,7 @@ uint16_t OTHybridTester::calibrateADC()
         fTC_2SSEH->read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
         fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
         fTC_2SSEH->set_AMUX(3303, 3303);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
     else
     {
@@ -1460,6 +1465,10 @@ void OTHybridTester::calibrateCurrentDAC()
     fResultFile->cd();
     cCalibrationTree->Fill();
     cCalibrationTree->Write();
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard) { clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0x1c); }
+    }
 }
 
 #endif

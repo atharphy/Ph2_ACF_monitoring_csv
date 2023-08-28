@@ -137,19 +137,19 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
     {
         uint32_t cChipID   = 0;
         uint32_t cChipID_0 = ReadChipFusedBlock(pChip, 0, 0);
-
-        uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 4);
+        LOG(DEBUG) << BOLDYELLOW << "1st FuseID from lpgbt 0x" << std::hex << +cChipID_0 << std::dec << RESET;
+        uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 8);
         cChipID_1          = ((cChipID_1 & 0xFFFFFFC0) >> 6) | ((cChipID_1 & 0x3f) << 26);
-
-        uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 8);
+        LOG(DEBUG) << BOLDYELLOW << "2nd FuseID from lpgbt 0x" << std::hex << +cChipID_1 << std::dec << RESET;
+        uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 12);
         cChipID_2          = ((cChipID_2 & 0xFFFFF000) >> 12) | ((cChipID_2 & 0xfff) << 20);
-
-        uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 12);
+        LOG(DEBUG) << BOLDYELLOW << "3rd FuseID from lpgbt 0x" << std::hex << +cChipID_2 << std::dec << RESET;
+        uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 16);
         cChipID_3          = ((cChipID_3 & 0xFFFC0000) >> 18) | ((cChipID_3 & 0x3ffff) << 14);
-
-        uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 16);
+        LOG(DEBUG) << BOLDYELLOW << "4th FuseID from lpgbt 0x" << std::hex << +cChipID_3 << std::dec << RESET;
+        uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 20);
         cChipID_4          = ((cChipID_4 & 0xFF000000) >> 24) | ((cChipID_4 & 0xffffff) << 8);
-
+        LOG(DEBUG) << BOLDYELLOW << "5th FuseID from lpgbt 0x" << std::hex << +cChipID_4 << std::dec << RESET;
         for(int i = 0; i < 32; i++)
         {
             uint8_t cTemp = 0;
@@ -934,6 +934,7 @@ float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, f
 // Resistor values also valid for PS ROH v2
 // R1=1k; Voltage divider 680k and 1000k
 // Typical responsivity 0.45-0.55 A/W
+// For SEHv5 its 47k and 100k
 float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
 {
     float cAdcMeasurement = GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
@@ -1410,4 +1411,525 @@ std::string lpGBTInterface::GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t 
 
 bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
 
+void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_t pChipId, std::string pFileName)
+{
+    // # Load calibration data from a local CSV file based for the specific chipid.
+
+    // # Arguments:
+    // # pFileName: Path of CSV file containing calibration data.
+    // # pChipId: ChipID for which calibration data should be loaded.
+
+    // # Raises:
+    // # LpgbtCalibrationWarning: If loading calibration data failed.
+    // # FileNotFoundError: If the file does not exis
+
+    LOG(INFO) << BOLDGREEN << "Loading calibration data for 0x" << std::hex << +pChipId << std::dec << " chip from " << pFileName << RESET;
+    bool cCalibrationLoaded = false;
+
+    std::ifstream                         file(pFileName.c_str(), std::ios::in);
+    std::vector<std::vector<std::string>> content;
+    std::vector<std::string>              row;
+    std::vector<std::string>              cHeaderRow;
+    std::string                           line, word;
+    uint32_t                              cRowCounter = 0;
+    if(file.is_open())
+    {
+        while(getline(file, line))
+        {
+            cRowCounter++;
+            if(cRowCounter < 5)
+            { // skip header (version check possible)
+                if(cRowCounter == 4)
+                { // read field names
+                    cHeaderRow.clear();
+                    std::stringstream str(line);
+                    while(getline(str, word, ',')) { cHeaderRow.push_back(word); }
+                }
+                continue;
+            }
+            row.clear();
+            std::stringstream str(line);
+
+            while(getline(str, word, ',')) { row.push_back(word); }
+            uint32_t cRowChipId = strtoul(row[0].c_str(), 0, 16);
+            // for(uint32_t i=0;i<32;i++){
+            //     if(cRowChipId == 0x00244200){
+            //     LOG(INFO) << BOLDBLUE << std::hex << (cRowChipId ^ (1 << i )) << std::dec << RESET;
+            // }
+            if(cRowChipId == pChipId)
+            {
+                for(uint32_t j = 1; j < row.size(); j++)
+                {
+                    LOG(DEBUG) << BOLDBLUE << cHeaderRow[j] << RESET;
+                    LOG(DEBUG) << BOLDBLUE << row[j] << RESET;
+                    calibration[cHeaderRow[j]] = std::stof(row[j]);
+                }
+                cCalibrationLoaded = true;
+                break;
+            }
+        }
+        if(!cCalibrationLoaded)
+        {
+            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Calibration data not available for the 0x" << std::hex << +pChipId << std::dec << " chip" << RESET;
+            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Using default calibration data" << RESET;
+            // throw std::runtime_error(std::string("LpgbtCalibrationError"));
+        }
+        for(auto it = calibration.cbegin(); it != calibration.cend(); ++it) { LOG(DEBUG) << BOLDBLUE << it->first << " = " << it->second << RESET; }
+    }
+    else
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::LoadCalibrationData: " << pFileName << " could not be opened. Check file path!" << RESET;
+        throw std::runtime_error(std::string("FileNotFoundError"));
+    }
+    file.close();
+}
+
+// # Set the junction temperature. It should be updated by the user based on:
+// # - thermal simulations and measurements performed in the final system, or
+// # - data of its internal temperature sensor obtained during production testing
+// #   (estimate_temperature_uncalib_vref)
+void lpGBTInterface::SetTemperature(Ph2_HwDescription::Chip* pChip, float pTemperature)
+{
+    // # Set junction temperature.
+    // # Arguments:
+    // # pTemperature: Estimate of junction temperature [C]
+    // #
+    fTemperature = pTemperature;
+}
+
+float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor)
+{
+    // # Estimate temperature using internal temperature sensor and uncalibrated VREF.
+    // # WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
+    // # Side effects:
+    // #    ADC configuration.
+    // # Arguments:
+    // #    pResetTempSensor: Reset temperature sensor before using it.
+
+    // # Return:
+    // #    Temperature estimate in degree C.
+
+    uint8_t cVrefCode = (uint32_t)std::round(calibration["VREF_OFFSET"]);
+    LOG(DEBUG) << BOLDGREEN << "Enable VREF at code: 0x" << std::hex << +cVrefCode << std::dec << " [LSB]" << RESET;
+
+    EnableInternalVref(pChip, true);
+    SetVrefTune(pChip, cVrefCode);
+    if(pResetTempSensor)
+    {
+        auto cVal = ReadChipReg(pChip, "ADCMon");
+        // ######################################
+        // # Enable reset on temperature sensor #
+        // ######################################
+        WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
+        std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+        // #######################################
+        // # Disable reset on temperature sensor #
+        // #######################################
+        WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
+    }
+
+    std::vector<float> cMeasurements(0);
+    for(uint8_t cIndx = 0; cIndx < 10; cIndx++)
+    {
+        uint16_t cAdcVal = ReadADC(pChip, "TEMP", "VREF/2", 0);
+        LOG(DEBUG) << BOLDGREEN << "Temperature readout: 0x" << std::hex << +cAdcVal << std::dec << " [LSB]" << RESET;
+
+        // estimate the junction temperature
+        cMeasurements.push_back(cAdcVal * calibration["TEMPERATURE_UNCALVREF_SLOPE"] + calibration["TEMPERATURE_UNCALVREF_OFFSET"]);
+    }
+    float cTemperature = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+    LOG(INFO) << BOLDGREEN << "Temperature estimate: " << cTemperature << " [C]" << RESET;
+    return cTemperature;
+}
+
+void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::Chip* pChip, bool pEnable)
+{
+    /*  Calculate the optimum VREFTUNE code based on the junction temperature
+           and apply the setting to the chip. Prior calling this method, the user
+           is expected to set the temperature estimate (set_temperature) first if it
+           is know or to to use estimate_temperature_uncalib_vref in order to
+           estimate it automatically. In the later case, it is advice to use
+           auto_tune_vref method instead.
+
+        Arguments:
+            pEnable: Enable VREF generator
+    */
+
+    uint8_t cCodeOpt = (uint32_t)std::round(calibration["VREF_SLOPE"] * fTemperature + calibration["VREF_OFFSET"]);
+    LOG(INFO) << BOLDGREEN << "REFTune = 0x" << std::hex << +cCodeOpt << std::dec << RESET;
+    EnableInternalVref(pChip, pEnable);
+    SetVrefTune(pChip, cCodeOpt);
+}
+
+void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor)
+{
+    /*  Auto tune VREF based on the internal temperature sensor.
+
+        WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
+
+        Side effects:
+            ADC configuration.
+            Junction temperature.
+
+        Arguments:
+            pResetTempSensor: Reset temperature sensor before using it.
+    */
+    float cTemperature = EstimateTemperatureUncalibVref(pChip, pResetTempSensor);
+
+    // update temperature estimate
+    SetTemperature(pChip, cTemperature);
+
+    // tune VREF
+    TuneVrefControlLib(pChip);
+}
+
+void lpGBTInterface::VdacSetVout(Ph2_HwDescription::Chip* pChip, float pVoltageV, bool pEnable)
+{
+    /*  """Set requested voltage at the output of the lpGBT voltage DAC.
+
+        Prerequisites:
+            VREF should be tuned to 1V.
+
+        Arguments:
+            pVoltageV: voltage in volts (0-1)
+            pEnable: voltage DAC state
+
+        Raises:
+            LpgbtOutOfRangeError: If the requested voltage cannot be achieved.
+    """ */
+    if((pVoltageV > 1.) or (pVoltageV < 0.))
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::VdacSetVout: Invalid voltage for VDAC" << RESET;
+        throw std::runtime_error(std::string("Invalid voltage for VDAC"));
+    }
+    int32_t cDacCode =
+        (int32_t)std::round((calibration["VDAC_SLOPE"] + fTemperature * calibration["VDAC_SLOPE_TEMP"]) * pVoltageV + calibration["VDAC_OFFSET"] + fTemperature * calibration["VDAC_OFFSET_TEMP"]);
+
+    if(cDacCode < 0 or cDacCode > 4095)
+    {
+        LOG(ERROR) << BOLDRED << "VdacSetVout::_CdacCodeToCurrent: VDAC can not deliver requested voltage." << RESET;
+        throw std::runtime_error(std::string("VDAC can not deliver requested voltage."));
+    }
+    // lpgbt interface is missing a voltage DAC function (unused in tracker?)
+    // self.vdac_setup(dac_code, enable)
+}
+
+float lpGBTInterface::AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples)
+{
+    /* Get input voltage.
+
+        Prerequisites:
+            VREF should be tuned to 1V.
+
+        Returns:
+            Calibrated voltage reading (mean of number of samples).
+
+        Raises:
+            LpgbtException: in case the conversion timeout is exceeded
+    */
+
+    std::vector<uint16_t> cMeasurements(0);
+    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++) { cMeasurements.push_back(ReadADC(pChip, pADCInputP, pADCInputN, pGain)); }
+    uint16_t cResult = (uint16_t)std::round(std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size());
+
+    std::string cAdcStr = "ADC_" + fADCGainMap[pGain];
+
+    float cCalRes =
+        ((calibration[cAdcStr + "_SLOPE"] + fTemperature * calibration[cAdcStr + "_SLOPE_TEMP"]) * cResult + calibration[cAdcStr + "_OFFSET"] + fTemperature * calibration[cAdcStr + "_OFFSET_TEMP"]);
+
+    LOG(DEBUG) << BOLDGREEN << "Measured calibrated Vin for " << pADCInputP << " and " << pADCInputN << " is " << cCalRes << " [V]" << RESET;
+    return cCalRes;
+}
+
+float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode)
+{
+    /* """Return estimate of the CDAC current for specific code.
+
+        Arguments:
+            pChannel: CDAC channel
+            pCode: CDAC code
+
+        Returns:
+            Estimate of the output current in Amps.
+    """ */
+    uint8_t cChannel = fADCInputMap[pChannel];
+    if(cChannel > 8)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacCodeToCurrent: Invalid CDAC channel" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC channel"));
+    }
+    return (pCode - calibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] - fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]) /
+           (calibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]);
+}
+
+float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode)
+{
+    /*  """Return estimate of the CDAC output resistance for specific code.
+
+        Arguments:
+            pChannel: CDAC channel
+            pCode: CDAC code
+
+        Returns:
+            Estimate of the output resistance in Ohms.
+    """ */
+    uint8_t cChannel = fADCInputMap[pChannel];
+    if(cChannel > 8)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacCodeToRout: Invalid CDAC channel" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC channel"));
+    }
+    // The rout for code zero is very large and not properly modeled.
+    // Return the rout estimate for code 1 instead.
+    if(pCode == 0) { pCode = 1; }
+
+    float cR0 = (calibration["CDAC" + std::to_string(cChannel) + "_R0"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_R0_TEMP"]);
+    return cR0 / pCode;
+}
+
+uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA)
+{
+    /*  """Return optimum CDAC code for the requested current (in amps)
+
+        Arguments:
+            pChannel: CDAC channel
+            pCurrentA: Output current [A]
+
+        Returns:
+            The optimum CDAC code
+
+        Raises:
+            LpgbtOutOfRangeError: If the requested current cannot be achieved.
+    """ */
+    uint8_t cChannel = fADCInputMap[pChannel];
+    if(cChannel > 8)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacGetOptimumCodeForCurrent: Invalid CDAC channel" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC channel"));
+    }
+    if((pCurrentA > 1e-3) or (pCurrentA <= 0))
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacGetOptimumCodeForCurrent: Invalid CDAC current" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC current"));
+    }
+
+    uint16_t cCode = (uint16_t)std::round((calibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]) * pCurrentA +
+                                          calibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]);
+
+    /* code = round(
+            (
+                self.calibration[f"CDAC{chn}_SLOPE"]
+                + self.temperature_c * self.calibration[f"CDAC{chn}_SLOPE_TEMP"]
+            )
+            * current_a
+            + self.calibration[f"CDAC{chn}_OFFSET"]
+            + self.temperature_c * self.calibration[f"CDAC{chn}_OFFSET_TEMP"]
+        ) */
+
+    if(cCode > 255)
+    {
+        LOG(ERROR) << BOLDRED << "CDAC can not deliver requested current." << RESET;
+        throw std::runtime_error(std::string("CDAC can not deliver requested current."));
+    }
+
+    return (uint16_t)cCode;
+}
+
+void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA)
+{
+    /*   """Configure the lpGBT current DAC.
+
+        Side effects:
+            Disable all other current sources.
+
+        Arguments:
+            pChannel: ADC channel to connect to current DAC to
+            pCurrentA: Output current [A]
+    """ */
+    uint8_t cChannel = fADCInputMap[pChannel];
+    if(cChannel > 8)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::CdacSetCurrent: Invalid CDAC channel" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC channel"));
+    }
+    if((pCurrentA > 1e-3) or (pCurrentA <= 0))
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::CdacSetCurrent: Invalid CDAC current" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC current"));
+    }
+    uint8_t cCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, pCurrentA);
+    ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cCode});
+}
+float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, bool pImprovePrecision)
+{
+    LOG(INFO) << BOLDYELLOW << "pExpectedROhm not provided. Performing auto ranging." << RESET;
+
+    uint8_t cCdacCode = 1;
+    float   cVAdc     = 0;
+    while(true)
+    {
+        ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cCdacCode});
+        cVAdc = AdcGetVin(pChip, pChannel, "VREF/2", 0);
+        if(cVAdc > 0.5 or cCdacCode >= 128) { break; }
+        cCdacCode *= 2.;
+    }
+    float cExpectedROhm = cVAdc / _CdacCodeToCurrent(pChip, pChannel, cCdacCode);
+    LOG(DEBUG) << BOLDBLUE << "First estimate of resistance: " << cExpectedROhm / 1e3 << " kOhm" << RESET;
+    return MeasureResistance(pChip, pChannel, cExpectedROhm, pImprovePrecision);
+}
+float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pExpectedROhm, bool pImprovePrecision)
+{
+    /* """Measure resistance connected between the ground (VSS) and a given ADC channel.
+       If the pExpectedROhm is provided (see oberloaded function), it will be used to set the current source
+       (CDAC) in order to obtain optimum voltage drop across the resistors (around 0.5 Vref).
+       Alternatively, if pExpectedROhm is not provided, an auto ranging procedure will
+       be executed in order to estimate the value of the resistor first.
+
+       When measuring resistive temperature sensors (e.g. PT1000 or NTC) it is recommended
+       to set pExpectedROhm in order to prevent auto ranging as it will minimize the error
+       introduced by integral non-linearity errors of the current source and should result
+       in less "noisy" results.
+
+       In order to improve the measurement precision, one could set pImprovePrecision
+       to true. It will result in the method performing several measurements for different
+       CDAC codes in order to average out the errors introduced by the CDAC non-linearity.
+       The number of measurements depends on the resistance value and it is set automatically
+       for maximum precision.
+
+    Prerequisites:
+        VREF should be tuned to 1V.
+
+    Side effects:
+        ADC settings.
+        CDAC settings.
+
+    Arguments:
+        pChannel: ADC channel to be used for the measurement
+        pExpectedROhm: Expected resistance [Ohms]. If not set, auto ranging will be done
+                        automatically
+        pImprovePrecision: Improve precision by preforming multiple measurements
+
+    Returns:
+        Resistance [Ohms]
+    """ */
+
+    float   cCurrentA = 0.5 / pExpectedROhm;
+    uint8_t cCdacCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, cCurrentA);
+    LOG(DEBUG) << BOLDBLUE << "Optimum cdac code: " << +cCdacCode << RESET;
+
+    std::vector<uint8_t> cCdacCodesVec;
+    std::vector<float>   cRloadsVec;
+    if(pImprovePrecision)
+    {
+        for(uint8_t i = (uint8_t)cCdacCode * 0.9; i < (uint8_t)cCdacCode * 1.1; i++) { cCdacCodesVec.push_back(i); }
+    }
+    else
+    {
+        cCdacCodesVec.push_back(cCdacCode);
+    }
+
+    for(auto cdac_code: cCdacCodesVec)
+    {
+        ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cdac_code});
+
+        float iout = _CdacCodeToCurrent(pChip, pChannel, cdac_code);
+        float rout = _CdacCodeToRout(pChip, pChannel, cdac_code);
+
+        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 10);
+
+        float rmeas = vadc / iout;
+        LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
+        if(vadc < 0.25) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too high" << RESET; }
+        if(vadc > 0.75) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too low" << RESET; }
+        float rload = rmeas / (1 - rmeas / rout);
+        LOG(DEBUG) << BOLDBLUE << "CODE: " << +cdac_code << " IOUT: " << 1e3 * iout << " [mA] ROUT: " << rout * 1e-3 << " [kOhm] VADC: " << vadc << " [V] LOAD: " << rload << " [Ohm]" << RESET;
+
+        cRloadsVec.push_back(rload);
+    }
+
+    return (std::accumulate(cRloadsVec.begin(), cRloadsVec.end(), 0.) / cRloadsVec.size());
+}
+
+float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::Chip* pChip, uint8_t pSamples, bool pResetTempSensor)
+{
+    /*  """Measure junction temperature.
+
+        Prerequisites:
+            VREF should be tuned to 1V.
+
+        Side effects:
+            ADC settings.
+
+        Arguments:
+            pSamples: Number of ADC samples to average during the measurement
+            pResetTempSensor: Should the temperature sensor be reset prior to its use
+
+        Returns:
+            Temperature [C]
+
+        Raises:
+            LpgbtException: in case the conversion timeout is exceeded
+    """ */
+
+    if(pResetTempSensor)
+    {
+        auto cVal = ReadChipReg(pChip, "ADCMon");
+        // ######################################
+        // # Enable reset on temperature sensor #
+        // ######################################
+        WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
+        std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+        // #######################################
+        // # Disable reset on temperature sensor #
+        // #######################################
+        WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
+    }
+
+    float cAdcVal = AdcGetVin(pChip, "TEMP", "VREF/2", 0, pSamples);
+
+    float cTemp = (cAdcVal * calibration["TEMPERATURE_SLOPE"] + calibration["TEMPERATURE_OFFSET"]);
+    return cTemp;
+}
+
+float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pPowerSupply, uint8_t pSamples, bool pDisableMonitorAfterMeasurement)
+{
+    /*  """Measure power supply voltage.
+
+        Prerequisites:
+            VREF should be tuned to 1V.
+
+        Side effects:
+            ADC settings.
+            Settings of VDD monitors.
+
+        Arguments:
+            pPowerSupply: Power supply rail to be measured (VDDTX,
+                          VDDRX, VDD, VDDA)
+            pSamples: how many conversions to perform
+
+        Returns:
+            Calibrated reading of a power supply voltage in V
+
+        Raises:
+            LpgbtException: in case the conversion timeout is exceeded
+    """ */
+    if(!(pPowerSupply != "VDDTX" or pPowerSupply != "VDDRX" or pPowerSupply != "VDD" or pPowerSupply != "VDDA"))
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::MeasurePowerSupplyVoltage: Invalid pPowerSupply" << RESET;
+        throw std::runtime_error(std::string("Invalid pPowerSupply"));
+    }
+
+    // Enable VDD monitor
+    ConfigureInternalMonitoring(pChip, true);
+    // perform conversion
+    float cVadc = AdcGetVin(pChip, pPowerSupply, "VREF/2", 0, pSamples);
+
+    float cVsup = cVadc * (calibration["VDDMON_SLOPE"] + fTemperature * calibration["VDDMON_SLOPE_TEMP"]);
+
+    // disable VDD monitor (if requested)
+    if(pDisableMonitorAfterMeasurement) { ConfigureInternalMonitoring(pChip, false); }
+    LOG(DEBUG) << BOLDGREEN << "lpGBTInterface::MeasurePowerSupplyVoltage: " << pPowerSupply << " " << cVsup << " V" << RESET;
+
+    return cVsup;
+}
 } // namespace Ph2_HwInterface

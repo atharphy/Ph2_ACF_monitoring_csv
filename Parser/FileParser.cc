@@ -537,14 +537,8 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 unsigned cStripThreshold     = convertAnyInt(cThresholdNode.attribute("stripThreshold").value());
                 unsigned cStripThresholdHigh = convertAnyInt(cThresholdNode.attribute("stripThresholdHigh").value());
-                if(cStripThreshold > 0xFF)
-                {
-                    throw std::runtime_error("The stripThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
-                }
-                if(cStripThresholdHigh > 0xFF)
-                {
-                    throw std::runtime_error("The cStripThresholdHigh register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
-                }
+                if(cStripThreshold > 0xFF) { throw std::runtime_error("The stripThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255."); }
+                if(cStripThresholdHigh > 0xFF) { throw std::runtime_error("The cStripThresholdHigh register set in the xml is greater than 255. Acceptable values are between 0 and 255."); }
 
                 cChip->setReg("Bias_THDAC", cStripThreshold);
                 cChip->setReg("Bias_THDACHIGH", cStripThresholdHigh);
@@ -586,10 +580,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()); // / SSA2_ELECTRON_CALDAC; // conversion factor to electron with 1 CalDAC = 0.039 fC
-                if(cInjStrps > 0xFF)
-                {
-                    throw std::runtime_error("The maximum strip charge that can be injected is 255. Acceptable values are between 0 and 255.");
-                }
+                if(cInjStrps > 0xFF) { throw std::runtime_error("The maximum strip charge that can be injected is 255. Acceptable values are between 0 and 255."); }
                 cChip->setReg("Bias_CALDAC", cInjStrps);
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA injection settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjStrps
                    << std::dec << RESET << std::endl;
@@ -782,10 +773,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cThresholdPxls = convertAnyInt(cThresholdNode.attribute("pixelThreshold").value());
-                if(cThresholdPxls > 0xFF)
-                {
-                    throw std::runtime_error("The pixelThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255.");
-                }
+                if(cThresholdPxls > 0xFF) { throw std::runtime_error("The pixelThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255."); }
 
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
@@ -850,10 +838,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cInjPxls = convertAnyInt(cInjectionNode.attribute("pixelCharge").value()); // / MPA2_ELECTRON_CALDAC. conversion factor from DAQ to electrons;
-                if(cInjPxls > 0xFF)
-                {
-                    throw std::runtime_error("The maximum pixel charge that can be injected is 255. Acceptable values are between 0 and 255.");
-                }
+                if(cInjPxls > 0xFF) { throw std::runtime_error("The maximum pixel charge that can be injected is 255. Acceptable values are between 0 and 255."); }
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
                     std::stringstream cRegName;

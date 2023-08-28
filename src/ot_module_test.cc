@@ -278,6 +278,8 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
     cTool.initializeExceptionHandler();
+    BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->getFirstObject());
+    cTool.fBeBoardInterface->getBoardInfo(pBoard);
 
     if(cmd.foundOption("vtrxLightOff"))
     {

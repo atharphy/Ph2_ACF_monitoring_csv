@@ -214,6 +214,104 @@ class lpGBTInterface : public ChipInterface
                                                    {"VDDA", 13},
                                                    {"TEMP", 14},
                                                    {"VREF/2", 15}};
+    std::map<uint8_t, std::string> fADCGainMap  = {{0, "X2"}, {1, "X8"}, {2, "X16"}, {3, "X32"}}; // WARNING: for X32 no calibration!
+
+    // # The calibration values in the dictionary below correspond to the average value
+    // # of calibration coefficients (obtained for all chips) and will be used if
+    // # no per-chip calibration data is loaded. In order to improve the quality
+    // # of calibration the user is expected to call load_calibration_data method.
+
+    std::map<std::string, float> calibration = {
+        {"VREF_SLOPE", -3.3638e-01},
+        {"VREF_OFFSET", 1.3426e+02},
+        {"VDAC_SLOPE", 4.0906e+03},
+        {"VDAC_OFFSET", 2.5420e-01},
+        {"VDAC_SLOPE_TEMP", 1.0492e-01},
+        {"VDAC_OFFSET_TEMP", -3.8617e-02},
+        {"ADC_X2_SLOPE", 1.0429e-03},
+        {"ADC_X2_OFFSET", -3.3531e-02},
+        {"ADC_X2_SLOPE_TEMP", -2.9308e-09},
+        {"ADC_X2_OFFSET_TEMP", 1.2004e-06},
+        {"ADC_X8_SLOPE", 3.0928e-04},
+        {"ADC_X8_OFFSET", 3.4134e-01},
+        {"ADC_X8_SLOPE_TEMP", 6.6980e-10},
+        {"ADC_X8_OFFSET_TEMP", -7.6619e-07},
+        {"ADC_X16_SLOPE", 1.4331e-04},
+        {"ADC_X16_OFFSET", 4.2615e-01},
+        {"ADC_X16_SLOPE_TEMP", 1.5782e-09},
+        {"ADC_X16_OFFSET_TEMP", -1.3777e-06},
+        {"VDDMON_SLOPE", 2.3257e+00},
+        {"VDDMON_SLOPE_TEMP", 6.5729e-05},
+        {"CDAC0_SLOPE", 2.7212e+05},
+        {"CDAC0_OFFSET", -1.3486e-02},
+        {"CDAC0_R0", 2.5227e+06},
+        {"CDAC0_SLOPE_TEMP", -1.5463e+02},
+        {"CDAC0_OFFSET_TEMP", -4.8661e-04},
+        {"CDAC0_R0_TEMP", 9.5716e+03},
+        {"CDAC1_SLOPE", 2.7223e+05},
+        {"CDAC1_OFFSET", -1.3486e-02},
+        {"CDAC1_R0", 2.5227e+06},
+        {"CDAC1_SLOPE_TEMP", -1.5643e+02},
+        {"CDAC1_OFFSET_TEMP", -4.8661e-04},
+        {"CDAC1_R0_TEMP", 9.5716e+03},
+        {"CDAC2_SLOPE", 2.7227e+05},
+        {"CDAC2_OFFSET", -1.3486e-02},
+        {"CDAC2_R0", 2.5227e+06},
+        {"CDAC2_SLOPE_TEMP", -1.5756e+02},
+        {"CDAC2_OFFSET_TEMP", -4.8661e-04},
+        {"CDAC2_R0_TEMP", 9.5716e+03},
+        {"CDAC3_SLOPE", 2.7193e+05},
+        {"CDAC3_OFFSET", -1.3486e-02},
+        {"CDAC3_R0", 2.5227e+06},
+        {"CDAC3_SLOPE_TEMP", -1.5537e+02},
+        {"CDAC3_OFFSET_TEMP", -4.8661e-04},
+        {"CDAC3_R0_TEMP", 9.5716e+03},
+        {"CDAC4_SLOPE", 2.7277e+05},
+        {"CDAC4_OFFSET", -1.3486e-02},
+        {"CDAC4_R0", 2.5227e+06},
+        {"CDAC4_SLOPE_TEMP", -1.6278e+02},
+        {"CDAC4_OFFSET_TEMP", -4.8661e-04},
+        {"CDAC4_R0_TEMP", 9.5716e+03},
+        {"CDAC5_SLOPE", 2.7295e+05},
+        {"CDAC5_OFFSET", -1.3486e-02},
+        {"CDAC5_R0", 2.5227e+06},
+        {"CDAC5_SLOPE_TEMP", -1.6169e+02},
+        {"CDAC5_OFFSET_TEMP", -4.8661e-04},
+        {"CDAC5_R0_TEMP", 9.5716e+03},
+        {"CDAC6_SLOPE", 2.7342e+05},
+        {"CDAC6_OFFSET", -1.3486e-02},
+        {"CDAC6_R0", 2.5227e+06},
+        {"CDAC6_SLOPE_TEMP", -1.6537e+02},
+        {"CDAC6_OFFSET_TEMP", -4.8661e-04},
+        {"CDAC6_R0_TEMP", 9.5716e+03},
+        {"CDAC7_SLOPE", 2.7328e+05},
+        {"CDAC7_OFFSET", -1.3486e-02},
+        {"CDAC7_R0", 2.5227e+06},
+        {"CDAC7_SLOPE_TEMP", -1.6303e+02},
+        {"CDAC7_OFFSET_TEMP", -4.8661e-04},
+        {"CDAC7_R0_TEMP", 9.5716e+03},
+        {"TEMPERATURE_SLOPE", 4.1320e+02},
+        {"TEMPERATURE_OFFSET", -1.8545e+02},
+        {"TEMPERATURE_UNCALVREF_SLOPE", 4.5960e-01},
+        {"TEMPERATURE_UNCALVREF_OFFSET", -2.1253e+02},
+    };
+    void    LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_t pChipId, std::string pFileName = "./settings/lpGBTFiles/lpgbt_calibration.csv");
+    void    SetTemperature(Ph2_HwDescription::Chip* pChip, float pTemperature);
+    float   EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor = true);
+    void    TuneVrefControlLib(Ph2_HwDescription::Chip* pChip, bool pEnable = true);
+    void    AutoTuneVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor = true);
+    float   AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples = 1);
+    float   _CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode);
+    float   _CdacCodeToRout(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode);
+    uint8_t _CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA);
+    void    CdacSetCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA);
+    float   MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, bool pImprovePrecision = true);
+    float   MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pExpectedROhm, bool pImprovePrecision = true);
+    void    VdacSetVout(Ph2_HwDescription::Chip* pChip, float pVoltageV, bool pEnable = true);
+    float   MeasureTemperature(Ph2_HwDescription::Chip* pChip, uint8_t pSamples = 1, bool pResetTempSensor = true);
+    float   MeasurePowerSupplyVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pPowerSupply, uint8_t pSamples = 1, bool pDisableMonitorAfterMeasurement = true);
+
+    float fTemperature = 0.0;
 
   protected:
     // ##############
