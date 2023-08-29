@@ -19,6 +19,7 @@ void OTTemperature::Running()
 {
     Initialise();
     fSuccess = true;
+    TuneLpGBTVref();
     ReadModuleTemperatures();
     Reset();
 }
@@ -63,7 +64,7 @@ float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::stri
 
     // read file line by line
     std::string   cFilename = pLUT;
-    std::ifstream file(cFilename);
+    std::ifstream file(expandEnvironmentVariables(cFilename));
     if(file.is_open())
     {
         std::string line;

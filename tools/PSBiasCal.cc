@@ -211,7 +211,7 @@ float PSBiasCal::MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstri
         // }
         // LOG(INFO) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
         // VBGexpected   = theRegister->second;
-        VBGexpected   = MPA2_VBG_EXPECTED;
+        VBGexpected   = SSA2_VBG_EXPECTED;
         VREFexpected  = SSA2_VREF_EXPECTED;
         VREFmin       = SSA2_VREF_MIN;
         VREFmax       = SSA2_VREF_MAX;
@@ -395,7 +395,7 @@ uint8_t PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string 
                 new_val_down =
                     uint32_t(std::round(static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->ReadADC(static_cast<ReadoutChip*>(cChip), DAC_forCheck)));
 
-            uint8_t DAC_up_val = std::min(uint8_t(31), uint8_t(DAC_new_val + 1));
+            uint8_t DAC_up_val = std::min(uint8_t(DAC_max), uint8_t(DAC_new_val + 1));
             LOG(DEBUG) << MAGENTA << "DAC_up_val " << +DAC_up_val << RESET;
 
             fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_up_val);
@@ -424,7 +424,7 @@ uint8_t PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string 
                 if((expdiffup < expdiff))
                 {
                     DAC_val     = DAC_up_val;
-                    DAC_new_val = DAC_new_val + 1;
+                    DAC_new_val = std::min(uint8_t(DAC_max), uint8_t(DAC_new_val + 1));
                 }
             }
             else
@@ -514,8 +514,8 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
         uint32_t                 shift = iDAC[point];
 
         uint32_t MtoWr = (1 << shift);
-        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB", MtoWr & 0xff);
-        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB", (MtoWr >> 8) & 0xff);
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_lsb", MtoWr & 0xff);
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_msb", (MtoWr >> 8) & 0xff);
         DAC = nameDAC[point];
         // regIndex = ADCcontrolIndex[point];
     }
@@ -552,8 +552,8 @@ void PSBiasCal::DisableTest(Chip* cChip)
     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
     {
         LOG(DEBUG) << BOLDMAGENTA << "SSA2 Disable " << RESET;
-        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB", 0x0);
-        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB", 0x0);
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_lsb", 0x0);
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_msb", 0x0);
     }
 }
 
@@ -713,7 +713,7 @@ void PSBiasCal::CalibrateBias()
                         // }
                         // LOG(DEBUG) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
                         // measured_VBG = theRegister->second;
-                        // VREFstring = "VREF";
+                        VREFstring = "VREF";
                     }
                     else
                         LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << "Calibration procedure not implemented for this chip type. Some variables will be set to 0!!" << RESET;

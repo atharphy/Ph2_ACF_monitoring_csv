@@ -58,6 +58,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
                                                             "ADC_OFFSET_VOLT",
                                                             "ADC_MAXIMUM_VOLT",
                                                             "TEMPSENS_IDEAL_FACTOR",
+                                                            "SAMPLE_N_TIMES",
                                                             "VREF_ADC",
                                                             "CLK_DATA_DELAY",
                                                             "CLK_DATA_DELAY_DATA",
@@ -123,7 +124,7 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, false);                  // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0b1111, false);                // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false);          // 0x30 = reset Aurora AND Serializer
     RD53Interface::SendCommand(pChip, RD53ACmd::GlobalPulse{pChip->getId(), 0x04}); // Reset Channel Synchronizer
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
@@ -173,6 +174,14 @@ std::pair<std::string, uint16_t> RD53AInterface::SetSpecialRegister(std::string 
         return {regName, value};
     else
     {
+        try
+        {
+            pRD53RegMap.at(regName);
+        }
+        catch(const std::out_of_range& error)
+        {
+            throw std::out_of_range("Register " + regName + " not found in RD53 register-map file. I can not proceed. Please verify that you are using the latest RD53 registre-map.");
+        }
         ChipRegItem& specialReg = pRD53RegMap.at(regName);
         ChipRegItem& Reg        = pRD53RegMap.at(it->second.regName);
         return {it->second.regName, RD53Interface::SetFieldValue(Reg.fValue, value, it->second.start, specialReg.fBitSize)};

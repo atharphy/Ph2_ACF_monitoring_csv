@@ -62,6 +62,7 @@ class RD53FWInterface : public BeBoardFWInterface
 
     void ResetSequence(const std::string& refClockRate);
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
+    void PrintFWstatus() override;
 
     void Start() override;
     void Stop() override;
@@ -78,18 +79,17 @@ class RD53FWInterface : public BeBoardFWInterface
     void SetOptoLinkVersion(uint8_t version) override;
     // #############################
 
-    void     SelectBERcheckBitORFrame(const uint8_t bitORframe);
-    void     WriteArbitraryRegister(const std::string&                regName,
-                                    const uint32_t                    value,
-                                    const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
-                                    ReadoutChipInterface*             pReadoutChipInterface = nullptr,
-                                    const bool                        doReset               = false);
-    uint32_t ReadArbitraryRegister(const std::string& regName);
-    void     ResetBoard();
-    void     ResetFastCmdBlk();
-    void     ResetSlowCmdFIFO();
-    void     ResetReadBkFIFO();
-    void     ResetReadoutBlk();
+    void SelectBERcheckBitORFrame(const uint8_t bitORframe);
+    void WriteArbitraryRegister(const std::string&                regName,
+                                const uint32_t                    value,
+                                const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
+                                ReadoutChipInterface*             pReadoutChipInterface = nullptr,
+                                const bool                        doReset               = false);
+    void ResetBoard();
+    void ResetFastCmdBlk();
+    void ResetSlowCmdFIFO();
+    void ResetReadBkFIFO();
+    void ResetReadoutBlk();
 
     // ####################################
     // # Check AURORA lock on data stream #
@@ -208,7 +208,6 @@ class RD53FWInterface : public BeBoardFWInterface
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
   private:
-    void     PrintFWstatus();
     void     TurnOffFMC();
     void     TurnOnFMC();
     void     ConfigureDIO5(const DIO5Config* config);

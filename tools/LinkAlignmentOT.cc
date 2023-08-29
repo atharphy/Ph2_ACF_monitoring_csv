@@ -134,7 +134,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
                 cChannels = {2, 0, 2, 0, 2, 2};
             }
         }
-        else
+        else // PS
         {
             if(cHybrid->getId() % 2 == 0)
             {
@@ -310,6 +310,8 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
 
             if(!cAligned)
             {
+                if(((cHybrid->getId() % 2) == 0) & ((cLineId - 1) == 4) & (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
+                { continue; } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                 LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id"
                           << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
@@ -950,10 +952,10 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         }
     }
     LOG(INFO) << BOLDBLUE << "LinkAlignmentOT::AlignStubPackage setting hybrid enable register to " << std::bitset<32>(cNewMask) << RESET;
+    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
 
-    bool    cSkip         = false;
-    uint8_t cPackageDelay = 7;
-    uint8_t cFinalDelay   = cPackageDelay;
+    bool    cSkip       = false;
+    uint8_t cFinalDelay = cOriginalDelay;
     if(!cSkip)
     {
         // gethybrid IDs
@@ -981,9 +983,10 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         // unique ids for each hybrid
         bool cCorrectDelay = false;
         // now try and find correct package delay
-        uint16_t cMaxBxCounter  = 3564;
-        uint32_t cNevents       = 10;
-        auto     cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+        uint16_t cMaxBxCounter = 3564;
+        uint32_t cNevents      = 10;
+        uint8_t  cPackageDelay = cOriginalDelay;
+
         LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
         LOG(DEBUG) << cMaxBxCounter << RESET;
         size_t cAttempt = 0;
@@ -1021,7 +1024,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                     }
                 }
 
-                // check that BxIds ae synchronous across single links
+                // check that BxIds are synchronous across single links
                 std::vector<uint8_t> cIdsToCompare(0);
                 for(auto cIter: cHybridIdsMap)
                 {
@@ -1035,11 +1038,11 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                         auto& cBxIdsSecond = cBxIds[cIter.second[1]];
                         cSyncThisLink      = (cBxIdsFirst == cBxIdsSecond);
                         if(cSyncThisLink) LOG(DEBUG) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
-                        // if in sync.. add first hybrid id to list
-                        if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
-                        else
-                            LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                     }
+                    // if in sync.. add first hybrid id to list
+                    if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
+                    else
+                        LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                 }
                 // if all the links are synchronous then.. check if we are
                 // in sync across the multiple links
@@ -1127,13 +1130,14 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                     {
                         LOG(INFO) << BOLDGREEN << "All hybrids match for a package delay of " << +cPackageDelay << RESET;
                         cCorrectDelay = true;
+                        cFinalDelay   = cPackageDelay;
                     }
                     else
                         LOG(DEBUG) << BOLDRED << "For a package delay of " << +cPackageDelay << " found " << +cNFound << "/" << cMatchesFound.size()
                                    << " pairs of hybrids with a constant difference in BxIds" << RESET;
                 } // Ids are synchronous across each link
                 else
-                    LOG(INFO) << BOLDRED << "For a pakcage delay of " << +cPackageDelay << " DE-SYNC in one of the links..." << RESET;
+                    LOG(INFO) << BOLDRED << "For a package delay of " << +cPackageDelay << " DE-SYNC in one of the links..." << RESET;
             } // pkg delay
             cAttempt++;
         } while(cAttempt < 1 && !cCorrectDelay);

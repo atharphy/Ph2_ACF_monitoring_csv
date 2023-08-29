@@ -117,11 +117,11 @@ void ThrAdjustment::localConfigure(const std::string& histoFileName, int current
 void ThrAdjustment::run()
 {
     LOG(INFO) << RESET;
-    LOG(INFO) << BOLDGREEN << "Searching for a threshold that maximizes the efficiency" << RESET;
+    LOG(INFO) << BOLDMAGENTA << ">>> Searching for a threshold maximizing the efficiency <<<" << RESET;
     ThrAdjustment::bitWiseScanGlobal_Maximum(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
 
     LOG(INFO) << RESET;
-    LOG(INFO) << BOLDGREEN << "Searching for a threshold that corresponds to " << std::setprecision(1) << BOLDYELLOW << TARGETEFF * 100 << "%" << BOLDGREEN << " efficiency" << RESET;
+    LOG(INFO) << BOLDMAGENTA << ">>> Searching for a threshold corresponding to " << std::setprecision(1) << BOLDYELLOW << TARGETEFF * 100 << "%" << BOLDMAGENTA << " efficiency <<<" << RESET;
     ThrAdjustment::bitWiseScanGlobal_Zero(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
 
     // ############################

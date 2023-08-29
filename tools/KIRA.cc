@@ -139,7 +139,7 @@ void KIRA::determineLatency()
         setSameDacBeBoard(cBoard, "TriggerLatency", cLat);
         fBeBoardInterface->ChipReSync(cBoard);
         ReadNEvents(cBoard, fNevents);
-        // ContinousReadout();
+        // ContinuousReadout();
 
         size_t                     cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
         const std::vector<Event*>& cEvents      = this->GetEvents();
@@ -226,12 +226,12 @@ void KIRA::determineLatency()
     // Switch LED off again
     if(botSensor)
     {
-        fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLatencyLED) + ",Intensity:" + std::to_string(0));
+        fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLatencyLED) + ",Intensity:0");
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLatencyLED) + ",Value:off");
     }
     else
     {
-        fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLatencyLED) + ",Intensity:" + std::to_string(0));
+        fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLatencyLED) + ",Intensity:0");
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLatencyLED) + ",Value:off");
     }
 }
@@ -250,7 +250,7 @@ void KIRA::performKIRATest()
         fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Intensity:" + std::to_string(cIntensity));
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Light:on");
 
-        // ContinousReadout();
+        // ContinuousReadout();
         ReadNEvents(cBoard, fNevents);
         const std::vector<Event*>& cEvents       = this->GetEvents();
         DetectorDataContainer      cHitContainer = analyseEvents(cBoard, cEvents, 0, cLED);
@@ -266,7 +266,7 @@ void KIRA::performKIRATest()
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Light:on");
 
         fBeBoardInterface->ChipReSync(cBoard);
-        // ContinousReadout();
+        // ContinuousReadout();
         ReadNEvents(cBoard, fNevents);
         const std::vector<Event*>& cEvents2       = this->GetEvents();
         DetectorDataContainer      cHitContainer2 = analyseEvents(cBoard, cEvents2, 1, cLED);
@@ -295,7 +295,7 @@ void KIRA::calibrateIntensity()
             LOG(INFO) << BOLDYELLOW << "Setting LED Intensity to " << cIntensity << RESET;
             fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Intensity:" + std::to_string(cIntensity));
             fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Light:on");
-            // ContinousReadout();
+            // ContinuousReadout();
             ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents             = this->GetEvents();
             DetectorDataContainer      cHitContainerBottom = analyseEvents(cBoard, cEvents, 0, cLED, false);
@@ -305,7 +305,7 @@ void KIRA::calibrateIntensity()
             fDQMHistogrammer.fillSensorPlotsCalibration(cHitContainerBottom, fNReadbackEvents, cLED, cIntensity, 0);
 #endif
 
-            fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Intensity:" + std::to_string(0));
+            fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Intensity:0");
             fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Light:off");
             if(cChipCovered)
             {
@@ -318,9 +318,9 @@ void KIRA::calibrateIntensity()
         for(uint32_t cIntensity = cIntensityStart; cIntensity <= cIntensityStop; cIntensity += cIntensityStep)
         {
             LOG(INFO) << BOLDYELLOW << "Setting LED Intensity to " << cIntensity << RESET;
-            fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Intensity:" + std::to_string(cIntensity));
+            fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Intensity:0");
             fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Light:on");
-            // ContinousReadout();
+            // ContinuousReadout();
             ReadNEvents(cBoard, fNevents);
             const std::vector<Event*>& cEvents          = this->GetEvents();
             DetectorDataContainer      cHitContainerTop = analyseEvents(cBoard, cEvents, 1, cLED, false);
@@ -330,7 +330,7 @@ void KIRA::calibrateIntensity()
             fDQMHistogrammer.fillSensorPlotsCalibration(cHitContainerTop, fNReadbackEvents, cLED, cIntensity, 1);
 #endif
 
-            fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Intensity:" + std::to_string(0));
+            fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Intensity:0");
             fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Light:off");
             if(cChipCovered)
             {
