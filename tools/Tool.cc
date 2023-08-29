@@ -952,7 +952,7 @@ void Tool::SaveResults()
     // Save summary TTree
     // fResultFile->cd();
     if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->cd();
-    if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
+        // if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 #endif
 }
 

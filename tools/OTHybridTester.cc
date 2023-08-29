@@ -289,7 +289,9 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 
 void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
 {
-    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    D19clpGBTInterface*      clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    std::pair<bool, uint8_t> cReturn;
+    bool                     cResult = true;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -298,13 +300,18 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
             // clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {,}, cSource); // 0 --> link data, 3 --> constant pattern
+            if(!fIsSEH)
+            {
+                cReturn = PhaseTuneLineEleFC7(0, 0);
+                cResult &= cReturn.first;
+                cReturn = PhaseTuneLineEleFC7(0, 4);
+                cResult &= cReturn.first;
+            }
 
-            PhaseTuneLineEleFC7(0, 0);
-            PhaseTuneLineEleFC7(0, 1);
-            PhaseTuneLineEleFC7(0, 2);
-            // PhaseTuneLineEleFC7(0, 3);
-            PhaseTuneLineEleFC7(0, 4);
-            // PhaseTuneLineEleFC7(0, 5);
+            cReturn = PhaseTuneLineEleFC7(0, 1); // SEH: FCMD_CIC_R
+            cResult &= cReturn.first;
+            cReturn = PhaseTuneLineEleFC7(0, 2); // SEH: FCMD_CIC_L
+            cResult &= cReturn.first;
         }
     }
     for(auto cBoard: *fDetectorContainer)
@@ -314,6 +321,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 0); // 0 --> link data, 3 --> constant pattern
         }
     }
+    // if(!cResult) { throw std::runtime_error("Failed to Phase Align "); }
 }
 
 bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, int pNTries)
@@ -410,7 +418,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
         cI2CTree->Branch("I2C_Master_status", &cI2CStatusVectVect[index]);
         cI2CTree->Fill();
         fResultFile->cd();
-        cI2CTree->Write();
+        // cI2CTree->Write();
         index += 1;
     }
     return cTestSuccess;
@@ -517,7 +525,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             }
             fillSummaryTree("VREFCNTR", cTrim);
             fResultFile->cd();
-            cDACtoADCTree->Write();
+            // cDACtoADCTree->Write();
             cDACtoADCMultiGraph->Draw("AL*");
             cDACtoADCMultiGraph->GetXaxis()->SetTitle("DAC");
             cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
@@ -643,7 +651,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 
     cADCHistogram->Draw("colz");
     cADCCanvas->Write();
-    cFixedADCsTree->Write();
+    // cFixedADCsTree->Write();
 
     // flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 
@@ -927,6 +935,109 @@ bool OTHybridTester::LpGBTGetLinkLock()
     }
     return cStatus;
 }
+bool OTHybridTester::LpGBTFastCommandCheckerv2(uint8_t pPattern)
+{
+    uint8_t             cMatch;
+    uint8_t             cShift;
+    uint8_t             cWrappedByte;
+    uint32_t            cWrappedData;
+    bool                res             = true;
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    uint8_t             cPattern        = 0xca;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            if(cPattern != 0x06)
+            {
+                clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, cPattern << 24 | cPattern << 16 | cPattern << 8 | cPattern);
+                clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 3); // 0 --> link data, 3 --> constant pattern   }
+            }
+        }
+    }
+    std::string str;
+
+    for(uint8_t cPhase = 0; cPhase < 21; cPhase++)
+    {
+        LOG(INFO) << BOLDGREEN << "Phase : " << +cPhase << RESET;
+        str.append(std::to_string(cPhase));
+        str.append(",");
+        SetPhaseLineEleFC7(0, 1, cPhase);
+        SetPhaseLineEleFC7(0, 2, cPhase);
+
+        for(auto cBoard: *fDetectorContainer)
+        {
+            bool isElectricalFc7 = true;
+            for(auto cOpticalGroup: *cBoard)
+            {
+                std::ignore     = cOpticalGroup;
+                isElectricalFc7 = false;
+                break;
+            }
+            if(isElectricalFc7)
+            {
+                fBeBoardInterface->setBoard(cBoard->getId());
+
+                std::map<std::string, std::string> fFCMDLines;
+
+                if(fIsSEH) { fFCMDLines = f2SSEHFCMDLines; }
+                else
+                {
+                    fFCMDLines = fPSROHFCMDLines;
+                }
+
+                auto cMapIterator = fFCMDLines.begin();
+                LOG(DEBUG) << BOLDBLUE << "Checking against : " << std::bitset<8>(cPattern) << RESET;
+                do
+                {
+                    int multiMatch = 0;
+                    for(int i = 0; i < 1000; i++)
+                    {
+                        uint32_t cFCMDOutput = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second);
+                        LOG(DEBUG) << BOLDBLUE << "Scoped output on " << cMapIterator->first << ": " << std::bitset<32>(cFCMDOutput) << RESET;
+
+                        cMatch = 32;
+                        cShift = 0;
+                        for(uint8_t shift = 0; shift < 8; shift++)
+                        {
+                            cWrappedByte = (cPattern >> shift) | (cPattern << (8 - shift));
+                            cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+                            LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
+                            LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
+                            int popcount = __builtin_popcountll(cWrappedData ^ cFCMDOutput);
+                            if(popcount < cMatch)
+                            {
+                                cMatch = popcount;
+                                cShift = shift;
+                            }
+                            LOG(DEBUG) << BOLDBLUE << "Line " << cMapIterator->first << " Shift " << +shift << " Match " << +popcount << RESET;
+                        }
+                        LOG(DEBUG) << BOLDBLUE << "Found for " << cMapIterator->first << " a minimal bit difference of " << +cMatch << " for a bit shift of " << +cShift << RESET;
+                        LOG(DEBUG) << Form("_miss_match_0x%02X", cPattern) << RESET;
+                        multiMatch += cMatch;
+                        fillSummaryTree(cMapIterator->first + Form("_miss_match_0x%02X", cPattern), cMatch);
+                        fillSummaryTree(cMapIterator->first + Form("_miss_shift_0x%02X", cPattern), cShift);
+
+                        if((cMatch == 0)) { LOG(DEBUG) << BOLDGREEN << "FCMD Test passed for " << cMapIterator->first << RESET; }
+                        else
+                        {
+                            LOG(DEBUG) << BOLDRED << "FCMD Test failed for " << cMapIterator->first << RESET;
+                            res &= false;
+                        }
+                    }
+                    cMapIterator++;
+                    str.append(std::to_string(multiMatch));
+                    str.append(",");
+
+                } while(cMapIterator != fFCMDLines.end());
+            }
+        }
+        str.append("\n");
+    }
+    std::cout << str;
+    return res;
+}
+
 bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
 {
     uint8_t                     cMatch;
@@ -1069,7 +1180,7 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_
             cEyeDiagramHist->GetXaxis()->SetTitle("Time [ps]");
             cEyeDiagramHist->GetYaxis()->SetTitle("Vof [mV]");
             fResultFile->cd();
-            cEyeDiagramTree->Write();
+            // cEyeDiagramTree->Write();
             cEyeDiagramHist->Write();
             cEyeDiagramCanvas->cd();
             cEyeDiagramHist->Draw("COLZ");
@@ -1270,16 +1381,17 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
     cAlignerObjct.fChip   = 0;
     cAlignerObjct.fLine   = pLineId;
     LineConfiguration cLineCnfg;
+    cLineCnfg.fPatternPeriod = 8;
     // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
     cAlignerInterface->TunePhase(cAlignerObjct, cLineCnfg);
-    cAlignerInterface->GetLineStatus(cAlignerObjct);
+    // cAlignerInterface->GetLineStatus(cAlignerObjct);
     // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
     // cLineCnfg.fDelay = 1;
     // cLineCnfg.fMode  = 2;
     // cAlignerInterface->SetLineConfiguration(cLineCnfg);
     // cAlignerInterface->GetLineStatus(cAlignerObjct);
     // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
-    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned(cAlignerObjct);
+    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned();
     if(!cLineStatus.first)
     {
         LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
@@ -1292,6 +1404,37 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
 
     cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
     return cLineStatus;
+}
+
+void OTHybridTester::SetPhaseLineEleFC7(uint8_t pHybrid, uint8_t pLineId, uint8_t pDelay)
+{
+    std::pair<bool, uint8_t> cLineStatus;
+    cLineStatus.first  = false;
+    cLineStatus.second = 0;
+    uint8_t pChip      = 0;
+    auto    cBoardId   = 1;
+    auto    cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    fBeBoardInterface->setBoard((*cBoardIter)->getId());
+    LOG(DEBUG) << BOLDYELLOW << "OTHybridTester::SetPhaseLineEleFC7#" << +pLineId << " for a Chip#" << +pChip << RESET;
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
+    cAlignerInterface->InitializeConfiguration();
+    cAlignerInterface->InitializeAlignerObject();
+
+    AlignerObject cAlignerObjct;
+    cAlignerObjct.fHybrid = pHybrid;
+    cAlignerObjct.fChip   = 0;
+    cAlignerObjct.fLine   = pLineId;
+    LineConfiguration cLineCnfg;
+    cLineCnfg.fMode  = 2;
+    cLineCnfg.fDelay = pDelay;
+    cAlignerInterface->SetLineConfiguration(cLineCnfg);
+    // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
+    cAlignerInterface->ManuallyConfigureLine(cAlignerObjct, cLineCnfg);
+    // cAlignerInterface->GetLineStatus(cAlignerObjct);
+
+    return;
 }
 
 uint16_t OTHybridTester::calibrateADC()
@@ -1409,7 +1552,7 @@ uint16_t OTHybridTester::calibrateADC()
     }
     fResultFile->cd();
     cCalibrationTree->Fill();
-    cCalibrationTree->Write();
+    // cCalibrationTree->Write();
     fTC_2SSEH->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
     return cTrimOptimized;
 }
@@ -1424,7 +1567,12 @@ void OTHybridTester::calibrateCurrentDAC()
     std::vector<uint16_t> cADCVect;
     std::vector<uint16_t> cOffsetVect;
     std::vector<float>    cGainVect;
-
+    auto                  cDACtoADCCanvas = new TCanvas("cCurrentDACtoADC", " Current DAC to ADC conversion", 500, 500);
+    auto                  cObj            = gROOT->FindObject("mgCurrentDACtoADC");
+    if(cObj) delete cObj;
+    auto cDACtoADCMultiGraph = new TMultiGraph();
+    cDACtoADCMultiGraph->SetName("mgCurrentDACtoADC");
+    cDACtoADCMultiGraph->SetTitle("lpGBT - Current DAC to ADC conversion");
     auto cCalibrationTree = new TTree("tCurrentDACCalibration", "Calibration of the current DAC");
 
     cCalibrationTree->Branch("ADCValue", &cADCVect);
@@ -1469,6 +1617,19 @@ void OTHybridTester::calibrateCurrentDAC()
     {
         for(auto cOpticalGroup: *cBoard) { clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0x1c); }
     }
+    auto cDACtoADCGraph = new TGraph();
+    for(uint16_t i = 0; i < cDACVect.size(); i++) { cDACtoADCGraph->SetPoint(i, cDACVect.at(i), cADCVect.at(i)); }
+    cDACtoADCGraph->SetName("gCurrentDACtoADC");
+    cDACtoADCGraph->SetTitle("CurrentDACtoADC");
+    cDACtoADCGraph->SetLineColor(1);
+    cDACtoADCGraph->SetFillColor(0);
+    cDACtoADCGraph->SetLineWidth(3);
+    cDACtoADCMultiGraph->Add(cDACtoADCGraph);
+    cDACtoADCMultiGraph->Draw("AL*");
+    cDACtoADCMultiGraph->GetXaxis()->SetTitle("Current DAC");
+    cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
+    cDACtoADCCanvas->Write();
+    // cCalibrationTree->Write();
 }
 
 #endif

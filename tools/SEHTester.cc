@@ -118,7 +118,7 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     cUinIinGraph->SetTitle("Uin to Iin during power-up");
     cUinIinGraph->SetLineWidth(3);
     cUinIinGraph->SetMarkerStyle(70);
-    cUinIinTree->Write();
+    // cUinIinTree->Write();
 
     auto cUinIinCanvas = new TCanvas("cUinIin", "Uin to Iin during power-up", 750, 500);
 
@@ -256,7 +256,7 @@ void SEHTester::TestBiasVoltage()
     cDACtoHVCanvas->BuildLegend();
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
-    cBiasVoltageTree->Write();
+    // cBiasVoltageTree->Write();
     fTC_2SSEH->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("BiasDone", 1);
@@ -331,7 +331,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     } while(time_taken < measurementTime);
     cLeakTree->Fill();
     fResultFile->cd();
-    cLeakTree->Write();
+    // cLeakTree->Write();
 
     auto cLeakMultiGraph = new TMultiGraph();
     cLeakMultiGraph->SetName("mgILeak");
@@ -479,7 +479,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cDACtoHVMultiGraph->Write();
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
-    cBiasVoltageTree->Write();
+    // cBiasVoltageTree->Write();
     fTC_2SSEH->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("ExternalBiasDone", 1);
@@ -601,7 +601,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     } while(time_taken < measurementTime);
     cLeakTree->Fill();
     fResultFile->cd();
-    cLeakTree->Write();
+    // cLeakTree->Write();
 
     auto cleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cILeakValVect.data());
     cleakGraph->SetName("ILeak");
@@ -785,7 +785,7 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
     fTC_2SSEH->set_load1(false, false, 0);
     fTC_2SSEH->set_load2(false, false, 0);
     fResultFile->cd();
-    cEfficiencyTree->Write();
+    // cEfficiencyTree->Write();
 
     auto cUouttoIoutCanvas = new TCanvas("cUouttoIout", "Uout versus Iout DC/DC", 750, 500);
     cUouttoIoutMultiGraph->Draw("ALP");
@@ -879,7 +879,7 @@ void SEHTester::DCDCOutputEvaluation()
     cDCDCOutputCanvas->BuildLegend();
     fResultFile->cd();
     cDCDCOutputCanvas->Write();
-    cDCDCOutputTree->Write();
+    // cDCDCOutputTree->Write();
 }
 
 void SEHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
@@ -1547,6 +1547,7 @@ void SEHTester::RunHybridETest()
 
     double cAcceptancePercentage = 15. / 100.;
     LOG(INFO) << "Running electrical test on the hybrid. Accepted deviation: +- " << +cAcceptancePercentage << " %" << RESET;
+    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
 
     for(auto cMapIterator: f2SSEHSupplyMeasurements)
     {
@@ -1560,7 +1561,7 @@ void SEHTester::RunHybridETest()
         {
             if(cNominalValue->second != 0)
             {
-                fillSummaryTree(cMeasurementName + "_dev", cNominalValue->second - result);
+                fillSummaryTree(cMeasurementName + "_dev", result - cNominalValue->second);
                 if(cAcceptancePercentage != 0)
                 {
                     if(result < cNominalValue->second * (1 + cAcceptancePercentage) && result > cNominalValue->second * (1 - cAcceptancePercentage))
