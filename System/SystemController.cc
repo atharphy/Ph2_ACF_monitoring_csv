@@ -792,7 +792,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             lpGBTClockConfig cClkCnfg;
             cClkCnfg.fClkFreq     = 4;
             cClkCnfg.fClkDriveStr = cSsaClockDrive;
-            cClkCnfg.fClkInvert   = 0;
+            cClkCnfg.fClkInvert   = cHybrid->getInvertClock();
 
             LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " << +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
 
@@ -1053,7 +1053,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
     {
         cBoard->printBoardType();
         fBeBoardInterface->setBoard(cBoard->getId());
-        fBeBoardInterface->ConfigureBoard(cBoard);
+        if(cBoard->getToConfigure()) fBeBoardInterface->ConfigureBoard(cBoard);
     }
 
     for(const auto cBoard: *fDetectorContainer)
@@ -1069,12 +1069,15 @@ void SystemController::ConfigureHw(bool pReInitialize)
             bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
             cBoard->setSparsification(cSparsified);
             if(pReInitialize == true)
-                InitializeOT(cBoard);
+            {
+                InitializeOT(cBoard); // sets the clocks and configures the CICs, enables the FE readout chips (same as below?!)
+            }
             else // lpGBT + CIC will need to be configured  (and also maybe reset)
             {
                 // lpGBT config
                 for(auto cOpticalGroup: *cBoard)
                 {
+                    if(cOpticalGroup->flpGBT == nullptr) continue;
                     LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << +cBoard->getId() << RESET;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     if(cOpticalGroup->getReset() == 0)
@@ -1140,6 +1143,20 @@ void SystemController::ConfigureHw(bool pReInitialize)
                 }
             }
             ConfigureOT(cBoard);
+            /*
+            const BeBoard* cFirstBoard = fDetectorContainer->getFirstObject();
+            auto cFirstOpticalGroup = cFirstBoard->getFirstObject();
+            if(!cBoard->isOptical() && cFirstOpticalGroup->flpGBT != nullptr)
+            {
+                LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
+                auto cLinkInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getLinkInterface();
+                cLinkInterface->GeneralLinkReset(cBoard);
+            }
+            if(configureOT)
+            {
+                ConfigureOT(cBoard); // Configures the readout chips but the CIC is done above in the InitializeOT function
+            }
+            */
 
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
@@ -1265,7 +1282,7 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pRe
     // ########################################################
     std::cout << fParsedFile.str() << std::endl;
 
-    ConfigureHw(pReInitialize);
+    if(findValueInSettings<double>("SkipConfigureHW", 0) == 0) ConfigureHw(pReInitialize);
 }
 
 void SystemController::initializeExceptionHandler()

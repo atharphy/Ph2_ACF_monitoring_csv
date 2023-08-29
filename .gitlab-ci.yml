@@ -148,12 +148,12 @@ build:ShepApplication_al8:
     entrypoint: ["/bin/sh","-c"]
 
 # Compile with EUDAQ libraries
-build:StandAlone_wEUDAQ_al8:
-  extends: build:StandAlone_wEUDAQ_c7
-  stage: build_al8
-  image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
-    entrypoint: ["/bin/sh","-c"]
+# build:StandAlone_wEUDAQ_al8:
+#   extends: build:StandAlone_wEUDAQ_c7
+#   stage: build_al8
+#   image:
+#     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
+#     entrypoint: ["/bin/sh","-c"]
 
 # Compile with TC_USB library
 build:StandAlone_wTC_USB_al8:
@@ -198,12 +198,12 @@ build:ShepApplication_al9:
     entrypoint: ["/bin/sh","-c"]
 
 # Compile with EUDAQ libraries
-build:StandAlone_wEUDAQ_al9:
-  extends: build:StandAlone_wEUDAQ_c7
-  stage: build_al9
-  image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
-    entrypoint: ["/bin/sh","-c"]
+# build:StandAlone_wEUDAQ_al9:
+#   extends: build:StandAlone_wEUDAQ_c7
+#   stage: build_al9
+#   image:
+#     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
+#     entrypoint: ["/bin/sh","-c"]
 
 # Compile with TC_USB library
 build:StandAlone_wTC_USB_al9:

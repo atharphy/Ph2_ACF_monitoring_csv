@@ -72,6 +72,44 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
+    LOG(INFO) << BOLDBLUE << "Load calibration data and automatically tune vref (repeat if temperature changes)!" << RESET;
+    // LoadCalibrationData(pChip, 0x00244200);
+    LoadCalibrationData(pChip, ReadChipID(pChip, static_cast<lpGBT*>(pChip)->getVersion()));
+    AutoTuneVref(pChip);
+
+    LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
+    CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC0\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC0", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC1\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC1", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC2\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC2", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC3\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC3", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC4\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC4", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC5\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC5", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC6\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC6", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
+
+    LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
+    LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;
+    LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
+    LOG(INFO) << BOLDGREEN << MeasureTemperature(pChip) << " C" << RESET;
+
+    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDTX\")" << RESET;
+    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDTX") << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDRX\")" << RESET;
+    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDRX") << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDD\")" << RESET;
+    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDD") << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDA\")" << RESET;
+    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDA") << " V" << RESET;
+
     return cReady;
 } //
 

@@ -92,7 +92,17 @@ void PSAlignment::Initialise()
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3) continue;
-                    fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", 0x00);
+
+                    uint16_t cReadoutMode = 0x0;
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2) // Something must be fixed somewhere! If not done like this RetimePix is overwritten and stubs lost!
+                    {
+                        ChipRegMask cMask;
+                        cMask.fNbits    = 2;
+                        cMask.fBitShift = 0;
+                        cChip->setRegBits("Control_1", cMask, cReadoutMode);
+                        cReadoutMode = cChip->getReg("Control_1");
+                    }
+                    fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", cReadoutMode);
                 }
             }
         }
@@ -147,11 +157,12 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
                     // mapping for probe station/etc. can be different
                     if(pSetupType.find("PSModule") != std::string::npos)
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", 0x4);
-                        fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x3F);
-                        fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", 0x02);
-                        fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x00);
-                        fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x02);
+                        // These are now set in the XML because they are different for differen PS versions!!!
+                        // fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", 0x4);
+                        // fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx320", 0x36); // different for PSv2 /2.1
+                        // fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", 0x02);
+                        // fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x00);
+                        // fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x00); // different for PSv2 /2.1
                     }
                 } // chip
             }     // hybrid

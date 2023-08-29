@@ -325,11 +325,12 @@ int main(int argc, char* argv[])
         LOG(DEBUG) << BOLDBLUE << cTool.getDirectoryName().c_str() << RESET;
         LOG(DEBUG) << BOLDBLUE << cTool.GetMonitorFileName().c_str() << RESET;
     }
-    SEHTester cSEHTester;
-    cSEHTester.Inherit(&cTool);
     // Choose USB interface by Dev and Bus, actually (only) works because of (evil) global variables in the tcusb
     // ¯\_(ツ)_/¯
     if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_2SSEH cTC_2SSEH(cUsbBus, cUsbDev); }
+
+    SEHTester cSEHTester;
+    cSEHTester.Inherit(&cTool);
     cSEHTester.InitialiseTestCard(true);
     cSEHTester.RunHybridETest();
     cTool.fillSummaryTree("setup_type", (cGui) ? 1 : 0);
@@ -337,7 +338,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("measure-input-iv"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control and perform I-V scan" << RESET;
-        cSEHTester.TurnOn(0, 0, false);
+        cSEHTester.TurnOn(0, 0, false, true);
         if(!cSEHTester.CheckShort(cLVPowerSupplyId, cLVChannelId))
         {
             LOG(INFO) << BOLDBLUE << "Stop test due to possible short" << RESET;
@@ -350,12 +351,12 @@ int main(int argc, char* argv[])
         }
         cTool.fillSummaryTree("has_short", 0);
         cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
-        cSEHTester.TurnOn(cRightLoad, cLeftLoad, true);
+        cSEHTester.TurnOn(cRightLoad, cLeftLoad, true, false);
     }
     else
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
-        cSEHTester.TurnOn(cRightLoad, cLeftLoad, true);
+        cSEHTester.TurnOn(cRightLoad, cLeftLoad, true, true);
     }
     if(cmd.foundOption("test-ext-leak"))
     {

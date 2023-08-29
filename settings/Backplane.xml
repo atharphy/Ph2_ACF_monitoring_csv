@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-    <BeBoard Id="0" boardType="D19C" eventType="VR">
+    <BeBoard Id="0" boardType="D19C" eventType="VR" configure="1">
     <connection id="board" uri="chtcp-2.0://hybridtesting:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />      <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!--CONFIG-->
     <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 0 - AMC13 -->

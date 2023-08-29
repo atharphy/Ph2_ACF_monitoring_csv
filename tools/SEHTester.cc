@@ -525,10 +525,10 @@ void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     fTC_2SSEH->set_load2(true, false, pLeftLoadValue);
     fTC_2SSEH->set_load1(true, false, pRightLoadValue);
 }
-void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool setLoad)
+void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool setLoad, bool measureTemperature)
 {
     // workaround to turn on the bPOL2V5 propertly
-    if(!setLoad)
+    if(measureTemperature)
     {
         float T;
         // check if the critical temperature of -35C has been reached
