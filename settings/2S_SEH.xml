@@ -4,7 +4,7 @@
       OPTICAL FC7 
   ###############-->
     <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
-    <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
+    <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1" configure="1">
         <connection id="board" uri="ipbusudp-2.0://192.168.0.169:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
         <CDCE configure="0" clockRate="320" />
 
