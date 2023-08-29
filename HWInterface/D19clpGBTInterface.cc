@@ -110,24 +110,28 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     uint8_t              cClkFreq = 0, cClkDriveStr = 7, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 2}, cTxChannels = {0};
     uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 0, cTxPreEmphWidth = 0, cTxInvert = 0;
-    ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
+    for(const auto& group: cTxGroups)
+        for(const auto& channel: cTxChannels) lpGBTInterface::ConfigureTxGroup(pChip, group, channel, cTxDataRate);
+
     for(const auto& cGroup: cTxGroups)
     {
         if(cGroup == 0) cTxInvert = 1;
         if(cGroup == 2) cTxInvert = 0;
         for(const auto& cChannel: cTxChannels) ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
     }
+
     // Rx configuration and Phase Align
     // Configure Rx Groups
     // WriteChipReg(pChip, "EPRXDllConfig", , false);
     std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0; // manual mode by default
-    ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
-    // Configure Rx Channels
-    // module/skeleton
+    for(const auto& group: cRxGroups)
+        for(const auto& channel: cRxChannels) lpGBTInterface::ConfigureRxGroup(pChip, group, channel, cRxDataRate, cRxTrackMode);
+
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 5;
     for(const auto& cGroup: cRxGroups)
     {
@@ -156,7 +160,6 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
         this->cicReset(pChip, true, cSide);
     }
 #if defined(__TCUSB__)
-    // // ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
     std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 0};
     std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 0};
     InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
@@ -167,12 +170,6 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 #endif
 
 } // namespace Ph2_HwInterface
-void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
-{
-    // Configure Rx Phase Shifter
-
-    D19clpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 2);
-}
 
 void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
@@ -214,7 +211,7 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
 
         cFreq         = 2;
         uint8_t cMode = 1; // Initial training mode
-        lpGBTInterface::ConfigureRxGroups(pChip, {cGroup}, {cChannel}, cFreq, cMode);
+        lpGBTInterface::ConfigureRxGroup(pChip, cGroup, cChannel, cFreq, cMode);
         std::string cTrainRxReg;
         if(cGroup == 0 || cGroup == 1)
             cTrainRxReg = "EPRXTrain10";
@@ -304,12 +301,13 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
     // Find mode
     std::vector<uint8_t> cTapsHist(15, 0);
     for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
-    // Return cTapsHist;
+
     auto cTapMode = std::max_element(cTapsHist.begin(), cTapsHist.end()) - cTapsHist.begin();
     LOG(INFO) << BOLDMAGENTA << "Most frequent optimal tap is " << +cTapMode << RESET;
     uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
-    lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, cMode);
-    // if(cTapMode!=15) for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cOptimalTaps[cIndx]); }
+    for(const auto& group: pGroups)
+        for(const auto& channel: pChannels) lpGBTInterface::ConfigureRxGroup(pChip, group, channel, 2, cMode);
+
     return (cSuccess) ? cTapMode : 15;
 }
 
@@ -329,24 +327,27 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     uint8_t cClkFreq = 0, cClkDriveStr = 0, cClkInvert = 0;
     uint8_t cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
+
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    // uint8_t              cTxDataRate = 3, cTxDriveStr = 4  , cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
+    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    for(const auto& group: cTxGroups)
+        for(const auto& channel: cTxChannels) lpGBTInterface::ConfigureTxGroup(pChip, group, channel, cTxDataRate);
+
     for(const auto& cGroup: cTxGroups)
     {
         cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
         for(const auto& cChannel: cTxChannels) ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
     }
+
     // Rx configuration and Phase Align
     // Configure Rx Groups
     std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
-    ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
-    // Configure Rx Channels
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9; // cRxInvert = 0 ;
-    // uint8_t cRxEqual = 1, cRxTerm = 1, cRxAcBias = 1, cRxInvert = 0, cRxPhase = 10;
+    for(const auto& group: cRxGroups)
+        for(const auto& channel: cRxChannels) lpGBTInterface::ConfigureRxGroup(pChip, group, channel, cRxDataRate, cRxTrackMode);
+
+    uint8_t              cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9; // cRxInvert = 0 ;
     std::vector<uint8_t> cGrpsLeft{0, 1, 1, 2, 2, 3, 3};
     std::vector<uint8_t> cChnlsLeft{2, 0, 2, 0, 2, 0, 2};
     std::vector<uint8_t> cInvrtLeft{1, 1, 0, 1, 1, 1, 1};
@@ -380,7 +381,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         this->cicReset(pChip, true, cSide);
     }
 #if defined(__TCUSB__)
-    // ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
     std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 6, 0};
     std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 2, 0};
     InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);

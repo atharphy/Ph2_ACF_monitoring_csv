@@ -119,14 +119,20 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     // ######################
     // # Configure Up links #
     // ######################
-    RD53lpGBTInterface::ConfigureRxGroups(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::RxPhaseTracking);
-    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties()) this->ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, 1, 1, 1, RxProperty.Polarity, 12);
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+    {
+        this->ConfigureRxGroup(pChip, RxProperty.Group, RxProperty.Channel, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::RxPhaseTracking);
+        this->ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, 1, 1, 1, RxProperty.Polarity, 12);
+    }
 
     // ########################
     // # Configure Down links #
     // ########################
-    RD53lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
-    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties()) this->ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, 3, 3, 0, 0, TxProperty.Polarity);
+    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
+    {
+        this->ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
+        this->ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, 3, 3, 0, 0, TxProperty.Polarity);
+    }
 
     // #################################
     // # Configure high-speed polarity #
@@ -230,7 +236,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
         do
         {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-        } while(RD53lpGBTInterface::IsRxLocked(pChip, RxProperty.Group) == false);
+        } while(this->IsRxLocked(pChip, RxProperty.Group) == false);
         LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +RxProperty.Group << BOLDBLUE << " LOCKED" << RESET;
 
         // #################
@@ -249,7 +255,8 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
     // #####################################
     // # Set back Rx groups to fixed phase #
     // #####################################
-    RD53lpGBTInterface::ConfigureRxGroups(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::RxPhaseTracking);
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+        this->ConfigureRxGroup(pChip, RxProperty.Group, RxProperty.Channel, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::RxPhaseTracking);
 
     static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
 }
@@ -338,58 +345,6 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
     static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
 
     return allGood;
-}
-
-void RD53lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pDataRate, uint8_t pTrackMode)
-{
-    for(const auto& cGroup: pGroups)
-    {
-        // #######################################################################
-        // # Enable Rx Groups Channels and set Data Rate and Phase Tracking mode #
-        // #######################################################################
-        uint8_t cValueEnableRx = 0;
-        for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
-            if(RxProperty.Group == cGroup) cValueEnableRx |= (1 << RxProperty.Channel);
-        std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
-        WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
-    }
-}
-
-void RD53lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pDataRate)
-{
-    for(const auto& cGroup: pGroups)
-    {
-        // ##########################################################
-        // # Configure Tx Group Data Rate value for specified group #
-        // ##########################################################
-        uint8_t cValueDataRate = ReadChipReg(pChip, "EPTXDataRate");
-        WriteChipReg(pChip, "EPTXDataRate", (cValueDataRate & ~(0x03 << 2 * cGroup)) | (pDataRate << 2 * cGroup));
-
-        // #############################################
-        // # Enable given channels for specified group #
-        // #############################################
-        std::string cEnableTxReg;
-        if(cGroup == 0 || cGroup == 1)
-            cEnableTxReg = "EPTX10Enable";
-        else if(cGroup == 2 || cGroup == 3)
-            cEnableTxReg = "EPTX32Enable";
-
-        uint8_t cValueEnableTx = ReadChipReg(pChip, cEnableTxReg);
-        for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
-            if(TxProperty.Group == cGroup) cValueEnableTx |= (1 << (TxProperty.Channel + 4 * (cGroup % 2)));
-        WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
-    }
-}
-
-bool RD53lpGBTInterface::IsRxLocked(Chip* pChip, uint8_t pGroup)
-{
-    std::string cRXLockedReg = "EPRX" + std::to_string(pGroup) + "Locked";
-    uint8_t     cChannelMask = 0;
-
-    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
-        if(RxProperty.Group == pGroup) cChannelMask |= (1 << RxProperty.Channel);
-
-    return (((ReadChipReg(pChip, cRXLockedReg) & (cChannelMask << 4)) >> 4) == cChannelMask);
 }
 
 } // namespace Ph2_HwInterface

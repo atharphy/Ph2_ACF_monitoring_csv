@@ -221,18 +221,15 @@ uint8_t lpGBTInterface::GetChipRate(Chip* pChip)
         throw std::runtime_error(std::string("lpGBT hard wired configuration doesn't exist"));
 }
 
-void lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
+void lpGBTInterface::ConfigureRxGroup(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDataRate, uint8_t pTrackMode)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        // #######################################################################
-        // # Enable Rx Groups Channels and set Data Rate and Phase Tracking mode #
-        // #######################################################################
-        uint8_t cValueEnableRx = 0;
-        for(const auto cChannel: pChannels) cValueEnableRx |= (1 << cChannel);
-        std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
-        WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
-    }
+    // #######################################################################
+    // # Enable Rx Groups Channels and set Data Rate and Phase Tracking mode #
+    // #######################################################################
+    std::string cRXCntrlReg    = "EPRX" + std::to_string(pGroup) + "Control";
+    uint8_t     cValueEnableRx = (ReadChipReg(pChip, cRXCntrlReg) >> 4);
+    cValueEnableRx |= (1 << pChannel);
+    WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
 }
 
 void lpGBTInterface::ConfigureRxChannel(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pEqual, uint8_t pTerm, uint8_t pAcBias, uint8_t pInvert, uint8_t pPhase)
@@ -244,29 +241,27 @@ void lpGBTInterface::ConfigureRxChannel(Chip* pChip, uint8_t pGroup, uint8_t pCh
     WriteChipReg(pChip, cRXChnCntrReg, (pPhase << 4) | (pInvert << 3) | (pAcBias << 2) | (pTerm << 1) | (pEqual << 0));
 }
 
-void lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate)
+
+void lpGBTInterface::ConfigureTxGroup(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDataRate)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        // ##########################################################
-        // # Configure Tx Group Data Rate value for specified group #
-        // ##########################################################
-        uint8_t cValueDataRate = ReadChipReg(pChip, "EPTXDataRate");
-        WriteChipReg(pChip, "EPTXDataRate", (cValueDataRate & ~(0x03 << 2 * cGroup)) | (pDataRate << 2 * cGroup));
+    // ##########################################################
+    // # Configure Tx Group Data Rate value for specified group #
+    // ##########################################################
+    uint8_t cValueDataRate = ReadChipReg(pChip, "EPTXDataRate");
+    WriteChipReg(pChip, "EPTXDataRate", (cValueDataRate & ~(0x03 << 2 * pGroup)) | (pDataRate << 2 * pGroup));
 
-        // #############################################
-        // # Enable given channels for specified group #
-        // #############################################
-        std::string cEnableTxReg;
-        if(cGroup == 0 || cGroup == 1)
-            cEnableTxReg = "EPTX10Enable";
-        else if(cGroup == 2 || cGroup == 3)
-            cEnableTxReg = "EPTX32Enable";
+    // #############################################
+    // # Enable given channels for specified group #
+    // #############################################
+    std::string cEnableTxReg;
+    if(pGroup == 0 || pGroup == 1)
+        cEnableTxReg = "EPTX10Enable";
+    else if(pGroup == 2 || pGroup == 3)
+        cEnableTxReg = "EPTX32Enable";
 
-        uint8_t cValueEnableTx = ReadChipReg(pChip, cEnableTxReg);
-        for(const auto cChannel: pChannels) cValueEnableTx |= (1 << (cChannel + 4 * (cGroup % 2)));
-        WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
-    }
+    uint8_t cValueEnableTx = ReadChipReg(pChip, cEnableTxReg);
+    cValueEnableTx |= (1 << (pChannel + 4 * (pGroup % 2)));
+    WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
 }
 
 void lpGBTInterface::ConfigureTxChannel(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDriveStr, uint8_t pPreEmphMode, uint8_t pPreEmphStr, uint8_t pPreEmphWidth, uint8_t pInvert)
@@ -645,11 +640,14 @@ uint8_t lpGBTInterface::GetRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChannel
     return ((cRxPhaseRegValue & (0x0F << 4 * (pChannel % 2))) >> 4 * (pChannel % 2));
 }
 
-bool lpGBTInterface::IsRxLocked(Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels)
+bool lpGBTInterface::IsRxLocked(Chip* pChip, uint8_t pGroup)
 {
     std::string cRXLockedReg = "EPRX" + std::to_string(pGroup) + "Locked";
     uint8_t     cChannelMask = 0;
-    for(auto cChannel: pChannels) cChannelMask |= (1 << cChannel);
+
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+        if(RxProperty.Group == pGroup) cChannelMask |= (1 << RxProperty.Channel);
+
     return (((ReadChipReg(pChip, cRXLockedReg) & (cChannelMask << 4)) >> 4) == cChannelMask);
 }
 
