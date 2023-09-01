@@ -96,7 +96,7 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
 
     float I_SEH;
     float U_SEH;
-    float cVoltages[] = {4.6, 4.8, 5., 5.2, 5.4, 6., 7., 8., 9., 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.1, 10.2, 10.3, 10.4, 10.5, 10., 9., 8., 7., 6.8, 6.6, 6.4, 6.2, 6.0, 5, 4.8, 4.6};
+    float cVoltages[] = {5., 5.2, 5.4, 6., 7., 8., 9.,9.1,9.2,9.3,9.4 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.5, 10., 9., 8., 7., 6.6, 6.4, 6.2, 6.0,5.8, 5};
     for(auto& voltage: cVoltages)
     // while(cVolts < 10.01)
     {
@@ -274,10 +274,13 @@ void SEHTester::SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string pow
 void SEHTester::EndExternalTestLeakageCurrent(std::string powerSupplyId, std::string channelId)
 {
     fTC_2SSEH->set_HV(true, false, false, 0);
-    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * static_cast<float>(0)) + ",";
-    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(0) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    
+    
     fillSummaryTree("ExternalParallelLeakDone", 1);
 }
 
@@ -393,9 +396,9 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
         LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! ExternalfTC_2SSEH->Voltage cannot be executed" << RESET;
         throw std::runtime_error("ExternalfTC_2SSEH->Voltage cannot be executed");
     }
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fTC_2SSEH->set_HV(false, true, true, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
     std::vector<float> cHvSetValVect;
     std::vector<float> cVHVJ7ValVect;
@@ -409,9 +412,10 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cBiasVoltageTree->Branch("HvMea", &cHvMeaValVect);
     std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(0) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    std::this_thread::sleep_for(std::chrono::milliseconds(6000));
     setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(6000));
     for(int cHvSet = 0; cHvSet <= 1000; cHvSet += 200)
     {
         // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
