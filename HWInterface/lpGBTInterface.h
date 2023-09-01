@@ -313,6 +313,8 @@ class lpGBTInterface : public ChipInterface
 
     float fTemperature = 0.0;
 
+    std::vector<uint8_t> fTrainedPhases;    
+
   protected:
     // ##############
     // # LpGBT maps #

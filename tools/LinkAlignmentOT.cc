@@ -31,6 +31,7 @@ bool LinkAlignmentOT::Align()
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
         for(auto cOpticalGroup: *cBoard)
         {
+            if (true) ECV(cOpticalGroup);
             AlignLpGBTInputs(cOpticalGroup);
             WordAlignBEdata(cOpticalGroup);
         }
@@ -89,6 +90,351 @@ void LinkAlignmentOT::Initialise()
             }
         }
     }
+}
+
+void LinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
+{
+    std::stringstream tables;
+    for (uint8_t strength = 1; strength < 6; strength ++)
+    {
+        LOG (INFO) << BOLDRED << "CIC STRENGTH PUT TO " << +strength << RESET;
+        tables << "CIC Strength: " << +strength << "\n";
+        for(auto cHybrid: *pOpticalGroup)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            fCicInterface->ConfigureDriveStrength(cCic, strength);
+        }
+        std::vector<std::vector<bool>> wordAlignment;
+        std::vector<std::vector<float>> bitErrors;
+
+        for (uint8_t phase = 0; phase < 15; phase++)
+        {
+            SetlpGBTRxPhase(pOpticalGroup,phase);
+            std::vector <bool> alignedLines = CheckWordAlignBEdata(pOpticalGroup);
+            wordAlignment.push_back(alignedLines);
+            std::stringstream ss;
+            for (auto line : alignedLines) ss << line << "\t";
+            LOG (INFO) << ss.str() << RESET;
+            bitErrors.push_back(BitErrorTest(pOpticalGroup));
+        }
+        AlignLpGBTInputs(pOpticalGroup);
+        WordAlignBEdata(pOpticalGroup);
+        std::stringstream table = PrintECVResultTable(pOpticalGroup, wordAlignment, bitErrors);
+        tables << table.str() <<"\n";
+    }
+    LOG (INFO) << tables.str() << "\n"<<RESET;;
+
+}
+
+void LinkAlignmentOT::SetlpGBTRxPhase(const OpticalGroup* pOpticalGroup, uint8_t pPhase)
+{
+    LOG (INFO) << BOLDRED << "RX Phase set to " << +pPhase << RESET;
+    auto& clpGBT = pOpticalGroup->flpGBT;
+
+    std::vector<uint8_t> cEportGroups = getGroupsAndChannels(pOpticalGroup, true);
+    std::vector<uint8_t> cEportChnls = getGroupsAndChannels(pOpticalGroup, false);
+
+    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], pPhase); }
+
+}
+
+
+std::vector<bool> LinkAlignmentOT::CheckWordAlignBEdata(const OpticalGroup* pOpticalGroup)
+{
+    std::vector<bool> ret;
+    fStubDebug      = true;
+    bool cAligned   = false;
+    auto cBoardId   = pOpticalGroup->getBeBoardId();
+    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::WordAlignBEdata for an OG " << RESET;
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+    fBeBoardInterface->setBoard((*cBoardIter)->getId());
+    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
+    cAlignerInterface->InitializeConfiguration();
+    cAlignerInterface->InitializeAlignerObject();
+    LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::WordAlignBEdata after debug interface " << RESET;
+
+    auto& cBeBitSlip   = fBeBitSlip.getObject((*cBoardIter)->getId());
+    auto& cBeBitSlipOG = cBeBitSlip->getObject(pOpticalGroup->getId());
+
+    // configure CICs to output alignment pattern on L1 lines
+    std::vector<uint8_t> cFeEnableRegs(0);
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, true);
+        cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
+        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+    }
+    // stop triggers to make sure that there are no L1 packets from the CIC
+    fBeBoardInterface->Stop((*cBoardIter));
+
+    // align stub lines in the BE
+    size_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
+    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::WordAlignBEdata ... word alignment on " << +cNlines << "/6 lines stub from CIC.." << RESET;
+    for(size_t cLineId = 1; cLineId <= cNlines; cLineId++)
+    {
+        for(auto cHybrid: *pOpticalGroup)
+        {
+            auto& cBeBitSlipHybrd = cBeBitSlipOG->getObject(cHybrid->getId());
+            auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
+
+            LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
+            AlignerObject cAlignerObjct;
+            cAlignerObjct.fHybrid = cHybrid->getId();
+            cAlignerObjct.fChip   = 0;
+            cAlignerObjct.fLine   = cLineId;
+            LineConfiguration cLineCnfg;
+            cLineCnfg.fPattern       = 0xEA;
+            cLineCnfg.fPatternPeriod = 8;
+            cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
+            cAlignerInterface->GetLineStatus(cAlignerObjct);
+            cAligned                = cAlignerInterface->IsLineWordAligned(cAlignerObjct);
+            cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
+
+            if(cThisBeBitSlip[cLineId] == 0 && !fAllowZeroBitslip)
+            {
+                size_t cMaxAttempts = 10;
+                size_t cIter        = 0;
+                do
+                {
+                    cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
+                    cAlignerInterface->GetLineStatus(cAlignerObjct);
+                    cAligned                = cAlignerInterface->IsLineWordAligned(cAlignerObjct);
+                    cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
+                    cIter++;
+                } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
+            }
+            ret.push_back(cAligned);
+
+        }
+    }
+    // check for 0 bit slips
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto&                cBeBitSlipHybrd = cBeBitSlipOG->getObject(cHybrid->getId());
+        auto&                cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
+        std::vector<uint8_t> cBitSlipHist(15, 0);
+        for(auto cItem: cThisBeBitSlip) cBitSlipHist[cItem]++;
+        auto cMode = std::max_element(cBitSlipHist.begin(), cBitSlipHist.end()) - cBitSlipHist.begin();
+        LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << " most frequent bitslip is " << +cMode << RESET;
+
+    }
+
+    // disable stub output
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, false);
+    }
+    // align L1 data in the BE
+    fL1Debug = true;
+    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::WordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
+    cAligned = L1WordAlignment(pOpticalGroup, fL1Debug);
+    ret.insert(ret.begin(),cAligned); //to be corrected
+    ret.push_back(cAligned);
+    size_t cIndx = 0;
+    // re-confiure enabled FEs
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
+        cIndx++;
+    }
+    LOG(INFO) << BOLDYELLOW << "Reached end of WordAlignBEData" << RESET;
+    return ret;
+}
+
+
+std::vector<float> LinkAlignmentOT::BitErrorTest(const OpticalGroup* pOpticalGroup)
+{
+    std::vector<float> ret;
+    ret.push_back(0);
+    LOG (INFO) << "ECV BitErrorTest" << RESET;
+    std::vector<uint8_t> cFeEnableRegs(0);
+    int hybridCount = 0;
+
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, true);
+        cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
+        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+        hybridCount++;
+    }
+   
+    auto cBoardId   = pOpticalGroup->getBeBoardId();
+    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    fBeBoardInterface->setBoard((*cBoardIter)->getId());
+    auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface*            cDebugInterface   = cInterface->getDebugInterface();
+    
+    uint8_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
+
+    std::vector<int> lineBitErrors(cNlines*hybridCount, 0);
+
+    LOG (INFO) << "Start readout of stubs" << RESET;
+    for (int i = 0; i<1000; i++)
+    {
+        std::vector<std::string> stubData;
+        if (i%100 ==0)
+            LOG (INFO) << "Select reg and hybrid. Stub debug" << RESET;
+        for(auto cHybrid: *pOpticalGroup)
+        {
+            fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+            fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+            for (auto line : cDebugInterface->StubDebug(true, cNlines,false) )
+            {
+                stubData.push_back(line);
+            }
+
+        }
+
+        if (i%100 ==0){
+            LOG (INFO) << "Check output" << RESET;
+
+        }
+        int lineCount = 0;
+        for (auto line : stubData){
+            if (i%100 ==0){
+                LOG (INFO) << line << RESET;
+
+            }
+
+            line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
+            //LOG (INFO) << "Line "<<(lineCount % (cNlines*hybridCount)) << " : "<<  line << RESET;
+            std::bitset<32> pattern = 0xEAAAAAAA;
+            std::size_t found = line.find("111");
+            if (found != std::string::npos)
+            {
+                std::bitset<32> toCheck(line.substr(found,32));
+                std::bitset<32> bitErrors = (pattern ^ toCheck);
+                if (lineCount % 2 == 0)
+                    lineBitErrors[ ( lineCount % (cNlines*hybridCount) ) / 2] += bitErrors.count();
+                else
+                    lineBitErrors[ ( ( lineCount - 1 ) % (cNlines*hybridCount) ) / 2 + cNlines] += bitErrors.count();
+
+            }
+            else
+                if (lineCount % 2 == 0)
+                    lineBitErrors[ ( lineCount % (cNlines*hybridCount) ) / 2] += 32;
+                else
+                    lineBitErrors[ ( ( lineCount - 1 ) % (cNlines*hybridCount) ) / 2 + cNlines] += 32;
+
+            lineCount++;
+        }
+    }
+    for (int i = 0; i< (cNlines*hybridCount); i++)
+    {
+        LOG (INFO) << i << " : " << (float)(lineBitErrors[i])/ (float)(1000*32)  << RESET;
+        ret.push_back((float)(lineBitErrors[i])/ (float)(1000*32));
+    }
+
+    size_t cIndx = 0;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, false);
+        fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
+        cIndx++;
+    }
+    std::string l1adata = cDebugInterface->L1ADebug(1, false);
+    LOG (INFO) << "L1 A debug" << RESET;
+    LOG (INFO) << l1adata << RESET;
+    ret.push_back(0);
+    return ret;
+}
+
+std::vector <uint8_t> LinkAlignmentOT::getGroupsAndChannels(const OpticalGroup* pOpticalGroup, bool pGroups)
+{
+    std::vector<uint8_t> cEportGroups;
+    std::vector<uint8_t> cEportChnls;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        std::vector<uint8_t> cGroups;
+        std::vector<uint8_t> cChannels;
+        if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+        {
+            if(cHybrid->getId() % 2 == 0)
+            {
+                cGroups   = {0, 4, 4, 5, 5, 6};
+                cChannels = {0, 0, 2, 0, 2, 0};
+            }
+            else
+            {
+                cGroups   = {0, 1, 1, 2, 2, 3};
+                cChannels = {2, 0, 2, 0, 2, 2};
+            }
+        }
+        if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
+        {
+            if(cHybrid->getId() % 2 == 0)
+            {
+                cGroups   = {4, 4, 5, 5, 6, 6, 0};
+                cChannels = {2, 0, 2, 0, 2, 0, 0};
+            }
+            else
+            {
+                cGroups   = {0, 1, 1, 2, 2, 3, 3};
+                cChannels = {2, 0, 2, 0, 2, 0, 2};
+            }
+        }
+        for(auto cGrp: cGroups) cEportGroups.push_back(cGrp);
+        for(auto cChnl: cChannels) cEportChnls.push_back(cChnl);
+    }
+    if (pGroups)
+        return cEportGroups;
+    else
+        return cEportChnls;
+}
+
+std::stringstream LinkAlignmentOT::PrintECVResultTable(const OpticalGroup* pOpticalGroup, std::vector<std::vector<bool>> pWordAlignment, std::vector<std::vector<float>> pBitErrors)
+{
+    std::stringstream ret;
+    std::vector<uint8_t> cEportGroups = getGroupsAndChannels(pOpticalGroup, true);
+    std::vector<uint8_t> cEportChnls = getGroupsAndChannels(pOpticalGroup, false);
+
+    ret << BOLDGREEN << "ECV Result Table\n" << RESET;
+    //D19clpGBTInterface* clpGBTInterface    = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    //ret << BOLDYELLOW << "Trained lpGBT Phases: " << RESET;
+    //for (auto a : flpGBTInterface->fTrainedPhases) ret << +a << "\t";
+    //ret << "\n";
+    ret << "Phase\t";
+    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) ret << +cEportGroups[cIndx] << ":" << +cEportChnls[cIndx] << "\t";
+    ret << "\n";
+    for (int phase = 0; phase < (int) pWordAlignment.size(); phase ++)
+    {
+        std::stringstream line;
+        if (flpGBTInterface->fTrainedPhases.back() == phase)
+            line << BOLDBLUE << phase << RESET << "\t";
+        else
+            line << phase << "\t";
+
+        //for (auto entry : pWordAlignment[phase]) line << entry << "\t";
+        int chn = 0;
+        for (auto error : pBitErrors[phase])
+        {
+            if (pWordAlignment[phase][chn] && error == 0)
+                line <<BOLDGREEN;
+            if (pWordAlignment[phase][chn] && error > 0)
+                line <<BOLDYELLOW;
+            if (!pWordAlignment[phase][chn])
+                line <<BOLDRED;
+            if (flpGBTInterface->fTrainedPhases[chn] ==phase)
+                line << BOLDBLUE;
+            line << (int)(error*1000) /1000.0 << RESET <<"\t";
+
+
+            chn++;
+        }
+        ret<< line.str() << "\n" << RESET;
+    }
+    return ret;
 }
 
 // Align lpGBT inputs

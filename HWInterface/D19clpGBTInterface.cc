@@ -229,6 +229,7 @@ void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint
 
 uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
+    lpGBTInterface::fTrainedPhases.clear();
     LOG(INFO) << BOLDBLUE << "Aligning lpGBT#" << +pChip->getId() << RESET;
     const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
 
@@ -337,6 +338,7 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
         }
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
+        lpGBTInterface::fTrainedPhases.push_back(cUniquePhases[cIndxBstPhase]);
     }
 
     // Find mode
@@ -347,6 +349,7 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
     LOG(INFO) << BOLDMAGENTA << "Most frequent optimal tap is " << +cTapMode << RESET;
     uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, cMode);
+    lpGBTInterface::fTrainedPhases.push_back(cTapMode);
     // if(cTapMode!=15) for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cOptimalTaps[cIndx]); }
     return (cSuccess) ? cTapMode : 15;
 }
