@@ -332,6 +332,7 @@ int main(int argc, char* argv[])
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
     cSEHTester.InitialiseTestCard(true);
+    if(cGui) { std::this_thread::sleep_for(std::chrono::milliseconds(3000)); }
     cSEHTester.RunHybridETest();
     cTool.fillSummaryTree("setup_type", (cGui) ? 1 : 0);
 
