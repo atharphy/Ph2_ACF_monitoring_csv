@@ -96,7 +96,7 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
 
     float I_SEH;
     float U_SEH;
-    float cVoltages[] = {5., 5.2, 5.4, 6., 7., 8., 9.,9.1,9.2,9.3,9.4 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.5, 10., 9., 8., 7., 6.6, 6.4, 6.2, 6.0,5.8, 5};
+    float cVoltages[] = {5., 5.2, 5.4, 6., 7., 8., 9., 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.5, 10., 9., 8., 7., 6.6, 6.4, 6.2, 6.0, 5.8, 5};
     for(auto& voltage: cVoltages)
     // while(cVolts < 10.01)
     {
@@ -274,13 +274,12 @@ void SEHTester::SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string pow
 void SEHTester::EndExternalTestLeakageCurrent(std::string powerSupplyId, std::string channelId)
 {
     fTC_2SSEH->set_HV(true, false, false, 0);
-    setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    std::string setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(0) + ",";
+    setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(0) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-    
-    
+
     fillSummaryTree("ExternalParallelLeakDone", 1);
 }
 
