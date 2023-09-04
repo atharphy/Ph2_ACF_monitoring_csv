@@ -137,19 +137,19 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
     {
         uint32_t cChipID   = 0;
         uint32_t cChipID_0 = ReadChipFusedBlock(pChip, 0, 0);
-        LOG(DEBUG) << BOLDYELLOW << "1st FuseID from lpgbt 0x" << std::hex << +cChipID_0 << std::dec << RESET;
+        LOG(DEBUG) << BOLDBLUE << "1st FuseID from lpGBT 0x" << std::hex << +cChipID_0 << std::dec << RESET;
         uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 8);
         cChipID_1          = ((cChipID_1 & 0xFFFFFFC0) >> 6) | ((cChipID_1 & 0x3f) << 26);
-        LOG(DEBUG) << BOLDYELLOW << "2nd FuseID from lpgbt 0x" << std::hex << +cChipID_1 << std::dec << RESET;
+        LOG(DEBUG) << BOLDBLUE << "2nd FuseID from lpGBT 0x" << std::hex << +cChipID_1 << std::dec << RESET;
         uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 12);
         cChipID_2          = ((cChipID_2 & 0xFFFFF000) >> 12) | ((cChipID_2 & 0xfff) << 20);
-        LOG(DEBUG) << BOLDYELLOW << "3rd FuseID from lpgbt 0x" << std::hex << +cChipID_2 << std::dec << RESET;
+        LOG(DEBUG) << BOLDBLUE << "3rd FuseID from lpGBT 0x" << std::hex << +cChipID_2 << std::dec << RESET;
         uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 16);
         cChipID_3          = ((cChipID_3 & 0xFFFC0000) >> 18) | ((cChipID_3 & 0x3ffff) << 14);
-        LOG(DEBUG) << BOLDYELLOW << "4th FuseID from lpgbt 0x" << std::hex << +cChipID_3 << std::dec << RESET;
+        LOG(DEBUG) << BOLDBLUE << "4th FuseID from lpGBT 0x" << std::hex << +cChipID_3 << std::dec << RESET;
         uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 20);
         cChipID_4          = ((cChipID_4 & 0xFF000000) >> 24) | ((cChipID_4 & 0xffffff) << 8);
-        LOG(DEBUG) << BOLDYELLOW << "5th FuseID from lpgbt 0x" << std::hex << +cChipID_4 << std::dec << RESET;
+        LOG(DEBUG) << BOLDBLUE << "5th FuseID from lpGBT 0x" << std::hex << +cChipID_4 << std::dec << RESET;
         for(int i = 0; i < 32; i++)
         {
             uint8_t cTemp = 0;
@@ -161,13 +161,13 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
 
         if(cChipID == 0)
         {
-            LOG(INFO) << BOLDYELLOW << "No redundant lpgbt ID, only use first register" << RESET;
+            LOG(INFO) << BOLDBLUE << "No redundant lpGBT ID, only use first register" << RESET;
             cChipID = cChipID_0;
         }
-        LOG(INFO) << BOLDYELLOW << "FuseID from lpgbt 0x" << std::hex << +cChipID << std::dec << RESET;
+        LOG(INFO) << BOLDYELLOW << "FuseID from lpGBT optical group #" << +pChip->getOpticalGroupId() << " on Board " << +pChip->getBeBoardId() << ": 0x" << std::hex << +cChipID << std::dec << RESET;
         return cChipID;
     }
-
+    LOG(INFO) << BOLDYELLOW << "No FuseID for version 0 lpGBT optical group #" << +pChip->getOpticalGroupId() << " on Board " << +pChip->getBeBoardId() << RESET;
     return 0;
 }
 
@@ -1780,7 +1780,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, const st
 float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pExpectedROhm, bool pImprovePrecision)
 {
     /* """Measure resistance connected between the ground (VSS) and a given ADC channel.
-       If the pExpectedROhm is provided (see oberloaded function), it will be used to set the current source
+       If the pExpectedROhm is provided (see overloaded function), it will be used to set the current source
        (CDAC) in order to obtain optimum voltage drop across the resistors (around 0.5 Vref).
        Alternatively, if pExpectedROhm is not provided, an auto ranging procedure will
        be executed in order to estimate the value of the resistor first.
