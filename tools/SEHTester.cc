@@ -73,7 +73,7 @@ bool SEHTester::CheckShort(std::string powerSupplyId, std::string channelId)
     }
     return true;
 }
-void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId)
+void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId, const std::vector<float>& cVoltages)
 {
     if(fPowerSupplyClient == nullptr)
     {
@@ -96,7 +96,8 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
 
     float I_SEH;
     float U_SEH;
-    float cVoltages[] = {5., 5.2, 5.4, 6., 7., 8., 9., 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.5, 10., 9., 8., 7., 6.6, 6.4, 6.2, 6.0, 5.8, 5};
+
+    // float cVoltages[] = {5., 5.2, 5.4, 6., 7., 8., 9., 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.5, 10., 9., 8., 7., 6.6, 6.4, 6.2, 6.0, 5.8, 5};
     for(auto& voltage: cVoltages)
     // while(cVolts < 10.01)
     {
