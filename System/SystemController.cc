@@ -348,6 +348,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
             RD53Shared::setFirstChip(*fDetectorContainer);
         }
+        else
+            throw Exception("[SystemController::InitializeHw] Error, board type not recognized");
     }
 
     if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
