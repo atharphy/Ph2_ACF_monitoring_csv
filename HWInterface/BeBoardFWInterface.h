@@ -200,6 +200,8 @@ class BeBoardFWInterface : public RegManager
     /*! \brief Set or reset the start signal */
     virtual void SetForceStart(bool bStart) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
+    virtual void PrintFWstatus() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
+
     // ############################
     // # Read/Write Optical Group #
     // ############################

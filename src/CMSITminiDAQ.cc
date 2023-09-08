@@ -224,7 +224,7 @@ int main(int argc, char** argv)
         else if(binaryFile != "")
             readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
     }
-    else if(binaryFile == "")
+    else
     {
         // #######################
         // # Initialize Hardware #
