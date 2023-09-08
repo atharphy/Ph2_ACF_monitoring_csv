@@ -192,7 +192,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 5-6: SerSelOut2[1:0]
     // # bits 3-4: SerSelOut1[1:0]
     // # bits 1-2: SerSelOut0[1:0]
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0b1111, false);
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", pRD53->laneConfig.packOutputLanes(), false);
     // # bits 7-8: SER_INV_TAP[1:0]
     // # bits 5-6: SER_EN_TAP[1:0]
     // # bits 1-4: SER_EN_LANE[3:0] --> External output lanes
@@ -222,8 +222,8 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 3-6:   EnDataMergeLane[3:0] --> Internal input lanes
     // # bit 2:      MergeChBonding       --> Channel bonding
     // # bit 1:      DataMergingGpoSel
-    uint16_t val =
-        bits::pack<8, 8>(pRD53->laneConfig.serializeBits<uint8_t, 4, 2>(pRD53->laneConfig.inputLaneMapping), pRD53->laneConfig.serializeBits<uint8_t, 4, 2>(pRD53->laneConfig.outputLaneMapping));
+    uint16_t val = bits::pack<8, 8>(pRD53->laneConfig.serializeBits<uint8_t, NCHIPLANES, 2>(pRD53->laneConfig.inputLaneMapping),
+                                    pRD53->laneConfig.serializeBits<uint8_t, NCHIPLANES, 2>(pRD53->laneConfig.outputLaneMapping));
     RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false); // Mux selection for input and output internal lane mapping to external lanes
     // # Internal inputs mapped to external inputs with 2 bits
     // # bits 15-16: DataMergingInMux_3[1:0]

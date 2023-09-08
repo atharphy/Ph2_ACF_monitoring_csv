@@ -21,6 +21,11 @@
 
 #include <iomanip>
 
+// ##################
+// # Default values #
+// ##################
+#define NCHIPLANES 4
+
 // #########################
 // # Chip useful constants #
 // #########################
@@ -78,7 +83,11 @@ struct pixelMask
 struct LaneConfig
 {
     LaneConfig() : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(true) {}
-    LaneConfig(bool isPrimary, uint8_t master, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes);
+    LaneConfig(bool                                   isPrimary,
+               uint8_t                                master,
+               const std::array<uint8_t, NCHIPLANES>& outputLanes,
+               const std::array<bool, NCHIPLANES>&    signleChannelInputLanes,
+               const std::array<bool, NCHIPLANES>&    dualChannelInputLanes);
 
     template <typename T, size_t N, size_t S>
     auto serializeBits(std::array<T, N> arr)
@@ -88,12 +97,19 @@ struct LaneConfig
         return val;
     }
 
-    std::array<uint8_t, 4> outputLaneMapping;
-    std::array<uint8_t, 4> inputLaneMapping;
-    std::array<bool, 5>    internalLanesEnabled;
-    uint8_t                nOutputLanes;
-    uint8_t                master;
-    bool                   isPrimary;
+    uint8_t packOutputLanes()
+    {
+        std::array<bool, NCHIPLANES> laneEnable = {false};
+        std::transform(outputLaneMapping.begin(), outputLaneMapping.end(), laneEnable.begin(), [&](const auto& x) { return x < NCHIPLANES; });
+        return serializeBits<bool, NCHIPLANES, 1>(laneEnable);
+    }
+
+    std::array<uint8_t, NCHIPLANES>  outputLaneMapping;
+    std::array<uint8_t, NCHIPLANES>  inputLaneMapping;
+    std::array<bool, NCHIPLANES + 1> internalLanesEnabled;
+    uint8_t                          nOutputLanes;
+    uint8_t                          master;
+    bool                             isPrimary;
 };
 
 // ####################################
