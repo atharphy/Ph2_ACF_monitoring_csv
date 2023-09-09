@@ -214,7 +214,8 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ################
     // # Data merging #
     // ################
-    RD53Interface::WriteChipReg(pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeBits<bool, 5, 1>(pRD53->laneConfig.internalLanesEnabled), 1), false);
+    RD53Interface::WriteChipReg(
+        pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeBits<bool, NCHIPLANES + 1, 1>(pRD53->laneConfig.internalLanesEnabled), 1), false);
     // # bits 10-13: DataMergingInputPolarityInvert[3:0]
     // # bit 9:      EnOutputDataChipId   --> Map in FormatOptions: enableChipId
     // # bit 8:      EnGatingDataMergeClk1280
