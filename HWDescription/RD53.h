@@ -89,27 +89,45 @@ struct LaneConfig
                const std::array<bool, NCHIPLANES>&    signleChannelInputLanes,
                const std::array<bool, NCHIPLANES>&    dualChannelInputLanes);
 
-    template <typename T, size_t N, size_t S>
-    auto serializeBits(std::array<T, N> arr)
+    // ####################################
+    // # Serialize an array of N elements #
+    // # allowing S-bits for each element #
+    // # into a TT-type variable          #
+    // ####################################
+    template <typename T, size_t N, size_t S, typename TT>
+    TT serializeArray(const std::array<T, N>& arr)
     {
-        uint16_t val = 0;
-        for(auto i = 0u; i < N; i++) val |= arr[i] << (S * i);
-        return val;
+        return processUnfoldedArray<T, N, S, TT>(arr, std::make_index_sequence<N>{});
     }
 
     uint8_t packOutputLanes()
     {
         std::array<bool, NCHIPLANES> laneEnable = {false};
         std::transform(outputLaneMapping.begin(), outputLaneMapping.end(), laneEnable.begin(), [&](const auto& x) { return x < NCHIPLANES; });
-        return serializeBits<bool, NCHIPLANES, 1>(laneEnable);
+        return serializeArray<bool, NCHIPLANES, 1, uint16_t>(laneEnable);
     }
 
     std::array<uint8_t, NCHIPLANES>  outputLaneMapping;
     std::array<uint8_t, NCHIPLANES>  inputLaneMapping;
     std::array<bool, NCHIPLANES + 1> internalLanesEnabled;
-    uint8_t                          nOutputLanes;
+    uint8_t                          nOutputLanes; // @TMP@
     uint8_t                          master;
     bool                             isPrimary;
+
+  private:
+    template <typename T, size_t N, size_t S, typename TT, size_t... Is>
+    TT processUnfoldedArray(const std::array<T, N>& arr, std::index_sequence<Is...>)
+    {
+        return serializeElements<T, N, S, TT, Is...>(arr[Is]...);
+    }
+
+    template <typename T, size_t N, size_t S, typename TT, size_t... Is, typename... Args>
+    TT serializeElements(Args... args)
+    {
+        TT                           result = 0;
+        __attribute__((unused)) auto unused = {result |= args << (S * Is)...};
+        return result;
+    }
 };
 
 // ####################################

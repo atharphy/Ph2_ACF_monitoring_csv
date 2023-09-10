@@ -215,7 +215,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # Data merging #
     // ################
     RD53Interface::WriteChipReg(
-        pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeBits<bool, NCHIPLANES + 1, 1>(pRD53->laneConfig.internalLanesEnabled), 1), false);
+        pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeArray<bool, NCHIPLANES + 1, 1, uint16_t>(pRD53->laneConfig.internalLanesEnabled), 1), false);
     // # bits 10-13: DataMergingInputPolarityInvert[3:0]
     // # bit 9:      EnOutputDataChipId   --> Map in FormatOptions: enableChipId
     // # bit 8:      EnGatingDataMergeClk1280
@@ -223,8 +223,8 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 3-6:   EnDataMergeLane[3:0] --> Internal input lanes
     // # bit 2:      MergeChBonding       --> Channel bonding
     // # bit 1:      DataMergingGpoSel
-    uint16_t val = bits::pack<8, 8>(pRD53->laneConfig.serializeBits<uint8_t, NCHIPLANES, 2>(pRD53->laneConfig.inputLaneMapping),
-                                    pRD53->laneConfig.serializeBits<uint8_t, NCHIPLANES, 2>(pRD53->laneConfig.outputLaneMapping));
+    uint16_t val = bits::pack<8, 8>(pRD53->laneConfig.serializeArray<uint8_t, NCHIPLANES, 2, uint16_t>(pRD53->laneConfig.inputLaneMapping),
+                                    pRD53->laneConfig.serializeArray<uint8_t, NCHIPLANES, 2, uint16_t>(pRD53->laneConfig.outputLaneMapping));
     RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false); // Mux selection for input and output internal lane mapping to external lanes
     // # Internal inputs mapped to external inputs with 2 bits
     // # bits 15-16: DataMergingInMux_3[1:0]
