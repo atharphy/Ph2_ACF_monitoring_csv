@@ -282,8 +282,9 @@ void RD53FWInterface::PrintFWstatus()
     // ##########################
     // # Check hybrid registers #
     // ##########################
-    this->singleChip = RegManager::ReadReg("user.stat_regs.aurora_rx.Hybrid_type");
-    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << this->singleChip << RESET << GREEN " (1=Single chip, 2=Double chip, 4=Quad chip)" << RESET;
+    uint32_t chipType = RegManager::ReadReg("user.stat_regs.aurora_rx.Hybrid_type");
+    this->singleChip  = chipType == 1;
+    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << chipType << RESET << GREEN " (1=Single chip, 2=Double chip, 4=Quad chip)" << RESET;
 
     uint32_t hybrid = RegManager::ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
     LOG(INFO) << GREEN << "Number of hybrids which can be potentially readout: " << BOLDYELLOW << hybrid << RESET;
