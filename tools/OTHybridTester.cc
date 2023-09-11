@@ -81,7 +81,7 @@ void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
         for(auto cOpticalGroup: *cBoard)
         {
             LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
-            for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+            for(const auto& RxProperty: static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getRxProperties())
             {
                 clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, RxProperty.Group, RxProperty.Channel, false);
                 clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, RxProperty.Group, 4);
@@ -173,7 +173,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     auto cHybridId = 2 * cOpticalGroup->getId() + hybridNumber;
                     if(pIsExternal)
                     {
-                        for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+                        for(const auto& RxProperty: static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getRxProperties())
                         {
                             clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, RxProperty.Group, RxProperty.Channel, false);
                             clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, RxProperty.Group, 0);

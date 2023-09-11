@@ -1658,11 +1658,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
         //     // ###################
         //     // # Specific for OT #
         //     // ###################
-        //     plpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6});
-        //     plpGBT->addRxChannels({0, 2});
 
-        //     for(const auto& group: plpGBT->getRxGroups())
-        //         for(const auto& channel: plpGBT->getRxChannels()) plpGBT->addRxProperty(group, channel, 0);
         // }
     }
 }

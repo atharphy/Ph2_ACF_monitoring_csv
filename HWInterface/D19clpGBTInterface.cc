@@ -155,49 +155,24 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
 
     // Tx Groups and Channels
-    std::vector<uint8_t> cTxGroups = {0, 2}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 0, cTxPreEmphWidth = 0, cTxInvert = 0;
-    for(const auto& group: cTxGroups)
-        for(const auto& channel: cTxChannels) lpGBTInterface::ConfigureTxGroup(pChip, group, channel, cTxDataRate);
 
-    for(const auto& cGroup: cTxGroups)
-    {
-        if(cGroup == 0) cTxInvert = 1;
-        if(cGroup == 2) cTxInvert = 0;
-        for(const auto& cChannel: cTxChannels)
-        {
-            ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
-            static_cast<lpGBT*>(pChip)->addTxProperty(cGroup, cChannel, cTxInvert);
-        }
-    }
+    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 0, cTxPreEmphWidth = 0;
+    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties()) { lpGBTInterface::ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, cTxDataRate); }
+
+    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
+    { ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity); }
 
     // Rx configuration and Phase Align
     // Configure Rx Groups
     // WriteChipReg(pChip, "EPRXDllConfig", , false);
-    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 0; // manual mode by default
-    for(const auto& group: cRxGroups)
-        for(const auto& channel: cRxChannels) lpGBTInterface::ConfigureRxGroup(pChip, group, channel, cRxDataRate, cRxTrackMode);
 
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 5;
-    for(const auto& cGroup: cRxGroups)
-    {
-        for(const auto cChannel: cRxChannels)
-        {
-            if(cGroup == 6 && cChannel == 0)
-                cRxInvert = 0;
-            else if(cGroup == 5 && cChannel == 0)
-                cRxInvert = 0;
-            else
-                cRxInvert = 1;
+    uint8_t cRxDataRate = 2, cRxTrackMode = 0; // manual mode by default
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties()) { lpGBTInterface::ConfigureRxGroup(pChip, RxProperty.Group, RxProperty.Channel, cRxDataRate, cRxTrackMode); }
 
-            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0)))
-            {
-                ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-                static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cTxInvert);
-            }
-        }
-    }
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 5;
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+    { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
+
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
@@ -380,51 +355,21 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
 
     // Tx Groups and Channels
-    std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    for(const auto& group: cTxGroups)
-        for(const auto& channel: cTxChannels) lpGBTInterface::ConfigureTxGroup(pChip, group, channel, cTxDataRate);
+    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0;
+    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties()) { lpGBTInterface::ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, cTxDataRate); }
 
-    for(const auto& cGroup: cTxGroups)
-    {
-        cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
-        for(const auto& cChannel: cTxChannels)
-        {
-            lpGBTInterface::ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
-            static_cast<lpGBT*>(pChip)->addTxProperty(cGroup, cChannel, cTxInvert);
-        }
-    }
+    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
+    { ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity); }
 
     // Rx configuration and Phase Align
     // Configure Rx Groups
-    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
-    for(const auto& group: cRxGroups)
-        for(const auto& channel: cRxChannels) lpGBTInterface::ConfigureRxGroup(pChip, group, channel, cRxDataRate, cRxTrackMode);
+    uint8_t cRxDataRate = 2, cRxTrackMode = 0;
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties()) { lpGBTInterface::ConfigureRxGroup(pChip, RxProperty.Group, RxProperty.Channel, cRxDataRate, cRxTrackMode); }
 
-    uint8_t              cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9; // cRxInvert = 0 ;
-    std::vector<uint8_t> cGrpsLeft{0, 1, 1, 2, 2, 3, 3};
-    std::vector<uint8_t> cChnlsLeft{2, 0, 2, 0, 2, 0, 2};
-    std::vector<uint8_t> cInvrtLeft{1, 1, 0, 1, 1, 1, 1};
-    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
-    {
-        uint8_t cGroup    = cGrpsLeft[cIndx];
-        uint8_t cChannel  = cChnlsLeft[cIndx];
-        uint8_t cRxInvert = cInvrtLeft[cIndx];
-        ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-        static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cTxInvert);
-    }
-    std::vector<uint8_t> cGrpsRight{4, 4, 5, 5, 6, 6, 0};
-    std::vector<uint8_t> cChnlsRight{2, 0, 2, 0, 2, 0, 0};
-    std::vector<uint8_t> cInvrtRight{0, 0, 0, 0, 0, 0, 1};
-    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
-    {
-        uint8_t cGroup    = cGrpsRight[cIndx];
-        uint8_t cChannel  = cChnlsRight[cIndx];
-        uint8_t cRxInvert = cInvrtRight[cIndx];
-        ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-        static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cTxInvert);
-    }
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9;
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+    { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
+
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for PS ROH
