@@ -1636,13 +1636,8 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             // # Retrieve links, groups, channels and polarities and propagate to LpGBT class #
             // ################################################################################
             plpGBT->addRxGroups(cRxGroups);
-            plpGBT->addRxChannels(cRxChannels);
-            plpGBT->addRxPolarities(cRxPolarities);
             plpGBT->addRxProperty(cRxGroups[0], cRxChannels[0], cRxPolarities[0]);
 
-            plpGBT->addTxGroups(cTxGroups);
-            plpGBT->addTxChannels(cTxChannels);
-            plpGBT->addTxPolarities(cTxPolarities);
             plpGBT->addTxProperty(cTxGroups[0], cTxChannels[0], cTxPolarities[0]);
 
             // ###################################################################
