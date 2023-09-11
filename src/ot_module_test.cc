@@ -26,6 +26,7 @@
 #include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/PixelAlive.h"
 #include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
@@ -130,6 +131,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("linkTest", "Check data coming over link....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC."); // Scurve
     cmd.defineOptionAlternative("measurePedeNoise", "m");
+
+    cmd.defineOption("pixelAlive", "measure pixel occupancy and mask pixels below threshold");
+    cmd.defineOptionAlternative("pixelAlive", "p");
 
     cmd.defineOption("cmNoise", "measure common mode noise");
 
@@ -1233,6 +1237,24 @@ int main(int argc, char* argv[])
         cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
+    }
+    if(cmd.foundOption("pixelAlive") && !cmd.foundOption("read"))
+    {
+        LOG(INFO) << BOLDMAGENTA << "Measuring Pixel Occupancy and Masking Pixels Below Threshold" << RESET;
+        t.start();
+        PixelAlive cPixelAlive;
+        cPixelAlive.Inherit(&cTool);
+        cPixelAlive.Initialise();
+        cPixelAlive.measurePixels();
+    //cPixelAlive.channelTest(); //For Debugging Purposes
+//        cPixelAlive.measurePixels(); //Run twice for masking test
+        cPixelAlive.writeObjects();
+        LOG(INFO) << BOLDBLUE << "Dumping PixelAlive Registers" << RESET;
+        cPixelAlive.dumpConfigFiles();
+        cPixelAlive.Reset();
+        t.stop();
+        t.show("Time to Measure Pixel Occupancy and Mask Pixels");
+        LOG(INFO) << BOLDMAGENTA << "PixelAlive Finished" << RESET;
     }
 
     if(cmd.foundOption("cmNoise") && !cmd.foundOption("read"))
