@@ -1658,17 +1658,17 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxPolarity(cTxPolarities[0]);
         }
-        else
-        {
-            // ###################
-            // # Specific for OT #
-            // ###################
-            plpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6});
-            plpGBT->addRxChannels({0, 2});
+        // else
+        // {
+        //     // ###################
+        //     // # Specific for OT #
+        //     // ###################
+        //     plpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6});
+        //     plpGBT->addRxChannels({0, 2});
 
-            for(const auto& group: plpGBT->getRxGroups())
-                for(const auto& channel: plpGBT->getRxChannels()) plpGBT->addRxProperty(group, channel, 0);
-        }
+        //     for(const auto& group: plpGBT->getRxGroups())
+        //         for(const auto& channel: plpGBT->getRxChannels()) plpGBT->addRxProperty(group, channel, 0);
+        // }
     }
 }
 

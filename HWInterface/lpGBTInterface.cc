@@ -17,14 +17,20 @@ namespace Ph2_HwInterface
 {
 void lpGBTInterface::StartPRBSpattern(Chip* pChip)
 {
-    lpGBTInterface::ConfigureRxPRBS(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), true);
-    lpGBTInterface::ConfigureRxSource(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), lpGBTconstants::PATTERN_PRBS);
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+    {
+        lpGBTInterface::ConfigureRxPRBS(pChip, RxProperty.Group, RxProperty.Channel, true);
+        lpGBTInterface::ConfigureRxSource(pChip, RxProperty.Group, lpGBTconstants::PATTERN_PRBS);
+    }
 }
 
 void lpGBTInterface::StopPRBSpattern(Chip* pChip)
 {
-    lpGBTInterface::ConfigureRxPRBS(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), false);
-    lpGBTInterface::ConfigureRxSource(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), lpGBTconstants::PATTERN_NORMAL);
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+    {
+        lpGBTInterface::ConfigureRxPRBS(pChip, RxProperty.Group, RxProperty.Channel, false);
+        lpGBTInterface::ConfigureRxSource(pChip, RxProperty.Group, lpGBTconstants::PATTERN_NORMAL);
+    }
 }
 
 // ################################
@@ -351,70 +357,62 @@ void lpGBTInterface::ConfigureDPPattern(Chip* pChip, uint32_t pPattern)
     WriteChipReg(pChip, "DPDataPattern3", ((pPattern & 0xFF000000) >> 24));
 }
 
-void lpGBTInterface::ConfigureRxPRBS(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, bool pEnable)
+void lpGBTInterface::ConfigureRxPRBS(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool pEnable)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        std::string cPRBSReg;
-        if(cGroup == 1 || cGroup == 0)
-            cPRBSReg = "EPRXPRBS0";
-        else if(cGroup == 3 || cGroup == 2)
-            cPRBSReg = "EPRXPRBS1";
-        else if(cGroup == 5 || cGroup == 4)
-            cPRBSReg = "EPRXPRBS2";
-        else if(cGroup == 6)
-            cPRBSReg = "EPRXPRBS3";
+    std::string cPRBSReg;
+    if(pGroup == 1 || pGroup == 0)
+        cPRBSReg = "EPRXPRBS0";
+    else if(pGroup == 3 || pGroup == 2)
+        cPRBSReg = "EPRXPRBS1";
+    else if(pGroup == 5 || pGroup == 4)
+        cPRBSReg = "EPRXPRBS2";
+    else if(pGroup == 6)
+        cPRBSReg = "EPRXPRBS3";
 
-        uint8_t cEnabledCh       = 0;
-        uint8_t cValueEnablePRBS = ReadChipReg(pChip, cPRBSReg);
-        for(const auto cChannel: pChannels) cEnabledCh |= pEnable << cChannel;
-        WriteChipReg(pChip, cPRBSReg, (cValueEnablePRBS & ~(0xF << 4 * (cGroup % 2))) | (cEnabledCh << (4 * (cGroup % 2))));
-    }
+    uint8_t cEnabledCh       = 0;
+    uint8_t cValueEnablePRBS = ReadChipReg(pChip, cPRBSReg);
+    cEnabledCh |= pEnable << pChannel;
+    WriteChipReg(pChip, cPRBSReg, (cValueEnablePRBS & ~(0xF << 4 * (pGroup % 2))) | (cEnabledCh << (4 * (pGroup % 2))));
+
+} // namespace Ph2_HwInterface
+
+void lpGBTInterface::ConfigureRxSource(Chip* pChip, uint8_t pGroup, uint8_t pSource)
+{
+    if(pSource == 0)
+        LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +pGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
+    else if(pSource == 1)
+        LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +pGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
+    else if(pSource == 4 || pSource == 5)
+        LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +pGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
+
+    std::string cRxSourceReg;
+    if(pGroup == 0 || pGroup == 1)
+        cRxSourceReg = "ULDataSource1";
+    else if(pGroup == 2 || pGroup == 3)
+        cRxSourceReg = "ULDataSource2";
+    else if(pGroup == 4 || pGroup == 5)
+        cRxSourceReg = "ULDataSource3";
+    else if(pGroup == 6)
+        cRxSourceReg = "ULDataSource4";
+
+    uint8_t cValueRxSource = ReadChipReg(pChip, cRxSourceReg);
+    WriteChipReg(pChip, cRxSourceReg, (cValueRxSource & ~(0x7 << 3 * (pGroup % 2))) | (pSource << 3 * (pGroup % 2)));
 }
 
-void lpGBTInterface::ConfigureRxSource(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource)
+void lpGBTInterface::ConfigureTxSource(Chip* pChip, uint8_t pGroup, uint8_t pSource)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        if(pSource == 0)
-            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
-        else if(pSource == 1)
-            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
-        else if(pSource == 4 || pSource == 5)
-            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
+    if(pSource == 0)
+        LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +pGroup << RESET << GREEN << " Source to NORMAL " << RESET;
+    else if(pSource == 1)
+        LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +pGroup << RESET << GREEN << " Source to PRBS7 " << RESET;
+    else if(pSource == 2)
+        LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +pGroup << RESET << GREEN << " Source to Binary counter " << RESET;
+    else if(pSource == 3)
+        LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +pGroup << RESET << GREEN << " Source to Constant Pattern" << RESET;
 
-        std::string cRxSourceReg;
-        if(cGroup == 0 || cGroup == 1)
-            cRxSourceReg = "ULDataSource1";
-        else if(cGroup == 2 || cGroup == 3)
-            cRxSourceReg = "ULDataSource2";
-        else if(cGroup == 4 || cGroup == 5)
-            cRxSourceReg = "ULDataSource3";
-        else if(cGroup == 6)
-            cRxSourceReg = "ULDataSource4";
-
-        uint8_t cValueRxSource = ReadChipReg(pChip, cRxSourceReg);
-        WriteChipReg(pChip, cRxSourceReg, (cValueRxSource & ~(0x7 << 3 * (cGroup % 2))) | (pSource << 3 * (cGroup % 2)));
-    }
-}
-
-void lpGBTInterface::ConfigureTxSource(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource)
-{
-    for(const auto& cGroup: pGroups)
-    {
-        if(pSource == 0)
-            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to NORMAL " << RESET;
-        else if(pSource == 1)
-            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to PRBS7 " << RESET;
-        else if(pSource == 2)
-            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Binary counter " << RESET;
-        else if(pSource == 3)
-            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Constant Pattern" << RESET;
-
-        uint8_t cULDataSrcValue = ReadChipReg(pChip, "ULDataSource5");
-        cULDataSrcValue         = (cULDataSrcValue & ~(0x3 << (2 * cGroup))) | (pSource << (2 * cGroup));
-        WriteChipReg(pChip, "ULDataSource5", cULDataSrcValue);
-    }
+    uint8_t cULDataSrcValue = ReadChipReg(pChip, "ULDataSource5");
+    cULDataSrcValue         = (cULDataSrcValue & ~(0x3 << (2 * pGroup))) | (pSource << (2 * pGroup));
+    WriteChipReg(pChip, "ULDataSource5", cULDataSrcValue);
 }
 
 void lpGBTInterface::ConfigureRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)

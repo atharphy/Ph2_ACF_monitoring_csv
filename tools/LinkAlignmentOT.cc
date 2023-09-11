@@ -194,8 +194,7 @@ bool LinkAlignmentOT::CheckLpgbtOutputs(const OpticalGroup* pOpticalGroup, uint8
     D19clpGBTInterface* clpGBTInterface    = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     uint32_t            cPatternToTransmit = pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern;
     clpGBTInterface->ConfigureDPPattern(clpGBT, cPatternToTransmit);
-    clpGBTInterface->ConfigureRxSource(clpGBT, clpGBTInterface->getGroups(), lpGBTconstants::PATTERN_CONST);
-
+    for(const auto& RxProperty: static_cast<lpGBT*>(pOpticalGroup->flpGBT)->getRxProperties()) { clpGBTInterface->ConfigureRxSource(clpGBT, RxProperty.Group, lpGBTconstants::PATTERN_CONST); }
     // now check output
     uint8_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
     for(auto cHybrid: *pOpticalGroup)
@@ -229,7 +228,7 @@ bool LinkAlignmentOT::CheckLpgbtOutputs(const OpticalGroup* pOpticalGroup, uint8
         cDebugInterface->L1ADebug();
     }
     // back to normal pattern .. i.e. data from CIC
-    clpGBTInterface->ConfigureRxSource(clpGBT, clpGBTInterface->getGroups(), lpGBTconstants::PATTERN_NORMAL);
+    for(const auto& RxProperty: static_cast<lpGBT*>(pOpticalGroup->flpGBT)->getRxProperties()) { clpGBTInterface->ConfigureRxSource(clpGBT, RxProperty.Group, lpGBTconstants::PATTERN_NORMAL); }
 
     return true;
 }

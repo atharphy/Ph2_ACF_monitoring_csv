@@ -98,7 +98,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
         LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
         // Example on how to use the current source to measure resistance
-        // Only for OT-2S 
+        // Only for OT-2S
         // if(pChip->getFrontEndType() == FrontEndType::OuterTracker2S) {
         // CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
         // LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
@@ -164,7 +164,11 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     {
         if(cGroup == 0) cTxInvert = 1;
         if(cGroup == 2) cTxInvert = 0;
-        for(const auto& cChannel: cTxChannels) ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+        for(const auto& cChannel: cTxChannels)
+        {
+            ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+            static_cast<lpGBT*>(pChip)->addTxProperty(cGroup, cChannel, cTxInvert);
+        }
     }
 
     // Rx configuration and Phase Align
@@ -187,7 +191,11 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
             else
                 cRxInvert = 1;
 
-            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0)))
+            {
+                ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+                static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cTxInvert);
+            }
         }
     }
     // Reset I2C Masters
@@ -380,7 +388,11 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     for(const auto& cGroup: cTxGroups)
     {
         cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
-        for(const auto& cChannel: cTxChannels) ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+        for(const auto& cChannel: cTxChannels)
+        {
+            lpGBTInterface::ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
+            static_cast<lpGBT*>(pChip)->addTxProperty(cGroup, cChannel, cTxInvert);
+        }
     }
 
     // Rx configuration and Phase Align
@@ -400,6 +412,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         uint8_t cChannel  = cChnlsLeft[cIndx];
         uint8_t cRxInvert = cInvrtLeft[cIndx];
         ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+        static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cTxInvert);
     }
     std::vector<uint8_t> cGrpsRight{4, 4, 5, 5, 6, 6, 0};
     std::vector<uint8_t> cChnlsRight{2, 0, 2, 0, 2, 0, 0};
@@ -410,6 +423,7 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         uint8_t cChannel  = cChnlsRight[cIndx];
         uint8_t cRxInvert = cInvrtRight[cIndx];
         ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
+        static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cTxInvert);
     }
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});

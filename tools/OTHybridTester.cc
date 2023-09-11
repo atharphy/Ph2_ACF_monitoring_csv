@@ -80,9 +80,12 @@ void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
             LOG(INFO) << BOLDGREEN << "Internal LpGBT pattern generation" << RESET;
-            clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
+            for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+            {
+                clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, RxProperty.Group, RxProperty.Channel, false);
+                clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, RxProperty.Group, 4);
+            }
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern);
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
@@ -170,8 +173,11 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     auto cHybridId = 2 * cOpticalGroup->getId() + hybridNumber;
                     if(pIsExternal)
                     {
-                        clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
-                        clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
+                        for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+                        {
+                            clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, RxProperty.Group, RxProperty.Channel, false);
+                            clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, RxProperty.Group, 0);
+                        }
                         std::this_thread::sleep_for(std::chrono::milliseconds(500));
                     }
 
@@ -298,7 +304,10 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
         {
             uint8_t cSource = 3;
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
-            clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
+            for(const auto& TxProperty: static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getTxProperties())
+            {
+                clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, TxProperty.Group, cSource); // 0 --> link data, 3 --> constant pattern
+            }
             // clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {,}, cSource); // 0 --> link data, 3 --> constant pattern
             if(!fIsSEH)
             {
@@ -318,7 +327,10 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 0); // 0 --> link data, 3 --> constant pattern
+            for(const auto& TxProperty: static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getTxProperties())
+            {
+                clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, TxProperty.Group, 0); // 0 --> link data, 3 --> constant pattern
+            }
         }
     }
     // if(!cResult) { throw std::runtime_error("Failed to Phase Align "); }
@@ -954,7 +966,10 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
                 if(cPattern != 0x07)
                 {
                     clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, cPattern << 24 | cPattern << 16 | cPattern << 8 | cPattern);
-                    clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 3); // 0 --> link data, 3 --> constant pattern   }
+                    for(const auto& TxProperty: static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getTxProperties())
+                    {
+                        clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, TxProperty.Group, 3); // 0 --> link data, 3 --> constant pattern   }
+                    }
                 }
             }
         }
@@ -1104,7 +1119,8 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
             else
             {
                 LOG(INFO) << BOLDMAGENTA << "Performing BER Test with PRBS7" << RESET;
-                clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, true);
+                for(const auto& RxProperty: static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getRxProperties())
+                { clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, RxProperty.Group, RxProperty.Channel, true); }
             }
             // Configure BERT block
             clpGBTInterface->ConfigureBERT(cOpticalGroup->flpGBT, pCoarseSource, pFineSource, pMeasTime);
@@ -1119,7 +1135,11 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
                     LOG(INFO) << BOLDWHITE << "\tBit Error Rate [RxEqual=" << +cRxEqual << ":RxPhase=" << +cRxPhase << "] = " << +cBERTResult << "%" << RESET;
                 }
             }
-            if(pPattern == 0x00000000) { clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false); }
+            if(pPattern == 0x00000000)
+            {
+                for(const auto& RxProperty: static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getRxProperties())
+                { clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, RxProperty.Group, RxProperty.Channel, false); }
+            }
         }
     }
 }
