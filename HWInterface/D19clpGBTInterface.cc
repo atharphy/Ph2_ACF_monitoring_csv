@@ -81,7 +81,6 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         AutoTuneVref(pChip);
 
         LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
-        CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
         LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC0\", \"VREF/2\", 0) " << RESET;
         LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC0", "VREF/2", 0) << " V" << RESET;
         LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC1\", \"VREF/2\", 0) " << RESET;
@@ -98,9 +97,12 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC6", "VREF/2", 0) << " V" << RESET;
         LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
         LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
-
-        LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
-        LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;
+        // Example on how to use the current source to measure resistance
+        // Only for OT-2S 
+        // if(pChip->getFrontEndType() == FrontEndType::OuterTracker2S) {
+        // CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
+        // LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;}
         LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
         LOG(INFO) << BOLDGREEN << MeasureTemperature(pChip) << " C" << RESET;
 
