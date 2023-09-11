@@ -67,8 +67,8 @@ void OTQuickNoise::TakeData()
 
         for(auto cOpticalGroup: *cBoard)
         {
-            json j;
-	    std::vector<int> hits(TOTAL_CHANNELS_OT,0); 
+            json             j;
+            std::vector<int> hits(TOTAL_CHANNELS_OT, 0);
             for(auto& cEvent: events)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -78,18 +78,15 @@ void OTQuickNoise::TakeData()
                         uint32_t chipOffset_module = (cHybrid->getId() * HYBRID_CHANNELS_OT) + (cChip->getId() * NCHANNELS);
                         for(uint32_t iCh = 0; iCh < NCHANNELS + 1; iCh++)
                         {
-                            if(cEvent->DataBit(cHybrid->getId(), cChip->getId(), iCh))
-			    { 
-				hits[chipOffset_module + iCh] += 1;
-			    }
+                            if(cEvent->DataBit(cHybrid->getId(), cChip->getId(), iCh)) { hits[chipOffset_module + iCh] += 1; }
                         }
                     }
                 }
             } // end events loop
             if(fOfStream != nullptr)
             {
-                j["type"] = "data";
-		j["data"]["hits"] = hits;
+                j["type"]         = "data";
+                j["data"]["hits"] = hits;
                 *(fOfStream) << j << std::endl;
             }
         } // end module loop
@@ -99,8 +96,8 @@ void OTQuickNoise::TakeData()
 void OTQuickNoise::parseSettings()
 {
     // now read the settings from the map
-    fNevents      = findValueInSettings<double>("Nevents", 1000);
-    fManualVcth   = findValueInSettings<double>("CMNoise_manualVcth", 0);
+    fNevents    = findValueInSettings<double>("Nevents", 1000);
+    fManualVcth = findValueInSettings<double>("CMNoise_manualVcth", 0);
 
     LOG(INFO) << "Parsed the following settings:";
     LOG(INFO) << "	Running " << fNevents;

@@ -632,7 +632,7 @@ void Tool::SoftDestroy()
     if(fOfStream != nullptr)
     {
         delete fOfStream;
-	fOfStream = nullptr;
+        fOfStream = nullptr;
     }
 #ifdef __USE_ROOT__
     if(fResultFile != nullptr)

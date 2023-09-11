@@ -21,8 +21,8 @@ class OTLightTransmission : public OTTool
     void Resume() override;
 
     void ReadRegisters();
+
   private:
     int cChannel;
-
 };
 #endif

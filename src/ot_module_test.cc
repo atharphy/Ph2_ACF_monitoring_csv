@@ -1,4 +1,3 @@
-#include <cstring>
 #include "HWInterface/D19cDebugFWInterface.h"
 #include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
@@ -16,12 +15,12 @@
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
 #include "tools/OTCMNoise.h"
+#include "tools/OTLightTransmission.h"
+#include "tools/OTQuickNoise.h"
+#include "tools/OTSensorTemperature.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
-#include "tools/OTSensorTemperature.h"
 #include "tools/OTlpGBTID.h"
-#include "tools/OTQuickNoise.h"
-#include "tools/OTLightTransmission.h"
 #include "tools/PSAlignment.h"
 #include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
@@ -29,6 +28,7 @@
 #include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
+#include <cstring>
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -217,21 +217,20 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
-    bool        batchMode        = (cmd.foundOption("batch")) ? true : false;
-    bool        cCheckData       = (cmd.foundOption("checkData"));
-    bool        cSaveToFile      = cmd.foundOption("save");
-    std::string cSkip            = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
-    std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
-    std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
-    std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    int         cKiraPort        = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
-    std::string cKiraID          = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
-    bool        cKiraCalibration = cmd.foundOption("kiracalibration");
-    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+    std::string cHWFile             = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
+    bool        batchMode           = (cmd.foundOption("batch")) ? true : false;
+    bool        cCheckData          = (cmd.foundOption("checkData"));
+    bool        cSaveToFile         = cmd.foundOption("save");
+    std::string cSkip               = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
+    std::string cInjectionSource    = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
+    std::string cSrcLnkTst          = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
+    std::string cModuleId           = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
+    int         cKiraPort           = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
+    std::string cKiraID             = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
+    bool        cKiraCalibration    = cmd.foundOption("kiracalibration");
+    std::string cDirectory          = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    bool        cPulseShape         = (cmd.foundOption("pulseShape")) ? true : false;
     int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
-
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -303,17 +302,17 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("writeJson"))
     {
         std::ofstream* outStream = new std::ofstream(cmd.optionValue("writeJson"));
-	cTool.setOfStream(outStream);
+        cTool.setOfStream(outStream);
     }
 
     if(cmd.foundOption("readTemperatures"))
     {
         LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
-        auto cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
+        auto          cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
         OTTemperature cTemperatureReader;
         cTemperatureReader.Inherit(&cTool);
         cTemperatureReader.SetGain(cGain);
-	cTemperatureReader.LoopReadout(true);
+        cTemperatureReader.LoopReadout(true);
         StartInfo theStartInfo;
         theStartInfo.setRunNumber(cRunNumber);
         cTemperatureReader.Start(theStartInfo);
