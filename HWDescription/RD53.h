@@ -184,14 +184,21 @@ class RD53 : public ReadoutChip
     // #################
     // # LpGBT mapping #
     // #################
-    void    setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
-    void    setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
-    void    setTxGroup(uint8_t pTxGroup) { fLpGBTmap.TxGroup = pTxGroup; }
-    void    setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
+    void setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
+    void setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
+    void setRxPolarity(uint8_t pRxPolarity) { fLpGBTmap.RxPolarity = pRxPolarity; }
+
+    void setTxGroup(uint8_t pTxGroup) { fLpGBTmap.TxGroup = pTxGroup; }
+    void setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
+    void setTxPolarity(uint8_t pTxPolarity) { fLpGBTmap.TxPolarity = pTxPolarity; }
+
     uint8_t getRxGroup() { return fLpGBTmap.RxGroup; }
     uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
+    uint8_t getRxPolarity() { return fLpGBTmap.RxPolarity; }
+
     uint8_t getTxGroup() { return fLpGBTmap.TxGroup; }
     uint8_t getTxChannel() { return fLpGBTmap.TxChannel; }
+    uint8_t getTxPolarity() { return fLpGBTmap.TxPolarity; }
 
   protected:
     DataFormatOptions dataFormatOptions;
@@ -201,8 +208,10 @@ class RD53 : public ReadoutChip
     {
         uint8_t RxGroup;
         uint8_t RxChannel;
+        uint8_t RxPolarity;
         uint8_t TxGroup;
         uint8_t TxChannel;
+        uint8_t TxPolarity;
     } fLpGBTmap;
     pixelMask   fPixelsMask;
     pixelMask   fPixelsMaskDefault;

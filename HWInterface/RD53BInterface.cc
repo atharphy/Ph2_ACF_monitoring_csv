@@ -81,7 +81,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Programmig global registers #
     // ###############################
     static const std::set<std::string> registerBlackList = {
-        "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+        "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
     static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
                                                             "DAC_PREAMP_R_LIN",
                                                             "DAC_PREAMP_TL_LIN",
@@ -346,6 +346,14 @@ std::pair<std::string, uint16_t> RD53BInterface::SetSpecialRegister(std::string 
         return {regName, value};
     else
     {
+        try
+        {
+            pRD53RegMap.at(regName);
+        }
+        catch(const std::out_of_range& error)
+        {
+            throw std::out_of_range("Register " + regName + " not found in RD53 register-map file. I can not proceed. Please verify that you are using the latest RD53 registre-map.");
+        }
         ChipRegItem& specialReg = pRD53RegMap.at(regName);
         ChipRegItem& Reg        = pRD53RegMap.at(it->second.regName);
         return {it->second.regName, RD53Interface::SetFieldValue(Reg.fValue, value, it->second.start, specialReg.fBitSize)};
@@ -727,14 +735,26 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
+    const uint16_t sampleNtimes = pChip->getRegItem("SAMPLE_N_TIMES").fValue;
+    const uint16_t GlbPulseVal  = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", data, false); // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
-    RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);             // Trigger Monitor Data to start conversion
-    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);    // Stop monitoring
-    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0xFF);        // Restore value in Global Pulse Route
 
-    return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+    // ########################################################
+    // # Sample data multiple times for better value estimate #
+    // ########################################################
+    uint32_t val = 0;
+    for(auto i = 0u; i < sampleNtimes; i++)
+    {
+        RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);          // Trigger Monitor Data to start conversion
+        RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false); // Stop monitoring
+        val += RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+    }
+    val /= sampleNtimes;
+
+    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0xFF); // Restore value in Global Pulse Route
+
+    return val;
 }
 
 float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type, int beta)

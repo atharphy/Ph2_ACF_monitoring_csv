@@ -44,7 +44,7 @@ void CalibBase::saveChipRegisters(int currentRun, bool doUpdateChip)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap();
+                    if(doUpdateChip == true) cChip->saveRegMap();
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
                     system(command.c_str());
