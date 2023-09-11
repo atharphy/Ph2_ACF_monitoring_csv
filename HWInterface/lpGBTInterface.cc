@@ -113,7 +113,7 @@ uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
 
     uint8_t cMasterId = 1, cSlaveAddress = 0x50, cNbyte = 1, cFrequency = 2;
 
-    bool cRecent = WriteI2C(pChip, cMasterId, cSlaveAddress, 0x1, cNbyte, cFrequency);
+    bool cRecent = WriteI2C(pChip, cMasterId, cSlaveAddress, 0x15, cNbyte, cFrequency);
     if(cRecent) { cReadBackValue = ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency); }
     if(cReadBackValue == 0x15)
     {
