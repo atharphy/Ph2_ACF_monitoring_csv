@@ -521,7 +521,7 @@ void Tool::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer
         {
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
-            uint32_t chipFuseId = flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
+            uint32_t chipFuseId = 0; // flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
             // Temporary function in lpgbt interface until VTRx interface is implemented
             theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
         }
