@@ -194,8 +194,35 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
     ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
 #endif
+}
+void D19clpGBTInterface::Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip)
+{
+    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
+    uint8_t              cRxInvert = 0;
+    for(const auto& cGroup: cRxGroups)
+    {
+        for(const auto cChannel: cRxChannels)
+        {
+            if(cGroup == 6 && cChannel == 0)
+                cRxInvert = 0;
+            else if(cGroup == 5 && cChannel == 0)
+                cRxInvert = 0;
+            else
+                cRxInvert = 1;
 
-} // namespace Ph2_HwInterface
+            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) { static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert); }
+        }
+    }
+    std::vector<uint8_t> cTxGroups = {0, 2};
+    uint8_t              cTxInvert = 0;
+
+    for(const auto& cGroup: cTxGroups)
+    {
+        if(cGroup == 0) cTxInvert = 1;
+        if(cGroup == 2) cTxInvert = 0;
+        static_cast<lpGBT*>(pChip)->addTxProperty(cGroup, 0, cTxInvert);
+    }
+}
 
 void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
@@ -392,5 +419,35 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 
 #endif
     LOG(INFO) << BOLDGREEN << "PS-ROH-" << +cChipRate << "G lpGBT configuration APPLIED" << RESET;
+}
+void D19clpGBTInterface::AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip)
+{
+    std::vector<uint8_t> cTxGroups = {0, 1, 2, 3};
+    uint8_t              cTxInvert = 0;
+    for(const auto& cGroup: cTxGroups)
+    {
+        cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
+        static_cast<lpGBT*>(pChip)->addTxProperty(cGroup, 0, cTxInvert);
+    }
+    std::vector<uint8_t> cGrpsLeft{0, 1, 1, 2, 2, 3, 3};
+    std::vector<uint8_t> cChnlsLeft{2, 0, 2, 0, 2, 0, 2};
+    std::vector<uint8_t> cInvrtLeft{1, 1, 0, 1, 1, 1, 1};
+    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
+    {
+        uint8_t cGroup    = cGrpsLeft[cIndx];
+        uint8_t cChannel  = cChnlsLeft[cIndx];
+        uint8_t cRxInvert = cInvrtLeft[cIndx];
+        static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert);
+    }
+    std::vector<uint8_t> cGrpsRight{4, 4, 5, 5, 6, 6, 0};
+    std::vector<uint8_t> cChnlsRight{2, 0, 2, 0, 2, 0, 0};
+    std::vector<uint8_t> cInvrtRight{0, 0, 0, 0, 0, 0, 1};
+    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
+    {
+        uint8_t cGroup    = cGrpsRight[cIndx];
+        uint8_t cChannel  = cChnlsRight[cIndx];
+        uint8_t cRxInvert = cInvrtRight[cIndx];
+        static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert);
+    }
 }
 } // namespace Ph2_HwInterface

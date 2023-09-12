@@ -1134,7 +1134,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // ###############
     // # Configuring #
     // ###############
-    lpGBTInterface::ConfigureRxSource(pChip, {pGroup}, lpGBTconstants::PATTERN_NORMAL);
+    lpGBTInterface::ConfigureRxSource(pChip, pGroup, lpGBTconstants::PATTERN_NORMAL);
     lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
 
     // #########

@@ -35,8 +35,10 @@ class D19clpGBTInterface : public lpGBTInterface
     void SetConfigMode(bool pOptical, bool pToggleTC = false);
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
+    void AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip);
     // configure 2S-SEH
     void        Configure2SSEH(Ph2_HwDescription::Chip* pChip);
+    void        Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip);
     std::string getVariableValue(std::string variable, std::string buffer);
     void        ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
     void        InitialPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
