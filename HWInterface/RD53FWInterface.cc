@@ -356,11 +356,11 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
-        // RD53FWInterface::ResetSlowCmdFIFO();                                              // @TMP@ : temporary fix untill FIFO error FW fix
-        // std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP)); // @TMP@ : temporary fix untill FIFO error FW fix
+        RD53FWInterface::ResetSlowCmdFIFO();                                              // @TMP@ : temporary fix untill FIFO error FW fix
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP)); // @TMP@ : temporary fix untill FIFO error FW fix
     }
-    if(nAttempts == RD53Shared::MAXATTEMPTS) // @TMP@ : temporary fix untill FIFO error FW fix
-        LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
+    // if(nAttempts == RD53Shared::MAXATTEMPTS) // @TMP@ : temporary fix untill FIFO error FW fix
+    //     LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
 
     // ###############################
     // # Send command(s) to the chip #
@@ -395,8 +395,8 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         nAttempts++;
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
-    if(nAttempts == RD53Shared::MAXATTEMPTS) // @TMP@ : temporary fix untill FIFO error FW fix
-        LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
+    // if(nAttempts == RD53Shared::MAXATTEMPTS) // @TMP@ : temporary fix untill FIFO error FW fix
+    //     LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
 }
 
 std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(ReadoutChip* pChip)
@@ -424,7 +424,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
         if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
     }
 
-    if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIFO error FW fix
+    // if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIFO error FW fix
 
     return regReadback;
 }
