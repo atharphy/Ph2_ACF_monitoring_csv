@@ -330,6 +330,18 @@
     <Setting name="PhaseStartLatency">290</Setting>
     <Setting name="PhaseLatencyRange">10</Setting>
 
+    <!--PixelAlive Settings-->
+    <Setting name="PixelAliveNevents">100</Setting>
+    <Setting name="PixelAliveNeventsForValidation">1000</Setting>
+    <Setting name="PixelEpsilon">0.01</Setting>
+    <Setting name="PixelAliveMask">1</Setting> <!--Boolean For Enable Masking-->
+    <Setting name="PixelAlivePulseAmplitude_MPA">145</Setting>
+    <Setting name="PixelAlivePulseAmplitude_SSA">132</Setting>
+    <Setting name="PixelAliveThreshold_MPA">225</Setting>
+    <Setting name="PixelAliveThreshold_SSA">111</Setting>
+
+
+
     <!-- Sync Test --> 
     <Setting name="Attempts">1</Setting>
     <!-- injection configuration, number of MPAs -->
