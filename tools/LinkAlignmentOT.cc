@@ -31,7 +31,7 @@ bool LinkAlignmentOT::Align()
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
         for(auto cOpticalGroup: *cBoard)
         {
-            if (true) ECV(cOpticalGroup);
+            if (false) ECV(cOpticalGroup);
             AlignLpGBTInputs(cOpticalGroup);
             WordAlignBEdata(cOpticalGroup);
         }
