@@ -314,6 +314,22 @@ run:2S:DS:
     - job: run:2S:python
       artifacts: false
 
+## PS module
+run:PS:
+  extends: .run
+  script:
+    - source ./setup.sh ci
+    - ot_module_test -f settings/CMSPS_CI.xml -t -m -a -b --reconfigure
+  after_script:
+    - cp Results/*/Hybrid.root .
+    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysisPS.log
+    - cp coreAnalysisPS.log .
+  artifacts:
+    paths:
+      - Hybrid.root
+      - coreAnalysisPS.log
+      - MonitorResults/MonitorDQM*.root
+    expire_in: 1 week
 
 ## CHECK ##########
 
