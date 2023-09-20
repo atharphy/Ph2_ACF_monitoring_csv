@@ -21,7 +21,7 @@ LaneConfig::LaneConfig(bool                                   isPrimary,
     // ################
     // # nOutputLanes #
     // ################
-    // nOutputLanes = std::count_if(outputLanes.begin(), outputLanes.end(), [](auto x) { return x > 0; }); // @TMP@
+    nOutputLanes = std::count_if(outputLanes.begin(), outputLanes.end(), [](auto x) { return x > 0; });
 
     // #####################
     // # outputLaneMapping #
@@ -31,7 +31,6 @@ LaneConfig::LaneConfig(bool                                   isPrimary,
         if(outputLanes[NCHIPLANES - 1 - i] > 0)
             outputLaneMapping[i] = outputLanes[NCHIPLANES - 1 - i] - 1;
         else
-            // outputLaneMapping[i] = nOutputLanes; // @TMP@
             outputLaneMapping[i] = NCHIPLANES;
     }
 

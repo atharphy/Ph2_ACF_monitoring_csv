@@ -203,6 +203,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(
         pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
     RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(pRD53->laneConfig.nOutputLanes), 0b011001, 0b11), false);
     // # bit 14:    SendAltOutput
@@ -402,7 +403,7 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
     {
         for(int i = 0; i < 2; i++)
         {
-            uint16_t value = 0x5555 << i;
+            const uint16_t value = 0x5555 << i;
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);
             RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});

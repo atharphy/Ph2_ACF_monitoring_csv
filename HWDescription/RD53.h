@@ -110,7 +110,7 @@ struct LaneConfig
     std::array<uint8_t, NCHIPLANES>  outputLaneMapping;
     std::array<uint8_t, NCHIPLANES>  inputLaneMapping;
     std::array<bool, NCHIPLANES + 1> internalLanesEnabled;
-    uint8_t                          nOutputLanes; // @TMP@
+    uint8_t                          nOutputLanes;
     uint8_t                          master;
     bool                             isPrimary;
 
