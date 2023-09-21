@@ -19,8 +19,7 @@ void GenericDacDacScan::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
-    PixelAlive::doDisplay    = false;
-    PixelAlive::doUpdateChip = false;
+    PixelAlive::doSaveData = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -34,8 +33,6 @@ void GenericDacDacScan::ConfigureCalibration()
     startValueDAC2 = this->findValueInSettings<double>("StartValueDAC2");
     stopValueDAC2  = this->findValueInSettings<double>("StopValueDAC2");
     stepDAC2       = this->findValueInSettings<double>("StepDAC2", 1);
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
 
     // ##############################
     // # Initialize dac scan values #
@@ -71,7 +68,7 @@ void GenericDacDacScan::Running()
 
     GenericDacDacScan::run();
     GenericDacDacScan::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
     GenericDacDacScan::sendData();
 }
 
@@ -139,24 +136,24 @@ void GenericDacDacScan::run()
 
 void GenericDacDacScan::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+    if(PixelAlive::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
+        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GenericDacDacScan::fillHisto();
     histos->process();
 
-    if(doDisplay == true) myApp->Run(true);
+    if(PixelAlive::doDisplay == true) myApp->Run(true);
 #endif
 }
 

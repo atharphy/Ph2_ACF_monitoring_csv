@@ -185,10 +185,10 @@ void Physics::draw(bool saveData)
     if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
+        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Physics::fillHisto();
     histos->process();
 

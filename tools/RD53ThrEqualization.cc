@@ -220,10 +220,11 @@ void ThrEqualization::draw(bool saveData)
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
+        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+        PixelAlive::histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     ThrEqualization::fillHisto();
     histos->process();
 

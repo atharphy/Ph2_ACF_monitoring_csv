@@ -19,16 +19,14 @@ void Latency::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
-    PixelAlive::doDisplay    = false;
-    PixelAlive::doUpdateChip = false;
-    PixelAlive::doSaveData   = false;
+    PixelAlive::doSaveData = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValue = this->findValueInSettings<double>("LatencyStart");
-    stopValue  = this->findValueInSettings<double>("LatencyStop");
+    startValue   = this->findValueInSettings<double>("LatencyStart");
+    stopValue    = this->findValueInSettings<double>("LatencyStop");
 
     // ##############################
     // # Initialize dac scan values #
@@ -58,7 +56,7 @@ void Latency::Running()
 
     Latency::run();
     Latency::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
     Latency::sendData();
 }
 
@@ -129,7 +127,7 @@ void Latency::run()
 
 void Latency::draw(bool saveData)
 {
-    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -139,10 +137,10 @@ void Latency::draw(bool saveData)
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
+        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> Latency saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Latency::fillHisto();
     histos->process();
 

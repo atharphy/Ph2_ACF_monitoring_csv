@@ -20,8 +20,6 @@ void ClockDelay::ConfigureCalibration()
     // ##############################
     PixelAlive::ConfigureCalibration();
     PixelAlive::doDisplay    = false;
-    PixelAlive::doUpdateChip = false;
-    PixelAlive::doSaveData   = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -29,7 +27,7 @@ void ClockDelay::ConfigureCalibration()
     // #######################
     startValue = 0u;
     stopValue  = frontEnd->nLatencyBins2Span * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK")) + 1) - 1;
-
+ 
     // ##############################
     // # Initialize dac scan values #
     // ##############################
@@ -62,7 +60,7 @@ void ClockDelay::Running()
 
     ClockDelay::run();
     ClockDelay::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
     ClockDelay::sendData();
     la.sendData();
 }
@@ -179,7 +177,7 @@ void ClockDelay::run()
 
 void ClockDelay::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
     la.draw(false);
 
 #ifdef __USE_ROOT__
@@ -190,10 +188,10 @@ void ClockDelay::draw(bool saveData)
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
+        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> ClockDelay saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     ClockDelay::fillHisto();
     histos->process();
 
