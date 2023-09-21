@@ -184,7 +184,11 @@ void PixelAlive::run()
                                         statusGood = false;
                                         break;
                                     }
-                                if((statusGood == false) || (RD53Event::decodedEvents.size() == 0)) regValueMap[suffix] ^= 1 << i;
+                                if((statusGood == false) || (RD53Event::decodedEvents.size() == 0))
+                                {
+                                    regValueMap[suffix] ^= 1 << i;
+                                    static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
+                                }
                             }
                         }
 
