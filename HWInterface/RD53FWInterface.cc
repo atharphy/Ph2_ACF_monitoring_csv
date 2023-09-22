@@ -1300,14 +1300,14 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-    const uint32_t nBitInClkPeriod  = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
-    const double   fps              = 1.28e9 / nBitInClkPeriod;         // Frames per second
-    const int      nPrints          = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
-    const double   scaleByAuroraClk = 37.5 / 40;                        // @CONST@
-    double         frames2run;
-    double         time2run;
-    uint32_t       cntr_lo;
-    uint32_t       cntr_hi;
+    const double bitPerFrame      = 32. * std::pow(2, frontendSpeed); // Bits per frame
+    const double fps              = 1.28e9 / bitPerFrame;             // Frames per second: 32-bit frame @ 1.28 Gbit/s, 64-bit frame @ 640 Mbit/s, 128-bit frame @ 320 Mbit/s
+    const int    nPrints          = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    const double scaleByAuroraClk = 37.5 / 40;                        // @CONST@
+    double       frames2run;
+    double       time2run;
+    uint32_t     cntr_lo;
+    uint32_t     cntr_hi;
 
     if(given_time == true)
     {
@@ -1341,7 +1341,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     // #########
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.start_checker", 1}, {"user.ctrl_regs.PRBS_checker.start_checker", 0}});
 
-    LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
+    LOG(INFO) << BOLDGREEN << std::fixed << std::setprecision(0) << "===== BER run starting @ " << bitPerFrame << "-bits/frame  =====" << RESET;
     bool     run_done     = false;
     int      idx          = 1;
     uint64_t frameCounter = 0, nErrors = 0;
