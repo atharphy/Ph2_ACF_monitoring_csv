@@ -64,7 +64,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
     void PrintFWstatus() override;
 
-    void Start() override;
+    void Start(const Ph2_HwDescription::BeBoard* pBoard) override;
     void Stop() override;
     void Pause() override;
     void Resume() override;

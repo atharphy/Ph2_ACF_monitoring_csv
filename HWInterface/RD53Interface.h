@@ -60,6 +60,8 @@ class RD53Interface : public ReadoutChipInterface
     void PackHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList);
     void SendHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
 
+    virtual void SendClear(const Ph2_HwDescription::BeBoard* pBoard) = 0;
+
     // ######################################################################################################
     // # SetSpecialRegister                                                                                 #
     // # Receives: any register (real or fake) and a value                                                  #

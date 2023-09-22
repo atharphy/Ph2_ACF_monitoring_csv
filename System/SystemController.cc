@@ -347,6 +347,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             else
                 fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
             RD53Shared::setFirstChip(*fDetectorContainer);
+            RD53Shared::setChipInterface(*fReadoutChipInterface);
         }
         else
             throw Exception("[SystemController::InitializeHw] Error, board type not recognized");
@@ -1315,8 +1316,6 @@ void SystemController::Resume()
 
 void SystemController::StartBoard(BeBoard* pBoard) { fBeBoardInterface->Start(pBoard); }
 void SystemController::StopBoard(BeBoard* pBoard) { fBeBoardInterface->Stop(pBoard); }
-void SystemController::PauseBoard(BeBoard* pBoard) { fBeBoardInterface->Pause(pBoard); }
-void SystemController::ResumeBoard(BeBoard* pBoard) { fBeBoardInterface->Resume(pBoard); }
 
 void SystemController::Abort() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Abort not implemented" << RESET; }
 

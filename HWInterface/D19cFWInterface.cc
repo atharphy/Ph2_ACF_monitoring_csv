@@ -957,11 +957,9 @@ void D19cFWInterface::PowerOnDIO5(uint8_t pFMCId)
     WriteReg(cRegName, 0x1);
 }
 
-void D19cFWInterface::Start() { fTriggerInterface->Start(); }
-
+void D19cFWInterface::Start(const BeBoard* pBoard) { fTriggerInterface->Start(); }
 void D19cFWInterface::Stop() { fTriggerInterface->Stop(); }
 void D19cFWInterface::Pause() { fTriggerInterface->Pause(); }
-
 void D19cFWInterface::Resume() { fTriggerInterface->Resume(); }
 
 void D19cFWInterface::DDR3SelfTest()

@@ -523,8 +523,9 @@ uint32_t RD53FWInterface::GetBoardEnabledHybrids(const BeBoard* pBoard)
     return theHybridsEn;
 }
 
-void RD53FWInterface::Start()
+void RD53FWInterface::Start(const BeBoard* pBoard)
 {
+    RD53Shared::chipInterface->SendClear(pBoard);
     RD53FWInterface::ResetReadoutBlk();
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
 }
@@ -682,7 +683,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ####################
         // # Readout sequence #
         // ####################
-        RD53FWInterface::Start();
+        RD53FWInterface::Start(pBoard);
         while(RegManager::ReadReg("user.stat_regs.trigger_cntr") < pNEvents * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         RD53FWInterface::ReadData(pBoard, false, pData, pWait);
@@ -693,9 +694,10 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ##################
         RD53Event::decodedEvents.clear();
         status = 0;
-        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
-        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status);         // Decode events with a single thread
-        // RD53Event::PrintEvents(RD53Event::decodedEvents, pData);                      // @TMP@
+
+        // RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
+        RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status);         // Decode events with a single thread
+
         if(RD53Event::EvtErrorHandler(status) == false)
         {
             retry = true;

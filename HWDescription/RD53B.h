@@ -21,13 +21,15 @@
 // ############################
 namespace RD53BEvtEncoder
 {
-const uint8_t NBIT_CHIPID = 2;   // Number of chip ID bits
-const uint8_t NBIT_TRIGID = 8;   // Number of trigger ID bits
-const uint8_t NBIT_TRGTAG = 8;   // Number of trigger tag bits
-const uint8_t MAX_TRGTAG  = 223; // Maximum trigger tag value for external triggers
-const uint8_t NBIT_BCID   = 8;   // Number of bunch crossing ID bits
-const uint8_t NBIT_TOT    = 4;   // Number of ToT bits
-const uint8_t NBIT_CCOL   = 6;   // Number of core column bits
+const uint8_t NBIT_CHIPID     = 2;   // Number of chip ID bits
+const uint8_t NBIT_TRIGID     = 8;   // Number of trigger ID bits
+const uint8_t NBIT_TRGTAG     = 8;   // Number of trigger tag bits
+const uint8_t MAX_TRGTAG      = 215; // Maximum trigger tag value for external triggers
+const uint8_t MAX_TRGTAG_ERR1 = 219; // Maximum trigger tag value for error of type 1
+const uint8_t MAX_TRGTAG_ERR2 = 223; // Maximum trigger tag value for error of type 2
+const uint8_t NBIT_BCID       = 8;   // Number of bunch crossing ID bits
+const uint8_t NBIT_TOT        = 4;   // Number of ToT bits
+const uint8_t NBIT_CCOL       = 6;   // Number of core column bits
 } // namespace RD53BEvtEncoder
 
 namespace RD53BConstants

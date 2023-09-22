@@ -607,6 +607,13 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
     return low | (high << pChip->getNumberOfBits("EfusesReadData0"));
 }
 
+void RD53BInterface::SendClear(const BeBoard* pBoard)
+{
+    for(auto cOpticalGroup: *pBoard)
+        for(auto cHybrid: *cOpticalGroup)
+            for(auto cChip: *cHybrid) RD53Interface::SendCommand(cChip, RD53BCmd::Clear{cChip->getId()});
+}
+
 // ###########################
 // # Dedicated to monitoring #
 // ###########################

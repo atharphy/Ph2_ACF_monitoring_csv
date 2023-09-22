@@ -412,6 +412,17 @@ void RD53AInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
+void RD53AInterface::SendClear(const BeBoard* pBoard)
+{
+    for(auto cOpticalGroup: *pBoard)
+        for(auto cHybrid: *cOpticalGroup)
+            for(auto cChip: *cHybrid)
+            {
+                RD53Interface::SendCommand(cChip, RD53ACmd::BCR{});
+                RD53Interface::SendCommand(cChip, RD53ACmd::ECR{});
+            }
+}
+
 // ###########################
 // # Dedicated to monitoring #
 // ###########################
