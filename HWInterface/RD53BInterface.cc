@@ -312,7 +312,14 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
     RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
-    if(regReadback.size() == 0) RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
+    // ####################################################
+    // # Needed to avoid FIFO empty error during readback #
+    // ####################################################
+    if(regReadback.size() == 0)
+    {
+        RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    }
 
     for(auto i = 0u; i < regReadback.size(); i++)
     {

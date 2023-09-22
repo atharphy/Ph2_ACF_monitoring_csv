@@ -19,7 +19,7 @@ void ClockDelay::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
-    PixelAlive::doDisplay    = false;
+    PixelAlive::doDisplay = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -27,7 +27,7 @@ void ClockDelay::ConfigureCalibration()
     // #######################
     startValue = 0u;
     stopValue  = frontEnd->nLatencyBins2Span * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK")) + 1) - 1;
- 
+
     // ##############################
     // # Initialize dac scan values #
     // ##############################

@@ -25,8 +25,8 @@ void Latency::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValue   = this->findValueInSettings<double>("LatencyStart");
-    stopValue    = this->findValueInSettings<double>("LatencyStop");
+    startValue = this->findValueInSettings<double>("LatencyStart");
+    stopValue  = this->findValueInSettings<double>("LatencyStop");
 
     // ##############################
     // # Initialize dac scan values #
