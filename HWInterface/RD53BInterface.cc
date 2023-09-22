@@ -31,22 +31,40 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Reset Core Columns #
     // ######################
     RD53BInterface::ResetCoreColumns(pRD53);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // ##############
     // # Field data #
     // ##############
-    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false);
+    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, pVerify);
     // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
     // # bit 11:   EnBCId        --> Map in FormatOptions: enableBCID
     // # bit 10:   EnLv1Id       --> Map in FormatOptions: enableTriggerId
     // # bit 9:    EnEoS         --> Map in FormatOptions: enableEOSmarker
     // # bits 1-8: NumOfEventsInStream[7:0]
-    RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, false);
+    RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, pVerify);
     // # bit 9:    BinaryReadOut --> Map in FormatOptions: enableToT
     // # bit 8:    RawData       --> Map in FormatOptions: enableRawMap
     // # bits 4-7: MaxHits[3:0]
     // # bits 1-3: MaxToT[2:0]
+
+    // ###################
+    // # Ring oscillator #
+    // ###################
+    RD53Interface::WriteChipReg(pChip, "RingOscConfig", 0b111111111111111, pVerify);
+    RD53Interface::WriteChipReg(pChip, "RingOscConfig", 0b101111011111111, pVerify);
+    // # bit 15:   RingOscBClear
+    // # bit 14:   RingOscBEnBL
+    // # bit 13:   RingOscBEnBR
+    // # bit 12:   RingOscBEnCAPA
+    // # bit 11:   RingOscBEnFF
+    // # bit 10:   RingOscBEnLVT
+    // # bit 9:    RingOscAClear
+    // # bits 1:8: RingOscAEnable[7:0]
+
+    // ###################################################
+    // # Impose SelfTriggerMultiplier = trigger_duration #
+    // ###################################################
+    RD53Interface::WriteChipReg(pChip, "SelfTriggerMultiplier", static_cast<RD53FWInterface*>(fBoardFW)->getLocalCfgFastCmd()->trigger_duration + 1, pVerify);
 
     // #######################################
     // # Programming CLK_DATA_DELAY register #
@@ -102,20 +120,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
             (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
            (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
-        {
-            if(cRegItem.first == "CDR_CONFIG")
-            {
-                RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
-                std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-            }
-
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
-        }
-
-    // ###################################################
-    // # Impose SelfTriggerMultiplier = trigger_duration #
-    // ###################################################
-    RD53Interface::WriteChipReg(pChip, "SelfTriggerMultiplier", static_cast<RD53FWInterface*>(fBoardFW)->getLocalCfgFastCmd()->trigger_duration + 1, pVerify);
 
     // ###################################
     // # Programmig pixel cell registers #
@@ -152,34 +157,6 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // #######################################################################
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG", 0xAC75);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
-
-    // ##########
-    // # Resets #
-    // ##########
-    RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0b111, 0xFF); // ResetChannelSynchronizer, ResetCommandDecoder, ResetGlobalConfiguration
-
-    // ###################
-    // # Ring oscillator #
-    // ###################
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b111111111111111);
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b101111011111111);
-    // # bit 15:   RingOscBClear
-    // # bit 14:   RingOscBEnBL
-    // # bit 13:   RingOscBEnBR
-    // # bit 12:   RingOscBEnCAPA
-    // # bit 11:   RingOscBEnFF
-    // # bit 10:   RingOscBEnLVT
-    // # bit 9:    RingOscAClear
-    // # bits 1:8: RingOscAEnable[7:0]
-
-    // ########################
-    // # Disable Service Data #
-    // ########################
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "ServiceDataConf", 0x100 | 50); // How many Data frames to skip before sending a Monitor Frame
-    // # bit 9:    EnServiceData
-    // # bits 1-8: ServiceFrameSkip [7:0]
-
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
 void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
@@ -202,8 +179,6 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ##############
     RD53Interface::WriteChipReg(
         pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
-    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(pRD53->laneConfig.nOutputLanes), 0b011001, 0b11), false);
     // # bit 14:    SendAltOutput
@@ -224,6 +199,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 3-6:   EnDataMergeLane[3:0] --> Internal input lanes
     // # bit 2:      MergeChBonding       --> Channel bonding
     // # bit 1:      DataMergingGpoSel
+
     uint16_t val = bits::pack<8, 8>(pRD53->laneConfig.serializeArray<uint8_t, NCHIPLANES, 2, uint16_t>(pRD53->laneConfig.inputLaneMapping),
                                     pRD53->laneConfig.serializeArray<uint8_t, NCHIPLANES, 2, uint16_t>(pRD53->laneConfig.outputLaneMapping));
     RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false); // Mux selection for input and output internal lane mapping to external lanes
@@ -237,16 +213,20 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 5-6:   DataMergingOutMux_2[1:0]
     // # bits 3-4:   DataMergingOutMux_1[1:0]
     // # bits 1-2:   DataMergingOutMux_0[1:0]
+
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1, false);
     // # bits 5-16: CBWait[11:0]
     // # bits 1-4:  CBSend[3:0]
+
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
 
-    // ##########
-    // # Resets #
-    // ##########
-    RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
+    // ########################
+    // # Disable Service Data #
+    // ########################
+    RD53Interface::WriteChipReg(pChip, "ServiceDataConf", 0x100 | 50, false); // How many Data frames to skip before sending a Monitor Frame
+    // # bit 9:    EnServiceData
+    // # bits 1-8: ServiceFrameSkip [7:0]
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for CROC v1
@@ -332,6 +312,8 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
     RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
+    if(regReadback.size() == 0) RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
+
     for(auto i = 0u; i < regReadback.size(); i++)
     {
         regReadback[i].first  = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR)); // Removing bit related to PIX_PORTAL register identification
@@ -406,7 +388,7 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
             const uint16_t value = 0x5555 << i;
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);
-            RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
+            RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
         }
 
         RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, 0, false);
@@ -415,7 +397,7 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
 
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x3F, false);
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x3F, false);
-    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
+    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
 
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0, false);
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0, false);

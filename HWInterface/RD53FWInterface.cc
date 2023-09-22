@@ -95,12 +95,10 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##########
     // # Resets #
     // ##########
-    RD53FWInterface::ChipReset();
     RD53FWInterface::ResetFastCmdBlk();
     RD53FWInterface::ResetSlowCmdFIFO();
     RD53FWInterface::ResetReadBkFIFO();
     RD53FWInterface::ResetReadoutBlk();
-    RD53FWInterface::ChipReSync();
 
     // ###############################################
     // # FW register initialization from config file #
@@ -356,10 +354,8 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
-        // RD53FWInterface::ResetSlowCmdFIFO();                                              // @TMP@ : temporary fix untill FIFO error FW fix
-        // std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP)); // @TMP@ : temporary fix untill FIFO error FW fix
     }
-    if(nAttempts == RD53Shared::MAXATTEMPTS) // @TMP@ : temporary fix untill FIFO error FW fix
+    if(nAttempts == RD53Shared::MAXATTEMPTS)
         LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
 
     // ###############################
@@ -395,7 +391,7 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         nAttempts++;
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
-    if(nAttempts == RD53Shared::MAXATTEMPTS) // @TMP@ : temporary fix untill FIFO error FW fix
+    if(nAttempts == RD53Shared::MAXATTEMPTS)
         LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
 }
 
@@ -424,7 +420,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
         if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
     }
 
-    if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIFO error FW fix
+    if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
 
     return regReadback;
 }
@@ -529,10 +525,7 @@ uint32_t RD53FWInterface::GetBoardEnabledHybrids(const BeBoard* pBoard)
 
 void RD53FWInterface::Start()
 {
-    RD53FWInterface::ChipReset();
     RD53FWInterface::ResetReadoutBlk();
-    RD53FWInterface::ChipReSync();
-
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
 }
 
