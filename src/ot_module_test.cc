@@ -26,7 +26,7 @@
 #include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
-#include "tools/PixelAlive.h"
+#include "tools/PSPixelAlive.h"
 #include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
@@ -1242,7 +1242,7 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDMAGENTA << "Measuring Pixel Occupancy and Masking Pixels Below Threshold" << RESET;
         t.start();
-        PixelAlive cPixelAlive;
+        PSPixelAlive cPixelAlive;
         cPixelAlive.Inherit(&cTool);
         cPixelAlive.Initialise();
         cPixelAlive.measurePixels();
