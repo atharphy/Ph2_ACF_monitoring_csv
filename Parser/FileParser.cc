@@ -642,11 +642,13 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("stripCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("stripFine").value());
-                cChip->setReg("ClockDeskewing_coarse", cCoarse);
+                if(cChip->getFrontEndType() == FrontEndType::SSA2) cChip->setReg("ClockDeskewing_coarse", cCoarse);
+                else if (cChip->getFrontEndType() == FrontEndType::SSA) cChip->setReg("PhaseShiftClock", cCoarse);
                 ChipRegMask cMask;
                 cMask.fNbits    = 3;
                 cMask.fBitShift = 0;
-                cChip->setRegBits("ClockDeskewing_fine", cMask, cFine);
+                if(cChip->getFrontEndType() == FrontEndType::SSA2) cChip->setRegBits("ClockDeskewing_fine", cMask, cFine);
+                else if (cChip->getFrontEndType() == FrontEndType::SSA) cChip->setRegBits("ClockDeskewing", cMask, cFine);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
                    << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
