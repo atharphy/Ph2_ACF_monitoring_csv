@@ -319,6 +319,7 @@ run:PS:
   extends: .run
   script:
     - source ./setup.sh ci
+    - fpgaconfig -c settings/CMSPS_CI.xml -i ps_8m_5g_cic1_l12octa_l8dio5
     - ot_module_test -f settings/CMSPS_CI.xml -t -m -a -b --reconfigure
   after_script:
     - cp Results/*/Hybrid.root .
