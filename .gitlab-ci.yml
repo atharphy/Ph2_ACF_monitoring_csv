@@ -266,6 +266,7 @@ run:2S:
   extends: .run
   script:
     - source ./setup.sh ci
+    - fpgaconfig -c settings/CMS2S_CI.xml -i 2s_cic1_18Aug
     - ot_module_test -f settings/CMS2S_CI.xml -t -m -a -b --reconfigure
   after_script:
     - cp Results/*/Hybrid.root .
