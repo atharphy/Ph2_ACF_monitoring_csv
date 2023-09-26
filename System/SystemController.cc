@@ -576,7 +576,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
 
-            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases (if any) for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
             LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
         }
@@ -1063,6 +1063,9 @@ void SystemController::ConfigureHw(bool pReInitialize)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
 
+        // #################
+        // # Outer Tracker #
+        // #################
         if(cBoard->getBoardType() == BoardType::D19C)
         {
             // Set board sparisification
@@ -1163,6 +1166,9 @@ void SystemController::ConfigureHw(bool pReInitialize)
 
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
+        // #################
+        // # Inner Tracker #
+        // #################
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
             if(pReInitialize == true)
