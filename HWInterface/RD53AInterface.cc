@@ -92,8 +92,8 @@ void RD53AInterface::InitRD53Downlink(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::move(RD53Shared::firstChip->getLaneUpInitSequence()), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::move(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC)), -1);
 }
 
 void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
