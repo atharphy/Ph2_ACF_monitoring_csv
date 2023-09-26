@@ -92,11 +92,8 @@ void RD53AInterface::InitRD53Downlink(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
-
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
 void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
@@ -118,7 +115,6 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # CML_CONFIG    = 0b00001111 #
     // ##############################
 
-    LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
     RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG", RD53Shared::setBits(pRD53->laneConfig.nOutputLanes) << 2, false); // Number of active lanes [5:2]
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
@@ -146,8 +142,6 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ##############
     RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
     RD53Interface::SendCommand(pRD53, RD53ACmd::ECR{});
-
-    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
 std::vector<std::pair<uint16_t, uint16_t>> RD53AInterface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)

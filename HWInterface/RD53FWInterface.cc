@@ -83,7 +83,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> L12 FMC type : " << BOLDYELLOW << cL12FMCtype << BOLDBLUE << " -- L08 FMC type : " << BOLDYELLOW << cL08FMCtype << BOLDBLUE
               << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=Unspecified)" << RESET;
 
-    if(cFEtype == 2) WriteReg("user.ctrl_regs.reset_reg.enable_sync_word", 1);
+    if(cFEtype == 2) RegManager::WriteReg("user.ctrl_regs.reset_reg.enable_sync_word", 1);
 
     // #########################
     // # Set RD53 AURORA speed #
@@ -440,29 +440,23 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     uint32_t              channel_up;
     int                   nAttempts = 0;
     std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
-    while(nAttempts < RD53Shared::MAXATTEMPTS)
+    do
     {
+        // ###############################################
+        // # Send sequence to help frontend chip to lock #
+        // ###############################################
+        if(initSequence.size() != 0)
+            for(const auto cOpticalGroup: *pBoard)
+                for(const auto cHybrid: *cOpticalGroup) RD53FWInterface::WriteChipCommand(initSequence, cHybrid->getId());
+
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
         LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "active" << BOLDBLUE << " data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << ", i.e. "
                   << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
 
-        if(chips_en & ~channel_up)
-        {
-            LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive" << BOLDYELLOW << " -- > retry " << RESET;
-
-            // ###############################################
-            // # Send sequence to help frontend chip to lock #
-            // ###############################################
-            if(initSequence.size() != 0)
-                for(const auto cOpticalGroup: *pBoard)
-                    for(const auto cHybrid: *cOpticalGroup) RD53FWInterface::WriteChipCommand(initSequence, cHybrid->getId());
-
-            nAttempts++;
-        }
-        else
-            break;
-    }
+        if(chips_en & ~channel_up) LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive" << BOLDYELLOW << " -- > retry " << RESET;
+        nAttempts++;
+    } while((nAttempts < RD53Shared::MAXATTEMPTS) && (chips_en & ~channel_up));
 
     if(nAttempts == RD53Shared::MAXATTEMPTS)
     {
@@ -695,8 +689,11 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         RD53Event::decodedEvents.clear();
         status = 0;
 
-        // RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
-        RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status);         // Decode events with a single thread
+        // ###################
+        // # Decoding events #
+        // ###################
+        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
+        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status); // Decode events with a single thread
 
         if(RD53Event::EvtErrorHandler(status) == false)
         {
