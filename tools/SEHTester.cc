@@ -15,6 +15,8 @@ void SEHTester::Initialise()
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         for(auto cOpticalGroup: *cBoard)
         {
+            clpGBTInterface->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT);
+
             clpGBTInterface->Configure2SSEH(cOpticalGroup->flpGBT);
             lpGBTClockConfig cClkCnfg;
             cClkCnfg.fClkFreq         = 4;

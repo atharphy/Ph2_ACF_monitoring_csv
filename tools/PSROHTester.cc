@@ -14,6 +14,8 @@ void PSROHTester::Initialise()
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         for(auto cOpticalGroup: *cBoard)
         {
+            clpGBTInterface->AddPSROHeLinkProperties(cOpticalGroup->flpGBT);
+
             clpGBTInterface->ConfigurePSROH(cOpticalGroup->flpGBT);
             //
             uint8_t          cChipRate = clpGBTInterface->GetChipRate(cOpticalGroup->flpGBT);
