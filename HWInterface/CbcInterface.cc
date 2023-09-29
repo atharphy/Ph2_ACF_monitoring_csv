@@ -725,6 +725,11 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         uint16_t cLatency        = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
         return cLatency;
     }
+    else if(pRegNode == "TestPulse" || pRegNode == "InjectedCharge")
+    {
+        uint16_t cRegValue = ReadChipSingleReg(pCbc, "MiscTestPulseCtrl&AnalogMux");
+        return (cRegValue & 0x40) >> 6;
+    }
     else
     {
         return ReadChipSingleReg(pCbc, pRegNode) & 0xFF;
