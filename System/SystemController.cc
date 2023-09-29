@@ -426,7 +426,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S);
             }
             else if(cWithLpGBT && flpGBTInterface != nullptr)
+            {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
+            }
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }

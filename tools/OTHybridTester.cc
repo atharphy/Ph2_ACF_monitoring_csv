@@ -148,11 +148,21 @@ void OTHybridTester::LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern)
 
 bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 {
-    bool     res = true;
+    bool     res = false;
     uint8_t  cMatch;
     uint8_t  cShift;
     uint8_t  cWrappedByte;
     uint32_t cWrappedData;
+
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto __attribute__((unused)) cOpticalGroup: *cBoard) { res = true; }
+    }
+    if(!res)
+    {
+        LOG(INFO) << BOLDYELLOW << "OTHybridTester::LpGBTCheckULPattern Stopping test. No OpticalGroup enabled!" << RESET;
+        return res;
+    }
 
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
@@ -338,7 +348,16 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
 
 bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, int pNTries)
 {
-    bool                cTestSuccess    = true;
+    bool cTestSuccess = false;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto __attribute__((unused)) cOpticalGroup: *cBoard) { cTestSuccess = true; }
+    }
+    if(!cTestSuccess)
+    {
+        LOG(INFO) << BOLDYELLOW << "OTHybridTester::LpGBTTestI2CMaster Stopping test. No OpticalGroup enabled!" << RESET;
+        return cTestSuccess;
+    }
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -686,10 +705,18 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
 
 bool OTHybridTester::LpGBTTestResetLines()
 {
-    bool                                         cValid  = true;
+    bool                                         cValid  = false;
     std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
     std::vector<uint8_t>                         cGPIOs;
-
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto __attribute__((unused)) cOpticalGroup: *cBoard) { cValid = true; }
+    }
+    if(!cValid)
+    {
+        LOG(INFO) << BOLDYELLOW << "OTHybridTester::LpGBTTestResetLines Stopping test. No OpticalGroup enabled!" << RESET;
+        return cValid;
+    }
     // lpGBTinterface now knows this .. so don't need the if statements
 
     if(fIsSEH) { cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->get2SResetGPIOs(); }
@@ -815,9 +842,18 @@ bool OTHybridTester::LpGBTTestGPILines()
 
 bool OTHybridTester::LpGBTTestVTRx()
 {
-    bool                cSuccess = true;
-    bool                cRecent;
-    bool                cReset          = true;
+    bool cSuccess = false;
+    bool cRecent;
+    bool cReset = true;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto __attribute__((unused)) cOpticalGroup: *cBoard) { cSuccess = true; }
+    }
+    if(!cSuccess)
+    {
+        LOG(INFO) << BOLDYELLOW << "OTHybridTester::LpGBTTestVTRx Stopping test. No OpticalGroup enabled!" << RESET;
+        return cSuccess;
+    }
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -830,7 +866,7 @@ bool OTHybridTester::LpGBTTestVTRx()
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
             // Configuring I2C Master pull-ups
-            clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 1 << 4 | 1 << 6);
+            clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6);
 
             LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 0);
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -950,11 +986,20 @@ bool OTHybridTester::LpGBTGetLinkLock()
 
 bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
 {
-    uint8_t                     cMatch;
-    uint8_t                     cShift;
-    uint8_t                     cWrappedByte;
-    uint32_t                    cWrappedData;
-    bool                        res             = true;
+    uint8_t  cMatch;
+    uint8_t  cShift;
+    uint8_t  cWrappedByte;
+    uint32_t cWrappedData;
+    bool     res = false;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto __attribute__((unused)) cOpticalGroup: *cBoard) { res = true; }
+    }
+    if(!res)
+    {
+        LOG(INFO) << BOLDYELLOW << "OTHybridTester::LpGBTFastCommandChecker Stopping test. No OpticalGroup enabled!" << RESET;
+        return res;
+    }
     D19clpGBTInterface*         clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     const std::vector<uint8_t>& cPatternVec     = {0x07, 0x00, 0xff, 0xaa, 0xcc, 0xca};
     for(const auto cPattern: cPatternVec)
@@ -1146,9 +1191,20 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
 
 bool OTHybridTester::LpGBTCheckClocks()
 {
-    bool                     cStatus         = true;
+    bool                     cStatus         = false;
     uint8_t                  cChipRate       = 0;
     std::vector<std::string> cClockTestTypes = {"_default", "_short", "_open"};
+
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto __attribute__((unused)) cOpticalGroup: *cBoard) { cStatus = true; }
+    }
+    if(!cStatus)
+    {
+        LOG(INFO) << BOLDYELLOW << "OTHybridTester::LpGBTCheckClocks Stopping test. No OpticalGroup enabled!" << RESET;
+        return cStatus;
+    }
+
     for(const auto cClockTestType: cClockTestTypes)
     {
         for(auto cBoard: *fDetectorContainer)
