@@ -22,7 +22,6 @@ DataChecker::~DataChecker() {}
 
 void DataChecker::Initialise()
 {
-    // exit(0);
     // get threshold range
     auto     cSetting   = fSettingsMap.find("PulseShapeInitialVcth");
     uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 400;
