@@ -22,7 +22,7 @@ DataChecker::~DataChecker() {}
 
 void DataChecker::Initialise()
 {
-    exit(0);
+    // exit(0);
     // get threshold range
     auto     cSetting   = fSettingsMap.find("PulseShapeInitialVcth");
     uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 400;
@@ -6547,6 +6547,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                 cWithCIC   = cWithCIC || (cCic != NULL);
                 for(auto cChip: *cHybrid)
                 {
+                    LOG(INFO) << "OT_MODULE_TEST:: cHybrid" << RESET;
                     auto cReadoutChip          = static_cast<ReadoutChip*>(cChip);
                     auto cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                     if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) != pChipIds.end())

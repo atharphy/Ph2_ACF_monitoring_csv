@@ -1290,7 +1290,6 @@ int main(int argc, char* argv[])
             cArgs.push_back(i);
             if(cArgsSS.peek() == ',') cArgsSS.ignore();
         };
-
         t.start();
         DataChecker cDataChecker;
         cDataChecker.Inherit(&cTool);
