@@ -730,7 +730,7 @@ void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)
 
 void RD53FWInterface::SendFastCommands(const FastCommandsConfig* cfg)
 {
-    const int GLOBAL_PULSE_WIDTH = 0x6; // @CONST@
+    const int GLOBAL_PULSE_WIDTH = 0x6; // @TMP@
 
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
@@ -916,11 +916,6 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
                          RD53FWInterface::localCfgFastCmd.trigger_duration)
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
-
-    // ###################
-    // # Print FW status #
-    // ###################
-    RD53FWInterface::PrintFWstatus();
 }
 
 void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)

@@ -467,6 +467,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ###############
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
     static_cast<RD53FWInterface*>(theBeBoardFW)->SendFastCommands();
+    static_cast<RD53FWInterface*>(theBeBoardFW)->PrintFWstatus();
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
     // ######################

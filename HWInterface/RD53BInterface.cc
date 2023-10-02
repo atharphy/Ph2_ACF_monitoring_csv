@@ -133,19 +133,22 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
 {
     std::vector<uint16_t> cmdStream;
-    PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
-    PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
-    serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
+    RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
+    RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
+    if((route & RD53BConstants::RESET_SERVICEDATA) == 0) RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", RD53BConstants::RESET_SERVICEDATA, cmdStream);
+    RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 }
 
 void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
 {
     std::vector<uint16_t> cmdStream;
-    serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, route}, cmdStream);
-    serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR + 1, pulseDuration}, cmdStream);
-    serialize(RD53BCmd::GlobalPulse{RD53BConstants::BROADCAST_CHIPID}, cmdStream);
-    SendChipCommands(pBoard, cmdStream, -1);
+    RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, route}, cmdStream);
+    RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR + 1, pulseDuration}, cmdStream);
+    if((route & RD53BConstants::RESET_SERVICEDATA) == 0)
+        RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, RD53BConstants::RESET_SERVICEDATA}, cmdStream);
+    RD53BCmd::serialize(RD53BCmd::GlobalPulse{RD53BConstants::BROADCAST_CHIPID}, cmdStream);
+    RD53BInterface::SendChipCommands(pBoard, cmdStream, -1);
 }
 
 void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
@@ -224,6 +227,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ########################
     // # Disable Service Data #
     // ########################
+    RD53BInterface::Reset(pChip, 3, 0xFF);                                    // Reset Service Data
     RD53Interface::WriteChipReg(pChip, "ServiceDataConf", 0x100 | 50, false); // How many Data frames to skip before sending a Monitor Frame
     // # bit 9:    EnServiceData
     // # bits 1-8: ServiceFrameSkip [7:0]
@@ -315,11 +319,11 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
     // ####################################################
     // # Needed to avoid FIFO empty error during readback #
     // ####################################################
-    if(regReadback.size() == 0)
-    {
-        RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    }
+    // if(regReadback.size() == 0)
+    // {
+    //     RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
+    //     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    // }
 
     for(auto i = 0u; i < regReadback.size(); i++)
     {
@@ -533,7 +537,7 @@ void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>
             auto next = std::min(cmdStream.end(), std::min(it + RD53Constants::NWORDS_TO_SYNC, begin + nWordsThisPacketExclSync));
             std::copy(it, next, std::back_inserter(cmdPacket));
             it = next;
-            for(auto i = 0; i < NSYNC_WORDS; i++) serialize(RD53BCmd::Sync{}, cmdPacket);
+            for(auto i = 0; i < NSYNC_WORDS; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, cmdPacket);
         }
 
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdPacket, pRD53->getHybridId());
