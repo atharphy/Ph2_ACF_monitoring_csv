@@ -16,8 +16,10 @@
 #include "Utils/ContainerRecycleBin.h"
 #include "Utils/Visitor.h"
 #include "tools/Tool.h"
-#include "TH2F.h"
+
+#ifdef __USE_ROOT__
 #include "DQMUtils/DQMHistogramPSPixelAlive.h"
+#endif
 
 #include <map>
 

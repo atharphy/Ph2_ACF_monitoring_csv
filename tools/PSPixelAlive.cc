@@ -14,7 +14,6 @@
 #include "boost/format.hpp"
 #include <math.h>
 
-#include "DQMUtils/DQMHistogramPSPixelAlive.h"
 
 PSPixelAlive::PSPixelAlive() : Tool() {}
 
