@@ -46,7 +46,6 @@ class PSPixelAlive : public Tool
     void Pause() override;
     void Resume() override;
     void Reset();
-    void channelTest(); //For Debugging Purposes
 
   protected:
     void measureOccupancy();
