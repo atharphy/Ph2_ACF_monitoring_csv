@@ -591,6 +591,19 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
             for(auto cChip: *cHybrid) RD53Interface::SendCommand(cChip, RD53BCmd::Clear{cChip->getId()});
 }
 
+void RD53BInterface::SendBoardSync(const BeBoard* pBoard)
+{
+    for(auto cOpticalGroup: *pBoard)
+        for(auto cHybrid: *cOpticalGroup)
+            for(auto cChip: *cHybrid)
+            {
+                const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(cChip, "GlobalPulseConf");
+                RD53Interface::WriteChipReg(cChip, "GlobalPulseConf", 0xFFFF ^ 0b11000000000, 0); // ResetTriggerTable, ResetBCIDCounter
+                RD53Interface::SendCommand(cChip, RD53BCmd::Clear{cChip->getId()});
+                RD53Interface::WriteChipReg(cChip, "GlobalPulseConf", GlbPulseVal, 0); // Restore value in Global Pulse Route
+            }
+}
+
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
 {
     std::vector<uint16_t> cmdStream;
@@ -746,8 +759,9 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     uint16_t counter = 0;
     for(auto i = 0u; i < sampleNtimes; i++)
     {
-        RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);          // Trigger Monitor Data to start conversion
-        RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false); // Stop monitoring
+        RD53Interface::WriteChipReg(pChip, "MonitorConfig", data | 1 << 13, false); // Enable monitoring
+        RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);                       // Trigger Monitor Data to start conversion
+        RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);              // Stop monitoring
         uint32_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
         if(val != 0)
         {

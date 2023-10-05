@@ -32,7 +32,8 @@ class RD53AInterface : public RD53Interface
     void     PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override { return pChip->getId(); }
-    void     SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard) override;
+    void     SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard) override{};
+    void     SendBoardSync(const Ph2_HwDescription::BeBoard* pBoard) override;
 
     std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
     uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
