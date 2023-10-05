@@ -31,7 +31,7 @@ LaneConfig::LaneConfig(bool                                   isPrimary,
         if(outputLanes[NCHIPLANES - 1 - i] > 0)
             outputLaneMapping[i] = outputLanes[NCHIPLANES - 1 - i] - 1;
         else
-            outputLaneMapping[i] = NCHIPLANES;
+            outputLaneMapping[i] = nOutputLanes;
     }
 
     // ########################

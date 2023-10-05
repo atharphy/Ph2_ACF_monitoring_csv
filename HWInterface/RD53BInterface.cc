@@ -24,8 +24,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ########################################################################
     // # Switching to pixel-register configuration, instead of the hard-wired #
     // ########################################################################
-    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG", 0x9CE2, pVerify);
-    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, pVerify);
+    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG", 0x9CE2, false);
+    RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, false);
 
     // ######################
     // # Reset Core Columns #
@@ -130,27 +130,6 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     return true;
 }
 
-void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
-{
-    std::vector<uint16_t> cmdStream;
-    RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
-    RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
-    if((route & RD53BConstants::RESET_SERVICEDATA) == 0) RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", RD53BConstants::RESET_SERVICEDATA, cmdStream);
-    RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
-}
-
-void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
-{
-    std::vector<uint16_t> cmdStream;
-    RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, route}, cmdStream);
-    RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR + 1, pulseDuration}, cmdStream);
-    if((route & RD53BConstants::RESET_SERVICEDATA) == 0)
-        RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, RD53BConstants::RESET_SERVICEDATA}, cmdStream);
-    RD53BCmd::serialize(RD53BCmd::GlobalPulse{RD53BConstants::BROADCAST_CHIPID}, cmdStream);
-    RD53BInterface::SendChipCommands(pBoard, cmdStream, -1);
-}
-
 void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
@@ -217,20 +196,26 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 3-4:   DataMergingOutMux_1[1:0]
     // # bits 1-2:   DataMergingOutMux_0[1:0]
 
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1, false);
-    // # bits 5-16: CBWait[11:0]
-    // # bits 1-4:  CBSend[3:0]
-
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
-    // # bits 1-8: CBWait[19:12]
-
-    // ########################
-    // # Disable Service Data #
-    // ########################
-    RD53BInterface::Reset(pChip, 3, 0xFF);                                    // Reset Service Data
+    // #######################
+    // # Enable Service Data #
+    // #######################
     RD53Interface::WriteChipReg(pChip, "ServiceDataConf", 0x100 | 50, false); // How many Data frames to skip before sending a Monitor Frame
     // # bit 9:    EnServiceData
     // # bits 1-8: ServiceFrameSkip [7:0]
+
+    // ########################
+    // # Aurora configuration #
+    // ########################
+    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1, false);
+    // # bits 5-16: CBWait[11:0]
+    // # bits 1-4:  CBSend[3:0]
+    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
+    // # bits 1-8: CBWait[19:12]
+
+    // ######################################################
+    // # Set Global Pulse Route to special value as default #
+    // ######################################################
+    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", 0b10011000, 0); // ResetServiceData, ResetAurora, ResetDataMerging
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for CROC v1
@@ -316,15 +301,6 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
     RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
-    // ####################################################
-    // # Needed to avoid FIFO empty error during readback #
-    // ####################################################
-    // if(regReadback.size() == 0)
-    // {
-    //     RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
-    //     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    // }
-
     for(auto i = 0u; i < regReadback.size(); i++)
     {
         regReadback[i].first  = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR)); // Removing bit related to PIX_PORTAL register identification
@@ -397,20 +373,14 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
         for(int i = 0; i < 2; i++)
         {
             const uint16_t value = 0x5555 << i;
-            RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);
             RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
         }
-
-        RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, 0, false);
         RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, 0, false);
     }
 
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x3F, false);
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x3F, false);
     RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
-
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0, false);
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0, false);
 }
 
@@ -611,11 +581,38 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
     return low | (high << pChip->getNumberOfBits("EfusesReadData0"));
 }
 
-void RD53BInterface::SendClear(const BeBoard* pBoard)
+void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
 {
+    // #######################################################################################################
+    // # Make sure to set Global Pulse Route to 0b10011000 = ResetServiceData, ResetAurora, ResetDataMerging #
+    // #######################################################################################################
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
             for(auto cChip: *cHybrid) RD53Interface::SendCommand(cChip, RD53BCmd::Clear{cChip->getId()});
+}
+
+void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
+{
+    std::vector<uint16_t> cmdStream;
+
+    RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
+    RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
+    RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
+
+    std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
+}
+
+void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
+{
+    std::vector<uint16_t> cmdStream;
+
+    RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, route}, cmdStream);
+    RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR + 1, pulseDuration}, cmdStream);
+    RD53BCmd::serialize(RD53BCmd::GlobalPulse{RD53BConstants::BROADCAST_CHIPID}, cmdStream);
+    RD53Interface::SendChipCommands(pBoard, cmdStream, -1);
+
+    std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
 }
 
 // ###########################
@@ -745,18 +742,24 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     // ########################################################
     // # Sample data multiple times for better value estimate #
     // ########################################################
-    uint32_t val = 0;
+    uint32_t avgVal  = 0;
+    uint16_t counter = 0;
     for(auto i = 0u; i < sampleNtimes; i++)
     {
         RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);          // Trigger Monitor Data to start conversion
         RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false); // Stop monitoring
-        val += RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+        uint32_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+        if(val != 0)
+        {
+            avgVal += val;
+            counter++;
+        }
     }
-    val /= sampleNtimes;
+    avgVal /= counter;
 
-    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0xFF); // Restore value in Global Pulse Route
+    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0x04); // Restore value in Global Pulse Route
 
-    return val;
+    return avgVal;
 }
 
 float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type, int beta)

@@ -103,7 +103,7 @@ struct LaneConfig
     uint8_t packOutputLanes()
     {
         std::array<bool, NCHIPLANES> laneEnable = {false};
-        std::transform(outputLaneMapping.begin(), outputLaneMapping.end(), laneEnable.begin(), [&](const auto& x) { return x < NCHIPLANES; });
+        std::transform(outputLaneMapping.begin(), outputLaneMapping.end(), laneEnable.begin(), [&](const auto& x) { return x < nOutputLanes; });
         return serializeArray<bool, NCHIPLANES, 1, uint16_t>(laneEnable);
     }
 
@@ -118,10 +118,10 @@ struct LaneConfig
     template <typename T, size_t N, size_t S, typename TT, size_t... Is>
     TT processUnfoldedArray(const std::array<T, N>& arr, std::index_sequence<Is...>)
     {
-        return serializeElements<T, N, S, TT, Is...>(arr[Is]...);
+        return serializeElements<S, TT, Is...>(arr[Is]...);
     }
 
-    template <typename T, size_t N, size_t S, typename TT, size_t... Is, typename... Args>
+    template <size_t S, typename TT, size_t... Is, typename... Args>
     TT serializeElements(Args... args)
     {
         TT                           result = 0;

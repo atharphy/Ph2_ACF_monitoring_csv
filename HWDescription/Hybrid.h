@@ -13,7 +13,6 @@
 #define Hybrid_h__
 
 #include "FrontEndDescription.h"
-// #include "RD53.h"
 #include "ReadoutChip.h"
 #include "Utils/Container.h"
 #include "Utils/Visitor.h"
