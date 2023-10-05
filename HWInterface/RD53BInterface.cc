@@ -218,12 +218,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #######################
     // # Reset communication #
     // #######################
-    RD53BInterface::SendGlobalPulse(pChip, 0b10110000, 0xFF); // ResetAurora, ResetSynchronizers, ResetDataMerging
-
-    // ######################################################
-    // # Set Global Pulse Route to special value as default #
-    // ######################################################
-    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", 0b10011000, 0); // ResetServiceData, ResetAurora, ResetDataMerging
+    RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSynchronizers
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for CROC v1
@@ -308,6 +303,11 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
     auto nameAndValue(SetSpecialRegister(regName, 0, pChip->getRegMap()));
     RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
+
+    // #####################################################
+    // # If no data are present --> send a Clear and retry #
+    // #####################################################
+    if(regReadback.size() == 0) RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
 
     for(auto i = 0u; i < regReadback.size(); i++)
     {
@@ -610,6 +610,7 @@ void RD53BInterface::SendChipSync(ReadoutChip* pChip)
     this->setBoard(pChip->getBeBoardId());
 
     const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
+
     RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", 0xFFFF ^ 0b11000000000, 0); // ResetTriggerTable, ResetBCIDCounter
     RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
     RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", GlbPulseVal, 0); // Restore value in Global Pulse Route
