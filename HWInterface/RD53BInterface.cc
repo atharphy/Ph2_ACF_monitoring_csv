@@ -162,6 +162,9 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(
         pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
 
+    // ########################
+    // # Aurora configuration #
+    // ########################
     RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(pRD53->laneConfig.nOutputLanes), 0b011001, 0b11), false);
     // # bit 14:    SendAltOutput
     // # bit 13:    EnablePRBS
@@ -203,14 +206,19 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bit 9:    EnServiceData
     // # bits 1-8: ServiceFrameSkip [7:0]
 
-    // ########################
-    // # Aurora configuration #
-    // ########################
+    // #####################################
+    // # Aurora Channel Bond configuration #
+    // #####################################
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1, false);
     // # bits 5-16: CBWait[11:0]
     // # bits 1-4:  CBSend[3:0]
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
+
+    // #######################
+    // # Reset communication #
+    // #######################
+    RD53BInterface::SendGlobalPulse(pChip, 0b10110000, 0xFF); // ResetAurora, ResetSynchronizers, ResetDataMerging
 
     // ######################################################
     // # Set Global Pulse Route to special value as default #
@@ -220,7 +228,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for CROC v1
 {
-    this->setBoard(pHybrid->getId());
+    this->setBoard(pHybrid->getBeBoardId());
 
     // ########################
     // # Disable Service Data #
@@ -568,6 +576,8 @@ void RD53BInterface::PackWriteBroadcastCommand(const BeBoard* pBoard, const std:
 
 void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
 {
+    this->setBoard(pChip->getBeBoardId());
+
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53BCmd::RD53BCmdEncoder::SYNC), -1);
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
@@ -575,6 +585,8 @@ void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
 
 uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
 {
+    this->setBoard(pChip->getBeBoardId());
+
     RD53Interface::WriteChipReg(pChip, "EfusesConfig", 0x0F0F, false);
     uint16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
     uint16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
@@ -583,6 +595,8 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
 
 void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
 {
+    this->setBoard(pBoard->getId());
+
     // #######################################################################################################
     // # Make sure to set Global Pulse Route to 0b10011000 = ResetServiceData, ResetAurora, ResetDataMerging #
     // #######################################################################################################
@@ -591,21 +605,20 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
             for(auto cChip: *cHybrid) RD53Interface::SendCommand(cChip, RD53BCmd::Clear{cChip->getId()});
 }
 
-void RD53BInterface::SendBoardSync(const BeBoard* pBoard)
+void RD53BInterface::SendChipSync(ReadoutChip* pChip)
 {
-    for(auto cOpticalGroup: *pBoard)
-        for(auto cHybrid: *cOpticalGroup)
-            for(auto cChip: *cHybrid)
-            {
-                const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(cChip, "GlobalPulseConf");
-                RD53Interface::WriteChipReg(cChip, "GlobalPulseConf", 0xFFFF ^ 0b11000000000, 0); // ResetTriggerTable, ResetBCIDCounter
-                RD53Interface::SendCommand(cChip, RD53BCmd::Clear{cChip->getId()});
-                RD53Interface::WriteChipReg(cChip, "GlobalPulseConf", GlbPulseVal, 0); // Restore value in Global Pulse Route
-            }
+    this->setBoard(pChip->getBeBoardId());
+
+    const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
+    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", 0xFFFF ^ 0b11000000000, 0); // ResetTriggerTable, ResetBCIDCounter
+    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
+    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", GlbPulseVal, 0); // Restore value in Global Pulse Route
 }
 
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
 {
+    this->setBoard(pChip->getBeBoardId());
+
     std::vector<uint16_t> cmdStream;
 
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
@@ -618,6 +631,8 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
 
 void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
 {
+    this->setBoard(pBoard->getId());
+
     std::vector<uint16_t> cmdStream;
 
     RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, route}, cmdStream);
@@ -792,6 +807,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     // # idealityFactor = 2000 [1/1000] for Poly Sens Top                                             #
     // # idealityFactor = 1225 [1/1000] for the rest                                                  #
     // ################################################################################################
+
+    this->setBoard(pChip->getBeBoardId());
 
     // #####################
     // # Natural constants #

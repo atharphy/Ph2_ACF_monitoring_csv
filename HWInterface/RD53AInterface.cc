@@ -401,20 +401,17 @@ void RD53AInterface::PackWriteBroadcastCommand(const BeBoard* pBoard, const std:
 
 void RD53AInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
 {
+    this->setBoard(pChip->getBeBoardId());
+
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
-void RD53AInterface::SendBoardSync(const BeBoard* pBoard)
+void RD53AInterface::SendChipSync(ReadoutChip* pChip)
 {
-    for(auto cOpticalGroup: *pBoard)
-        for(auto cHybrid: *cOpticalGroup)
-            for(auto cChip: *cHybrid)
-            {
-                RD53Interface::SendCommand(cChip, RD53ACmd::BCR{});
-                RD53Interface::SendCommand(cChip, RD53ACmd::ECR{});
-            }
+    RD53Interface::SendCommand(pChip, RD53ACmd::BCR{});
+    RD53Interface::SendCommand(pChip, RD53ACmd::ECR{});
 }
 
 // ###########################
@@ -493,6 +490,8 @@ float RD53AInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     // # Temperature is calculated based on the difference of the two, with the formula on the bottom #
     // # idealityFactor = 1225 [1/1000]                                                               #
     // ################################################################################################
+
+    this->setBoard(pChip->getBeBoardId());
 
     // #####################
     // # Natural constants #

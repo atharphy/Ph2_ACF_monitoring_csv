@@ -33,7 +33,7 @@ class RD53BInterface : public RD53Interface
     void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
     void     SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard) override;
-    void     SendBoardSync(const Ph2_HwDescription::BeBoard* pBoard) override;
+    void     SendChipSync(Ph2_HwDescription::ReadoutChip* pChip) override;
 
     std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
     uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
