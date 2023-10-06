@@ -218,7 +218,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #######################
     // # Reset communication #
     // #######################
-    RD53BInterface::SendGlobalPulse(pChip, RD53BConstants::RESET_GLOBAL_PULSE, 0xFF); // ResetAurora, ResetSerializers
+    RD53BInterface::SendGlobalPulse(pChip, RD53BConstants::RESET_GLOBAL_PULSE, 0xFF);
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for CROC v1
