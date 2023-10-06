@@ -776,7 +776,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
             counter++;
         }
     }
-    avgVal /= counter;
+    avgVal /= (counter != 0 ? counter : 1);
 
     RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0x04); // Restore value in Global Pulse Route
 
@@ -829,7 +829,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // ###############################################
         // # Calculate temperature with NTC Beta formula #
         // ###############################################
-        float resistance  = 1e3 * voltage / current;                                // [kOhm]
+        float resistance  = 1e3 * voltage / (current != 0 ? current : 1);           // [kOhm]
         float temperature = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
 
         return temperature;
