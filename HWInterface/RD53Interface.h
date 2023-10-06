@@ -61,8 +61,6 @@ class RD53Interface : public ReadoutChipInterface
     void SendHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
 
     virtual void SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard) = 0;
-    virtual void SendChipSync(Ph2_HwDescription::ReadoutChip* pChip)      = 0;
-    void         SendBoardSync(const Ph2_HwDescription::BeBoard* pBoard);
 
     // ######################################################################################################
     // # SetSpecialRegister                                                                                 #

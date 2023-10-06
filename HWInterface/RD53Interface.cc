@@ -237,15 +237,6 @@ void RD53Interface::SendHybridCommands(const BeBoard* pBoard, const std::vector<
     static_cast<RD53FWInterface*>(fBoardFW)->SendChipCommands(hybridCommandList);
 }
 
-void RD53Interface::SendBoardSync(const BeBoard* pBoard)
-{
-    this->setBoard(pBoard->getId());
-
-    for(auto cOpticalGroup: *pBoard)
-        for(auto cHybrid: *cOpticalGroup)
-            for(auto cChip: *cHybrid) SendChipSync(cChip);
-}
-
 // ###########################
 // # Dedicated to monitoring #
 // ###########################

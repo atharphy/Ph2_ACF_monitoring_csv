@@ -408,10 +408,17 @@ void RD53AInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
-void RD53AInterface::SendChipSync(ReadoutChip* pChip)
+void RD53AInterface::SendBoardClear(const BeBoard* pBoard)
 {
-    RD53Interface::SendCommand(pChip, RD53ACmd::BCR{});
-    RD53Interface::SendCommand(pChip, RD53ACmd::ECR{});
+    this->setBoard(pBoard->getId());
+
+    for(auto cOpticalGroup: *pBoard)
+        for(auto cHybrid: *cOpticalGroup)
+            for(auto cChip: *cHybrid)
+            {
+                RD53Interface::SendCommand(cChip, RD53ACmd::BCR{});
+                RD53Interface::SendCommand(cChip, RD53ACmd::ECR{});
+            }
 }
 
 // ###########################

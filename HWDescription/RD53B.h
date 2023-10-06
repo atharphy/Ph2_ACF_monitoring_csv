@@ -34,9 +34,9 @@ const uint8_t NBIT_CCOL       = 6;   // Number of core column bits
 
 namespace RD53BConstants
 {
-const uint8_t  BROADCAST_CHIPID  = 31;   // Broadcast chip ID used to send the command to multiple chips
-const uint16_t GLOBAL_PULSE_ADDR = 0x3D; // Global Pulse Route regiser address
-const uint16_t RESET_SERVICEDATA = 0x08; // If = 1 Global Pulse does reset Service Data but not with Clear command
+const uint8_t  BROADCAST_CHIPID   = 31;   // Broadcast chip ID used to send the command to multiple chips
+const uint16_t GLOBAL_PULSE_ADDR  = 0x3D; // Global Pulse Route regiser address
+const uint16_t RESET_GLOBAL_PULSE = 0x30; // If = 1 Global Pulse does reset Aurora and Serializers but not with Clear command
 } // namespace RD53BConstants
 
 // ####################################################################################

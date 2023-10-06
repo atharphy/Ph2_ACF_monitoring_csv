@@ -218,7 +218,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #######################
     // # Reset communication #
     // #######################
-    RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSynchronizers
+    RD53BInterface::SendGlobalPulse(pChip, RD53BConstants::RESET_GLOBAL_PULSE, 0xFF); // ResetAurora, ResetSerializers
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for CROC v1
@@ -530,7 +530,7 @@ void RD53BInterface::Reset(ReadoutChip* pChip, const size_t resetType, const siz
 // # resetType =  2 --> Reset Global Configuration #
 // # resetType =  3 --> Reset Service Data         #
 // # resetType =  4 --> Reset Aurora               #
-// # resetType =  5 --> Reset Serializer           #
+// # resetType =  5 --> Reset Serializers          #
 // # resetType =  6 --> Reset ADC                  #
 // # resetType =  7 --> Reset Data Merging         #
 // # resetType =  8 --> Reset Efuses               #
@@ -597,23 +597,12 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    // #######################################################################################################
-    // # Make sure to set Global Pulse Route to 0b10011000 = ResetServiceData, ResetAurora, ResetDataMerging #
-    // #######################################################################################################
+    // ###################################################################################
+    // # Make sure to set Global Pulse Route to 0b110000 = ResetAurora, ResetSerializers #
+    // ###################################################################################
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
             for(auto cChip: *cHybrid) RD53Interface::SendCommand(cChip, RD53BCmd::Clear{cChip->getId()});
-}
-
-void RD53BInterface::SendChipSync(ReadoutChip* pChip)
-{
-    this->setBoard(pChip->getBeBoardId());
-
-    const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
-
-    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", 0xFFFF ^ 0b11000000000, 0); // ResetTriggerTable, ResetBCIDCounter
-    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
-    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", GlbPulseVal, 0); // Restore value in Global Pulse Route
 }
 
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
@@ -625,6 +614,7 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
+    RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", RD53BConstants::RESET_GLOBAL_PULSE, cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
     std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
@@ -639,6 +629,7 @@ void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t ro
     RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, route}, cmdStream);
     RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR + 1, pulseDuration}, cmdStream);
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{RD53BConstants::BROADCAST_CHIPID}, cmdStream);
+    RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, RD53BConstants::RESET_GLOBAL_PULSE}, cmdStream);
     RD53Interface::SendChipCommands(pBoard, cmdStream, -1);
 
     std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
