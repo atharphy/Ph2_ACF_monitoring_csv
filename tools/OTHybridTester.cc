@@ -810,7 +810,7 @@ bool OTHybridTester::LpGBTTestVTRx()
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
             // Configuring I2C Master pull-ups
-            clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 1 << 4 | 1 << 6);
+            clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6);
 
             LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 0);
             std::this_thread::sleep_for(std::chrono::milliseconds(10));

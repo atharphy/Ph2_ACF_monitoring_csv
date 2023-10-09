@@ -1900,36 +1900,36 @@ float D19cFWInterface::GetSFPParameter_L8(std::string parameter, int channel)
     else
     {
         float result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l8");
-        if(parameter == "T") 
-	{ 
-		result = result / 256.0;
-		LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
-	}
-	else if(parameter == "V")
-	{ 
-		result = result / 10.0;
-		LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
-	}
-	else if(parameter == "I")
-	{ 
-		result = result * 0.002;
-		LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
-	}
-	else if(parameter == "TX")
-	{ 
-		result = result * 0.1;
-		LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
-	}
-	else if(parameter == "RX")
-	{ 
-		result = result * 0.1;
-		LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
-	}
-	else if(parameter == "raw")
-	{
-		LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET;
-	}
-	return result;
+        if(parameter == "T")
+        {
+            result = result / 256.0;
+            LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
+        }
+        else if(parameter == "V")
+        {
+            result = result / 10.0;
+            LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
+        }
+        else if(parameter == "I")
+        {
+            result = result * 0.002;
+            LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
+        }
+        else if(parameter == "TX")
+        {
+            result = result * 0.1;
+            LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "RX")
+        {
+            result = result * 0.1;
+            LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "raw")
+        {
+            LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET;
+        }
+        return result;
     }
     return error;
 }
@@ -1972,34 +1972,35 @@ float D19cFWInterface::GetSFPParameter_L12(std::string parameter, int channel)
     else
     {
         float result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l12");
-        if(parameter == "T") 
-	{ 
-		result = result / 256.0;
-		LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
-	}
-	else if(parameter == "V")
-	{ 
-		result = result / 10.0;
-		LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
-	}
-	else if(parameter == "I")
-	{ 
-		result = result * 0.002;
-		LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
-	}
-	else if(parameter == "TX")
-	{ 
-		result = result * 0.1;
-		LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
-	}
-	else if(parameter == "RX")
-	{ 
-		result = result * 0.1;
-		LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
-	}
-	else if(parameter == "raw") LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET;
+        if(parameter == "T")
+        {
+            result = result / 256.0;
+            LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
+        }
+        else if(parameter == "V")
+        {
+            result = result / 10.0;
+            LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
+        }
+        else if(parameter == "I")
+        {
+            result = result * 0.002;
+            LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
+        }
+        else if(parameter == "TX")
+        {
+            result = result * 0.1;
+            LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "RX")
+        {
+            result = result * 0.1;
+            LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "raw")
+            LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET;
 
-	return result;
+        return result;
     }
     return error;
 } // D19cFWInterface
