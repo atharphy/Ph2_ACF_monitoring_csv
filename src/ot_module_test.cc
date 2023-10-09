@@ -1,4 +1,3 @@
-#include <cstring>
 #include "HWInterface/D19cDebugFWInterface.h"
 #include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
@@ -16,20 +15,21 @@
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
 #include "tools/OTCMNoise.h"
+#include "tools/OTLightTransmission.h"
+#include "tools/OTQuickNoise.h"
+#include "tools/OTSensorTemperature.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
-#include "tools/OTSensorTemperature.h"
 #include "tools/OTlpGBTID.h"
-#include "tools/OTQuickNoise.h"
-#include "tools/OTLightTransmission.h"
 #include "tools/PSAlignment.h"
 #include "tools/PSBiasCal.h"
+#include "tools/PSPixelAlive.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
-#include "tools/PSPixelAlive.h"
 #include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
+#include <cstring>
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -234,8 +234,7 @@ int main(int argc, char* argv[])
     bool        cKiraCalibration = cmd.foundOption("kiracalibration");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
-    //int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
-
+    // int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -307,67 +306,67 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("writeJson"))
     {
         std::ofstream* outStream = new std::ofstream(cmd.optionValue("writeJson"));
-	cTool.setOfStream(outStream);
+        cTool.setOfStream(outStream);
     }
-/*
-    if(cmd.foundOption("readTemperatures"))
-    {
-        LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
-        auto cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
-        OTTemperature cTemperatureReader;
-        cTemperatureReader.Inherit(&cTool);
-        cTemperatureReader.SetGain(cGain);
-	cTemperatureReader.LoopReadout(true);
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(cRunNumber);
-        cTemperatureReader.Start(theStartInfo);
-        cTemperatureReader.waitForRunToBeCompleted();
-    }
+    /*
+        if(cmd.foundOption("readTemperatures"))
+        {
+            LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
+            auto cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
+            OTTemperature cTemperatureReader;
+            cTemperatureReader.Inherit(&cTool);
+            cTemperatureReader.SetGain(cGain);
+        cTemperatureReader.LoopReadout(true);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(cRunNumber);
+            cTemperatureReader.Start(theStartInfo);
+            cTemperatureReader.waitForRunToBeCompleted();
+        }
 
-    if(cmd.foundOption("readSensorTemperature"))
-    {
-        LOG(INFO) << BOLDBLUE << "Reading sensor temperature" << RESET;
-        OTSensorTemperature cSensorTemperature;
-        cSensorTemperature.Inherit(&cTool);
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(cRunNumber);
-        cSensorTemperature.Start(theStartInfo);
-        cSensorTemperature.waitForRunToBeCompleted();
-    }
+        if(cmd.foundOption("readSensorTemperature"))
+        {
+            LOG(INFO) << BOLDBLUE << "Reading sensor temperature" << RESET;
+            OTSensorTemperature cSensorTemperature;
+            cSensorTemperature.Inherit(&cTool);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(cRunNumber);
+            cSensorTemperature.Start(theStartInfo);
+            cSensorTemperature.waitForRunToBeCompleted();
+        }
 
-    if(cmd.foundOption("readlpGBTIDs"))
-    {
-        LOG(INFO) << BOLDBLUE << "Reading lpGBT IDs" << RESET;
-        OTlpGBTID clpGBTDIReader;
-        clpGBTDIReader.Inherit(&cTool);
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(cRunNumber);
-        clpGBTDIReader.Start(theStartInfo);
-        clpGBTDIReader.waitForRunToBeCompleted();
-    }
+        if(cmd.foundOption("readlpGBTIDs"))
+        {
+            LOG(INFO) << BOLDBLUE << "Reading lpGBT IDs" << RESET;
+            OTlpGBTID clpGBTDIReader;
+            clpGBTDIReader.Inherit(&cTool);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(cRunNumber);
+            clpGBTDIReader.Start(theStartInfo);
+            clpGBTDIReader.waitForRunToBeCompleted();
+        }
 
-    if(cmd.foundOption("measureQuickNoise"))
-    {
-        LOG(INFO) << BOLDBLUE << "Computing occupancy over 10000 triggers" << RESET;
-        OTQuickNoise cQuickNoiseReader;
-        cQuickNoiseReader.Inherit(&cTool);
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(cRunNumber);
-        cQuickNoiseReader.Start(theStartInfo);
-        cQuickNoiseReader.waitForRunToBeCompleted();
-    }
+        if(cmd.foundOption("measureQuickNoise"))
+        {
+            LOG(INFO) << BOLDBLUE << "Computing occupancy over 10000 triggers" << RESET;
+            OTQuickNoise cQuickNoiseReader;
+            cQuickNoiseReader.Inherit(&cTool);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(cRunNumber);
+            cQuickNoiseReader.Start(theStartInfo);
+            cQuickNoiseReader.waitForRunToBeCompleted();
+        }
 
-    if(cTansmissionChannel > 0)
-    {
-        LOG(INFO) << BOLDBLUE << "Getting transciever data" << RESET;
-        OTLightTransmission cLightTransmissionReader(cTansmissionChannel);
-        cLightTransmissionReader.Inherit(&cTool);
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(cRunNumber);
-        cLightTransmissionReader.Start(theStartInfo);
-        cLightTransmissionReader.waitForRunToBeCompleted();
-    }
-*/
+        if(cTansmissionChannel > 0)
+        {
+            LOG(INFO) << BOLDBLUE << "Getting transciever data" << RESET;
+            OTLightTransmission cLightTransmissionReader(cTansmissionChannel);
+            cLightTransmissionReader.Inherit(&cTool);
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(cRunNumber);
+            cLightTransmissionReader.Start(theStartInfo);
+            cLightTransmissionReader.waitForRunToBeCompleted();
+        }
+    */
     if(cmd.foundOption("calibrateADC"))
     {
         LOG(INFO) << BOLDBLUE << "Calibrating ADC.." << RESET;

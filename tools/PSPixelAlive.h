@@ -5,7 +5,7 @@
  * \author Adam Kobert
  * \date 2 / 27 / 23
  *
- * 
+ *
  *
  */
 
@@ -37,14 +37,14 @@ class PSPixelAlive : public Tool
 
     void Initialise();
     void measurePixels(); // Calls Occupancy Measurements and Plotting Functions
-//    void Validate();
+                          //    void Validate();
     void writeObjects();
 
-//    void Run() override;
-//    void Stoper() override;
+    //    void Run() override;
+    //    void Stoper() override;
     void Run();
     void Stoper();
-//    void ConfigureCalibration() override;
+    //    void ConfigureCalibration() override;
     void Pause() override;
     void Resume() override;
     void Reset();
@@ -70,8 +70,8 @@ class PSPixelAlive : public Tool
     float    fMaskingThreshold{0};
     bool     fMaskNoisyChannels{0};
 
-//    DetectorDataContainer*                     fThresholdAndNoiseContainer;
-//    std::map<uint16_t, DetectorDataContainer*> fSCurveStripOccupancyMap, fSCurvePixelOccupancyMap;
+    //    DetectorDataContainer*                     fThresholdAndNoiseContainer;
+    //    std::map<uint16_t, DetectorDataContainer*> fSCurveStripOccupancyMap, fSCurvePixelOccupancyMap;
 
   private:
     // to hold the original register values

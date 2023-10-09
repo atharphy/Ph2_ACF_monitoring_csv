@@ -21,6 +21,5 @@ class OTlpGBTID : public OTTool
     void Resume() override;
 
     void ReadlpGBTIDs();
-
 };
 #endif

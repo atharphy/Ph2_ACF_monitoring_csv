@@ -25,7 +25,7 @@ void OTlpGBTID::Running()
     Reset();
 }
 
-void OTlpGBTID::ReadlpGBTIDs() 
+void OTlpGBTID::ReadlpGBTIDs()
 {
     for(auto cBoard: *fDetectorContainer)
     {
@@ -34,14 +34,14 @@ void OTlpGBTID::ReadlpGBTIDs()
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
             uint32_t chipFuseId = flpGBTInterface->ReadChipFuseID(theLpGBT);
-	    LOG(INFO) << BOLDBLUE << "lpGBT ID: " << chipFuseId << RESET;
-	    if(fOfStream != nullptr)
-	    {
-	        json j;
-	        j["type"] = "data";
-	        j["data"]["ID"] = chipFuseId;
-	        *(fOfStream) << j << std::endl;
-	    }
+            LOG(INFO) << BOLDBLUE << "lpGBT ID: " << chipFuseId << RESET;
+            if(fOfStream != nullptr)
+            {
+                json j;
+                j["type"]       = "data";
+                j["data"]["ID"] = chipFuseId;
+                *(fOfStream) << j << std::endl;
+            }
         }
     }
 }

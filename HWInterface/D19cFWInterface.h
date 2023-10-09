@@ -365,8 +365,8 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
 
     // fast command generic block
-    void ResetFCMDBram();
-    void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
+    void  ResetFCMDBram();
+    void  ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
     float GetSFPParameter_L8(std::string parameter, int channel);
     float GetSFPParameter_L12(std::string parameter, int channel);
 };

@@ -37,8 +37,8 @@ void OTSensorTemperature::ReadThermistors(const OpticalGroup* pOpticalGroup)
         LOG(INFO) << BOLDBLUE << type << " (" << adc << ") Temperature: " << temperature << "°C" << RESET;
         if(fOfStream != nullptr)
         {
-	    json j;
-            j["type"] = "data";
+            json j;
+            j["type"]                = "data";
             j["data"]["temperature"] = temperature;
             *(fOfStream) << j << std::endl;
         }
