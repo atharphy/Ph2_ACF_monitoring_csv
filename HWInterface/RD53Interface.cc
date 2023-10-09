@@ -50,14 +50,10 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     }
 
     if(status == false)
-    {
         LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
                    << ", read = " << BOLDYELLOW << actualValue << RESET;
-    }
     else if((pVerify == true) && (status == true))
-    {
         LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
-    }
 
     // #######################################
     // # Update both real and fake registers #
@@ -295,9 +291,9 @@ float RD53Interface::convertADC2VorI(ReadoutChip* pChip, uint32_t value, bool is
 // ######################################
 {
     // ################################################################################
-    // # resistorI2V   = 0.01-0.005 [MOhm] resistor for current to voltage conversion #
-    // # ADCoffset     =  63 [1/10 mV] Offset due to ground shift                     #
-    // # actualVrefADC = 839 [mV]      Lower than VrefADC due to parasitics           #
+    // # resistorI2V   = 0.01-0.005 [MOhm] Resistor for current to voltage conversion #
+    // # ADCoffset     =  63 [1/10 mV]     Offset due to ground shift                 #
+    // # actualVrefADC = 839 [mV]          Lower than VrefADC due to parasitics       #
     // ################################################################################
 
     const float resistorI2V   = pChip->getRegItem("RESISTORI2V").fValue / 1e6; // [MOhm]

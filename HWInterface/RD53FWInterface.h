@@ -64,7 +64,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
     void PrintFWstatus() override;
 
-    void Start() override;
+    void Start(const Ph2_HwDescription::BeBoard* pBoard) override;
     void Stop() override;
     void Pause() override;
     void Resume() override;
@@ -212,7 +212,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void     TurnOnFMC();
     void     ConfigureDIO5(const DIO5Config* config);
     void     SendBoardCommandWithStrobe(const std::string& cmdReg);
-    void     SendBoardCommand(const std::string& cmdReg);
     uint32_t GetBoardEnabledChips(const Ph2_HwDescription::BeBoard* pBoard, bool primariesOnly = false);
     uint32_t GetBoardEnabledHybrids(const Ph2_HwDescription::BeBoard* pBoard);
 
