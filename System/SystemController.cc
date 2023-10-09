@@ -850,7 +850,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
                 {
                     if(cSkipSSA3 && cSSAId == 3) continue;
-                    SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
+                    SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/SSAFiles/SSA.txt");
                     uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
                     cSSA->setOptical(cHybrid->isOptical());
                     cSSA->setMasterId(cHybrid->getMasterId());
