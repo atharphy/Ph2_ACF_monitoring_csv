@@ -164,6 +164,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
             for(const auto cPattern: cPatternVec)
             {
                 this->LpGBTInjectULExternalPattern(true, cPattern);
+                // this->LpGBTInjectULInternalPattern(cPattern | (cPattern << 8) | (cPattern << 16) | (cPattern << 24));
                 LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(cPattern) << RESET;
                 for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
                 {
@@ -172,6 +173,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     {
                         clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
                         clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
+                        // clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 2);
                         std::this_thread::sleep_for(std::chrono::milliseconds(500));
                     }
 
