@@ -151,7 +151,7 @@ export CompileWithEUDAQ=false
 ###############################
 # Compile with TC_USB library #
 ###############################
-export CompileWithTCUSB=true
+export CompileWithTCUSB=false
 
 ########################
 # Clang-format command #
