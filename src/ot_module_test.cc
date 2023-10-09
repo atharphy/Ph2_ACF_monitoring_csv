@@ -25,6 +25,7 @@
 #include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/PSPixelAlive.h"
 #include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
@@ -131,6 +132,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC."); // Scurve
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
+    cmd.defineOption("pixelAlive", "measure pixel occupancy and mask pixels below threshold");
+    cmd.defineOptionAlternative("pixelAlive", "p");
+
     cmd.defineOption("cmNoise", "measure common mode noise");
 
     cmd.defineOption("read", "Read data from a raw file.  ", ArgvParser::OptionRequiresValue);
@@ -217,20 +221,20 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string cHWFile             = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
-    bool        batchMode           = (cmd.foundOption("batch")) ? true : false;
-    bool        cCheckData          = (cmd.foundOption("checkData"));
-    bool        cSaveToFile         = cmd.foundOption("save");
-    std::string cSkip               = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
-    std::string cInjectionSource    = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
-    std::string cSrcLnkTst          = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
-    std::string cModuleId           = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    int         cKiraPort           = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
-    std::string cKiraID             = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
-    bool        cKiraCalibration    = cmd.foundOption("kiracalibration");
-    std::string cDirectory          = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    bool        cPulseShape         = (cmd.foundOption("pulseShape")) ? true : false;
-    int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
+    std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
+    bool        batchMode        = (cmd.foundOption("batch")) ? true : false;
+    bool        cCheckData       = (cmd.foundOption("checkData"));
+    bool        cSaveToFile      = cmd.foundOption("save");
+    std::string cSkip            = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
+    std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
+    std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
+    std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
+    int         cKiraPort        = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
+    std::string cKiraID          = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
+    bool        cKiraCalibration = cmd.foundOption("kiracalibration");
+    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+    //int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -304,7 +308,7 @@ int main(int argc, char* argv[])
         std::ofstream* outStream = new std::ofstream(cmd.optionValue("writeJson"));
         cTool.setOfStream(outStream);
     }
-
+/*
     if(cmd.foundOption("readTemperatures"))
     {
         LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
@@ -362,7 +366,7 @@ int main(int argc, char* argv[])
         cLightTransmissionReader.Start(theStartInfo);
         cLightTransmissionReader.waitForRunToBeCompleted();
     }
-
+*/
     if(cmd.foundOption("calibrateADC"))
     {
         LOG(INFO) << BOLDBLUE << "Calibrating ADC.." << RESET;
@@ -1232,6 +1236,22 @@ int main(int argc, char* argv[])
         cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
+    }
+    if(cmd.foundOption("pixelAlive") && !cmd.foundOption("read"))
+    {
+        LOG(INFO) << BOLDMAGENTA << "Measuring Pixel Occupancy and Masking Pixels Below Threshold" << RESET;
+        t.start();
+        PSPixelAlive cPixelAlive;
+        cPixelAlive.Inherit(&cTool);
+        cPixelAlive.Initialise();
+        cPixelAlive.measurePixels();
+        cPixelAlive.writeObjects();
+        LOG(INFO) << BOLDBLUE << "Dumping PixelAlive Registers" << RESET;
+        cPixelAlive.dumpConfigFiles();
+        cPixelAlive.Reset();
+        t.stop();
+        t.show("Time to Measure Pixel Occupancy and Mask Pixels");
+        LOG(INFO) << BOLDMAGENTA << "PixelAlive Finished" << RESET;
     }
 
     if(cmd.foundOption("cmNoise") && !cmd.foundOption("read"))
