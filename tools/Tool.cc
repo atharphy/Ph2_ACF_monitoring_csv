@@ -218,10 +218,6 @@ void Tool::initMetadataAndFillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationNameContainer);
     theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName;
 
-    // DetectorDataContainer theFirmwareVersionContainer;
-    // ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
-    // for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
-
     DetectorDataContainer theDetectorConfigurationContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
     theDetectorConfigurationContainer.getSummary<std::string>() = fConfigurationFileContent;
@@ -249,11 +245,10 @@ void Tool::initMetadataAndFillInitialConditions()
 
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
-    if(fBoardType == BoardType::D19C) { fDQMMetadata = new DQMMetadataOT(); }
+    if(fBoardType == BoardType::D19C)
+        fDQMMetadata = new DQMMetadataOT();
     else if(fBoardType == BoardType::RD53)
-    {
         fDQMMetadata = new DQMMetadataIT();
-    }
     else
     {
         LOG(ERROR) << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Board type not defined!! Impossible to create DQM for metadata, aborting..." << std::endl;
@@ -264,7 +259,6 @@ void Tool::initMetadataAndFillInitialConditions()
     fDQMMetadata->fillUsername(theUsernameContainer);
     fDQMMetadata->fillHostName(theHostNameContainer);
     fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
-    // fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
     fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
     fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
     fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
@@ -286,9 +280,6 @@ void Tool::initMetadataAndFillInitialConditions()
 
         ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
         theGitCommitHashSerialization.streamByDetectorContainer(fDQMStreamer, theGitCommitHashContainer);
-
-        // ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
-        // theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
 
         ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
         theCalibrationNameSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationNameContainer);
@@ -313,11 +304,10 @@ void Tool::initMetadataAndFillInitialConditions()
     }
 #endif
 
-    if(fBoardType == BoardType::D19C) { fillOTMetadataInitialConditions(); }
+    if(fBoardType == BoardType::D19C)
+        fillOTMetadataInitialConditions();
     else if(fBoardType == BoardType::RD53)
-    {
         fillITMetadataInitialConditions();
-    }
 }
 
 void Tool::fillOTMetadataInitialConditions()
@@ -1483,14 +1473,10 @@ void Tool::scanBeBoardDacDac(uint16_t                                         bo
 
     for(size_t dacIt = 0; dacIt < dac1List.size(); ++dacIt)
     {
-        // el::LoggingFlag::NewLineForContainer (0);
         if(boardId == 0) LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List[dacIt] << " vs " << dac2Name << RESET;
-        // el::LoggingFlag::NewLineForContainer (1);
         setSameDacBeBoard(fDetectorContainer->getObject(boardId), dac1Name, dac1List[dacIt]);
         scanBeBoardDac(boardId, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt], numberOfEventsPerBurst);
     }
-
-    return;
 }
 
 // One dimensional dac scan
@@ -1927,8 +1913,6 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                                         .fOccupancy < targetOccupancy) and
                                    (not first))
                                 {
-                                    // std::cout<<"occDiff "<<occDiff<<" NoccDiff "<<NoccDiff<<std::endl;
-
                                     if(std::fabs(currentStepOccupancyContainer->getObject(boardId)
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
