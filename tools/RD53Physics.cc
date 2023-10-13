@@ -65,8 +65,6 @@ void Physics::Running()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid) fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ChipReSync();
-
     StartInfo theStartInfo;
     theStartInfo.setRunNumber(theCurrentRun);
     SystemController::Start(theStartInfo);
@@ -163,8 +161,8 @@ void Physics::run()
 
         theGuard.lock();
         genericEvtConverter(RD53Event::decodedEvents);
-        numberOfEventsPerRun += RD53Event::decodedEvents.size();
         theGuard.unlock();
+        numberOfEventsPerRun += RD53Event::decodedEvents.size();
 
         if((RD53Event::decodedEvents.size() != 0) && (numberOfEventsPerRun % PRINTeventsEVERY == 0))
             LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings up to now: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
