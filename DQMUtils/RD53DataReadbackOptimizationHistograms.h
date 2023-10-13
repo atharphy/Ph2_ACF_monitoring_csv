@@ -33,6 +33,8 @@ class DataReadbackOptimizationHistograms : public DQMHistogramBase
     void fillScanTAP2(const DetectorDataContainer& TAP2scanContainer);
     void fillTAP2(const DetectorDataContainer& TAP2Container);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

@@ -372,11 +372,10 @@ void Tool::fillMetadataFinalConditions()
     }
 #endif
 
-    if(fBoardType == BoardType::D19C) { fillOTMetadataFinalConditions(); }
+    if(fBoardType == BoardType::D19C)
+        fillOTMetadataFinalConditions();
     else if(fBoardType == BoardType::RD53)
-    {
         fillITMetadataFinalConditions();
-    }
 }
 
 void Tool::fillITMetadataFinalConditions() {}
@@ -547,11 +546,15 @@ void Tool::Stop()
             thePacketHeader.addPacketHeader(doneWithRunMessage);
             fDQMStreamer->broadcast(doneWithRunMessage);
         }
-        Tool::dumpConfigFiles();
-        Tool::SaveResults();
-        Tool::WriteRootFile();
-        Tool::CloseResultFile();
     }
+}
+
+void Tool::SaveAndClose()
+{
+    Tool::dumpConfigFiles();
+    Tool::SaveResults();
+    Tool::WriteRootFile();
+    Tool::CloseResultFile();
 }
 
 void Tool::Inherit(const Tool* pTool)
@@ -573,9 +576,8 @@ void Tool::Inherit(const Tool* pTool)
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
     fDQMMetadata          = pTool->fDQMMetadata;
 #endif
-    fTestGroupChannelMap = pTool->fTestGroupChannelMap;
-    fRunNumber           = pTool->fRunNumber;
-    // fRunningFuture               = pTool->fRunningFuture;
+    fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
+    fRunNumber                   = pTool->fRunNumber;
     fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
     fAllChan                     = pTool->fAllChan;
     fMaskForTestGroupChannelMap  = pTool->fMaskForTestGroupChannelMap;

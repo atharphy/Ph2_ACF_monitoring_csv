@@ -106,7 +106,7 @@ void SCurve::Stop()
     Tool::Stop();
 
     SCurve::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -200,10 +200,10 @@ void SCurve::draw(bool saveData)
     if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
-        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
     }
 
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     SCurve::fillHisto();
     histos->process();
     doSaveData = saveData;

@@ -86,7 +86,8 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
     {
         auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
         if(regReadback.size() == 0)
-            LOG(WARNING) << BLUE << "Empty register readback from chip id " << YELLOW << pChip->getId() << BLUE << ", attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET;
+            LOG(WARNING) << BLUE << "Empty register readback from chip id " << YELLOW << pChip->getId() << BLUE << ", attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts
+                         << RESET;
         else
             return regReadback[0].second;
     }

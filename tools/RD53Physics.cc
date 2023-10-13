@@ -95,13 +95,23 @@ void Physics::Stop()
 
     Tool::Stop();
 
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
+
     // ################
     // # Error report #
     // ################
-    Physics::chipErrorReport();
+    CalibBase::chipErrorReport();
+
+    // #######################
+    // # Save chip registers #
+    // #######################
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
     Physics::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
@@ -173,8 +183,6 @@ void Physics::run()
 
 void Physics::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
-
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
@@ -183,10 +191,10 @@ void Physics::draw(bool saveData)
     if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
-        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
     }
 
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Physics::fillHisto();
     histos->process();
 

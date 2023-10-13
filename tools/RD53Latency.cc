@@ -79,7 +79,7 @@ void Latency::Stop()
     Tool::Stop();
 
     Latency::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -141,6 +141,7 @@ void Latency::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> Latency saving histograms..." << RESET;
     }
 
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Latency::fillHisto();
     histos->process();
 
