@@ -61,7 +61,7 @@ void DataTransmissionTest::Stop()
     Tool::Stop();
 
     DataTransmissionTest::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -105,10 +105,10 @@ void DataTransmissionTest::draw(bool saveData)
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
-        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> DataTransmissionTest saving histograms..." << RESET;
     }
 
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     DataTransmissionTest::fillHisto();
     histos->process();
 

@@ -50,8 +50,8 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     }
 
     if(status == false)
-        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
-                   << ", read = " << BOLDYELLOW << actualValue << RESET;
+        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 id " << BOLDYELLOW << pChip->getId() << BOLDRED << " reg. " << BOLDYELLOW << regName << BOLDRED
+                   << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED << ", read = " << BOLDYELLOW << actualValue << RESET;
     else if((pVerify == true) && (status == true))
         LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
 
@@ -86,7 +86,8 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
     {
         auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
         if(regReadback.size() == 0)
-            LOG(WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET;
+            LOG(WARNING) << BLUE << "Empty register readback from chip id " << YELLOW << pChip->getId() << BLUE << ", attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts
+                         << RESET;
         else
             return regReadback[0].second;
     }

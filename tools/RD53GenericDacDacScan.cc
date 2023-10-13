@@ -91,7 +91,7 @@ void GenericDacDacScan::Stop()
     Tool::Stop();
 
     GenericDacDacScan::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -146,10 +146,10 @@ void GenericDacDacScan::draw(bool saveData)
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
-        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saving histograms..." << RESET;
     }
 
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GenericDacDacScan::fillHisto();
     histos->process();
 

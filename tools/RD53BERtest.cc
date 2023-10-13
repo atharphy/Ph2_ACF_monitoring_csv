@@ -55,7 +55,7 @@ void BERtest::Stop()
     Tool::Stop();
 
     BERtest::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -145,10 +145,10 @@ void BERtest::draw(bool saveData)
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
-        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> BERtest saving histograms..." << RESET;
     }
 
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     BERtest::fillHisto();
     histos->process();
 

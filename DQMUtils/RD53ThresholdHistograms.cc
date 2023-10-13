@@ -26,6 +26,8 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 
     auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
     bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");
+
+    AreHistoBooked = true;
 }
 
 bool ThresholdHistograms::fill(std::string& inputStream)

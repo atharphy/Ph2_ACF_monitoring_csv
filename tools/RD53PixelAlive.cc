@@ -97,7 +97,7 @@ void PixelAlive::Stop()
     Tool::Stop();
 
     PixelAlive::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -260,10 +260,10 @@ void PixelAlive::draw(bool saveData)
     if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
-        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saving histograms..." << RESET;
     }
 
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     PixelAlive::fillHisto();
     histos->process();
     doSaveData = saveData;

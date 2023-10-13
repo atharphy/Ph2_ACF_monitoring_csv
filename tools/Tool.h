@@ -111,6 +111,7 @@ class Tool : public Ph2_System::SystemController
     void waitForRunToBeCompleted();
     void privateRunning(std::promise<int>&& thePromise);
     void SaveResults();
+    void SaveAndClose();
     void CloseResultFile();
     void initMetadataAndFillInitialConditions();
     void fillOTMetadataInitialConditions();

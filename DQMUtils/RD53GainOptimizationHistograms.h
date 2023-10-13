@@ -26,6 +26,8 @@ class GainOptimizationHistograms : public DQMHistogramBase
 
     void fill(const DetectorDataContainer& DataContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

@@ -44,6 +44,8 @@ void DataReadbackOptimizationHistograms::book(TFile* theOutputFile, DetectorCont
     bookImplementer(theOutputFile, theDetectorStructure, TAP2scan, hTAP2scan, "TAP2 - pre-emphasis-2", "Bit Error Rate (frames-with-err / frames)");
     auto hTAP2 = CanvasContainer<TH1F>("TAP2", "TAP2 - pre-emphasis-2", stopValueTAP2 - startValueTAP2 + 1, startValueTAP2, stopValueTAP2 + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TAP2, hTAP2, "TAP2 - pre-emphasis-2", "Entries");
+
+    AreHistoBooked = true;
 }
 
 bool DataReadbackOptimizationHistograms::fill(std::string& inputStream)

@@ -84,7 +84,7 @@ void InjectionDelay::Stop()
     Tool::Stop();
 
     InjectionDelay::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -185,10 +185,10 @@ void InjectionDelay::draw(bool saveData)
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
         this->InitResultFile(CalibBase::theHistoFileName);
-        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
         LOG(INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
     }
 
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     InjectionDelay::fillHisto();
     histos->process();
 

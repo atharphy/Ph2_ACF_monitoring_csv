@@ -27,6 +27,8 @@ class InjectionDelayHistograms : public DQMHistogramBase
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer);
     void fillInjectionDelay(const DetectorDataContainer& InjectionDelayContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

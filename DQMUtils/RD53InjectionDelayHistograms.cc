@@ -32,6 +32,8 @@ void InjectionDelayHistograms::book(TFile* theOutputFile, DetectorContainer& the
 
     auto hOcc1D = CanvasContainer<TH1F>("InjDelayScan", "Injection Delay Scan", stopValue - startValue + 1, startValue, stopValue + 1);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, title.str().c_str(), "Efficiency");
+
+    AreHistoBooked = true;
 }
 
 bool InjectionDelayHistograms::fill(std::string& inputStream)

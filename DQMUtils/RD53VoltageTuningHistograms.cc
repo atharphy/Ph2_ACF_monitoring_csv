@@ -22,6 +22,8 @@ void VoltageTuningHistograms::book(TFile* theOutputFile, DetectorContainer& theD
 
     bookImplementer(theOutputFile, theDetectorStructure, VoltageDig, hVoltageDig, "VoltageDig", "Entries");
     bookImplementer(theOutputFile, theDetectorStructure, VoltageAna, hVoltageAna, "VoltageAna", "Entries");
+
+    AreHistoBooked = true;
 }
 
 bool VoltageTuningHistograms::fill(std::string& inputStream)

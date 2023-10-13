@@ -31,6 +31,8 @@ class SCurveHistograms : public DQMHistogramBase
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL);
     void fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 
