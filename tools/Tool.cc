@@ -521,7 +521,7 @@ void Tool::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer
         {
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
-            uint32_t chipFuseId = flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
+            uint32_t chipFuseId = 0; // flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
             // Temporary function in lpgbt interface until VTRx interface is implemented
             theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
         }
@@ -632,7 +632,7 @@ void Tool::SoftDestroy()
     if(fOfStream != nullptr)
     {
         delete fOfStream;
-	fOfStream = nullptr;
+        fOfStream = nullptr;
     }
 #ifdef __USE_ROOT__
     if(fResultFile != nullptr)
@@ -959,7 +959,7 @@ void Tool::SaveResults()
     // Save summary TTree
     // fResultFile->cd();
     if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->cd();
-    if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
+        // if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 #endif
 }
 

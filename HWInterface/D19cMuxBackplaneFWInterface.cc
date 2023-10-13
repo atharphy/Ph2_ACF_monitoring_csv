@@ -32,8 +32,9 @@ void D19cMuxBackplaneFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
         throw std::runtime_error("FC7 power is not enabled!");
     }
 
-    bool BackplanePG   = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_powergood") == 1);
-    bool CardPG        = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_powergood") == 1);
+    bool BackplanePG = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplane_powergood") == 1);
+    bool CardPG      = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.card_powergood") == 1);
+    LOG(INFO) << BOLDBLUE << "Back-plane power good " << BackplanePG << " and card power good " << CardPG << " ." << RESET;
     bool SystemPowered = false;
     if(BackplanePG && CardPG)
     {
@@ -48,6 +49,7 @@ void D19cMuxBackplaneFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
     }
     if(SystemPowered)
     {
+        int  cWait                  = 0;
         bool CardsDisconnected      = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
         bool c                      = false;
         bool BackplanesDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
@@ -62,8 +64,11 @@ void D19cMuxBackplaneFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
             std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
             CardsDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.cards_disconnected") == 1);
             LOG(DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
+            cWait += pWait_ms;
         }
 
+        LOG(INFO) << "Card deselected after " << +cWait << " ms" << RESET;
+        cWait = 0;
         while(!BackplanesDisconnected)
         {
             if(b == false) LOG(INFO) << "Disconnecting backplanes";
@@ -71,7 +76,10 @@ void D19cMuxBackplaneFWInterface::DisconnectMultiplexingSetup(uint8_t pWait_ms)
             std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
             BackplanesDisconnected = (ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.backplanes_disconnected") == 1);
             LOG(DEBUG) << BOLDBLUE << "Set-up scanned : " << +ReadReg("fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") << RESET;
+            cWait += pWait_ms;
         }
+
+        LOG(INFO) << "Backplane deselected after " << +cWait << " ms" << RESET;
 
         if(CardsDisconnected && BackplanesDisconnected)
         {

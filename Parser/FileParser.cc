@@ -642,13 +642,17 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("stripCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("stripFine").value());
-                if(cChip->getFrontEndType() == FrontEndType::SSA2) cChip->setReg("ClockDeskewing_coarse", cCoarse);
-                else if (cChip->getFrontEndType() == FrontEndType::SSA) cChip->setReg("PhaseShiftClock", cCoarse);
+                if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                    cChip->setReg("ClockDeskewing_coarse", cCoarse);
+                else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                    cChip->setReg("PhaseShiftClock", cCoarse);
                 ChipRegMask cMask;
                 cMask.fNbits    = 3;
                 cMask.fBitShift = 0;
-                if(cChip->getFrontEndType() == FrontEndType::SSA2) cChip->setRegBits("ClockDeskewing_fine", cMask, cFine);
-                else if (cChip->getFrontEndType() == FrontEndType::SSA) cChip->setRegBits("ClockDeskewing", cMask, cFine);
+                if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                    cChip->setRegBits("ClockDeskewing_fine", cMask, cFine);
+                else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                    cChip->setRegBits("ClockDeskewing", cMask, cFine);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
                    << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
@@ -1638,13 +1642,8 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             // # Retrieve links, groups, channels and polarities and propagate to LpGBT class #
             // ################################################################################
             plpGBT->addRxGroups(cRxGroups);
-            plpGBT->addRxChannels(cRxChannels);
-            plpGBT->addRxPolarities(cRxPolarities);
             plpGBT->addRxProperty(cRxGroups[0], cRxChannels[0], cRxPolarities[0]);
 
-            plpGBT->addTxGroups(cTxGroups);
-            plpGBT->addTxChannels(cTxChannels);
-            plpGBT->addTxPolarities(cTxPolarities);
             plpGBT->addTxProperty(cTxGroups[0], cTxChannels[0], cTxPolarities[0]);
 
             // ###################################################################
@@ -1660,17 +1659,13 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxPolarity(cTxPolarities[0]);
         }
-        else
-        {
-            // ###################
-            // # Specific for OT #
-            // ###################
-            plpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6});
-            plpGBT->addRxChannels({0, 2});
+        // else
+        // {
+        //     // ###################
+        //     // # Specific for OT #
+        //     // ###################
 
-            for(const auto& group: plpGBT->getRxGroups())
-                for(const auto& channel: plpGBT->getRxChannels()) plpGBT->addRxProperty(group, channel, 0);
-        }
+        // }
     }
 }
 

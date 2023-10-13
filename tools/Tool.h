@@ -362,9 +362,8 @@ class Tool : public Ph2_System::SystemController
     uint8_t getNormalization() { return fNormalize; }
     void    resetOutputDirectoryName() { fDirectoryName = ""; }
 
-    void setOfStream(std::ofstream* pOfStream) { fOfStream = pOfStream; };
+    void           setOfStream(std::ofstream* pOfStream) { fOfStream = pOfStream; };
     std::ofstream* getOfStream() { return fOfStream; };
-
 
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);

@@ -72,44 +72,49 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
-    LOG(INFO) << BOLDBLUE << "Load calibration data and automatically tune vref (repeat if temperature changes)!" << RESET;
     // LoadCalibrationData(pChip, 0x00244200);
-    LoadCalibrationData(pChip, ReadChipID(pChip, static_cast<lpGBT*>(pChip)->getVersion()));
-    AutoTuneVref(pChip);
+    if(cChipVersion == 1)
+    {
+        LOG(INFO) << BOLDBLUE << "Load calibration data and automatically tune vref (repeat if temperature changes)!" << RESET;
 
-    LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
-    CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
-    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC0\", \"VREF/2\", 0) " << RESET;
-    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC0", "VREF/2", 0) << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC1\", \"VREF/2\", 0) " << RESET;
-    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC1", "VREF/2", 0) << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC2\", \"VREF/2\", 0) " << RESET;
-    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC2", "VREF/2", 0) << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC3\", \"VREF/2\", 0) " << RESET;
-    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC3", "VREF/2", 0) << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC4\", \"VREF/2\", 0) " << RESET;
-    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC4", "VREF/2", 0) << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC5\", \"VREF/2\", 0) " << RESET;
-    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC5", "VREF/2", 0) << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC6\", \"VREF/2\", 0) " << RESET;
-    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC6", "VREF/2", 0) << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
-    LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
+        LoadCalibrationData(pChip, ReadChipID(pChip, cChipVersion));
+        AutoTuneVref(pChip);
 
-    LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
-    LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;
-    LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
-    LOG(INFO) << BOLDGREEN << MeasureTemperature(pChip) << " C" << RESET;
+        LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
+        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC0\", \"VREF/2\", 0) " << RESET;
+        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC0", "VREF/2", 0) << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC1\", \"VREF/2\", 0) " << RESET;
+        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC1", "VREF/2", 0) << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC2\", \"VREF/2\", 0) " << RESET;
+        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC2", "VREF/2", 0) << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC3\", \"VREF/2\", 0) " << RESET;
+        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC3", "VREF/2", 0) << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC4\", \"VREF/2\", 0) " << RESET;
+        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC4", "VREF/2", 0) << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC5\", \"VREF/2\", 0) " << RESET;
+        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC5", "VREF/2", 0) << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC6\", \"VREF/2\", 0) " << RESET;
+        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC6", "VREF/2", 0) << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
+        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
+        // Example on how to use the current source to measure resistance
+        // Only for OT-2S
+        // if(pChip->getFrontEndType() == FrontEndType::OuterTracker2S) {
+        // CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
+        // LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;}
+        LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
+        LOG(INFO) << BOLDGREEN << MeasureTemperature(pChip) << " C" << RESET;
 
-    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDTX\")" << RESET;
-    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDTX") << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDRX\")" << RESET;
-    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDRX") << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDD\")" << RESET;
-    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDD") << " V" << RESET;
-    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDA\")" << RESET;
-    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDA") << " V" << RESET;
-
+        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDTX\")" << RESET;
+        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDTX") << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDRX\")" << RESET;
+        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDRX") << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDD\")" << RESET;
+        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDD") << " V" << RESET;
+        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDA\")" << RESET;
+        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDA") << " V" << RESET;
+    }
     return cReady;
 } //
 
@@ -150,41 +155,24 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
 
     // Tx Groups and Channels
-    std::vector<uint8_t> cTxGroups = {0, 2}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 0, cTxPreEmphWidth = 0, cTxInvert = 0;
-    for(const auto& group: cTxGroups)
-        for(const auto& channel: cTxChannels) lpGBTInterface::ConfigureTxGroup(pChip, group, channel, cTxDataRate);
 
-    for(const auto& cGroup: cTxGroups)
-    {
-        if(cGroup == 0) cTxInvert = 1;
-        if(cGroup == 2) cTxInvert = 0;
-        for(const auto& cChannel: cTxChannels) ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
-    }
+    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 0, cTxPreEmphWidth = 0;
+    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties()) { lpGBTInterface::ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, cTxDataRate); }
+
+    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
+    { ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity); }
 
     // Rx configuration and Phase Align
     // Configure Rx Groups
     // WriteChipReg(pChip, "EPRXDllConfig", , false);
-    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 0; // manual mode by default
-    for(const auto& group: cRxGroups)
-        for(const auto& channel: cRxChannels) lpGBTInterface::ConfigureRxGroup(pChip, group, channel, cRxDataRate, cRxTrackMode);
 
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 5;
-    for(const auto& cGroup: cRxGroups)
-    {
-        for(const auto cChannel: cRxChannels)
-        {
-            if(cGroup == 6 && cChannel == 0)
-                cRxInvert = 0;
-            else if(cGroup == 5 && cChannel == 0)
-                cRxInvert = 0;
-            else
-                cRxInvert = 1;
+    uint8_t cRxDataRate = 2, cRxTrackMode = 0; // manual mode by default
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties()) { lpGBTInterface::ConfigureRxGroup(pChip, RxProperty.Group, RxProperty.Channel, cRxDataRate, cRxTrackMode); }
 
-            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-        }
-    }
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 5;
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+    { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
+
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
@@ -206,8 +194,36 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
     ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
 #endif
+}
+void D19clpGBTInterface::Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip)
+{
+    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
+    uint8_t              cRxInvert = 0;
+    for(const auto& cGroup: cRxGroups)
+    {
+        for(const auto cChannel: cRxChannels)
+        {
+            if(cGroup == 6 && cChannel == 0)
+                cRxInvert = 0;
+            else if(cGroup == 5 && cChannel == 0)
+                cRxInvert = 0;
+            else
+                cRxInvert = 1;
 
-} // namespace Ph2_HwInterface
+            if(!((cGroup == 6 && cChannel == 2) || (cGroup == 3 && cChannel == 0))) { static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert); }
+        }
+    }
+    std::vector<uint8_t> cTxGroups = {0, 2};
+    uint8_t              cTxInvert = 0;
+
+    for(const auto& cGroup: cTxGroups)
+    {
+        if(cGroup == 0) cTxInvert = 1;
+        if(cGroup == 2) cTxInvert = 0;
+
+        static_cast<lpGBT*>(pChip)->addTxProperty(cGroup, 0, cTxInvert);
+    }
+}
 
 void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
@@ -275,9 +291,9 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             // If the fail occurs it means that the Chip has a major issue and this check avoids to be stuck in this loop for a very long time
             bool writeSucceded = WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
             if(!writeSucceded) return 15;
-            std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+            std::this_thread::sleep_for(std::chrono::microseconds((lpGBTconstants::DEEPSLEEP) / 10));
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+            std::this_thread::sleep_for(std::chrono::microseconds((lpGBTconstants::DEEPSLEEP) / 10));
             // Check for lock
             std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
             uint8_t     cLockShift   = cChannel + 4;
@@ -288,14 +304,14 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             uint8_t     cIter        = 0;
             do
             {
-                std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+                std::this_thread::sleep_for(std::chrono::microseconds((lpGBTconstants::DEEPSLEEP) / 10));
                 cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
                 cContinue = cLock == 0;
                 cIter++;
             } while(cContinue && cIter < cMaxIters);
             if(cLock) cAligned[cIndx] += 1;
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+            std::this_thread::sleep_for(std::chrono::microseconds((lpGBTconstants::DEEPSLEEP) / 10));
             cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
             LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
             cPhases.push_back(cCurrPhase);
@@ -367,45 +383,21 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
 
     // Tx Groups and Channels
-    std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
-    uint8_t              cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    for(const auto& group: cTxGroups)
-        for(const auto& channel: cTxChannels) lpGBTInterface::ConfigureTxGroup(pChip, group, channel, cTxDataRate);
+    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0;
+    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties()) { lpGBTInterface::ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, cTxDataRate); }
 
-    for(const auto& cGroup: cTxGroups)
-    {
-        cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
-        for(const auto& cChannel: cTxChannels) ConfigureTxChannel(pChip, cGroup, cChannel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, cTxInvert);
-    }
+    for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
+    { ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity); }
 
     // Rx configuration and Phase Align
     // Configure Rx Groups
-    std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
-    uint8_t              cRxDataRate = 2, cRxTrackMode = 0;
-    for(const auto& group: cRxGroups)
-        for(const auto& channel: cRxChannels) lpGBTInterface::ConfigureRxGroup(pChip, group, channel, cRxDataRate, cRxTrackMode);
+    uint8_t cRxDataRate = 2, cRxTrackMode = 0;
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties()) { lpGBTInterface::ConfigureRxGroup(pChip, RxProperty.Group, RxProperty.Channel, cRxDataRate, cRxTrackMode); }
 
-    uint8_t              cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9; // cRxInvert = 0 ;
-    std::vector<uint8_t> cGrpsLeft{0, 1, 1, 2, 2, 3, 3};
-    std::vector<uint8_t> cChnlsLeft{2, 0, 2, 0, 2, 0, 2};
-    std::vector<uint8_t> cInvrtLeft{1, 1, 0, 1, 1, 1, 1};
-    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
-    {
-        uint8_t cGroup    = cGrpsLeft[cIndx];
-        uint8_t cChannel  = cChnlsLeft[cIndx];
-        uint8_t cRxInvert = cInvrtLeft[cIndx];
-        ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-    }
-    std::vector<uint8_t> cGrpsRight{4, 4, 5, 5, 6, 6, 0};
-    std::vector<uint8_t> cChnlsRight{2, 0, 2, 0, 2, 0, 0};
-    std::vector<uint8_t> cInvrtRight{0, 0, 0, 0, 0, 0, 1};
-    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
-    {
-        uint8_t cGroup    = cGrpsRight[cIndx];
-        uint8_t cChannel  = cChnlsRight[cIndx];
-        uint8_t cRxInvert = cInvrtRight[cIndx];
-        ConfigureRxChannel(pChip, cGroup, cChannel, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
-    }
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9;
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+    { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
+
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for PS ROH
@@ -428,5 +420,35 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 
 #endif
     LOG(INFO) << BOLDGREEN << "PS-ROH-" << +cChipRate << "G lpGBT configuration APPLIED" << RESET;
+}
+void D19clpGBTInterface::AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip)
+{
+    std::vector<uint8_t> cTxGroups = {0, 1, 2, 3};
+    uint8_t              cTxInvert = 0;
+    for(const auto& cGroup: cTxGroups)
+    {
+        cTxInvert = (cGroup % 2 == 0) ? 1 : 0;
+        static_cast<lpGBT*>(pChip)->addTxProperty(cGroup, 0, cTxInvert);
+    }
+    std::vector<uint8_t> cGrpsLeft{0, 1, 1, 2, 2, 3, 3};
+    std::vector<uint8_t> cChnlsLeft{2, 0, 2, 0, 2, 0, 2};
+    std::vector<uint8_t> cInvrtLeft{1, 1, 0, 1, 1, 1, 1};
+    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
+    {
+        uint8_t cGroup    = cGrpsLeft[cIndx];
+        uint8_t cChannel  = cChnlsLeft[cIndx];
+        uint8_t cRxInvert = cInvrtLeft[cIndx];
+        static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert);
+    }
+    std::vector<uint8_t> cGrpsRight{4, 4, 5, 5, 6, 6, 0};
+    std::vector<uint8_t> cChnlsRight{2, 0, 2, 0, 2, 0, 0};
+    std::vector<uint8_t> cInvrtRight{0, 0, 0, 0, 0, 0, 1};
+    for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
+    {
+        uint8_t cGroup    = cGrpsRight[cIndx];
+        uint8_t cChannel  = cChnlsRight[cIndx];
+        uint8_t cRxInvert = cInvrtRight[cIndx];
+        static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert);
+    }
 }
 } // namespace Ph2_HwInterface

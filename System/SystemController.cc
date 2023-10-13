@@ -406,10 +406,15 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             bool cWithPSHybrid = (cSSAfound && !cWithLpGBT);
             bool cWith2SHybrid = (cCBCfound && !cWithLpGBT);
 
-            if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
+            if(cWithPSmodule)
+            {
+                cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT);
+            }
             else if(cWith2Smodule)
             {
                 cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT);
             }
             else if(cWithPSHybrid)
             {
@@ -421,7 +426,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S);
             }
             else if(cWithLpGBT && flpGBTInterface != nullptr)
+            {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
+            }
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }
@@ -848,7 +855,14 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
                 {
                     if(cSkipSSA3 && cSSAId == 3) continue;
-                    SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/SSAFiles/SSA.txt");
+                    SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(),
+                                        cHybrid->getFMCId(),
+                                        cHybrid->getOpticalGroupId(),
+                                        cHybrid->getId(),
+                                        cSSAId,
+                                        0,
+                                        0,
+                                        std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/SSAFiles/SSA.txt");
                     uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
                     cSSA->setOptical(cHybrid->isOptical());
                     cSSA->setMasterId(cHybrid->getMasterId());
