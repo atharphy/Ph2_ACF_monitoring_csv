@@ -244,6 +244,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         else if(static_cast<std::string>(theChild.name()) == "lpGBT")
         {
             std::string fileName = cFilePath + expandEnvironmentVariables(theChild.attribute("configfile").value());
+            os << BOLDBLUE << "|\t|----OpticalGroup --> Id: " << BOLDYELLOW << cOpticalGroupId << BOLDBLUE << ", FMC Id: " << BOLDYELLOW << cFMCId << RESET << std::endl;
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << fileName << RESET << std::endl;
             uint8_t cChipId      = theChild.attribute("Id").as_uint();
             uint8_t cChipVersion = theChild.attribute("version").as_uint();
@@ -728,7 +729,8 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
 
 // Irene
 void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
-{ // Get ID of MPA then add to the Hybrid!
+{
+    // Get ID of MPA then add to the Hybrid!
     uint32_t    cChipId    = pMPANode.attribute("Id").as_uint();
     uint32_t    cPartnerId = pMPANode.attribute("partid").as_uint();
     std::string cFileName;
@@ -990,9 +992,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         {
             uint8_t cHybridId = 2 * pOpticalGroup->getId() + pHybridNode.attribute("Id").as_uint();
             uint8_t cMasterId;
-            if(pHybridNode.attribute("i2cMaster")) { cMasterId = pHybridNode.attribute("i2cMaster").as_int(); } // can overwrite default from xml
+            if(pHybridNode.attribute("i2cMaster")) { cMasterId = pHybridNode.attribute("i2cMaster").as_int(); } // Can overwrite default from xml
             else
-                cMasterId = (cHybridId % 2 == 0) ? 2 : 0; // default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
+                cMasterId = (cHybridId % 2 == 0) ? 2 : 0; // Default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
             os << BOLDBLUE << "I2C Master Id is " << +cMasterId << RESET << std::endl;
 
             uint8_t invertClock;
@@ -1642,13 +1644,8 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             // # Retrieve links, groups, channels and polarities and propagate to LpGBT class #
             // ################################################################################
             plpGBT->addRxGroups(cRxGroups);
-            plpGBT->addRxChannels(cRxChannels);
-            plpGBT->addRxPolarities(cRxPolarities);
             plpGBT->addRxProperty(cRxGroups[0], cRxChannels[0], cRxPolarities[0]);
 
-            plpGBT->addTxGroups(cTxGroups);
-            plpGBT->addTxChannels(cTxChannels);
-            plpGBT->addTxPolarities(cTxPolarities);
             plpGBT->addTxProperty(cTxGroups[0], cTxChannels[0], cTxPolarities[0]);
 
             // ###################################################################
@@ -1663,17 +1660,6 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxPolarity(cTxPolarities[0]);
-        }
-        else
-        {
-            // ###################
-            // # Specific for OT #
-            // ###################
-            plpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6});
-            plpGBT->addRxChannels({0, 2});
-
-            for(const auto& group: plpGBT->getRxGroups())
-                for(const auto& channel: plpGBT->getRxChannels()) plpGBT->addRxProperty(group, channel, 0);
         }
     }
 }
