@@ -48,28 +48,18 @@ class lpGBT : public Chip
     void setClockFrequency(uint16_t pClockFrequency) { fClockFrequency = pClockFrequency; }
 
     void addRxGroups(const std::vector<uint8_t>& pRxGroups) { addNoDuplicate<uint8_t>(fRxGroups, pRxGroups); }
-    void addRxChannels(const std::vector<uint8_t>& pRxChannels) { addNoDuplicate<uint8_t>(fRxChannels, pRxChannels); }
-    void addRxPolarities(const std::vector<uint8_t>& pRxPolarities) { addNoDuplicate<uint8_t>(fRxPolarities, pRxPolarities); }
     void addRxProperty(uint8_t pRxGroup, uint8_t pRxChannel, uint8_t pRxPolarity) { fRxProperties.push_back({pRxGroup, pRxChannel, pRxPolarity}); };
     void setRxDataRate(uint16_t pRxDataRate) { fRxDataRate = pRxDataRate; }
 
-    void addTxGroups(const std::vector<uint8_t>& pTxGroups) { addNoDuplicate<uint8_t>(fTxGroups, pTxGroups); }
-    void addTxChannels(const std::vector<uint8_t>& pTxChannels) { addNoDuplicate<uint8_t>(fTxChannels, pTxChannels); }
-    void addTxPolarities(const std::vector<uint8_t>& pTxPolarities) { addNoDuplicate<uint8_t>(fTxPolarities, pTxPolarities); }
     void addTxProperty(uint8_t pTxGroup, uint8_t pTxChannel, uint8_t pTxPolarity) { fTxProperties.push_back({pTxGroup, pTxChannel, pTxPolarity}); };
     void setTxDataRate(uint16_t pTxDataRate) { fTxDataRate = pTxDataRate; }
 
     uint16_t getClockFrequency() { return fClockFrequency; }
 
     std::vector<uint8_t>         getRxGroups() { return fRxGroups; }
-    std::vector<uint8_t>         getRxChannels() { return fRxChannels; }
-    std::vector<uint8_t>         getRxPolarities() { return fRxPolarities; }
     std::vector<eportProperties> getRxProperties() { return fRxProperties; }
     uint16_t                     getRxDataRate() { return fRxDataRate; }
 
-    std::vector<uint8_t>         getTxGroups() { return fTxGroups; }
-    std::vector<uint8_t>         getTxChannels() { return fTxChannels; }
-    std::vector<uint8_t>         getTxPolarities() { return fTxPolarities; }
     std::vector<eportProperties> getTxProperties() { return fTxProperties; }
     uint16_t                     getTxDataRate() { return fTxDataRate; }
 
@@ -91,7 +81,7 @@ class lpGBT : public Chip
     bool                         phaseRxAligned; // @TMP@
     uint16_t                     fClockFrequency, fRxDataRate, fTxDataRate, fChipAddress;
     uint8_t                      fVersion, fRxHSLPolarity, fTxHSLPolarity;
-    std::vector<uint8_t>         fRxGroups, fRxChannels, fRxPolarities, fTxGroups, fTxChannels, fTxPolarities;
+    std::vector<uint8_t>         fRxGroups;
     std::vector<eportProperties> fRxProperties, fTxProperties;
 
     // #########################################################

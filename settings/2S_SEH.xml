@@ -22,7 +22,7 @@
         </OpticalGroup>
         <OpticalGroup Id="2" FMCId="L12" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+            <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
                 <Settings />
             </lpGBT>
         </OpticalGroup>
@@ -140,7 +140,7 @@
     <!--##############
     ELECTRICAL FC7 
   ###############-->
-    <BeBoard Id="1" boardType="D19C" eventType="VR" linkReset="1" boardReset="0">
+    <BeBoard Id="1" boardType="D19C" eventType="VR" linkReset="1" boardReset="0" configure="1">
         <connection id="board" uri="ipbusudp-2.0://192.168.0.135:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
         <CDCE configure="0" clockRate="320" />
 
@@ -182,7 +182,11 @@
         <MonitorDQM        ip="127.0.0.1" port="8000" enableConnection="1"/>
         <PowerSupplyClient ip="127.0.0.1" port="7000" enableConnection="1"/>
     </CommunicationSettings>
-
+    <TestParameters>
+        <InputVoltages>
+          <Voltage>5., 5.2, 5.4, 6., 7., 8., 9., 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.5, 10., 9., 8., 7., 6.6, 6.4, 6.2, 6.0, 5.8, 5.6, 5.4, 5.2, 5</Voltage>
+        </InputVoltages>
+    </TestParameters>
     <Devices>
         <PowerSupply
             ID="MyRohdeSchwarz"

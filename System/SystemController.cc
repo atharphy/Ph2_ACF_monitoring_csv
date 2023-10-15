@@ -407,10 +407,15 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             bool cWithPSHybrid = (cSSAfound && !cWithLpGBT);
             bool cWith2SHybrid = (cCBCfound && !cWithLpGBT);
 
-            if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
+            if(cWithPSmodule)
+            {
+                cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT);
+            }
             else if(cWith2Smodule)
             {
                 cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT);
             }
             else if(cWithPSHybrid)
             {
@@ -422,7 +427,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S);
             }
             else if(cWithLpGBT && flpGBTInterface != nullptr)
+            {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
+            }
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }
