@@ -81,18 +81,17 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    const int nAttempts = 20; // @CONST@
-    for(auto attempt = 0; attempt < nAttempts; attempt++)
+    for(auto attempt = 0; attempt < RD53Shared::MAXATTEMPTS; attempt++)
     {
         auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
         if(regReadback.size() == 0)
-            LOG(WARNING) << BLUE << "Empty register readback from chip id " << YELLOW << pChip->getId() << BLUE << ", attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts
-                         << RESET;
+            LOG(WARNING) << BLUE << "Empty register readback from chip id " << YELLOW << pChip->getId() << BLUE << ", attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW
+                         << +RD53Shared::MAXATTEMPTS << RESET;
         else
             return regReadback[0].second;
     }
 
-    LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
+    LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED " attempts" << RESET;
 
     return 0;
 }
