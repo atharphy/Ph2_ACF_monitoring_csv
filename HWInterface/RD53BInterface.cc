@@ -304,11 +304,6 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
     RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
-    // #####################################################
-    // # If no data are present --> send a Clear and retry #
-    // #####################################################
-    if(regReadback.size() == 0) RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
-
     for(auto i = 0u; i < regReadback.size(); i++)
     {
         regReadback[i].first  = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR)); // Removing bit related to PIX_PORTAL register identification
