@@ -520,7 +520,9 @@ uint32_t RD53FWInterface::GetBoardEnabledHybrids(const BeBoard* pBoard)
 void RD53FWInterface::Start(const BeBoard* pBoard)
 {
     RD53Shared::chipInterface->SendBoardClear(pBoard);
+    RD53FWInterface::ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
     RD53FWInterface::ResetReadoutBlk();
+
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
 }
 
