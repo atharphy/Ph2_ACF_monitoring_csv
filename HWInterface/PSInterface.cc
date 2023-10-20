@@ -37,8 +37,14 @@ ReadoutChipInterface* PSInterface::getInterface(Chip* pPS)
         return static_cast<SSA2Interface*>((CHIP_INTERFACE.find(pPS->getFrontEndType()))->second);
     else if(pPS->getFrontEndType() == FrontEndType::MPA)
         return static_cast<MPAInterface*>((CHIP_INTERFACE.find(pPS->getFrontEndType()))->second);
-    else
+    else if(pPS->getFrontEndType() == FrontEndType::MPA2)
         return static_cast<MPA2Interface*>((CHIP_INTERFACE.find(pPS->getFrontEndType()))->second);
+    else
+    {
+        std::string errorstring = "Unknown Interface Type " + std::to_string((int)pPS->getFrontEndType());
+        throw Exception(errorstring.c_str());
+        exit(EXIT_FAILURE);
+    }
 
     // return (CHIP_INTERFACE.find(pPS->getFrontEndType()))->second;
 }
@@ -145,7 +151,8 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     }
     else if(pChip->getFrontEndType() == FrontEndType::SSA2 or pChip->getFrontEndType() == FrontEndType::SSA)
     {
-        LOG(ERROR) << "No digiInjection for SSA for some reason";
+        LOG(ERROR) << BOLDRED << "No digiInjection implemented for SSA for some reason " << RESET;
+        throw std::runtime_error(std::string("No digiInjection implemented for SSA for some reason "));
     }
 }
 

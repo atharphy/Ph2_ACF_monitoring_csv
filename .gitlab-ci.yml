@@ -148,12 +148,12 @@ build:ShepApplication_al8:
     entrypoint: ["/bin/sh","-c"]
 
 # Compile with EUDAQ libraries
-build:StandAlone_wEUDAQ_al8:
-  extends: build:StandAlone_wEUDAQ_c7
-  stage: build_al8
-  image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
-    entrypoint: ["/bin/sh","-c"]
+# build:StandAlone_wEUDAQ_al8:
+#   extends: build:StandAlone_wEUDAQ_c7
+#   stage: build_al8
+#   image:
+#     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al8:latest
+#     entrypoint: ["/bin/sh","-c"]
 
 # Compile with TC_USB library
 build:StandAlone_wTC_USB_al8:
@@ -198,12 +198,12 @@ build:ShepApplication_al9:
     entrypoint: ["/bin/sh","-c"]
 
 # Compile with EUDAQ libraries
-build:StandAlone_wEUDAQ_al9:
-  extends: build:StandAlone_wEUDAQ_c7
-  stage: build_al9
-  image:
-    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
-    entrypoint: ["/bin/sh","-c"]
+# build:StandAlone_wEUDAQ_al9:
+#   extends: build:StandAlone_wEUDAQ_c7
+#   stage: build_al9
+#   image:
+#     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_al9:latest
+#     entrypoint: ["/bin/sh","-c"]
 
 # Compile with TC_USB library
 build:StandAlone_wTC_USB_al9:
@@ -266,6 +266,7 @@ run:2S:
   extends: .run
   script:
     - source ./setup.sh ci
+    - fpgaconfig -c settings/CMS2S_CI.xml -i 2s_cic1_18Aug
     - ot_module_test -f settings/CMS2S_CI.xml -t -m -a -b --reconfigure
   after_script:
     - cp Results/*/Hybrid.root .
@@ -314,6 +315,23 @@ run:2S:DS:
     - job: run:2S:python
       artifacts: false
 
+## PS module
+run:PS:
+  extends: .run
+  script:
+    - source ./setup.sh ci
+    - fpgaconfig -c settings/CMSPS_CI.xml -i ps_8m_5g_cic1_l12octa_l8dio5
+    - ot_module_test -f settings/CMSPS_CI.xml -t -m -a -b --reconfigure
+  after_script:
+    - cp Results/*/Hybrid.root .
+    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysisPS.log
+    - cp coreAnalysisPS.log .
+  artifacts:
+    paths:
+      - Hybrid.root
+      - coreAnalysisPS.log
+      - MonitorResults/MonitorDQM*.root
+    expire_in: 1 week
 
 ## CHECK ##########
 

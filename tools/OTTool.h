@@ -51,7 +51,7 @@ class OTTool : public Tool
     void        SetBrdRegstoPerserve(std::vector<std::string> pListOfRegs);
     void        SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void        ReadDataFromFile(std::string pRawFileName);
-    void        ContinousReadout();
+    void        ContinuousReadout();
     void        SetName(std::string pName) { fMyName = pName; };
     void        TriggerMonitor(uint32_t pDelta_s = 1);
     static void StopTriggerMonitor(int signum)
@@ -89,9 +89,9 @@ class OTTool : public Tool
     void UpdateFromRegMap(Ph2_HwDescription::BeBoard* pBoard);
     void PrintData(Ph2_HwDescription::BeBoard* pBoard);
     void EventPrintout(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent);
-    void ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
+    void ContinuousReadout(Ph2_HwDescription::BeBoard* pBoard);
     void WaitForTriggers(Ph2_HwDescription::BeBoard* pBoard);
-    void ContinousReadoutTh(uint8_t cBrdId);
+    void ContinuousReadoutTh(uint8_t cBrdId);
     void CheckFinishedTh(uint8_t cBrdId);
     void StartReadoutTh(uint8_t cBrdId);
     void CatchStop();

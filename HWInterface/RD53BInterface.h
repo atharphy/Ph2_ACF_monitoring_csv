@@ -58,6 +58,7 @@ class RD53BInterface : public RD53Interface
                                                                                 {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
                                                                                 {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 4}},
 
+                                                                                {"CML_CONFIG_EN_LANE", {"CML_CONFIG", 0}},
                                                                                 {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 4}},
                                                                                 {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 6}},
 

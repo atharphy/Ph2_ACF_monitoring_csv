@@ -41,7 +41,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ### Important webpages and information:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
-- Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
+- Detailed description of the various calibrations: https://cernbox.cern.ch/s/yFByejNP8Tp7VFq
 - ROC tuning sequence: https://www.overleaf.com/read/ffpkqnjjjscd
 - Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
 - Mask converter from `Ph2_ACF` to `Alki's` code: `pyUtilsIT/ConvertPh2ACFMask2Alkis.py`
@@ -349,7 +349,7 @@ wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
 tar zxvf v2.9.2.tar.gz
 ```
 
-### Setup on RHEL 9.1 or AlmaLinux 9.1
+### Setup on RHEL 9 or AlmaLinux 9
 The following procedure will install (in order):
 1. complete the `cern` installation
 2. when installing `rarpd` use the version for `Fedora`
@@ -362,7 +362,7 @@ The following procedure will install (in order):
 #### Complete the CERN installation
 Make sure that the CERN installation is complete by running
 ```bash
-sudo dnf --repofrompath=cern9el,http://linuxsoft.cern.ch/internal/repos/cern9el-stable/x86_64/os --repo=cern9el install cern-release
+sudo dnf --repofrompath=cern9el,http://linuxsoft.cern.ch/cern/alma/9/CERN/x86_64/ --repo=cern9el install cern-release
 ```
 
 #### Libraries needed by Ph2_ACF

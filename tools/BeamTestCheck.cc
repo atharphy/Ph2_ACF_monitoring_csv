@@ -45,7 +45,7 @@ void BeamTestCheck::Initialise()
     theChannelGroupHandler.setChannelGroupParameters(16, 2);
     setChannelGroupHandler(theChannelGroupHandler);
 
-    // set TP amplitude and delay
+    // set TP amplitude and delay for 2S modules
     fTPamplitude = findValueInSettings<double>("Check2STPamplitude", 255);
     fTPdelay     = findValueInSettings<double>("Check2STPdelay", 0);
 
@@ -55,8 +55,10 @@ void BeamTestCheck::Initialise()
     // initialize latency scan range based on TP settings
     fStartLatency = findValueInSettings<double>("StartLatency", 0);
     fLatencyRange = findValueInSettings<double>("LatencyRange", 0);
+    LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << "fStartLatency " << fStartLatency << " fLatencyRange " << fLatencyRange << RESET;
+    unsigned cInjectionType = findValueInSettings<double>("InjectionType", 0);
+    LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << "cInjectionType: " << cInjectionType << RESET;
 
-    auto cInjectionType = findValueInSettings<double>("InjectionType", 0);
     SetInjectionType(cInjectionType);
 
     // initialize containers
@@ -107,7 +109,9 @@ void BeamTestCheck::Initialise()
 #ifdef __USE_ROOT__
     fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
-    // injection
+    // Method to define an injection pixels/strips
+    // cInjection.fRow    = 98;
+    // cInjection.fColumn = 12;
     defInjection();
 }
 
@@ -136,15 +140,15 @@ void BeamTestCheck::DisableAllFEs()
     }
 }
 //
-void BeamTestCheck::CheckWithTP(uint8_t pContinousReadout)
+void BeamTestCheck::CheckWithTP(uint8_t pContinuousReadout)
 {
     for(auto cBoard: *fDetectorContainer)
     {
         // prepare injection
         PrepareForTP(cBoard);
     }
-    if(fScanL1Latency) ScanL1Latency(pContinousReadout);
-    if(fScanStubLatency) ScanStubLatency(pContinousReadout);
+    if(fScanL1Latency) ScanL1Latency(pContinuousReadout);
+    if(fScanStubLatency) ScanStubLatency(pContinuousReadout);
 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
@@ -185,9 +189,13 @@ void BeamTestCheck::ValidateRaw()
 }
 void BeamTestCheck::Validate()
 {
+    auto stubDelay = fBeBoardInterface->ReadBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
+    fDetectorContainer->getFirstObject()->dumpRegisters();
+
     // validate
     // read events
-    if(fReadoutMode == 0) ContinousReadout();
+    if(fReadoutMode == 0) ContinuousReadout();
 
     LOG(INFO) << BOLDYELLOW << "Creating root file [hit map] from raw file" << RESET;
     for(auto cBoard: *fDetectorContainer)
@@ -208,7 +216,7 @@ void BeamTestCheck::Validate()
 #endif
 }
 //
-void BeamTestCheck::CheckWithInternal(uint8_t pContinousReadout)
+void BeamTestCheck::CheckWithInternal(uint8_t pContinuousReadout)
 {
     for(auto cBoard: *fDetectorContainer)
     {
@@ -217,8 +225,8 @@ void BeamTestCheck::CheckWithInternal(uint8_t pContinousReadout)
         LOG(INFO) << "Check with internal triggers " << RESET;
     }
 
-    if(fScanL1Latency) ScanL1Latency(pContinousReadout);
-    if(fScanStubLatency) ScanStubLatency(pContinousReadout);
+    if(fScanL1Latency) ScanL1Latency(pContinuousReadout);
+    if(fScanStubLatency) ScanStubLatency(pContinuousReadout);
 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
@@ -231,7 +239,7 @@ void BeamTestCheck::CheckWithInternal(uint8_t pContinousReadout)
 
     for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
-void BeamTestCheck::CheckWithTLU(uint8_t pContinousReadout)
+void BeamTestCheck::CheckWithTLU(uint8_t pContinuousReadout)
 {
     LOG(INFO) << BOLDBLUE << "Checking with external triggers - will readout " << fNevents << RESET;
 
@@ -239,11 +247,11 @@ void BeamTestCheck::CheckWithTLU(uint8_t pContinousReadout)
     {
         // prepare injection
         PrepareForTLU(cBoard);
-        LOG(INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
+        LOG(INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinuousReadout << RESET;
     }
 
-    if(fScanL1Latency) ScanL1Latency(pContinousReadout);
-    if(fScanStubLatency) ScanStubLatency(pContinousReadout);
+    if(fScanL1Latency) ScanL1Latency(pContinuousReadout);
+    if(fScanStubLatency) ScanStubLatency(pContinuousReadout);
 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
@@ -254,7 +262,7 @@ void BeamTestCheck::CheckWithTLU(uint8_t pContinousReadout)
     // validate
     Validate();
 }
-void BeamTestCheck::CheckWithExternal(uint8_t pContinousReadout)
+void BeamTestCheck::CheckWithExternal(uint8_t pContinuousReadout)
 {
     LOG(INFO) << BOLDBLUE << "Checking with external triggers - will readout " << fNevents << RESET;
 
@@ -262,11 +270,11 @@ void BeamTestCheck::CheckWithExternal(uint8_t pContinousReadout)
     {
         // prepare injection
         PrepareForExternal(cBoard);
-        LOG(INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
+        LOG(INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinuousReadout << RESET;
     }
 
-    if(fScanL1Latency) ScanL1Latency(pContinousReadout);
-    if(fScanStubLatency) ScanStubLatency(pContinousReadout);
+    if(fScanL1Latency) ScanL1Latency(pContinuousReadout);
+    if(fScanStubLatency) ScanStubLatency(pContinuousReadout);
         /*// print out optimal L1 + stub latencies
         for(auto cBoard: *fDetectorContainer)
         {
@@ -299,15 +307,15 @@ void BeamTestCheck::CheckWithExternal(uint8_t pContinousReadout)
     // {
     //     // prepare injection
     //     PrepareForExternal(cBoard);
-    //     LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
+    //     LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinuousReadout << RESET;
 
-    //     // if(pContinousReadout == 1) ContinousReadout(cBoard);
+    //     // if(pContinuousReadout == 1) ContinuousReadout(cBoard);
     //     // else ReadNEvents(cBoard, fNevents);
 
     //     // // process events
     //     // //ProcessEvents(cBoard);
     //     // // scan the latency - find best hit latency
-    //     ScanLatency(cBoard, pContinousReadout);
+    //     ScanLatency(cBoard, pContinuousReadout);
     //     // scan the threshold, record number of hits; cluster occupancy
     //     // ScanThreshold(cBoard);
     // }
@@ -565,10 +573,10 @@ void BeamTestCheck::ScanThreshold(BeBoard* pBoard)
         }
     }
 }
-void BeamTestCheck::ScanL1Latency(uint8_t pContinousReadout)
+void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
 {
     bool cValidate = false;
-    LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
+    LOG(INFO) << "Scanning Latency ... ContinuousReadout set to " << +pContinuousReadout << RESET;
 
     size_t cTotalNChnls = 0;
     size_t cNHybrids    = 0;
@@ -675,7 +683,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinousReadout)
             }         // optical group
         }
         LOG(INFO) << BOLDBLUE << "Latency Step#" << +cLatStep << RESET;
-        ContinousReadout();
+        ContinuousReadout();
 
         // check read-back events
         for(auto cBoard: *fDetectorContainer)
@@ -857,7 +865,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinousReadout)
     if(cValidate)
     {
         // int  cValidateRange=3;
-        ContinousReadout();
+        ContinuousReadout();
         // check read-back events
         for(auto cBoard: *fDetectorContainer)
         {
@@ -1237,8 +1245,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         cTmpS0.assign(cMaxRows, 0);
                         cTmpS1.assign(cMaxRows, 0);
                         bool    cSSAExists = std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8) != cSSAIds.end();
-                        uint8_t cSSAId     = (cSSAExists) ? std::distance(cSSAIds.begin(), std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8)) : 0;
-                        if(cSSAExists) LOG(DEBUG) << BOLDYELLOW << "MPA#" << +cChip->getId() << " SSA Id " << +cSSAId << RESET;
+                        uint8_t cSSAId     = (cSSAExists) ? (cChip->getId() % 8) : -1;
+                        LOG(DEBUG) << BOLDYELLOW << "MPA#" << +cChip->getId() << " SSA Id " << +cSSAId << RESET;
 
                         // loop over hits and count
                         auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
@@ -1278,6 +1286,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                            << +cRow << " Column " << +cCol << RESET;
                             }
                             bool cValidCoords = (cRow < cMaxRows && cCol < cMaxCols);
+
                             if(cSensorID == 0)
                             {
                                 cHitContainerS0->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint32_t>()++;
@@ -1492,10 +1501,10 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
         }
     }
 }
-void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
+void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
 {
     // bool cUseReadNevents = false;
-    LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
+    LOG(INFO) << "Scanning Latency ... ContinuousReadout set to " << +pContinuousReadout << RESET;
     ;
     size_t cTotalNChnls = 0;
     size_t cNHybrids    = 0;
@@ -1552,8 +1561,8 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
         auto     cBrdIndx     = pBoard->getId();
         size_t   cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
 
-        if(pContinousReadout == 1)
-            ContinousReadout(pBoard);
+        if(pContinuousReadout == 1)
+            ContinuousReadout(pBoard);
         else
             ReadNEvents(pBoard, fNevents);
 
@@ -1695,10 +1704,10 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
 
     LOG(INFO) << BOLDYELLOW << "Optimal latency found to be : " << fOptimalLatency << " 40 MHz clock cycles [L1 data]" << RESET;
 }
-void BeamTestCheck::ScanStubLatency(uint8_t pContinousReadout)
+void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
 {
     // bool cUseReadNevents = false;
-    LOG(INFO) << "Scanning Stub Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
+    LOG(INFO) << __PRETTY_FUNCTION__ << "Scanning Stub Latency ... ContinuousReadout set to " << +pContinuousReadout << RESET;
     // stub offset already set for this board
     // LOG(INFO) << BOLDBLUE << "Stub offset for BeBoard#" << +pBoard->getId() << " set to " << +pBoard->getStubOffset() << RESET;
     // figure out latency scan range
@@ -1778,8 +1787,7 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinousReadout)
     // if no alignment has been run .. use scan range
     if(!cAlignmentRun)
     {
-        auto     cSetting   = fSettingsMap.find("StubAlignmentScanStart");
-        uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
+        uint32_t cScanStart = findValueInSettings<double>("StubAlignmentScanStart", 100);
         cOffset             = cScanStart;
     }
     else
@@ -1808,7 +1816,7 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinousReadout)
             cSet.push_back(1);
         }
         // read events
-        ContinousReadout();
+        ContinuousReadout();
 
         for(auto cBoard: *fDetectorContainer)
         {
@@ -1933,33 +1941,30 @@ void BeamTestCheck::PrepareForExternalTP(BeBoard* pBoard)
     // inject PS
     if(!cWith2S) InjectPattern(pBoard, fInjections, -1);
 }
+
 void BeamTestCheck::PrepareForTP(BeBoard* pBoard)
 {
-    // configure trigger
-    uint8_t                  cTriggerSource   = 6;
-    uint32_t                 cDelayAfterReset = 300;
-    uint32_t                 cDelayAfterTP    = 300;
-    uint32_t                 cDelayTillNext   = 5000;
-    std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_after_test_pulse", "test_pulse.delay_before_next_pulse", "triggers_to_accept"};
-    std::vector<uint32_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayAfterTP, cDelayTillNext, 0};
-    std::vector<uint32_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
-    std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    cRegVec.clear();
-    for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
-    {
-        std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
-        cFcmdRegOrigVals[cIndx] = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
-        cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
-    }
-    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    // Save Trigger register value
+    uint32_t cDelayAfterReset = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
+    ;
+    LOG(INFO) << BOLDRED << " cDelayAfterReset " << cDelayAfterReset << RESET;
+
+    // SUGGESTED VALUES THAT SHOULD BE ALREADY IN THE XML
+    // delay_after_fast_reset  = 300
+    // delay_after_test_pulse  = 300
+    // delay_before_next_pulse = 5000
+    // triggers_to_accept      = 0
+
+    uint8_t cTriggerSource = 6; // SYNC MODE WHILE 12 IS ASYNC
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSource);
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
     size_t cNgroups                     = 0;
     bool   cMaskChannelsFromOtherGroups = false;
     bool   cInject                      = true;
     bool   cWith2S                      = false;
-    // inject in one of each CBCs
+    // inject in one of each CBCs and NOT PS
     for(auto cGroup: *getChannelGroupHandlerContainer()->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
     {
         if(cNgroups > 0) continue;
@@ -1992,8 +1997,11 @@ void BeamTestCheck::PrepareForTP(BeBoard* pBoard)
     }
 
     // inject PS
-    if(!cWith2S) InjectPattern(pBoard, fInjections, -1);
+    if(!cWith2S) { InjectPattern(pBoard, fInjections, -1); }
+
+    // fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSource);
 }
+
 void BeamTestCheck::PrepareForTLU(BeBoard* pBoard)
 {
     BeBoardRegMap cRegMap         = pBoard->getBeBoardRegMap();
@@ -2100,7 +2108,7 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
     // enable DIO5
     cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x0});
     cRegVec.push_back({"fc7_daq_cnfg.dio5_block.dio5_en", 0x1});
-    cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 0});
+    cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 10});
     cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDaelay});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);

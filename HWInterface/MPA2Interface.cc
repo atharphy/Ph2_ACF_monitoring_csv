@@ -52,6 +52,14 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
         uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
         return cValue;
     }
+    else if(pRegNode == "StubWindow")
+    {
+        uint8_t cBitShift = ECM_TABLE.find("StubWindow")->second;
+        auto    cReg      = this->readPeri(pMPA2, "ECM");
+        uint8_t cRegMask  = (0x3F << cBitShift);
+        uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
+        return cValue;
+    }
     else if(pRegNode == "vref")
     {
         cRegItem = pMPA2->getRegItem("ADCcontrol");
@@ -116,6 +124,10 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     {
         return this->ReadChipReg(pMPA2, "ThDAC0");
     }
+    else if(pRegNode == "InjectedCharge")
+    {
+        return this->ReadChipReg(pMPA2, "CalDAC0");
+    }
     else if(pRegNode == "ADC_output")
     {
         // std::cout<<(this->ReadChipReg(pMPA2, "ADC_output_LSB")&0xFF)<<","<<((this->ReadChipReg(pMPA2, "ADC_output_MSB")&0xF)<<8)<<std::endl;
@@ -124,12 +136,31 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     }
     else if(pRegNode == "TriggerLatency")
     {
-        uint8_t cLatencyReg1 = pMPA2->getRegItem("MemoryControl_1").fValue;
-        uint8_t cLatencyReg2 = (pMPA2->getRegItem("MemoryControl_2").fValue) & (0x1); // first bit is latency for MPA2
+        uint8_t cLatencyReg1 = pMPA2->getRegItem("MemoryControl_1_ALL").fValue;
+        uint8_t cLatencyReg2 = (pMPA2->getRegItem("MemoryControl_2_ALL").fValue) & (0x1); // first bit is latency for MPA2
         return (cLatencyReg2 << 8) | cLatencyReg1;
+    }
+    else if(pRegNode == "PixelControl_ALL" || pRegNode == "PixelControl")
+    {
+        // LORE IRENE -- The pixel control register is written for all pixels (broadcast) and must be read for the individual rows
+        // in this case we are hardcoding row 1 and reading it back to prove that we actually set the register.
+        // This read gives a warning saying that the register for that row is not in the list of registers MPA2.txt
+        // The register is however read correctly because the address exist on the chip.
+        cRegItem          = pMPA2->getRegItem("PixelControl_ALL");
+        uint16_t row      = 1;
+        cRegItem.fAddress = cRegItem.fAddress + ((row & 0x1F) << 11);
+        return this->ReadReg(pMPA2, cRegItem.fAddress) & 0xFF;
+    }
+    else if(pRegNode == "ENFLAGS_ALL")
+    {
+        cRegItem          = pMPA2->getRegItem("ENFLAGS_P1");
+        uint16_t row      = 1;
+        cRegItem.fAddress = cRegItem.fAddress + ((row & 0x1F) << 11);
+        return this->ReadReg(pMPA2, cRegItem.fAddress) & 0xFF;
     }
     else
     {
+        LOG(DEBUG) << BOLDYELLOW << "Reading back register: " << pRegNode << RESET;
         cRegItem = pMPA2->getRegItem(pRegNode);
         return this->ReadReg(pMPA2, cRegItem.fAddress) & 0xFF;
     }
@@ -504,7 +535,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
 {
     setBoard(pMPA2->getBeBoardId());
 
-    LOG(DEBUG) << BOLDMAGENTA << "1 MPA2Interface::WriteChipReg writing to " << pRegName << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "MPA2Interface::WriteChipReg writing to " << pRegName << RESET;
     LOG(DEBUG) << BOLDMAGENTA << "VALUE " << pValue << RESET;
 
     // need to or success
@@ -524,7 +555,11 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "ReadoutMode")
     {
-        return this->configPeri(pMPA2, "ReadoutMode", pValue);
+        uint8_t cBitShift = CONTROL_TABLE.find("ReadoutMode")->second;
+        uint8_t cRegMask  = (0x3 << cBitShift);
+        return this->WriteChipRegBits(pMPA2, "Control_1", (pValue << cBitShift), "Mask", cRegMask, pVerify);
+
+        // return this->configPeri(pMPA2, "ReadoutMode", pValue);
     }
 
     else if(pRegName == "RetimePix")
@@ -539,13 +574,6 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         uint8_t cBitShift = CONTROL_TABLE.find("PhaseShift")->second;
         uint8_t cRegMask  = (0x7 << cBitShift);
         return this->WriteChipRegBits(pMPA2, "Control_1", (pValue << cBitShift), "Mask", cRegMask, pVerify);
-    }
-
-    else if(pRegName == "ClusterCut_ALL")
-    {
-        LOG(INFO) << BOLDMAGENTA << "ClusterCut_ALL" << RESET;
-        uint8_t cBitShift = 2;
-        return this->WriteChipRegBits(pMPA2, "PixelControl_ALL", (pValue << cBitShift), "Mask_ALL", 0x1C, false);
     }
 
     else if(pRegName == "SSAOffset") // should work with MPA2 address table
@@ -717,25 +745,13 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
         uint8_t cRegMask  = (0x3 << cBitShift); //
-        // cRegMask          = ~(cRegMask);
-
         return this->WriteChipRegBits(pMPA2, "ECM", (pValue << cBitShift), "Mask", cRegMask, pVerify);
-
-        // auto    cReg      = this->readPeri(pMPA2, "ECM");
-        // uint8_t cValue    = (cReg & cRegMask) | (pValue << cBitShift);
-        // return this->configPeri(pMPA2, "ECM", cValue);
     }
     else if(pRegName == "StubWindow")
     {
         uint8_t cBitShift = ECM_TABLE.find("StubWindow")->second;
-        uint8_t cRegMask  = (0x3F << cBitShift); // FIX ME _ AUTOMATE THIS
-        // cRegMask          = ~(cRegMask);
-
+        uint8_t cRegMask  = (0x3F << cBitShift);
         return this->WriteChipRegBits(pMPA2, "ECM", (pValue << cBitShift), "Mask", cRegMask, pVerify);
-
-        // auto    cReg      = this->readPeri(pMPA2, "ECM");
-        // uint8_t cValue    = (cReg & cRegMask) | (pValue << cBitShift);
-        // return this->configPeri(pMPA2, "ECM", cValue);
     }
     else if(pRegName == "DigitalPattern")
     {
@@ -786,7 +802,21 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     else if(pRegName == "ModeSel_ALL")
     {
         uint8_t cBitShift = 0;
-        return this->WriteChipRegBits(pMPA2, "PixelControl_ALL", (pValue << cBitShift), "Mask_ALL", 0x3, pVerify);
+        bool    cSuccess  = this->WriteChipRegBits(pMPA2, "PixelControl_ALL", (pValue << cBitShift), "Mask_ALL", 0x03, pVerify);
+        return cSuccess;
+    }
+    else if(pRegName == "ClusterCut_ALL")
+    {
+        uint8_t cBitShift = 2;
+        bool    cSuccess  = this->WriteChipRegBits(pMPA2, "PixelControl_ALL", (pValue << cBitShift), "Mask_ALL", 0x1C, pVerify);
+        return cSuccess;
+    }
+    else if(pRegName == "HipCut_ALL")
+    {
+        LOG(INFO) << BOLDMAGENTA << "HipCut_ALL" << RESET;
+        uint8_t cBitShift = 5;
+        bool    cSuccess  = this->WriteChipRegBits(pMPA2, "PixelControl_ALL", (pValue << cBitShift), "Mask_ALL", 0xE0, pVerify);
+        return cSuccess;
     }
 
     else if(pRegName == "AnalogueAsync")

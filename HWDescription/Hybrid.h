@@ -82,9 +82,13 @@ class Hybrid
      */
     uint8_t getMasterId() const { return fMasterId; };
 
+    void    setInvertClock(uint8_t pInvertClock) { fInvertClock = pInvertClock; };
+    uint8_t getInvertClock() const { return fInvertClock; };
+
   protected:
     uint16_t fNPixelChips = 0, fNStripChips = 0;
     uint8_t  fMasterId;
+    uint8_t  fInvertClock;
 };
 } // namespace Ph2_HwDescription
 

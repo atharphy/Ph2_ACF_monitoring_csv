@@ -219,7 +219,8 @@ RESISTORI2V               0xC0          0d10000                 0d10000         
 ADC_OFFSET_VOLT           0xC1          0d63                    0d63                               16
 ADC_MAXIMUM_VOLT          0xC2          0d839                   0d839                              16
 TEMPSENS_IDEAL_FACTOR     0xC3          0d1225                  0d1225                             16
-VREF_ADC                  0xC4          0d900                   0d900                              12
+SAMPLE_N_TIMES            0xC4          0d10                    0d10                               16
+VREF_ADC                  0xC5          0d900                   0d900                              12
 
 *-------------------------------------------------------------------------------------------------------
 PIXELCONFIGURATION
