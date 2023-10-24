@@ -48,6 +48,7 @@ MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
+    configFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
     for(auto& cMapItem: fRegMap)
