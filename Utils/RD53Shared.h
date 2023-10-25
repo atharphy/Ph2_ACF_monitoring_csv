@@ -27,9 +27,15 @@ namespace Ph2_HwDescription
 class RD53;
 }
 
+namespace Ph2_HwInterface
+{
+class RD53Interface;
+}
+
 namespace RD53Shared
 {
-extern Ph2_HwDescription::RD53* firstChip;
+extern Ph2_HwDescription::RD53*        firstChip;
+extern Ph2_HwInterface::RD53Interface* chipInterface;
 
 const char     RESULTDIR[]            = "Results";                                       // Directory containing the results
 const float    PRECISION              = 1e-2;                                            // Resolution on computing observables
@@ -68,6 +74,12 @@ template <typename T>
 static void setFirstChip(T& theDetectorContainer)
 {
     firstChip = static_cast<Ph2_HwDescription::RD53*>(theDetectorContainer.getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
+}
+
+template <typename T>
+static void setChipInterface(T& theChipInterface)
+{
+    chipInterface = static_cast<Ph2_HwInterface::RD53Interface*>(&theChipInterface);
 }
 
 template <typename T>

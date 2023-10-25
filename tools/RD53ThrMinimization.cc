@@ -85,7 +85,7 @@ void ThrMinimization::Stop()
     Tool::Stop();
 
     ThrMinimization::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -151,7 +151,7 @@ void ThrMinimization::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> ThrMinimization saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     ThrMinimization::fillHisto();
     histos->process();
 

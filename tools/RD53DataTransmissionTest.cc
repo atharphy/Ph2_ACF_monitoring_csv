@@ -59,8 +59,9 @@ void DataTransmissionTest::Stop()
     LOG(INFO) << GREEN << "[DataTransmissionTest::Stop] Stopping" << RESET;
 
     Tool::Stop();
+
     DataTransmissionTest::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -101,17 +102,17 @@ void DataTransmissionTest::draw(bool saveData)
 
     if(BERtest::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(CalibBase::theHistoFileName);
-    LOG(INFO) << BOLDBLUE << "\t--> DataTransmissionTest saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(CalibBase::theHistoFileName);
+        LOG(INFO) << BOLDBLUE << "\t--> DataTransmissionTest saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     DataTransmissionTest::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(BERtest::doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 

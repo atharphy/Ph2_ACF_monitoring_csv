@@ -57,7 +57,7 @@ void VoltageTuning::Stop()
     Tool::Stop();
 
     VoltageTuning::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -336,10 +336,13 @@ void VoltageTuning::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(CalibBase::theHistoFileName);
-    LOG(INFO) << BOLDBLUE << "\t--> VoltageTuning saving histograms..." << RESET;
+    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+    {
+        this->InitResultFile(CalibBase::theHistoFileName);
+        LOG(INFO) << BOLDBLUE << "\t--> VoltageTuning saving histograms..." << RESET;
+    }
 
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     VoltageTuning::fillHisto();
     histos->process();
 

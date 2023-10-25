@@ -87,6 +87,8 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
                                         startValueY,
                                         stopValueY);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, titleX.str().c_str(), titleY.str().c_str());
+
+    AreHistoBooked = true;
 }
 
 bool GenericDacDacScanHistograms::fill(std::string& inputStream)

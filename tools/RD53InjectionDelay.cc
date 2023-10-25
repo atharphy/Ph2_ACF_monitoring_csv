@@ -19,9 +19,7 @@ void InjectionDelay::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
-    PixelAlive::doDisplay    = false;
-    PixelAlive::doUpdateChip = false;
-    PixelAlive::doSaveData   = false;
+    PixelAlive::doSaveData = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -62,7 +60,7 @@ void InjectionDelay::Running()
 
     InjectionDelay::run();
     InjectionDelay::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
     InjectionDelay::sendData();
     la.sendData();
 }
@@ -86,7 +84,7 @@ void InjectionDelay::Stop()
     Tool::Stop();
 
     InjectionDelay::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -176,7 +174,7 @@ void InjectionDelay::run()
 
 void InjectionDelay::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
     la.draw(false);
 
 #ifdef __USE_ROOT__
@@ -190,7 +188,7 @@ void InjectionDelay::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     InjectionDelay::fillHisto();
     histos->process();
 

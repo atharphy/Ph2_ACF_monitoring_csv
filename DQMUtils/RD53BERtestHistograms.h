@@ -24,6 +24,8 @@ class BERtestHistograms : public DQMHistogramBase
 
     void fillBERtest(const DetectorDataContainer& BERtestContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

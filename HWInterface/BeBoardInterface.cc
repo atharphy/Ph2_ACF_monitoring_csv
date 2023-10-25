@@ -142,14 +142,14 @@ void BeBoardInterface::ConfigureBoard(const BeBoard* pBoard)
     fBoardFW->ConfigureBoard(pBoard);
 }
 
-void BeBoardInterface::Start(BeBoard* pBoard)
+void BeBoardInterface::Start(const BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
-    fBoardFW->Start();
+    fBoardFW->Start(pBoard);
 }
-void BeBoardInterface::Stop(BeBoard* pBoard)
+void BeBoardInterface::Stop(const BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
@@ -157,7 +157,7 @@ void BeBoardInterface::Stop(BeBoard* pBoard)
     fBoardFW->Stop();
 }
 
-void BeBoardInterface::Pause(BeBoard* pBoard)
+void BeBoardInterface::Pause(const BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
@@ -165,7 +165,7 @@ void BeBoardInterface::Pause(BeBoard* pBoard)
     fBoardFW->Pause();
 }
 
-void BeBoardInterface::Resume(BeBoard* pBoard)
+void BeBoardInterface::Resume(const BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 

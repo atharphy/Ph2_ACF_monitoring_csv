@@ -58,6 +58,8 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
 
     auto hTriggerID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 1, TrgIDsize + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TriggerID, hTriggerID, "#DeltaTrigger-ID", "Entries");
+
+    AreHistoBooked = true;
 }
 
 bool PixelAliveHistograms::fill(std::string& inputStream)

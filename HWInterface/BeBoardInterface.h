@@ -203,25 +203,25 @@ class BeBoardInterface
      * \brief Start a DAQ
      * \param pBoard
      */
-    void Start(Ph2_HwDescription::BeBoard* pBoard);
+    void Start(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Stop a DAQ
      * \param pBoard
      */
-    void Stop(Ph2_HwDescription::BeBoard* pBoard);
+    void Stop(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Pause a DAQ
      * \param pBoard
      */
-    void Pause(Ph2_HwDescription::BeBoard* pBoard);
+    void Pause(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Resume a DAQ
      * \param pBoard
      */
-    void Resume(Ph2_HwDescription::BeBoard* pBoard);
+    void Resume(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Start a DAQ

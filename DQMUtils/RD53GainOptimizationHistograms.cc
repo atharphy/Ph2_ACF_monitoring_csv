@@ -26,6 +26,8 @@ void GainOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& t
 
     auto hKrumCurr = CanvasContainer<TH1F>("KrumCurr", "KrumCurr", rangeKrumCurr, 0, rangeKrumCurr);
     bookImplementer(theOutputFile, theDetectorStructure, KrumCurr, hKrumCurr, "Krummenacher Current", "Entries");
+
+    AreHistoBooked = true;
 }
 
 bool GainOptimizationHistograms::fill(std::string& inputStream)

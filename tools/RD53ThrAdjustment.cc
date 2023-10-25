@@ -84,7 +84,7 @@ void ThrAdjustment::Stop()
     Tool::Stop();
 
     ThrAdjustment::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -156,7 +156,7 @@ void ThrAdjustment::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> ThrAdjustment saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     ThrAdjustment::fillHisto();
     histos->process();
 

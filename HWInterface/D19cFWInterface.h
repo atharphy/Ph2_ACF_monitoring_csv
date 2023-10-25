@@ -186,7 +186,7 @@ class D19cFWInterface : public BeBoardFWInterface
     /*!
      * \brief Start a DAQ
      */
-    void Start() override;
+    void Start(const Ph2_HwDescription::BeBoard* pBoard) override;
     /*!
      * \brief Stop a DAQ
      */
