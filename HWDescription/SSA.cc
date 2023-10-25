@@ -30,6 +30,7 @@ SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
+    configFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);
     for(auto& cMapItem: fRegMap)
