@@ -29,7 +29,7 @@ SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
     fChipOriginalMask->enableAllChannels();
-    fPartnerId = pPartnerId;
+    fPartnerId     = pPartnerId;
     configFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);

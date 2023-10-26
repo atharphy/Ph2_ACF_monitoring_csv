@@ -1158,7 +1158,8 @@ void Tool::dumpConfigFiles()
                         auto cReg = flpGBTInterface->ReadChipReg(clpGBT, cItemInMap.first);
                         clpGBT->setReg(cItemInMap.first, cReg);
                     }
-                    std::string cFilename = "../../" + fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_lpGBT" + std::to_string(clpGBT->getId());
+                    std::string cFilename =
+                        "../../" + fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_lpGBT" + std::to_string(clpGBT->getId());
                     cFilename += "_";
                     LOG(DEBUG) << BOLDBLUE << "Dumping lpgbt configuration to " << cFilename << RESET;
                     clpGBT->saveRegMap(cFilename.data());
