@@ -132,7 +132,7 @@ class BeBoardFWInterface : public RegManager
     /*!
      * \brief Start a DAQ
      */
-    virtual void Start() = 0;
+    virtual void Start(const Ph2_HwDescription::BeBoard* pBoard) = 0;
 
     /*!
      * \brief Stop a DAQ

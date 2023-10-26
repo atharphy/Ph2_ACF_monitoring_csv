@@ -223,9 +223,21 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
         isGood = false;
     }
 
-    if(status & RD53FWEvtEncoder::TRGTAG)
+    if(status & RD53FWEvtEncoder::TRGTAG_ER1)
     {
         LOG(ERROR) << BOLDRED << "Trigger tag counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::TRGTAG_ER2)
+    {
+        LOG(ERROR) << BOLDRED << "Trigger tag single bit-flip detected in tag symbol of a trigger command " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::TRGTAG_ER3)
+    {
+        LOG(ERROR) << BOLDRED << "Trigger tag unrecognized tag symbol " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
     }
 
@@ -685,7 +697,6 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
     auto         bits         = bit_view(data, 0, howMany);
     const size_t n32bitsWords = bits.size() / RD53FWEvtEncoder::NBIT_EVT_WORD;
     const size_t maxL1Counter = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID * (options.enableBCID == true ? 1 : 2)) + 1;
-    const size_t maxTrgTag    = RD53BEvtEncoder::MAX_TRGTAG;
 
     if(howMany == 0) eventStatus |= RD53FWEvtEncoder::EMPTY;
 
@@ -763,7 +774,16 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
                 if(evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evt.eventStatus |= RD53FWEvtEncoder::L1A;
 
         for(auto j = 0u; j < evt.chip_events.size(); j++)
-            if((evt.chip_events[j].trigger_tag <= maxTrgTag) && ((evt.trigger_tag + 1) % 32) != (evt.chip_events[j].trigger_tag >> 2)) evt.eventStatus |= RD53FWEvtEncoder::TRGTAG;
+        {
+            if(evt.chip_events[j].trigger_tag <= RD53BEvtEncoder::MAX_TRGTAG)
+            {
+                if(((evt.trigger_tag + 1) % 32) != (evt.chip_events[j].trigger_tag >> 2)) evt.eventStatus |= RD53FWEvtEncoder::TRGTAG_ER1;
+            }
+            else if(evt.chip_events[j].trigger_tag <= RD53BEvtEncoder::MAX_TRGTAG_ERR1)
+                evt.eventStatus |= RD53FWEvtEncoder::TRGTAG_ER2;
+            else if(evt.chip_events[j].trigger_tag <= RD53BEvtEncoder::MAX_TRGTAG_ERR2)
+                evt.eventStatus |= RD53FWEvtEncoder::TRGTAG_ER3;
+        }
 
         events.push_back(std::move(evt));
         eventStatus |= evt.eventStatus;

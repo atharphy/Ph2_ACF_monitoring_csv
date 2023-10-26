@@ -28,6 +28,8 @@ class PhysicsHistograms : public DQMHistogramBase
     void fillBCID(const DetectorDataContainer& DataContainer);
     void fillTrgID(const DetectorDataContainer& DataContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

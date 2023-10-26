@@ -19,9 +19,7 @@ void ClockDelay::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
-    PixelAlive::doDisplay    = false;
-    PixelAlive::doUpdateChip = false;
-    PixelAlive::doSaveData   = false;
+    PixelAlive::doDisplay = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -62,7 +60,7 @@ void ClockDelay::Running()
 
     ClockDelay::run();
     ClockDelay::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
     ClockDelay::sendData();
     la.sendData();
 }
@@ -86,7 +84,7 @@ void ClockDelay::Stop()
     Tool::Stop();
 
     ClockDelay::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -179,7 +177,7 @@ void ClockDelay::run()
 
 void ClockDelay::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
     la.draw(false);
 
 #ifdef __USE_ROOT__
@@ -193,7 +191,7 @@ void ClockDelay::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> ClockDelay saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     ClockDelay::fillHisto();
     histos->process();
 

@@ -9,7 +9,8 @@
 
 #include "RD53Shared.h"
 
-Ph2_HwDescription::RD53* RD53Shared::firstChip;
+Ph2_HwDescription::RD53*        RD53Shared::firstChip;
+Ph2_HwInterface::RD53Interface* RD53Shared::chipInterface;
 
 std::string RD53Shared::fromInt2Str(int val)
 {

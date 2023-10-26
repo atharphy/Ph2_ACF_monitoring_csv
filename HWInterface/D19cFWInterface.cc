@@ -731,12 +731,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     {
         LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard for optical readout" << RESET;
         LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslop " << RESET;
-        fBackendAlignmentInterface->setNbits(3);
     }
     else
     {
         LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslop " << RESET;
-        fBackendAlignmentInterface->setNbits(4);
     }
     fOptical = pBoard->isOptical() && !cWithlpGBT;
     // if optical readout .. then configure links
@@ -957,11 +955,9 @@ void D19cFWInterface::PowerOnDIO5(uint8_t pFMCId)
     WriteReg(cRegName, 0x1);
 }
 
-void D19cFWInterface::Start() { fTriggerInterface->Start(); }
-
+void D19cFWInterface::Start(const BeBoard* pBoard) { fTriggerInterface->Start(); }
 void D19cFWInterface::Stop() { fTriggerInterface->Stop(); }
 void D19cFWInterface::Pause() { fTriggerInterface->Pause(); }
-
 void D19cFWInterface::Resume() { fTriggerInterface->Resume(); }
 
 void D19cFWInterface::DDR3SelfTest()

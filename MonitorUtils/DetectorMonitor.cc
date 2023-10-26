@@ -32,8 +32,12 @@ DetectorMonitor::~DetectorMonitor()
 {
     LOG(INFO) << BOLDRED << ">>> Destroying monitoring <<<" << RESET;
     DetectorMonitor::stopRunning();
-    while(fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready)
-    { LOG(INFO) << GREEN << "\t--> Waiting for monitoring to be completed..." << RESET; }
+    u_int8_t cCounter = 0;
+    while((fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready) & (cCounter < fClose))
+    {
+        LOG(INFO) << GREEN << "\t--> Waiting for monitoring to be completed..." << RESET;
+        cCounter++;
+    }
 
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {

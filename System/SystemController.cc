@@ -347,6 +347,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             else
                 fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
             RD53Shared::setFirstChip(*fDetectorContainer);
+            RD53Shared::setChipInterface(*fReadoutChipInterface);
         }
         else
             throw Exception("[SystemController::InitializeHw] Error, board type not recognized");
@@ -406,10 +407,15 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             bool cWithPSHybrid = (cSSAfound && !cWithLpGBT);
             bool cWith2SHybrid = (cCBCfound && !cWithLpGBT);
 
-            if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
+            if(cWithPSmodule)
+            {
+                cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT);
+            }
             else if(cWith2Smodule)
             {
                 cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT);
             }
             else if(cWithPSHybrid)
             {
@@ -421,7 +427,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S);
             }
             else if(cWithLpGBT && flpGBTInterface != nullptr)
+            {
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
+            }
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }
@@ -466,6 +474,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ###############
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
     static_cast<RD53FWInterface*>(theBeBoardFW)->SendFastCommands();
+    static_cast<RD53FWInterface*>(theBeBoardFW)->PrintFWstatus();
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
     // ######################
@@ -575,7 +584,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
 
-            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases (if any) for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
             LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
         }
@@ -1069,6 +1078,9 @@ void SystemController::ConfigureHw(bool pReInitialize)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
 
+        // #################
+        // # Outer Tracker #
+        // #################
         if(cBoard->getBoardType() == BoardType::D19C)
         {
             // Set board sparisification
@@ -1169,6 +1181,9 @@ void SystemController::ConfigureHw(bool pReInitialize)
 
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
+        // #################
+        // # Inner Tracker #
+        // #################
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
             if(pReInitialize == true)
@@ -1322,8 +1337,6 @@ void SystemController::Resume()
 
 void SystemController::StartBoard(BeBoard* pBoard) { fBeBoardInterface->Start(pBoard); }
 void SystemController::StopBoard(BeBoard* pBoard) { fBeBoardInterface->Stop(pBoard); }
-void SystemController::PauseBoard(BeBoard* pBoard) { fBeBoardInterface->Pause(pBoard); }
-void SystemController::ResumeBoard(BeBoard* pBoard) { fBeBoardInterface->Resume(pBoard); }
 
 void SystemController::Abort() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Abort not implemented" << RESET; }
 

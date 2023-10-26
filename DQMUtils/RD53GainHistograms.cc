@@ -74,6 +74,8 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
 
     auto hChi2DoF2D = CanvasContainer<TH2F>("Chi2DoF2D", "Chi2DoF Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF2D, hChi2DoF2D, "Column", "Row");
+
+    AreHistoBooked = true;
 }
 
 bool GainHistograms::fill(std::string& inputStream)

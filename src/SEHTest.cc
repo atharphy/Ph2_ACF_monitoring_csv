@@ -216,7 +216,8 @@ int main(int argc, char* argv[])
     std::string        fmcId  = (cmd.foundOption("fmcId")) ? cmd.optionValue("fmcId") : "L12";
     pugi::xml_document doc;
     if(!doc.load_file(cHWFile.c_str())) return -1;
-    pugi::xml_node cDescription = doc.child("HwDescription");
+    pugi::xml_node     cDescription = doc.child("HwDescription");
+    std::vector<float> cVoltages    = {5., 5.2, 5.4, 6., 7., 8., 9., 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.5, 10., 9., 8., 7., 6.6, 6.4, 6.2, 6.0, 5.8, 5};
     for(pugi::xml_node devices = cDescription.first_child(); devices; devices = devices.next_sibling())
     {
         for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
@@ -230,6 +231,24 @@ int main(int argc, char* argv[])
                     attr.set_value(linkId);
                     attr = ps.attribute("FMCId");
                     attr.set_value(fmcId.c_str());
+                }
+            }
+            if((static_cast<std::string>(ps.name()) == "InputVoltages") && (static_cast<std::string>(devices.name()) == "TestParameters"))
+            {
+                string loadedVector = ps.child_value("Voltage");
+                if(loadedVector != "")
+                {
+                    int         pos = 0, new_pos = 0;
+                    std::string sep = ",";
+                    cVoltages.clear();
+                    loadedVector += ",";
+                    while(true)
+                    {
+                        new_pos = loadedVector.find(sep, pos);
+                        if(new_pos == -1) { break; }
+                        cVoltages.push_back(stof(loadedVector.substr(pos, new_pos - pos)));
+                        pos = new_pos + 1;
+                    }
                 }
             }
             std::string stringID(ps.attribute("ID").value());
@@ -351,7 +370,7 @@ int main(int argc, char* argv[])
             abort();
         }
         cTool.fillSummaryTree("has_short", 0);
-        cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
+        cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId, cVoltages);
         cSEHTester.TurnOn(cRightLoad, cLeftLoad, true, false);
     }
     else
