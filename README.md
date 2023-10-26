@@ -202,6 +202,13 @@ yum install llvm-toolset-7.0
 formatAll
 ```
 
+### git requirements (required to push after large files have been added!!!)
+
+```bash
+sudo yum install git-lfs
+git-lfs install
+git config lfs.https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git/info/lfs.locksverify true # or your username instead of cms_tk_ph2
+```
 
 ### The Ph2_ACF software
 Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal,  mentioned above):

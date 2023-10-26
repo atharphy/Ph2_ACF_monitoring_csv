@@ -47,7 +47,8 @@ MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId
     fMaxRegValue      = 255; // 8 bit registers in MPA
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
-    fPartnerId = pPartnerId;
+    fPartnerId     = pPartnerId;
+    configFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
     for(auto& cMapItem: fRegMap)
