@@ -29,7 +29,7 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
     fMaxRegValue      = 255; // 8 bit registers in SSA2
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
-    configFileName = filename;
+    configFileName    = filename;
     loadfRegMap(filename);
     // select control regs
     std::vector<std::string> cCntrlRegs{"THTRIMMING", "StripControl2", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L"};

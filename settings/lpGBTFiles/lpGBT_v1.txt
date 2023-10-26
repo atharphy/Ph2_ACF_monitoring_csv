@@ -749,7 +749,7 @@ PORBOR                    0x1d8         0x00              0x00                  
 PUSMStatus                0x1d9         0x00              0x00                          8
 PUSMPLLWATCHDOG           0x1da         0x00              0x00                          8
 PUSMDLLWATCHDOG           0x1db         0x00              0x00                          8
-PUSMDLLWATCHDOG           0x1dc         0x00              0x00                          8
+PUSMCSUMWATCHDOG          0x1dc         0x00              0x00                          8
 PUSMBROWNOUTWATCHDOG      0x1dd         0x00              0x00                          8
 PUSMPLLTIMEOUT            0x1de         0x00              0x00                          8
 PUSMDLLTIMEOUT            0x1df         0x00              0x00                          8
