@@ -47,7 +47,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
 
     bool fillHitPlots(DetectorDataContainer& theHitDataSum, DetectorDataContainer& theHitDataOdd, DetectorDataContainer& theHitDataEven);
     bool fill2DHitPlots(DetectorDataContainer& theHitData);
-    bool fillCorrelationPlots(DetectorDataContainer& theHybridData,DetectorDataContainer& theSensorData);
+    bool fillCorrelationPlots(DetectorDataContainer& theHybridData, DetectorDataContainer& theSensorData);
     bool fillHitProfile(DetectorDataContainer& theHitData);
 
     /*!
@@ -85,7 +85,6 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     DetectorDataContainer f2DChipSensorCorrelation;
     DetectorDataContainer f2DHybridCorrelation;
     DetectorDataContainer f2DChipCorrelation;
-
 
     uint32_t fNevents;
     bool     f2DHistograms;
