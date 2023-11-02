@@ -36,12 +36,11 @@ uint16_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNod
 
 bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify)
 {
-    const uint16_t maxRegValue      = 0xFF;                                                            // @CONST@
     const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
 
     this->setBoard(pChip->getBeBoardId());
 
-    if(pValue > maxRegValue)
+    if(pValue > RD53Shared::setBits(RD53Shared::MAXBITCHIPREG))
     {
         LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress << RESET;
         return false;
