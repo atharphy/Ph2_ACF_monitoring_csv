@@ -115,6 +115,11 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
 
+    // #########################################
+    // # Configure optical high-speed polarity #
+    // #########################################
+    this->ConfigureHighSpeedPolarity(pChip, static_cast<lpGBT*>(pChip)->getTxHSLPolarity(), static_cast<lpGBT*>(pChip)->getRxHSLPolarity());
+
     // ######################
     // # Configure Up links #
     // ######################
@@ -132,11 +137,6 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         this->ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
         this->ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, 3, 3, 0, 0, TxProperty.Polarity);
     }
-
-    // #################################
-    // # Configure high-speed polarity #
-    // #################################
-    this->ConfigureHighSpeedPolarity(pChip, static_cast<lpGBT*>(pChip)->getTxHSLPolarity(), static_cast<lpGBT*>(pChip)->getRxHSLPolarity());
 
     // ####################################################
     // # Programming registers as from configuration file #
