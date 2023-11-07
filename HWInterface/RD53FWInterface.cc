@@ -306,6 +306,7 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     if(cVecReg.size() != 0)
     {
         RegManager::WriteStackReg(cVecReg);
+        RD53FWInterface::WriteStackReg({{"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 1}, {"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 0}});
         RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
         RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
     }
@@ -520,9 +521,7 @@ uint32_t RD53FWInterface::GetBoardEnabledHybrids(const BeBoard* pBoard)
 void RD53FWInterface::Start(const BeBoard* pBoard)
 {
     RD53Shared::chipInterface->SendBoardClear(pBoard);
-    RD53FWInterface::ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
     RD53FWInterface::ResetReadoutBlk();
-
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
 }
 
@@ -1028,7 +1027,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
     // Perform operation
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_2.ic_nb_of_words_to_read", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x0}});
 
-    // Actual readback one word at a time
+    // Actual readback: one word at a time
     uint32_t cRead  = 0;
     uint8_t  nWords = (static_cast<const lpGBT*>(pChip)->getVersion() == 0 ? 7 : 6); // @TMP@ : LpGBT-v0 --> 7th; LpGBT-v1 --> 6th
     for(uint8_t i = 0; i < nWords; i++)

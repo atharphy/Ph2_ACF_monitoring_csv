@@ -39,7 +39,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
                 auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
                 actualValue      = regReadback[0].second;
                 auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
-                if(regReadback.size() == 0 /* @TMP@ */ || regReadback[0].first != row || regReadback[0].second != data) status = false;
+                if((regReadback.size() == 0) || (regReadback[0].first != row) || (regReadback[0].second != data)) status = false;
             }
         }
         else

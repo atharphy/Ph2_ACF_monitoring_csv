@@ -25,7 +25,7 @@ void RD53Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53Event
     for(auto& evt: decodedEvents)
         for(auto& chip_event: evt.chip_events)
         {
-            int chip_id = RD53Event::lane2chipId(pBoard, 0, chip_event.hybrid_id, chip_event.chip_lane);
+            int chip_id = RD53Event::lane2chipId(pBoard, chip_event.hybrid_id, chip_event.chip_lane);
             if(chip_id != -1) chip_event.chip_id = chip_id;
         }
 }
@@ -71,18 +71,18 @@ bool RD53Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipInd
     return true;
 }
 
-int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane)
+int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane)
 {
-    // #############################
-    // # Translate lane to chip ID #
-    // #############################
+    // #######################################################
+    // # Translate lane to chip ID                           #
+    // # Based on the assumption that the hybridId is unique #
+    // #######################################################
     if(pBoard != nullptr)
     {
-        auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&](OpticalGroupContainer* cOpticalGroup) { return cOpticalGroup->getId() == optGroup_id; });
-        if(opticalGroup != pBoard->end())
+        for(const auto cOpticalGroup: *pBoard)
         {
-            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](HybridContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
-            if(hybrid != (*opticalGroup)->end())
+            auto hybrid = std::find_if(cOpticalGroup->begin(), cOpticalGroup->end(), [&](HybridContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
+            if(hybrid != cOpticalGroup->end())
             {
                 auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&](ChipContainer* pChip) { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
 

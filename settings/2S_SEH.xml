@@ -170,8 +170,8 @@
             <MonitoringElement device="PowerSupply" register="MyRohdeSchwarz_LV_Module3_Current" enable="0" />
             <!-- <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Voltage" enable="1" />
             <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Current" enable="1" /> -->
-            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Voltage" enable="0" />
-            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Current" enable="0" />
+            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Voltage" enable="1" />
+            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Current" enable="1" />
             <!-- High voltage monitoring element needs to contain "_HV_" and end with "Voltage" or "Current!" -->
             <MonitoringElement device="TestCard" register="HV_meas" enable="1" />
         </Monitoring>
