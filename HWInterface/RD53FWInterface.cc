@@ -306,9 +306,9 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     if(cVecReg.size() != 0)
     {
         RegManager::WriteStackReg(cVecReg);
+        RD53FWInterface::WriteStackReg({{"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 1}, {"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 0}});
         RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
         RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
-        RegManager::WriteStackReg({{"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}});
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
