@@ -282,8 +282,6 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         size_t cMaxAttempts = 5;
         for(size_t cAttempt = 0; cAttempt < cMaxAttempts; cAttempt++)
         {
-            ResetRxDll(pChip, {cGroup});
-
             // Enable training
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
 
@@ -351,7 +349,6 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         }
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
-
     // Find mode
     std::vector<uint8_t> cTapsHist(15, 0);
     for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
