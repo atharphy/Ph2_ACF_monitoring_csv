@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
     bool        cKiraCalibration = cmd.foundOption("kiracalibration");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
-    // int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
+    int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
