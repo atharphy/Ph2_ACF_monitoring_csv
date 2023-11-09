@@ -172,7 +172,8 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 5;
     for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
     { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
-
+    // Configuring I2C Master pull-ups for VTRx+
+    WriteChipReg(pChip, "I2CM1Config", 1 << 4 | 1 << 6);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
