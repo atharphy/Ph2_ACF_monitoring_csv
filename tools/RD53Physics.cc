@@ -71,6 +71,7 @@ void Physics::Running()
 
     numberOfEventsPerRun  = 0;
     corruptedEventCounter = 0;
+    LOG(INFO) << BOLDBLUE << "[Physics::Running]\t--> Run started" << RESET;
     Physics::run();
 }
 
