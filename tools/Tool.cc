@@ -497,7 +497,7 @@ void Tool::fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContain
             if(theLpGBT == nullptr) continue;
             uint32_t chipFuseId = flpGBTInterface->ReadChipFuseID(theLpGBT);
 
-            theLpGBTFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
+            theLpGBTFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertUInt32tToString(chipFuseId);
         }
     }
 }
@@ -512,7 +512,7 @@ void Tool::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer
             if(theLpGBT == nullptr) continue;
             uint32_t chipFuseId = 0; // flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
             // Temporary function in lpgbt interface until VTRx interface is implemented
-            theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
+            theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertUInt32tToString(chipFuseId);
         }
     }
 }
