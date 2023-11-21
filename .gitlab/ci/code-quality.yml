@@ -18,8 +18,8 @@ variables:
 quality:cpplint:
   image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
   stage: quality
-  tags:
-    - docker
+  #tags:
+  #  - docker
   # stage: quality
   needs: []
   allow_failure: true
@@ -43,8 +43,8 @@ quality:cpplint:
 quality:clang-format:
   image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
   stage: quality
-  tags:
-    - docker
+  #tags:
+  #  - docker
   # stage: quality
   needs: []
   allow_failure: true
