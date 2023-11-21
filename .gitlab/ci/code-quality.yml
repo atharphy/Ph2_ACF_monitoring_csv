@@ -91,6 +91,8 @@ quality:clang-format:
 code_quality:
   stage: quality
   allow_failure: false
+  tags:
+    - k8s-default
   needs:
     - job: quality:cpplint
       artifacts: true
