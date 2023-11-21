@@ -19,7 +19,7 @@ quality:cpplint:
   image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
   stage: quality
   tags:
-    - k8s-cvmfs
+    - docker
   # stage: quality
   needs: []
   allow_failure: true
@@ -44,7 +44,7 @@ quality:clang-format:
   image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
   stage: quality
   tags:
-    - k8s-cvmfs
+    - docker
   # stage: quality
   needs: []
   allow_failure: true
