@@ -90,7 +90,7 @@ void DataReadbackOptimization::Stop()
     Tool::Stop();
 
     DataReadbackOptimization::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -164,7 +164,7 @@ void DataReadbackOptimization::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> DataReadbackOptimization saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     DataReadbackOptimization::fillHisto();
     histos->process();
 

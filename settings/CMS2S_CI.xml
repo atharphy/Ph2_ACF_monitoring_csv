@@ -2,11 +2,11 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1" configure="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.71:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.42:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
 
     <!-- skeleton -->
-    <OpticalGroup Id="2" FMCId="L12" reset="1">
+    <OpticalGroup Id="0" FMCId="L12" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
         <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
@@ -20,7 +20,7 @@
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+                <CIC enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
                 <!-- <MaskedStrips
                     CBCId="0;1"
                     Rows="241, 240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16;241,240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16"
@@ -32,7 +32,7 @@
             <CBC Id="1" configfile="CBC3_default.txt" />
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
     </OpticalGroup>
 

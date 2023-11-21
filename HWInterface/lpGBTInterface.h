@@ -73,27 +73,13 @@ class lpGBTInterface : public ChipInterface
     // # LpGBT block configuration functions #
     // #######################################
     void     SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone);
-    void     ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
     void     ConfigureRxAlignmentMode(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode);
     uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t  GetChipRate(Ph2_HwDescription::Chip* pChip);
-    void     ConfigureRxChannels(Ph2_HwDescription::Chip*    pChip,
-                                 const std::vector<uint8_t>& pGroups,
-                                 const std::vector<uint8_t>& pChannels,
-                                 uint8_t                     pEqual,
-                                 uint8_t                     pTerm,
-                                 uint8_t                     pAcBias,
-                                 uint8_t                     pInvert,
-                                 uint8_t                     pPhase);
-    void     ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate);
-    void     ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
-                                 const std::vector<uint8_t>& pGroups,
-                                 const std::vector<uint8_t>& pChannels,
-                                 uint8_t                     pDriveStr,
-                                 uint8_t                     pPreEmphMode,
-                                 uint8_t                     pPreEmphStr,
-                                 uint8_t                     pPreEmphWidth,
-                                 uint8_t                     pInvert);
+    void     ConfigureRxGroup(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDataRate, uint8_t pTrackMode);
+    void     ConfigureRxChannel(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pEqual, uint8_t pTerm, uint8_t pAcBias, uint8_t pInvert, uint8_t pPhase);
+    void     ConfigureTxGroup(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDataRate);
+    void     ConfigureTxChannel(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDriveStr, uint8_t pPreEmphMode, uint8_t pPreEmphStr, uint8_t pPreEmphWidth, uint8_t pInvert);
     void     ConfigureClocks(Ph2_HwDescription::Chip*    pChip,
                              const std::vector<uint8_t>& pClock,
                              uint8_t                     pFreq,
@@ -104,9 +90,9 @@ class lpGBTInterface : public ChipInterface
                              uint8_t                     pPreEmphStr);
     void     ConfigureHighSpeedPolarity(Ph2_HwDescription::Chip* pChip, uint8_t pOutPolarity, uint8_t pInPolarity);
     void     ConfigureDPPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
-    void     ConfigureRxPRBS(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, bool pEnable);
-    void     ConfigureRxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
-    void     ConfigureTxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
+    void     ConfigureRxPRBS(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool pEnable);
+    void     ConfigureRxSource(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pSource);
+    void     ConfigureTxSource(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pSource);
     void     ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     void     ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay);
     void     SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
@@ -131,7 +117,7 @@ class lpGBTInterface : public ChipInterface
     void    PrintChipMode(Ph2_HwDescription::Chip* pChip);
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
-    bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
+    bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
 
     // ########################

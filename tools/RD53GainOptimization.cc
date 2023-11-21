@@ -83,7 +83,7 @@ void GainOptimization::Stop()
     Tool::Stop();
 
     GainOptimization::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -149,7 +149,7 @@ void GainOptimization::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();
     histos->process();
 

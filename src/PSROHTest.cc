@@ -272,7 +272,6 @@ int main(int argc, char* argv[])
         cPSROHTester.Inherit(&cTool);
         cPSROHTester.InitialiseTestCard(false);
         uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
-        cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
 
         // Initialize BackEnd & Control LpGBT Tester
         LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
@@ -282,6 +281,7 @@ int main(int argc, char* argv[])
         cPSROHTester.CheckConfiguredHw();
         cPSROHTester.ReadChipIds();
         // Initialise tester
+        cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
         cPSROHTester.Initialise();
 
         if(cMeasureInputIV) cPSROHTester.MeasureInputIV("AFTER_CONFIG");

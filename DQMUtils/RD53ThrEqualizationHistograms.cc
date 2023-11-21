@@ -46,6 +46,8 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
 
     auto hTDACGain = CanvasContainer<TH1F>("TDACGain", "TDAC Gain", stopValue - startValue + 1, startValue, stopValue + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TDACGain, hTDACGain, "TDAC Gain", "Entries");
+
+    AreHistoBooked = true;
 }
 
 bool ThrEqualizationHistograms::fill(std::string& inputStream)

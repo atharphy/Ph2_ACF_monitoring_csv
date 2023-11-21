@@ -21,6 +21,11 @@
 
 #include <iomanip>
 
+// ##################
+// # Default values #
+// ##################
+#define NCHIPLANES 4
+
 // #########################
 // # Chip useful constants #
 // #########################
@@ -78,22 +83,51 @@ struct pixelMask
 struct LaneConfig
 {
     LaneConfig() : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(true) {}
-    LaneConfig(bool isPrimary, uint8_t master, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes);
+    LaneConfig(bool                                   isPrimary,
+               uint8_t                                master,
+               const std::array<uint8_t, NCHIPLANES>& outputLanes,
+               const std::array<bool, NCHIPLANES>&    signleChannelInputLanes,
+               const std::array<bool, NCHIPLANES>&    dualChannelInputLanes);
 
-    template <typename T, size_t N, size_t S>
-    auto serializeBits(std::array<T, N> arr)
+    // ####################################
+    // # Serialize an array of N elements #
+    // # allowing S-bits for each element #
+    // # into a TT-type variable          #
+    // ####################################
+    template <typename T, size_t N, size_t S, typename TT>
+    TT serializeArray(const std::array<T, N>& arr)
     {
-        uint16_t val = 0;
-        for(auto i = 0u; i < N; i++) val |= arr[i] << (S * i);
-        return val;
+        return processUnfoldedArray<T, N, S, TT>(arr, std::make_index_sequence<N>{});
     }
 
-    std::array<uint8_t, 4> outputLaneMapping;
-    std::array<uint8_t, 4> inputLaneMapping;
-    std::array<bool, 5>    internalLanesEnabled;
-    uint8_t                nOutputLanes;
-    uint8_t                master;
-    bool                   isPrimary;
+    uint8_t packOutputLanes()
+    {
+        std::array<bool, NCHIPLANES> laneEnable = {false};
+        std::transform(outputLaneMapping.begin(), outputLaneMapping.end(), laneEnable.begin(), [&](const auto& x) { return x < nOutputLanes; });
+        return serializeArray<bool, NCHIPLANES, 1, uint16_t>(laneEnable);
+    }
+
+    std::array<uint8_t, NCHIPLANES>  outputLaneMapping;
+    std::array<uint8_t, NCHIPLANES>  inputLaneMapping;
+    std::array<bool, NCHIPLANES + 1> internalLanesEnabled;
+    uint8_t                          nOutputLanes;
+    uint8_t                          master;
+    bool                             isPrimary;
+
+  private:
+    template <typename T, size_t N, size_t S, typename TT, size_t... Is>
+    TT processUnfoldedArray(const std::array<T, N>& arr, std::index_sequence<Is...>)
+    {
+        return serializeElements<S, TT, Is...>(arr[Is]...);
+    }
+
+    template <size_t S, typename TT, size_t... Is, typename... Args>
+    TT serializeElements(Args... args)
+    {
+        TT                           result = 0;
+        __attribute__((unused)) auto unused = {result |= args << (S * Is)...};
+        return result;
+    }
 };
 
 // ####################################
@@ -184,14 +218,21 @@ class RD53 : public ReadoutChip
     // #################
     // # LpGBT mapping #
     // #################
-    void    setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
-    void    setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
-    void    setTxGroup(uint8_t pTxGroup) { fLpGBTmap.TxGroup = pTxGroup; }
-    void    setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
+    void setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
+    void setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
+    void setRxPolarity(uint8_t pRxPolarity) { fLpGBTmap.RxPolarity = pRxPolarity; }
+
+    void setTxGroup(uint8_t pTxGroup) { fLpGBTmap.TxGroup = pTxGroup; }
+    void setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
+    void setTxPolarity(uint8_t pTxPolarity) { fLpGBTmap.TxPolarity = pTxPolarity; }
+
     uint8_t getRxGroup() { return fLpGBTmap.RxGroup; }
     uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
+    uint8_t getRxPolarity() { return fLpGBTmap.RxPolarity; }
+
     uint8_t getTxGroup() { return fLpGBTmap.TxGroup; }
     uint8_t getTxChannel() { return fLpGBTmap.TxChannel; }
+    uint8_t getTxPolarity() { return fLpGBTmap.TxPolarity; }
 
   protected:
     DataFormatOptions dataFormatOptions;
@@ -201,8 +242,10 @@ class RD53 : public ReadoutChip
     {
         uint8_t RxGroup;
         uint8_t RxChannel;
+        uint8_t RxPolarity;
         uint8_t TxGroup;
         uint8_t TxChannel;
+        uint8_t TxPolarity;
     } fLpGBTmap;
     pixelMask   fPixelsMask;
     pixelMask   fPixelsMaskDefault;

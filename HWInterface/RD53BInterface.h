@@ -32,12 +32,14 @@ class RD53BInterface : public RD53Interface
     void     PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
+    void     SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard) override;
+
+    std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
+    uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
 
   private:
     void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault) override;
     std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
-    std::pair<std::string, uint16_t>           SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
-    uint16_t                                   GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
 
     uint16_t GetPixelConfig(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
     uint16_t GetPixelConfigMask(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
@@ -58,6 +60,7 @@ class RD53BInterface : public RD53Interface
                                                                                 {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
                                                                                 {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 4}},
 
+                                                                                {"CML_CONFIG_EN_LANE", {"CML_CONFIG", 0}},
                                                                                 {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 4}},
                                                                                 {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 6}},
 

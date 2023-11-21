@@ -38,6 +38,8 @@ class GainHistograms : public DQMHistogramBase
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL);
     void fillGain(const DetectorDataContainer& GainContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

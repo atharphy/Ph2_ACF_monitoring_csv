@@ -4,7 +4,7 @@
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
     <!-- <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!--<connection id="board" uri="chtcp-2.0://outertracker03.dhcp.fnal.gov:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
     <CDCE configure="0" clockRate="320"/>
         
     <OpticalGroup Id="0" FMCId="L12" reset="1">
@@ -29,7 +29,7 @@
             <SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
             <!-- <SSA2 Id="3" configfile="SSA2.txt" />
-            <SSA2 Id="4" configfile="SSA2.txt" /> -->
+                             <SSA2 Id="4" configfile="SSA2.txt" /> -->
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
             <SSA2 Id="7" configfile="SSA2.txt" />
@@ -65,8 +65,8 @@
             <SSA2 Id="0" configfile="SSA2.txt" />
             <SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
-            <SSA2 Id="3" configfile="SSA2.txt" />
-            <SSA2 Id="4" configfile="SSA2.txt" />
+            <!-- <SSA2 Id="3" configfile="SSA2.txt" />
+                             <SSA2 Id="4" configfile="SSA2.txt" /> -->
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
             <SSA2 Id="7" configfile="SSA2.txt" />
@@ -227,7 +227,7 @@
 <Settings>
     <!-- Module parameters for PS alignment -->
     <!--<Setting name="MinStubPhase">1</Setting>
-    <Setting name="MaxStubPhase">8</Setting> -->
+             <Setting name="MaxStubPhase">8</Setting> -->
 
     <!-- 0 : digital; 1 : analog --> 
     <Setting name="InjectionType">1</Setting>
@@ -295,7 +295,7 @@
     <Setting name="PedestalEqualizationMaskUntrimmed">1</Setting>
 
     <!--Full search settings (pedestal) MPA
-    <Setting name="PedestalEqualizationFullScanStart">170</Setting>
+             <Setting name="PedestalEqualizationFullScanStart">170</Setting>
     <Setting name="Nevents">500</Setting>
     <Setting name="PedestalEqualizationOccupancy">3.</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
@@ -307,7 +307,7 @@
     <Setting name="PedestalEqualizationFullScanStart">220</Setting>
     <Setting name="PedestalEqualizationOccupancy">0.5</Setting>
     <!-- <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
-    <Setting name="PedeNoisePulseAmplitude">1</Setting>
+             <Setting name="PedeNoisePulseAmplitude">1</Setting>
 
     <Setting name="PedestalEqualizationPulseAmplitudePix">1</Setting>
     <Setting name="PedeNoisePulseAmplitudePix">1</Setting> -->
@@ -317,7 +317,7 @@
     <Setting name="PedeNoiseUntrimmedLimit">4.95</Setting><!--Aligned to ~5sigma sigma~=0.98-->
 
     <!-- <Setting name="PedeNoiseUseFixRange">1</Setting>
-    <Setting name="PedeNoiseMinThreshold">40</Setting>
+             <Setting name="PedeNoiseMinThreshold">40</Setting>
     <Setting name="PedeNoiseMaxThreshold">240</Setting> -->
     <Setting name="FullScan">0</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">70</Setting>
@@ -329,6 +329,15 @@
     <Setting name="PhaseRange">7</Setting>
     <Setting name="PhaseStartLatency">290</Setting>
     <Setting name="PhaseLatencyRange">10</Setting>
+    
+    <!--PixelAlive Settings-->
+    <Setting name="PixelAliveNevents">1000</Setting>
+    <Setting name="PixelEpsilon">0.05</Setting>
+    <Setting name="PixelAliveMask">1</Setting> <!--Boolean For Enable Masking-->
+    <Setting name="PixelAlivePulseAmplitude_MPA">145</Setting>
+    <Setting name="PixelAlivePulseAmplitude_SSA">132</Setting>
+    <Setting name="PixelAliveThreshold_MPA">225</Setting>
+    <Setting name="PixelAliveThreshold_SSA">111</Setting>
 
     <!-- Sync Test --> 
     <Setting name="Attempts">1</Setting>
@@ -377,8 +386,8 @@
 <MonitoringSettings>
 <Monitoring type="PS" enable="0">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    <MonitoringElement device="MPA2"  register="CalDAC6" enable="1"/>
-    <MonitoringElement device="MPA2"  register="VBG" enable="1"/>
+    <MonitoringElement device="MPA2"  register="CalDAC7" enable="1"/>
+    <MonitoringElement device="MPA2"  register="bandgap" enable="1"/>
     <MonitoringElement device="MPA2"  register="avdd" enable="1"/> 
     <MonitoringElement device="MPA2"  register="dvdd" enable="1"/>    
     <MonitoringElement device="SSA2"  register="AVDD" enable="1"/>
