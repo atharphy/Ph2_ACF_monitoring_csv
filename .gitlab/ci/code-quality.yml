@@ -16,7 +16,8 @@ variables:
 
 # See: https://gitlab.cern.ch/gitlabci-examples/static_code_analysis
 quality:cpplint:
-  image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
+  #image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
+  image: cfreak/codeclimate-cpplint:latest
   stage: quality
   #tags:
   #  - docker
