@@ -100,8 +100,10 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
+    include_directories(${Protobuf_INCLUDE_DIRS})
 
     #library dirs
+    link_directories(${Protobuf_LIBRARIES})
 
     cet_make_exec(RunController
         SOURCE
