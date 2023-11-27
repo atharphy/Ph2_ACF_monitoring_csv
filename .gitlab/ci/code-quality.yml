@@ -56,6 +56,8 @@ quality:clang-format:
     - mkdir -p ${REPORTS_PATH}
   script:
     - yum install -y git which
+    - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash
+    - yum install -y git-lfs
     - echo "Running code quality checks clang-format script"
     - source /cvmfs/sft.cern.ch/lcg/contrib/clang/${LCG_CLANG_VERSION}/x86_64-centos7/setup.sh || true # Check about clang version
     - curl -LO https://raw.githubusercontent.com/Sarcasm/run-clang-format/master/run-clang-format.py
