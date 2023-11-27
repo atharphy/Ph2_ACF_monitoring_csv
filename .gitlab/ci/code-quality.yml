@@ -41,10 +41,11 @@ quality:cpplint:
       - artifacts
 
 quality:clang-format:
-  image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
+  #image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
+  image: cern/cc7-base:latest
   stage: quality
-  #tags:
-  #  - docker
+  tags:
+    - cvmfs
   # stage: quality
   needs: []
   allow_failure: true
