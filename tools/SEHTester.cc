@@ -15,6 +15,8 @@ void SEHTester::Initialise()
         D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         for(auto cOpticalGroup: *cBoard)
         {
+            clpGBTInterface->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT);
+
             clpGBTInterface->Configure2SSEH(cOpticalGroup->flpGBT);
             lpGBTClockConfig cClkCnfg;
             cClkCnfg.fClkFreq         = 4;
@@ -73,7 +75,7 @@ bool SEHTester::CheckShort(std::string powerSupplyId, std::string channelId)
     }
     return true;
 }
-void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId)
+void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId, const std::vector<float>& cVoltages)
 {
     if(fPowerSupplyClient == nullptr)
     {
@@ -96,7 +98,6 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
 
     float I_SEH;
     float U_SEH;
-    float cVoltages[] = {4.6, 4.8, 5., 5.2, 5.4, 6., 7., 8., 9., 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.1, 10.2, 10.3, 10.4, 10.5, 10., 9., 8., 7., 6.8, 6.6, 6.4, 6.2, 6.0, 5, 4.8, 4.6};
     for(auto& voltage: cVoltages)
     // while(cVolts < 10.01)
     {
@@ -118,7 +119,7 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     cUinIinGraph->SetTitle("Uin to Iin during power-up");
     cUinIinGraph->SetLineWidth(3);
     cUinIinGraph->SetMarkerStyle(70);
-    cUinIinTree->Write();
+    // cUinIinTree->Write();
 
     auto cUinIinCanvas = new TCanvas("cUinIin", "Uin to Iin during power-up", 750, 500);
 
@@ -256,7 +257,7 @@ void SEHTester::TestBiasVoltage()
     cDACtoHVCanvas->BuildLegend();
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
-    cBiasVoltageTree->Write();
+    // cBiasVoltageTree->Write();
     fTC_2SSEH->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("BiasDone", 1);
@@ -274,10 +275,12 @@ void SEHTester::SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string pow
 void SEHTester::EndExternalTestLeakageCurrent(std::string powerSupplyId, std::string channelId)
 {
     fTC_2SSEH->set_HV(true, false, false, 0);
-    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * static_cast<float>(0)) + ",";
+    std::string setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-    setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(0) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+
     fillSummaryTree("ExternalParallelLeakDone", 1);
 }
 
@@ -331,7 +334,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     } while(time_taken < measurementTime);
     cLeakTree->Fill();
     fResultFile->cd();
-    cLeakTree->Write();
+    // cLeakTree->Write();
 
     auto cLeakMultiGraph = new TMultiGraph();
     cLeakMultiGraph->SetName("mgILeak");
@@ -393,9 +396,9 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
         LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! ExternalfTC_2SSEH->Voltage cannot be executed" << RESET;
         throw std::runtime_error("ExternalfTC_2SSEH->Voltage cannot be executed");
     }
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fTC_2SSEH->set_HV(false, true, true, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
     std::vector<float> cHvSetValVect;
     std::vector<float> cVHVJ7ValVect;
@@ -409,9 +412,10 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cBiasVoltageTree->Branch("HvMea", &cHvMeaValVect);
     std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(0) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    std::this_thread::sleep_for(std::chrono::milliseconds(6000));
     setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(6000));
     for(int cHvSet = 0; cHvSet <= 1000; cHvSet += 200)
     {
         // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -479,7 +483,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cDACtoHVMultiGraph->Write();
     cDACtoHVCanvas->Write();
     cBiasVoltageTree->Fill();
-    cBiasVoltageTree->Write();
+    // cBiasVoltageTree->Write();
     fTC_2SSEH->set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("ExternalBiasDone", 1);
@@ -493,10 +497,10 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     double xval, yval, y_allowed_min, y_allowed_max, yvalConvert = 0;
     for(int n = 0; n < 2; n++)
     {
-        for(int i = 0; i < myGraphs_vec4->getObject(n).GetN(); i++)
+        for(int i = 0; i < myGraphs_vec4->at(n).GetN(); i++)
         { // check that every point is within the allowed min/max curves
-            xval          = myGraphs_vec4->getObject(n).GetX()[i];
-            yval          = myGraphs_vec4->getObject(n).GetY()[i];
+            xval          = myGraphs_vec4->at(n).GetX()[i];
+            yval          = myGraphs_vec4->at(n).GetY()[i];
             yvalConvert   = (yval - 1.) * 1000.;
             y_allowed_min = fit_grading_HV_test->Eval(xval) * 0.99 - 25.; // Offset, da bei kleinen Werten der relative Fehler größer sein kann
             y_allowed_max = fit_grading_HV_test->Eval(xval) * 1.01 + 50.;
@@ -525,10 +529,10 @@ void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     fTC_2SSEH->set_load2(true, false, pLeftLoadValue);
     fTC_2SSEH->set_load1(true, false, pRightLoadValue);
 }
-void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool setLoad)
+void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool setLoad, bool measureTemperature)
 {
     // workaround to turn on the bPOL2V5 propertly
-    if(!setLoad)
+    if(measureTemperature)
     {
         float T;
         // check if the critical temperature of -35C has been reached
@@ -550,7 +554,7 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool s
     {
         fTC_2SSEH->set_load2(true, false, pLeftLoadValue);
         fTC_2SSEH->set_load1(true, false, pRightLoadValue);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
         fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_R, I_P1V2_R);
         fTC_2SSEH->read_load(fTC_2SSEH->I_P1V2_L, I_P1V2_L);
         fTC_2SSEH->read_supply(fTC_2SSEH->I_SEH, I_SEH);
@@ -601,7 +605,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     } while(time_taken < measurementTime);
     cLeakTree->Fill();
     fResultFile->cd();
-    cLeakTree->Write();
+    // cLeakTree->Write();
 
     auto cleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cILeakValVect.data());
     cleakGraph->SetName("ILeak");
@@ -785,7 +789,7 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
     fTC_2SSEH->set_load1(false, false, 0);
     fTC_2SSEH->set_load2(false, false, 0);
     fResultFile->cd();
-    cEfficiencyTree->Write();
+    // cEfficiencyTree->Write();
 
     auto cUouttoIoutCanvas = new TCanvas("cUouttoIout", "Uout versus Iout DC/DC", 750, 500);
     cUouttoIoutMultiGraph->Draw("ALP");
@@ -879,7 +883,7 @@ void SEHTester::DCDCOutputEvaluation()
     cDCDCOutputCanvas->BuildLegend();
     fResultFile->cd();
     cDCDCOutputCanvas->Write();
-    cDCDCOutputTree->Write();
+    // cDCDCOutputTree->Write();
 }
 
 void SEHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
@@ -1547,6 +1551,7 @@ void SEHTester::RunHybridETest()
 
     double cAcceptancePercentage = 15. / 100.;
     LOG(INFO) << "Running electrical test on the hybrid. Accepted deviation: +- " << +cAcceptancePercentage << " %" << RESET;
+    std::this_thread::sleep_for(std::chrono::milliseconds(2500));
 
     for(auto cMapIterator: f2SSEHSupplyMeasurements)
     {
@@ -1560,7 +1565,7 @@ void SEHTester::RunHybridETest()
         {
             if(cNominalValue->second != 0)
             {
-                fillSummaryTree(cMeasurementName + "_dev", cNominalValue->second - result);
+                fillSummaryTree(cMeasurementName + "_dev", result - cNominalValue->second);
                 if(cAcceptancePercentage != 0)
                 {
                     if(result < cNominalValue->second * (1 + cAcceptancePercentage) && result > cNominalValue->second * (1 - cAcceptancePercentage))

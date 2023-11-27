@@ -112,7 +112,7 @@ void Gain::Stop()
     Tool::Stop();
 
     Gain::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -209,7 +209,7 @@ void Gain::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Gain::fillHisto();
     histos->process();
     doSaveData = saveData;

@@ -27,6 +27,8 @@ class ClockDelayHistograms : public DQMHistogramBase
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer);
     void fillClockDelay(const DetectorDataContainer& ClockDelayContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

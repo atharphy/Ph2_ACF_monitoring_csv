@@ -57,7 +57,7 @@ uint32_t D19cPSCounterFWInterface::Compose_Id(const BeBoard* pBoard, const Optic
     return cId;
 }
 
-// method to read counter from regiseter
+// method to read counter from register
 void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
 {
     for(auto cOpticalGroup: *pBoard)
@@ -362,7 +362,10 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
         return fTriggerInterface->RunTriggerFSM();
     }
     else
+    {
+        LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData  USING WRONG TRIGGER SOURCE FOR THIS TEST... " << cTriggerSource << RESET;
         return false; // wrong trigger source for this type of readout
+    }
 }
 bool D19cPSCounterFWInterface::WaitForReadout()
 {

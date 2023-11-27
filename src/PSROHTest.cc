@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    doc.save_file((cHWFile + "_copy").c_str());
+    if(cmd.foundOption("linkId") && cmd.foundOption("fmcId")) doc.save_file((cHWFile + "_copy").c_str());
 
     TApplication cApp("Root Application", &argc, argv);
     if(batchMode)
@@ -246,13 +246,22 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
-    cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
-    cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
-    remove((cHWFile + "_copy").c_str());
+    if(cmd.foundOption("linkId") && cmd.foundOption("fmcId"))
+    {
+        cTool.InitializeHw((cHWFile + "_copy").c_str(), outp);
+        cTool.InitializeSettings((cHWFile + "_copy").c_str(), outp);
+        remove((cHWFile + "_copy").c_str());
+    }
+    else
+    {
+        cTool.InitializeHw((cHWFile).c_str(), outp);
+        cTool.InitializeSettings((cHWFile).c_str(), outp);
+    }
     LOG(INFO) << outp.str();
     outp.str("");
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
+    cTool.initializeExceptionHandler();
     cTool.bookSummaryTree();
     if(cGui) gui::data("ResultsDirectory", cTool.getDirectoryName().c_str());
 
@@ -263,15 +272,16 @@ int main(int argc, char* argv[])
         cPSROHTester.Inherit(&cTool);
         cPSROHTester.InitialiseTestCard(false);
         uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
-        cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
 
         // Initialize BackEnd & Control LpGBT Tester
         LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
         if(cMeasureInputIV) cPSROHTester.MeasureInputIV("BEFORE_CONFIG");
         LOG(INFO) << BOLDMAGENTA << " ------------------------------------------- " << RESET;
         cTool.ConfigureHw(); // Link is stablished
+        cPSROHTester.CheckConfiguredHw();
         cPSROHTester.ReadChipIds();
         // Initialise tester
+        cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
         cPSROHTester.Initialise();
 
         if(cMeasureInputIV) cPSROHTester.MeasureInputIV("AFTER_CONFIG");

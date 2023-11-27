@@ -83,7 +83,7 @@ void CicFEAlignment::writeObjects()
 // State machine control functions
 bool CicFEAlignment::AlignInputs()
 {
-    LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Aligning Inputs " << RESET;
+    LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << RESET;
     // align CIC inputs - first phase
     bool cPhaseAligned = this->PhaseAlignment();
     if(!cPhaseAligned)

@@ -140,11 +140,10 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.StartHttpServer();
 
-    bool cIgnoreI2c    = false;
     bool cReInitialize = true;
     if(cmd.foundOption("reconfigure"))
     {
-        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        cTool.ConfigureHw(cReInitialize);
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
@@ -190,8 +189,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("reload"))
     {
         // //cReInitialize=false;
-        // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
-        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        cTool.ConfigureHw(cReInitialize);
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;

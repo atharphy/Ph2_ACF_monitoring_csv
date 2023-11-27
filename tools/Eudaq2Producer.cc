@@ -74,12 +74,11 @@ void Eudaq2Producer::DoInitialise()
         for(auto cOpticalGroup: *cBoard) { fIsPS &= (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS); }
     }
 
-    bool cIgnoreI2c    = false;
     bool cReInitialize = true;
     bool cReconfigure  = (cEudaqIni->Get("Reconfigure", "false") == "true") ? true : false;
     if(cReconfigure)
     {
-        this->ConfigureHw(cIgnoreI2c, cReInitialize);
+        this->ConfigureHw(cReInitialize);
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;

@@ -31,6 +31,8 @@ class ThrEqualizationHistograms : public DQMHistogramBase
     void fillOccupancyScan(const DetectorDataContainer& OccupancyContainer);
     void fillTDACGain(const DetectorDataContainer& TDACGainContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

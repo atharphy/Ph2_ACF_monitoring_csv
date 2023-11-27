@@ -83,7 +83,7 @@ void GainOptimization::Stop()
     Tool::Stop();
 
     GainOptimization::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -149,7 +149,7 @@ void GainOptimization::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();
     histos->process();
 
@@ -260,6 +260,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
                         // # Save best DAC values #
                         // ########################
                         float oldValue = bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
+
                         if(fabs(newValue - targetToT) < fabs(oldValue - targetToT))
                         {
                             bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = newValue;

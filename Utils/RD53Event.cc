@@ -25,7 +25,7 @@ void RD53Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53Event
     for(auto& evt: decodedEvents)
         for(auto& chip_event: evt.chip_events)
         {
-            int chip_id = RD53Event::lane2chipId(pBoard, 0, chip_event.hybrid_id, chip_event.chip_lane);
+            int chip_id = RD53Event::lane2chipId(pBoard, chip_event.hybrid_id, chip_event.chip_lane);
             if(chip_id != -1) chip_event.chip_id = chip_id;
         }
 }
@@ -71,18 +71,18 @@ bool RD53Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipInd
     return true;
 }
 
-int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane)
+int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane)
 {
-    // #############################
-    // # Translate lane to chip ID #
-    // #############################
+    // #######################################################
+    // # Translate lane to chip ID                           #
+    // # Based on the assumption that the hybridId is unique #
+    // #######################################################
     if(pBoard != nullptr)
     {
-        auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&](OpticalGroupContainer* cOpticalGroup) { return cOpticalGroup->getId() == optGroup_id; });
-        if(opticalGroup != pBoard->end())
+        for(const auto cOpticalGroup: *pBoard)
         {
-            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](HybridContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
-            if(hybrid != (*opticalGroup)->end())
+            auto hybrid = std::find_if(cOpticalGroup->begin(), cOpticalGroup->end(), [&](HybridContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
+            if(hybrid != cOpticalGroup->end())
             {
                 auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&](ChipContainer* pChip) { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
 
@@ -153,7 +153,7 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
         LOG(INFO) << BOLDGREEN << "EVENT           = " << i << RESET;
         LOG(INFO) << BOLDGREEN << "block_size      = " << evt.block_size << RESET;
         LOG(INFO) << BOLDGREEN << "tlu_trigger_id  = " << evt.tlu_trigger_id << RESET;
-        LOG(INFO) << BOLDGREEN << "data_format_ver = " << evt.data_format_ver << RESET;
+        LOG(INFO) << BOLDGREEN << "trigger_tag     = " << evt.trigger_tag << RESET;
         LOG(INFO) << BOLDGREEN << "tdc             = " << evt.tdc << RESET;
         LOG(INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter << RESET;
         LOG(INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter << RESET;
@@ -220,6 +220,24 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
     if(status & RD53FWEvtEncoder::L1A)
     {
         LOG(ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::TRGTAG_ER1)
+    {
+        LOG(ERROR) << BOLDRED << "Trigger tag counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::TRGTAG_ER2)
+    {
+        LOG(ERROR) << BOLDRED << "Trigger tag single bit-flip detected in tag symbol of a trigger command " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::TRGTAG_ER3)
+    {
+        LOG(ERROR) << BOLDRED << "Trigger tag unrecognized tag symbol " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
     }
 
@@ -577,10 +595,10 @@ RD53Event RD53Event::DecodeRD53AEvent(const uint32_t* data, size_t n32bitsWords)
     // # Decode event preamble #
     // #########################
     bool dummy_size;
-    std::tie(evt.block_size)                                      = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
-    std::tie(evt.tlu_trigger_id, evt.data_format_ver, dummy_size) = bits::unpack<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
-    std::tie(evt.tdc, evt.l1a_counter)                            = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
-    evt.bx_counter                                                = data[3];
+    std::tie(evt.block_size)                                  = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
+    std::tie(evt.tlu_trigger_id, evt.trigger_tag, dummy_size) = bits::unpack<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_TRGTAG, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
+    std::tie(evt.tdc, evt.l1a_counter)                        = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
+    evt.bx_counter                                            = data[3];
 
     // ############################
     // # Search for frame lengths #
@@ -701,11 +719,11 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
         bits.skip(RD53FWEvtEncoder::NBIT_EVTHEAD);
         size_t block_size  = bits.pop(RD53FWEvtEncoder::NBIT_BLOCKSIZE);
         evt.tlu_trigger_id = bits.pop(RD53FWEvtEncoder::NBIT_TRIGID);
-        bits.skip(RD53FWEvtEncoder::NBIT_FMTVER);
-        size_t dummy_size = bits.pop(RD53FWEvtEncoder::NBIT_DUMMY);
-        evt.tdc           = bits.pop(RD53FWEvtEncoder::NBIT_TDC);
-        evt.l1a_counter   = bits.pop(RD53FWEvtEncoder::NBIT_L1ACNT);
-        evt.bx_counter    = bits.pop(RD53FWEvtEncoder::NBIT_BXCNT);
+        evt.trigger_tag    = bits.pop(RD53FWEvtEncoder::NBIT_TRGTAG);
+        size_t dummy_size  = bits.pop(RD53FWEvtEncoder::NBIT_DUMMY);
+        evt.tdc            = bits.pop(RD53FWEvtEncoder::NBIT_TDC);
+        evt.l1a_counter    = bits.pop(RD53FWEvtEncoder::NBIT_L1ACNT);
+        evt.bx_counter     = bits.pop(RD53FWEvtEncoder::NBIT_BXCNT);
 
         // ##############################
         // # Decode frame and chip data #
@@ -755,6 +773,18 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             for(auto j = 0u; j < evt.chip_events.size(); j++)
                 if(evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evt.eventStatus |= RD53FWEvtEncoder::L1A;
 
+        for(auto j = 0u; j < evt.chip_events.size(); j++)
+        {
+            if(evt.chip_events[j].trigger_tag <= RD53BEvtEncoder::MAX_TRGTAG)
+            {
+                if(((evt.trigger_tag + 1) % 32) != (evt.chip_events[j].trigger_tag >> 2)) evt.eventStatus |= RD53FWEvtEncoder::TRGTAG_ER1;
+            }
+            else if(evt.chip_events[j].trigger_tag <= RD53BEvtEncoder::MAX_TRGTAG_ERR1)
+                evt.eventStatus |= RD53FWEvtEncoder::TRGTAG_ER2;
+            else if(evt.chip_events[j].trigger_tag <= RD53BEvtEncoder::MAX_TRGTAG_ERR2)
+                evt.eventStatus |= RD53FWEvtEncoder::TRGTAG_ER3;
+        }
+
         events.push_back(std::move(evt));
         eventStatus |= evt.eventStatus;
     }
@@ -768,13 +798,13 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     TFile theFile(fileName.c_str(), "RECREATE");
     TTree theTree("theTree", "Ntuple with event data");
 
-    uint16_t FW_block_size, FW_tlu_trigger_id, FW_data_format_ver, FW_tdc;
+    uint16_t FW_block_size, FW_tlu_trigger_id, FW_trigger_tag, FW_tdc;
     uint32_t event, FW_l1a_counter, FW_bx_counter, FW_event_status, FW_nframes;
 
     theTree.Branch("event", &event, "event/i");
     theTree.Branch("FW_block_size", &FW_block_size, "FW_block_size/i");
     theTree.Branch("FW_tlu_trigger_id", &FW_tlu_trigger_id, "FW_tlu_trigger_id/i");
-    theTree.Branch("FW_data_format_ver", &FW_data_format_ver, "FW_data_format_ver/i");
+    theTree.Branch("FW_trigger_tag", &FW_trigger_tag, "FW_trigger_tag/i");
     theTree.Branch("FW_tdc", &FW_tdc, "FW_tdc/i");
     theTree.Branch("FW_l1a_counter", &FW_l1a_counter, "FW_l1a_counter/i");
     theTree.Branch("FW_bx_counter", &FW_bx_counter, "FW_bx_counter/i");
@@ -813,6 +843,13 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     std::vector<uint16_t> RD53_hit_col;
     std::vector<uint8_t>  RD53_hit_tot;
 
+    // ###################################################################
+    // # Needed to split the hits per chip: jagged aray needs dictionary #
+    // ###################################################################
+    // std::vector<std::vector<uint16_t>> RD53_hit_row;
+    // std::vector<std::vector<uint16_t>> RD53_hit_col;
+    // std::vector<std::vector<uint8_t>>  RD53_hit_tot;
+
     theTree.Branch("RD53_hit_row", &RD53_hit_row);
     theTree.Branch("RD53_hit_col", &RD53_hit_col);
     theTree.Branch("RD53_hit_tot", &RD53_hit_tot);
@@ -821,15 +858,15 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     {
         auto& evt = events[i];
 
-        event              = i;
-        FW_block_size      = evt.block_size;
-        FW_tlu_trigger_id  = evt.tlu_trigger_id;
-        FW_data_format_ver = evt.data_format_ver;
-        FW_tdc             = evt.tdc;
-        FW_l1a_counter     = evt.l1a_counter;
-        FW_bx_counter      = evt.bx_counter;
-        FW_event_status    = evt.eventStatus;
-        FW_nframes         = evt.chip_events.size();
+        event             = i;
+        FW_block_size     = evt.block_size;
+        FW_tlu_trigger_id = evt.tlu_trigger_id;
+        FW_trigger_tag    = evt.trigger_tag;
+        FW_tdc            = evt.tdc;
+        FW_l1a_counter    = evt.l1a_counter;
+        FW_bx_counter     = evt.bx_counter;
+        FW_event_status   = evt.eventStatus;
+        FW_nframes        = evt.chip_events.size();
 
         FW_frame_event_error_code.clear();
         FW_frame_event_hybrid_id.clear();
@@ -865,12 +902,23 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
             RD53_frame_event_status.push_back(event.eventStatus);
             RD53_frame_event_nhits.push_back(event.hit_data.size());
 
+            // std::vector<uint16_t> hit_rows;
+            // std::vector<uint16_t> hit_cols;
+            // std::vector<uint8_t>  hit_tots;
+
             for(const auto& hit: event.hit_data)
             {
                 RD53_hit_row.push_back(hit.row);
                 RD53_hit_col.push_back(hit.col);
                 RD53_hit_tot.push_back(hit.tot);
+                // hit_rows.push_back(hit.row);
+                // hit_cols.push_back(hit.col);
+                // hit_tots.push_back(hit.tot);
             }
+
+            // RD53_hit_row.push_back(std::move(hit_rows));
+            // RD53_hit_col.push_back(std::move(hit_cols));
+            // RD53_hit_tot.push_back(std::move(hit_tots));
         }
 
         theTree.Fill();

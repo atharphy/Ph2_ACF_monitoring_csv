@@ -19,7 +19,7 @@ class D19cMuxBackplaneFWInterface : public BeBoardFWInterface
   public:
     void     DisconnectMultiplexingSetup(uint8_t pWait_ms = 100);
     uint32_t ScanMultiplexingSetup(uint8_t pWait_ms = 100);
-    void     ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
+    void     ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, bool InterlockEnabled, uint8_t pWait_ms = 100);
 
   private:
 };

@@ -28,6 +28,8 @@ class LatencyHistograms : public DQMHistogramBase
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer);
     void fillLatency(const DetectorDataContainer& LatencyContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

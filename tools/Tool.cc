@@ -53,6 +53,7 @@ Tool::Tool()
     , fTestPulse(false)
     , fDoBoardBroadcast(false)
     , fDoHybridBroadcast(false)
+    , fOfStream(nullptr)
 {
 #ifdef __HTTP__
     fHttpServer = nullptr;
@@ -141,9 +142,9 @@ void Tool::waitForRunToBeCompleted()
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void Tool::Configure(const ConfigureInfo& theConfigureInfo)
+void Tool::Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize)
 {
-    SystemController::Configure(theConfigureInfo);
+    SystemController::Configure(theConfigureInfo, pReInitialize);
     ConfigureCalibration();
 }
 
@@ -217,10 +218,6 @@ void Tool::initMetadataAndFillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationNameContainer);
     theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName;
 
-    DetectorDataContainer theFirmwareVersionContainer;
-    ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFirmwareVersionContainer);
-    for(const auto board: *fDetectorContainer) theFirmwareVersionContainer.getObject(board->getId())->getSummary<std::string>() = std::to_string(fBeBoardInterface->getBoardFirmwareVersion(board));
-
     DetectorDataContainer theDetectorConfigurationContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
     theDetectorConfigurationContainer.getSummary<std::string>() = fConfigurationFileContent;
@@ -240,15 +237,18 @@ void Tool::initMetadataAndFillInitialConditions()
     DetectorDataContainer theLpGBTFuseIdContainer;
     ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theLpGBTFuseIdContainer);
     fillLpGBTFuseIdContainer(theLpGBTFuseIdContainer);
+
+    DetectorDataContainer theVTRxFuseIdContainer;
+    ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theVTRxFuseIdContainer);
+    fillVTRxFuseIdContainer(theVTRxFuseIdContainer);
     bool isInitialValue = true;
 
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
-    if(fBoardType == BoardType::D19C) { fDQMMetadata = new DQMMetadataOT(); }
+    if(fBoardType == BoardType::D19C)
+        fDQMMetadata = new DQMMetadataOT();
     else if(fBoardType == BoardType::RD53)
-    {
         fDQMMetadata = new DQMMetadataIT();
-    }
     else
     {
         LOG(ERROR) << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Board type not defined!! Impossible to create DQM for metadata, aborting..." << std::endl;
@@ -259,13 +259,13 @@ void Tool::initMetadataAndFillInitialConditions()
     fDQMMetadata->fillUsername(theUsernameContainer);
     fDQMMetadata->fillHostName(theHostNameContainer);
     fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
-    fDQMMetadata->fillFirmwareVersion(theFirmwareVersionContainer);
     fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
     fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
     fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTFuseId(theLpGBTFuseIdContainer);
+    fDQMMetadata->fillVTRxFuseId(theVTRxFuseIdContainer);
 #else
     if(fDQMStreamerEnabled)
     {
@@ -280,9 +280,6 @@ void Tool::initMetadataAndFillInitialConditions()
 
         ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
         theGitCommitHashSerialization.streamByDetectorContainer(fDQMStreamer, theGitCommitHashContainer);
-
-        ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
-        theFirmwareVersionSerialization.streamByDetectorContainer(fDQMStreamer, theFirmwareVersionContainer);
 
         ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
         theCalibrationNameSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationNameContainer);
@@ -301,14 +298,16 @@ void Tool::initMetadataAndFillInitialConditions()
 
         ContainerSerialization theLpGBTFuseIdSerialization("MetadataLpGBTFuseId");
         theLpGBTFuseIdSerialization.streamByBoardContainer(fDQMStreamer, theLpGBTFuseIdContainer);
+
+        ContainerSerialization theVTRxFuseIdSerialization("MetadataVTRxFuseId");
+        theVTRxFuseIdSerialization.streamByBoardContainer(fDQMStreamer, theVTRxFuseIdContainer);
     }
 #endif
 
-    if(fBoardType == BoardType::D19C) { fillOTMetadataInitialConditions(); }
+    if(fBoardType == BoardType::D19C)
+        fillOTMetadataInitialConditions();
     else if(fBoardType == BoardType::RD53)
-    {
         fillITMetadataInitialConditions();
-    }
 }
 
 void Tool::fillOTMetadataInitialConditions()
@@ -373,11 +372,10 @@ void Tool::fillMetadataFinalConditions()
     }
 #endif
 
-    if(fBoardType == BoardType::D19C) { fillOTMetadataFinalConditions(); }
+    if(fBoardType == BoardType::D19C)
+        fillOTMetadataFinalConditions();
     else if(fBoardType == BoardType::RD53)
-    {
         fillITMetadataFinalConditions();
-    }
 }
 
 void Tool::fillITMetadataFinalConditions() {}
@@ -452,7 +450,9 @@ void Tool::fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
+                uint32_t chipFuseId = 0;
+                if(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic->getFrontEndType() == FrontEndType::CIC2)
+                    chipFuseId = fCicInterface->ReadChipFuseID(static_cast<OuterTrackerHybrid*>(cHybrid)->fCic);
                 theCICFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::string>() = std::to_string(chipFuseId);
             }
         }
@@ -495,8 +495,24 @@ void Tool::fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContain
         {
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
-            uint32_t chipFuseId                                                                                                              = flpGBTInterface->ReadChipFuseID(theLpGBT);
-            theLpGBTFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = std::to_string(chipFuseId);
+            uint32_t chipFuseId = flpGBTInterface->ReadChipFuseID(theLpGBT);
+
+            theLpGBTFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertUInt32tToString(chipFuseId);
+        }
+    }
+}
+
+void Tool::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto theLpGBT = cOpticalGroup->flpGBT;
+            if(theLpGBT == nullptr) continue;
+            uint32_t chipFuseId = 0; // flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
+            // Temporary function in lpgbt interface until VTRx interface is implemented
+            theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertUInt32tToString(chipFuseId);
         }
     }
 }
@@ -530,11 +546,15 @@ void Tool::Stop()
             thePacketHeader.addPacketHeader(doneWithRunMessage);
             fDQMStreamer->broadcast(doneWithRunMessage);
         }
-        Tool::dumpConfigFiles();
-        Tool::SaveResults();
-        Tool::WriteRootFile();
-        Tool::CloseResultFile();
     }
+}
+
+void Tool::SaveAndClose()
+{
+    Tool::dumpConfigFiles();
+    Tool::SaveResults();
+    Tool::WriteRootFile();
+    Tool::CloseResultFile();
 }
 
 void Tool::Inherit(const Tool* pTool)
@@ -556,9 +576,8 @@ void Tool::Inherit(const Tool* pTool)
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
     fDQMMetadata          = pTool->fDQMMetadata;
 #endif
-    fTestGroupChannelMap = pTool->fTestGroupChannelMap;
-    fRunNumber           = pTool->fRunNumber;
-    // fRunningFuture               = pTool->fRunningFuture;
+    fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
+    fRunNumber                   = pTool->fRunNumber;
     fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
     fAllChan                     = pTool->fAllChan;
     fMaskForTestGroupChannelMap  = pTool->fMaskForTestGroupChannelMap;
@@ -571,6 +590,7 @@ void Tool::Inherit(const Tool* pTool)
     fUseReadNEvents              = pTool->fUseReadNEvents;
     fNReadbackEvents             = pTool->fNReadbackEvents;
     fNormalize                   = pTool->fNormalize;
+    fOfStream                    = pTool->fOfStream;
 
 #ifdef __HTTP__
     fHttpServer = pTool->fHttpServer;
@@ -601,6 +621,11 @@ void Tool::Destroy()
 
 void Tool::SoftDestroy()
 {
+    if(fOfStream != nullptr)
+    {
+        delete fOfStream;
+        fOfStream = nullptr;
+    }
 #ifdef __USE_ROOT__
     if(fResultFile != nullptr)
     {
@@ -647,8 +672,11 @@ void Tool::SoftDestroy()
     }
     fBeBoardHistMap.clear();
 #ifndef __TCUSB__
-    delete fDQMMetadata;
-    fDQMMetadata = nullptr;
+    if(fResultFile != nullptr)
+    {
+        delete fDQMMetadata;
+        fDQMMetadata = nullptr;
+    }
 #endif
 #endif
     fTestGroupChannelMap.clear();
@@ -923,7 +951,7 @@ void Tool::SaveResults()
     // Save summary TTree
     // fResultFile->cd();
     if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->cd();
-    if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
+        // if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 #endif
 }
 
@@ -1130,8 +1158,10 @@ void Tool::dumpConfigFiles()
                         auto cReg = flpGBTInterface->ReadChipReg(clpGBT, cItemInMap.first);
                         clpGBT->setReg(cItemInMap.first, cReg);
                     }
-                    std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_lpGBT" + std::to_string(clpGBT->getId());
-                    cFilename += ".txt";
+                    std::string cFilename =
+                        "../../" + fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_lpGBT" + std::to_string(clpGBT->getId());
+                    cFilename += "_";
+                    LOG(DEBUG) << BOLDBLUE << "Dumping lpgbt configuration to " << cFilename << RESET;
                     clpGBT->saveRegMap(cFilename.data());
                 }
 
@@ -1143,6 +1173,7 @@ void Tool::dumpConfigFiles()
                                                 "_Chip" + std::to_string(chip->getId());
                         LOG(DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
                         if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2) cFilename += "SSA";
+                        if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2) cFilename += "MPA";
                         cFilename += ".txt";
                         chip->saveRegMap(cFilename.data());
                     }
@@ -1150,8 +1181,9 @@ void Tool::dumpConfigFiles()
                     if(cCic != NULL)
                     {
                         std::string cFilename =
-                            fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(hybrid->getId()) + ".txt";
-                        LOG(INFO) << BOLDBLUE << "Dumping CIC configuration to " << cFilename << RESET;
+                            "../../" + fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(hybrid->getId());
+                        cFilename += "_";
+                        LOG(DEBUG) << BOLDBLUE << "Dumping CIC configuration to " << cFilename << RESET;
                         cCic->saveRegMap(cFilename.data());
                     }
                 }
@@ -1257,6 +1289,7 @@ void Tool::setFWTestPulse()
         {
             EventType cEventType = cBoard->getEventType();
             bool      cAsync     = (cEventType == EventType::PSAS);
+
             if(!cAsync)
             {
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
@@ -1446,14 +1479,10 @@ void Tool::scanBeBoardDacDac(uint16_t                                         bo
 
     for(size_t dacIt = 0; dacIt < dac1List.size(); ++dacIt)
     {
-        // el::LoggingFlag::NewLineForContainer (0);
         if(boardId == 0) LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List[dacIt] << " vs " << dac2Name << RESET;
-        // el::LoggingFlag::NewLineForContainer (1);
         setSameDacBeBoard(fDetectorContainer->getObject(boardId), dac1Name, dac1List[dacIt]);
         scanBeBoardDac(boardId, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt], numberOfEventsPerBurst);
     }
-
-    return;
 }
 
 // One dimensional dac scan
@@ -1890,8 +1919,6 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                                         .fOccupancy < targetOccupancy) and
                                    (not first))
                                 {
-                                    // std::cout<<"occDiff "<<occDiff<<" NoccDiff "<<NoccDiff<<std::endl;
-
                                     if(std::fabs(currentStepOccupancyContainer->getObject(boardId)
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
@@ -2413,7 +2440,7 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
     if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
     {
         this->setSameGlobalDac("AnalogueAsync", 1);
-        //#FIXME the commented block bellow throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
+        //#FIXME the commented block below throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
         // Error: implementation of virtual member function is absent"
         /*
                 for(auto cBoard: *fDetectorContainer)
@@ -2451,6 +2478,7 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
         LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << cTmp << RESET;
     }
     fUseReadNEvents = cUseReadNEvents;
+    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end " << RESET;
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
@@ -2562,14 +2590,22 @@ void Tool::setSameGlobalDac(const std::string& dacName, const uint16_t dacValue)
 void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
     if(fDoBoardBroadcast == false)
+    {
         for(auto cOpticalGroup: *pBoard)
             for(auto cHybrid: *cOpticalGroup)
                 if(fDoHybridBroadcast == false)
-                    for(auto cChip: *cHybrid) fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue);
+                {
+                    for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue); }
+                }
                 else
+                {
                     fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
+                }
+    }
     else
+    {
         fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
+    }
 }
 
 // Set same local dac for all BeBoard
