@@ -43,7 +43,7 @@ const uint8_t  EVT_HEADER_SIZE = 4;  // Number of words in event header
 const uint8_t  NBIT_EVTHEAD    = 16; // Number of bits for the Error Code
 const uint8_t  NBIT_BLOCKSIZE  = 16; // Number of bits for the Block Size
 const uint8_t  NBIT_TRIGID     = 16; // Number of bits for the TLU Trigger ID
-const uint8_t  NBIT_FMTVER     = 8;  // Number of bits for the Format Version
+const uint8_t  NBIT_TRGTAG     = 8;  // Number of bits for the trigger tag
 const uint8_t  NBIT_DUMMY      = 8;  // Number of bits for the Dummy Size
 const uint8_t  NBIT_TDC        = 8;  // Number of bits for the TDC
 const uint8_t  NBIT_L1ACNT     = 24; // Number of bits for the L1A Counter (Event number)
@@ -71,9 +71,12 @@ const uint32_t EMPTY      = 0x00000002; // Event status Empty event
 const uint32_t NOEVHEADER = 0x00000004; // Event status No event headear found in data
 const uint32_t INCOMPLETE = 0x00000008; // Event status Incomplete event header
 const uint32_t L1A        = 0x00000010; // Event status L1A counter mismatch
-const uint32_t NOFRHEADER = 0x00000020; // Event status No frame header found in data
-const uint32_t MISSCHIP   = 0x00000040; // Event status Chip data are missing
-const uint32_t CORRUPTED  = 0x00000080; // Event status Corrupted event
+const uint32_t TRGTAG_ER1 = 0x00000020; // Event status Trigger tag mismatch
+const uint32_t TRGTAG_ER2 = 0x00000040; // Event status Trigger tag single bit-flip
+const uint32_t TRGTAG_ER3 = 0x00000080; // Event status Trigger tag Unrecognized tag symbol
+const uint32_t NOFRHEADER = 0x00000100; // Event status No frame header found in data
+const uint32_t MISSCHIP   = 0x00000200; // Event status Chip data are missing
+const uint32_t CORRUPTED  = 0x00000400; // Event status Corrupted event
 } // namespace RD53FWEvtEncoder
 
 namespace Ph2_HwInterface
@@ -156,7 +159,7 @@ class RD53Event : public Ph2_HwInterface::Event
     // ################
     uint16_t                   block_size;
     uint16_t                   tlu_trigger_id;
-    uint16_t                   data_format_ver;
+    uint16_t                   trigger_tag;
     uint16_t                   tdc;
     uint32_t                   l1a_counter;
     uint32_t                   bx_counter;
@@ -170,7 +173,7 @@ class RD53Event : public Ph2_HwInterface::Event
 
   private:
     bool        isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;
-    static int  lane2chipId(const Ph2_HwDescription::BeBoard* pBoard, uint16_t optGroup_id, uint16_t hybrid_id, uint16_t chip_lane);
+    static int  lane2chipId(const Ph2_HwDescription::BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane);
     static void decoderThread(std::vector<uint32_t>*& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint32_t& eventStatus, std::atomic<bool>& workDone);
 
     static std::vector<std::thread>            decodingThreads;

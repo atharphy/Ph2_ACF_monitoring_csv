@@ -44,18 +44,14 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
         const auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNRows() / 2, RD53Shared::firstChip->getNCols() / 2);
         const auto unitTime =
             1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
-        titleX << "Injection Delay (ns)";
-        startValueX *= unitTime;
-        stopValueX *= unitTime;
+        titleX << "Injection Delay (" << unitTime << " ns)";
     }
     else if(regNameDAC2.find("CAL_EDGE_FINE_DELAY") != std::string::npos)
     {
         const auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNRows() / 2, RD53Shared::firstChip->getNCols() / 2);
         const auto unitTime =
             1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
-        titleY << "Injection Delay (ns)";
-        startValueY *= unitTime;
-        stopValueY *= unitTime;
+        titleY << "Injection Delay (" << unitTime << " ns)";
     }
 
     if(regNameDAC1.find("VCAL") != std::string::npos)
@@ -91,6 +87,8 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
                                         startValueY,
                                         stopValueY);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, titleX.str().c_str(), titleY.str().c_str());
+
+    AreHistoBooked = true;
 }
 
 bool GenericDacDacScanHistograms::fill(std::string& inputStream)

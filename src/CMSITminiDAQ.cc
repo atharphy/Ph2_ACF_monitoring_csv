@@ -39,7 +39,6 @@
 #define RUNNUMBER 0
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
-#define DELAYAFTERPHYSICS -1 // [seconds]
 #define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
@@ -118,6 +117,9 @@ int main(int argc, char** argv)
     cmd.defineOption("prog", "Just program the system components", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("prog", "p");
 
+    cmd.defineOption("skipcfg", "Skip entire configuration sequence", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("skipcfg", "k");
+
     cmd.defineOption("eudaqRunCtr", "EUDAQ-IT run control address (e.g. tcp://localhost:44000)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("prodName", "Name of the EUDAQ producer in run controler", CommandLineProcessing::ArgvParser::OptionRequiresValue);
@@ -162,9 +164,10 @@ int main(int argc, char** argv)
     std::string EUDAQproducerNAME = cmd.foundOption("prodName") == true ? cmd.optionValue("prodName") : "";
     std::string binaryFile        = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
     bool        program           = cmd.foundOption("prog") == true ? true : false;
+    bool        skipcfg           = cmd.foundOption("skipcfg") == true ? true : false;
     bool        reset             = cmd.foundOption("reset") == true ? true : false;
     bool        dumpRegs          = cmd.foundOption("dump") == true ? true : false;
-    int         runtime           = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : DELAYAFTERPHYSICS;
+    int         runtime           = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : -1;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
@@ -220,7 +223,7 @@ int main(int argc, char** argv)
         else if(binaryFile != "")
             readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
     }
-    else if(binaryFile == "")
+    else
     {
         // #######################
         // # Initialize Hardware #
@@ -229,7 +232,7 @@ int main(int argc, char** argv)
         ConfigureInfo theConfigureInfo;
         theConfigureInfo.setConfigurationFiles(configFile, settingsFile);
         theConfigureInfo.setCalibrationName(whichCalib);
-        mySysCntr.Configure(theConfigureInfo);
+        mySysCntr.Configure(theConfigureInfo, !skipcfg);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
 

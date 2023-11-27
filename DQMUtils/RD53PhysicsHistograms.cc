@@ -47,6 +47,8 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 
     auto hTriggerID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 1, TrgIDsize + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TriggerID, hTriggerID, "#DeltaTrigger-ID", "Entries");
+
+    AreHistoBooked = true;
 }
 
 bool PhysicsHistograms::fill(std::string& inputStream)

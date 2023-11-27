@@ -134,7 +134,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
                 cChannels = {2, 0, 2, 0, 2, 2};
             }
         }
-        else
+        else // PS
         {
             if(cHybrid->getId() % 2 == 0)
             {
@@ -194,15 +194,15 @@ bool LinkAlignmentOT::CheckLpgbtOutputs(const OpticalGroup* pOpticalGroup, uint8
     D19clpGBTInterface* clpGBTInterface    = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     uint32_t            cPatternToTransmit = pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern;
     clpGBTInterface->ConfigureDPPattern(clpGBT, cPatternToTransmit);
-    clpGBTInterface->ConfigureRxSource(clpGBT, clpGBTInterface->getGroups(), lpGBTconstants::PATTERN_CONST);
-
+    for(const auto& RxProperty: static_cast<lpGBT*>(pOpticalGroup->flpGBT)->getRxProperties()) { clpGBTInterface->ConfigureRxSource(clpGBT, RxProperty.Group, lpGBTconstants::PATTERN_CONST); }
     // now check output
     uint8_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
     for(auto cHybrid: *pOpticalGroup)
     {
         AlignerObject cAlignerObjct;
-        cAlignerObjct.fHybrid = cHybrid->getId();
-        cAlignerObjct.fChip   = 0;
+        cAlignerObjct.fHybrid  = cHybrid->getId();
+        cAlignerObjct.fChip    = 0;
+        cAlignerObjct.fOptical = 1;
         LineConfiguration cLineCnfg;
         cLineCnfg.fPattern       = pPattern;
         cLineCnfg.fPatternPeriod = 8;
@@ -211,8 +211,7 @@ bool LinkAlignmentOT::CheckLpgbtOutputs(const OpticalGroup* pOpticalGroup, uint8
             LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
             cAlignerObjct.fLine = cLineId;
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-            cAlignerInterface->GetLineStatus(cAlignerObjct);
-            if(cAlignerInterface->IsLineWordAligned(cAlignerObjct)) LOG(INFO) << BOLDYELLOW << "\t..Line#" << +cLineId << " aligned." << RESET;
+            if(cAlignerInterface->IsLineWordAligned()) LOG(INFO) << BOLDYELLOW << "\t..Line#" << +cLineId << " aligned." << RESET;
         }
         fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
         fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
@@ -225,12 +224,11 @@ bool LinkAlignmentOT::CheckLpgbtOutputs(const OpticalGroup* pOpticalGroup, uint8
         cAlignerObjct.fLine = 0;
         cLineCnfg.fPattern  = pPattern;
         cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-        cAlignerInterface->GetLineStatus(cAlignerObjct);
-        if(cAlignerInterface->IsLineWordAligned(cAlignerObjct)) LOG(INFO) << BOLDYELLOW << "\t..Line#" << +cAlignerObjct.fLine << " aligned." << RESET;
+        if(cAlignerInterface->IsLineWordAligned()) LOG(INFO) << BOLDYELLOW << "\t..Line#" << +cAlignerObjct.fLine << " aligned." << RESET;
         cDebugInterface->L1ADebug();
     }
     // back to normal pattern .. i.e. data from CIC
-    clpGBTInterface->ConfigureRxSource(clpGBT, clpGBTInterface->getGroups(), lpGBTconstants::PATTERN_NORMAL);
+    for(const auto& RxProperty: static_cast<lpGBT*>(pOpticalGroup->flpGBT)->getRxProperties()) { clpGBTInterface->ConfigureRxSource(clpGBT, RxProperty.Group, lpGBTconstants::PATTERN_NORMAL); }
 
     return true;
 }
@@ -297,19 +295,21 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
 
             LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
             AlignerObject cAlignerObjct;
-            cAlignerObjct.fHybrid = cHybrid->getId();
-            cAlignerObjct.fChip   = 0;
-            cAlignerObjct.fLine   = cLineId;
+            cAlignerObjct.fHybrid  = cHybrid->getId();
+            cAlignerObjct.fChip    = 0;
+            cAlignerObjct.fLine    = cLineId;
+            cAlignerObjct.fOptical = 1;
             LineConfiguration cLineCnfg;
             cLineCnfg.fPattern       = 0xEA;
             cLineCnfg.fPatternPeriod = 8;
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-            cAlignerInterface->GetLineStatus(cAlignerObjct);
-            cAligned                = cAlignerInterface->IsLineWordAligned(cAlignerObjct);
+            cAligned                = cAlignerInterface->IsLineWordAligned();
             cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
 
             if(!cAligned)
             {
+                if(((cHybrid->getId() % 2) == 0) & ((cLineId - 1) == 4) & (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
+                { continue; } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                 LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id"
                           << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
@@ -322,8 +322,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
                 do
                 {
                     cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-                    cAlignerInterface->GetLineStatus(cAlignerObjct);
-                    cAligned                = cAlignerInterface->IsLineWordAligned(cAlignerObjct);
+                    cAligned                = cAlignerInterface->IsLineWordAligned();
                     cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
                     cIter++;
                 } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
@@ -465,13 +464,13 @@ bool LinkAlignmentOT::PhaseAlignBEdata(const OpticalGroup* pOpticalGroup)
                 LOG(INFO) << BOLDMAGENTA << "Setting sampling delay on L1A line on Hybrid#" << +cHybrid->getId() << RESET;
 
             AlignerObject cAlignerObjct;
-            cAlignerObjct.fHybrid = cHybrid->getId();
-            cAlignerObjct.fChip   = 0;
-            cAlignerObjct.fLine   = cLineId;
+            cAlignerObjct.fHybrid  = cHybrid->getId();
+            cAlignerObjct.fChip    = 0;
+            cAlignerObjct.fLine    = cLineId;
+            cAlignerObjct.fOptical = 1;
             LineConfiguration cLineCnfg;
             cAlignerInterface->TunePhase(cAlignerObjct, cLineCnfg);
-            cAlignerInterface->GetLineStatus(cAlignerObjct);
-            cAligned                      = cAlignerInterface->IsLinePhaseAligned(cAlignerObjct);
+            cAligned                      = cAlignerInterface->IsLinePhaseAligned();
             cThisBeSamplingDelay[cLineId] = cAlignerInterface->GetLineConfiguration().fDelay;
 
             // cTuner.TunePhase(cInterface, cHybrid->getId(), 0, cLineId);
@@ -517,8 +516,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8
     cAlignerObjct.fLine   = pLineId;
     LineConfiguration cLineCnfg;
     cAlignerInterface->TunePhase(cAlignerObjct, cLineCnfg);
-    cAlignerInterface->GetLineStatus(cAlignerObjct);
-    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned(cAlignerObjct);
+    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned();
     if(!cLineStatus.first)
     {
         LOG(INFO) << BOLDRED << "Could not phase align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
@@ -553,8 +551,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
     cLineCnfg.fPattern       = pAlignmentPattern;
     cLineCnfg.fPatternPeriod = pPeriod;
     cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-    cAlignerInterface->GetLineStatus(cAlignerObjct);
-    cLineStatus.first  = cAlignerInterface->IsLineWordAligned(cAlignerObjct);
+    cLineStatus.first  = cAlignerInterface->IsLineWordAligned();
     cLineStatus.second = cAlignerInterface->GetLineConfiguration().fBitslip;
 
     if(!cLineStatus.first)
@@ -571,8 +568,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
         do
         {
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-            cAlignerInterface->GetLineStatus(cAlignerObjct);
-            cLineStatus.first  = cAlignerInterface->IsLineWordAligned(cAlignerObjct);
+            cLineStatus.first  = cAlignerInterface->IsLineWordAligned();
             cLineStatus.second = cAlignerInterface->GetLineConfiguration().fBitslip;
             cIter++;
         } while(cIter < cMaxAttempts && cLineStatus.second == 0);
@@ -606,7 +602,7 @@ void LinkAlignmentOT::ManuallyConfigureLine(const Chip* pChip, uint8_t pLineId, 
     cLineCnfg.fBitslip    = pBitslip;
     cLineCnfg.fEnableL1   = 0;
     cLineCnfg.fMasterLine = 0;
-    cAlignerInterface->SetLineMode(cAlignerObjct, cLineCnfg);
+    cAlignerInterface->ManuallyConfigureLine(cAlignerObjct, cLineCnfg);
 }
 void LinkAlignmentOT::LegacyAlignmentMPA(const Chip* pChip)
 {
@@ -680,7 +676,7 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
     cLineCnfg.fMode    = 2;
     cLineCnfg.fDelay   = 0;
     cLineCnfg.fBitslip = 0;
-    cAlignerInterface->SetLineMode(cAlignerObjct, cLineCnfg);
+    cAlignerInterface->ManuallyConfigureLine(cAlignerObjct, cLineCnfg);
 
     bool                     cSuccess  = false;
     unsigned int             cAttempts = 0;
@@ -787,15 +783,16 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         // configure pattern
         LOG(INFO) << BOLDBLUE << "LinkAlignmentOT::L1WordAlignment for CIC data" << RESET;
         AlignerObject cAlignerObjct;
-        cAlignerObjct.fHybrid = cHybrid->getId();
-        cAlignerObjct.fChip   = 0;
-        cAlignerObjct.fLine   = cLineId;
+        cAlignerObjct.fHybrid  = cHybrid->getId();
+        cAlignerObjct.fChip    = 0;
+        cAlignerObjct.fLine    = cLineId;
+        cAlignerObjct.fOptical = cOptical ? 1 : 0;
         LineConfiguration cLineCnfg;
         cLineCnfg.fPattern    = cPattern;
         cLineCnfg.fMode       = 0;
         cLineCnfg.fEnableL1   = 0;
         cLineCnfg.fMasterLine = 0;
-        cAlignerInterface->SetLineMode(cAlignerObjct, cLineCnfg);
+        cAlignerInterface->ManuallyConfigureLine(cAlignerObjct, cLineCnfg);
 
         uint8_t cPhaseDelay = 0;
         if(!cOptical)
@@ -809,8 +806,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
             std::pair<bool, uint8_t> cLineStatus;
             cLineCnfg.fPatternPeriod = cPatternLength;
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-            cAlignerInterface->GetLineStatus(cAlignerObjct);
-            cLineStatus.first  = cAlignerInterface->IsLineWordAligned(cAlignerObjct);
+            cLineStatus.first  = cAlignerInterface->IsLineWordAligned();
             cLineStatus.second = cAlignerInterface->GetLineConfiguration().fBitslip;
             cSuccess           = cLineStatus.first;
             if(cSuccess) cThisBeBitSlip.push_back(cLineStatus.second);
@@ -950,10 +946,10 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         }
     }
     LOG(INFO) << BOLDBLUE << "LinkAlignmentOT::AlignStubPackage setting hybrid enable register to " << std::bitset<32>(cNewMask) << RESET;
+    auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
 
-    bool    cSkip         = false;
-    uint8_t cPackageDelay = 7;
-    uint8_t cFinalDelay   = cPackageDelay;
+    bool    cSkip       = false;
+    uint8_t cFinalDelay = cOriginalDelay;
     if(!cSkip)
     {
         // gethybrid IDs
@@ -981,9 +977,10 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         // unique ids for each hybrid
         bool cCorrectDelay = false;
         // now try and find correct package delay
-        uint16_t cMaxBxCounter  = 3564;
-        uint32_t cNevents       = 10;
-        auto     cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+        uint16_t cMaxBxCounter = 3564;
+        uint32_t cNevents      = 10;
+        uint8_t  cPackageDelay = cOriginalDelay;
+
         LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
         LOG(DEBUG) << cMaxBxCounter << RESET;
         size_t cAttempt = 0;
@@ -1021,7 +1018,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                     }
                 }
 
-                // check that BxIds ae synchronous across single links
+                // check that BxIds are synchronous across single links
                 std::vector<uint8_t> cIdsToCompare(0);
                 for(auto cIter: cHybridIdsMap)
                 {
@@ -1035,11 +1032,11 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                         auto& cBxIdsSecond = cBxIds[cIter.second[1]];
                         cSyncThisLink      = (cBxIdsFirst == cBxIdsSecond);
                         if(cSyncThisLink) LOG(DEBUG) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
-                        // if in sync.. add first hybrid id to list
-                        if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
-                        else
-                            LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                     }
+                    // if in sync.. add first hybrid id to list
+                    if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
+                    else
+                        LOG(INFO) << BOLDRED << "\t..FAILED sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                 }
                 // if all the links are synchronous then.. check if we are
                 // in sync across the multiple links
@@ -1127,13 +1124,14 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                     {
                         LOG(INFO) << BOLDGREEN << "All hybrids match for a package delay of " << +cPackageDelay << RESET;
                         cCorrectDelay = true;
+                        cFinalDelay   = cPackageDelay;
                     }
                     else
                         LOG(DEBUG) << BOLDRED << "For a package delay of " << +cPackageDelay << " found " << +cNFound << "/" << cMatchesFound.size()
                                    << " pairs of hybrids with a constant difference in BxIds" << RESET;
                 } // Ids are synchronous across each link
                 else
-                    LOG(INFO) << BOLDRED << "For a pakcage delay of " << +cPackageDelay << " DE-SYNC in one of the links..." << RESET;
+                    LOG(INFO) << BOLDRED << "For a package delay of " << +cPackageDelay << " DE-SYNC in one of the links..." << RESET;
             } // pkg delay
             cAttempt++;
         } while(cAttempt < 1 && !cCorrectDelay);

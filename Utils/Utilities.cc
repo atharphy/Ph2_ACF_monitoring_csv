@@ -114,6 +114,13 @@ double convertAnyDouble(const char* pRegValue)
     return strtod(myRegValue.c_str(), 0);
 }
 
+std::string convertUInt32tToString(uint32_t number)
+{
+    std::stringstream ss;
+    ss << +number;
+    return ss.str();
+}
+
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters)
 {
     std::vector<std::string> cTokens;

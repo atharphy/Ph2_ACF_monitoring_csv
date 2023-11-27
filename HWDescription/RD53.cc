@@ -11,11 +11,13 @@
 
 namespace Ph2_HwDescription
 {
-LaneConfig::LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes)
-    : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(isPrimary)
+LaneConfig::LaneConfig(bool                                   isPrimary,
+                       uint8_t                                master,
+                       const std::array<uint8_t, NCHIPLANES>& outputLanes,
+                       const std::array<bool, NCHIPLANES>&    signleChannelInputLanes,
+                       const std::array<bool, NCHIPLANES>&    dualChannelInputLanes)
+    : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), master(master), isPrimary(isPrimary)
 {
-    const int nLanes = 4; // @CONST@
-
     // ################
     // # nOutputLanes #
     // ################
@@ -24,10 +26,10 @@ LaneConfig::LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes
     // #####################
     // # outputLaneMapping #
     // #####################
-    for(auto i = 0u; i < nLanes; i++)
+    for(auto i = 0u; i < NCHIPLANES; i++)
     {
-        if(outputLanes[nLanes - 1 - i] > 0)
-            outputLaneMapping[i] = outputLanes[nLanes - 1 - i] - 1;
+        if(outputLanes[NCHIPLANES - 1 - i] > 0)
+            outputLaneMapping[i] = outputLanes[NCHIPLANES - 1 - i] - 1;
         else
             outputLaneMapping[i] = nOutputLanes;
     }
@@ -52,8 +54,8 @@ LaneConfig::LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes
     if(nSingleChannels > 0)
     {
         size_t j = nBondedChannels + 1;
-        for(auto i = 0u; i < nLanes; i++)
-            if(signleChannelInputLanes[nLanes - 1 - i])
+        for(auto i = 0u; i < NCHIPLANES; i++)
+            if(signleChannelInputLanes[NCHIPLANES - 1 - i])
             {
                 inputLaneMapping[j - 1] = i;
                 internalLanesEnabled[j] = true;

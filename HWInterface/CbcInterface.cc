@@ -688,6 +688,11 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
         return cThreshold;
     }
+    else if(pRegNode == "TestPulse" || pRegNode == "InjectedCharge")
+    {
+        uint8_t cRegValue = ReadChipSingleReg(pCbc, "MiscTestPulseCtrl&AnalogMux");
+        return cRegValue;
+    }
     else if(pRegNode == "HitLogic")
     {
         uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
@@ -719,6 +724,11 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         auto     cRegValueSecond = ReadChipSingleReg(pCbc, "TriggerLatency1");
         uint16_t cLatency        = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
         return cLatency;
+    }
+    else if(pRegNode == "TestPulse" || pRegNode == "InjectedCharge")
+    {
+        uint16_t cRegValue = ReadChipSingleReg(pCbc, "MiscTestPulseCtrl&AnalogMux");
+        return (cRegValue & 0x40) >> 6;
     }
     else
     {

@@ -15,47 +15,70 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-// ################################################
-// # LpGBT chip register write and read functions #
-// ################################################
+void lpGBTInterface::StartPRBSpattern(Chip* pChip)
+{
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+    {
+        lpGBTInterface::ConfigureRxPRBS(pChip, RxProperty.Group, RxProperty.Channel, true);
+        lpGBTInterface::ConfigureRxSource(pChip, RxProperty.Group, lpGBTconstants::PATTERN_PRBS);
+    }
+}
+
+void lpGBTInterface::StopPRBSpattern(Chip* pChip)
+{
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+    {
+        lpGBTInterface::ConfigureRxPRBS(pChip, RxProperty.Group, RxProperty.Channel, false);
+        lpGBTInterface::ConfigureRxSource(pChip, RxProperty.Group, lpGBTconstants::PATTERN_NORMAL);
+    }
+}
+
+// ################################
+// # Chip configuration functions #
+// ################################
+
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto     cBoardType       = fBoardFW->getBoardType();
-    auto     cAddress         = pChip->getRegItem(pDacName).fAddress;
-    uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
+    auto           cBoardType       = fBoardFW->getBoardType();
+    auto           cAddress         = pChip->getRegItem(pDacName).fAddress;
+    const uint16_t maxRegValue      = 0xFF;                                                            // @CONST@
+    const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
 
-    // Checking that written value isn't more than 8 bits
-    if(pDacValue > 0xFF)
+    // ######################################################
+    // # Checking that written value isn't more than 8 bits #
+    // ######################################################
+    if(pDacValue > maxRegValue)
     {
         LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
 
-    // Checking that register address isn't higher than highest write address
+    // ##########################################################################
+    // # Checking that register address isn't higher than highest write address #
+    // ##########################################################################
     if(cAddress > cMaxWriteAddress)
     {
-        LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
+        LOG(ERROR) << "LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
-    bool cSuccess = false;
 
-    if(cBoardType != BoardType::RD53 && pChip->isOptical())
+    bool cSuccess = false;
+    if((cBoardType != BoardType::RD53) && (pChip->isOptical() == true))
     {
         auto cRegisterMap             = pChip->getRegMap();
         cRegisterMap[pDacName].fValue = pDacValue;
         cSuccess                      = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerify);
     }
-    else if(pChip->isOptical())
+    else if(pChip->isOptical() == true)
         cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerify);
-    // TO-DO .. figure out what to do if piGBT is used
 
-    if(!cSuccess)
+    if(cSuccess == false)
     {
         LOG(INFO) << BOLDRED << "LpGBT register writing issue on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
                   << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
-        return false;
+        return cSuccess;
     }
 
     pChip->setReg(pDacName, pDacValue);
@@ -70,18 +93,48 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     auto     cAddress = pChip->getRegItem(pDacName).fAddress;
     uint16_t cValue   = 0x00;
 
-    if(cBoardType != BoardType::RD53 && pChip->isOptical())
+    if((cBoardType != BoardType::RD53) && (pChip->isOptical() == true))
     {
         auto cRegisterMap = pChip->getRegMap();
         cValue            = fBoardFW->SingleRegisterRead(pChip, cRegisterMap[pDacName]);
     }
     else if(pChip->isOptical())
-    {
         cValue = fBoardFW->ReadOptoLinkRegister(pChip, cAddress);
-    }
 
     pChip->setReg(pDacName, cValue);
     return cValue;
+}
+
+uint32_t lpGBTInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip) { return ReadChipID(pChip, 1); }
+
+uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
+{
+    uint32_t cChipId        = 0;
+    uint8_t  cReadBackValue = 0;
+    ResetI2C(pChip, {0, 1, 2});
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
+
+    // Configuring I2C Master pull-ups
+    WriteChipReg(pChip, "I2CM1Config", 1 << 4 | 1 << 6);
+
+    uint8_t cMasterId = 1, cSlaveAddress = 0x50, cNbyte = 1, cFrequency = 2;
+
+    bool cRecent = WriteI2C(pChip, cMasterId, cSlaveAddress, 0x15, cNbyte, cFrequency);
+    if(cRecent) { cReadBackValue = ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency); }
+    if(cReadBackValue == 0x15)
+    {
+        LOG(INFO) << BOLDYELLOW << "VTRx+ with LDD version 1.3!" << RESET;
+
+        for(int i = 0; i < 4; i++)
+        {
+            WriteI2C(pChip, cMasterId, cSlaveAddress, i + 0x16, cNbyte, cFrequency);
+            cReadBackValue = ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency);
+            cChipId        = cChipId | cReadBackValue << (i * 8);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+    LOG(INFO) << BOLDYELLOW << "FuseID from VTRx+ 0x" << std::hex << +cChipId << std::dec << RESET;
+    return cChipId;
 }
 
 uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t version)
@@ -90,43 +143,38 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
     {
         uint32_t cChipID   = 0;
         uint32_t cChipID_0 = ReadChipFusedBlock(pChip, 0, 0);
-        // cChipID_0          = 0x10000067;
-        uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 4);
-        // cChipID_1          = 0b10000000000000000001100111000100;
+        LOG(DEBUG) << BOLDBLUE << "1st FuseID from lpGBT 0x" << std::hex << +cChipID_0 << std::dec << RESET;
+        uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 8);
         cChipID_1          = ((cChipID_1 & 0xFFFFFFC0) >> 6) | ((cChipID_1 & 0x3f) << 26);
-        uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 8);
-        // cChipID_2          = 0b00000000000001100000000100100011;
+        LOG(DEBUG) << BOLDBLUE << "2nd FuseID from lpGBT 0x" << std::hex << +cChipID_1 << std::dec << RESET;
+        uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 12);
         cChipID_2          = ((cChipID_2 & 0xFFFFF000) >> 12) | ((cChipID_2 & 0xfff) << 20);
-        uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 12);
-        // cChipID_3          = 0b00000001100000000000100011010000;
+        LOG(DEBUG) << BOLDBLUE << "3rd FuseID from lpGBT 0x" << std::hex << +cChipID_2 << std::dec << RESET;
+        uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 16);
         cChipID_3          = ((cChipID_3 & 0xFFFC0000) >> 18) | ((cChipID_3 & 0x3ffff) << 14);
-        uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 16);
-        // cChipID_4          = 0b01100111000000000011010001010000;
-        cChipID_4 = ((cChipID_4 & 0xFF000000) >> 24) | ((cChipID_4 & 0xffffff) << 8);
-        // Majority vote for lpgbt ID
+        LOG(DEBUG) << BOLDBLUE << "4th FuseID from lpGBT 0x" << std::hex << +cChipID_3 << std::dec << RESET;
+        uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 20);
+        cChipID_4          = ((cChipID_4 & 0xFF000000) >> 24) | ((cChipID_4 & 0xffffff) << 8);
+        LOG(DEBUG) << BOLDBLUE << "5th FuseID from lpGBT 0x" << std::hex << +cChipID_4 << std::dec << RESET;
         for(int i = 0; i < 32; i++)
         {
             uint8_t cTemp = 0;
             cTemp         = ((cChipID_0 >> i) & 1) | ((cChipID_1 >> i & 1) << 1) | ((cChipID_2 >> i & 1) << 2) | ((cChipID_3 >> i & 1) << 3) | ((cChipID_4 >> i & 1) << 4);
-            // LOG(INFO) << BOLDYELLOW << "cTemp 0x"<< std::hex << +cTemp << std::dec << RESET;
-            // LOG(INFO) << BOLDYELLOW << "popcount 0x"<< std::hex << +__builtin_popcountll(cTemp) << std::dec << RESET;
             if(__builtin_popcountll(cTemp) > 2) { cChipID = cChipID | (1 << i); }
             else
-            {
                 cChipID = cChipID | (0 << i);
-            }
         }
+
         if(cChipID == 0)
         {
-            LOG(INFO) << BOLDYELLOW << "No redundant lpgbt ID, only use first register" << RESET;
+            LOG(INFO) << BOLDBLUE << "No redundant lpGBT ID, only use first register" << RESET;
             cChipID = cChipID_0;
         }
+        LOG(INFO) << BOLDYELLOW << "FuseID from lpGBT optical group #" << +pChip->getOpticalGroupId() << " on Board " << +pChip->getBeBoardId() << ": 0x" << std::hex << +cChipID << std::dec << RESET;
         return cChipID;
     }
-    else
-    {
-        return 0;
-    }
+    LOG(INFO) << BOLDYELLOW << "No FuseID for version 0 lpGBT optical group #" << +pChip->getOpticalGroupId() << " on Board " << +pChip->getBeBoardId() << RESET;
+    return 0;
 }
 
 uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL)
@@ -134,7 +182,6 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
     WriteChipReg(pChip, "FUSEControl", 2);
     int      cReadBack = 0;
     uint32_t cResult   = 0;
-
     while(cReadBack != 4)
     {
         cReadBack = ReadChipReg(pChip, "FUSEStatus");
@@ -148,19 +195,19 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEBlowAddL = " << +cFuseL << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesA");
-    cResult   = cResult | (cReadBack << 24);
+    cResult   = cResult | (cReadBack);
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesA = " << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesB");
-    cResult   = cResult | (cReadBack << 16);
+    cResult   = cResult | (cReadBack << 8);
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesB = " << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesC");
-    cResult   = cResult | (cReadBack << 8);
+    cResult   = cResult | (cReadBack << 16);
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesC = " << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesD");
-    cResult   = cResult | (cReadBack);
+    cResult   = cResult | (cReadBack << 24);
     LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesD = " << +cReadBack << RESET;
 
     WriteChipReg(pChip, "FUSEControl", 0);
@@ -181,18 +228,6 @@ bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std:
 
 void lpGBTInterface::SetPUSMDone(Chip* pChip, bool pPllConfigDone, bool pDllConfigDone) { WriteChipReg(pChip, "POWERUP2", pDllConfigDone << 2 | pPllConfigDone << 1); }
 
-void lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode)
-{
-    for(const auto& cGroup: pGroups)
-    {
-        // Enable Rx Groups Channels and set Data Rate and Phase Tracking mode
-        uint8_t cValueEnableRx = 0;
-        for(const auto cChannel: pChannels) cValueEnableRx |= (1 << cChannel);
-        std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
-        WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
-    }
-}
-
 void lpGBTInterface::ConfigureRxAlignmentMode(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode)
 {
     for(const auto& cGroup: pGroups)
@@ -205,82 +240,86 @@ void lpGBTInterface::ConfigureRxAlignmentMode(Chip* pChip, const std::vector<uin
 
 uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
 {
-    uint16_t    cChipRate   = GetChipRate(pChip);
+    uint16_t    cChipRate   = lpGBTInterface::GetChipRate(pChip);
     std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
     auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
     uint16_t    cValue      = (cRegValue & 0xC);
     return (cChipRate / 5.) * (int)cValue * (float)lpGBTconstants::ACCELERATOR_CLK / 1e6;
 }
 
-void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
-                                         const std::vector<uint8_t>& pGroups,
-                                         const std::vector<uint8_t>& pChannels,
-                                         uint8_t                     pEqual,
-                                         uint8_t                     pTerm,
-                                         uint8_t                     pAcBias,
-                                         uint8_t                     pInvert,
-                                         uint8_t                     pPhase)
+uint8_t lpGBTInterface::GetChipRate(Chip* pChip)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        for(const auto& cChannel: pChannels)
-        {
-            // Configure Rx Channel Phase, Inversion, AcBias enabling, Termination enabling, Equalization enabling
-            std::string cRXChnCntrReg = "EPRX" + std::to_string(cGroup) + std::to_string(cChannel) + "ChnCntr";
-            WriteChipReg(pChip, cRXChnCntrReg, (pPhase << 4) | (pInvert << 3) | (pAcBias << 2) | (pTerm << 1) | (pEqual << 0));
-        }
-    }
+    uint8_t cValueConfigPins = ((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4);
+
+    if(cValueConfigPins <= 7)
+        return 5;
+    else if(cValueConfigPins <= 15)
+        return 10;
+    else
+        throw std::runtime_error(std::string("lpGBT hard wired configuration doesn't exist"));
 }
 
-void lpGBTInterface::ConfigureTxGroups(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate)
+void lpGBTInterface::ConfigureRxGroup(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDataRate, uint8_t pTrackMode)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        // Configure Tx Group Data Rate value for specified group
-        uint8_t cValueDataRate = ReadChipReg(pChip, "EPTXDataRate");
-        WriteChipReg(pChip, "EPTXDataRate", (cValueDataRate & ~(0x03 << 2 * cGroup)) | (pDataRate << 2 * cGroup));
-
-        // Enable given channels for specified group
-        std::string cEnableTxReg;
-        if(cGroup == 0 || cGroup == 1)
-            cEnableTxReg = "EPTX10Enable";
-        else if(cGroup == 2 || cGroup == 3)
-            cEnableTxReg = "EPTX32Enable";
-
-        uint8_t cValueEnableTx = ReadChipReg(pChip, cEnableTxReg);
-        for(const auto cChannel: pChannels) cValueEnableTx |= (1 << (cChannel + 4 * (cGroup % 2)));
-        WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
-    }
+    // #######################################################################
+    // # Enable Rx Groups Channels and set Data Rate and Phase Tracking mode #
+    // #######################################################################
+    std::string cRXCntrlReg    = "EPRX" + std::to_string(pGroup) + "Control";
+    uint8_t     cValueEnableRx = (ReadChipReg(pChip, cRXCntrlReg) >> 4);
+    cValueEnableRx |= (1 << pChannel);
+    WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
 }
 
-void lpGBTInterface::ConfigureTxChannels(Chip*                       pChip,
-                                         const std::vector<uint8_t>& pGroups,
-                                         const std::vector<uint8_t>& pChannels,
-                                         uint8_t                     pDriveStr,
-                                         uint8_t                     pPreEmphMode,
-                                         uint8_t                     pPreEmphStr,
-                                         uint8_t                     pPreEmphWidth,
-                                         uint8_t                     pInvert)
+void lpGBTInterface::ConfigureRxChannel(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pEqual, uint8_t pTerm, uint8_t pAcBias, uint8_t pInvert, uint8_t pPhase)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        for(const auto& cChannel: pChannels)
-        {
-            // Configure Tx Channel PreEmphasisStrenght, PreEmphasisMode, DriveStrength
-            std::string cTXChnCntrl = "EPTX" + std::to_string(cGroup) + std::to_string(cChannel) + "ChnCntr";
-            WriteChipReg(pChip, cTXChnCntrl, (pPreEmphStr << 5) | (pPreEmphMode << 3) | (pDriveStr << 0));
+    // #######################################################################################################
+    // # Configure Rx Channel Phase, Inversion, AcBias enabling, Termination enabling, Equalization enabling #
+    // #######################################################################################################
+    std::string cRXChnCntrReg = "EPRX" + std::to_string(pGroup) + std::to_string(pChannel) + "ChnCntr";
+    WriteChipReg(pChip, cRXChnCntrReg, (pPhase << 4) | (pInvert << 3) | (pAcBias << 2) | (pTerm << 1) | (pEqual << 0));
+}
 
-            // Configure Tx Channel PreEmphasisWidth, Inversion
-            std::string cTXChnCntr;
-            if(cChannel == 0 || cChannel == 1)
-                cTXChnCntr = "EPTX" + std::to_string(cGroup) + "1_" + std::to_string(cGroup) + "0ChnCntr";
-            else if(cChannel == 2 || cChannel == 3)
-                cTXChnCntr = "EPTX" + std::to_string(cGroup) + "3_" + std::to_string(cGroup) + "2ChnCntr";
+void lpGBTInterface::ConfigureTxGroup(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDataRate)
+{
+    // ##########################################################
+    // # Configure Tx Group Data Rate value for specified group #
+    // ##########################################################
+    uint8_t cValueDataRate = ReadChipReg(pChip, "EPTXDataRate");
+    WriteChipReg(pChip, "EPTXDataRate", (cValueDataRate & ~(0x03 << 2 * pGroup)) | (pDataRate << 2 * pGroup));
 
-            uint8_t cValueChnCntr = ReadChipReg(pChip, cTXChnCntr);
-            WriteChipReg(pChip, cTXChnCntr, (cValueChnCntr & ~(0x0F << 4 * (cChannel % 2))) | ((pInvert << 3 | pPreEmphWidth << 0) << 4 * (cChannel % 2)));
-        }
-    }
+    // #############################################
+    // # Enable given channels for specified group #
+    // #############################################
+    std::string cEnableTxReg;
+    if(pGroup == 0 || pGroup == 1)
+        cEnableTxReg = "EPTX10Enable";
+    else if(pGroup == 2 || pGroup == 3)
+        cEnableTxReg = "EPTX32Enable";
+
+    uint8_t cValueEnableTx = ReadChipReg(pChip, cEnableTxReg);
+    cValueEnableTx |= (1 << (pChannel + 4 * (pGroup % 2)));
+    WriteChipReg(pChip, cEnableTxReg, cValueEnableTx);
+}
+
+void lpGBTInterface::ConfigureTxChannel(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDriveStr, uint8_t pPreEmphMode, uint8_t pPreEmphStr, uint8_t pPreEmphWidth, uint8_t pInvert)
+{
+    // ############################################################################
+    // # Configure Tx Channel PreEmphasisStrenght, PreEmphasisMode, DriveStrength #
+    // ############################################################################
+    std::string cTXChnCntrl = "EPTX" + std::to_string(pGroup) + std::to_string(pChannel) + "ChnCntr";
+    WriteChipReg(pChip, cTXChnCntrl, (pPreEmphStr << 5) | (pPreEmphMode << 3) | (pDriveStr << 0));
+
+    // ####################################################
+    // # Configure Tx Channel PreEmphasisWidth, Inversion #
+    // ####################################################
+    std::string cTXChnCntr;
+    if(pChannel == 0 || pChannel == 1)
+        cTXChnCntr = "EPTX" + std::to_string(pGroup) + "1_" + std::to_string(pGroup) + "0ChnCntr";
+    else if(pChannel == 2 || pChannel == 3)
+        cTXChnCntr = "EPTX" + std::to_string(pGroup) + "3_" + std::to_string(pGroup) + "2ChnCntr";
+
+    uint8_t cValueChnCntr = ReadChipReg(pChip, cTXChnCntr);
+    WriteChipReg(pChip, cTXChnCntr, (cValueChnCntr & ~(0x0F << 4 * (pChannel % 2))) | ((pInvert << 3 | pPreEmphWidth << 0) << 4 * (pChannel % 2)));
 }
 
 void lpGBTInterface::ConfigureClocks(Chip*                       pChip,
@@ -294,7 +333,9 @@ void lpGBTInterface::ConfigureClocks(Chip*                       pChip,
 {
     for(const auto& cClock: pClocks)
     {
-        // Configure Clocks Frequency, Drive Strength, Inversion, Pre-Emphasis Width, Pre-Emphasis Mode, Pre-Emphasis Strength
+        // #######################################################################################################################
+        // # Configure Clocks Frequency, Drive Strength, Inversion, Pre-Emphasis Width, Pre-Emphasis Mode, Pre-Emphasis Strength #
+        // #######################################################################################################################
         std::string cClkHReg = "EPCLK" + std::to_string(cClock) + "ChnCntrH";
         std::string cClkLReg = "EPCLK" + std::to_string(cClock) + "ChnCntrL";
         WriteChipReg(pChip, cClkHReg, pInvert << 6 | pDriveStr << 3 | pFreq);
@@ -316,70 +357,62 @@ void lpGBTInterface::ConfigureDPPattern(Chip* pChip, uint32_t pPattern)
     WriteChipReg(pChip, "DPDataPattern3", ((pPattern & 0xFF000000) >> 24));
 }
 
-void lpGBTInterface::ConfigureRxPRBS(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, bool pEnable)
+void lpGBTInterface::ConfigureRxPRBS(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool pEnable)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        std::string cPRBSReg;
-        if(cGroup == 1 || cGroup == 0)
-            cPRBSReg = "EPRXPRBS0";
-        else if(cGroup == 3 || cGroup == 2)
-            cPRBSReg = "EPRXPRBS1";
-        else if(cGroup == 5 || cGroup == 4)
-            cPRBSReg = "EPRXPRBS2";
-        else if(cGroup == 6)
-            cPRBSReg = "EPRXPRBS3";
+    std::string cPRBSReg;
+    if(pGroup == 1 || pGroup == 0)
+        cPRBSReg = "EPRXPRBS0";
+    else if(pGroup == 3 || pGroup == 2)
+        cPRBSReg = "EPRXPRBS1";
+    else if(pGroup == 5 || pGroup == 4)
+        cPRBSReg = "EPRXPRBS2";
+    else if(pGroup == 6)
+        cPRBSReg = "EPRXPRBS3";
 
-        uint8_t cEnabledCh       = 0;
-        uint8_t cValueEnablePRBS = ReadChipReg(pChip, cPRBSReg);
-        for(const auto cChannel: pChannels) cEnabledCh |= pEnable << cChannel;
-        WriteChipReg(pChip, cPRBSReg, (cValueEnablePRBS & ~(0xF << 4 * (cGroup % 2))) | (cEnabledCh << (4 * (cGroup % 2))));
-    }
+    uint8_t cEnabledCh       = 0;
+    uint8_t cValueEnablePRBS = ReadChipReg(pChip, cPRBSReg);
+    cEnabledCh |= pEnable << pChannel;
+    WriteChipReg(pChip, cPRBSReg, (cValueEnablePRBS & ~(0xF << 4 * (pGroup % 2))) | (cEnabledCh << (4 * (pGroup % 2))));
+
+} // namespace Ph2_HwInterface
+
+void lpGBTInterface::ConfigureRxSource(Chip* pChip, uint8_t pGroup, uint8_t pSource)
+{
+    if(pSource == 0)
+        LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +pGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
+    else if(pSource == 1)
+        LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +pGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
+    else if(pSource == 4 || pSource == 5)
+        LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +pGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
+
+    std::string cRxSourceReg;
+    if(pGroup == 0 || pGroup == 1)
+        cRxSourceReg = "ULDataSource1";
+    else if(pGroup == 2 || pGroup == 3)
+        cRxSourceReg = "ULDataSource2";
+    else if(pGroup == 4 || pGroup == 5)
+        cRxSourceReg = "ULDataSource3";
+    else if(pGroup == 6)
+        cRxSourceReg = "ULDataSource4";
+
+    uint8_t cValueRxSource = ReadChipReg(pChip, cRxSourceReg);
+    WriteChipReg(pChip, cRxSourceReg, (cValueRxSource & ~(0x7 << 3 * (pGroup % 2))) | (pSource << 3 * (pGroup % 2)));
 }
 
-void lpGBTInterface::ConfigureRxSource(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource)
+void lpGBTInterface::ConfigureTxSource(Chip* pChip, uint8_t pGroup, uint8_t pSource)
 {
-    for(const auto& cGroup: pGroups)
-    {
-        if(pSource == 0)
-            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
-        else if(pSource == 1)
-            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
-        else if(pSource == 4 || pSource == 5)
-            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
+    if(pSource == 0)
+        LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +pGroup << RESET << GREEN << " Source to NORMAL " << RESET;
+    else if(pSource == 1)
+        LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +pGroup << RESET << GREEN << " Source to PRBS7 " << RESET;
+    else if(pSource == 2)
+        LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +pGroup << RESET << GREEN << " Source to Binary counter " << RESET;
+    else if(pSource == 3)
+        LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +pGroup << RESET << GREEN << " Source to Constant Pattern" << RESET;
 
-        std::string cRxSourceReg;
-        if(cGroup == 0 || cGroup == 1)
-            cRxSourceReg = "ULDataSource1";
-        else if(cGroup == 2 || cGroup == 3)
-            cRxSourceReg = "ULDataSource2";
-        else if(cGroup == 4 || cGroup == 5)
-            cRxSourceReg = "ULDataSource3";
-        else if(cGroup == 6)
-            cRxSourceReg = "ULDataSource4";
-
-        uint8_t cValueRxSource = ReadChipReg(pChip, cRxSourceReg);
-        WriteChipReg(pChip, cRxSourceReg, (cValueRxSource & ~(0x7 << 3 * (cGroup % 2))) | (pSource << 3 * (cGroup % 2)));
-    }
-}
-
-void lpGBTInterface::ConfigureTxSource(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource)
-{
-    for(const auto& cGroup: pGroups)
-    {
-        if(pSource == 0)
-            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to NORMAL " << RESET;
-        else if(pSource == 1)
-            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to PRBS7 " << RESET;
-        else if(pSource == 2)
-            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Binary counter " << RESET;
-        else if(pSource == 3)
-            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Constant Pattern" << RESET;
-
-        uint8_t cULDataSrcValue = ReadChipReg(pChip, "ULDataSource5");
-        cULDataSrcValue         = (cULDataSrcValue & ~(0x3 << (2 * cGroup))) | (pSource << (2 * cGroup));
-        WriteChipReg(pChip, "ULDataSource5", cULDataSrcValue);
-    }
+    uint8_t cULDataSrcValue = ReadChipReg(pChip, "ULDataSource5");
+    cULDataSrcValue         = (cULDataSrcValue & ~(0x3 << (2 * pGroup))) | (pSource << (2 * pGroup));
+    WriteChipReg(pChip, "ULDataSource5", cULDataSrcValue);
 }
 
 void lpGBTInterface::ConfigureRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
@@ -402,9 +435,117 @@ void lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8_t>&
     }
 }
 
+void lpGBTInterface::SetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
+{
+    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
+    auto        cIt  = fPhaseTapMap.find(cKey);
+    if(cIt != fPhaseTapMap.end()) { cIt->second = pPhase; }
+    else
+    {
+        throw std::runtime_error(std::string("Unused Channel or Group!"));
+    }
+}
+
+uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel)
+{
+    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
+    auto        cIt  = fPhaseTapMap.find(cKey);
+    if(cIt != fPhaseTapMap.end()) { return cIt->second; }
+    else
+    {
+        throw std::runtime_error(std::string("Unused Channel or Group!"));
+        return 15;
+    }
+}
+
 // ####################################
 // # LpGBT specific routine functions #
 // ####################################
+
+bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
+{
+    uint8_t cVal     = pEnable << 7 | (pCorrection & 0x3F);
+    bool    cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
+    LOG(DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex << +cVal << std::dec << RESET;
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+
+    return cSuccess;
+}
+
+bool lpGBTInterface::EnableInternalVref(Ph2_HwDescription::Chip* pChip, bool pEnable) { return true; }
+
+bool lpGBTInterface::SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTune)
+{
+    uint8_t     cNbits   = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
+    std::string cRegName = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? "VREFCNTR" : "VREFTUNE";
+    ChipRegMask cMask;
+    cMask.fBitShift = 0;
+    cMask.fNbits    = cNbits;
+    pChip->setRegBits(cRegName, cMask, pVrefTune);
+    WriteChipReg(pChip, cRegName, pVrefTune);
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+    auto cVrefTune = pChip->getRegItem(cRegName).fValue;
+
+    return cVrefTune == pVrefTune;
+}
+
+uint8_t lpGBTInterface::GetVrefTune(Ph2_HwDescription::Chip* pChip)
+{
+    uint8_t     cNbits    = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
+    std::string cRegName  = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? "VREFCNTR" : "VREFTUNE";
+    auto        cVrefTune = pChip->getRegItem(cRegName).fValue;
+    uint8_t     mask      = (0xFF >> (8 - cNbits));
+
+    return (mask & cVrefTune);
+}
+
+float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, uint16_t pVinput) // pVinput in mV!
+{
+    auto cGain   = GetADCGain(pChip, false);
+    auto cOffset = GetADCOffset(pChip, false);
+    auto cADC    = ReadADC(pChip, pADC);
+    return ((int)pVinput / 1000. * cGain * 512) / (cADC - cOffset * (1 - cGain / 2.));
+}
+
+uint8_t lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip)
+{
+    const std::string pADC    = static_cast<lpGBT*>(pChip)->getTuneVrefADC();
+    uint16_t          pVinput = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
+    LOG(INFO) << BOLDYELLOW << "Tune Vref of lpGBT using input of " << pADC << " and " << pVinput << "mV" << RESET;
+    uint8_t cNbits       = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
+    uint8_t cCurrentStep = (0xFF >> (8 - cNbits));
+    SetVrefTune(pChip, cCurrentStep);
+    auto     cVrefTune     = GetVrefTune(pChip);
+    float    cCurrentVref  = GetVref(pChip, pADC, pVinput);
+    uint16_t cPreviousStep = cCurrentStep;
+
+    for(int iBit = cNbits - 1; iBit >= 0; --iBit)
+    {
+        // ############
+        // # Flip bit #
+        // ############
+        cCurrentStep = cPreviousStep + (1 << iBit);
+        SetVrefTune(pChip, cCurrentStep);
+        cVrefTune    = GetVrefTune(pChip);
+        cCurrentVref = GetVref(pChip, pADC, pVinput);
+
+        // ####################################
+        // # Determine if it is better or not #
+        // ####################################
+        if(cCurrentVref < 1.) cPreviousStep = cCurrentStep;
+        SetVrefTune(pChip, cCurrentStep);
+        cVrefTune    = GetVrefTune(pChip);
+        cCurrentVref = GetVref(pChip, pADC, pVinput);
+
+        if(static_cast<lpGBT*>(pChip)->getVersion() == 0)
+            LOG(INFO) << BOLDYELLOW << " Flip Bit#" << +iBit << " Tune =  " << std::bitset<5>(cVrefTune) << " Vref = " << cCurrentVref << RESET;
+        else
+            LOG(INFO) << BOLDYELLOW << " Flip Bit#" << +iBit << " Tune =  " << std::bitset<8>(cVrefTune) << " Vref = " << cCurrentVref << RESET;
+    }
+
+    LOG(INFO) << BOLDYELLOW << "Vref tune set to " << +cVrefTune << " - Vref = " << cCurrentVref << RESET;
+    return cVrefTune;
+}
 
 void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGroups)
 {
@@ -430,32 +571,9 @@ void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups
     std::string cRegName = "RST1";
     uint8_t     cValue   = 0x00;
     for(auto cGroup: pGroups) { cValue = cValue | (1 << cGroup); }
-    this->WriteChipReg(pChip, "RST1", cValue);
+    WriteChipReg(pChip, "RST1", cValue);
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
-    this->WriteChipReg(pChip, "RST1", 0x00);
-}
-
-uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel)
-{
-    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
-    auto        cIt  = fPhaseTapMap.find(cKey);
-    if(cIt != fPhaseTapMap.end()) { return cIt->second; }
-    else
-    {
-        throw std::runtime_error(std::string("Unused Channel or Group!"));
-        return 15;
-    }
-}
-
-void lpGBTInterface::SetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
-{
-    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
-    auto        cIt  = fPhaseTapMap.find(cKey);
-    if(cIt != fPhaseTapMap.end()) { cIt->second = pPhase; }
-    else
-    {
-        throw std::runtime_error(std::string("Unused Channel or Group!"));
-    }
+    WriteChipReg(pChip, "RST1", 0x00);
 }
 
 // ################################
@@ -536,17 +654,6 @@ void lpGBTInterface::PrintChipMode(Chip* pChip)
     }
 }
 
-uint8_t lpGBTInterface::GetChipRate(Chip* pChip)
-{
-    uint8_t cValueConfigPins = ((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4);
-    if(cValueConfigPins <= 7)
-        return 5;
-    else if(cValueConfigPins <= 15)
-        return 10;
-    else
-        throw std::runtime_error(std::string("lpGBT hard wired configuration doesn't exist"));
-}
-
 uint8_t lpGBTInterface::GetPUSMStatus(Chip* pChip) { return ReadChipReg(pChip, "PUSMStatus"); }
 
 uint8_t lpGBTInterface::GetRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChannel)
@@ -561,11 +668,14 @@ uint8_t lpGBTInterface::GetRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChannel
     return ((cRxPhaseRegValue & (0x0F << 4 * (pChannel % 2))) >> 4 * (pChannel % 2));
 }
 
-bool lpGBTInterface::IsRxLocked(Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels)
+bool lpGBTInterface::IsRxLocked(Chip* pChip, uint8_t pGroup)
 {
     std::string cRXLockedReg = "EPRX" + std::to_string(pGroup) + "Locked";
     uint8_t     cChannelMask = 0;
-    for(auto cChannel: pChannels) cChannelMask |= (1 << cChannel);
+
+    for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
+        if(RxProperty.Group == pGroup) cChannelMask |= (1 << RxProperty.Channel);
+
     return (((ReadChipReg(pChip, cRXLockedReg) & (cChannelMask << 4)) >> 4) == cChannelMask);
 }
 
@@ -671,14 +781,20 @@ void lpGBTInterface::ConfigureADC(Chip* pChip, uint8_t pGainSelect, bool pADCEna
 
 void lpGBTInterface::ConfigureCurrentDAC(Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput)
 {
-    // Enables current DAC without changing the voltage DAC
+    // ########################################################
+    // # Enables current DAC without changing the voltage DAC #
+    // ########################################################
     uint8_t cDACConfigH = ReadChipReg(pChip, "DACConfigH");
     WriteChipReg(pChip, "DACConfigH", cDACConfigH | 0x40);
 
-    // Sets output current for the current DAC. Current = CURDACSelect * 3.5 uA
+    // ############################################################################
+    // # Sets output current for the current DAC. Current = CURDACSelect * 3.5 uA #
+    // ############################################################################
     WriteChipReg(pChip, "CURDACValue", pCurrentDACOutput);
 
-    // Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels
+    // ###############################################################################################################################
+    // # Setting Nth bit in this register attaches current DAC to ADCN pin. Current source can be attached to any number of channels #
+    // ###############################################################################################################################
     uint8_t cCURDACCHN = 0;
     uint8_t cADCInput;
 
@@ -699,10 +815,14 @@ void lpGBTInterface::ConfigureInternalMonitoring(Chip* pChip, uint8_t pEnable)
 float lpGBTInterface::GetInternalTemperature(Chip* pChip)
 {
     auto cVal = ReadChipReg(pChip, "ADCMon");
-    // Enable reset on temperature sensor
+    // ######################################
+    // # Enable reset on temperature sensor #
+    // ######################################
     WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
-    // Disable reset on temperature sensor
+    // #######################################
+    // # Disable reset on temperature sensor #
+    // #######################################
     WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
 
     std::vector<float> cMeasurements(0);
@@ -714,11 +834,13 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
 {
     std::vector<float> cTempVoltageReadings;
     std::vector<float> cTempCurrentValues;
+
     for(auto cCurrentDAC: pCurrents)
     {
-        ConfigureCurrentDAC(pChip, {pADC}, cCurrentDAC);
+        lpGBTInterface::ConfigureCurrentDAC(pChip, {pADC}, cCurrentDAC);
         float              cCurrent = (0.9e-3) * cCurrentDAC / 256;
         std::vector<float> cMeasurements(0);
+
         for(uint8_t cIndx = 0; cIndx < 10; cIndx++)
         {
             auto cMeasurement = ReadADC(pChip, pADC, "VREF/2", pGain);
@@ -728,6 +850,7 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
                 cMeasurements.push_back(cMeasurement);
             }
         }
+
         if(cMeasurements.size() > 0)
         {
             float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
@@ -738,9 +861,11 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
         else
             LOG(DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings" << RESET;
     }
-    ConfigureCurrentDAC(pChip, {pADC}, 0x00);
+
+    lpGBTInterface::ConfigureCurrentDAC(pChip, {pADC}, 0x00);
     float cLSQResistance = (cTempVoltageReadings.size() != 0) ? getLeastSquareSlope<float>(cTempCurrentValues, cTempVoltageReadings) : -1;
     LOG(DEBUG) << BOLDBLUE << "Resistance \t... " << cLSQResistance << RESET;
+
     return cLSQResistance;
 }
 
@@ -751,11 +876,10 @@ uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
     return cMeasurement;
 }
 
-// #################################################################
-// # Implements the ADC master formula for the a basic measurement #
-// # Assumes a calibrated Vref                                     #
-// #################################################################
 float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose)
+// #############################################################################################
+// # Implements the ADC master formula for the a basic measurement  assuming a calibrated Vref #
+// #############################################################################################
 {
     uint16_t cMeasurement = ReadADC(pChip, pADCInputP, "VREF/2");
     return (cMeasurement - cOffset * (1. - cGain / 2.)) / cGain / 512.;
@@ -779,6 +903,7 @@ float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, f
 // Resistor values also valid for PS ROH v2
 // R1=1k; Voltage divider 680k and 1000k
 // Typical responsivity 0.45-0.55 A/W
+// For SEHv5 its 47k and 100k
 float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
 {
     float cAdcMeasurement = GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
@@ -792,43 +917,66 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
 {
     float cResult;
     WriteChipReg(pChip, "ADCMon", 0);
-    // Disable resistive divider, so "VDD" is actually GND
-    std::this_thread::sleep_for(std::chrono::microseconds(1000));
+    // #######################################################
+    // # Disable resistive divider, so "VDD" is actually GND #
+    // #######################################################
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     uint16_t cMeasurement = ReadADC(pChip, "VDD", "VREF/2");
     cResult               = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2. * -1.;
-    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
-    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
+
+    if(pVerbose)
+    {
+        LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+        LOG(INFO) << BOLDBLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
+    }
+
     cMeasurement = ReadADC(pChip, "VREF/2", "VDD");
     cResult      = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2.;
-    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
-    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
+
+    if(pVerbose)
+    {
+        LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+        LOG(INFO) << BOLDBLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
+    }
 
     return cResult;
 }
 
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
-    // Read differential (converted) data on two ADC inputs
+    // ########################################################
+    // # Read differential (converted) data on two ADC inputs #
+    // ########################################################
     uint8_t cADCInputP = lpGBTInterface::fADCInputMap[pADCInputP];
     uint8_t cADCInputN = lpGBTInterface::fADCInputMap[pADCInputN];
 
     LOG(DEBUG) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInputP << RESET;
 
-    // Select ADC Input
+    // ####################
+    // # Select ADC Input #
+    // ####################
     WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
 
-    // Enable ADC Input without starting conversion
+    // ################################################
+    // # Enable ADC Input without starting conversion #
+    // ################################################
     lpGBTInterface::ConfigureADC(pChip, pGain, true, false);
 
-    // Enable Internal VREF
+    // ########################
+    // # Enable Internal VREF #
+    // ########################
     uint8_t cVrefcntrContent = ReadChipReg(pChip, "VREFCNTR");
     WriteChipReg(pChip, "VREFCNTR", 1 << 7 | (0x3f & cVrefcntrContent));
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
-    // Start ADC conversion
+    // ########################
+    // # Start ADC conversion #
+    // ########################
     lpGBTInterface::ConfigureADC(pChip, pGain, true, true);
 
-    // Check conversion status
+    // ###########################
+    // # Check conversion status #
+    // ###########################
     uint8_t cIter    = 0;
     bool    cSuccess = false;
     do
@@ -838,6 +986,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;
     } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
+
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
         LOG(INFO) << BOLDRED << "LpGBT ADC conversion timed out on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
@@ -846,14 +995,20 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
         return 0;
     }
 
-    // Read ADC value
+    // ##################
+    // # Read ADC value #
+    // ##################
     uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
     uint8_t cADCvalue2 = ReadChipReg(pChip, "ADCStatusL");
 
-    // Clear ADC conversion bit and disable ADC
+    // ############################################
+    // # Clear ADC conversion bit and disable ADC #
+    // ############################################
     lpGBTInterface::ConfigureADC(pChip, pGain, false, false);
 
-    // disable Internal VREF
+    // #########################
+    // # Disable Internal VREF #
+    // #########################
     WriteChipReg(pChip, "VREFCNTR", 0 << 7 | (0x3f & cVrefcntrContent));
 
     return (cADCvalue1 << 8 | cADCvalue2);
@@ -861,22 +1016,9 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
 bool lpGBTInterface::IsReadADCDone(Chip* pChip) { return (((ReadChipReg(pChip, "ADCStatusH") & 0x40) >> 6) == 1); }
 
-// ########################
-// # LpGBT Vref functions #
-// ########################
-
-bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
-{
-    uint8_t cVal     = pEnable << 7 | (pCorrection & 0x3F);
-    bool    cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
-    LOG(DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex << +cVal << std::dec << RESET;
-    std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
-    return cSuccess;
-}
-
-// #######################
-// # Bit Error Rate test #
-// #######################
+// #############################
+// # LpGBT Bit Error Rate test #
+// #############################
 
 void lpGBTInterface::ConfigureBERT(Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable)
 {
@@ -923,38 +1065,44 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
     lpGBTInterface::StartBERT(pChip, true);  // Start
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
-    // Wait for BERT to end
+    // ########################
+    // # Wait for BERT to end #
+    // ########################
     while(lpGBTInterface::IsBERTDone(pChip) == false)
     {
         LOG(INFO) << BOLDBLUE << "\t--> BERT still running ... " << RESET;
         std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     }
 
-    // Throw error if empty data
+    // #############################
+    // # Throw error if empty data #
+    // #############################
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
-        // Stop BERT
-        lpGBTInterface::StartBERT(pChip, false);
+        lpGBTInterface::StartBERT(pChip, false); // Stop
         LOG(INFO) << BOLDRED << "LpGBT BERT : All zeros at input on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
                   << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return 0.;
     }
 
-    // Compute number of bits checked
+    // ##################################
+    // # Compute number of bits checked #
+    // ##################################
     uint64_t cErrors           = lpGBTInterface::GetBERTErrors(pChip);
     uint8_t  cMeasTime         = (ReadChipReg(pChip, "BERTConfig") & (0xF << 4)) >> 4;
     uint64_t cNClkCycles       = std::pow(2, 5 + cMeasTime * 2);
     uint8_t  cNBitsPerClkCycle = (lpGBTInterface::GetChipRate(pChip) == 5) ? 8 : 16; // 5G(320MHz) == 8 bits/clk, 10G(640MHz) == 16 bits/clk
-    uint64_t cBitsChecked      = cNClkCycles * cNBitsPerClkCycle;
+    double   cBitsChecked      = cNClkCycles * cNBitsPerClkCycle;
 
-    // Stop BERT
-    lpGBTInterface::StartBERT(pChip, false);
+    lpGBTInterface::StartBERT(pChip, false); // Stop
     LOG(INFO) << BOLDBLUE << "\t--> Bits checked  : " << BOLDYELLOW << +cBitsChecked << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Bits in error : " << BOLDYELLOW << +cErrors << RESET;
 
-    // Return fraction of errors
-    return (double)cErrors / cBitsChecked;
+    // #############################
+    // # Return fraction of errors #
+    // #############################
+    return cErrors / cBitsChecked;
 }
 
 double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
@@ -965,11 +1113,11 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-    const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
-    const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
-    const int      nPrints         = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
-    double         frames2run;
-    double         time2run;
+    const double bitPerFrame = 32. * std::pow(2, frontendSpeed); // Bits per frame
+    const double fps         = 1.28e9 / bitPerFrame;             // Frames per second: 32-bit frame @ 1.28 Gbit/s, 64-bit frame @ 640 Mbit/s, 128-bit frame @ 320 Mbit/s
+    const int    nPrints     = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    double       frames2run;
+    double       time2run;
 
     if(given_time == true)
         time2run = frames_or_time;
@@ -978,13 +1126,15 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     size_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
     frames2run          = fBERTMeasTimeMap[BERTMeasTime];
 
-    // Configure number of printouts and calculate the frequency of printouts
+    // ##########################################################################
+    // # Configure number of printouts and calculate the frequency of printouts #
+    // ##########################################################################
     double time_per_step = std::min(std::max(time2run / nPrints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
     // ###############
     // # Configuring #
     // ###############
-    lpGBTInterface::ConfigureRxSource(pChip, {pGroup}, lpGBTconstants::PATTERN_NORMAL);
+    lpGBTInterface::ConfigureRxSource(pChip, pGroup, lpGBTconstants::PATTERN_NORMAL);
     lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
 
     // #########
@@ -994,7 +1144,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     lpGBTInterface::StartBERT(pChip, true);  // Start
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
-    LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
+    LOG(INFO) << BOLDGREEN << std::fixed << std::setprecision(0) << "===== BER run starting @ " << bitPerFrame << "-bits/frame  =====" << RESET;
     int      idx = 1;
     uint64_t nErrors;
     while(lpGBTInterface::IsBERTDone(pChip) == false)
@@ -1004,7 +1154,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
         nErrors = lpGBTInterface::GetBERTErrors(pChip);
 
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
-        LOG(INFO) << GREEN << "Current counter: " << BOLDYELLOW << nErrors / nBitInClkPeriod << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN
+        LOG(INFO) << GREEN << "Current counter: " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN
                   << " bits with errors" << RESET;
         idx++;
     }
@@ -1025,28 +1175,18 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     nErrors = lpGBTInterface::GetBERTErrors(pChip);
     lpGBTInterface::StartBERT(pChip, false); // Stop
 
-    // Read PRBS frame counter
+    // ###########################
+    // # Read PRBS frame counter #
+    // ###########################
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
-    LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors / nBitInClkPeriod << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN
-              << " bits with errors" << RESET;
-    LOG(INFO) << GREEN << "Final BER: " << BOLDYELLOW << nErrors / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / nBitInClkPeriod / frames2run * 100 << RESET << GREEN << "%)"
+    LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN << " bits with errors"
+              << RESET;
+    LOG(INFO) << GREEN << "Final BER: " << BOLDYELLOW << nErrors / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / bitPerFrame / frames2run * 100 << RESET << GREEN << "%)"
               << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors / frames2run;
-}
-
-void lpGBTInterface::StartPRBSpattern(Chip* pChip)
-{
-    lpGBTInterface::ConfigureRxPRBS(pChip, {lpGBTconstants::fictitiousGroup}, {lpGBTconstants::fictitiousChannel}, true);
-    lpGBTInterface::ConfigureRxSource(pChip, {lpGBTconstants::fictitiousGroup}, lpGBTconstants::PATTERN_PRBS);
-}
-
-void lpGBTInterface::StopPRBSpattern(Chip* pChip)
-{
-    lpGBTInterface::ConfigureRxPRBS(pChip, {lpGBTconstants::fictitiousGroup}, {lpGBTconstants::fictitiousChannel}, false);
-    lpGBTInterface::ConfigureRxSource(pChip, {lpGBTconstants::fictitiousGroup}, lpGBTconstants::PATTERN_NORMAL);
 }
 
 // ####################################
@@ -1240,4 +1380,525 @@ std::string lpGBTInterface::GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t 
 
 bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
 
+void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_t pChipId, std::string pFileName)
+{
+    // # Load calibration data from a local CSV file based for the specific chipid.
+
+    // # Arguments:
+    // # pFileName: Path of CSV file containing calibration data.
+    // # pChipId: ChipID for which calibration data should be loaded.
+
+    // # Raises:
+    // # LpgbtCalibrationWarning: If loading calibration data failed.
+    // # FileNotFoundError: If the file does not exis
+
+    LOG(INFO) << BOLDGREEN << "Loading calibration data for 0x" << std::hex << +pChipId << std::dec << " chip from " << pFileName << RESET;
+    bool cCalibrationLoaded = false;
+
+    std::ifstream                         file(pFileName.c_str(), std::ios::in);
+    std::vector<std::vector<std::string>> content;
+    std::vector<std::string>              row;
+    std::vector<std::string>              cHeaderRow;
+    std::string                           line, word;
+    uint32_t                              cRowCounter = 0;
+    if(file.is_open())
+    {
+        while(getline(file, line))
+        {
+            cRowCounter++;
+            if(cRowCounter < 5)
+            { // skip header (version check possible)
+                if(cRowCounter == 4)
+                { // read field names
+                    cHeaderRow.clear();
+                    std::stringstream str(line);
+                    while(getline(str, word, ',')) { cHeaderRow.push_back(word); }
+                }
+                continue;
+            }
+            row.clear();
+            std::stringstream str(line);
+
+            while(getline(str, word, ',')) { row.push_back(word); }
+            uint32_t cRowChipId = strtoul(row[0].c_str(), 0, 16);
+            // for(uint32_t i=0;i<32;i++){
+            //     if(cRowChipId == 0x00244200){
+            //     LOG(INFO) << BOLDBLUE << std::hex << (cRowChipId ^ (1 << i )) << std::dec << RESET;
+            // }
+            if(cRowChipId == pChipId)
+            {
+                for(uint32_t j = 1; j < row.size(); j++)
+                {
+                    LOG(DEBUG) << BOLDBLUE << cHeaderRow[j] << RESET;
+                    LOG(DEBUG) << BOLDBLUE << row[j] << RESET;
+                    calibration[cHeaderRow[j]] = std::stof(row[j]);
+                }
+                cCalibrationLoaded = true;
+                break;
+            }
+        }
+        if(!cCalibrationLoaded)
+        {
+            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Calibration data not available for the 0x" << std::hex << +pChipId << std::dec << " chip" << RESET;
+            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Using default calibration data" << RESET;
+            // throw std::runtime_error(std::string("LpgbtCalibrationError"));
+        }
+        for(auto it = calibration.cbegin(); it != calibration.cend(); ++it) { LOG(DEBUG) << BOLDBLUE << it->first << " = " << it->second << RESET; }
+    }
+    else
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::LoadCalibrationData: " << pFileName << " could not be opened. Check file path!" << RESET;
+        throw std::runtime_error(std::string("FileNotFoundError"));
+    }
+    file.close();
+}
+
+// # Set the junction temperature. It should be updated by the user based on:
+// # - thermal simulations and measurements performed in the final system, or
+// # - data of its internal temperature sensor obtained during production testing
+// #   (estimate_temperature_uncalib_vref)
+void lpGBTInterface::SetTemperature(Ph2_HwDescription::Chip* pChip, float pTemperature)
+{
+    // # Set junction temperature.
+    // # Arguments:
+    // # pTemperature: Estimate of junction temperature [C]
+    // #
+    fTemperature = pTemperature;
+}
+
+float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor)
+{
+    // # Estimate temperature using internal temperature sensor and uncalibrated VREF.
+    // # WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
+    // # Side effects:
+    // #    ADC configuration.
+    // # Arguments:
+    // #    pResetTempSensor: Reset temperature sensor before using it.
+
+    // # Return:
+    // #    Temperature estimate in degree C.
+
+    uint8_t cVrefCode = (uint32_t)std::round(calibration["VREF_OFFSET"]);
+    LOG(DEBUG) << BOLDGREEN << "Enable VREF at code: 0x" << std::hex << +cVrefCode << std::dec << " [LSB]" << RESET;
+
+    EnableInternalVref(pChip, true);
+    SetVrefTune(pChip, cVrefCode);
+    if(pResetTempSensor)
+    {
+        auto cVal = ReadChipReg(pChip, "ADCMon");
+        // ######################################
+        // # Enable reset on temperature sensor #
+        // ######################################
+        WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
+        std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+        // #######################################
+        // # Disable reset on temperature sensor #
+        // #######################################
+        WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
+    }
+
+    std::vector<float> cMeasurements(0);
+    for(uint8_t cIndx = 0; cIndx < 10; cIndx++)
+    {
+        uint16_t cAdcVal = ReadADC(pChip, "TEMP", "VREF/2", 0);
+        LOG(DEBUG) << BOLDGREEN << "Temperature readout: 0x" << std::hex << +cAdcVal << std::dec << " [LSB]" << RESET;
+
+        // estimate the junction temperature
+        cMeasurements.push_back(cAdcVal * calibration["TEMPERATURE_UNCALVREF_SLOPE"] + calibration["TEMPERATURE_UNCALVREF_OFFSET"]);
+    }
+    float cTemperature = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+    LOG(INFO) << BOLDGREEN << "Temperature estimate: " << cTemperature << " [C]" << RESET;
+    return cTemperature;
+}
+
+void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::Chip* pChip, bool pEnable)
+{
+    /*  Calculate the optimum VREFTUNE code based on the junction temperature
+           and apply the setting to the chip. Prior calling this method, the user
+           is expected to set the temperature estimate (set_temperature) first if it
+           is know or to to use estimate_temperature_uncalib_vref in order to
+           estimate it automatically. In the later case, it is advice to use
+           auto_tune_vref method instead.
+
+        Arguments:
+            pEnable: Enable VREF generator
+    */
+
+    uint8_t cCodeOpt = (uint32_t)std::round(calibration["VREF_SLOPE"] * fTemperature + calibration["VREF_OFFSET"]);
+    LOG(INFO) << BOLDGREEN << "REFTune = 0x" << std::hex << +cCodeOpt << std::dec << RESET;
+    EnableInternalVref(pChip, pEnable);
+    SetVrefTune(pChip, cCodeOpt);
+}
+
+void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::Chip* pChip, bool pResetTempSensor)
+{
+    /*  Auto tune VREF based on the internal temperature sensor.
+
+        WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
+
+        Side effects:
+            ADC configuration.
+            Junction temperature.
+
+        Arguments:
+            pResetTempSensor: Reset temperature sensor before using it.
+    */
+    float cTemperature = EstimateTemperatureUncalibVref(pChip, pResetTempSensor);
+
+    // update temperature estimate
+    SetTemperature(pChip, cTemperature);
+
+    // tune VREF
+    TuneVrefControlLib(pChip);
+}
+
+void lpGBTInterface::VdacSetVout(Ph2_HwDescription::Chip* pChip, float pVoltageV, bool pEnable)
+{
+    /*  """Set requested voltage at the output of the lpGBT voltage DAC.
+
+        Prerequisites:
+            VREF should be tuned to 1V.
+
+        Arguments:
+            pVoltageV: voltage in volts (0-1)
+            pEnable: voltage DAC state
+
+        Raises:
+            LpgbtOutOfRangeError: If the requested voltage cannot be achieved.
+    """ */
+    if((pVoltageV > 1.) or (pVoltageV < 0.))
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::VdacSetVout: Invalid voltage for VDAC" << RESET;
+        throw std::runtime_error(std::string("Invalid voltage for VDAC"));
+    }
+    int32_t cDacCode =
+        (int32_t)std::round((calibration["VDAC_SLOPE"] + fTemperature * calibration["VDAC_SLOPE_TEMP"]) * pVoltageV + calibration["VDAC_OFFSET"] + fTemperature * calibration["VDAC_OFFSET_TEMP"]);
+
+    if(cDacCode < 0 or cDacCode > 4095)
+    {
+        LOG(ERROR) << BOLDRED << "VdacSetVout::_CdacCodeToCurrent: VDAC can not deliver requested voltage." << RESET;
+        throw std::runtime_error(std::string("VDAC can not deliver requested voltage."));
+    }
+    // lpgbt interface is missing a voltage DAC function (unused in tracker?)
+    // self.vdac_setup(dac_code, enable)
+}
+
+float lpGBTInterface::AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples)
+{
+    /* Get input voltage.
+
+        Prerequisites:
+            VREF should be tuned to 1V.
+
+        Returns:
+            Calibrated voltage reading (mean of number of samples).
+
+        Raises:
+            LpgbtException: in case the conversion timeout is exceeded
+    */
+
+    std::vector<uint16_t> cMeasurements(0);
+    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++) { cMeasurements.push_back(ReadADC(pChip, pADCInputP, pADCInputN, pGain)); }
+    uint16_t cResult = (uint16_t)std::round(std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size());
+
+    std::string cAdcStr = "ADC_" + fADCGainMap[pGain];
+
+    float cCalRes =
+        ((calibration[cAdcStr + "_SLOPE"] + fTemperature * calibration[cAdcStr + "_SLOPE_TEMP"]) * cResult + calibration[cAdcStr + "_OFFSET"] + fTemperature * calibration[cAdcStr + "_OFFSET_TEMP"]);
+
+    LOG(DEBUG) << BOLDGREEN << "Measured calibrated Vin for " << pADCInputP << " and " << pADCInputN << " is " << cCalRes << " [V]" << RESET;
+    return cCalRes;
+}
+
+float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode)
+{
+    /* """Return estimate of the CDAC current for specific code.
+
+        Arguments:
+            pChannel: CDAC channel
+            pCode: CDAC code
+
+        Returns:
+            Estimate of the output current in Amps.
+    """ */
+    uint8_t cChannel = fADCInputMap[pChannel];
+    if(cChannel > 8)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacCodeToCurrent: Invalid CDAC channel" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC channel"));
+    }
+    return (pCode - calibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] - fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]) /
+           (calibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]);
+}
+
+float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode)
+{
+    /*  """Return estimate of the CDAC output resistance for specific code.
+
+        Arguments:
+            pChannel: CDAC channel
+            pCode: CDAC code
+
+        Returns:
+            Estimate of the output resistance in Ohms.
+    """ */
+    uint8_t cChannel = fADCInputMap[pChannel];
+    if(cChannel > 8)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacCodeToRout: Invalid CDAC channel" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC channel"));
+    }
+    // The rout for code zero is very large and not properly modeled.
+    // Return the rout estimate for code 1 instead.
+    if(pCode == 0) { pCode = 1; }
+
+    float cR0 = (calibration["CDAC" + std::to_string(cChannel) + "_R0"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_R0_TEMP"]);
+    return cR0 / pCode;
+}
+
+uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA)
+{
+    /*  """Return optimum CDAC code for the requested current (in amps)
+
+        Arguments:
+            pChannel: CDAC channel
+            pCurrentA: Output current [A]
+
+        Returns:
+            The optimum CDAC code
+
+        Raises:
+            LpgbtOutOfRangeError: If the requested current cannot be achieved.
+    """ */
+    uint8_t cChannel = fADCInputMap[pChannel];
+    if(cChannel > 8)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacGetOptimumCodeForCurrent: Invalid CDAC channel" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC channel"));
+    }
+    if((pCurrentA > 1e-3) or (pCurrentA <= 0))
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacGetOptimumCodeForCurrent: Invalid CDAC current" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC current"));
+    }
+
+    uint16_t cCode = (uint16_t)std::round((calibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]) * pCurrentA +
+                                          calibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]);
+
+    /* code = round(
+            (
+                self.calibration[f"CDAC{chn}_SLOPE"]
+                + self.temperature_c * self.calibration[f"CDAC{chn}_SLOPE_TEMP"]
+            )
+            * current_a
+            + self.calibration[f"CDAC{chn}_OFFSET"]
+            + self.temperature_c * self.calibration[f"CDAC{chn}_OFFSET_TEMP"]
+        ) */
+
+    if(cCode > 255)
+    {
+        LOG(ERROR) << BOLDRED << "CDAC can not deliver requested current." << RESET;
+        throw std::runtime_error(std::string("CDAC can not deliver requested current."));
+    }
+
+    return (uint16_t)cCode;
+}
+
+void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pCurrentA)
+{
+    /*   """Configure the lpGBT current DAC.
+
+        Side effects:
+            Disable all other current sources.
+
+        Arguments:
+            pChannel: ADC channel to connect to current DAC to
+            pCurrentA: Output current [A]
+    """ */
+    uint8_t cChannel = fADCInputMap[pChannel];
+    if(cChannel > 8)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::CdacSetCurrent: Invalid CDAC channel" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC channel"));
+    }
+    if((pCurrentA > 1e-3) or (pCurrentA <= 0))
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::CdacSetCurrent: Invalid CDAC current" << RESET;
+        throw std::runtime_error(std::string("Invalid CDAC current"));
+    }
+    uint8_t cCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, pCurrentA);
+    ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cCode});
+}
+float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, bool pImprovePrecision)
+{
+    LOG(INFO) << BOLDYELLOW << "pExpectedROhm not provided. Performing auto ranging." << RESET;
+
+    uint8_t cCdacCode = 1;
+    float   cVAdc     = 0;
+    while(true)
+    {
+        ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cCdacCode});
+        cVAdc = AdcGetVin(pChip, pChannel, "VREF/2", 0);
+        if(cVAdc > 0.5 or cCdacCode >= 128) { break; }
+        cCdacCode *= 2.;
+    }
+    float cExpectedROhm = cVAdc / _CdacCodeToCurrent(pChip, pChannel, cCdacCode);
+    LOG(DEBUG) << BOLDBLUE << "First estimate of resistance: " << cExpectedROhm / 1e3 << " kOhm" << RESET;
+    return MeasureResistance(pChip, pChannel, cExpectedROhm, pImprovePrecision);
+}
+float lpGBTInterface::MeasureResistance(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, float pExpectedROhm, bool pImprovePrecision)
+{
+    /* """Measure resistance connected between the ground (VSS) and a given ADC channel.
+       If the pExpectedROhm is provided (see overloaded function), it will be used to set the current source
+       (CDAC) in order to obtain optimum voltage drop across the resistors (around 0.5 Vref).
+       Alternatively, if pExpectedROhm is not provided, an auto ranging procedure will
+       be executed in order to estimate the value of the resistor first.
+
+       When measuring resistive temperature sensors (e.g. PT1000 or NTC) it is recommended
+       to set pExpectedROhm in order to prevent auto ranging as it will minimize the error
+       introduced by integral non-linearity errors of the current source and should result
+       in less "noisy" results.
+
+       In order to improve the measurement precision, one could set pImprovePrecision
+       to true. It will result in the method performing several measurements for different
+       CDAC codes in order to average out the errors introduced by the CDAC non-linearity.
+       The number of measurements depends on the resistance value and it is set automatically
+       for maximum precision.
+
+    Prerequisites:
+        VREF should be tuned to 1V.
+
+    Side effects:
+        ADC settings.
+        CDAC settings.
+
+    Arguments:
+        pChannel: ADC channel to be used for the measurement
+        pExpectedROhm: Expected resistance [Ohms]. If not set, auto ranging will be done
+                        automatically
+        pImprovePrecision: Improve precision by preforming multiple measurements
+
+    Returns:
+        Resistance [Ohms]
+    """ */
+
+    float   cCurrentA = 0.5 / pExpectedROhm;
+    uint8_t cCdacCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, cCurrentA);
+    LOG(DEBUG) << BOLDBLUE << "Optimum cdac code: " << +cCdacCode << RESET;
+
+    std::vector<uint8_t> cCdacCodesVec;
+    std::vector<float>   cRloadsVec;
+    if(pImprovePrecision)
+    {
+        for(uint8_t i = (uint8_t)cCdacCode * 0.9; i < (uint8_t)cCdacCode * 1.1; i++) { cCdacCodesVec.push_back(i); }
+    }
+    else
+    {
+        cCdacCodesVec.push_back(cCdacCode);
+    }
+
+    for(auto cdac_code: cCdacCodesVec)
+    {
+        ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cdac_code});
+
+        float iout = _CdacCodeToCurrent(pChip, pChannel, cdac_code);
+        float rout = _CdacCodeToRout(pChip, pChannel, cdac_code);
+
+        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 10);
+
+        float rmeas = vadc / iout;
+        LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
+        if(vadc < 0.25) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too high" << RESET; }
+        if(vadc > 0.75) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too low" << RESET; }
+        float rload = rmeas / (1 - rmeas / rout);
+        LOG(DEBUG) << BOLDBLUE << "CODE: " << +cdac_code << " IOUT: " << 1e3 * iout << " [mA] ROUT: " << rout * 1e-3 << " [kOhm] VADC: " << vadc << " [V] LOAD: " << rload << " [Ohm]" << RESET;
+
+        cRloadsVec.push_back(rload);
+    }
+
+    return (std::accumulate(cRloadsVec.begin(), cRloadsVec.end(), 0.) / cRloadsVec.size());
+}
+
+float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::Chip* pChip, uint8_t pSamples, bool pResetTempSensor)
+{
+    /*  """Measure junction temperature.
+
+        Prerequisites:
+            VREF should be tuned to 1V.
+
+        Side effects:
+            ADC settings.
+
+        Arguments:
+            pSamples: Number of ADC samples to average during the measurement
+            pResetTempSensor: Should the temperature sensor be reset prior to its use
+
+        Returns:
+            Temperature [C]
+
+        Raises:
+            LpgbtException: in case the conversion timeout is exceeded
+    """ */
+
+    if(pResetTempSensor)
+    {
+        auto cVal = ReadChipReg(pChip, "ADCMon");
+        // ######################################
+        // # Enable reset on temperature sensor #
+        // ######################################
+        WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
+        std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+        // #######################################
+        // # Disable reset on temperature sensor #
+        // #######################################
+        WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
+    }
+
+    float cAdcVal = AdcGetVin(pChip, "TEMP", "VREF/2", 0, pSamples);
+
+    float cTemp = (cAdcVal * calibration["TEMPERATURE_SLOPE"] + calibration["TEMPERATURE_OFFSET"]);
+    return cTemp;
+}
+
+float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pPowerSupply, uint8_t pSamples, bool pDisableMonitorAfterMeasurement)
+{
+    /*  """Measure power supply voltage.
+
+        Prerequisites:
+            VREF should be tuned to 1V.
+
+        Side effects:
+            ADC settings.
+            Settings of VDD monitors.
+
+        Arguments:
+            pPowerSupply: Power supply rail to be measured (VDDTX,
+                          VDDRX, VDD, VDDA)
+            pSamples: how many conversions to perform
+
+        Returns:
+            Calibrated reading of a power supply voltage in V
+
+        Raises:
+            LpgbtException: in case the conversion timeout is exceeded
+    """ */
+    if(!(pPowerSupply != "VDDTX" or pPowerSupply != "VDDRX" or pPowerSupply != "VDD" or pPowerSupply != "VDDA"))
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::MeasurePowerSupplyVoltage: Invalid pPowerSupply" << RESET;
+        throw std::runtime_error(std::string("Invalid pPowerSupply"));
+    }
+
+    // Enable VDD monitor
+    ConfigureInternalMonitoring(pChip, true);
+    // perform conversion
+    float cVadc = AdcGetVin(pChip, pPowerSupply, "VREF/2", 0, pSamples);
+
+    float cVsup = cVadc * (calibration["VDDMON_SLOPE"] + fTemperature * calibration["VDDMON_SLOPE_TEMP"]);
+
+    // disable VDD monitor (if requested)
+    if(pDisableMonitorAfterMeasurement) { ConfigureInternalMonitoring(pChip, false); }
+    LOG(DEBUG) << BOLDGREEN << "lpGBTInterface::MeasurePowerSupplyVoltage: " << pPowerSupply << " " << cVsup << " V" << RESET;
+
+    return cVsup;
+}
 } // namespace Ph2_HwInterface

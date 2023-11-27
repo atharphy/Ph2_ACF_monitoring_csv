@@ -45,6 +45,7 @@ class MultiplexingSetup : public Tool
   private:
     std::map<int, std::vector<int>> fAvailable;
     uint32_t                        fAvailableCards;
+    bool                            fInterlockEnabled;
 
     void parseAvailable(bool filterBoardsWithoutCards = true)
     {

@@ -102,7 +102,7 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void Configure(const ConfigureInfo& theConfigureInfo) override;
+    void Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize = true) override;
 
     void Start(const StartInfo& theStartInfo) override;
     // void InformImDone();
@@ -111,6 +111,7 @@ class Tool : public Ph2_System::SystemController
     void waitForRunToBeCompleted();
     void privateRunning(std::promise<int>&& thePromise);
     void SaveResults();
+    void SaveAndClose();
     void CloseResultFile();
     void initMetadataAndFillInitialConditions();
     void fillOTMetadataInitialConditions();
@@ -122,6 +123,7 @@ class Tool : public Ph2_System::SystemController
     void fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer);
     void fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer);
     void fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContainer);
+    void fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer);
     void fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer);
     void fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurationContainer);
 
@@ -361,6 +363,9 @@ class Tool : public Ph2_System::SystemController
     uint8_t getNormalization() { return fNormalize; }
     void    resetOutputDirectoryName() { fDirectoryName = ""; }
 
+    void           setOfStream(std::ofstream* pOfStream) { fOfStream = pOfStream; };
+    std::ofstream* getOfStream() { return fOfStream; };
+
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
 
@@ -417,6 +422,8 @@ class Tool : public Ph2_System::SystemController
     int     fWait_ms{100};
     size_t  fNReadbackEvents{0};
     uint8_t fNormalize{1};
+
+    std::ofstream* fOfStream;
 };
 
 #endif

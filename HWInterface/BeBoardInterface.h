@@ -134,7 +134,7 @@ class BeBoardInterface
      * \param pBoard
      * \param pRegNode : Node of the register to update
      */
-    uint32_t ReadBoardReg(Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode);
+    uint32_t ReadBoardReg(Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, bool updateRegs = true);
 
     /*!
      * \brief Read a block of a given size from the board
@@ -203,25 +203,25 @@ class BeBoardInterface
      * \brief Start a DAQ
      * \param pBoard
      */
-    void Start(Ph2_HwDescription::BeBoard* pBoard);
+    void Start(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Stop a DAQ
      * \param pBoard
      */
-    void Stop(Ph2_HwDescription::BeBoard* pBoard);
+    void Stop(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Pause a DAQ
      * \param pBoard
      */
-    void Pause(Ph2_HwDescription::BeBoard* pBoard);
+    void Pause(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Resume a DAQ
      * \param pBoard
      */
-    void Resume(Ph2_HwDescription::BeBoard* pBoard);
+    void Resume(const Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
      * \brief Start a DAQ
@@ -308,7 +308,6 @@ class BeBoardInterface
      */
     std::pair<std::vector<uint32_t>, std::vector<uint32_t>> ReadData(Ph2_HwDescription::BeBoard* pBoard, int buffernum, int mpa);
 
-    void     selectLink(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLinkId, uint32_t pWait_ms = 100);
     uint16_t ParseEvents(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData);
 };
 } // namespace Ph2_HwInterface

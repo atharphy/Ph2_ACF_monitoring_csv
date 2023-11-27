@@ -14,7 +14,7 @@ const uint8_t READ_FE              = 6;
 const uint8_t WRITE_FE             = 7;
 const int     BLOCK_SIZE           = 16000;
 
-const std::map<uint8_t, std::string> I2C_STATUS_MAP = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+const std::map<uint8_t, std::string> I2C_STATUS_MAP = {{0, "InvalidTransactionCode"}, {4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 
 const std::map<int, std::string> WORKER_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                       {1, "IDLE"},
@@ -59,7 +59,8 @@ const std::map<int, std::string> I2C_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                    {15, "GET_STAT"},
                                                    {16, "CHECK_STAT"},
                                                    {17, "WAIT_IC_WR_DONE"},
-                                                   {18, "WAIT_IC_RD_DONE"}};
+                                                   {18, "WAIT_IC_RD_DONE"},
+                                                   {19, "UNDEFINED"}};
 
 const std::map<int, std::string> FE_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                   {1, "IDLE"},

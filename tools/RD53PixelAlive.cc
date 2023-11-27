@@ -48,7 +48,8 @@ void PixelAlive::ConfigureCalibration()
     // ######################
     // # Set injection type #
     // ######################
-    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DIGITAL_INJ_EN", injType == RD53Shared::INJtype::Digital);
+    for(const auto cBoard: *fDetectorContainer)
+        this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DIGITAL_INJ_EN", ((injType == RD53Shared::INJtype::Digital) || (injType == RD53Shared::INJtype::SelfTrigger)));
 
     // #######################
     // # Initialize progress #
@@ -96,7 +97,7 @@ void PixelAlive::Stop()
     Tool::Stop();
 
     PixelAlive::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -183,7 +184,11 @@ void PixelAlive::run()
                                         statusGood = false;
                                         break;
                                     }
-                                if((statusGood == false) || (RD53Event::decodedEvents.size() == 0)) regValueMap[suffix] ^= 1 << i;
+                                if((statusGood == false) || (RD53Event::decodedEvents.size() == 0))
+                                {
+                                    regValueMap[suffix] ^= 1 << i;
+                                    static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
+                                }
                             }
                         }
 
@@ -258,7 +263,7 @@ void PixelAlive::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     PixelAlive::fillHisto();
     histos->process();
     doSaveData = saveData;

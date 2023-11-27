@@ -29,6 +29,8 @@ void DataTransmissionTestGraphs::book(TFile* theOutputFile, DetectorContainer& t
     bookImplementer(theOutputFile, theDetectorStructure, TAP0scan, gTAP0scan, "TAP0", "Bit Error Rate");
     auto hTAP0tgt = CanvasContainer<TH1F>("TAP0tgt", "TAP0 at target BER", 1024, 0 - 0.5, 1024 - 0.5);
     bookImplementer(theOutputFile, theDetectorStructure, TAP0tgt, hTAP0tgt, "TAP0 at target BER", "Value");
+
+    AreHistoBooked = true;
 }
 
 bool DataTransmissionTestGraphs::fill(std::string& inputStream)

@@ -7,6 +7,8 @@
 #include "tools/CombinedCalibration.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
+#include "tools/OTTemperature.h"
+#include "tools/OTVTRXLightOff.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RD53ClockDelay.h"
@@ -34,12 +36,13 @@ using namespace MessageUtils;
 CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
     // OT calibrations
+    Register<OTVTRXLightOff>("vtrxoff");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("takedata"); // will be used in future version of GIPHT
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, KIRA>("calibrationandkira");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, KIRA>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise");
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>("calibrationandpedenoise");
+    Register<OTTemperature, LinkAlignmentOT, CicFEAlignment, PedeNoise, OTTemperature>("pedenoise");
+    Register<OTTemperature, LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, OTTemperature>("calibrationandpedenoise");
     Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample");
     Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("cbcpulseshape");
     Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("otlatency");

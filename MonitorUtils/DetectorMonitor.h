@@ -45,6 +45,8 @@ class DetectorMonitor
     std::atomic<bool> fKeepRunning;
     std::atomic<bool> startMonitor;
     std::future<void> fMonitorFuture;
+
+    u_int8_t fClose = 20;
 };
 
 #endif

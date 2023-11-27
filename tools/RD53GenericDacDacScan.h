@@ -64,8 +64,6 @@ class GenericDacDacScan : public PixelAlive
     size_t      startValueDAC2;
     size_t      stopValueDAC2;
     size_t      stepDAC2;
-    bool        doUpdateChip;
-    bool        doDisplay;
 
     int  theCurrentRun;
     bool isDAC1ChipReg;

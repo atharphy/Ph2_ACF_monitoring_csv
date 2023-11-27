@@ -72,9 +72,8 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
-    bool cIgnoreI2c    = false;
     bool cReInitialize = true;
-    cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+    cTool.ConfigureHw(cReInitialize);
 
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     cDirectory += "WorkerTest";

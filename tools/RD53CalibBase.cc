@@ -44,7 +44,7 @@ void CalibBase::saveChipRegisters(int currentRun, bool doUpdateChip)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap();
+                    if(doUpdateChip == true) cChip->saveRegMap();
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
                     system(command.c_str());
@@ -185,4 +185,13 @@ uint8_t CalibBase::assignGroupType(RD53Shared::INJtype injType) const
         groupType = RD53GroupType::Custom;
 
     return groupType;
+}
+
+void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
+{
+    auto chipSubset = [](const ChipContainer* theChip) { return theChip->isEnabled(); };
+
+    fDetectorContainer->resetReadoutChipQueryFunction();
+    fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryName);
+    fDetectorContainer->setEnabledAll(true);
 }

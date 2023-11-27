@@ -109,7 +109,7 @@ void ThrEqualization::Stop()
     Tool::Stop();
 
     ThrEqualization::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
@@ -223,7 +223,7 @@ void ThrEqualization::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
     }
 
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     ThrEqualization::fillHisto();
     histos->process();
 

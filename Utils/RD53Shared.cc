@@ -9,7 +9,8 @@
 
 #include "RD53Shared.h"
 
-Ph2_HwDescription::RD53* RD53Shared::firstChip;
+Ph2_HwDescription::RD53*        RD53Shared::firstChip;
+Ph2_HwInterface::RD53Interface* RD53Shared::chipInterface;
 
 std::string RD53Shared::fromInt2Str(int val)
 {
@@ -41,14 +42,16 @@ void RD53Shared::resetDefaultFloat() { std::cout.setf(std::ios_base::fmtflags(0)
 std::string RD53Shared::gitGitCommit()
 {
     std::string myString;
+    std::string base(std::getenv("PH2ACF_BASE_DIR"));
+    std::string cd("cd " + base + "; ");
 
-    system(std::string("git rev-parse HEAD >> git.log").c_str());
+    system(std::string(cd + "git rev-parse HEAD >> git.log").c_str());
 
-    std::ifstream gitFile("git.log");
+    std::ifstream gitFile(base + "/git.log");
     gitFile >> myString;
     gitFile.close();
 
-    system(std::string("rm git.log").c_str());
+    system(std::string(cd + "rm git.log").c_str());
 
     return myString;
 }

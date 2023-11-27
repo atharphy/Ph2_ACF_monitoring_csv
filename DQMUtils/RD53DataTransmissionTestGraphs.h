@@ -28,6 +28,8 @@ class DataTransmissionTestGraphs : public DQMHistogramBase
     void fillTAP0scan(const DetectorDataContainer& TAP0scanContainer);
     void fillTAP0tgt(const DetectorDataContainer& TAP0tgtContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

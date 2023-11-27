@@ -731,12 +731,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     {
         LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard for optical readout" << RESET;
         LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslop " << RESET;
-        fBackendAlignmentInterface->setNbits(3);
     }
     else
     {
         LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslop " << RESET;
-        fBackendAlignmentInterface->setNbits(4);
     }
     fOptical = pBoard->isOptical() && !cWithlpGBT;
     // if optical readout .. then configure links
@@ -957,11 +955,9 @@ void D19cFWInterface::PowerOnDIO5(uint8_t pFMCId)
     WriteReg(cRegName, 0x1);
 }
 
-void D19cFWInterface::Start() { fTriggerInterface->Start(); }
-
+void D19cFWInterface::Start(const BeBoard* pBoard) { fTriggerInterface->Start(); }
 void D19cFWInterface::Stop() { fTriggerInterface->Stop(); }
 void D19cFWInterface::Pause() { fTriggerInterface->Pause(); }
-
 void D19cFWInterface::Resume() { fTriggerInterface->Resume(); }
 
 void D19cFWInterface::DDR3SelfTest()
@@ -1493,10 +1489,10 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
                        << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
         }
         else if(pItem.fStatusReg == 0x00)
-            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << RESET;
+            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << std::dec << RESET;
     }
     else
-        LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " FAILED " << RESET;
+        LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " FAILED " << std::dec << RESET;
     return cValue;
 }
 
@@ -1543,12 +1539,14 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
             // update map
             auto cPreviousValue = cIterator->second.fValue;
             pChip->setReg(cIterator->first, pItem.fValue);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite successful write of 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
-                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            uint16_t readBackVal = pChip->getReg(cIterator->first);
+            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite Succesful write of 0x" << std::hex << +pItem.fValue << " to " << cIterator->first << "\t.. Memory is now 0x"
+                       << +readBackVal << " it was 0x" << +cPreviousValue << std::dec << RESET;
             pItem = pChip->getRegItem(cIterator->first);
+            LOG(DEBUG) << BOLDGREEN << " DONE D19cFWInterface::SingleRegisterWrite" << RESET;
         }
         else
-            LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILEd to write to Register " << cIterator->first << RESET;
+            LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILED to write to Register " << cIterator->first << RESET;
         return true;
     }
     else
@@ -1735,7 +1733,7 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
                 cItem = pChip->getRegItem(cIterator->first);
             }
             else
-                LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Register 0x" << std::hex << +cItem.fAddress << " not in register map " << RESET;
+                LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Register 0x" << std::hex << +cItem.fAddress << " not in register map " << std::dec << RESET;
         }
         return true;
     }
@@ -1858,7 +1856,7 @@ void D19cFWInterface::ConfigureFCMDBram(std::vector<uint8_t> pFastCommands)
     LOG(DEBUG) << BOLDBLUE << "Configuring FCMD BRAM from sw..... done" << RESET;
 }
 // sfp_ddmi
-void D19cFWInterface::GetSFPParameter_L8(std::string parameter, int channel)
+float D19cFWInterface::GetSFPParameter_L8(std::string parameter, int channel)
 {
     if(parameter == "T") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 96);
     if(parameter == "V") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 98);
@@ -1897,16 +1895,41 @@ void D19cFWInterface::GetSFPParameter_L8(std::string parameter, int channel)
     }
     else
     {
-        int result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l8");
-        if(parameter == "T") LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result / 256.0 << " Celsius" << RESET;
-        if(parameter == "V") LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result / 10.0 << " miliVolt" << RESET;
-        if(parameter == "I") LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result * 0.002 << " miliAmper" << RESET;
-        if(parameter == "TX") LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result * 0.1 << " muWatt" << RESET;
-        if(parameter == "RX") LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result * 0.1 << " muWatt" << RESET;
-        if(parameter == "raw") LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET;
+        float result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l8");
+        if(parameter == "T")
+        {
+            result = result / 256.0;
+            LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
+        }
+        else if(parameter == "V")
+        {
+            result = result / 10.0;
+            LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
+        }
+        else if(parameter == "I")
+        {
+            result = result * 0.002;
+            LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
+        }
+        else if(parameter == "TX")
+        {
+            result = result * 0.1;
+            LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "RX")
+        {
+            result = result * 0.1;
+            LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "raw")
+        {
+            LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET;
+        }
+        return result;
     }
+    return error;
 }
-void D19cFWInterface::GetSFPParameter_L12(std::string parameter, int channel)
+float D19cFWInterface::GetSFPParameter_L12(std::string parameter, int channel)
 {
     if(parameter == "T") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 96);
     if(parameter == "V") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 98);
@@ -1944,13 +1967,37 @@ void D19cFWInterface::GetSFPParameter_L12(std::string parameter, int channel)
     }
     else
     {
-        int result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l12");
-        if(parameter == "T") LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result / 256.0 << " Celsius" << RESET;
-        if(parameter == "V") LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result / 10.0 << " miliVolt" << RESET;
-        if(parameter == "I") LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result * 0.002 << " miliAmper" << RESET;
-        if(parameter == "TX") LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result * 0.1 << " muWatt" << RESET;
-        if(parameter == "RX") LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result * 0.1 << " muWatt" << RESET;
-        if(parameter == "raw") LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << "  " << RESET;
+        float result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l12");
+        if(parameter == "T")
+        {
+            result = result / 256.0;
+            LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
+        }
+        else if(parameter == "V")
+        {
+            result = result / 10.0;
+            LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
+        }
+        else if(parameter == "I")
+        {
+            result = result * 0.002;
+            LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
+        }
+        else if(parameter == "TX")
+        {
+            result = result * 0.1;
+            LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "RX")
+        {
+            result = result * 0.1;
+            LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "raw")
+            LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET;
+
+        return result;
     }
+    return error;
 } // D19cFWInterface
 } // namespace Ph2_HwInterface
