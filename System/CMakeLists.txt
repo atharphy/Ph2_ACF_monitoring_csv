@@ -94,7 +94,7 @@ else()
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
-    #    include_directories(${Protobuf_INCLUDE_DIRS})
+    include_directories(${Protobuf_INCLUDE_DIRS})
 
     cet_set_compiler_flags(
                            EXTRA_FLAGS -Wno-reorder -Wl,--undefined

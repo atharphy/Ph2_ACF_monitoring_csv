@@ -15,6 +15,7 @@
 
 #include <array>
 #include <vector>
+#include <cstdint>
 
 namespace RD53ACmd
 {
