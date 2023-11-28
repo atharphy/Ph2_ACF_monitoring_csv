@@ -1,6 +1,8 @@
 #include "OTlpGBTID.h"
+#ifdef __USE_ROOT__
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+#endif
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -27,6 +29,7 @@ void OTlpGBTID::Running()
 
 void OTlpGBTID::ReadlpGBTIDs()
 {
+#ifdef __USE_ROOT__
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -44,6 +47,7 @@ void OTlpGBTID::ReadlpGBTIDs()
             }
         }
     }
+#endif
 }
 
 void OTlpGBTID::Stop() {}
