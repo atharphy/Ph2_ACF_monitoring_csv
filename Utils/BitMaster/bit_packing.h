@@ -44,6 +44,7 @@
 
 #include <iostream>
 #include <tuple>
+#include <cstdint>
 
 namespace bits
 {

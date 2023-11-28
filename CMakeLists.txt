@@ -239,9 +239,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         add_subdirectory(DQMUtils)
         add_subdirectory(RootUtils)
         add_subdirectory(MonitorDQM)
-    endif()
-
-    if(NoDataShipping OR CompileForShep)
         add_subdirectory(src)
     endif()
 
