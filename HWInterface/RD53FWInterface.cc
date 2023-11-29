@@ -293,7 +293,11 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################
+    bool                                          gtxRxPolarity = false;
+    bool                                          fastCmdReg1   = false;
+    bool                                          extTluReg2    = false;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
+
     LOG(INFO) << GREEN << "Initializing board's registers:" << RESET;
 
     for(const auto& it: pBoard->getBeBoardRegMap())
@@ -301,14 +305,17 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second << std::dec << " (" << it.second << ")" << RESET;
             cVecReg.push_back({it.first, it.second});
+            if(it.first.find("gtx_rx_polarity") != std::string::npos) gtxRxPolarity = true;
+            if(it.first.find("fast_cmd_reg_1") != std::string::npos) fastCmdReg1 = true;
+            if(it.first.find("ext_tlu_reg2") != std::string::npos) extTluReg2 = true;
         }
 
     if(cVecReg.size() != 0)
     {
         RegManager::WriteStackReg(cVecReg);
-        RD53FWInterface::WriteStackReg({{"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 1}, {"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 0}});
-        RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
-        RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
+        if(gtxRxPolarity == true) RD53FWInterface::WriteStackReg({{"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 1}, {"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 0}});
+        if(fastCmdReg1 == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
+        if(extTluReg2 == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
