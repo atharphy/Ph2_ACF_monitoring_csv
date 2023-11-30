@@ -1424,7 +1424,6 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
         if(fEventType != EventType::ZS)
         {
-            // check data words because I'm desperate
             // for( auto cWord : pData )
             //     LOG (INFO) << BOLDYELLOW << "SystemController \t..." << std::bitset<32>(cWord) << RESET;
 
