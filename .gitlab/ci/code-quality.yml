@@ -6,9 +6,6 @@ variables:
   QUALITY_CHECK_DIR: ci-quality-checks
   LCG_CLANG_VERSION: 14 # Check if true
 
-# .quality_setup: &quality_setup |-
-  # mkdir -p ${REPORTS_PATH}
-
   
 # Ideally, we'd throw the warnings and errors discovered in a sensitive compilation
 # job into the code quality report so that the number of compilation warnings 
@@ -16,18 +13,15 @@ variables:
 
 # See: https://gitlab.cern.ch/gitlabci-examples/static_code_analysis
 quality:cpplint:
-  #image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
   image: cfreak/codeclimate-cpplint:latest
   stage: quality
-  #tags:
-  #  - docker
-  # stage: quality
+  tags:
+    - k8s-default
   needs: []
   allow_failure: true
 
   before_script:
     - echo "Running code quality cpplint checks"
-    #- yum install -y python3
     - mkdir -p ${REPORTS_PATH}
   script:
     - python3 ${CI_PROJECT_DIR}/.gitlab/ci/scripts/runcpplint.py --files ./**/*.cxx ./**/*.cpp ./**/*.h ./**/*.hpp
@@ -42,12 +36,10 @@ quality:cpplint:
       - artifacts
 
 quality:clang-format:
-  #image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
   image: cern/cc7-base:latest
   stage: quality
   tags:
     - cvmfs
-  # stage: quality
   needs: []
   allow_failure: true
 
@@ -66,7 +58,6 @@ quality:clang-format:
     - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
     - echo ARTIFACTS_DIR/PATCHFILE is ${ARTIFACTS_DIR}/${PATCHFILE}
     - ls ${ARTIFACTS_DIR}
-    #- ls -l
     - |
         git checkout -b patch/${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}
         ${CLANG_FORMAT_EXE} -i -r . || true
