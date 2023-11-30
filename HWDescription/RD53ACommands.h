@@ -14,8 +14,8 @@
 #include "Utils/BitMaster/bit_packing.h"
 
 #include <array>
-#include <vector>
 #include <cstdint>
+#include <vector>
 
 namespace RD53ACmd
 {

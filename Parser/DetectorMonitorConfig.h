@@ -2,11 +2,11 @@
 #define DETECTOR_MONITOR_CONFIG_H
 
 #include <algorithm>
+#include <cstdint>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <cstdint>
 
 struct DetectorMonitorConfig
 {
