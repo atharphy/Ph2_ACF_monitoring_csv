@@ -511,9 +511,9 @@ std::vector<Stub> D19cCbc3EventZS::StubVector(uint8_t pHybridId, uint8_t pCbcId)
         uint8_t bend2 = (cData->second.at(cData->second.size() - 1) & 0x000F0000) >> 16;
         uint8_t bend3 = (cData->second.at(cData->second.size() - 1) & 0x0F000000) >> 24;
 
-        if(pos1 != 0) cStubVec.emplace_back(pos1, bend1);
-        if(pos2 != 0) cStubVec.emplace_back(pos2, bend2);
-        if(pos3 != 0) cStubVec.emplace_back(pos3, bend3);
+        if(pos1 != 0) cStubVec.emplace_back(Stub(pos1, bend1));
+        if(pos2 != 0) cStubVec.emplace_back(Stub(pos2, bend2));
+        if(pos3 != 0) cStubVec.emplace_back(Stub(pos3, bend3));
     }
     else
         LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
