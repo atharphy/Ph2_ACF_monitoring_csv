@@ -963,7 +963,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         // 0 --> CBC , 1 --> MPA
         uint8_t cModeSelect = (cIs2S) ? 0 : 1;
         uint8_t cBx0Delay   = (cIs2S) ? 8 : 22;
-        // select CIC mode
+        // Select CIC mode
         if(!fCicInterface->SelectMode(cCic, cModeSelect))
         {
             exceptionHandleFunction(cHybrid->getId(), "configure CIC mode");
@@ -971,21 +971,21 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         }
         LOG(INFO) << BOLDMAGENTA << "CIC configured for " << (cIs2S ? "2S" : "PS") << " readout." << RESET;
 
-        // configure CIC FE enable register
-        // first make sure it is set to 0x00
+        // Configure CIC FE enable register
+        // First make sure it is set to 0x00
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         // figure out which Chips are enabled
         std::vector<uint8_t> cChipIds(0);
         for(auto cReadoutChip: *cHybrid)
         {
-            // only consider MPAs and CBCs
+            // Only consider MPAs and CBCs
             if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
             cChipIds.push_back(cReadoutChip->getId() % 8);
         }
         fCicInterface->EnableFEs(cCic, cChipIds, true);
 
-        // make sure data rate is correctly configured
-        // only works for CIC2
+        // Make sure data rate is correctly configured
+        // Only works for CIC2
         if(cCic->getFrontEndType() == FrontEndType::CIC2)
         {
             uint8_t cFeConfigReg  = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
@@ -1049,8 +1049,8 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             continue;
         }
 
-        cSuccess = true; // at least on hybrid is working fine
-    }                    // all hybrids connected to this OG
+        cSuccess = true; // At least on hybrid is working fine
+    }                    // All hybrids connected to this OG
 #ifdef __TCUSB__
     cSuccess = true; // No hybrids in the SEH/ROH test system
 #endif
@@ -1095,7 +1095,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
             }
             else // lpGBT + CIC will need to be configured  (and also maybe reset)
             {
-                // lpGBT config
+                // LpGBT config
                 for(auto cOpticalGroup: *cBoard)
                 {
                     if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -1412,100 +1412,90 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
 
-        if(pNevents == 0)
-        {
-            // LOG(INFO) << BOLDRED << "Asking to decode 0 events. . something might not be right here!!!" << RESET;
-        }
-        else
-        {
-            EventType fEventType = pBoard->getEventType();
-            uint32_t  fNHybrid   = pBoard->getNHybrid();
-            // uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
-            // LOG(INFO) << BOLDBLUE << "Reading events from " << +fNHybrid << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
-            fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
-            // uint32_t nmpa = 0;
-            uint32_t maxind = 0;
-            for(auto opticalGroup: *pBoard)
-            {
-                for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
-            }
+        EventType fEventType = pBoard->getEventType();
+        uint32_t  fNHybrid   = pBoard->getNHybrid();
+        // uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
+        // LOG(INFO) << BOLDBLUE << "Reading events from " << +fNHybrid << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
+        fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
+        // uint32_t nmpa = 0;
+        uint32_t maxind = 0;
+        for(auto opticalGroup: *pBoard)
+            for(auto hybrid: *opticalGroup) maxind = std::max(maxind, uint32_t(hybrid->size()));
 
-            if(fEventType != EventType::ZS)
-            {
-                // check data words because I'm desperate
-                // for( auto cWord : pData )
-                //     LOG (INFO) << BOLDYELLOW << "SystemController \t..." << std::bitset<32>(cWord) << RESET;
+        if(fEventType != EventType::ZS)
+        {
+            // for( auto cWord : pData )
+            //     LOG (INFO) << BOLDYELLOW << "SystemController \t..." << std::bitset<32>(cWord) << RESET;
 
-                size_t cEventIndex    = 0;
-                auto   cEventIterator = pData.begin();
-                do
+            size_t cEventIndex    = 0;
+            auto   cEventIterator = pData.begin();
+            do
+            {
+                uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
+                if(cHeader != 0xFFFF)
                 {
-                    uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
-                    if(cHeader != 0xFFFF)
+                    int cPositionInData = (int)std::distance(pData.begin(), cEventIterator);
+                    // first part of data header
+                    if(fFileHandler != nullptr && cPositionInData > 12)
+                        LOG(INFO) << BOLDRED << "SystemController::DecodeData Invalid header from the FW in position#" << cPositionInData << RESET;
+                    else if(fFileHandler == nullptr)
+                        LOG(INFO) << BOLDRED << "SystemController::DecodeData Invalid header from the FW in position#" << cPositionInData << RESET;
+                    cEventIterator++;
+                }
+                else // valid event  // decode
+                {
+                    uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
+                    // LOG (INFO) << BOLDMAGENTA << "SystemController::DecodeData Decoding event made of up " << +cEventSize << " 32 bit words. " << RESET;
+                    auto cEnd = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
+                    // retrieve chunck of data vector belonging to this event
+                    if(cEnd - cEventIterator == cEventSize)
                     {
-                        int cPositionInData = (int)std::distance(pData.begin(), cEventIterator);
-                        // first part of data header
-                        if(fFileHandler != nullptr && cPositionInData > 12)
-                            LOG(INFO) << BOLDRED << "SystemController::DecodeData Invalid header from the FW in position#" << cPositionInData << RESET;
-                        else if(fFileHandler == nullptr)
-                            LOG(INFO) << BOLDRED << "SystemController::DecodeData Invalid header from the FW in position#" << cPositionInData << RESET;
-                        cEventIterator++;
-                    }
-                    else // valid event  // decode
-                    {
-                        uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
-                        // LOG (INFO) << BOLDMAGENTA << "SystemController::DecodeData Decoding event made of up " << +cEventSize << " 32 bit words. " << RESET;
-                        auto cEnd = ((cEventIterator + cEventSize) > pData.end()) ? pData.end() : (cEventIterator + cEventSize);
-                        // retrieve chunck of data vector belonging to this event
-                        if(cEnd - cEventIterator == cEventSize)
+                        std::vector<uint32_t> cEvent(cEventIterator, cEnd);
+                        // some useful debug information
+                        LOG(DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
+                                   << +cEventSize << " 32 bit words..." << RESET;
+                        if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
+                        else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
                         {
-                            std::vector<uint32_t> cEvent(cEventIterator, cEnd);
-                            // some useful debug information
-                            LOG(DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
-                                       << +cEventSize << " 32 bit words..." << RESET;
-                            if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
-                            else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
-                            {
-                                bool cWithCBC3 = !(fEventType == EventType::VR2S);
-                                if(cWithCBC3)
-                                    LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 8CBC3 " << RESET;
-                                else
-                                    LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 2S-FEH  " << RESET;
-                                fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3, cTLUconfig));
-                            }
-                            else if(pBoard->getFrontEndType() == FrontEndType::SSA)
-                            {
-                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNHybrid, cEvent));
-                            }
-                            else if(pBoard->getFrontEndType() == FrontEndType::SSA2)
-                            {
-                                fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNHybrid, cEvent));
-                            }
-                            else if(pBoard->getFrontEndType() == FrontEndType::MPA)
-                            {
-                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNHybrid, cEvent));
-                                LOG(INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
-                                // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
-                                // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
-                                // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
-                                // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
-                                // for(auto cWord : cEvent )
-                                //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
-                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNHybrid, cEvent));
-                            }
-                            else if(pBoard->getFrontEndType() == FrontEndType::MPA)
-                            {
-                                LOG(INFO) << BOLDBLUE << "Decoding MPA data " << RESET;
-                                // fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
-                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNHybrid, cEvent));
-                            }
-                            cEventIndex++;
+                            bool cWithCBC3 = !(fEventType == EventType::VR2S);
+                            if(cWithCBC3)
+                                LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 8CBC3 " << RESET;
+                            else
+                                LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 2S-FEH  " << RESET;
+                            fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3, cTLUconfig));
                         }
-                        cEventIterator += cEventSize;
+                        else if(pBoard->getFrontEndType() == FrontEndType::SSA)
+                        {
+                            fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNHybrid, cEvent));
+                        }
+                        else if(pBoard->getFrontEndType() == FrontEndType::SSA2)
+                        {
+                            fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNHybrid, cEvent));
+                        }
+                        else if(pBoard->getFrontEndType() == FrontEndType::MPA)
+                        {
+                            fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNHybrid, cEvent));
+                            LOG(INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
+                            // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
+                            // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
+                            // LOG (INFO) << BOLDBLUE << "L1A counter chip0 : " << cL1Counter0 << RESET;
+                            // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
+                            // for(auto cWord : cEvent )
+                            //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
+                            fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNHybrid, cEvent));
+                        }
+                        else if(pBoard->getFrontEndType() == FrontEndType::MPA)
+                        {
+                            LOG(INFO) << BOLDBLUE << "Decoding MPA data " << RESET;
+                            // fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
+                            fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNHybrid, cEvent));
+                        }
+                        cEventIndex++;
                     }
-                } while(cEventIterator < pData.end());
-            }
-        } // end zero check
+                    cEventIterator += cEventSize;
+                }
+            } while(cEventIterator < pData.end());
+        }
     }
     else if(pType == BoardType::D19C && pBoard->getEventType() == EventType::PSAS)
     {
