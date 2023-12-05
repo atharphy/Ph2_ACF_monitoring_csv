@@ -284,7 +284,7 @@ run:2S:python:
   extends: .run
   script:
     - source ./setup.sh ci
-    - PythonController.py -f settings/CMS2S_CI.xml -c calibrationandpedenoise
+    - pythonUtils/PythonController.py -f settings/CMS2S_CI.xml -c calibrationandpedenoise
   after_script:
     - cp Results/*/*.root .
   artifacts:
