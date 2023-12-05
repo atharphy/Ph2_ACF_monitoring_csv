@@ -284,7 +284,7 @@ run:2S:python:
   extends: .run
   script:
     - source ./setup.sh ci
-    - pythonUtils/PythonController.py -f settings/CMS2S_CI.xml -c calibrationandpedenoise
+    - python3 pythonUtils/PythonController.py -f settings/CMS2S_CI.xml -c calibrationandpedenoise
   after_script:
     - cp Results/*/*.root .
   artifacts:
@@ -362,7 +362,7 @@ check:2S:
   needs:
     - run:2S
   script:
-    - python3 pythonUtils/ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_2/Hybrid_4/D_B(0)_O(2)_HybridNoiseDistribution_Hybrid(4)" -o plots
+    - python3 pythonUtils/ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/D_B(0)_O(0)_HybridNoiseDistribution_Hybrid(0)" -o plots
 
 
 ## DEPLOY ##########
