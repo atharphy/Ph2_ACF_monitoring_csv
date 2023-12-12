@@ -36,9 +36,9 @@ void DQMHistogramECV::book(TFile* theOutputFile, DetectorContainer& theDetectorS
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
-    HistContainer<TH2F> hBitErrorScanPolarity0("Hybrid_Clock_Polarity_0", "Polarity 0", 42, 0, 42, 75,0,75);
+    HistContainer<TH2F> hBitErrorScanPolarity0("Hybrid_Clock_Polarity_0", "Polarity 0", 49, 0, 49, 75,0,75);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBitErrorScanPolarity0, hBitErrorScanPolarity0);
-    HistContainer<TH2F> hBitErrorScanPolarity1("Hybrid_Clock_Polarity_1", "Polarity 1", 42, 0, 42, 75,0,75);
+    HistContainer<TH2F> hBitErrorScanPolarity1("Hybrid_Clock_Polarity_1", "Polarity 1", 49, 0, 49, 75,0,75);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBitErrorScanPolarity1, hBitErrorScanPolarity1);
 
 }

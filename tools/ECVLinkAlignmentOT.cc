@@ -207,11 +207,7 @@ void ECVLinkAlignmentOT::StoreValuesInHistogram(uint8_t pClockPolarity, uint8_t 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.filllpGBTCICPlot(pClockPolarity, pClockStrength, pCicStrength, pPhase,cBERContainer);
 #endif
-
-
-
 }
-
 
 std::vector<bool> ECVLinkAlignmentOT::CheckWordAlignBEdata(const OpticalGroup* pOpticalGroup)
 {
@@ -283,7 +279,6 @@ std::vector<bool> ECVLinkAlignmentOT::CheckWordAlignBEdata(const OpticalGroup* p
                 } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
             }
             ret.push_back(cAligned);
-
         }
     }
     // check for 0 bit slips
@@ -500,19 +495,35 @@ std::vector<float>  ECVLinkAlignmentOT::L1BitErrorTest(const OpticalGroup* pOpti
 
 std::vector<float> ECVLinkAlignmentOT::BitErrorTest(const OpticalGroup* pOpticalGroup)
 {
-    //l1BER.push_back(0);
-    //l1BER.push_back(0);
-
     std::vector<float> stubBER  = StubBitErrorTest(pOpticalGroup);
     std::vector<float> l1BER    = L1BitErrorTest(pOpticalGroup);
 
     std::vector<float> ret;
 
-    ret.push_back(l1BER[0]);
-    for(auto ber : stubBER)
-        ret.push_back(ber);
-    ret.push_back(l1BER[1]);
-
+    if ( pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+    {
+        ret.push_back(l1BER[0]);
+        for(auto ber : stubBER)
+            ret.push_back(ber);
+        ret.push_back(l1BER[1]);
+    }
+    if ( pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
+    {
+        ret.push_back(stubBER[0]);
+        ret.push_back(stubBER[1]);
+        ret.push_back(stubBER[2]);
+        ret.push_back(stubBER[3]);
+        ret.push_back(stubBER[4]);
+        ret.push_back(stubBER[5]);
+        ret.push_back(l1BER[0]);
+        ret.push_back(stubBER[6]);
+        ret.push_back(stubBER[7]);
+        ret.push_back(stubBER[8]);
+        ret.push_back(stubBER[9]);
+        ret.push_back(stubBER[10]);
+        ret.push_back(stubBER[11]);
+        ret.push_back(l1BER[1]);
+    }
     return ret;
 }
 
