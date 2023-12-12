@@ -1242,6 +1242,7 @@ bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength)
     if(cIterator != fTxDriveStrength.end())
     {
         auto cValue = (cRegValue & 0xF8) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
+        LOG (INFO) << +cValue << RESET;
         cSuccess    = this->WriteChipReg(pChip, cRegName, cValue);
         LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
         if(!cSuccess)

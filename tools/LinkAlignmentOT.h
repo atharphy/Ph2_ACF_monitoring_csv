@@ -63,9 +63,7 @@ class LinkAlignmentOT : public OTTool
     void                     LegacyAlignmentMPA(const Ph2_HwDescription::Chip* pChip);
     void                     CheckLpgbtOutputs(uint8_t pPattern = 0xAA);
 
-
   protected:
-  private:
     // Alignment parameters
     DetectorDataContainer fLpGBTSamplingDelay;
     DetectorDataContainer fBeSamplingDelay; // one per line per data line from hybrid
@@ -74,19 +72,14 @@ class LinkAlignmentOT : public OTTool
     bool                  fL1Debug{false};
     bool                  fAllowZeroBitslip{true};
 
-    std::vector<uint8_t> getGroupsAndChannels(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pGroups);
-    void ECV(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    std::vector<float>  BitErrorTest(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void SetlpGBTRxPhase(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pPhase);
-    std::vector<bool> CheckWordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    std::stringstream PrintECVResultTable(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::vector<std::vector<bool>> pWordAlignment, std::vector<std::vector<float>> pBitErrors);
-
     bool CheckLpgbtOutputs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pPattern = 0xAA);
     bool AlignLpGBTInputs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool PhaseAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    bool WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    bool WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pDisableUnsresponsiveHybrids = true);
     bool AlignStubPackage(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool AlignStubPackage(Ph2_HwDescription::BeBoard* pBoard);
     bool Align();
+  private:
+
 };
 #endif

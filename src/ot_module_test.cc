@@ -13,6 +13,7 @@
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
+#include "tools/ECVLinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTLightTransmission.h"
@@ -155,6 +156,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
     cmd.defineOption("phaseScan", "Phase Scan");
 
+    cmd.defineOption("ecv", "Perform Electronic Chain Validation Scans", ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
@@ -235,6 +238,7 @@ int main(int argc, char* argv[])
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
     int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
+    bool        cEcv             = (cmd.foundOption("ecv")) ? true : false;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -547,6 +551,34 @@ int main(int argc, char* argv[])
         cRegTester.writeObjects();
     }
 
+    if (cEcv)
+    {
+        cTool.ConfigureHw(true);
+
+        ECVLinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+        //try
+        //{
+            StartInfo theStartInfo;
+            theStartInfo.setRunNumber(cRunNumber);
+            cLinkAlignment.Start(theStartInfo);
+        //}
+        //catch(const std::exception& e)
+        //{
+        //    LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            //return (666);
+        //}
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.writeObjects();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            //return (666);
+        }
+    }
+
+
     // align CIC-lpGBT-BE
 
     bool cReInitialize = true;
@@ -577,6 +609,7 @@ int main(int argc, char* argv[])
         cPSAlignment.ConfigureDefaultAlignmentParameters();
         cPSAlignment.Reset();
 
+
         // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
 
@@ -600,6 +633,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
+        
         // align FEs - CIC
         LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
         CicFEAlignment cCicAligner;

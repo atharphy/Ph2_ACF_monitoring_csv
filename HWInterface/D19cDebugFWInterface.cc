@@ -13,7 +13,7 @@ D19cDebugFWInterface::~D19cDebugFWInterface() {}
 
 std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
 {
-    LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
+    if (pPrint) LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
     auto cInitFastReset = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
     auto cInitBP        = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable");
     // enable initial fast reset
@@ -26,7 +26,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
     // load new trigger configuration
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-    LOG(INFO) << BOLDBLUE << "Started triggers ...." << RESET;
+    if (pPrint) LOG(INFO) << BOLDBLUE << "Started triggers ...." << RESET;
     // wait until you've received at least one trigger
     auto cNTriggersRxd = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
     auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
@@ -36,7 +36,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
         cEndTime      = std::chrono::high_resolution_clock::now();
         cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cNTriggersRxd = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        LOG(INFO) << BOLDMAGENTA << "Trigger in counter is " << +cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;
+        if (pPrint) LOG(INFO) << BOLDMAGENTA << "Trigger in counter is " << +cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;
     } while(cNTriggersRxd < 10 && cDuration < pWait_ms * 1e3);
     WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
 

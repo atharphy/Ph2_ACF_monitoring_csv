@@ -904,8 +904,8 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
             lpGBTClockConfig cClkCnfg;
             cClkCnfg.fClkFreq         = 4;
             cClkCnfg.fClkDriveStr     = cHybridClockDrive;
-            cClkCnfg.fClkInvert       = (cSide == 0) ? 1 : 0;
-            cClkCnfg.fClkPreEmphWidth = 0;
+            cClkCnfg.fClkInvert       = (cSide == 0) ? 0 : 1; //1:0
+            cClkCnfg.fClkPreEmphWidth = 0; 
             cClkCnfg.fClkPreEmphMode  = cPreEmphMode;
             cClkCnfg.fClkPreEmphStr   = cPreEmphStr;
             LOG(INFO) << BOLDBLUE << "Enabling Hybrid clock [Side == " << +cSide << "]" << RESET;
