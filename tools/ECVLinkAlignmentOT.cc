@@ -458,7 +458,7 @@ std::vector<float>  ECVLinkAlignmentOT::L1BitErrorTest(const OpticalGroup* pOpti
                 LOG (INFO) << l1adata << RESET;
             }
             std::size_t found = l1adata.find("111111111111111111111111111");
-            std::bitset<32> pattern = 0xAD55AAB5;
+            std::bitset<32> pattern = ( pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) ? 0xAD55AAB5 : 0xAAAAAAAA;
             if (found != std::string::npos && (1600-found)>(250+32))
             {
                 std::bitset<32> toCheck(l1adata.substr(found + 250,32));
