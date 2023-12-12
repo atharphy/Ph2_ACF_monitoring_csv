@@ -34,9 +34,7 @@ class ECVLinkAlignmentOT : public LinkAlignmentOT
     void Resume() override;
 
     void writeObjects();
-
-
-    bool Align();
+    bool Scan();
 
   protected:
   private:
@@ -53,7 +51,6 @@ class ECVLinkAlignmentOT : public LinkAlignmentOT
     std::vector<bool>     CheckWordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     std::stringstream     PrintECVResultTable(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::vector<std::vector<bool>> pWordAlignment, std::vector<std::vector<float>> pBitErrors);
     void                  StoreValuesInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, std::vector<float> pBers);
-    std::string           GetL1Buffer ();
 
 };
 #endif

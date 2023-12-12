@@ -16,7 +16,7 @@ using namespace Ph2_System;
 ECVLinkAlignmentOT::ECVLinkAlignmentOT() : LinkAlignmentOT() {}
 ECVLinkAlignmentOT::~ECVLinkAlignmentOT() {}
 
-bool ECVLinkAlignmentOT::Align()
+bool ECVLinkAlignmentOT::Scan()
 {
     LOG(INFO) << BOLDYELLOW << "ECVLinkAlignmentOT::Align ..." << RESET;
     for(const auto cBoard: *fDetectorContainer)
@@ -210,36 +210,6 @@ void ECVLinkAlignmentOT::StoreValuesInHistogram(uint8_t pClockPolarity, uint8_t 
 
 
 
-}
-
-std::string ECVLinkAlignmentOT::GetL1Buffer ()
-{
-    /*
-    LOG(DEBUG) << BOLDMAGENTA << "First header found after " << this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
-    auto        cWords    = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-    std::string cBuffer   = "";
-    size_t      cLineIndx = 0;
-    for(auto cWord: cWords)
-    {
-        auto                     cString = std::bitset<32>(cWord).to_string();
-        std::vector<std::string> cOutputWords(0);
-        for(size_t cIndex = 0; cIndex < 4; cIndex++) { cOutputWords.push_back(cString.substr(cIndex * 8, 8)); }
-        std::string cOutput = "";
-        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
-        {
-            cOutput += *cIt + " ";
-            cBuffer += *cIt;
-        }
-        if(pPrint) LOG(INFO) << BOLDBLUE << "#" << +cLineIndx << ":" << cOutput << RESET;
-        cLineIndx++;
-    }
-
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", cInitFastReset);
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", cInitBP);
-    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
-    return cBuffer;
-    */
-   return "";
 }
 
 
@@ -638,16 +608,7 @@ std::stringstream ECVLinkAlignmentOT::PrintECVResultTable(const OpticalGroup* pO
 void ECVLinkAlignmentOT::Running()
 {
     Initialise();
-    //try
-    //{
-        Align();
-    //}
-    //catch(const std::exception& e)
-    //{
-    //    fSuccess = false;
-    //    LOG(INFO) << BOLDRED << "ECVLinkAlignmentOT failed" << RESET;
-    //    throw std::runtime_error(std::string("Could not align link in the BE"));
-    //}
+    Scan();
     fSuccess = true;
     Reset();
 }
@@ -662,7 +623,6 @@ void ECVLinkAlignmentOT::writeObjects()
 {
 #ifdef __USE_ROOT__
     this->SaveResults();
-    LOG (INFO) << "process" << RESET;
     fDQMHistogrammer.process();
 #endif
 }
