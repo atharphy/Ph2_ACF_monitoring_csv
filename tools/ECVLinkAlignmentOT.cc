@@ -301,9 +301,9 @@ std::vector<bool> ECVLinkAlignmentOT::CheckWordAlignBEdata(const OpticalGroup* p
         fCicInterface->SelectOutput(cCic, false);
     }
     // align L1 data in the BE
-    fL1Debug = true;
+    fL1Debug = false;
     LOG(INFO) << BOLDMAGENTA << "ECVLinkAlignmentOT::WordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
-    cAligned = L1WordAlignment(pOpticalGroup, fL1Debug);
+    cAligned = L1WordAlignment(pOpticalGroup, fL1Debug); //If one line is not aligned it is false for both lines
     ret.insert(ret.begin(),cAligned); //to be corrected
     ret.push_back(cAligned);
     size_t cIndx = 0;
@@ -502,9 +502,19 @@ std::vector<float> ECVLinkAlignmentOT::BitErrorTest(const OpticalGroup* pOptical
 
     if ( pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
     {
+        ret.push_back(stubBER[0]);
+        ret.push_back(stubBER[1]);
+        ret.push_back(stubBER[2]);
+        ret.push_back(stubBER[3]);
+        ret.push_back(stubBER[4]);
+        ret.push_back(1);
         ret.push_back(l1BER[0]);
-        for(auto ber : stubBER)
-            ret.push_back(ber);
+        ret.push_back(stubBER[5]);
+        ret.push_back(stubBER[6]);
+        ret.push_back(stubBER[7]);
+        ret.push_back(stubBER[8]);
+        ret.push_back(stubBER[9]);
+        ret.push_back(1);
         ret.push_back(l1BER[1]);
     }
     if ( pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
@@ -606,8 +616,6 @@ std::stringstream ECVLinkAlignmentOT::PrintECVResultTable(const OpticalGroup* pO
             if (flpGBTInterface->fTrainedPhases[chn] ==phase)
                 line << BOLDBLUE;
             line << (int)(error*1000) /1000.0 << RESET <<"\t";
-
-
             chn++;
         }
         ret<< line.str() << "\n" << RESET;

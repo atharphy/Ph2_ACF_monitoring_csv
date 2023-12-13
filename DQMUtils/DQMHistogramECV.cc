@@ -73,7 +73,7 @@ void DQMHistogramECV::process()
                 }
                 binNumber = 1;
 
-                for (uint32_t channel = 1; channel <=6; channel++)
+                for (uint32_t channel = 1; channel <=7; channel++)
                 {
                     for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
                     {
@@ -118,7 +118,7 @@ void DQMHistogramECV::process()
                 }
                 binNumber = 1;
 
-                for (uint32_t channel = 1; channel <=6; channel++)
+                for (uint32_t channel = 1; channel <=7; channel++)
                 {
                     for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
                     {
@@ -165,7 +165,7 @@ void DQMHistogramECV::filllpGBTCICPlot(uint8_t pClockPolarity, uint8_t pClockStr
                     if (+hybrid->getId() == 0)
                         cBERSummary->SetBinContent(ch*7+pClockStrength,76-pPhase*5-pCicStrength , value);
                     else
-                        cBERSummary->SetBinContent((ch%6)*7+pClockStrength,76-pPhase*5-pCicStrength , value);
+                        cBERSummary->SetBinContent((ch%7)*7+pClockStrength,76-pPhase*5-pCicStrength , value);
                     ch ++;
                 }
 
