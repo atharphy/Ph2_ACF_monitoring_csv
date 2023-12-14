@@ -113,7 +113,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
     fPulseAmplitudePix           = findValueInSettings<double>("PedeNoisePulseAmplitudePix", fPulseAmplitude);
-    std::cout << __PRETTY_FUNCTION__ << " fPulseAmplitude " << +fPulseAmplitudePix << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " fPulseAmplitudePix " << +fPulseAmplitudePix << std::endl;
     fPedeNoiseLimit          = findValueInSettings<double>("PedeNoiseLimit", 10); // NOT IN XML
     fPedeNoiseMask           = findValueInSettings<double>("PedeNoiseMask", 0);   // NOT IN XML
     fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoiseMaskUntrimmed", 0);
@@ -124,6 +124,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fMaxThreshold            = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
     fNeventsForValidation    = findValueInSettings<double>("NeventsForValidation", 10000); // NOT IN XML
     fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
+    fPedeNoiseLatency        = findValueInSettings<double>("PedeNoiseLatency", 198);
+
     // if you forget to use the PedeNoiseUseFixRange setting but instead declare
     // min and max threshold ... will still work
     if(!fUseFixRange && fMinThreshold != fMaxThreshold) { fUseFixRange = true; }
@@ -337,6 +339,8 @@ void PedeNoise::sweepSCurves()
 
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+
+        setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TriggerLatency", fPedeNoiseLatency); 
     }
 
     bool forceAllChannels = false;
@@ -405,8 +409,8 @@ void PedeNoise::Validate()
 
     LOG(INFO) << "Setting all channels";
     this->SetTestAllChannels(true);
-    LOG(INFO) << "measuring with " << fNeventsForValidation << " events and " << fNEventsPerBurst << " per burst";
-    this->measureData(fNeventsForValidation, fNEventsPerBurst);
+    LOG(INFO) << "measuring with " << fNeventsForValidation << " events and " << fMaxNevents << " per burst";
+    this->measureData(fNeventsForValidation, fMaxNevents);
     LOG(INFO) << "setting al channels v2";
     this->SetTestAllChannels(originalAllChannelFlag);
 #ifdef __USE_ROOT__

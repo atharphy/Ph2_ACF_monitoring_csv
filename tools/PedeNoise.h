@@ -76,6 +76,7 @@ class PedeNoise : public Tool
     uint32_t fNeventsForValidation{0};
     float    fMaskingThreshold{0};
     bool     fMaskNoisyChannels{0};
+    uint16_t fPedeNoiseLatency{0};
 
     DetectorDataContainer*                     fThresholdAndNoiseContainer;
     std::map<uint16_t, DetectorDataContainer*> fSCurveStripOccupancyMap, fSCurvePixelOccupancyMap;
