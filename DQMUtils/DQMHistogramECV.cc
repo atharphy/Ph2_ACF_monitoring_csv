@@ -36,10 +36,25 @@ void DQMHistogramECV::book(TFile* theOutputFile, DetectorContainer& theDetectorS
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
-    HistContainer<TH2F> hBitErrorScanPolarity0("Hybrid_Clock_Polarity_0", "Polarity 0", 49, 0, 49, 75,0,75);
+    HistContainer<TH2F> hBitErrorScanPolarity0("CIC_Clock_Polarity_0", "Polarity 0", 49, 0, 49, 75,0,75);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBitErrorScanPolarity0, hBitErrorScanPolarity0);
-    HistContainer<TH2F> hBitErrorScanPolarity1("Hybrid_Clock_Polarity_1", "Polarity 1", 49, 0, 49, 75,0,75);
+    HistContainer<TH2F> hBitErrorScanPolarity1("CIC_Clock_Polarity_1", "Polarity 1", 49, 0, 49, 75,0,75);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBitErrorScanPolarity1, hBitErrorScanPolarity1);
+
+    HistContainer<TH2F> hWordAlignmentScanPolarity0("WordAlignment_Polarity_0", "Polarity 0", 49, 0, 49, 75,0,75);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fWordAlignmentScanPolarity0, hWordAlignmentScanPolarity0);
+    HistContainer<TH2F> hWordAlignmentScanPolarity1("WordAlignment_Polarity_1", "Polarity 1", 49, 0, 49, 75,0,75);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fWordAlignmentScanPolarity1, hWordAlignmentScanPolarity1);
+
+    HistContainer<TH2F> hPhaseTrainingPolarity0("PhaseTraining_Polarity_0", "Polarity 0", 49, 0, 49, 75,0,75);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanPolarity0, hPhaseTrainingPolarity0);
+    HistContainer<TH2F> hPhaseTrainingPolarity1("PhaseTraining_Polarity_1", "Polarity 1", 49, 0, 49, 75,0,75);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanPolarity1, hPhaseTrainingPolarity1);
+
+    HistContainer<TH2F> hChosenPhasePolarity0("ChosenPhase_Polarity_0", "Polarity 0", 49, 0, 49, 75,0,75);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fChosenPhasePolarity0, hChosenPhasePolarity0);
+    HistContainer<TH2F> hChosenPhasePolarity1("ChosenPhase_Polarity_1", "Polarity 1", 49, 0, 49, 75,0,75);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fChosenPhasePolarity1, hChosenPhasePolarity1);
 
 }
 
@@ -142,8 +157,30 @@ void DQMHistogramECV::process()
 //========================================================================================================================
 
 void DQMHistogramECV::reset(void) {}
-
-void DQMHistogramECV::filllpGBTCICPlot(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& pBERSummary)
+void DQMHistogramECV::filllWordAlign(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pLine,  DetectorDataContainer& pWordAlignSummary)
+{
+    for(auto board: pWordAlignSummary)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                bool aligned = pWordAlignSummary.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<bool>();
+                TH2F* cAlignSummary;
+                if (pClockPolarity == 0)
+                    cAlignSummary = fWordAlignmentScanPolarity0 .getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                else
+                    cAlignSummary = fWordAlignmentScanPolarity1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                
+                if (+hybrid->getId() == 0)
+                    cAlignSummary->SetBinContent(pLine*7+pClockStrength,76-pPhase*5-pCicStrength , (aligned)? 1 : 0);
+                else
+                    cAlignSummary->SetBinContent((pLine%7)*7+pClockStrength,76-pPhase*5-pCicStrength , (aligned)? 1 : 0);
+            }
+        }
+    }
+}
+void DQMHistogramECV::filllBER(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& pBERSummary)
 {
     for(auto board: pBERSummary)
     {

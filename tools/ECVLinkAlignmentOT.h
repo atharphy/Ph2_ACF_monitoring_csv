@@ -44,13 +44,21 @@ class ECVLinkAlignmentOT : public LinkAlignmentOT
     void                  SetHybridClockPolarityAndStrength(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pInverted, uint8_t pStrength);
     std::vector<uint8_t>  getGroupsAndChannels(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pGroups);
     void                  ECV(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void                  ECV2(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+
     std::vector<float>    BitErrorTest(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    std::vector<float>    StubBitErrorTest(const OpticalGroup* pOpticalGroup);
-    std::vector<float>    L1BitErrorTest(const OpticalGroup* pOpticalGroup);
+    std::vector<float>    StubBitErrorTest(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    std::vector<float>    L1BitErrorTest(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void                  SetlpGBTRxPhase(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pPhase);
     std::vector<bool>     CheckWordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void                  InitWordAlignStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    std::vector<bool>     CheckWordAlignBEdataStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void                  StopWordAlignStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    std::vector<bool>     CheckWordAlignBEdataL1(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     std::stringstream     PrintECVResultTable(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::vector<std::vector<bool>> pWordAlignment, std::vector<std::vector<float>> pBitErrors);
     void                  StoreValuesInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, std::vector<float> pBers);
+    void                  StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pLine, bool pAligned);
+
 
 };
 #endif

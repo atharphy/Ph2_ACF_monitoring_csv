@@ -53,12 +53,25 @@ class DQMHistogramECV : public DQMHistogramBase
     void reset(void) override;
     // virtual void summarizeHistos();
 
-    void filllpGBTCICPlot(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& pBERsummary);
+    void filllWordAlign(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pLine, DetectorDataContainer& pWordAlignSummary);
+
+    void filllBER(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& pBERSummary);
+
+
 
   private:
     DetectorDataContainer fDetectorData;
     DetectorDataContainer fBitErrorScanPolarity0;
     DetectorDataContainer fBitErrorScanPolarity1;
+
+    DetectorDataContainer fWordAlignmentScanPolarity0;
+    DetectorDataContainer fWordAlignmentScanPolarity1;
+
+    DetectorDataContainer fPhaseScanPolarity0;
+    DetectorDataContainer fPhaseScanPolarity1;
+
+    DetectorDataContainer fChosenPhasePolarity0;
+    DetectorDataContainer fChosenPhasePolarity1;
 
 };
 #endif

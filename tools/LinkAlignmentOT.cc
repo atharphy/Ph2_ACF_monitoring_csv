@@ -723,7 +723,7 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
     }
     return cSuccess;
 }
-bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pScope)
+bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pScope, uint8_t pSkipLine)
 {
     auto cBoardId   = pOpticalGroup->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
@@ -768,6 +768,9 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
 
     for(auto cHybrid: *pOpticalGroup)
     {
+        if (cHybrid->getId() + 1 == pSkipLine) // only scan line 1 or 2  if pSkipLine is set pSkilLine == 0 means no line should be skipped
+            continue;
+
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
         if(cCic == nullptr)
         {
