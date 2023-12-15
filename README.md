@@ -35,7 +35,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 ### Suggested software and firmware versions:
-- Software git branch / tag : `Dev` / `v4-17`
+- Software git branch / tag : `Dev` / `v4-18`
 - Firmware tag: `v4-08`
 
 ### Important webpages and information:
