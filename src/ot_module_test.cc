@@ -211,6 +211,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("readSensorTemperature", "Read sensor temperature", ArgvParser::NoOptionAttribute);
     cmd.defineOption("measureQuickNoise", "measure occupancy of all channels");
     cmd.defineOption("measureChannelTransmission", "measure data about transmission for given acquisition card channel", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("latency", "scan the trigger latency", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("stublatency", "scan the stub latency", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -235,6 +237,8 @@ int main(int argc, char* argv[])
     std::string cDirectory          = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape         = (cmd.foundOption("pulseShape")) ? true : false;
     int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
+    bool        cLatency            = (cmd.foundOption("latency")) ? true : false;
+    bool        cStubLatency        = (cmd.foundOption("stublatency")) ? true : false;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -568,14 +572,13 @@ int main(int argc, char* argv[])
         // }
 
         // map MPA outputs for PS module
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
-        cPSAlignment.Initialise();
-        // LORENZO 2023_06_29
-        cPSAlignment.MapMPAOutputs(); // for MPA only. MPA2 OutSetting writtent during the configure hardware step above.
-        // LORENZO 2023_06_29
-        cPSAlignment.ConfigureDefaultAlignmentParameters();
-        cPSAlignment.Reset();
+        cPSAlignment.Start(theStartInfo);
+        cPSAlignment.waitForRunToBeCompleted();
 
         // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
@@ -606,8 +609,6 @@ int main(int argc, char* argv[])
         cCicAligner.Inherit(&cTool);
 
         // Doesnt work PSv2
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(cRunNumber);
         cCicAligner.Start(theStartInfo);
         cCicAligner.waitForRunToBeCompleted();
         //\Doesnt work PSv2
@@ -1480,7 +1481,6 @@ int main(int argc, char* argv[])
 
     if(cPulseShape)
     {
-        std::cout << "I am in" << std::endl;
         Timer t;
         t.start();
         CBCPulseShape cCBCPulseShape;
@@ -1512,6 +1512,16 @@ int main(int argc, char* argv[])
 
         t.stop();
         t.show("Time to check stubs on shared channels");
+    }
+
+    if(cLatency || cStubLatency)
+    {
+        LatencyScan cLatencyScan;
+        cLatencyScan.Inherit(&cTool);
+        cLatencyScan.Initialize();
+        if(cLatency) cLatencyScan.ScanLatency();
+        if(cStubLatency) cLatencyScan.StubLatencyScan();
+        cLatencyScan.writeObjects();
     }
 
     cTool.SaveResults();

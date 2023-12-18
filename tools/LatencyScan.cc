@@ -56,13 +56,42 @@ void LatencyScan::Initialize()
 
     initializeRecycleBin();
 
-    fStartLatency = findValueInSettings<double>("StartLatency", 1);
-    fLatencyRange = findValueInSettings<double>("LatencyRange", 1);
-    fStartPhase   = findValueInSettings<double>("StartPhase", 0);
-    fPhaseRange   = findValueInSettings<double>("PhaseRange", 15);
-    fHoleMode     = findValueInSettings<double>("HoleMode", 1);
-    fNevents      = findValueInSettings<double>("Nevents", 10);
+    fStartLatency   = findValueInSettings<double>("StartLatency", 1);
+    fLatencyRange   = findValueInSettings<double>("LatencyRange", 1);
+    fStartPhase     = findValueInSettings<double>("StartPhase", 0);
+    fPhaseRange     = findValueInSettings<double>("PhaseRange", 15);
+    fHoleMode       = findValueInSettings<double>("HoleMode", 1);
+    fNevents        = findValueInSettings<double>("Nevents", 10);
+    fPulseAmplitude = findValueInSettings<double>("fLatencyPulseAmplitude", 200);
     std::cout << "Going to read " << fNevents << " events" << std::endl;
+
+    bool originalAllChannelFlag = this->fAllChan;
+    if(fPulseAmplitude != 0 && originalAllChannelFlag && cWithCBC)
+    {
+        this->SetTestAllChannels(false);
+        LOG(INFO) << RED << "Cannot inject pulse for all channels, test in groups enabled. " << RESET;
+    }
+
+    // configure TP amplitude
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cWithPSv2)
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
+        else
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+    }
+
+    if(fPulseAmplitude != 0)
+    {
+        LOG(INFO) << BOLDYELLOW << "Enabled test pulse. " << RESET;
+        this->enableTestPulse(true);
+        this->SetTestAllChannels(false);
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "sweepSCurves without TP injection" << RESET;
+        this->enableTestPulse(false);
+    }
 
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);

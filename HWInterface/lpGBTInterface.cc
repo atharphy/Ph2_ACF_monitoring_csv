@@ -982,7 +982,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     do
     {
         LOG(DEBUG) << GREEN << "Waiting for ADC conversion to end" << RESET;
-
+        usleep(10000);
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;
     } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
