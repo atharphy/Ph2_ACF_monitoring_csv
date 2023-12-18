@@ -126,10 +126,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
     fPedeNoiseLatency        = findValueInSettings<double>("PedeNoiseLatency", 198);
 
-    // if you forget to use the PedeNoiseUseFixRange setting but instead declare
-    // min and max threshold ... will still work
-    if(!fUseFixRange && fMinThreshold != fMaxThreshold) { fUseFixRange = true; }
-
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : fEventsPerPoint;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
     // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);

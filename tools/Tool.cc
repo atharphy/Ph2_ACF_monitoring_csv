@@ -497,7 +497,7 @@ void Tool::fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContain
             if(theLpGBT == nullptr) continue;
             uint32_t chipFuseId = flpGBTInterface->ReadChipFuseID(theLpGBT);
 
-            theLpGBTFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertUInt32tToString(chipFuseId);
+            theLpGBTFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(chipFuseId);
         }
     }
 }
@@ -512,7 +512,7 @@ void Tool::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer
             if(theLpGBT == nullptr) continue;
             uint32_t chipFuseId = 0; // flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
             // Temporary function in lpgbt interface until VTRx interface is implemented
-            theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertUInt32tToString(chipFuseId);
+            theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(chipFuseId);
         }
     }
 }
@@ -1169,8 +1169,8 @@ void Tool::dumpConfigFiles()
                 {
                     for(auto chip: *hybrid)
                     {
-                        std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(hybrid->getId()) +
-                                                "_Chip" + std::to_string(chip->getId());
+                        std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + convertToString(hybrid->getId()) +
+                                                "_Chip" + convertToString(chip->getId());
                         LOG(DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
                         if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2) cFilename += "SSA";
                         if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2) cFilename += "MPA";

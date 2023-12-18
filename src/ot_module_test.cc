@@ -572,15 +572,14 @@ int main(int argc, char* argv[])
         // }
 
         // map MPA outputs for PS module
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
-        cPSAlignment.Initialise();
-        // LORENZO 2023_06_29
-        cPSAlignment.MapMPAOutputs(); // for MPA only. MPA2 OutSetting writtent during the configure hardware step above.
-        // LORENZO 2023_06_29
-        cPSAlignment.ConfigureDefaultAlignmentParameters();
-        cPSAlignment.Reset();
-
+        cPSAlignment.Start(theStartInfo);
+        cPSAlignment.waitForRunToBeCompleted();
+        
         // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
 
@@ -610,8 +609,6 @@ int main(int argc, char* argv[])
         cCicAligner.Inherit(&cTool);
 
         // Doesnt work PSv2
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(cRunNumber);
         cCicAligner.Start(theStartInfo);
         cCicAligner.waitForRunToBeCompleted();
         //\Doesnt work PSv2

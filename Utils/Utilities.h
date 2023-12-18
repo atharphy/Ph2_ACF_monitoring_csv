@@ -104,10 +104,16 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
  * \return Result with variables expanded */
 std::string expandEnvironmentVariables(std::string s);
 
-/*! \brief Convert unit32_t to a string AVOIDING THE USAGE OF std::to_string()
- * \param number input number
+/*! \brief Convert value to a string AVOIDING THE USAGE OF std::to_string()
+ * \param value input value
  * \return Result string */
-std::string convertUInt32tToString(uint32_t number);
+template<typename T>
+std::string convertToString(T value)
+{
+    std::stringstream ss;
+    ss << +value;
+    return ss.str();
+}
 
 // get run number from file
 void getRunNumber(const std::string& pPath, int& pRunNumber, bool pIncrement = true);
