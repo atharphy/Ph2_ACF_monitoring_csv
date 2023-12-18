@@ -336,7 +336,7 @@ void PedeNoise::sweepSCurves()
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
 
-        setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TriggerLatency", fPedeNoiseLatency); 
+        setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TriggerLatency", fPedeNoiseLatency);
     }
 
     bool forceAllChannels = false;

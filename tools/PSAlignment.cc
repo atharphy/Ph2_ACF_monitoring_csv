@@ -1843,15 +1843,12 @@ void PSAlignment::writeObjects() {}
 void PSAlignment::Running()
 {
     Initialise();
-    MapMPAOutputs(); 
+    MapMPAOutputs();
     ConfigureDefaultAlignmentParameters();
     Reset();
 }
 
-void PSAlignment::Stop()
-{
-    dumpConfigFiles();
-}
+void PSAlignment::Stop() { dumpConfigFiles(); }
 
 void PSAlignment::Pause() {}
 

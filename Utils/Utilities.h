@@ -107,7 +107,7 @@ std::string expandEnvironmentVariables(std::string s);
 /*! \brief Convert value to a string AVOIDING THE USAGE OF std::to_string()
  * \param value input value
  * \return Result string */
-template<typename T>
+template <typename T>
 std::string convertToString(T value)
 {
     std::stringstream ss;

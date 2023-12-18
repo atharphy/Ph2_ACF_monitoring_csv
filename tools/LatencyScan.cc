@@ -80,7 +80,7 @@ void LatencyScan::Initialize()
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
     }
-    
+
     if(fPulseAmplitude != 0)
     {
         LOG(INFO) << BOLDYELLOW << "Enabled test pulse. " << RESET;

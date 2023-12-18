@@ -237,9 +237,9 @@ int main(int argc, char* argv[])
     std::string cDirectory          = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape         = (cmd.foundOption("pulseShape")) ? true : false;
     int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
-    bool        cLatency     = (cmd.foundOption("latency")) ? true : false;
-    bool        cStubLatency = (cmd.foundOption("stublatency")) ? true : false;
-    
+    bool        cLatency            = (cmd.foundOption("latency")) ? true : false;
+    bool        cStubLatency        = (cmd.foundOption("stublatency")) ? true : false;
+
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
     {
@@ -579,7 +579,7 @@ int main(int argc, char* argv[])
         cPSAlignment.Inherit(&cTool);
         cPSAlignment.Start(theStartInfo);
         cPSAlignment.waitForRunToBeCompleted();
-        
+
         // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
 
