@@ -26,16 +26,10 @@ bool ECVLinkAlignmentOT::Scan()
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
         for(auto cOpticalGroup: *cBoard)
         {
-            ECV2(cOpticalGroup);
-            AlignLpGBTInputs(cOpticalGroup);
-            WordAlignBEdata(cOpticalGroup);
+            ECV(cOpticalGroup);
         }
-        // check that word alignment of L1 data worked
-        //LOG(INFO) << BOLDYELLOW << "ECVLinkAlignmentOT::Align ... trying to readout L1 data.. " << RESET;
-        //ReadNEvents(cBoard, 10);
-    } // align BE
+    }
 
-    //AlignStubPackage();
     fSuccess = true;
     return fSuccess;
 }
@@ -91,7 +85,7 @@ void ECVLinkAlignmentOT::Initialise()
     #endif
 }
 
-void ECVLinkAlignmentOT::SetHybridClockPolarityAndStrength(const OpticalGroup* pOpticalGroup, bool pInverted, uint8_t pStrength)
+void ECVLinkAlignmentOT::SetCICClockPolarityAndStrength(const OpticalGroup* pOpticalGroup, bool pInverted, uint8_t pStrength)
 {
     uint8_t                    cHybridClockDrive = pStrength;
     uint8_t                    cPreEmphMode      = 0; // 3
@@ -114,26 +108,36 @@ void ECVLinkAlignmentOT::SetHybridClockPolarityAndStrength(const OpticalGroup* p
         cClkCnfg.fClkPreEmphMode  = cPreEmphMode;
         cClkCnfg.fClkPreEmphStr   = cPreEmphStr;
         LOG(INFO) << BOLDBLUE << "Enabling Hybrid clock [Side == " << +cSide << "]" << RESET;
-        static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+
+        if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
+        else
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
     }
 }
 
-void ECVLinkAlignmentOT::ECV2(const OpticalGroup* pOpticalGroup)
+void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
 {
+    uint8_t clockPolarityStart      = 0, clockPolarityEnd       = 1 ;
+    uint8_t cicClockStrengthStart   = 7, cicClockStrengthEnd    = 7 ;
+    uint8_t cicSLVSStrengthStart    = 5, cicSLVSStrengthEnd     = 5 ;
+    uint8_t lpGBTPhaseStart         = 0, lpGBTPhaseEnd          = 14;
+
+    
     InitWordAlignStubs(pOpticalGroup);
-    for (uint8_t clockPolarity = 0; clockPolarity <=1; clockPolarity++)
+    for (uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
     {
-        for (uint8_t clockStrength = 1; clockStrength <=7; clockStrength++)
+        for (uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
         {
-            SetHybridClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
-            for (uint8_t cicStrength = 1; cicStrength <= 7; cicStrength ++)
+            SetCICClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
+            for (uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength ++)
             {
                 for(auto cHybrid: *pOpticalGroup)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     fCicInterface->ConfigureDriveStrength(cCic, cicStrength); 
                 }
-                for (uint8_t phase = 0; phase <= 14; phase++)
+                for (uint8_t phase = lpGBTPhaseStart; phase <= lpGBTPhaseEnd; phase++)
                 {
                     LOG (INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
                     LOG (INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
@@ -141,32 +145,31 @@ void ECVLinkAlignmentOT::ECV2(const OpticalGroup* pOpticalGroup)
                     LOG (INFO) << BOLDRED << "RX PHASE:\t" << +phase << RESET;
 
                     SetlpGBTRxPhase(pOpticalGroup,phase);
-                    std::vector <bool> alignedLines = CheckWordAlignBEdataStubs(pOpticalGroup);
+                    std::vector<std::pair<uint8_t, std::pair<uint8_t,bool>>>  alignedLines = CheckWordAlignBEdataStubs(pOpticalGroup);
 
-                    int line = 0;
                     for (auto a : alignedLines)
                     {
-                        StoreWordAlignInHistogram(clockPolarity,clockStrength, cicStrength,phase,line, a);
-                        line++;
+                        StoreWordAlignInHistogram(clockPolarity,clockStrength, cicStrength,phase,a.first,a.second.first, a.second.second);
                     }
                 }
             }
         }
     }
+    
     StopWordAlignStubs(pOpticalGroup);
-    for (uint8_t clockPolarity = 0; clockPolarity <=1; clockPolarity++)
+    for (uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
     {
-        for (uint8_t clockStrength = 1; clockStrength <=7; clockStrength++)
+        for (uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
         {
-            SetHybridClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
-            for (uint8_t cicStrength = 1; cicStrength <= 5; cicStrength ++)
+            SetCICClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
+            for (uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength ++)
             {
                 for(auto cHybrid: *pOpticalGroup)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     fCicInterface->ConfigureDriveStrength(cCic, cicStrength); 
                 }
-                for (uint8_t phase = 0; phase <= 14; phase++)
+                for (uint8_t phase = lpGBTPhaseStart; phase <= lpGBTPhaseEnd; phase++)
                 {
                     LOG (INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
                     LOG (INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
@@ -174,42 +177,30 @@ void ECVLinkAlignmentOT::ECV2(const OpticalGroup* pOpticalGroup)
                     LOG (INFO) << BOLDRED << "RX PHASE:\t" << +phase << RESET;
 
                     SetlpGBTRxPhase(pOpticalGroup,phase);
-                    std::vector <bool> alignedLines = CheckWordAlignBEdataL1(pOpticalGroup);
+                    std::vector<std::pair<uint8_t, std::pair<uint8_t,bool>>>  alignedLines = CheckWordAlignBEdataL1(pOpticalGroup);
 
-                    StoreWordAlignInHistogram(clockPolarity,clockStrength, cicStrength,phase,6, alignedLines[0]);
-                    StoreWordAlignInHistogram(clockPolarity,clockStrength, cicStrength,phase,13, alignedLines[1]);
+                    for (auto a : alignedLines)
+                    {
+                        StoreWordAlignInHistogram(clockPolarity,clockStrength, cicStrength,phase,a.first,a.second.first, a.second.second);
+                    }
                 }
             }
         }
     }
-}
-void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
-{
-    std::stringstream tables;
-    for (uint8_t clockPolarity = 0; clockPolarity <=1; clockPolarity++)
+
+    for (uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
     {
-        for (uint8_t clockStrength = 1; clockStrength <=7; clockStrength++)
+        for (uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
         {
-
-            SetHybridClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
-
-
-            for (uint8_t cicStrength = 1; cicStrength <= 5; cicStrength ++)
+            SetCICClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
+            for (uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength ++)
             {
-
-                tables << "Clock Polarity:\t" << +clockPolarity << "\n";
-                tables << "Clock Strength:\t" << +clockStrength << "\n";
-                tables << "CIC Strength:\t" << +cicStrength << "\n";
                 for(auto cHybrid: *pOpticalGroup)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     fCicInterface->ConfigureDriveStrength(cCic, cicStrength); 
-                    
                 }
-                std::vector<std::vector<bool>> wordAlignment;
-                std::vector<std::vector<float>> bitErrors;
-
-                for (uint8_t phase = 0; phase <= 14; phase++)
+                for (uint8_t phase = lpGBTPhaseStart; phase <= lpGBTPhaseEnd; phase++)
                 {
                     LOG (INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
                     LOG (INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
@@ -217,26 +208,117 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
                     LOG (INFO) << BOLDRED << "RX PHASE:\t" << +phase << RESET;
 
                     SetlpGBTRxPhase(pOpticalGroup,phase);
-                    std::vector <bool> alignedLines = CheckWordAlignBEdata(pOpticalGroup);
-                    wordAlignment.push_back(alignedLines);
-                    std::stringstream ss;
-                    for (auto line : alignedLines) ss << line << "\t";
-                    LOG (INFO) << ss.str() << RESET;
-                    std::vector<float> bers = BitErrorTest(pOpticalGroup); 
-                    bitErrors.push_back(bers);
-                    StoreValuesInHistogram(clockPolarity,clockStrength, cicStrength,phase,bers);
 
+                    std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>> stubBER  = StubBitErrorTest(pOpticalGroup);
+                    for (auto ber: stubBER)
+                    {
+                        StoreBERInHistogram(clockPolarity,clockStrength, cicStrength,phase,ber.first, ber.second.first, ber.second.second);
+                    }
                 }
+            }
+        }
+    }
+
+    InitL1BitErrorTest(pOpticalGroup);
+    for (uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
+    {
+        for (uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
+        {
+            SetCICClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
+            for (uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength ++)
+            {
+                for(auto cHybrid: *pOpticalGroup)
+                {
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    fCicInterface->ConfigureDriveStrength(cCic, cicStrength); 
+                }
+                for (uint8_t phase = lpGBTPhaseStart; phase <= lpGBTPhaseEnd; phase++)
+                {
+                    LOG (INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
+                    LOG (INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
+                    LOG (INFO) << BOLDRED << "CIC STRENGTH:\t" << +cicStrength << RESET;
+                    LOG (INFO) << BOLDRED << "RX PHASE:\t" << +phase << RESET;
+
+                    SetlpGBTRxPhase(pOpticalGroup,phase);
+
+                    std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>>  l1BER  = L1BitErrorTest(pOpticalGroup);
+                    for (auto ber: l1BER)
+                    {
+                        StoreBERInHistogram(clockPolarity,clockStrength, cicStrength,phase,ber.first, ber.second.first, ber.second.second);
+                    }
+                }
+            }
+        }
+    }
+    
+
+    for (uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
+    {
+        for (uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
+        {
+            SetCICClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
+            for (uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength ++)
+            {
+                for(auto cHybrid: *pOpticalGroup)
+                {
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    fCicInterface->ConfigureDriveStrength(cCic, cicStrength); 
+                }
+                LOG (INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
+                LOG (INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
+                LOG (INFO) << BOLDRED << "CIC STRENGTH:\t" << +cicStrength << RESET;
+
                 AlignLpGBTInputs(pOpticalGroup);
-                WordAlignBEdata(pOpticalGroup, false);
 
-
-                std::stringstream table = PrintECVResultTable(pOpticalGroup, wordAlignment, bitErrors);
-                tables << table.str() <<"\n";
+                std::vector<std::pair<uint8_t,std::pair<uint8_t,uint8_t>>> trainedPhases = flpGBTInterface->fTrainedPhases;
+                uint8_t chosenPhase = flpGBTInterface->fChosenPhase;
+                std::vector<uint8_t> hybridIds;
+                // = getGroupsAndChannels(pOpticalGroup, false);
+                for (auto trainedPhase : trainedPhases)
+                {
+                    if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+                    {
+                        if      (trainedPhase.first == 0 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,6, trainedPhase.second.second);
+                        else if (trainedPhase.first == 4 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, trainedPhase.second.second);
+                        else if (trainedPhase.first == 4 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,1, trainedPhase.second.second);
+                        else if (trainedPhase.first == 5 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,2, trainedPhase.second.second);
+                        else if (trainedPhase.first == 5 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,3, trainedPhase.second.second);
+                        else if (trainedPhase.first == 6 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,4, trainedPhase.second.second);
+                        
+                        else if (trainedPhase.first == 0 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,0, trainedPhase.second.second);
+                        else if (trainedPhase.first == 1 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,1, trainedPhase.second.second);
+                        else if (trainedPhase.first == 1 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,2, trainedPhase.second.second);
+                        else if (trainedPhase.first == 2 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,3, trainedPhase.second.second);
+                        else if (trainedPhase.first == 2 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,4, trainedPhase.second.second);
+                        else if (trainedPhase.first == 3 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,6, trainedPhase.second.second);
+                    }
+                    if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
+                    {
+                        if      (trainedPhase.first == 4 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,6, trainedPhase.second.second);
+                        else if (trainedPhase.first == 4 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,5, trainedPhase.second.second);
+                        else if (trainedPhase.first == 5 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,3, trainedPhase.second.second);
+                        else if (trainedPhase.first == 5 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,4, trainedPhase.second.second);
+                        else if (trainedPhase.first == 6 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,1, trainedPhase.second.second);
+                        else if (trainedPhase.first == 6 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,2, trainedPhase.second.second);
+                        else if (trainedPhase.first == 0 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, trainedPhase.second.second);
+                        
+                        else if (trainedPhase.first == 0 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,5, trainedPhase.second.second);
+                        else if (trainedPhase.first == 1 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,6, trainedPhase.second.second);
+                        else if (trainedPhase.first == 1 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,4, trainedPhase.second.second);
+                        else if (trainedPhase.first == 2 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,3, trainedPhase.second.second);
+                        else if (trainedPhase.first == 2 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,2, trainedPhase.second.second);
+                        else if (trainedPhase.first == 3 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,1, trainedPhase.second.second);
+                        else if (trainedPhase.first == 3 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, trainedPhase.second.second);
+                    }
+                }
+                StoreChosenPhase(clockPolarity, clockStrength, cicStrength, chosenPhase);
             }
         }
     }
-    LOG (INFO) << "\n" << tables.str() << "\n"<<RESET;;
+
+
+
+
 }
 
 void ECVLinkAlignmentOT::SetlpGBTRxPhase(const OpticalGroup* pOpticalGroup, uint8_t pPhase)
@@ -249,8 +331,6 @@ void ECVLinkAlignmentOT::SetlpGBTRxPhase(const OpticalGroup* pOpticalGroup, uint
     for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], pPhase); }
 
 }
-
-
 
 void ECVLinkAlignmentOT::InitWordAlignStubs(const OpticalGroup* pOpticalGroup)
 {
@@ -278,9 +358,10 @@ void ECVLinkAlignmentOT::InitWordAlignStubs(const OpticalGroup* pOpticalGroup)
     // stop triggers to make sure that there are no L1 packets from the CIC
     fBeBoardInterface->Stop((*cBoardIter));
 }
-std::vector<bool> ECVLinkAlignmentOT::CheckWordAlignBEdataStubs(const OpticalGroup* pOpticalGroup)
+
+std::vector<std::pair<uint8_t, std::pair<uint8_t,bool>>> ECVLinkAlignmentOT::CheckWordAlignBEdataStubs(const OpticalGroup* pOpticalGroup)
 {
-    std::vector<bool> alignedLines;
+    std::vector<std::pair<uint8_t, std::pair<uint8_t,bool>>> alignedLines;
 
     auto cBoardId   = pOpticalGroup->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
@@ -330,11 +411,16 @@ std::vector<bool> ECVLinkAlignmentOT::CheckWordAlignBEdataStubs(const OpticalGro
                     cIter++;
                 } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
             }
-            alignedLines.push_back(cAligned);
+            alignedLines.push_back(std::make_pair( cHybrid->getId(), std::make_pair(cLineId-1 ,cAligned )) );
+            //LOG (INFO) << cHybrid->getId() << RESET;
+            //LOG (INFO) << cLineId-1  << RESET;
+            //LOG (INFO) << cAligned << RESET;
+
         }
     }
     return alignedLines;
 }
+
 void ECVLinkAlignmentOT::StopWordAlignStubs(const OpticalGroup* pOpticalGroup)
 {
     // disable alignment output
@@ -346,145 +432,23 @@ void ECVLinkAlignmentOT::StopWordAlignStubs(const OpticalGroup* pOpticalGroup)
     }
 }
 
-
-std::vector<bool> ECVLinkAlignmentOT::CheckWordAlignBEdataL1(const OpticalGroup* pOpticalGroup)
+std::vector<std::pair<uint8_t, std::pair<uint8_t,bool>>> ECVLinkAlignmentOT::CheckWordAlignBEdataL1(const OpticalGroup* pOpticalGroup)
 {
-    std::vector<bool> ret ;
+    std::vector<std::pair<uint8_t, std::pair<uint8_t,bool>>> ret ;
 
     // align L1 data in the BE
     fL1Debug = false;
     LOG(INFO) << BOLDMAGENTA << "ECVLinkAlignmentOT::WordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
     bool cAligned0 = L1WordAlignment(pOpticalGroup, fL1Debug, 2); //If one line is not aligned it is false for both lines
     bool cAligned1 = L1WordAlignment(pOpticalGroup, fL1Debug, 1); //If one line is not aligned it is false for both lines
-    ret.push_back(cAligned0);
-    ret.push_back(cAligned1);
-
-    /*
-    size_t cIndx = 0;
-    // re-confiure enabled FEs
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-        fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
-        cIndx++;
-    }
-    LOG(INFO) << BOLDYELLOW << "Reached end of WordAlignBEData" << RESET;
-    */
+    ret.push_back(std::make_pair (0 ,std::make_pair( 6 ,cAligned0 ) ) );
+    ret.push_back(std::make_pair (1 ,std::make_pair( 6,cAligned1 ) ) );
     return ret;
 }
 
-
-std::vector<bool> ECVLinkAlignmentOT::CheckWordAlignBEdata(const OpticalGroup* pOpticalGroup)
+std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>> ECVLinkAlignmentOT::StubBitErrorTest(const OpticalGroup* pOpticalGroup)
 {
-    std::vector<bool> ret;
-    fStubDebug      = true;
-    bool cAligned   = false;
-    auto cBoardId   = pOpticalGroup->getBeBoardId();
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    LOG(INFO) << BOLDYELLOW << "ECVLinkAlignmentOT::WordAlignBEdata for an OG " << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
-    cAlignerInterface->InitializeConfiguration();
-    cAlignerInterface->InitializeAlignerObject();
-    LOG(INFO) << BOLDYELLOW << "ECVLinkAlignmentOT::WordAlignBEdata after debug interface " << RESET;
-
-    auto& cBeBitSlip   = fBeBitSlip.getObject((*cBoardIter)->getId());
-    auto& cBeBitSlipOG = cBeBitSlip->getObject(pOpticalGroup->getId());
-
-    // configure CICs to output alignment pattern on L1 lines
-    std::vector<uint8_t> cFeEnableRegs(0);
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-        // disable alignment output
-        fCicInterface->SelectOutput(cCic, true);
-        cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
-        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-    }
-    // stop triggers to make sure that there are no L1 packets from the CIC
-    fBeBoardInterface->Stop((*cBoardIter));
-
-    // align stub lines in the BE
-    size_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
-    LOG(INFO) << BOLDMAGENTA << "ECVLinkAlignmentOT::WordAlignBEdata ... word alignment on " << +cNlines << "/6 lines stub from CIC.." << RESET;
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        for(size_t cLineId = 1; cLineId <= cNlines; cLineId++)
-        {
-            auto& cBeBitSlipHybrd = cBeBitSlipOG->getObject(cHybrid->getId());
-            auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
-
-            LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
-            AlignerObject cAlignerObjct;
-            cAlignerObjct.fHybrid = cHybrid->getId();
-            cAlignerObjct.fChip   = 0;
-            cAlignerObjct.fLine   = cLineId;
-            cAlignerObjct.fOptical = 1;
-            LineConfiguration cLineCnfg;
-            cLineCnfg.fPattern       = 0xEA;
-            cLineCnfg.fPatternPeriod = 8;
-            cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-            cAligned                = cAlignerInterface->IsLineWordAligned();
-            LOG (INFO) << "Line " << +cLineId << " " << cAligned << RESET;
-
-            cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
-
-            if(cThisBeBitSlip[cLineId] == 0 && !fAllowZeroBitslip)
-            {
-                size_t cMaxAttempts = 10;
-                size_t cIter        = 0;
-                do
-                {
-                    cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-                    cAligned                = cAlignerInterface->IsLineWordAligned();
-                    cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
-                    cIter++;
-                } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
-            }
-            ret.push_back(cAligned);
-        }
-    }
-    // check for 0 bit slips
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        auto&                cBeBitSlipHybrd = cBeBitSlipOG->getObject(cHybrid->getId());
-        auto&                cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
-        std::vector<uint8_t> cBitSlipHist(15, 0);
-        for(auto cItem: cThisBeBitSlip) cBitSlipHist[cItem]++;
-        auto cMode = std::max_element(cBitSlipHist.begin(), cBitSlipHist.end()) - cBitSlipHist.begin();
-        LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << " most frequent bitslip is " << +cMode << RESET;
-    }
-
-    // disable stub output
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-        // disable alignment output
-        fCicInterface->SelectOutput(cCic, false);
-    }
-    // align L1 data in the BE
-    fL1Debug = false;
-    LOG(INFO) << BOLDMAGENTA << "ECVLinkAlignmentOT::WordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
-    cAligned = L1WordAlignment(pOpticalGroup, fL1Debug); //If one line is not aligned it is false for both lines
-    ret.insert(ret.begin(),cAligned); //to be corrected
-    ret.push_back(cAligned);
-    size_t cIndx = 0;
-    // re-confiure enabled FEs
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-        fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
-        cIndx++;
-    }
-    LOG(INFO) << BOLDYELLOW << "Reached end of WordAlignBEData" << RESET;
-    return ret;
-}
-
-std::vector<float> ECVLinkAlignmentOT::StubBitErrorTest(const OpticalGroup* pOpticalGroup)
-{
-    std::vector<float> ret;
+    std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>> ret;
     LOG (INFO) << "ECV StubBitErrorTest" << RESET;
     std::vector<uint8_t> cFeEnableRegs(0);
     int hybridCount = 0;
@@ -507,61 +471,64 @@ std::vector<float> ECVLinkAlignmentOT::StubBitErrorTest(const OpticalGroup* pOpt
     
     uint8_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
 
-    std::vector<int> lineBitErrors(cNlines*hybridCount, 0);
 
 
     LOG (INFO) << "Start readout of stubs" << RESET;
-    for (int i = 0; i<1000; i++)
+    for(auto cHybrid: *pOpticalGroup)
     {
-        std::vector<std::string> stubData;
-        for(auto cHybrid: *pOpticalGroup)
+        std::vector<int> lineBitErrors(cNlines, 0);
+
+        fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+        fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+        int n_events = 1000;
+        for (int i = 0; i<n_events; i++)
         {
-            fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-            fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+            std::vector<std::string> stubData;
+
             for (auto line : cDebugInterface->StubDebug(true, cNlines,false) )
             {
                 stubData.push_back(line);
             }
-        }
-        if (i%200 ==0)
-        {
-            LOG (INFO) << "Check output #Readout "<< i << RESET;
-        }
-        int lineCount = 0;
-
-        for (auto line : stubData){
             if (i%200 ==0)
             {
-                LOG (INFO) << line << RESET;
+                LOG (INFO) << "Check output #Readout "<< i << RESET;
             }
-            line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
-            //LOG (INFO) << "Line "<<(lineCount % (cNlines*hybridCount)) << " : "<<  line << RESET;
-            std::bitset<32> pattern = 0xEAAAAAAA;
+            int lineCount = 0;
 
-            std::size_t found = line.find("111");
-            if (found != std::string::npos)
-            {
-                std::bitset<32> toCheck(line.substr(found,32));
-                std::bitset<32> bitErrors = (pattern ^ toCheck);
-                if (toCheck.count() == 32)
-                    lineBitErrors[ ( lineCount % (cNlines*hybridCount) ) ] += 32;
+            for (auto line : stubData){
+                if (i%200 ==0)
+                {
+                    LOG (INFO) << line << RESET;
+                }
+                line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
+                //LOG (INFO) << "Line "<<(lineCount % (cNlines*hybridCount)) << " : "<<  line << RESET;
+                std::bitset<32> pattern = 0xEAAAAAAA;
 
+                std::size_t found = line.find("111");
+                if (found != std::string::npos)
+                {
+                    std::bitset<32> toCheck(line.substr(found,32));
+                    std::bitset<32> bitErrors = (pattern ^ toCheck);
+                    if (toCheck.count() == 32)
+                        lineBitErrors[ ( lineCount % (cNlines) ) ] += 32;
+
+                    else
+                        lineBitErrors[ ( lineCount % (cNlines) ) ] += bitErrors.count();
+                }
                 else
-                    lineBitErrors[ ( lineCount % (cNlines*hybridCount) ) ] += bitErrors.count();
+                {
+                    lineBitErrors[ ( lineCount % (cNlines) ) ] += 32;
+                }
+                lineCount++;
             }
-            else
-            {
-                lineBitErrors[ ( lineCount % (cNlines*hybridCount) ) ] += 32;
-            }
-            lineCount++;
+        }
+        uint8_t line = 0;
+        for (auto bitErrors : lineBitErrors)
+        {
+            ret.push_back(std::make_pair(cHybrid->getId(), std::make_pair(line,(float)(bitErrors)/ (float)(n_events*32)  )));
+            line++;
         }
     }
-    for (int i = 0; i< (cNlines*hybridCount); i++)
-    {
-        LOG (INFO) << i << " : " << (float)(lineBitErrors[i])/ (float)(1000*32)  << RESET;
-        ret.push_back((float)(lineBitErrors[i])/ (float)(1000*32));
-    }
-
     size_t cIndx = 0;
     for(auto cHybrid: *pOpticalGroup)
     {
@@ -571,14 +538,21 @@ std::vector<float> ECVLinkAlignmentOT::StubBitErrorTest(const OpticalGroup* pOpt
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
     }
+
     return ret;
 }
 
-std::vector<float>  ECVLinkAlignmentOT::L1BitErrorTest(const OpticalGroup* pOpticalGroup)
+void ECVLinkAlignmentOT::InitL1BitErrorTest(const OpticalGroup* pOpticalGroup)
 {
-    std::vector<float> ret;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        // disable alignment output
+        fCicInterface->SelectOutput(cCic, true);
+        //cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
+        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, true);
+    }
 
-    int cHybridCount = 0;
     for(auto cHybrid: *pOpticalGroup)
     {
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
@@ -589,6 +563,17 @@ std::vector<float>  ECVLinkAlignmentOT::L1BitErrorTest(const OpticalGroup* pOpti
             //if(cChip->getFrontEndType() == FrontEndType::CBC3) cWithCBC = true;
             fReadoutChipInterface->producePhaseAlignmentPattern(cChip, 10);
         }
+    } 
+}
+
+std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>>  ECVLinkAlignmentOT::L1BitErrorTest(const OpticalGroup* pOpticalGroup)
+{
+    std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>> ret;
+
+    int cHybridCount = 0;
+    for(auto cHybrid: *pOpticalGroup)
+    {   
+        LOG (INFO) << cHybrid->getId();
         cHybridCount++;
     } 
 
@@ -652,51 +637,7 @@ std::vector<float>  ECVLinkAlignmentOT::L1BitErrorTest(const OpticalGroup* pOpti
             }
         }
         LOG (INFO) << +cHybrid->getId() << " : " << (float)(lineBitErrors[+cHybrid->getId()])/ (float)(n_triggers*32)  << RESET;
-        ret.push_back((float)(lineBitErrors[+cHybrid->getId()])/ (float)(n_triggers*32));
-    }
-    return ret;
-}
-
-std::vector<float> ECVLinkAlignmentOT::BitErrorTest(const OpticalGroup* pOpticalGroup)
-{
-    std::vector<float> stubBER  = StubBitErrorTest(pOpticalGroup);
-    std::vector<float> l1BER    = L1BitErrorTest(pOpticalGroup);
-
-    std::vector<float> ret;
-
-    if ( pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
-    {
-        ret.push_back(stubBER[0]);
-        ret.push_back(stubBER[1]);
-        ret.push_back(stubBER[2]);
-        ret.push_back(stubBER[3]);
-        ret.push_back(stubBER[4]);
-        ret.push_back(1);
-        ret.push_back(l1BER[0]);
-        ret.push_back(stubBER[5]);
-        ret.push_back(stubBER[6]);
-        ret.push_back(stubBER[7]);
-        ret.push_back(stubBER[8]);
-        ret.push_back(stubBER[9]);
-        ret.push_back(1);
-        ret.push_back(l1BER[1]);
-    }
-    if ( pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
-    {
-        ret.push_back(stubBER[0]);
-        ret.push_back(stubBER[1]);
-        ret.push_back(stubBER[2]);
-        ret.push_back(stubBER[3]);
-        ret.push_back(stubBER[4]);
-        ret.push_back(stubBER[5]);
-        ret.push_back(l1BER[0]);
-        ret.push_back(stubBER[6]);
-        ret.push_back(stubBER[7]);
-        ret.push_back(stubBER[8]);
-        ret.push_back(stubBER[9]);
-        ret.push_back(stubBER[10]);
-        ret.push_back(stubBER[11]);
-        ret.push_back(l1BER[1]);
+        ret.push_back(std::make_pair(cHybrid->getId(), std::make_pair(6,(float)(lineBitErrors[+cHybrid->getId()])/ (float)(n_triggers*32))) ) ;
     }
     return ret;
 }
@@ -744,74 +685,29 @@ std::vector <uint8_t> ECVLinkAlignmentOT::getGroupsAndChannels(const OpticalGrou
         return cEportChnls;
 }
 
-std::stringstream ECVLinkAlignmentOT::PrintECVResultTable(const OpticalGroup* pOpticalGroup, std::vector<std::vector<bool>> pWordAlignment, std::vector<std::vector<float>> pBitErrors)
-{
-    std::stringstream ret;
-    std::vector<uint8_t> cEportGroups = getGroupsAndChannels(pOpticalGroup, true);
-    std::vector<uint8_t> cEportChnls = getGroupsAndChannels(pOpticalGroup, false);
 
-    ret << BOLDGREEN << "ECV Result Table\n" << RESET;
-    //D19clpGBTInterface* clpGBTInterface    = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-    //ret << BOLDYELLOW << "Trained lpGBT Phases: " << RESET;
-    //for (auto a : flpGBTInterface->fTrainedPhases) ret << +a << "\t";
-    //ret << "\n";
-    ret << "Type\tL1_R\tStub1_R\tStub2_R\tStub3_R\tStub4_R\tStub5_R\tStub1_L\tStub2_L\tStub3_L\tStub4_L\tStub5_L\tL1_L\n";
-    ret << "Phase\t";
-    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) ret << +cEportGroups[cIndx] << ":" << +cEportChnls[cIndx] << "\t";
-    ret << "\n";
-    for (int phase = 0; phase < (int) pWordAlignment.size(); phase ++)
-    {
-        std::stringstream line;
-        if (flpGBTInterface->fTrainedPhases.back() == phase)
-            line << BOLDBLUE << phase << RESET << "\t";
-        else
-            line << phase << "\t";
-
-        //for (auto entry : pWordAlignment[phase]) line << entry << "\t";
-        int chn = 0;
-        for (auto error : pBitErrors[phase])
-        {
-            if (pWordAlignment[phase][chn] && error == 0)
-                line <<BOLDGREEN;
-            if (pWordAlignment[phase][chn] && error > 0)
-                line <<BOLDYELLOW;
-            if (!pWordAlignment[phase][chn])
-                line <<BOLDRED;
-            if (flpGBTInterface->fTrainedPhases[chn] ==phase)
-                line << BOLDBLUE;
-            line << (int)(error*1000) /1000.0 << RESET <<"\t";
-            chn++;
-        }
-        ret<< line.str() << "\n" << RESET;
-    }
-    return ret;
-}
-
-void ECVLinkAlignmentOT::StoreValuesInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, std::vector<float> pBers)
+void ECVLinkAlignmentOT::StoreBERInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, float pBer)
 {
 
     auto cBoard = fDetectorContainer->getFirstObject();
 
     DetectorDataContainer cBERContainer;
-    ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, cBERContainer);
+    ContainerFactory::copyAndInitHybrid<float>(*fDetectorContainer, cBERContainer);
 
     for(auto cOpticalGroup: *cBoard)
     {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            cBERContainer.getObject(cBoard->getId())
-                          ->getObject(cOpticalGroup->getId())
-                          ->getObject(cHybrid->getId())
-                          ->getSummary<std::vector<float>>() = pBers;            
-        }
+        cBERContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(pHybridId)
+                        ->getSummary<float>() = pBer;
     } // optical group
 
 #ifdef __USE_ROOT__
-    fDQMHistogrammer.filllBER(pClockPolarity, pClockStrength, pCicStrength, pPhase,cBERContainer);
+    fDQMHistogrammer.filllBER(pClockPolarity, pClockStrength, pCicStrength, pPhase,pHybridId, pLine, cBERContainer);
 #endif
 }
 
-void ECVLinkAlignmentOT::StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pLine, bool pAligned)
+void ECVLinkAlignmentOT::StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, bool pAligned)
 {
 
     auto cBoard = fDetectorContainer->getFirstObject();
@@ -821,20 +717,61 @@ void ECVLinkAlignmentOT::StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8
 
     for(auto cOpticalGroup: *cBoard)
     {
+        //LOG (INFO) << "Store\t" << "hybrid: " << +pHybridId << " Line: " << +pLine << " aligned: " << pAligned << RESET;
+        cAlignedWordsContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(pHybridId)
+                        ->getSummary<bool>() = pAligned;
+    } // optical group
+
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.filllWordAlign(pClockPolarity, pClockStrength, pCicStrength, pPhase,pHybridId, pLine,cAlignedWordsContainer);
+#endif
+}
+
+void ECVLinkAlignmentOT::StoreTrainedPhases(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pHybridId, uint8_t pLine, uint8_t pPhase)
+{
+    auto cBoard = fDetectorContainer->getFirstObject();
+
+    DetectorDataContainer cPhasesContainer;
+    ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, cPhasesContainer);
+
+    for(auto cOpticalGroup: *cBoard)
+    {
+        cPhasesContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(pHybridId)
+                        ->getSummary<uint8_t>() = pPhase;
+        
+    } // optical group
+    LOG (INFO) << +pLine << RESET;
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.filllPhases(pClockPolarity, pClockStrength, pCicStrength, pHybridId, pLine, cPhasesContainer);
+#endif
+}
+
+void ECVLinkAlignmentOT::StoreChosenPhase(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase)
+{
+    auto cBoard = fDetectorContainer->getFirstObject();
+
+    DetectorDataContainer cPhasesContainer;
+    ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, cPhasesContainer);
+
+    for(auto cOpticalGroup: *cBoard)
+    {
         for(auto cHybrid: *cOpticalGroup)
         {
-            cAlignedWordsContainer.getObject(cBoard->getId())
+            cPhasesContainer.getObject(cBoard->getId())
                           ->getObject(cOpticalGroup->getId())
                           ->getObject(cHybrid->getId())
-                          ->getSummary<bool>() = pAligned;            
+                          ->getSummary<uint8_t>() = pPhase;
         }
     } // optical group
 
 #ifdef __USE_ROOT__
-    fDQMHistogrammer.filllWordAlign(pClockPolarity, pClockStrength, pCicStrength, pPhase,pLine,cAlignedWordsContainer);
+    fDQMHistogrammer.filllChosenPhase(pClockPolarity, pClockStrength, pCicStrength, cPhasesContainer);
 #endif
 }
-
 
 // State machine control functions
 void ECVLinkAlignmentOT::Running()
