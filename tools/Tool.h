@@ -29,7 +29,7 @@ class ChannelGroupBase;
 class ScanBase;
 class ConfigureInfo;
 class StartInfo;
-class DQMMetadata;
+class MetadataHandler;
 
 #ifdef __HTTP__
 #include "THttpServer.h"
@@ -383,7 +383,6 @@ class Tool : public Ph2_System::SystemController
     TTree*              fSummaryTree; /*< TTree for summary of results*/
     static std::string  fSummaryTreeParameter;
     static double       fSummaryTreeValue;
-    DQMMetadata*        fDQMMetadata;
 #endif
 
     FrontEndType        fType;
@@ -424,6 +423,8 @@ class Tool : public Ph2_System::SystemController
     uint8_t fNormalize{1};
 
     std::ofstream* fOfStream;
+
+    MetadataHandler* fMetadataHandler;
 };
 
 #endif

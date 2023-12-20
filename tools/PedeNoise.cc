@@ -601,6 +601,12 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
             uint8_t cNStripChips = 0, cNPixelChips = 0;
             for(auto cBoard: *fDetectorContainer)
             {
+                // std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.trigger_source = " << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source") << RESET << std::endl;
+                // std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.delay_after_test_pulse = " << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") << RESET << std::endl;
+                // std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.en_test_pulse = " << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_test_pulse") << RESET << std::endl;
+                // std::cout << GREEN << "Reading TriggerLatency from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TriggerLatency") << RESET << std::endl;
+                // std::cout << GREEN << "Reading TestPulsePotNodeSel from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TestPulsePotNodeSel") << RESET << std::endl;
+                // std::cout << GREEN << "Reading TestPulse from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TestPulse") << RESET << std::endl;
                 auto cBoardIdx = cBoard->getId();
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -906,47 +912,7 @@ void PedeNoise::extractPedeNoise()
                 }
             }
         }
-        if(cNormalize == 0)
-        {
-            // auto& cDataContainerThisBrd = fDetectorDataContainer->getObject(cBoard->getId());
-            // for(auto cOpticalGroup: *cBoard)
-            // {
-            //     auto& cDataContainerThisOG = cDataContainerThisBrd->getObject(cOpticalGroup->getId());
-            //     for(auto cHybrid: *cOpticalGroup)
-            //     {
-            //         auto& cDataContainerThisHybrid = cDataContainerThisOG->getObject(cHybrid->getId());
-            //         for(auto cChip: *cHybrid)
-            //         {
-            //             auto& cDataContainerThisChip = cDataContainerThisHybrid->getObject(cChip->getId());
-            //             auto& cSummary = cDataContainerThisChip->getSummary<Occupancy,Occupancy>();
-            //             ChannelGroupHandler* cHandler;
-            //             if( cChip->getFrontEndType() == FrontEndType::MPA ) cHandler = new MPAChannelGroupHandler();
-            //             else cHandler = new SSAChannelGroupHandler();
-            //             LOG (DEBUG) << BOLDYELLOW << " Normalizing assuming " << +getNReadbackEvents()
-            //                 << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
-            //             cSummary.fOccupancy = 0;
-            //             for( uint16_t cChnl=0; cChnl < cDataContainerThisChip->size(); cChnl++)
-            //             {
-            //                 uint32_t cRow = cChnl%cHandler->allChannelGroup()->getNumberOfRows();
-            //                 uint32_t cCol;
-            //                 if( cHandler->allChannelGroup()->getNumberOfCols() == 0 ) cCol = 0;
-            //                 else  cCol = cChnl/cHandler->allChannelGroup()->getNumberOfRows();
-            //                 if(cHandler->allChannelGroup()->isChannelEnabled(cRow, cCol ))
-            //                 {
-            //                     cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy /= getNReadbackEvents();
-            //                     cGlbOcc += cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy;
-            //                     if( cChnl < 10 || cChnl > 15*120 + 110 ) LOG (DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " <<
-            //                     cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET; cSummary.fOccupancy+= cDataContainerThisChip->getChannel<Occupancy>(cRow,
-            //                     cCol).fOccupancy; cNormGlblOcc++;
-            //                 }
-            //             }
-            //             cSummary.fOccupancy = std::min(cMaxOccupancy, cSummary.fOccupancy/cHandler->allChannelGroup()->getNumberOfEnabledChannels());
-            //         }
-            //     }
-            // }
-        }
-        else
-            board->normalizeAndAverageContainers(fDetectorContainer->getObject(board->getId()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
+        board->normalizeAndAverageContainers(fDetectorContainer->getObject(board->getId()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
     }
     setNormalization(cNormalizationOrig);
 }
@@ -1123,6 +1089,7 @@ void PedeNoise::Stop()
     writeObjects();
     dumpConfigFiles();
     SaveResults();
+    WriteRootFile();
     closeFileHandler();
     clearDataMembers();
     LOG(INFO) << "Noise measurement stopped.";

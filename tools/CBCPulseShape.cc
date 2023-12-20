@@ -28,7 +28,7 @@ void CBCPulseShape::Initialise(void)
     fChannelGroup          = findValueInSettings<double>("PulseShapeChannelGroup", -1);
     fPlotPulseShapeSCurves = findValueInSettings<double>("PlotPulseShapeSCurves", 0);
 
-    fLimit = 0.05; // larger tollerance for SCurve limits
+    fLimit = 0.01; // larger tollerance for SCurve limits
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
