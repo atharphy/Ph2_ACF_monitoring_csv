@@ -27,6 +27,7 @@
 //#include "tools/SSAPhysics.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/LinkAlignmentOT.h"
+#include "tools/ECVLinkAlignmentOT.h"
 #include "tools/PSPhysics.h"
 #include "tools/Physics2S.h"
 #include "tools/StubBackEndAlignment.h"
@@ -46,6 +47,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample");
     Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("cbcpulseshape");
     Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("otlatency");
+    Register<ECVLinkAlignmentOT>("ecv");
+
 
     // IT calibrations
     Register<PixelAlive>("pixelalive");

@@ -557,25 +557,14 @@ int main(int argc, char* argv[])
 
         ECVLinkAlignmentOT cLinkAlignment;
         cLinkAlignment.Inherit(&cTool);
-        //try
-        //{
-            StartInfo theStartInfo;
-            theStartInfo.setRunNumber(cRunNumber);
-            cLinkAlignment.Start(theStartInfo);
-        //}
-        //catch(const std::exception& e)
-        //{
-        //    LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
-            //return (666);
-        //}
+
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cLinkAlignment.Start(theStartInfo);
         cLinkAlignment.waitForRunToBeCompleted();
         cLinkAlignment.writeObjects();
         cLinkAlignment.dumpConfigFiles();
-        if(!cLinkAlignment.getStatus())
-        {
-            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
-            //return (666);
-        }
+
     }
 
 
