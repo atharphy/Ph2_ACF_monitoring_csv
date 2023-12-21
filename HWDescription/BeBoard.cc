@@ -40,7 +40,16 @@ uint32_t BeBoard::getReg(const std::string& pReg) const
         return i->second;
 }
 
-void BeBoard::setReg(const std::string& pReg, uint32_t psetValue) { fRegMap[pReg] = psetValue; }
+void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
+{
+    auto oldRegister = fRegMap[pReg];
+    fRegMap[pReg] = psetValue;
+    if(fTrackModifiedRegistersEnabled)
+    {
+        //TODO -> do not record skipped registers
+        if(oldRegister != psetValue) fModifiedRegisters[pReg] = oldRegister;
+    }
+}
 
 void BeBoard::updateCondData(uint32_t& pTDCVal)
 {
@@ -134,4 +143,18 @@ std::vector<FrontEndType> BeBoard::connectedFrontEndTypes() const
     }         // opticalGroup
     return cFrontEndTypes;
 }
+
+void BeBoard::takeSnapshot()
+{
+    clearSnapshot();
+    fTrackModifiedRegistersEnabled = true;
+}
+
+void BeBoard::clearSnapshot()
+{
+    fTrackModifiedRegistersEnabled = false;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fModifiedRegisters contains " << fModifiedRegisters.size() << " elements" << std::endl;
+    fModifiedRegisters.clear();
+}
+
 } // namespace Ph2_HwDescription

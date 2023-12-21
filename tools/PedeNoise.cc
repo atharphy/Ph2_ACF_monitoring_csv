@@ -11,6 +11,7 @@
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/ThresholdAndNoise.h"
+#include "System/RegisterHelper.h"
 #include "boost/format.hpp"
 #include <math.h>
 
@@ -1068,6 +1069,7 @@ void PedeNoise::ConfigureCalibration() {}
 
 void PedeNoise::Running()
 {
+    fRegisterHelper->takeSnapshot();
     LOG(INFO) << "Starting noise measurement";
     Initialise(true, true);
     // auto myFunction = [](const Ph2_HwDescription::ReadoutChip *theChip){
@@ -1080,6 +1082,7 @@ void PedeNoise::Running()
     Validate();
     LOG(INFO) << "Done with noise";
     Reset();
+    fRegisterHelper->clearSnapshot();
 }
 
 void PedeNoise::Stop()

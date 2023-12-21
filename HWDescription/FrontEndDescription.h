@@ -80,6 +80,9 @@ class FrontEndDescription
     void    setReset(uint8_t pReset) { fReset = pReset; }
     uint8_t getReset() { return fReset; }
 
+    virtual void takeSnapshot() = 0;
+    virtual void clearSnapshot() = 0;
+
   protected:
     // BIO Board Id that the FE is connected to
     uint8_t fBeBoardId;

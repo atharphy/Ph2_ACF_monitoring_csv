@@ -55,6 +55,8 @@ class BeBoard : public BoardContainer
      */
     BeBoard(uint8_t pBeId, const std::string& filename);
 
+    BeBoard(const BeBoard&) = delete;
+
     /*!
      * \brief Destructor
      */
@@ -175,12 +177,14 @@ class BeBoard : public BoardContainer
         for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
     }
 
+    void takeSnapshot();
+    void clearSnapshot();
+
   protected:
     BoardType    fBoardType;
     EventType    fEventType;
     FrontEndType fFrontEndType;
 
-    BeBoardRegMap     fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
     ConditionDataSet* fCondDataSet;
     bool              fOptical{false};
     bool              fConfigureCDCE{false};
@@ -201,6 +205,9 @@ class BeBoard : public BoardContainer
      * \param filename
      */
     void loadConfigFile(const std::string& filename);
+    BeBoardRegMap     fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
+    bool       fTrackModifiedRegistersEnabled {false}; 
+    BeBoardRegMap fModifiedRegisters {};
 };
 } // namespace Ph2_HwDescription
 

@@ -24,6 +24,7 @@
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
+#include "System/RegisterHelper.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -89,6 +90,7 @@ void SystemController::Inherit(const SystemController* pController)
     fSettingsFileName               = pController->fSettingsFileName;
     fCalibrationName                = pController->fCalibrationName;
     fConfigurationFileContent       = pController->fConfigurationFileContent;
+    fRegisterHelper                 = pController->fRegisterHelper;
 }
 
 void SystemController::StopMonitoring()
@@ -152,6 +154,9 @@ void SystemController::Destroy()
 
     delete fNameContainer;
     fNameContainer = nullptr;
+
+    delete fRegisterHelper;
+    fRegisterHelper = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -434,6 +439,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }
     }
+
+    fRegisterHelper = new RegisterHelper(fDetectorContainer, fBeBoardInterface, fReadoutChipInterface, flpGBTInterface, fCicInterface);
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }

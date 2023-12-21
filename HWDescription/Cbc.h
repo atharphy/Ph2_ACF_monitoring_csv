@@ -43,6 +43,8 @@ class Cbc : public ReadoutChip
     // C'tors with object FE Description
     Cbc(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string& filename);
 
+    Cbc(const Cbc&) = delete;
+
     /*!
      * \brief acceptor method for HwDescriptionVisitor
      * \param pVisitor

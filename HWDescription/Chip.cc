@@ -29,7 +29,7 @@ Chip::Chip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
 }
 
 // Copy C'tor
-Chip::Chip(const Chip& chipObj) : FrontEndDescription(chipObj), fChipId(chipObj.fChipId), fRegMap(chipObj.fRegMap), fModifiedRegs(chipObj.fModifiedRegs), fCommentMap(chipObj.fCommentMap) {}
+// Chip::Chip(const Chip& chipObj) : FrontEndDescription(chipObj), fChipId(chipObj.fChipId), fRegMap(chipObj.fRegMap), fModifiedRegs(chipObj.fModifiedRegs), fCommentMap(chipObj.fCommentMap) {}
 
 // D'Tor
 Chip::~Chip()
@@ -81,9 +81,15 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
         LOG(ERROR) << "Chip register are at most " << fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg;
     else
     {
+        auto oldRegister = i->second;
         i->second.fValue     = psetValue & fMaxRegValue;
         i->second.fStatusReg = pStatusReg;
         i->second.fPrmptCfg  = pPrmptCfg;
+        if(fTrackModifiedRegistersEnabled)
+        {
+            //TODO -> do not record skipped registers
+            if(oldRegister != i->second) fModifiedRegisters[i->first] = oldRegister;
+        }
     }
 }
 
@@ -188,6 +194,35 @@ void Chip::saveRegMap(const std::string& fName2Add)
     }
     else
         LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+}
+
+void Chip::takeSnapshot()
+{
+    clearSnapshot();
+    fTrackModifiedRegistersEnabled = true;
+}
+
+#include <cxxabi.h>
+void Chip::clearSnapshot()
+{
+    int32_t     status;
+    std::string className     = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
+
+    fTrackModifiedRegistersEnabled = false;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Chip type " << className << " fModifiedRegisters contains " << fModifiedRegisters.size() << " elements:" << std::endl;
+    for(const auto theRegister : fModifiedRegisters)
+    std::cout << theRegister.first << " " << fModifiedRegs[theRegister.first].fValue << " -> " << theRegister.second.fValue << std::endl;
+    fModifiedRegisters.clear();
+}
+
+void Chip::clearFreeRegisters()
+{
+    fListOfFreeRegisters.clear();
+}
+
+void Chip::addFreeRegister(const std::string& theRegisterName)
+{
+    fListOfFreeRegisters.push_back(theRegisterName);
 }
 
 } // namespace Ph2_HwDescription

@@ -74,7 +74,7 @@ class Chip : public FrontEndDescription
     Chip();
 
     // Copy C'tor
-    Chip(const Chip& chipObj);
+    Chip(const Chip&) = delete;
 
     Ph2_HwDescription::ChipFuseID pChipFuseID;
 
@@ -243,6 +243,11 @@ class Chip : public FrontEndDescription
         return output;
     }
 
+    void takeSnapshot() override;
+    void clearSnapshot() override;
+    void clearFreeRegisters();
+    void addFreeRegister(const std::string& theRegisterName);
+
   protected:
     std::string configFileName;
     uint8_t     fChipCode;
@@ -262,6 +267,9 @@ class Chip : public FrontEndDescription
     uint32_t fRegWrites         = 0;
     uint32_t fRegReads          = 0;
     uint8_t  fTrackRegisters    = 0;
+    bool       fTrackModifiedRegistersEnabled {false}; 
+    ChipRegMap fModifiedRegisters {};
+    std::vector<std::string> fListOfFreeRegisters {};
 };
 
 /*!
