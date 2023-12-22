@@ -185,23 +185,29 @@ void ThrAdjustment::fillHisto()
 
 void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue)
 {
-    bool        step2H = false;
-    bool        step2L = false;
+    char        zeroC = '0';
+    float       zeroF = 0;
     uint16_t    init;
     uint16_t    numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
     const float goldenRatio  = (sqrt(5) - 1) / 2.;
 
-    std::shared_ptr<DetectorDataContainer> outputMidH;
-    std::shared_ptr<DetectorDataContainer> outputMidL;
-    std::shared_ptr<DetectorDataContainer> outputMidTmp;
+    DetectorDataContainer outputMidH;
+    DetectorDataContainer outputMidL;
 
+    DetectorDataContainer directionContainer;
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midHDACcontainer;
+    DetectorDataContainer downloadDACcontainer;
     DetectorDataContainer midLDACcontainer;
     DetectorDataContainer maxDACcontainer;
 
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, outputMidH, zeroF);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, outputMidL, zeroF);
+
+    ContainerFactory::copyAndInitChip<char>(*fDetectorContainer, directionContainer, zeroC);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, minDACcontainer, init = startValue);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midHDACcontainer);
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, downloadDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midLDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
@@ -229,72 +235,80 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
         // ###########################
         // # Download new DAC values #
         // ###########################
-        for(const auto cBoard: *fDetectorContainer)
+        for(const auto cBoard: directionContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        if(step2H == true)
+                        if(cChip->getSummary<char>() == 'H')
+                        {
                             midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
-                        if(step2L == true)
-                            midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                            outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
-                        if(step2L == false)
                             midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
                                 (maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() -
                                  minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) *
                                     goldenRatio;
 
-                        if(step2H == false)
+                            downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                        }
+                        else if(cChip->getSummary<char>() == 'L')
+                        {
+                            midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+
+                            outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+
                             midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
                                 (maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() -
                                  minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) *
                                     (1 - goldenRatio);
+
+                            downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                        }
+                        else
+                        {
+                            midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
+                                (maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() -
+                                 minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) *
+                                    goldenRatio;
+
+                            midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
+                                (maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() -
+                                 minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) *
+                                    (1 - goldenRatio);
+
+                            downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                        }
                     }
 
-        if(step2H == true) outputMidL = outputMidH;
+        // ################
+        // # Run analysis #
+        // ################
+        CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
+        PixelAlive::run();
+        auto output = PixelAlive::analyze();
 
-        if(step2L == true) outputMidH = outputMidL;
-
-        if(step2L == false)
-        {
-            // ################
-            // # Run analysis #
-            // ################
-            CalibBase::downloadNewDACvalues(midHDACcontainer, regNames);
-            PixelAlive::run();
-            outputMidH = PixelAlive::analyze();
-
-            // ##############################################
-            // # Send periodic data to monitor the progress #
-            // ##############################################
-            PixelAlive::sendData();
-        }
-
-        if(step2H == false)
-        {
-            // ################
-            // # Run analysis #
-            // ################
-            CalibBase::downloadNewDACvalues(midLDACcontainer, regNames);
-            PixelAlive::run();
-            outputMidL = PixelAlive::analyze();
-
-            // ##############################################
-            // # Send periodic data to monitor the progress #
-            // ##############################################
-            PixelAlive::sendData();
-        }
+        // ##############################################
+        // # Send periodic data to monitor the progress #
+        // ##############################################
+        PixelAlive::sendData();
 
         // #####################
         // # Compute next step #
         // #####################
-        for(const auto cBoard: *outputMidH)
+        for(const auto cBoard: *output)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
@@ -302,32 +316,34 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                         // #######################
                         // # Build discriminator #
                         // #######################
-                        float newValueMidH = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                        float newValueMidL = outputMidL->getObject(cBoard->getId())
-                                                 ->getObject(cOpticalGroup->getId())
-                                                 ->getObject(cHybrid->getId())
-                                                 ->getObject(cChip->getId())
-                                                 ->getSummary<GenericDataVector, OccupancyAndPh>()
-                                                 .fOccupancy;
+                        auto value = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+
+                        if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'H')
+                            outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = value;
+                        else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'L')
+                            outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = value;
+                        else
+                            outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = value;
+
+                        auto valueMidH = outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
+                        auto valueMidL = outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
 
                         // #####################
                         // # Compute next move #
                         // #####################
-                        if(newValueMidH > newValueMidL)
+                        if(valueMidH > valueMidL)
                         {
                             minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
-                            step2H = true;
-                            step2L = false;
+                            directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'H';
                         }
                         else
                         {
                             maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
-                            step2H = false;
-                            step2L = true;
+                            directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'L';
                         }
                     }
     }
