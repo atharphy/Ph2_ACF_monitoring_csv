@@ -122,8 +122,6 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
     uint8_t clockPolarityStart      = 1, clockPolarityEnd       = 1 ;
     uint8_t cicClockStrengthStart   = 7, cicClockStrengthEnd    = 7 ;
     uint8_t cicSLVSStrengthStart    = 5, cicSLVSStrengthEnd     = 5 ;
-    /*
-
     uint8_t lpGBTPhaseStart         = 0, lpGBTPhaseEnd          = 14;
 
     InitWordAlignStubs(pOpticalGroup);
@@ -253,7 +251,7 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
         }
     }
     
-    */
+    
     for (uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
     {
         for (uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
