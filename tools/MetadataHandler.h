@@ -15,12 +15,12 @@ class MetadataHandler : public Tool
     void fillInitalConditions();
     void fillFinalConditions();
 
-    virtual void initMetadataHardwareSpecific() = 0;
+    virtual void initMetadataHardwareSpecific()         = 0;
     virtual void fillInitalConditionsHardwareSpecific() = 0;
-    virtual void fillFinalConditionsHardwareSpecific() = 0;
+    virtual void fillFinalConditionsHardwareSpecific()  = 0;
 
   protected:
-    DQMMetadata*        fDQMMetadata {nullptr};
+    DQMMetadata* fDQMMetadata{nullptr};
 
   private:
     void fillNameContainerWithChipIDs();
@@ -28,7 +28,6 @@ class MetadataHandler : public Tool
     void fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer);
     void fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContainer);
     void fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer);
-
 };
 
 #endif

@@ -31,6 +31,10 @@ class lpGBT : public Chip
 
     lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName);
 
+    lpGBT(const lpGBT&) = delete;
+
+    void initializeFreeRegisters() override;
+
     void loadfRegMap(const std::string& fileName) override;
 
     std::stringstream getRegMapStream() override;

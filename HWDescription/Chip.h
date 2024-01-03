@@ -19,6 +19,7 @@
 #include "Utils/easylogging++.h"
 
 #include <iostream>
+#include <regex>
 #include <set>
 #include <stdint.h>
 #include <string>
@@ -74,7 +75,7 @@ class Chip : public FrontEndDescription
     Chip();
 
     // Copy C'tor
-    Chip(const Chip& chipObj);
+    Chip(const Chip&) = delete;
 
     Ph2_HwDescription::ChipFuseID pChipFuseID;
 
@@ -184,16 +185,7 @@ class Chip : public FrontEndDescription
      */
     uint16_t        getClockFrequency() { return fClockFrequency; }
     virtual uint8_t getNumberOfBits(const std::string& dacName) = 0;
-    void            printChipType(std::ostream& os) const
-    {
-        if(fType == FrontEndType::SSA) os << "FrontEndType\t--> SSA";
-        if(fType == FrontEndType::SSA2) os << "FrontEndType\t--> SSA2";
-        if(fType == FrontEndType::MPA) os << "FrontEndType\t--> MPA";
-        if(fType == FrontEndType::MPA2) os << "FrontEndType\t--> MPA2";
-        if(fType == FrontEndType::CBC3) os << "FrontEndType\t--> CB3";
-        if(fType == FrontEndType::CIC) os << "FrontEndType\t--> CIC";
-        if(fType == FrontEndType::CIC2) os << "FrontEndType\t--> CIC2";
-    }
+    void            printChipType(std::ostream& os) const { os << "FrontEndType\t--> " << FrontEndDescription::getFrontEndName(fType); }
 
     // Set some of the bits in register , leave others untouched
     void setRegBits(const std::string& pReg, ChipRegMask pMask, uint16_t pValue)
@@ -243,25 +235,35 @@ class Chip : public FrontEndDescription
         return output;
     }
 
+    void                                          takeSnapshot();
+    void                                          clearSnapshot();
+    std::vector<std::pair<std::string, uint16_t>> getSnapshot() const;
+    void                                          clearFreeRegisters();
+    void                                          addFreeRegister(const std::regex& theRegisterName);
+    virtual void                                  initializeFreeRegisters(){};
+
   protected:
-    std::string configFileName;
-    uint8_t     fChipCode;
-    uint8_t     fChipId;
-    uint8_t     fChipAddress; // I2C addess of chip
-    uint16_t    fMaxRegValue;
-    uint16_t    fClockFrequency;
-    uint8_t     fMasterId;
-    ChipRegMap  fRegMap;
-    ChipRegMap  fModifiedRegs;
-    CommentMap  fCommentMap;
+    std::string             configFileName;
+    uint8_t                 fChipCode;
+    uint8_t                 fChipId;
+    uint8_t                 fChipAddress; // I2C addess of chip
+    uint16_t                fMaxRegValue;
+    uint16_t                fClockFrequency;
+    uint8_t                 fMasterId;
+    ChipRegMap              fRegMap;
+    ChipRegMap              fModifiedRegs;
+    CommentMap              fCommentMap;
+    std::vector<std::regex> fListOfFreeRegisters{};
 
   private:
-    uint32_t fI2CWrites         = 0;
-    uint32_t fI2Reads           = 0;
-    uint32_t fI2CReadMismatches = 0;
-    uint32_t fRegWrites         = 0;
-    uint32_t fRegReads          = 0;
-    uint8_t  fTrackRegisters    = 0;
+    uint32_t                                  fI2CWrites         = 0;
+    uint32_t                                  fI2Reads           = 0;
+    uint32_t                                  fI2CReadMismatches = 0;
+    uint32_t                                  fRegWrites         = 0;
+    uint32_t                                  fRegReads          = 0;
+    uint8_t                                   fTrackRegisters    = 0;
+    bool                                      fTrackModifiedRegistersEnabled{false};
+    std::unordered_map<std::string, uint16_t> fModifiedRegisters{};
 };
 
 /*!

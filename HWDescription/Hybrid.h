@@ -44,6 +44,8 @@ class Hybrid
     // Default C'tor
     Hybrid();
 
+    Hybrid(const Hybrid&) = delete;
+
     // D'tor
     ~Hybrid(){};
 

@@ -40,6 +40,8 @@ class OpticalGroup
     // Default C'tor
     OpticalGroup();
 
+    OpticalGroup(const OpticalGroup&) = delete;
+
     // D'tor
     ~OpticalGroup() { delete flpGBT; };
 

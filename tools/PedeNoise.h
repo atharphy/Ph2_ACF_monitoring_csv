@@ -52,7 +52,6 @@ class PedeNoise : public Tool
     void findPedestal(bool forceAllChannels = false);
     void extractPedeNoise();
     void disableStubLogic();
-    void reloadStubLogic();
     void cleanContainerVector();
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 

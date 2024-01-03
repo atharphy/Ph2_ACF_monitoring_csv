@@ -41,6 +41,10 @@ class Cic : public Chip
     // C'tors with object FE Description
     Cic(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string& filename);
 
+    Cic(const Cic&) = delete;
+
+    void initializeFreeRegisters() override;
+
     /*!
      * \brief acceptor method for HwDescriptionVisitor
      * \param pVisitor

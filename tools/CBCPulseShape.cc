@@ -103,7 +103,6 @@ void CBCPulseShape::runCBCPulseShape(void)
         cleanContainerVector();
     }
 
-    reloadStubLogic();
     this->enableTestPulse(false);
     setSameGlobalDac("TestPulsePotNodeSel", 0);
     LOG(INFO) << BLUE << "Disabled test pulse. " << RESET;

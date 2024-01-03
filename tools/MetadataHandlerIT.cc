@@ -3,13 +3,9 @@
 #include "DQMUtils/DQMMetadataIT.h"
 #endif
 
-MetadataHandlerIT::MetadataHandlerIT() 
-: MetadataHandler()
-{}
+MetadataHandlerIT::MetadataHandlerIT() : MetadataHandler() {}
 
-MetadataHandlerIT::~MetadataHandlerIT()
-{}
-
+MetadataHandlerIT::~MetadataHandlerIT() {}
 
 void MetadataHandlerIT::initMetadataHardwareSpecific()
 {
@@ -18,12 +14,6 @@ void MetadataHandlerIT::initMetadataHardwareSpecific()
 #endif
 }
 
-void MetadataHandlerIT::fillInitalConditionsHardwareSpecific()
-{
+void MetadataHandlerIT::fillInitalConditionsHardwareSpecific() {}
 
-}
-
-void MetadataHandlerIT::fillFinalConditionsHardwareSpecific()
-{
-
-}
+void MetadataHandlerIT::fillFinalConditionsHardwareSpecific() {}

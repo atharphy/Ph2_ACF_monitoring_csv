@@ -43,6 +43,8 @@ Cic::Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     setFrontEndType(FrontEndType::CIC);
 }
 
+void Cic::initializeFreeRegisters() { fListOfFreeRegisters.push_back(std::regex("^EfuseValue[0-3]$")); }
+
 // load fRegMap from file
 void Cic::loadfRegMap(const std::string& filename)
 {
