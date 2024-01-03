@@ -717,10 +717,23 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
                 if(fCicInterface->GetResyncRequest(cCic))
                 {
-                    LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
-                              << " --- Hybrid will be disabled" << RESET;
-                    ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
-                    continue;
+                    LOG(INFO) << RED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
+                              << " --- trying to change fast command sampling edge" << RESET;
+                    
+                    // Change the sampling edge of the fast command and then resync again
+                    uint8_t cCicEdge = fCicInterface->ReadFCMDEdge(cCic);
+                    cCicEdge = (cCicEdge == 0 )? 1 : 0;
+                    fCicInterface->ConfigureFCMDEdge(cCic, cCicEdge);
+                    cCicEdge = fCicInterface->ReadFCMDEdge(cCic);
+                    fBeBoardInterface->ChipReSync(pBoard);
+
+                    if(fCicInterface->GetResyncRequest(cCic))
+                    {
+                        LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
+                                << " --- Hybrid will be disabled" << RESET;
+                        ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
+                        continue;
+                    }                    
                 }
             }
         }
