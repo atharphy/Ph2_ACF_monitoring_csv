@@ -717,7 +717,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
                 if(fCicInterface->GetResyncRequest(cCic))
                 {
-                    LOG(INFO) << RED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
+                    LOG(INFO) << BOLDYELLOW << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
                               << " --- trying to change fast command sampling edge" << RESET;
                     
                     // Change the sampling edge of the fast command and then resync again
