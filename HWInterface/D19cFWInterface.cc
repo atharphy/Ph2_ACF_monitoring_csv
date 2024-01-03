@@ -1153,7 +1153,7 @@ void D19cFWInterface::ChipReSync()
     cFastCmd.resync_en     = 1;
     auto cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
     bool cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
-    cFastCmd.bc0_en        = (cWithCIC && fIs2S) ? 1 : 0;
+    cFastCmd.bc0_en        = (cWithCIC) ? 1 : 0;
     cFastCmds.push_back(cFastCmd);
     fFastCommandInterface->SendGlobalCustomFastCommands(cFastCmds);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
