@@ -20,21 +20,4 @@ OuterTrackerHybrid::OuterTrackerHybrid(const FrontEndDescription& pFeDesc, uint8
 
 OuterTrackerHybrid::OuterTrackerHybrid(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId) : Hybrid(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId), fCic(nullptr) {}
 
-
-void OuterTrackerHybrid::takeSnapshot()
-{
-    if(fCic != nullptr)
-    {
-        fCic->takeSnapshot();
-    }    
-}
-
-void OuterTrackerHybrid::clearSnapshot()
-{
-    if(fCic != nullptr)
-    {
-        fCic->clearSnapshot();
-    }  
-}
-
 } // namespace Ph2_HwDescription

@@ -18,20 +18,4 @@ OpticalGroup::OpticalGroup(const FrontEndDescription& pFeDesc, uint8_t pOpticalG
 
 OpticalGroup::OpticalGroup(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId) : FrontEndDescription(pBeBoardId, pFMCId, pOpticalGroupId, 0), OpticalGroupContainer(pOpticalGroupId) {}
 
-void OpticalGroup::takeSnapshot()
-{
-    if(flpGBT != nullptr)
-    {
-        flpGBT->takeSnapshot();
-    }  
-}
-
-void OpticalGroup::clearSnapshot()
-{
-    if(flpGBT != nullptr)
-    {
-        flpGBT->clearSnapshot();
-    }
-}
-
 } // namespace Ph2_HwDescription

@@ -64,9 +64,6 @@ class OpticalGroup
 
     std::map<std::string, std::pair<std::string, std::string>> fNTCMap;
 
-    void takeSnapshot() override;
-    void clearSnapshot() override;
-
   protected:
   private:
 };

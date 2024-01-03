@@ -1,6 +1,7 @@
 #include "tools/PedestalEqualization.h"
 #include "HWDescription/ReadoutChip.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "System/RegisterHelper.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
@@ -19,6 +20,13 @@ PedestalEqualization::~PedestalEqualization() {}
 
 void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
+    fRegisterHelper->takeSnapshot();
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^Channel\\d{3}$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^TrimDAC_P\\d+$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^TrimDAC_ALL$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^THTRIMMING_S\\d+$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^THTRIMMING_S\\d+$");
+
     fDisableStubLogic = pDisableStubLogic;
 
     DetectorDataContainer theOccupancyContainer;
@@ -185,70 +193,10 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 }
 void PedestalEqualization::Reset()
 {
-    LOG(INFO) << BOLDGREEN << "Resetting registers touched  by PedestalEqualization" << RESET;
-    // set everything back to original values .. like I wasn't here
-    for(auto cBoard: *fDetectorContainer)
-    {
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
-        std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
-        cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
-        fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
-
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    auto cModMap = cChip->GetModifiedRegisterMap();
-                    LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
-                    std::vector<std::pair<std::string, uint16_t>> cRegList;
-                    for(auto cMapItem: cModMap)
-                    {
-                        auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        if(cMapItem.second.fValue == cValueInMemory) continue;
-                        // don't reconfigure the offsets .. whole point of this excercise
-                        if(cMapItem.first.find("Channel") != std::string::npos) continue;
-                        if(cMapItem.first.find("TrimDAC") != std::string::npos) continue;
-                        if(cMapItem.first.find("THTRIMMING") != std::string::npos) continue;
-                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) { cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); };
-                        LOG(DEBUG) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
-                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
-                    }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
-                    // don't track registers + clear mod reg map
-                    cChip->setRegisterTracking(0);
-                    cChip->ClearModifiedRegisterMap();
-                }
-            }
-        }
-    }
+    fRegisterHelper->restoreSnapshot();
     resetPointers();
-
-    // size_t cIndx = 0;
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     if(fEventTypes[cIndx] == EventType::PSAS) continue;
-    //     cBoard->setEventType(fEventTypes[cIndx]);
-    //     for(auto cOpticalGroup: *cBoard)
-    //     {
-    //         for(auto cHybrid: *cOpticalGroup)
-    //         {
-    //             auto cType    = FrontEndType::SSA;
-    //             bool fWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-    //             cType         = FrontEndType::MPA;
-    //             bool fWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-    //             if(!fWithSSA && !fWithMPA) continue;
-
-    //             for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", 0); }
-    //         }
-    //     }
-    // }
 }
+
 void PedestalEqualization::FindVplus()
 {
     // original tool flags
@@ -545,7 +493,6 @@ void PedestalEqualization::Stop()
     dumpConfigFiles();
     closeFileHandler();
     LOG(INFO) << "Pedestal Equalization stopped.";
-    Reset();
 }
 
 void PedestalEqualization::Pause() {}

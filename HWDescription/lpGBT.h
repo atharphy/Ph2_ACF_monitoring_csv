@@ -33,6 +33,8 @@ class lpGBT : public Chip
 
     lpGBT(const lpGBT&) = delete;
 
+    void initializeFreeRegisters() override;
+
     void loadfRegMap(const std::string& fileName) override;
 
     std::stringstream getRegMapStream() override;

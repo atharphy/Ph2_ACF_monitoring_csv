@@ -26,21 +26,29 @@ RegisterHelper::RegisterHelper(DetectorContainer* theDetectorContainer,
 
 void RegisterHelper::takeSnapshot()
 {
+    LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " taking snapshot of the current HW configuration" << RESET;
     for(auto theBoard : *fDetectorContainer)
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         theBoard->takeSnapshot();
         for(auto theOpticalGroup : *theBoard)
         {
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-            theOpticalGroup->takeSnapshot();
+            auto theLpGBT = theOpticalGroup->flpGBT;
+            if(theLpGBT != nullptr)
+            {
+                theLpGBT->takeSnapshot();
+            }
             for(auto theHybrid : *theOpticalGroup)
             {
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-                theHybrid->takeSnapshot();
+                if(fCicInterface != nullptr) // easy check if it is IT or OT
+                {
+                    auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                    if(theCic != nullptr)
+                    {
+                        theCic->takeSnapshot();
+                    }
+                }
                 for(auto theChip : *theHybrid)
                 {
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                     theChip->takeSnapshot();
                 }
             }
@@ -52,19 +60,26 @@ void RegisterHelper::clearSnapshot()
 {
     for(auto theBoard : *fDetectorContainer)
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         theBoard->clearSnapshot();
         for(auto theOpticalGroup : *theBoard)
         {
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-            theOpticalGroup->clearSnapshot();
+            auto theLpGBT = theOpticalGroup->flpGBT;
+            if(theLpGBT != nullptr)
+            {
+                theLpGBT->clearSnapshot();
+            }
             for(auto theHybrid : *theOpticalGroup)
             {
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-                theHybrid->clearSnapshot();
+                if(fCicInterface != nullptr) // easy check if it is IT or OT
+                {
+                    auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                    if(theCic != nullptr)
+                    {
+                        theCic->clearSnapshot();
+                    }
+                }
                 for(auto theChip : *theHybrid)
                 {
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                     theChip->clearSnapshot();
                 }
             }
@@ -74,11 +89,49 @@ void RegisterHelper::clearSnapshot()
 
 void RegisterHelper::restoreSnapshot()
 {
+    LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " restoring snapshot of the HW configuration" << RESET;
 
+    for(auto theBoard : *fDetectorContainer)
+    {
+        const auto modifiedBoardRegisters = theBoard->getSnapshot();
+        fBeBoardInterface->WriteBoardMultReg(theBoard, modifiedBoardRegisters);
+        for(auto theOpticalGroup : *theBoard)
+        {
+            auto theLpGBT = theOpticalGroup->flpGBT;
+            if(theLpGBT != nullptr)
+            {
+                const auto modifiedLpGBTRegisters = theLpGBT->getSnapshot();
+                flpGBTInterface->WriteChipMultReg(theLpGBT, modifiedLpGBTRegisters);
+            }
+            for(auto theHybrid : *theOpticalGroup)
+            {
+                if(fCicInterface != nullptr) // easy check if it is IT or OT
+                {
+                    auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                    if(theCic != nullptr)
+                    {
+                        const auto modifiedCicRegisters = theCic->getSnapshot();
+                        fCicInterface->WriteChipMultReg(theCic, modifiedCicRegisters);
+                    }
+                }
+                for(auto theChip : *theHybrid)
+                {
+                    const auto modifiedChipRegisters = theChip->getSnapshot();
+                    fReadoutChipInterface->WriteChipMultReg(theChip, modifiedChipRegisters);
+                }
+            }
+        }
+    }
+
+    clearSnapshot();
+    resetFreeRegisters();
 }
 
-void RegisterHelper::freeFrontEndRegister(FrontEndType theFrontEndType, std::string registerName)
+void RegisterHelper::freeFrontEndRegister(const FrontEndType theFrontEndType, std::string registerName)
 {
+    LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Freeing registers matching pattern " << registerName << " for frontend type " << FrontEndDescription::getFrontEndName(theFrontEndType) << RESET;
+
+    std::regex registerPattern(registerName);
     for(auto theBoard : *fDetectorContainer)
     {
         for(auto theOpticalGroup : *theBoard)
@@ -87,19 +140,19 @@ void RegisterHelper::freeFrontEndRegister(FrontEndType theFrontEndType, std::str
             {
                 if(theOpticalGroup->flpGBT->getFrontEndType() == theFrontEndType)
                 {
-                    theOpticalGroup->flpGBT->addFreeRegister(registerName);
+                    theOpticalGroup->flpGBT->addFreeRegister(registerPattern);
                 }
             }
             for(auto theHybrid : *theOpticalGroup)
             {
                 if(fCicInterface != nullptr) // easy check if it is IT or OT
                 {
-                    auto theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(theHybrid);
-                    if(theOuterTrackerHybrid->fCic != nullptr)
+                    auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                    if(theCic != nullptr)
                     {
-                        if(theOuterTrackerHybrid->fCic->getFrontEndType() == theFrontEndType)
+                        if(theCic->getFrontEndType() == theFrontEndType)
                         {
-                            theOuterTrackerHybrid->fCic->addFreeRegister(registerName);
+                            theCic->addFreeRegister(registerPattern);
                         }
                     }
                 }
@@ -107,7 +160,7 @@ void RegisterHelper::freeFrontEndRegister(FrontEndType theFrontEndType, std::str
                 {
                     if(theChip->getFrontEndType() == theFrontEndType)
                     {
-                        theChip->addFreeRegister(registerName);
+                        theChip->addFreeRegister(registerPattern);
                     }
                 }
             }
@@ -117,11 +170,41 @@ void RegisterHelper::freeFrontEndRegister(FrontEndType theFrontEndType, std::str
 
 void RegisterHelper::freeBoardRegister(std::string registerName)
 {
-
+    std::regex registerPattern(registerName);
+    for(auto theBoard : *fDetectorContainer)
+    {
+        theBoard->addFreeRegister(registerPattern);
+    }
 }
 
 
-void RegisterHelper::resetTouchableRegister()
+void RegisterHelper::resetFreeRegisters()
 {
-
+    for(auto theBoard : *fDetectorContainer)
+    {
+        theBoard->clearFreeRegisters();
+        for(auto theOpticalGroup : *theBoard)
+        {
+            auto theLpGBT = theOpticalGroup->flpGBT;
+            if(theLpGBT != nullptr)
+            {
+                theLpGBT->clearFreeRegisters();
+            }
+            for(auto theHybrid : *theOpticalGroup)
+            {
+                if(fCicInterface != nullptr) // easy check if it is IT or OT
+                {
+                    auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                    if(theCic != nullptr)
+                    {
+                        theCic->clearFreeRegisters();
+                    }
+                }
+                for(auto theChip : *theHybrid)
+                {
+                    theChip->clearFreeRegisters();
+                }
+            }
+        }
+    }
 }

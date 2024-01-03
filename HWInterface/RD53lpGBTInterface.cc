@@ -48,7 +48,7 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
 
     if(pAddress >= cMaxWriteAddress)
     {
-        LOG(ERROR) << "LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
+        LOG(WARNING) << "LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
         return false;
     }
 

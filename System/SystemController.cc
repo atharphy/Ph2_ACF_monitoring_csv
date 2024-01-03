@@ -1412,6 +1412,10 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     else if(pType == BoardType::D19C && pBoard->getEventType() != EventType::PSAS)
     {
+        if(pData.size() == 0)
+        {
+            throw std::runtime_error("SystemController::DecodeData -> data vector is empty");
+        }
         bool cTLUconfig = 2;
         // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
         //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);

@@ -43,6 +43,8 @@ class Cic : public Chip
 
     Cic(const Cic&) = delete;
 
+    void initializeFreeRegisters() override;
+
     /*!
      * \brief acceptor method for HwDescriptionVisitor
      * \param pVisitor

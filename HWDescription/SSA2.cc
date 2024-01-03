@@ -62,6 +62,28 @@ SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
     setFrontEndType(FrontEndType::SSA2);
 }
 
+void SSA2::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::regex("^mask_strip$"));
+    fListOfFreeRegisters.push_back(std::regex("^mask_peri_[AD]$"));
+    fListOfFreeRegisters.push_back(std::regex("^Fuse_Prog_b[0-3]$"));
+
+    // Brodcast registers cannot be reset to avoid overriding local changes
+    fListOfFreeRegisters.push_back(std::regex("^ENFLAGS$"));
+    fListOfFreeRegisters.push_back(std::regex("^StripControl2$"));
+    fListOfFreeRegisters.push_back(std::regex("^THTRIMMING$"));
+    fListOfFreeRegisters.push_back(std::regex("^DigCalibPattern_[LH]$"));
+    fListOfFreeRegisters.push_back(std::regex("^AC_ReadCounter[LM]SB$"));
+
+    // Read only registers
+    fListOfFreeRegisters.push_back(std::regex("^SEUcnt$"));
+    fListOfFreeRegisters.push_back(std::regex("^Ring_oscillator$"));
+    fListOfFreeRegisters.push_back(std::regex("^ADC_out$"));
+    fListOfFreeRegisters.push_back(std::regex("^bist_output$"));
+    fListOfFreeRegisters.push_back(std::regex("^AC_ReadCounter$"));
+    fListOfFreeRegisters.push_back(std::regex("^status_reg$"));
+}
+
 void SSA2::loadfRegMap(const std::string& filename)
 { // start loadfRegMap
     std::ifstream file(filename.c_str(), std::ios::in);

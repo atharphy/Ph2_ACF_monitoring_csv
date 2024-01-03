@@ -66,9 +66,6 @@ class OuterTrackerHybrid : public Hybrid
         pCic = nullptr;
     }
 
-    void takeSnapshot() override;
-    void clearSnapshot() override;
-
     Cic* fCic;
 };
 } // namespace Ph2_HwDescription

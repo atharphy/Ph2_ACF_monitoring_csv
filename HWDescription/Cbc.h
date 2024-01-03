@@ -45,6 +45,8 @@ class Cbc : public ReadoutChip
 
     Cbc(const Cbc&) = delete;
 
+    void initializeFreeRegisters() override;
+
     /*!
      * \brief acceptor method for HwDescriptionVisitor
      * \param pVisitor

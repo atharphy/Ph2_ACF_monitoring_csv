@@ -46,6 +46,8 @@ class MPA2 : public ReadoutChip
 
     MPA2(const MPA2&) = delete;
 
+    void initializeFreeRegisters() override;
+
     using MPARegPair = std::pair<std::string, ChipRegItem>;
     uint8_t           fPartnerId;
     uint8_t           getPartid() { return fPartnerId; }

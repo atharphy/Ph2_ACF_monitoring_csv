@@ -19,6 +19,7 @@
 #include "Utils/easylogging++.h"
 
 #include <iostream>
+#include <regex>
 #include <set>
 #include <stdint.h>
 #include <string>
@@ -186,13 +187,7 @@ class Chip : public FrontEndDescription
     virtual uint8_t getNumberOfBits(const std::string& dacName) = 0;
     void            printChipType(std::ostream& os) const
     {
-        if(fType == FrontEndType::SSA) os << "FrontEndType\t--> SSA";
-        if(fType == FrontEndType::SSA2) os << "FrontEndType\t--> SSA2";
-        if(fType == FrontEndType::MPA) os << "FrontEndType\t--> MPA";
-        if(fType == FrontEndType::MPA2) os << "FrontEndType\t--> MPA2";
-        if(fType == FrontEndType::CBC3) os << "FrontEndType\t--> CB3";
-        if(fType == FrontEndType::CIC) os << "FrontEndType\t--> CIC";
-        if(fType == FrontEndType::CIC2) os << "FrontEndType\t--> CIC2";
+        os << "FrontEndType\t--> " << FrontEndDescription::getFrontEndName(fType);
     }
 
     // Set some of the bits in register , leave others untouched
@@ -243,10 +238,12 @@ class Chip : public FrontEndDescription
         return output;
     }
 
-    void takeSnapshot() override;
-    void clearSnapshot() override;
+    void takeSnapshot();
+    void clearSnapshot();
+    std::vector<std::pair<std::string, uint16_t>> getSnapshot() const;
     void clearFreeRegisters();
-    void addFreeRegister(const std::string& theRegisterName);
+    void addFreeRegister(const std::regex& theRegisterName);
+    virtual void initializeFreeRegisters() {};
 
   protected:
     std::string configFileName;
@@ -259,6 +256,7 @@ class Chip : public FrontEndDescription
     ChipRegMap  fRegMap;
     ChipRegMap  fModifiedRegs;
     CommentMap  fCommentMap;
+    std::vector<std::regex> fListOfFreeRegisters {};
 
   private:
     uint32_t fI2CWrites         = 0;
@@ -267,9 +265,8 @@ class Chip : public FrontEndDescription
     uint32_t fRegWrites         = 0;
     uint32_t fRegReads          = 0;
     uint8_t  fTrackRegisters    = 0;
-    bool       fTrackModifiedRegistersEnabled {false}; 
-    ChipRegMap fModifiedRegisters {};
-    std::vector<std::string> fListOfFreeRegisters {};
+    bool     fTrackModifiedRegistersEnabled {false}; 
+    std::unordered_map<std::string, uint16_t> fModifiedRegisters {};
 };
 
 /*!

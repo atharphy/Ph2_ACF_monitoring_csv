@@ -12,6 +12,7 @@
 #include "HWInterface/MPA2Interface.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/Utilities.h"
 #include <typeinfo>
 
 #define DEV_FLAG 0
@@ -1111,27 +1112,25 @@ void MPA2Interface::Activate_ps(Chip* pMPA2, uint8_t win) { this->WriteChipReg(p
 
 bool MPA2Interface::Set_calibration(Chip* pMPA2, uint32_t cal)
 {
-    bool success = true;
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC0", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC1", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC2", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC3", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC4", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC5", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC6", cal));
+    std::vector<std::pair<std::string, uint16_t>> theVector;
+    for(int index=0; index<=6; ++index)
+    {
+        std::string registerName  = "CalDAC" + convertToString(index);
+        theVector.push_back(std::make_pair(registerName, cal));
+    }
+    bool success = this->WriteChipMultReg(pMPA2, theVector);
     return success;
 }
 
 bool MPA2Interface::Set_threshold(Chip* pMPA2, uint32_t th)
 {
-    bool success = true;
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC0", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC1", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC2", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC3", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC4", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC5", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC6", th));
+    std::vector<std::pair<std::string, uint16_t>> theVector;
+    for(int index=0; index<=6; ++index)
+    {
+        std::string registerName  = "ThDAC" + convertToString(index);
+        theVector.push_back(std::make_pair(registerName, th));
+    }
+    bool success = this->WriteChipMultReg(pMPA2, theVector);
     return success;
 }
 

@@ -33,14 +33,7 @@ struct ChipRegItem
 
     bool operator==(const ChipRegItem& theChipRegItem) const 
     {
-        return fPage == theChipRegItem.fPage && 
-               fAddress == theChipRegItem.fAddress && 
-               fDefValue == theChipRegItem.fDefValue && 
-               fValue == theChipRegItem.fValue && 
-               fStatusReg == theChipRegItem.fStatusReg && 
-               fPrmptCfg == theChipRegItem.fPrmptCfg && 
-               fBitSize == theChipRegItem.fBitSize && 
-               fControlReg == theChipRegItem.fControlReg;
+        return fValue == theChipRegItem.fValue;
     }
 
     bool operator!=(const ChipRegItem& theChipRegItem) const 

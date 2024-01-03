@@ -86,9 +86,6 @@ class Hybrid
     void    setInvertClock(uint8_t pInvertClock) { fInvertClock = pInvertClock; };
     uint8_t getInvertClock() const { return fInvertClock; };
 
-    virtual void takeSnapshot() override {};
-    virtual void clearSnapshot() override {};
-
   protected:
     uint16_t fNPixelChips = 0, fNStripChips = 0;
     uint8_t  fMasterId;

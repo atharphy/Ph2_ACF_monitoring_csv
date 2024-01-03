@@ -46,8 +46,13 @@ void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
     fRegMap[pReg] = psetValue;
     if(fTrackModifiedRegistersEnabled)
     {
-        //TODO -> do not record skipped registers
-        if(oldRegister != psetValue) fModifiedRegisters[pReg] = oldRegister;
+        bool isFreeRegister = false;
+        for(const auto& freeRegister : fListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(pReg, freeRegister);
+            if(isFreeRegister) break;
+        }
+        if(!isFreeRegister && oldRegister != psetValue) fModifiedRegisters[pReg] = oldRegister;
     }
 }
 
@@ -153,8 +158,23 @@ void BeBoard::takeSnapshot()
 void BeBoard::clearSnapshot()
 {
     fTrackModifiedRegistersEnabled = false;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fModifiedRegisters contains " << fModifiedRegisters.size() << " elements" << std::endl;
     fModifiedRegisters.clear();
+}
+
+std::vector<std::pair<std::string, uint32_t>> BeBoard::getSnapshot() const
+{
+    std::vector<std::pair<std::string, uint32_t>> theModifiedRegisterVector(fModifiedRegisters.begin(), fModifiedRegisters.end());
+    return theModifiedRegisterVector;
+}
+
+void BeBoard::clearFreeRegisters()
+{
+    fListOfFreeRegisters.clear();
+}
+
+void BeBoard::addFreeRegister(const std::regex& theRegisterName)
+{
+    fListOfFreeRegisters.push_back(theRegisterName);
 }
 
 } // namespace Ph2_HwDescription

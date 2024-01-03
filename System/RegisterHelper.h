@@ -29,13 +29,14 @@ namespace Ph2_System
         ~RegisterHelper() {};
 
         void takeSnapshot();
-        void clearSnapshot();
-        void freeFrontEndRegister(FrontEndType theFrontEndType, std::string registerName);
-        void freeBoardRegister(std::string registerName);
         void restoreSnapshot();
-        void resetTouchableRegister();
+        void freeFrontEndRegister(const FrontEndType theFrontEndType, std::string registerName);
+        void freeBoardRegister(std::string registerName);
 
-    protected:
+    private:
+        void clearSnapshot();
+        void resetFreeRegisters();
+        
         DetectorContainer*                     fDetectorContainer    {nullptr};
         Ph2_HwInterface::BeBoardInterface*     fBeBoardInterface     {nullptr};
         Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface {nullptr};

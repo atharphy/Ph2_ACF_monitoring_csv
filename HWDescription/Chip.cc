@@ -37,6 +37,7 @@ Chip::~Chip()
     fRegMap.clear();
     fCommentMap.clear();
     fModifiedRegs.clear();
+    fListOfFreeRegisters.clear();
 }
 
 const ChipRegItem& Chip::getRegItem(const std::string& pReg) const
@@ -87,8 +88,13 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
         i->second.fPrmptCfg  = pPrmptCfg;
         if(fTrackModifiedRegistersEnabled)
         {
-            //TODO -> do not record skipped registers
-            if(oldRegister != i->second) fModifiedRegisters[i->first] = oldRegister;
+            bool isFreeRegister = false;
+            for(const auto& freeRegister : fListOfFreeRegisters)
+            {
+                isFreeRegister = std::regex_match(pReg, freeRegister);
+                if(isFreeRegister) break;
+            }
+            if(!isFreeRegister && oldRegister != i->second) fModifiedRegisters[i->first] = oldRegister.fValue;
         }
     }
 }
@@ -199,30 +205,31 @@ void Chip::saveRegMap(const std::string& fName2Add)
 void Chip::takeSnapshot()
 {
     clearSnapshot();
+    clearFreeRegisters();
     fTrackModifiedRegistersEnabled = true;
 }
 
-#include <cxxabi.h>
 void Chip::clearSnapshot()
 {
-    int32_t     status;
-    std::string className     = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
-
     fTrackModifiedRegistersEnabled = false;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Chip type " << className << " fModifiedRegisters contains " << fModifiedRegisters.size() << " elements:" << std::endl;
-    for(const auto theRegister : fModifiedRegisters)
-    std::cout << theRegister.first << " " << fModifiedRegs[theRegister.first].fValue << " -> " << theRegister.second.fValue << std::endl;
     fModifiedRegisters.clear();
 }
 
 void Chip::clearFreeRegisters()
 {
     fListOfFreeRegisters.clear();
+    initializeFreeRegisters();
 }
 
-void Chip::addFreeRegister(const std::string& theRegisterName)
+void Chip::addFreeRegister(const std::regex& theRegisterName)
 {
     fListOfFreeRegisters.push_back(theRegisterName);
+}
+
+std::vector<std::pair<std::string, uint16_t>> Chip::getSnapshot() const
+{
+    std::vector<std::pair<std::string, uint16_t>> theModifiedRegisterVector(fModifiedRegisters.begin(), fModifiedRegisters.end());
+    return theModifiedRegisterVector;
 }
 
 } // namespace Ph2_HwDescription

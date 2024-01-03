@@ -59,6 +59,31 @@ MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
     }
 }
 
+void MPA2::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::regex("^Mask$"));
+    fListOfFreeRegisters.push_back(std::regex("^EfuseProg[0-3]$"));
+
+    // Brodcast registers cannot be reset to avoid overriding local changes
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
+}
+
+
 void MPA2::loadfRegMap(const std::string& filename)
 { // start loadfRegMap
     std::ifstream file(filename.c_str(), std::ios::in);

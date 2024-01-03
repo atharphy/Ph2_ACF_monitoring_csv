@@ -46,6 +46,14 @@ void PedeNoise::clearDataMembers()
 
 void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
+    fRegisterHelper->takeSnapshot();
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^VCth\\d$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^MaskChannel-\\d{3}-to-\\d{3}$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC\\d$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ENFLAGS_P\\d+$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^ENFLAG_S\\d+$");
+
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoardRegMap cRegMap      = cBoard->getBeBoardRegMap();
@@ -186,50 +194,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedeNoise::Reset()
 {
-    LOG(INFO) << BOLDGREEN << "Resetting registers touched  by PedeNoise" << RESET;
-    // set everything back to original values .. like I wasn't here
-    for(auto cBoard: *fDetectorContainer)
-    {
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
-        std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
-        cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
-        fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
-
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                LOG(DEBUG) << BOLDBLUE << "PedeNoise::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-
-                for(auto cChip: *cHybrid)
-                {
-                    auto cModMap = cChip->GetModifiedRegisterMap();
-                    LOG(DEBUG) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
-                    std::vector<std::pair<std::string, uint16_t>> cRegList;
-                    for(auto cMapItem: cModMap)
-                    {
-                        auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        if(cMapItem.second.fValue == cValueInMemory) continue;
-                        // don't reconfigure the offsets .. whole point of this excercise
-                        if(cMapItem.first.find("VCth") != std::string::npos) continue;
-                        if(cMapItem.first.find("ThDAC") != std::string::npos) continue;
-                        if(cMapItem.first.find("Bias_THDAC") != std::string::npos) continue;
-                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) { cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); };
-                        LOG(DEBUG) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
-                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
-                    }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
-                    // don't track registers + clear mod reg map
-                    cChip->setRegisterTracking(0);
-                    cChip->ClearModifiedRegisterMap();
-                }
-            }
-        }
-    }
+    fRegisterHelper->restoreSnapshot();
     resetPointers();
 }
 void PedeNoise::disableStubLogic()
@@ -257,36 +222,6 @@ void PedeNoise::disableStubLogic()
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cChip), "HIP&TestMode");
                         // fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "Pipe&StubInpSel&Ptwidth", 0x23);
                         // fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "HIP&TestMode", 0x00);
-                    }
-                }
-            }
-        }
-    }
-}
-
-void PedeNoise::reloadStubLogic()
-{
-    // re-enable stub logic
-
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    RegisterVector cRegVec;
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
-                    {
-                        LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                        cRegVec.push_back(
-                            {"Pipe&StubInpSel&Ptwidth",
-                             fStubLogicValue->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()});
-                        cRegVec.push_back(
-                            {"HIP&TestMode",
-                             fHIPCountValue->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()});
-                        fReadoutChipInterface->WriteChipMultReg(cChip, cRegVec);
                     }
                 }
             }
@@ -370,7 +305,6 @@ void PedeNoise::sweepSCurves()
     if(fWithMPA) LOG(INFO) << MAGENTA << "Sweep of Pixel S-curves will start at an average threshold of " << cPixelStartValue << RESET;
 
     measureSCurves(cStripStartValue, cPixelStartValue);
-    // if(fDisableStubLogic) reloadStubLogic();
     this->SetTestAllChannels(originalAllChannelFlag);
     LOG(INFO) << BOLDBLUE << "Finished sweeping SCurves..." << RESET;
     return;
@@ -1069,7 +1003,6 @@ void PedeNoise::ConfigureCalibration() {}
 
 void PedeNoise::Running()
 {
-    fRegisterHelper->takeSnapshot();
     LOG(INFO) << "Starting noise measurement";
     Initialise(true, true);
     // auto myFunction = [](const Ph2_HwDescription::ReadoutChip *theChip){
@@ -1082,13 +1015,11 @@ void PedeNoise::Running()
     Validate();
     LOG(INFO) << "Done with noise";
     Reset();
-    fRegisterHelper->clearSnapshot();
 }
 
 void PedeNoise::Stop()
 {
     LOG(INFO) << "Stopping noise measurement";
-    Reset();
     writeObjects();
     dumpConfigFiles();
     SaveResults();
