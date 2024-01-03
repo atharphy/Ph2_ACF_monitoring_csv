@@ -724,7 +724,6 @@ void SystemController::InitializeOT(BeBoard* pBoard)
                     uint8_t cCicEdge = fCicInterface->ReadFCMDEdge(cCic);
                     cCicEdge = (cCicEdge == 0 )? 1 : 0;
                     fCicInterface->ConfigureFCMDEdge(cCic, cCicEdge);
-                    cCicEdge = fCicInterface->ReadFCMDEdge(cCic);
                     fBeBoardInterface->ChipReSync(pBoard);
 
                     if(fCicInterface->GetResyncRequest(cCic))
