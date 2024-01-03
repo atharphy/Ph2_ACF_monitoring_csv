@@ -6,9 +6,7 @@
 #include "DQMUtils/DQMMetadata.h"
 #endif
 
-MetadataHandler::MetadataHandler() 
-: Tool()
-{}
+MetadataHandler::MetadataHandler() : Tool() {}
 
 MetadataHandler::~MetadataHandler()
 {
@@ -21,15 +19,10 @@ MetadataHandler::~MetadataHandler()
 #endif
 }
 
-
-void MetadataHandler::initMetadata()
-{
-    initMetadataHardwareSpecific();
-}
+void MetadataHandler::initMetadata() { initMetadataHardwareSpecific(); }
 
 void MetadataHandler::fillInitalConditions()
 {
-
     fillNameContainerWithChipIDs();
 
     std::string theUsername;
@@ -96,7 +89,7 @@ void MetadataHandler::fillInitalConditions()
     ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theVTRxFuseIdContainer);
     fillVTRxFuseIdContainer(theVTRxFuseIdContainer);
     bool isInitialValue = true;
-    
+
 #ifdef __USE_ROOT__
     fDQMMetadata->book(fResultFile, *fDetectorContainer, fSettingsMap);
     if(fNameContainer != nullptr) fDQMMetadata->fillObjectNames(*fNameContainer);
@@ -186,7 +179,6 @@ void MetadataHandler::fillFinalConditions()
 
     fillFinalConditionsHardwareSpecific();
 }
-
 
 void MetadataHandler::fillNameContainerWithChipIDs()
 {

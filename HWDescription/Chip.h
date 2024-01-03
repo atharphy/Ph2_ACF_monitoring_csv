@@ -185,10 +185,7 @@ class Chip : public FrontEndDescription
      */
     uint16_t        getClockFrequency() { return fClockFrequency; }
     virtual uint8_t getNumberOfBits(const std::string& dacName) = 0;
-    void            printChipType(std::ostream& os) const
-    {
-        os << "FrontEndType\t--> " << FrontEndDescription::getFrontEndName(fType);
-    }
+    void            printChipType(std::ostream& os) const { os << "FrontEndType\t--> " << FrontEndDescription::getFrontEndName(fType); }
 
     // Set some of the bits in register , leave others untouched
     void setRegBits(const std::string& pReg, ChipRegMask pMask, uint16_t pValue)
@@ -238,35 +235,35 @@ class Chip : public FrontEndDescription
         return output;
     }
 
-    void takeSnapshot();
-    void clearSnapshot();
+    void                                          takeSnapshot();
+    void                                          clearSnapshot();
     std::vector<std::pair<std::string, uint16_t>> getSnapshot() const;
-    void clearFreeRegisters();
-    void addFreeRegister(const std::regex& theRegisterName);
-    virtual void initializeFreeRegisters() {};
+    void                                          clearFreeRegisters();
+    void                                          addFreeRegister(const std::regex& theRegisterName);
+    virtual void                                  initializeFreeRegisters(){};
 
   protected:
-    std::string configFileName;
-    uint8_t     fChipCode;
-    uint8_t     fChipId;
-    uint8_t     fChipAddress; // I2C addess of chip
-    uint16_t    fMaxRegValue;
-    uint16_t    fClockFrequency;
-    uint8_t     fMasterId;
-    ChipRegMap  fRegMap;
-    ChipRegMap  fModifiedRegs;
-    CommentMap  fCommentMap;
-    std::vector<std::regex> fListOfFreeRegisters {};
+    std::string             configFileName;
+    uint8_t                 fChipCode;
+    uint8_t                 fChipId;
+    uint8_t                 fChipAddress; // I2C addess of chip
+    uint16_t                fMaxRegValue;
+    uint16_t                fClockFrequency;
+    uint8_t                 fMasterId;
+    ChipRegMap              fRegMap;
+    ChipRegMap              fModifiedRegs;
+    CommentMap              fCommentMap;
+    std::vector<std::regex> fListOfFreeRegisters{};
 
   private:
-    uint32_t fI2CWrites         = 0;
-    uint32_t fI2Reads           = 0;
-    uint32_t fI2CReadMismatches = 0;
-    uint32_t fRegWrites         = 0;
-    uint32_t fRegReads          = 0;
-    uint8_t  fTrackRegisters    = 0;
-    bool     fTrackModifiedRegistersEnabled {false}; 
-    std::unordered_map<std::string, uint16_t> fModifiedRegisters {};
+    uint32_t                                  fI2CWrites         = 0;
+    uint32_t                                  fI2Reads           = 0;
+    uint32_t                                  fI2CReadMismatches = 0;
+    uint32_t                                  fRegWrites         = 0;
+    uint32_t                                  fRegReads          = 0;
+    uint8_t                                   fTrackRegisters    = 0;
+    bool                                      fTrackModifiedRegistersEnabled{false};
+    std::unordered_map<std::string, uint16_t> fModifiedRegisters{};
 };
 
 /*!

@@ -22,9 +22,9 @@
 #include "MonitorUtils/SEHMonitor.h"
 #include "Parser/CommunicationSettingConfig.h"
 #include "Parser/DetectorMonitorConfig.h"
+#include "System/RegisterHelper.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
-#include "System/RegisterHelper.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -724,22 +724,22 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
                 if(fCicInterface->GetResyncRequest(cCic))
                 {
-                    LOG(INFO) << BOLDYELLOW << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
-                              << " --- trying to change fast command sampling edge" << RESET;
-                    
+                    LOG(INFO) << BOLDYELLOW << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id "
+                              << +cHybrid->getId() << " --- trying to change fast command sampling edge" << RESET;
+
                     // Change the sampling edge of the fast command and then resync again
                     uint8_t cCicEdge = fCicInterface->ReadFCMDEdge(cCic);
-                    cCicEdge = (cCicEdge == 0 )? 1 : 0;
+                    cCicEdge         = (cCicEdge == 0) ? 1 : 0;
                     fCicInterface->ConfigureFCMDEdge(cCic, cCicEdge);
                     fBeBoardInterface->ChipReSync(pBoard);
 
                     if(fCicInterface->GetResyncRequest(cCic))
                     {
-                        LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
-                                << " --- Hybrid will be disabled" << RESET;
+                        LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id "
+                                  << +cHybrid->getId() << " --- Hybrid will be disabled" << RESET;
                         ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
                         continue;
-                    }                    
+                    }
                 }
             }
         }
@@ -1424,10 +1424,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     else if(pType == BoardType::D19C && pBoard->getEventType() != EventType::PSAS)
     {
-        if(pData.size() == 0)
-        {
-            throw std::runtime_error("SystemController::DecodeData -> data vector is empty");
-        }
+        if(pData.size() == 0) { throw std::runtime_error("SystemController::DecodeData -> data vector is empty"); }
         bool cTLUconfig = 2;
         // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
         //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(pBoard->getId()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);

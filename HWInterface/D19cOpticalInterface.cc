@@ -145,10 +145,11 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
                     pChip->UpdateModifiedRegMap(pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1));
                 if(pVerify)
                 {
-                    auto &writtenValue = pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1);
+                    auto& writtenValue = pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1);
                     if(cReadBack != writtenValue.fValue)
                     {
-                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write : Wrong value read back, written 0x" << std::hex << writtenValue.fValue << " but read back 0x" << +cReadBack << std::dec << RESET;
+                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write : Wrong value read back, written 0x" << std::hex << writtenValue.fValue << " but read back 0x" << +cReadBack << std::dec
+                                   << RESET;
                         cSuccess &= false;
                     }
                     writtenValue.fValue = cReadBack;

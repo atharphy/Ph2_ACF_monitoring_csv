@@ -50,7 +50,8 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     // ######################################################
     if(pDacValue > maxRegValue)
     {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address 0x" << BOLDYELLOW << std::hex << cAddress << std::dec << RESET;
+        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address 0x" << BOLDYELLOW << std::hex << cAddress << std::dec
+                   << RESET;
         return false;
     }
 

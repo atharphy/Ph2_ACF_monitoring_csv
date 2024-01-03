@@ -1262,7 +1262,7 @@ uint8_t CicInterface::ReadFCMDEdge(Chip* pChip)
 {
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "FC_ON_NEG_EDGE" : "MISC_CTRL";
     auto        cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint8_t     cNegEdge    = (pChip->getFrontEndType() == FrontEndType::CIC) ? cRegValue : ((cRegValue & 0x8) >>3);
+    uint8_t     cNegEdge  = (pChip->getFrontEndType() == FrontEndType::CIC) ? cRegValue : ((cRegValue & 0x8) >> 3);
     if(cNegEdge == 1)
         LOG(INFO) << BOLDBLUE << "Fast command block in CIC locks on falling edge." << RESET;
     else

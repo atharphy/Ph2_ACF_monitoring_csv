@@ -1113,9 +1113,9 @@ void MPA2Interface::Activate_ps(Chip* pMPA2, uint8_t win) { this->WriteChipReg(p
 bool MPA2Interface::Set_calibration(Chip* pMPA2, uint32_t cal)
 {
     std::vector<std::pair<std::string, uint16_t>> theVector;
-    for(int index=0; index<=6; ++index)
+    for(int index = 0; index <= 6; ++index)
     {
-        std::string registerName  = "CalDAC" + convertToString(index);
+        std::string registerName = "CalDAC" + convertToString(index);
         theVector.push_back(std::make_pair(registerName, cal));
     }
     bool success = this->WriteChipMultReg(pMPA2, theVector);
@@ -1125,9 +1125,9 @@ bool MPA2Interface::Set_calibration(Chip* pMPA2, uint32_t cal)
 bool MPA2Interface::Set_threshold(Chip* pMPA2, uint32_t th)
 {
     std::vector<std::pair<std::string, uint16_t>> theVector;
-    for(int index=0; index<=6; ++index)
+    for(int index = 0; index <= 6; ++index)
     {
-        std::string registerName  = "ThDAC" + convertToString(index);
+        std::string registerName = "ThDAC" + convertToString(index);
         theVector.push_back(std::make_pair(registerName, th));
     }
     bool success = this->WriteChipMultReg(pMPA2, theVector);

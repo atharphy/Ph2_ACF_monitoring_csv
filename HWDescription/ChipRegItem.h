@@ -31,16 +31,9 @@ struct ChipRegItem
     uint8_t  fBitSize    = 0;
     uint8_t  fControlReg = 0;
 
-    bool operator==(const ChipRegItem& theChipRegItem) const 
-    {
-        return fValue == theChipRegItem.fValue;
-    }
+    bool operator==(const ChipRegItem& theChipRegItem) const { return fValue == theChipRegItem.fValue; }
 
-    bool operator!=(const ChipRegItem& theChipRegItem) const 
-    {
-        return !operator==(theChipRegItem);
-    }
-
+    bool operator!=(const ChipRegItem& theChipRegItem) const { return !operator==(theChipRegItem); }
 };
 } // namespace Ph2_HwDescription
 

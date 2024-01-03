@@ -415,16 +415,16 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
     // Preserve the original register values changing only the needed bits
     registerValue = (registerValue & ~mask) + (pValue << posOfFirstOne);
 
-    //Preparing registers and masks
-    auto theMaskRegisterMasked = cRegMap[pMaskReg];
+    // Preparing registers and masks
+    auto theMaskRegisterMasked   = cRegMap[pMaskReg];
     theMaskRegisterMasked.fValue = mask;
-    auto success = fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterMasked, false);
+    auto success                 = fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterMasked, false);
 
-    auto theRegister = cRegMap[pRegNode];
+    auto theRegister   = cRegMap[pRegNode];
     theRegister.fValue = registerValue;
     success &= fBoardFW->SingleRegisterWrite(pSSA2, theRegister, pVerify);
 
-    auto theMaskRegisterUnmasked = cRegMap[pMaskReg];
+    auto theMaskRegisterUnmasked   = cRegMap[pMaskReg];
     theMaskRegisterUnmasked.fValue = 0xFF;
     success &= fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterUnmasked, false);
 

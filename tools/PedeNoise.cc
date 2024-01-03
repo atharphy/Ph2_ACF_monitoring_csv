@@ -2,6 +2,7 @@
 #include "HWDescription/Cbc.h"
 #include "HWDescription/SSA.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "System/RegisterHelper.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
@@ -11,7 +12,6 @@
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "System/RegisterHelper.h"
 #include "boost/format.hpp"
 #include <math.h>
 
@@ -536,12 +536,14 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
             uint8_t cNStripChips = 0, cNPixelChips = 0;
             for(auto cBoard: *fDetectorContainer)
             {
-                // std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.trigger_source = " << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source") << RESET << std::endl;
-                // std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.delay_after_test_pulse = " << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") << RESET << std::endl;
-                // std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.en_test_pulse = " << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_test_pulse") << RESET << std::endl;
-                // std::cout << GREEN << "Reading TriggerLatency from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TriggerLatency") << RESET << std::endl;
-                // std::cout << GREEN << "Reading TestPulsePotNodeSel from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TestPulsePotNodeSel") << RESET << std::endl;
-                // std::cout << GREEN << "Reading TestPulse from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TestPulse") << RESET << std::endl;
+                // std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.trigger_source = " << fBeBoardInterface->ReadBoardReg(cBoard,
+                // "fc7_daq_cnfg.fast_command_block.trigger_source") << RESET << std::endl; std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.delay_after_test_pulse = " <<
+                // fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") << RESET << std::endl; std::cout << GREEN << "Reading back from Board
+                // fc7_daq_cnfg.fast_command_block.en_test_pulse = " << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_test_pulse") << RESET << std::endl;
+                // std::cout << GREEN << "Reading TriggerLatency from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TriggerLatency") <<
+                // RESET << std::endl; std::cout << GREEN << "Reading TestPulsePotNodeSel from CBC = " <<
+                // fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TestPulsePotNodeSel") << RESET << std::endl; std::cout << GREEN << "Reading
+                // TestPulse from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TestPulse") << RESET << std::endl;
                 auto cBoardIdx = cBoard->getId();
                 for(auto cOpticalGroup: *cBoard)
                 {

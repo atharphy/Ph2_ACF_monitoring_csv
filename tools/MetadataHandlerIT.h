@@ -12,7 +12,6 @@ class MetadataHandlerIT : public MetadataHandler
     void initMetadataHardwareSpecific() override;
     void fillInitalConditionsHardwareSpecific() override;
     void fillFinalConditionsHardwareSpecific() override;
-
 };
 
 #endif

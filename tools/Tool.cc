@@ -212,11 +212,8 @@ void Tool::Stop()
         }
         SystemController::Stop();
 
-        if(fMetadataHandler != nullptr)
-        {
-            fMetadataHandler->fillFinalConditions();
-        }
-        
+        if(fMetadataHandler != nullptr) { fMetadataHandler->fillFinalConditions(); }
+
         if(fDQMStreamerEnabled)
         {
             std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;

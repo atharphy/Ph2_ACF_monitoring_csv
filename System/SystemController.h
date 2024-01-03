@@ -74,7 +74,6 @@ class StartInfo;
  */
 namespace Ph2_System
 {
-
 class RegisterHelper;
 
 // using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */

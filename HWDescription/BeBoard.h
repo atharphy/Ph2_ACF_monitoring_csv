@@ -17,9 +17,9 @@
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
 #include <map>
+#include <regex>
 #include <stdint.h>
 #include <vector>
-#include <regex>
 
 /*!
  * \namespace Ph2_HwDescription
@@ -178,11 +178,11 @@ class BeBoard : public BoardContainer
         for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
     }
 
-    void takeSnapshot();
-    void clearSnapshot();
+    void                                          takeSnapshot();
+    void                                          clearSnapshot();
     std::vector<std::pair<std::string, uint32_t>> getSnapshot() const;
-    void clearFreeRegisters();
-    void addFreeRegister(const std::regex& theRegisterName);
+    void                                          clearFreeRegisters();
+    void                                          addFreeRegister(const std::regex& theRegisterName);
 
   protected:
     BoardType    fBoardType;
@@ -208,11 +208,11 @@ class BeBoard : public BoardContainer
      * \brief Load RegMap from a file
      * \param filename
      */
-    void loadConfigFile(const std::string& filename);
-    BeBoardRegMap     fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
-    bool       fTrackModifiedRegistersEnabled {false}; 
-    BeBoardRegMap fModifiedRegisters {};
-    std::vector<std::regex> fListOfFreeRegisters {};
+    void                    loadConfigFile(const std::string& filename);
+    BeBoardRegMap           fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
+    bool                    fTrackModifiedRegistersEnabled{false};
+    BeBoardRegMap           fModifiedRegisters{};
+    std::vector<std::regex> fListOfFreeRegisters{};
 };
 } // namespace Ph2_HwDescription
 

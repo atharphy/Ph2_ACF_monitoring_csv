@@ -9,13 +9,9 @@
 
 using namespace Ph2_HwDescription;
 
-MetadataHandlerOT::MetadataHandlerOT() 
-: MetadataHandler()
-{}
+MetadataHandlerOT::MetadataHandlerOT() : MetadataHandler() {}
 
-MetadataHandlerOT::~MetadataHandlerOT()
-{}
-
+MetadataHandlerOT::~MetadataHandlerOT() {}
 
 void MetadataHandlerOT::initMetadataHardwareSpecific()
 {
@@ -70,7 +66,6 @@ void MetadataHandlerOT::fillFinalConditionsHardwareSpecific()
     }
 #endif
 }
-
 
 void MetadataHandlerOT::fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer)
 {

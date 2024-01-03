@@ -16,7 +16,6 @@ class MetadataHandlerOT : public MetadataHandler
   private:
     void fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer);
     void fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurationContainer);
-
 };
 
 #endif

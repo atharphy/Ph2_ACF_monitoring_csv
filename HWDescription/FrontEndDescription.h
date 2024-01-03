@@ -82,24 +82,26 @@ class FrontEndDescription
 
     static std::string getFrontEndName(const FrontEndType theFrontEndType)
     {
-        if(theFrontEndType == FrontEndType::HYBRID            ) return "HYBRID"            ;
-        if(theFrontEndType == FrontEndType::CBC3              ) return "CBC3"              ;
-        if(theFrontEndType == FrontEndType::MPA               ) return "MPA"               ;
-        if(theFrontEndType == FrontEndType::MPA2              ) return "MPA2"              ;
-        if(theFrontEndType == FrontEndType::SSA               ) return "SSA"               ;
-        if(theFrontEndType == FrontEndType::SSA2              ) return "SSA2"              ;
-        if(theFrontEndType == FrontEndType::RD53A             ) return "RD53A"             ;
-        if(theFrontEndType == FrontEndType::RD53B             ) return "RD53B"             ;
-        if(theFrontEndType == FrontEndType::CIC               ) return "CIC"               ;
-        if(theFrontEndType == FrontEndType::CIC2              ) return "CIC2"              ;
-        if(theFrontEndType == FrontEndType::OuterTracker2S    ) return "OuterTracker2S"    ;
-        if(theFrontEndType == FrontEndType::OuterTrackerPS    ) return "OuterTrackerPS"    ;
+        if(theFrontEndType == FrontEndType::HYBRID) return "HYBRID";
+        if(theFrontEndType == FrontEndType::CBC3) return "CBC3";
+        if(theFrontEndType == FrontEndType::MPA) return "MPA";
+        if(theFrontEndType == FrontEndType::MPA2) return "MPA2";
+        if(theFrontEndType == FrontEndType::SSA) return "SSA";
+        if(theFrontEndType == FrontEndType::SSA2) return "SSA2";
+        if(theFrontEndType == FrontEndType::RD53A) return "RD53A";
+        if(theFrontEndType == FrontEndType::RD53B) return "RD53B";
+        if(theFrontEndType == FrontEndType::CIC) return "CIC";
+        if(theFrontEndType == FrontEndType::CIC2) return "CIC2";
+        if(theFrontEndType == FrontEndType::OuterTracker2S) return "OuterTracker2S";
+        if(theFrontEndType == FrontEndType::OuterTrackerPS) return "OuterTrackerPS";
         if(theFrontEndType == FrontEndType::InnerTrackerDouble) return "InnerTrackerDouble";
-        if(theFrontEndType == FrontEndType::InnerTrackerQuad  ) return "InnerTrackerQuad"  ;
-        if(theFrontEndType == FrontEndType::HYBRID2S          ) return "HYBRID2S"          ;
-        if(theFrontEndType == FrontEndType::HYBRIDPS          ) return "HYBRIDPS"          ;
-        if(theFrontEndType == FrontEndType::LpGBT             ) return "LpGBT"             ;
-        else return "UNDEFINED";
+        if(theFrontEndType == FrontEndType::InnerTrackerQuad) return "InnerTrackerQuad";
+        if(theFrontEndType == FrontEndType::HYBRID2S) return "HYBRID2S";
+        if(theFrontEndType == FrontEndType::HYBRIDPS) return "HYBRIDPS";
+        if(theFrontEndType == FrontEndType::LpGBT)
+            return "LpGBT";
+        else
+            return "UNDEFINED";
     }
 
   protected:

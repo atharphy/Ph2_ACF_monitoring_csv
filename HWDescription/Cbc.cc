@@ -48,10 +48,7 @@ Cbc::Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     setFrontEndType(FrontEndType::CBC3);
 }
 
-void Cbc::initializeFreeRegisters()
-{
-    fListOfFreeRegisters.push_back(std::regex("^ChipIDFuse[1-3]$"));
-}
+void Cbc::initializeFreeRegisters() { fListOfFreeRegisters.push_back(std::regex("^ChipIDFuse[1-3]$")); }
 
 // load fRegMap from file
 void Cbc::loadfRegMap(const std::string& filename)

@@ -83,7 +83,6 @@ void MPA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
 }
 
-
 void MPA2::loadfRegMap(const std::string& filename)
 { // start loadfRegMap
     std::ifstream file(filename.c_str(), std::ios::in);

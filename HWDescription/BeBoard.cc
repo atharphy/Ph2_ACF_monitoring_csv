@@ -43,11 +43,11 @@ uint32_t BeBoard::getReg(const std::string& pReg) const
 void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
 {
     auto oldRegister = fRegMap[pReg];
-    fRegMap[pReg] = psetValue;
+    fRegMap[pReg]    = psetValue;
     if(fTrackModifiedRegistersEnabled)
     {
         bool isFreeRegister = false;
-        for(const auto& freeRegister : fListOfFreeRegisters)
+        for(const auto& freeRegister: fListOfFreeRegisters)
         {
             isFreeRegister = std::regex_match(pReg, freeRegister);
             if(isFreeRegister) break;
@@ -167,14 +167,8 @@ std::vector<std::pair<std::string, uint32_t>> BeBoard::getSnapshot() const
     return theModifiedRegisterVector;
 }
 
-void BeBoard::clearFreeRegisters()
-{
-    fListOfFreeRegisters.clear();
-}
+void BeBoard::clearFreeRegisters() { fListOfFreeRegisters.clear(); }
 
-void BeBoard::addFreeRegister(const std::regex& theRegisterName)
-{
-    fListOfFreeRegisters.push_back(theRegisterName);
-}
+void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(theRegisterName); }
 
 } // namespace Ph2_HwDescription
