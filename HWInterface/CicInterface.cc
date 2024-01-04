@@ -175,7 +175,28 @@ bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16
     return fBoardFW->SingleRegisterWrite(pChip, cRegMap[pRegNode], pVerify);
 }
 
-bool     CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify) { return true; }
+bool CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify)
+{
+    // first, identify the correct BeBoardFWInterface
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: pVecReq)
+    {
+        auto cIterator = cRegMap.find(cReq.first);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            continue;
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cItem.fValue      = cReq.second;
+        cRegItems.push_back(cItem);
+    }
+    return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
+}
+
 uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
     setBoard(pChip->getBeBoardId());

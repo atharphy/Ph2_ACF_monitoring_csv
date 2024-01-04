@@ -29,7 +29,6 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_Parser;
-bool cBrokenPS = false;
 
 namespace Ph2_System
 {
@@ -658,14 +657,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             if(cCic == NULL) continue;
             uint8_t cSide = cHybrid->getId() % 2;
             if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
-            else if(!cBrokenPS)
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
-            }
-            else
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0);
-            }
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
         }
     }
 
@@ -772,11 +764,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
             {
                 LOG(DEBUG) << BOLDBLUE << "\t... Applying hard reset to MPAs" << RESET;
-                if(!cBrokenPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide); }
-                else
-                {
-                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, 1);
-                }
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
             }
             if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
             {
@@ -841,26 +829,15 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
 
             // hold resets
-            if(!cBrokenPS)
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->ssaReset(clpGBT, true, cSide);
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, cSide);
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, cSide);
-            }
-            else
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, 1);
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, 0);
-            }
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->ssaReset(clpGBT, true, cSide);
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, cSide);
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, cSide);
 
             // make sure all SSAs on a module are configured to produce a clock
             // regardless of how many are enabled on this hybrid
             LOG(INFO) << BOLDBLUE << "Resetting SSA" << RESET;
-            if(!cBrokenPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cSide); }
-            else
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
-            }
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cSide);
+
             bool setSSACurrent = true;
             for(auto cChip: *cHybrid)
             {
@@ -1145,14 +1122,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
                         if(cCic == NULL) continue;
                         uint8_t cSide = cHybrid->getId() % 2;
                         if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
-                        else if(!cBrokenPS)
-                        {
-                            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
-                        }
-                        else
-                        {
-                            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, 0);
-                        }
+                        static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
                     }
                 }
 

@@ -28,11 +28,7 @@ void lpGBT::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]CurrentPhase[13][02]$"));
     fListOfFreeRegisters.push_back(std::regex("^EPRXEcCurrentPhase$"));
     fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]DLLStatus$"));
-    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Read.*"));
-    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Ctrl$"));
-    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Mask$"));
-    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Status$"));
-    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]TranCnt$"));
+    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2].*"));
     fListOfFreeRegisters.push_back(std::regex("^PSStatus$"));
     fListOfFreeRegisters.push_back(std::regex("^PIOIn[HL]$"));
     fListOfFreeRegisters.push_back(std::regex("^FUSEStatus$"));

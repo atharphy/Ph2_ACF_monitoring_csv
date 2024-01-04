@@ -37,23 +37,29 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cIter++;
     } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
     if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state " + fPUSMStatusMap[cChipVersion][cPUSMState])); }
+    
     // Configuring chip
-    bool cReconfigure = false;
-    if(cReconfigure)
+    ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
+    std::vector<std::pair<std::string, uint16_t>> cRegVec;
+    cRegVec.clear();
+    uint16_t maximumWritableRegister = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F;
+    
+    for(const auto& cRegItem: clpGBTRegMap)
     {
-        ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
-        std::vector<std::pair<std::string, uint16_t>> cRegVec;
-        cRegVec.clear();
-        for(const auto& cRegItem: clpGBTRegMap)
-        {
-            if(cRegItem.second.fAddress <= 0x13c && cRegItem.first.find("ChipConfig") == std::string::npos) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
-        } // get read/write registers
-        for(const auto& cReg: cRegVec)
-        {
-            LOG(DEBUG) << BOLDBLUE << "\tWriting 0x" << std::hex << +cReg.second << std::dec << " to " << cReg.first << RESET;
-            WriteChipReg(pChip, cReg.first, cReg.second);
-        }
-    }
+        // if(cRegItem.second.fAddress <= maximumWritableRegister)
+        // if(cRegItem.second.fAddress <= maximumWritableRegister && cRegItem.first.find("ChipConfig") == std::string::npos && cRegItem.first.find("CLKGConfig1") == std::string::npos)
+        // {
+            // uint8_t currentValue = ReadChipReg(pChip, cRegItem.first);
+            // if(currentValue != cRegItem.second.fValue) std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Changing Register " << cRegItem.first << " from 0x" << std::hex << +currentValue << " to 0x" << +cRegItem.second.fValue << std::dec << std::endl;
+            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Configuring register " << cRegItem.first << std::endl;
+            // WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue);
+            // usleep(10000);
+        // }
+        if(cRegItem.second.fAddress <= maximumWritableRegister && cRegItem.first.find("ChipConfig") == std::string::npos && cRegItem.first.find("CLKGConfig1") == std::string::npos) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
+    } // get read/write registers
+    
+    WriteChipMultReg(pChip, cRegVec);
+    
     // Setting PUSM Done bits
     SetPUSMDone(pChip, true, true);
     // Checking if lpGBT reaches Ready state
@@ -121,6 +127,28 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 /*-----------------------*/
 /* OT specific functions */
 /*-----------------------*/
+
+bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
+{
+    // first, identify the correct BeBoardFWInterface
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: pRegVec)
+    {
+        auto cIterator = cRegMap.find(cReq.first);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            continue;
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cItem.fValue      = cReq.second;
+        cRegItems.push_back(cItem);
+    }
+    return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
+}
 
 void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
 {

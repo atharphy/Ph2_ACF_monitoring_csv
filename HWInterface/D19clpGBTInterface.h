@@ -31,6 +31,8 @@ class D19clpGBTInterface : public lpGBTInterface
     // General configuration of the lpGBT chip from register file
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;
+
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pOptical, bool pToggleTC = false);
     // configure PS-ROH
