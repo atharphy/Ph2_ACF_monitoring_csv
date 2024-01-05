@@ -660,7 +660,7 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
 
     if(cGlobalSettingsNode != nullptr)
     {
-        LOG(INFO) << BOLDCYAN << "|\t|\t|----Global SSA Settings: " << RESET;
+        os << BOLDCYAN << "|\t|\t|----Global SSA2 Settings: " << RESET << std::endl;
         // first.. thresholds
         pugi::xml_node cThresholdNode = cGlobalSettingsNode.child("Thresholds");
         if(cThresholdNode != nullptr)
@@ -675,9 +675,9 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
 
                 cChip->setReg("Bias_THDAC", cStripThreshold);
                 cChip->setReg("Bias_THDACHIGH", cStripThresholdHigh);
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global SSA Settings to SSA# " << +cChip->getId() << RESET << std::endl
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA Settings to SSA# " << +cChip->getId() << RESET << std::endl
                    << GREEN << "|\t|\t|\t|---- Threshold: Strips 0x" << std::hex << +cStripThreshold << std::dec << RESET << std::endl
-                   << GREEN << "|\t|\t|\t|---- And Threshold High: Strips 0x" << std::hex << +cStripThresholdHigh << std::dec << RESET;
+                   << GREEN << "|\t|\t|\t|---- And Threshold High: Strips 0x" << std::hex << +cStripThresholdHigh << std::dec << RESET << std::endl;
             }
         }
 
@@ -693,7 +693,7 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
                 uint16_t cValueInMemory = cChip->getReg("ENFLAGS");
                 cValueInMemory          = (cValueInMemory & 0x1F) + ((cMode & 0x03) << 5);
                 cChip->setReg("ENFLAGS", cValueInMemory);
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----ENFLAGS to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec << RESET;
+                os << BOLDCYAN << "|\t|\t|----ENFLAGS to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec << RESET << std::endl;
 
             }
         }
@@ -708,8 +708,8 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
                 int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()); // / SSA2_ELECTRON_CALDAC; // conversion factor to electron with 1 CalDAC = 0.039 fC
                 if(cInjStrps > 0xFF) { throw std::runtime_error("The maximum strip charge that can be injected is 255. Acceptable values are between 0 and 255."); }
                 cChip->setReg("Bias_CALDAC", cInjStrps);
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global SSA injection settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjStrps
-                   << std::dec << RESET;
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA injection settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjStrps
+                   << std::dec << RESET << std::endl;
             }
         }
 
@@ -727,8 +727,8 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
                 cChip->setReg("control_1", control_1);
                 cChip->setReg("control_3", cLatency & 0xFF);
 
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global SSA latency settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
-                   << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET;
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA latency settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
+                   << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
             }
         }
 
@@ -744,8 +744,8 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
                 uint16_t cMemStripControl2 = cChip->getReg("StripControl2");
                 cMemStripControl2          = (cMemStripControl2 & 0xF8) + (cCut & 0x7); // HipCut is the 3 LSB of the StripControl2 register
                 cChip->setReg("StripControl2", cMemStripControl2);
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut
-                   << " read for StripControl2 is 0x" << cChip->getReg("StripControl2") << std::dec << RESET;
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut
+                   << " read for StripControl2 is 0x" << cChip->getReg("StripControl2") << std::dec << RESET << std::endl;
 
             }
         }
@@ -768,8 +768,8 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
 
                 cChip->setRegBits("ClockDeskewing_fine", cMask, cFine);
 
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
-                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET;
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
+                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
             }
         }
     }
@@ -880,9 +880,9 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 uint8_t cWindow = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("window").value()));
                 uint8_t cRegVal = (cMode << 6) | cWindow;
                 cChip->setReg("ECM", cRegVal);
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode
                           << std::dec << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN
-                          << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET;
+                          << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET << std::endl;
             }
         }
         // then hit logic mode
@@ -914,9 +914,8 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                     cRegName << "CalDAC" << +cIndx;
                     cChip->setReg(cRegName.str(), cInjPxls);
                 }
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA injection settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjPxls
+                os  << BOLDCYAN << "|\t|\t|----Applying global MPA injection settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjPxls
                    << std::dec << RESET << std::endl;
-                //
             }
         }
 
@@ -993,7 +992,7 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
     pugi::xml_node cGlobalSettingsNode = pHybridNode.child("Global");
     if(cGlobalSettingsNode != nullptr)
     {
-        LOG(INFO) << BOLDCYAN << "|\t|\t|----Global MPA Settings: " << RESET;
+        os << BOLDCYAN << "|\t|\t|----Global MPA2 Settings: " << RESET << std::endl;
         // first.. thresholds
         pugi::xml_node cThresholdNode = cGlobalSettingsNode.child("Thresholds");
         if(cThresholdNode != nullptr)
@@ -1010,8 +1009,8 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                     cRegName << "ThDAC" << +cIndx;
                     cChip->setReg(cRegName.str(), cThresholdPxls);
                 }
-                LOG(INFO)  << BOLDCYAN << "|\t|\t|----Applying global threshold MPA Settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << std::hex
-                           << +cThresholdPxls << std::dec << RESET;
+                os  << BOLDCYAN << "|\t|\t|----Applying global threshold MPA Settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << std::hex
+                           << +cThresholdPxls << std::dec << RESET << std::endl;
             }
         }
 
@@ -1026,9 +1025,9 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 uint8_t cWindow = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("window").value()));
                 uint8_t cRegVal = (cMode << 6) | cWindow;
                 cChip->setReg("ECM", cRegVal);
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode
                           << std::dec << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN
-                          << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET;
+                          << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET << std::endl;
             }
         }
         // then hit logic mode
@@ -1047,8 +1046,8 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 LOG(INFO) << BOLDYELLOW << "PixelControl_ALL 0x" << std::hex << pixelControl << std::dec << " getting from memory 0x" << std::hex << cChip->getReg("PixelControl_ALL") << std::dec
                           << RESET;
 
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
-                   << std::dec << RESET;
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
+                   << std::dec << RESET << std::endl;
             }
         }
 
@@ -1102,8 +1101,8 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 LOG(INFO) << BOLDYELLOW << "cEdgeSelTrig: 0x" << std::hex << cEdgeSelTrig << std::dec << RESET;
                 cChip->setReg("EdgeSelTrig", cEdgeSelTrig);
                 
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
-                   << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET;
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
+                   << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
             }
         }
 
@@ -1120,8 +1119,8 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 cMask.fNbits    = 3;
                 cMask.fBitShift = 5;
                 cChip->setRegBits("PixelControl_ALL", cMask, cCut);
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
-                   << RESET;
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
+                   << RESET << std::endl;
             }
         }
 
@@ -1144,8 +1143,8 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 cChip->setReg("ConfDLL", (cFine));
                 cChip->setReg("ConfDLL", cFine);
 
-                LOG(INFO) << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
-                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET;
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
+                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
             }
         }
     }
