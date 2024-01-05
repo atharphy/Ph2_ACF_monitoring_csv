@@ -28,7 +28,9 @@ void lpGBT::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]CurrentPhase[13][02]$"));
     fListOfFreeRegisters.push_back(std::regex("^EPRXEcCurrentPhase$"));
     fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]DLLStatus$"));
-    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2].*"));
+    fListOfFreeRegisters.push_back(std::regex(R"(^I2CM[0-2](?!Config$).*)"));
+    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Data[0-3]$"));
+    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Cmd$"));
     fListOfFreeRegisters.push_back(std::regex("^PSStatus$"));
     fListOfFreeRegisters.push_back(std::regex("^PIOIn[HL]$"));
     fListOfFreeRegisters.push_back(std::regex("^FUSE.*"));
@@ -55,9 +57,7 @@ void lpGBT::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::regex("^FAHeader.*"));
     fListOfFreeRegisters.push_back(std::regex("^FALossOfLockCount$"));
     fListOfFreeRegisters.push_back(std::regex("^ConfigErrorCounter[HL]$"));
-    fListOfFreeRegisters.push_back(std::regex("^$"));
-    fListOfFreeRegisters.push_back(std::regex("^$"));
-    fListOfFreeRegisters.push_back(std::regex("^$"));
+    fListOfFreeRegisters.push_back(std::regex("^POWERUP2$"));
 }
 
 void lpGBT::loadfRegMap(const std::string& fileName)

@@ -645,6 +645,19 @@ void SystemController::InitializeOT(BeBoard* pBoard)
         }
     }
 
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+    // return;
+
     // CIC reset
     for(auto cOpticalGroup: *pBoard)
     {
@@ -855,7 +868,7 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
         uint8_t                    cPreEmphMode      = 0; // 3
         uint8_t                    cPreEmphStr       = 0; // 7
         const std::vector<uint8_t> cGroupsExamples   = {0, 1};
-        static_cast<D19clpGBTInterface*>(flpGBTInterface)->Configure2SSEH(clpGBT);
+        static_cast<D19clpGBTInterface*>(flpGBTInterface)->hold2SModuleResets(clpGBT);
         for(auto cHybrid: *pOpticalGroup)
         {
             uint8_t cSide = cHybrid->getId() % 2;
@@ -1054,6 +1067,18 @@ void SystemController::ConfigureHw(bool pReInitialize)
             if(pReInitialize == true)
             {
                 InitializeOT(cBoard); // sets the clocks and configures the CICs, enables the FE readout chips (same as below?!)
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// return;
             }
             else // lpGBT + CIC will need to be configured  (and also maybe reset)
             {

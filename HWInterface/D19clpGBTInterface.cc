@@ -162,6 +162,33 @@ void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
     }
 }
 
+void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
+{
+    ResetI2C(pChip, {0, 1, 2});
+    // Setting GPIO levels Uncomment this for Skeleton test
+    // Setting GPIO levels for Skeleton test
+    ConfigureGPIODirection(pChip, {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}, 1);
+    ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC, fReset_VTRx}, 1);
+    // hold resets
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
+    {
+        this->cbcReset(pChip, true, cSide);
+        this->cicReset(pChip, true, cSide);
+    }
+
+    // Fabio: I do not think this part should be here, but I keep it for consistency with the previous code
+#if defined(__TCUSB__)
+    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 0};
+    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 0};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    cEportGroups = {0, 1, 1, 2, 2, 3};
+    cEportChnls  = {2, 0, 2, 0, 2, 2};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+#endif
+}
+
+
 // Preliminary
 void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 {
