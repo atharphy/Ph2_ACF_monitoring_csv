@@ -48,7 +48,7 @@ CURDACCalL                0x01f         0x00              0x00                  
 * RegName                       Addr          Defval            Value                         BitSize
 *------------------------------------------------------------------------------------------------------------
 CLKGConfig0                     0x020         0x00              0xF8                          8
-CLKGConfig1                     0x021         0x00              0x24                          8
+CLKGConfig1                     0x021         0x00              0x38                          8
 CLKGPllRes                      0x022         0x00              0x44                          8
 CLKGPLLIntCur                   0x023         0x00              0x55                          8
 CLKGPLLPropCur                  0x024         0x00              0x55                          8
@@ -59,7 +59,7 @@ CLKGFLLIntCur                   0x028         0x00              0x0F            
 CLKGFFCAP                       0x029         0x00              0x36                          8
 CLKGCntOverride                 0x02a         0x00              0x00                          8
 CLKGOverrideCapBank             0x02b         0x00              0x00                          8
-CLKGWaitTime                    0x02c         0x00              0xA0                            8
+CLKGWaitTime                    0x02c         0x00              0xA0                          8
 CLKGLFConfig0                   0x02d         0x00              0x89                          8
 CLKGLFConfig1                   0x02e         0x00              0x99                          8
 FAMaxHeaderFoundCount           0x02f         0x00              0x1A                          8

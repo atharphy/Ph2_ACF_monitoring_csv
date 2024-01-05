@@ -484,7 +484,7 @@ bool lpGBTInterface::SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTu
     cMask.fNbits    = cNbits;
     pChip->setRegBits(cRegName, cMask, pVrefTune);
     WriteChipReg(pChip, cRegName, pVrefTune);
-    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+    // std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     auto cVrefTune = pChip->getRegItem(cRegName).fValue;
 
     return cVrefTune == pVrefTune;
@@ -1383,17 +1383,17 @@ bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
 
 void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_t pChipId, std::string pFileName)
 {
-    // # Load calibration data from a local CSV file based for the specific chipid.
+    // # Load fCalibration data from a local CSV file based for the specific chipid.
 
     // # Arguments:
-    // # pFileName: Path of CSV file containing calibration data.
-    // # pChipId: ChipID for which calibration data should be loaded.
+    // # pFileName: Path of CSV file containing fCalibration data.
+    // # pChipId: ChipID for which fCalibration data should be loaded.
 
     // # Raises:
-    // # LpgbtCalibrationWarning: If loading calibration data failed.
+    // # LpgbtCalibrationWarning: If loading fCalibration data failed.
     // # FileNotFoundError: If the file does not exis
 
-    LOG(INFO) << BOLDGREEN << "Loading calibration data for 0x" << std::hex << +pChipId << std::dec << " chip from " << pFileName << RESET;
+    LOG(INFO) << BOLDGREEN << "Loading fCalibration data for 0x" << std::hex << +pChipId << std::dec << " chip from " << pFileName << RESET;
     bool cCalibrationLoaded = false;
 
     std::ifstream                         file(pFileName.c_str(), std::ios::in);
@@ -1432,7 +1432,7 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_
                 {
                     LOG(DEBUG) << BOLDBLUE << cHeaderRow[j] << RESET;
                     LOG(DEBUG) << BOLDBLUE << row[j] << RESET;
-                    calibration[cHeaderRow[j]] = std::stof(row[j]);
+                    fCalibration[cHeaderRow[j]] = std::stof(row[j]);
                 }
                 cCalibrationLoaded = true;
                 break;
@@ -1441,10 +1441,10 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, uint32_
         if(!cCalibrationLoaded)
         {
             LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Calibration data not available for the 0x" << std::hex << +pChipId << std::dec << " chip" << RESET;
-            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Using default calibration data" << RESET;
+            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Using default fCalibration data" << RESET;
             // throw std::runtime_error(std::string("LpgbtCalibrationError"));
         }
-        for(auto it = calibration.cbegin(); it != calibration.cend(); ++it) { LOG(DEBUG) << BOLDBLUE << it->first << " = " << it->second << RESET; }
+        for(auto it = fCalibration.cbegin(); it != fCalibration.cend(); ++it) { LOG(DEBUG) << BOLDBLUE << it->first << " = " << it->second << RESET; }
     }
     else
     {
@@ -1479,7 +1479,7 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pC
     // # Return:
     // #    Temperature estimate in degree C.
 
-    uint8_t cVrefCode = (uint32_t)std::round(calibration["VREF_OFFSET"]);
+    uint8_t cVrefCode = (uint32_t)std::round(fCalibration["VREF_OFFSET"]);
     LOG(DEBUG) << BOLDGREEN << "Enable VREF at code: 0x" << std::hex << +cVrefCode << std::dec << " [LSB]" << RESET;
 
     EnableInternalVref(pChip, true);
@@ -1505,7 +1505,7 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::Chip* pC
         LOG(DEBUG) << BOLDGREEN << "Temperature readout: 0x" << std::hex << +cAdcVal << std::dec << " [LSB]" << RESET;
 
         // estimate the junction temperature
-        cMeasurements.push_back(cAdcVal * calibration["TEMPERATURE_UNCALVREF_SLOPE"] + calibration["TEMPERATURE_UNCALVREF_OFFSET"]);
+        cMeasurements.push_back(cAdcVal * fCalibration["TEMPERATURE_UNCALVREF_SLOPE"] + fCalibration["TEMPERATURE_UNCALVREF_OFFSET"]);
     }
     float cTemperature = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
     LOG(INFO) << BOLDGREEN << "Temperature estimate: " << cTemperature << " [C]" << RESET;
@@ -1525,7 +1525,7 @@ void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::Chip* pChip, bool pEn
             pEnable: Enable VREF generator
     */
 
-    uint8_t cCodeOpt = (uint32_t)std::round(calibration["VREF_SLOPE"] * fTemperature + calibration["VREF_OFFSET"]);
+    uint8_t cCodeOpt = (uint32_t)std::round(fCalibration["VREF_SLOPE"] * fTemperature + fCalibration["VREF_OFFSET"]);
     LOG(INFO) << BOLDGREEN << "REFTune = 0x" << std::hex << +cCodeOpt << std::dec << RESET;
     EnableInternalVref(pChip, pEnable);
     SetVrefTune(pChip, cCodeOpt);
@@ -1573,7 +1573,7 @@ void lpGBTInterface::VdacSetVout(Ph2_HwDescription::Chip* pChip, float pVoltageV
         throw std::runtime_error(std::string("Invalid voltage for VDAC"));
     }
     int32_t cDacCode =
-        (int32_t)std::round((calibration["VDAC_SLOPE"] + fTemperature * calibration["VDAC_SLOPE_TEMP"]) * pVoltageV + calibration["VDAC_OFFSET"] + fTemperature * calibration["VDAC_OFFSET_TEMP"]);
+        (int32_t)std::round((fCalibration["VDAC_SLOPE"] + fTemperature * fCalibration["VDAC_SLOPE_TEMP"]) * pVoltageV + fCalibration["VDAC_OFFSET"] + fTemperature * fCalibration["VDAC_OFFSET_TEMP"]);
 
     if(cDacCode < 0 or cDacCode > 4095)
     {
@@ -1605,7 +1605,7 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::strin
     std::string cAdcStr = "ADC_" + fADCGainMap[pGain];
 
     float cCalRes =
-        ((calibration[cAdcStr + "_SLOPE"] + fTemperature * calibration[cAdcStr + "_SLOPE_TEMP"]) * cResult + calibration[cAdcStr + "_OFFSET"] + fTemperature * calibration[cAdcStr + "_OFFSET_TEMP"]);
+        ((fCalibration[cAdcStr + "_SLOPE"] + fTemperature * fCalibration[cAdcStr + "_SLOPE_TEMP"]) * cResult + fCalibration[cAdcStr + "_OFFSET"] + fTemperature * fCalibration[cAdcStr + "_OFFSET_TEMP"]);
 
     LOG(DEBUG) << BOLDGREEN << "Measured calibrated Vin for " << pADCInputP << " and " << pADCInputN << " is " << cCalRes << " [V]" << RESET;
     return cCalRes;
@@ -1628,8 +1628,8 @@ float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::Chip* pChip, const s
         LOG(ERROR) << BOLDRED << "lpGBTInterface::_CdacCodeToCurrent: Invalid CDAC channel" << RESET;
         throw std::runtime_error(std::string("Invalid CDAC channel"));
     }
-    return (pCode - calibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] - fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]) /
-           (calibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]);
+    return (pCode - fCalibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] - fTemperature * fCalibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]) /
+           (fCalibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * fCalibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]);
 }
 
 float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::Chip* pChip, const std::string& pChannel, uint8_t pCode)
@@ -1653,7 +1653,7 @@ float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::Chip* pChip, const std:
     // Return the rout estimate for code 1 instead.
     if(pCode == 0) { pCode = 1; }
 
-    float cR0 = (calibration["CDAC" + std::to_string(cChannel) + "_R0"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_R0_TEMP"]);
+    float cR0 = (fCalibration["CDAC" + std::to_string(cChannel) + "_R0"] + fTemperature * fCalibration["CDAC" + std::to_string(cChannel) + "_R0_TEMP"]);
     return cR0 / pCode;
 }
 
@@ -1683,17 +1683,17 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::Chip* p
         throw std::runtime_error(std::string("Invalid CDAC current"));
     }
 
-    uint16_t cCode = (uint16_t)std::round((calibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]) * pCurrentA +
-                                          calibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] + fTemperature * calibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]);
+    uint16_t cCode = (uint16_t)std::round((fCalibration["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * fCalibration["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]) * pCurrentA +
+                                          fCalibration["CDAC" + std::to_string(cChannel) + "_OFFSET"] + fTemperature * fCalibration["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]);
 
     /* code = round(
             (
-                self.calibration[f"CDAC{chn}_SLOPE"]
-                + self.temperature_c * self.calibration[f"CDAC{chn}_SLOPE_TEMP"]
+                self.fCalibration[f"CDAC{chn}_SLOPE"]
+                + self.temperature_c * self.fCalibration[f"CDAC{chn}_SLOPE_TEMP"]
             )
             * current_a
-            + self.calibration[f"CDAC{chn}_OFFSET"]
-            + self.temperature_c * self.calibration[f"CDAC{chn}_OFFSET_TEMP"]
+            + self.fCalibration[f"CDAC{chn}_OFFSET"]
+            + self.temperature_c * self.fCalibration[f"CDAC{chn}_OFFSET_TEMP"]
         ) */
 
     if(cCode > 255)
@@ -1857,7 +1857,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::Chip* pChip, uint8_t
 
     float cAdcVal = AdcGetVin(pChip, "TEMP", "VREF/2", 0, pSamples);
 
-    float cTemp = (cAdcVal * calibration["TEMPERATURE_SLOPE"] + calibration["TEMPERATURE_OFFSET"]);
+    float cTemp = (cAdcVal * fCalibration["TEMPERATURE_SLOPE"] + fCalibration["TEMPERATURE_OFFSET"]);
     return cTemp;
 }
 
@@ -1894,7 +1894,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::Chip* pChip, 
     // perform conversion
     float cVadc = AdcGetVin(pChip, pPowerSupply, "VREF/2", 0, pSamples);
 
-    float cVsup = cVadc * (calibration["VDDMON_SLOPE"] + fTemperature * calibration["VDDMON_SLOPE_TEMP"]);
+    float cVsup = cVadc * (fCalibration["VDDMON_SLOPE"] + fTemperature * fCalibration["VDDMON_SLOPE_TEMP"]);
 
     // disable VDD monitor (if requested)
     if(pDisableMonitorAfterMeasurement) { ConfigureInternalMonitoring(pChip, false); }

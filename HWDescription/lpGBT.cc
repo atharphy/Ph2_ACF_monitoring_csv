@@ -31,8 +31,8 @@ void lpGBT::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2].*"));
     fListOfFreeRegisters.push_back(std::regex("^PSStatus$"));
     fListOfFreeRegisters.push_back(std::regex("^PIOIn[HL]$"));
-    fListOfFreeRegisters.push_back(std::regex("^FUSEStatus$"));
-    fListOfFreeRegisters.push_back(std::regex("^FUSEValues[A-D]$"));
+    fListOfFreeRegisters.push_back(std::regex("^FUSE.*"));
+    fListOfFreeRegisters.push_back(std::regex("^FuseMagic$"));
     fListOfFreeRegisters.push_back(std::regex("^ProcessMonitorStatus$"));
     fListOfFreeRegisters.push_back(std::regex("^PMFreq[A-C]$"));
     fListOfFreeRegisters.push_back(std::regex("^SEUCount[HL]$"));
