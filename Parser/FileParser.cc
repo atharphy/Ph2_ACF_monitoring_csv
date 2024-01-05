@@ -1140,7 +1140,6 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 uint16_t cValueInMemory = cChip->getReg("Control_1");
                 LOG(DEBUG) << BOLDRED << __LINE__ << "COARSE: 0x" << std::hex << cCoarse << " CONTROL_1: 0x" << cValueInMemory << std::dec << RESET;
                 cFine = (cFine & 0xCF) + 0x30; // Setting bit 4 and 5 to 1 (4->Enable DLL, 5->DoNot Bypass)
-                cChip->setReg("ConfDLL", (cFine));
                 cChip->setReg("ConfDLL", cFine);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
