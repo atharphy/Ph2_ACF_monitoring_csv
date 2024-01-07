@@ -273,8 +273,10 @@ bool CicInterface::ManualBx0Alignment(Chip* pChip, uint8_t pBx0delay)
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Manually settomg BX0 delay value in CIC on FE" << +pChip->getHybridId() << " to " << +pBx0delay << " clock cycles." << RESET;
     bool cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValue << std::dec << std::endl;
     if(!cSuccess) return cSuccess;
     cSuccess = cSuccess && this->WriteChipReg(pChip, "EXT_BX0_DELAY", pBx0delay);
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing EXT_BX0_DELAY to 0x" << std::hex << +pBx0delay << std::dec << std::endl;
     return cSuccess;
 }
 // run automated Bx0 alignment - FIX ME
@@ -1168,6 +1170,7 @@ bool CicInterface::ConfigureStubOutput(Chip* pChip, uint8_t pLineSel)
     uint8_t cNlines       = 5 + cValue;
     LOG(INFO) << BOLDMAGENTA << "Configuring CIC" << +pChip->getHybridId() << " to produce stubs on " << +cNlines << "/6 output lines... writing 0x" << std::hex << +cValueToWrite << std::dec
               << " to CIC register " << cRegName << RESET;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValueToWrite << std::dec << std::endl;
     return this->WriteChipReg(pChip, cRegName, cValueToWrite);
 }
 bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)
@@ -1256,6 +1259,7 @@ bool CicInterface::ConfigureTermination(Chip* pChip, uint8_t pClkTerm, uint8_t p
     LOG(INFO) << BOLDBLUE << "Configuring termination on CIC CLk + Rx pads . register set to 0x" << std::hex << +cValue << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "\t\t.. Clk Term set to " << +pClkTerm << RESET;
     LOG(INFO) << BOLDBLUE << "\t\t.. Rx Term set to " << +pRxTerm << RESET;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] SLVS_PADS_CONFIG  to 0x" << std::hex << cValue << std::dec << std::endl;
     return this->WriteChipReg(pChip, "SLVS_PADS_CONFIG", cValue);
 }
 // configure drive strength

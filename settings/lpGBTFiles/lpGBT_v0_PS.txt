@@ -48,7 +48,7 @@ EPRXLOCKFILTER            0x01f         0x00              0x00                  
 * RegName                       Addr          Defval            Value                         BitSize
 *------------------------------------------------------------------------------------------------------------
 CLKGConfig0                     0x020         0x00              0xF8                          8
-CLKGConfig1                     0x021         0x00              0x24                          8
+CLKGConfig1                     0x021         0x00              0x38                          8
 CLKGPllRes                      0x022         0x00              0x44                          8
 CLKGPLLIntCur                   0x023         0x00              0x55                          8
 CLKGPLLPropCur                  0x024         0x00              0x55                          8

@@ -164,6 +164,7 @@ void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
 
 void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
 {
+    // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // hold resets
     for(uint8_t cSide = 0; cSide < 2; cSide++)
@@ -185,18 +186,43 @@ void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
 }
 
 
+void D19clpGBTInterface::holdPSModuleResets(Ph2_HwDescription::Chip* pChip)
+{
+    // Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
+    // hold resets
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
+    {
+        this->ssaReset(pChip, true, cSide);
+        this->mpaReset(pChip, true, cSide);
+        this->cicReset(pChip, true, cSide);
+    }
+
+    // Fabio: I do not think this part should be here, but I keep it for consistency with the previous code
+#if defined(__TCUSB__)
+    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 6, 0};
+    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 2, 0};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    cEportGroups = {0, 1, 1, 2, 2, 3, 3};
+    cEportChnls  = {2, 0, 2, 0, 2, 0, 2};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+#endif
+}
+
+
 void D19clpGBTInterface::configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
 {
     fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
     fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
     fClkConfig.fClkDriveStr     = pClkCnfg.fClkDriveStr;
-    fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
     fClkConfig.fClkPreEmphWidth = pClkCnfg.fClkPreEmphWidth;
     fClkConfig.fClkPreEmphMode  = pClkCnfg.fClkPreEmphMode;
     fClkConfig.fClkPreEmphStr   = pClkCnfg.fClkPreEmphStr;
 
     std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
     std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg  << " to 0x" << std::hex << (fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq) << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg  << " to 0x" << std::hex << (fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth) << std::dec << std::endl;
     WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
     WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
 }

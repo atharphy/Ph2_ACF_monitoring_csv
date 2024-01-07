@@ -1006,7 +1006,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cHybrid = pOpticalGroup->addHybridContainer(cHybridId, new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), cHybridId));
 
             cHybrid->setMasterId(cMasterId);
-            cHybrid->setInvertClock(invertClock);
+
+            if(pOpticalGroup->flpGBT != nullptr) pOpticalGroup->flpGBT->setInvertClock(cHybridId, invertClock != 0);
 
             cHybrid->setOptical(pBoard->isOptical());
             os << BOLDBLUE << "|       |       | HybridOpticalId is " << +cHybrid->getOpticalGroupId() << RESET;

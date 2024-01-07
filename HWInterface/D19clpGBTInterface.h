@@ -34,6 +34,7 @@ class D19clpGBTInterface : public lpGBTInterface
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;
 
     void hold2SModuleResets(Ph2_HwDescription::Chip* pChip);
+    void holdPSModuleResets(Ph2_HwDescription::Chip* pChip);
 
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pOptical, bool pToggleTC = false);

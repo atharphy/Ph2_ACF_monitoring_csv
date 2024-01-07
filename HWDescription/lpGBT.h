@@ -42,6 +42,7 @@ class lpGBT : public Chip
 
     void    setVersion(uint8_t pVersion) { fVersion = pVersion; }
     uint8_t getVersion() const { return fVersion; }
+    void    setInvertClock(uint8_t hybridId, bool pInvertClock);
 
     void setPhaseRxAligned(const bool done) { phaseRxAligned = done; };
     bool getPhaseRxAligned() { return phaseRxAligned; };

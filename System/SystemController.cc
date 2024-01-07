@@ -685,31 +685,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
             continue;
         }
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-        // continue;
     }
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-    // return;
 
     // check if a resync is needed
     LOG(INFO) << BOLDBLUE << "Checking if a ReSync is needed for Board" << +pBoard->getId() << RESET;
@@ -720,12 +696,14 @@ void SystemController::InitializeOT(BeBoard* pBoard)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             if(cCic == NULL) continue;
-            if(cReSyncNeeded) continue;
-
-            bool cReSync = fCicInterface->GetResyncRequest(cCic);
-            if(cReSync) LOG(INFO) << BOLDBLUE << "\t... CIC" << +cHybrid->getId() << " requires a ReSync" << RESET;
-            cReSyncNeeded = cReSync;
+            cReSyncNeeded = fCicInterface->GetResyncRequest(cCic);
+            if(cReSyncNeeded)
+            {
+                LOG(INFO) << BOLDBLUE << "\t... CIC" << +cHybrid->getId() << " requires a ReSync" << RESET;
+                break;
+            }
         }
+        if(cReSyncNeeded) break;
     }
 
     if(cReSyncNeeded)
@@ -815,17 +793,15 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 {
     auto cBoardId   = pOpticalGroup->getBeBoardId();
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    LOG(INFO) << BOLDBLUE << "SystemController::ModuleStartUpPS for BeBoard#" << +(*cBoardIter)->getId() << " OpticalGroup#" << +pOpticalGroup->getId() << RESET;
+    LOG(INFO) << BOLDBLUE << "SystemController::ModuleStartUpPS for BeBoard#" << +cBoardId << " OpticalGroup#" << +pOpticalGroup->getId() << RESET;
 
     auto& clpGBT = pOpticalGroup->flpGBT;
     // configure PS ROHs
     if(clpGBT != nullptr)
     {
-        const uint8_t cSsaClockDrive = 7;
-        const uint8_t cCicClockDrive = 7;
-
+        // static_cast<D19clpGBTInterface*>(flpGBTInterface)->holdPSModuleResets(clpGBT);
         static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigurePSROH(clpGBT);
+
         const std::vector<uint8_t> cGroupsExamples = {0, 1};
         for(auto cHybrid: *pOpticalGroup)
         {
@@ -836,8 +812,8 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 
             lpGBTClockConfig cClkCnfg;
             cClkCnfg.fClkFreq     = 4;
-            cClkCnfg.fClkDriveStr = cSsaClockDrive;
-            cClkCnfg.fClkInvert   = cHybrid->getInvertClock();
+            cClkCnfg.fClkDriveStr = 7;
+            cClkCnfg.fClkInvert   = 0;
 
             LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " << +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
 
@@ -851,14 +827,9 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             // enable clock to CIC
             cClkCnfg.fClkFreq     = (cReadoutRate == 320) ? 4 : 5;
             cClkCnfg.fClkInvert   = 0;
-            cClkCnfg.fClkDriveStr = cCicClockDrive;
+            cClkCnfg.fClkDriveStr = 7;
             LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide << "]" << RESET;
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
-
-            // hold resets
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->ssaReset(clpGBT, true, cSide);
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->mpaReset(clpGBT, true, cSide);
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, true, cSide);
 
             // make sure all SSAs on a module are configured to produce a clock
             // regardless of how many are enabled on this hybrid
@@ -885,9 +856,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
 {
     auto cBoardId        = pOpticalGroup->getBeBoardId();
     auto cOpticalGroupId = pOpticalGroup->getId();
-    auto cBoardIter      = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     bool cIs2S = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S);
-    auto cSparsified     = (*cBoardIter)->getSparsification();
 
     auto exceptionHandleFunction = [cBoardId, cOpticalGroupId, this](uint16_t hybridId, const std::string&& failMode) {
         LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
@@ -906,11 +875,10 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         LOG(INFO) << BOLDMAGENTA << "SystemController::CicStartUp for OpticalGroup#" << +pOpticalGroup->getId() << " CIC#" << +cCic->getHybridId() << RESET;
 
         // CIC start-up
-        uint8_t cModeSelect = (cIs2S) ? 0 : 1;
-        uint8_t cBx0Delay   = (cIs2S) ? 8 : 22;
         // Select CIC mode
         if(!cIs2S) //TODO: make sure it works for PS
         {
+            uint8_t cModeSelect = 1;
             if(!fCicInterface->SelectMode(cCic, cModeSelect))
             {
                 exceptionHandleFunction(cHybrid->getId(), "configure CIC mode");
@@ -978,28 +946,23 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         }
         else LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
 
-
-
-
-
-
-
-        if(!fCicInterface->SetSparsification(cCic, cSparsified))
+        if(!cIs2S) //TODO: make sure it works for PS
         {
-            exceptionHandleFunction(cHybrid->getId(), "set CIC sparsification");
-            continue;
+            if(!fCicInterface->ConfigureStubOutput(cCic))
+            {
+                exceptionHandleFunction(cHybrid->getId(), "configure CIC stub output");
+                continue;
+            }
         }
 
-        if(!fCicInterface->ConfigureStubOutput(cCic))
+        if(!cIs2S) //TODO: make sure it works for PS
         {
-            exceptionHandleFunction(cHybrid->getId(), "configure CIC stub output");
-            continue;
-        }
-
-        if(!fCicInterface->ManualBx0Alignment(cCic, cBx0Delay))
-        {
-            exceptionHandleFunction(cHybrid->getId(), "configure CIC Bx0 delay");
-            continue;
+            uint8_t cBx0Delay = 22;
+            if(!fCicInterface->ManualBx0Alignment(cCic, cBx0Delay))
+            {
+                exceptionHandleFunction(cHybrid->getId(), "configure CIC Bx0 delay");
+                continue;
+            }
         }
 
         cSuccess = true; // At least on hybrid is working fine
@@ -1044,17 +1007,17 @@ void SystemController::ConfigureHw(bool pReInitialize)
             if(pReInitialize == true)
             {
                 InitializeOT(cBoard); // sets the clocks and configures the CICs, enables the FE readout chips (same as below?!)
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
 // return;
             }
             else // lpGBT + CIC will need to be configured  (and also maybe reset)
