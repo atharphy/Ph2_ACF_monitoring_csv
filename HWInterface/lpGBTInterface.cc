@@ -720,7 +720,9 @@ void lpGBTInterface::ConfigureGPIOLevel(Chip* pChip, const std::vector<uint8_t>&
             cOutH = (cOutH & ~(1 << (cGPIO - 8))) | (pOut << (cGPIO - 8));
     }
 
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing PIOOutH to 0x" <<std::hex << +cOutH << ::std::dec << std::endl;
     WriteChipReg(pChip, "PIOOutH", cOutH);
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing PIOOutL to 0x" <<std::hex << +cOutL << ::std::dec << std::endl;
     WriteChipReg(pChip, "PIOOutL", cOutL);
 }
 

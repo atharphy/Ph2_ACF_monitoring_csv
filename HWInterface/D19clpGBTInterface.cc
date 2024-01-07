@@ -165,10 +165,6 @@ void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
 void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
 {
     ResetI2C(pChip, {0, 1, 2});
-    // Setting GPIO levels Uncomment this for Skeleton test
-    // Setting GPIO levels for Skeleton test
-    ConfigureGPIODirection(pChip, {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}, 1);
-    ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC, fReset_VTRx}, 1);
     // hold resets
     for(uint8_t cSide = 0; cSide < 2; cSide++)
     {
@@ -188,6 +184,22 @@ void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
 #endif
 }
 
+
+void D19clpGBTInterface::configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
+{
+    fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
+    fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+    fClkConfig.fClkDriveStr     = pClkCnfg.fClkDriveStr;
+    fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+    fClkConfig.fClkPreEmphWidth = pClkCnfg.fClkPreEmphWidth;
+    fClkConfig.fClkPreEmphMode  = pClkCnfg.fClkPreEmphMode;
+    fClkConfig.fClkPreEmphStr   = pClkCnfg.fClkPreEmphStr;
+
+    std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
+    std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
+    WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
+    WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
+}
 
 // Preliminary
 void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)

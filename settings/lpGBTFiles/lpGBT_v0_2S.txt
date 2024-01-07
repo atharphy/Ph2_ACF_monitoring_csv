@@ -148,8 +148,8 @@ I2CMTransData15           0x051         0x00              0x00                  
 *-------------------------------------------------------------------------------------------------------
 PIODirH                   0x052         0x00              0x01                          8
 PIODirL                   0x053         0x00              0x49                          8
-PIOOutH                   0x054         0x00              0x81                          8
-PIOOutL                   0x055         0x00              0x08                          8
+PIOOutH                   0x054         0x00              0x80                          8
+PIOOutL                   0x055         0x00              0x41                          8
 PIOPullEnaH               0x056         0x00              0x00                          8
 PIOPullEnaL               0x057         0x00              0x00                          8
 PIOUpDownH                0x058         0x00              0x00                          8

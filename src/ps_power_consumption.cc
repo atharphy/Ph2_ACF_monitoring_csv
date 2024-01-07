@@ -454,8 +454,7 @@ int main(int argc, char* argv[])
                     cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
 
                     // CIC start-up sequence
-                    uint8_t cDriveStrength = 1;
-                    cSuccess               = cTool.fCicInterface->StartUp(cCic, cDriveStrength);
+                    cSuccess               = cTool.fCicInterface->StartUp(cCic);
                     cTool.fBeBoardInterface->ChipReSync(cBoard);
                     if(cSuccess)
                         LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
@@ -765,8 +764,7 @@ int main(int argc, char* argv[])
                             cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
 
                             // CIC start-up sequence
-                            uint8_t cDriveStrength = 1;
-                            cSuccess               = cTool.fCicInterface->StartUp(cCic, cDriveStrength);
+                            cSuccess               = cTool.fCicInterface->StartUp(cCic);
                             cTool.fBeBoardInterface->ChipReSync(cBoard);
                             if(cSuccess)
                                 LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
@@ -897,8 +895,7 @@ int main(int argc, char* argv[])
                                 cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
 
                                 // CIC start-up sequence
-                                uint8_t cDriveStrength = 1;
-                                cSuccess               = cTool.fCicInterface->StartUp(cCic, cDriveStrength);
+                                cSuccess               = cTool.fCicInterface->StartUp(cCic);
                                 cTool.fBeBoardInterface->ChipReSync(cBoard);
                                 if(cSuccess)
                                     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "

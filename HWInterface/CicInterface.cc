@@ -431,49 +431,39 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
 }
 bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
 {
-    bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Resetting DLL in CIC" << +pChip->getHybridId() << RESET;
     // apply a channel reset
     LOG(DEBUG) << BOLDBLUE << "\t.... Enabling RESET on DLL" << RESET;
+
+    // enable resets
+    std::vector<std::pair<std::string, uint16_t>> listOfRegisters;
     for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
     {
-        // char cBuffer[14];
-        // sprintf(cBuffer, "scDllResetReq%.1d", cIndex);
         std::stringstream cBuffer;
         cBuffer << "scDllResetReq" << +cIndex;
-        std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
-        // std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
-        cSuccess = this->WriteChipReg(pChip, cRegName, 0xFF);
-        if(!cSuccess)
-        {
+        std::string cRegName(cBuffer.str());
+        listOfRegisters.push_back(std::make_pair(cRegName, 0xFF));
+    }
+    if(!this->WriteChipMultReg(pChip, listOfRegisters))
+    {
             LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
-                      << " --- Hybrid will be disabled" << RESET;
-            ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
-            return false;
-        }
+                << " --- Hybrid will be disabled" << RESET;
+        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
+        return false;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
-    // release channel reset
-    LOG(DEBUG) << BOLDBLUE << "\t... Disabling RESET on DLL" << RESET;
-    for(uint8_t cIndex = 0; cIndex < 2; cIndex += 1)
+
+    // disable resets
+    for(auto& registerAndValue : listOfRegisters) registerAndValue.second = 0x00;
+    if(!this->WriteChipMultReg(pChip, listOfRegisters))
     {
-        // char cBuffer[14];
-        // sprintf(cBuffer, "scDllResetReq%.1d", cIndex);
-        std::stringstream cBuffer;
-        cBuffer << "scDllResetReq" << +cIndex;
-        std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
-        // std::string cRegName = std::string(cBuffer, sizeof(cBuffer));
-        cSuccess = this->WriteChipReg(pChip, cRegName, 0x00);
-        if(!cSuccess)
-        {
             LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
-                      << " --- Hybrid will be disabled" << RESET;
-            ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
-            return false;
-        }
+                << " --- Hybrid will be disabled" << RESET;
+        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
+        return false;
     }
-    return cSuccess;
+    return true;
 }
 // check DLL lock in CIC
 bool CicInterface::CheckDLL(Chip* pChip)
@@ -1141,11 +1131,26 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
         // LOG(INFO) << BOLDMAGENTA << "For ROC [Hybrid Id " << +pFeId << "] CIC FE#" << +cChipId_forCic << " mask is " << std::bitset<8>(cMask) << RESET;
         cValue = (cValue & cMask) | (static_cast<uint8_t>(pEnable) << cChipId_forCic);
     }
-    if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
-
-    // LOG(INFO) << BOLDBLUE << "Setting FE enable register [" << cRegName << "] to " << std::bitset<8>(cValue) << RESET;
-    return true;
+    return this->WriteChipReg(pChip, cRegName, cValue);
 }
+
+bool CicInterface::configureEnabledFEs(Chip* pChip, std::vector<uint8_t> pFeIds)
+{
+    setBoard(pChip->getBeBoardId());
+    //  read type of CIC to figure out which mapping to use
+    std::vector<uint8_t> cFeMapping = getMapping(pChip);
+    // read enable register
+    std::string cRegName = "FE_ENABLE";
+    uint8_t    cValue   = 0;
+    for(auto pFeId: pFeIds)
+    {
+        uint8_t cChipId_forCic = cFeMapping[pFeId];
+        cValue = cValue | (1u << cChipId_forCic);
+    }
+    LOG(DEBUG) << BOLDMAGENTA << "New value of FE_ENABLE for CIC is " << std::hex << +cValue << std::dec << RESET;
+    return this->WriteChipReg(pChip, cRegName, cValue);
+}
+
 bool CicInterface::ConfigureStubOutput(Chip* pChip, uint8_t pLineSel)
 {
     setBoard(pChip->getBeBoardId());
@@ -1247,8 +1252,8 @@ bool CicInterface::ConfigureTermination(Chip* pChip, uint8_t pClkTerm, uint8_t p
 {
     std::string cRegName  = "SLVS_PADS_CONFIG";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    auto        cValue    = (pRxTerm << 4) | (pRxTerm << 3) | (cRegValue & 0x7);
-    LOG(INFO) << BOLDBLUE << "Configuring termination  on CIC CLk + Rx pads . register set to 0x" << std::hex << +cValue << std::dec << RESET;
+    auto        cValue    = (pRxTerm << 4) | (pClkTerm << 3) | (cRegValue & 0x7);
+    LOG(INFO) << BOLDBLUE << "Configuring termination on CIC CLk + Rx pads . register set to 0x" << std::hex << +cValue << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "\t\t.. Clk Term set to " << +pClkTerm << RESET;
     LOG(INFO) << BOLDBLUE << "\t\t.. Rx Term set to " << +pRxTerm << RESET;
     return this->WriteChipReg(pChip, "SLVS_PADS_CONFIG", cValue);
@@ -1262,7 +1267,7 @@ bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength)
     bool        cSuccess  = true;
     if(cIterator != fTxDriveStrength.end())
     {
-        auto cValue = (cRegValue & 0xFE) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
+        auto cValue = (cRegValue & 0xF8) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
         cSuccess    = this->WriteChipReg(pChip, cRegName, cValue);
         LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
         if(!cSuccess)
@@ -1315,7 +1320,7 @@ bool CicInterface::ConfigureFCMDEdge(Chip* pChip, uint8_t pUseNegEdge)
 }
 // start-up sequence for CIC [everything that does not require interaction
 // with the BE or the other readout ASICs on the chip
-bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegEdge)
+bool CicInterface::StartUp(Chip* pChip)
 {
     std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string(pChip->getHybridId());
     if(pChip->getFrontEndType() == FrontEndType::CIC)
@@ -1324,86 +1329,44 @@ bool CicInterface::StartUp(Chip* pChip, uint8_t pDriveStrength, uint8_t pUseNegE
         cOut += " for CIC2.";
     LOG(INFO) << BOLDBLUE << cOut << RESET;
 
-    bool cSuccess = this->CheckSoftReset(pChip);
-    if(!cSuccess) { LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " clear SOFT reset request in CIC..." << RESET; }
+    auto boardId = pChip->getBeBoardId();
+    auto opticalGroupId = pChip->getOpticalGroupId();
+    auto hybridId = pChip->getOpticalGroupId();
 
-    cSuccess = this->ConfigureDriveStrength(pChip, pDriveStrength);
-    // std::string cRegName  = "SLVS_PADS_CONFIG";
-    // uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    // auto        cIterator = fTxDriveStrength.find(pDriveStrength);
-    // if(cIterator != fTxDriveStrength.end())
-    // {
-    //     auto cValue = (cRegValue & 0xFE) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
-    //     cSuccess    = this->WriteChipReg(pChip, cRegName, cValue);
-    //     LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
-    //     if(!cSuccess)
-    //     {
-    //         LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " configure drive strength on CIC output pads." << RESET;
-    //         throw std::runtime_error(std::string("Could NOT configure drive strength on CIC output pads"));
-    //     }
-    //     cRegValue = this->ReadChipReg(pChip, cRegName);
-    //     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec
-    //         << "[ drive strength set to " << +pDriveStrength << " ]" << RESET;
-    // }
+    auto exceptionHandleFunction = [boardId, opticalGroupId, hybridId, this](const std::string&& failMode) {
+        LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +boardId << " OpticalGroup id " << +opticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
+        ExceptionHandler::getInstance()->disableHybrid(boardId, opticalGroupId, hybridId);
+    };
 
-    // reset DLL for each of the 12 phy ports
-    cSuccess = this->ResetDLL(pChip);
-    if(!cSuccess)
+    if(!this->CheckSoftReset(pChip))
     {
-        LOG(INFO) << BOLDRED << "Could not reset DLL in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
-                  << " --- Hybrid will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
+        exceptionHandleFunction("clear CIC SOFT reset request");
         return false;
     }
-    // checking DLL lock
-    cSuccess = this->CheckDLL(pChip);
-    if(!cSuccess)
+
+    // reset DLL for each of the 12 phy ports
+    if(!this->ResetDLL(pChip))
     {
-        LOG(INFO) << BOLDRED << "Could not lock DLL in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
-                  << " --- Hybrid will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
+        exceptionHandleFunction("Could not reset CIC DLL");
+        return false;
+    }
+
+    // checking DLL lock
+    if(!this->CheckDLL(pChip))
+    {
+        exceptionHandleFunction("Could not lock CIC DLL");
         return false;
     }
     LOG(INFO) << BOLDBLUE << "DLL in CIC " << BOLDGREEN << " LOCKED." << RESET;
 
-    // set phase aligner to static mode
-    bool cAutoAlign = false;
-    cSuccess        = this->SetAutomaticPhaseAlignment(pChip, cAutoAlign);
-    if(!cSuccess)
-    {
-        LOG(INFO) << BOLDRED << "Could not set automatic phase aligner in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
-                  << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
-        return false;
-    }
-
-    // select fast command edge
-    cSuccess = this->ConfigureFCMDEdge(pChip, pUseNegEdge);
-    // bool cNegEdge = (pUseNegEdge == 1); // was false for PS - need to check
-    // if(cNegEdge)
-    //     LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
-    // else
-    //     LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on rising edge." << RESET;
-    // cRegName        = (pChip->getFrontEndType() == FrontEndType::CIC) ? "FC_ON_NEG_EDGE" : "MISC_CTRL";
-    // cRegValue       = this->ReadChipReg(pChip, cRegName);
-    // uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC) ? cNegEdge : (cRegValue & 0x17) | (cNegEdge << 3);
-    // cSuccess        = this->WriteChipReg(pChip, cRegName, cValue);
-    // if(!cSuccess)
-    // {
-    //     LOG(INFO) << BOLDBLUE << "Could " << BOLDRED << " NOT " << BOLDBLUE << " select FC edge in CIC  " << RESET;
-    //     throw std::runtime_error(std::string("Error selecting FC edge in CIC"));
-    // }
-
     // check fast command lock
-    cSuccess = this->CheckFastCommandLock(pChip);
-    if(!cSuccess)
+    if(!this->CheckFastCommandLock(pChip))
     {
-        LOG(INFO) << BOLDRED << "Could not lock FC decoder in CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
-                  << " --- Hybrid will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
+        exceptionHandleFunction("Could not lock CIC DLL");
         return false;
     }
+
     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " locked fast command decoder in CIC." << RESET;
-    return cSuccess;
+    return true;
 }
 } // namespace Ph2_HwInterface

@@ -37,7 +37,7 @@
             <CBC Id="7" configfile="CBC3_default.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_2S.txt" />
             </Hybrid>
             </OpticalGroup>
 

@@ -134,4 +134,31 @@ std::stringstream Cic::getRegMapStream()
     return theStream;
 }
 
+void Cic::setDriveStrength(uint8_t pDriveStrength)
+{
+    auto& theRegister = fRegMap["SLVS_PADS_CONFIG"];
+    auto convertedRegisterValue = 0;
+    try
+    {
+        convertedRegisterValue = fTxDriveStrength.at(pDriveStrength);
+    }
+    catch(const std::exception& e)
+    {
+        std::string errorMessage = "Error: impossible to set CIC driver strenght to " + std::to_string(pDriveStrength);
+        throw std::runtime_error(errorMessage);
+    }
+
+    theRegister.fValue = (theRegister.fValue & 0xF8) | (convertedRegisterValue & 0x7);
+}
+
+void Cic::setEdgeSelect(uint8_t pEdgeSel)
+{
+    bool cNegEdge = (pEdgeSel == 1);
+    auto& theRegister = fRegMap["MISC_CTRL"];
+    theRegister.fValue = (theRegister.fValue & 0xF7) | ((cNegEdge ? 1 : 0) << 3);
+}
+
+
+std::map<uint8_t, uint8_t> Cic::fTxDriveStrength = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
+
 } // namespace Ph2_HwDescription

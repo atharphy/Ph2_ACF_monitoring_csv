@@ -1095,8 +1095,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                 if(cChildGlobal.attribute("edgeSelect"))
                                 {
                                     uint8_t cEdgeSelect = cChildGlobal.attribute("edgeSelect").as_uint();
-                                    LOG(INFO) << BOLDBLUE << "Setting edge select to " << +cEdgeSelect << RESET;
-                                    cCic->setEdgeSelect(cEdgeSelect);
+                                    if(cEdgeSelect == 0 || cEdgeSelect == 1) cCic->setEdgeSelect(cEdgeSelect);
+                                    else throw std::runtime_error("CIC edgeSelect can only be either 0 or 1");
                                 }
                                 LOG(INFO) << BOLDBLUE << " Global settings " << cNameGlobal << RESET;
                                 std::vector<std::string> cAttributes{"clockFrequency", "enableBend", "enableLastLine", "enableSparsification"};
@@ -1137,12 +1137,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                 {
                                     uint8_t cDriveStrength = cChildGlobal.attribute("driveStrength").as_uint();
                                     cCic->setDriveStrength(cDriveStrength);
-                                }
-
-                                if(cChildGlobal.attribute("edgeSelect"))
-                                {
-                                    uint8_t cEdgeSelect = cChildGlobal.attribute("edgeSelect").as_uint();
-                                    cCic->setEdgeSelect(cEdgeSelect);
                                 }
                             }
                         }
