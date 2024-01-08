@@ -339,6 +339,8 @@ void lpGBTInterface::ConfigureClocks(Chip*                       pChip,
         // #######################################################################################################################
         std::string cClkHReg = "EPCLK" + std::to_string(cClock) + "ChnCntrH";
         std::string cClkLReg = "EPCLK" + std::to_string(cClock) + "ChnCntrL";
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex << (pInvert << 6 | pDriveStr << 3 | pFreq) << std::dec << std::endl;
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg << " to 0x" << std::hex << (pPreEmphStr << 5 | pPreEmphMode << 3 | pPreEmphWidth) << std::dec << std::endl;
         WriteChipReg(pChip, cClkHReg, pInvert << 6 | pDriveStr << 3 | pFreq);
         WriteChipReg(pChip, cClkLReg, pPreEmphStr << 5 | pPreEmphMode << 3 | pPreEmphWidth);
     }

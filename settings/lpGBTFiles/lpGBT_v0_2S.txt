@@ -202,7 +202,7 @@ CURDACCHN                 0x06b         0x00              0x00                  
 *-------------------------------------------------------------------------------------------------------
 EPCLK0ChnCntrH            0x06c         0x00              0x00                          8
 EPCLK0ChnCntrL            0x06d         0x00              0x00                          8
-EPCLK1ChnCntrH            0x06e         0x00              0x7c                          8
+EPCLK1ChnCntrH            0x06e         0x00              0x78                          8
 EPCLK1ChnCntrL            0x06f         0x00              0x00                          8
 EPCLK2ChnCntrH            0x070         0x00              0x00                          8
 EPCLK2ChnCntrL            0x071         0x00              0x00                          8
@@ -222,7 +222,7 @@ EPCLK9ChnCntrH            0x07e         0x00              0x00                  
 EPCLK9ChnCntrL            0x07f         0x00              0x00                          8
 EPCLK10ChnCntrH           0x080         0x00              0x00                          8
 EPCLK10ChnCntrL           0x081         0x00              0x00                          8
-EPCLK11ChnCntrH           0x082         0x00              0x3c                          8
+EPCLK11ChnCntrH           0x082         0x00              0x78                          8
 EPCLK11ChnCntrL           0x083         0x00              0x00                          8
 EPCLK12ChnCntrH           0x084         0x00              0x00                          8
 EPCLK12ChnCntrL           0x085         0x00              0x00                          8

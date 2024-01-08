@@ -645,6 +645,19 @@ void SystemController::InitializeOT(BeBoard* pBoard)
         }
     }
 
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
+// return;
+
     // CIC reset
     for(auto cOpticalGroup: *pBoard)
     {
@@ -799,44 +812,17 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
     // configure PS ROHs
     if(clpGBT != nullptr)
     {
-        // static_cast<D19clpGBTInterface*>(flpGBTInterface)->holdPSModuleResets(clpGBT);
-        static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigurePSROH(clpGBT);
+        auto theD19clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+        theD19clpGBTInterface->holdPSModuleResets(clpGBT);
+        theD19clpGBTInterface->updateCICinputClockToMatchPSrate(clpGBT);
 
-        const std::vector<uint8_t> cGroupsExamples = {0, 1};
         for(auto cHybrid: *pOpticalGroup)
         {
-            // first .. send clock to the SSAs on this hybrid
             uint8_t  cSide        = cHybrid->getId() % 2;
-            uint16_t cReadoutRate = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetRxDataRate(clpGBT, cGroupsExamples[cSide]);
-            LOG(INFO) << BOLDMAGENTA << "Readout rate on PS-module (Hybrid# " << +cHybrid->getId() << ") is " << +cReadoutRate << " Mbps" << RESET;
-
-            lpGBTClockConfig cClkCnfg;
-            cClkCnfg.fClkFreq     = 4;
-            cClkCnfg.fClkDriveStr = 7;
-            cClkCnfg.fClkInvert   = 0;
-
-            LOG(INFO) << BOLDMAGENTA << " cClkCnfg.fClkInvert is " << +cClkCnfg.fClkInvert << ". For PSv2 should be 1, for PSv2.1 sould be 0. " << RESET;
-
-            cClkCnfg.fClkPreEmphWidth = 0;
-            cClkCnfg.fClkPreEmphMode  = 3; // 3;
-            cClkCnfg.fClkPreEmphStr   = 7; // 7;
-
-            LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide << "]" << RESET;
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
-
-            // enable clock to CIC
-            cClkCnfg.fClkFreq     = (cReadoutRate == 320) ? 4 : 5;
-            cClkCnfg.fClkInvert   = 0;
-            cClkCnfg.fClkDriveStr = 7;
-            LOG(INFO) << BOLDBLUE << "Enabling CIC clock [Side == " << +cSide << "]" << RESET;
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicClock(clpGBT, cClkCnfg, cSide);
-
-            // make sure all SSAs on a module are configured to produce a clock
-            // regardless of how many are enabled on this hybrid
             LOG(INFO) << BOLDBLUE << "Resetting SSA" << RESET;
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetSSA(clpGBT, cSide);
+            theD19clpGBTInterface->resetSSA(clpGBT, cSide);
         } // hybrid
-    }     // lpGBT part ... resets + clocks
+    }
 }
 
 void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)

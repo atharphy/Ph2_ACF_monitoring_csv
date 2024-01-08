@@ -147,8 +147,8 @@ I2CMClkDisable            0x052         0x00              0x00                  
 *-------------------------------------------------------------------------------------------------------
 PIODirH                   0x053         0x00              0x12                          8
 PIODirL                   0x054         0x00              0x4b                          8
-PIOOutH                   0x055         0x00              0x90                          8
-PIOOutL                   0x056         0x00              0x49                          8
+PIOOutH                   0x055         0x00              0x92                          8
+PIOOutL                   0x056         0x00              0x4b                          8
 PIOPullEnaH               0x057         0x00              0x00                          8
 PIOPullEnaL               0x058         0x00              0x00                          8
 PIOUpDownH                0x058         0x00              0x00                          8

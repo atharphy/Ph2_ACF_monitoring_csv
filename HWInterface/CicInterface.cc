@@ -161,7 +161,7 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerify, uint32_t pBlockSize)
     std::vector<ChipRegItem> cRegItems;
     for(auto cItem: cCicRegMap) { cRegItems.push_back(cItem.second); }
     bool cSuccess = fBoardFW->MultiRegisterWrite(pCic, cRegItems, pVerify);
-    ; // fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerify);
+    // fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerify);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Succesful write to " << cRegItems.size() << " registers on CIC" << RESET;
     return cSuccess;
 }
