@@ -47,25 +47,25 @@ CURDACCalL                0x01f         0x00              0x00                  
 *------------------------------------------------------------------------------------------------------------
 * RegName                       Addr          Defval            Value                         BitSize
 *------------------------------------------------------------------------------------------------------------
-CLKGConfig0                     0x020         0x00              0xF8                          8
+CLKGConfig0                     0x020         0x00              0xE8                          8
 CLKGConfig1                     0x021         0x00              0x38                          8
-CLKGPllRes                      0x022         0x00              0x44                          8
-CLKGPLLIntCur                   0x023         0x00              0x55                          8
-CLKGPLLPropCur                  0x024         0x00              0x55                          8
+CLKGPllRes                      0x022         0x00              0x22                          8
+CLKGPLLIntCur                   0x023         0x00              0x99                          8
+CLKGPLLPropCur                  0x024         0x00              0x99                          8
 CLKGCDRPropCur                  0x025         0x00              0x55                          8
 CLKGCDRIntCur                   0x026         0x00              0x55                          8
-CLKGCDRFFPropCur                0x027         0x00              0x55                          8
-CLKGFLLIntCur                   0x028         0x00              0x0F                          8
-CLKGFFCAP                       0x029         0x00              0x36                          8
+CLKGCDRFFPropCur                0x027         0x00              0x66                          8
+CLKGFLLIntCur                   0x028         0x00              0x55                          8
+CLKGFFCAP                       0x029         0x00              0x1b                          8
 CLKGCntOverride                 0x02a         0x00              0x00                          8
 CLKGOverrideCapBank             0x02b         0x00              0x00                          8
-CLKGWaitTime                    0x02c         0x00              0xA0                          8
-CLKGLFConfig0                   0x02d         0x00              0x89                          8
-CLKGLFConfig1                   0x02e         0x00              0x99                          8
-FAMaxHeaderFoundCount           0x02f         0x00              0x1A                          8
-FAMaxHeaderFoundCountAfterNF    0x030         0x00              0x0A                          8
-FAMaxHeaderNotFoundCount        0x031         0x00              0x0A                          8
-PSDllConfig                     0x033         0x00              0x0A                          8
+CLKGWaitTime                    0x02c         0x00              0x88                          8
+CLKGLFConfig0                   0x02d         0x00              0x8f                          8
+CLKGLFConfig1                   0x02e         0x00              0xff                          8
+FAMaxHeaderFoundCount           0x02f         0x00              0x10                          8
+FAMaxHeaderFoundCountAfterNF    0x030         0x00              0x10                          8
+FAMaxHeaderNotFoundCount        0x031         0x00              0x10                          8
+PSDllConfig                     0x033         0x00              0x00                          8
 FORCEEnable                     0x035         0x00              0x00                          8
 
 
@@ -91,9 +91,9 @@ EQRes                     0x038         0x00              0x00                  
 *-------------------------------------------------------------------------------------------------------
 * RegName                 Addr          Defval            Value                         BitSize
 *-------------------------------------------------------------------------------------------------------
-LDConfigH                 0x039         0x00              0x40                          8
-LDConfigL                 0x03a         0x00              0x20                          8
-REFCLK                    0x03b         0x00              0x03                          8
+LDConfigH                 0x039         0x00              0x7F                          8
+LDConfigL                 0x03a         0x00              0x00                          8
+REFCLK                    0x03b         0x00              0x00                          8
 SCCONFIG                  0x03c         0x00              0x00                          8
 
 
@@ -272,21 +272,21 @@ EPTX32Enable              0x0ab         0x00              0x11                  
 EPTXEcChnCntr             0x0ac         0x00              0x00                          8
 EPTXEcChnCntr2            0x0ad         0x00              0x00                          8
 EPTX00ChnCntr             0x0ae         0x00              0x8f                          8
-EPTX01ChnCntr             0x0af         0x00              0x07                          8
-EPTX02ChnCntr             0x0b0         0x00              0x07                          8
-EPTX03ChnCntr             0x0b1         0x00              0x07                          8
+EPTX01ChnCntr             0x0af         0x00              0x00                          8
+EPTX02ChnCntr             0x0b0         0x00              0x00                          8
+EPTX03ChnCntr             0x0b1         0x00              0x00                          8
 EPTX10ChnCntr             0x0b2         0x00              0x8f                          8
-EPTX11ChnCntr             0x0b3         0x00              0x07                          8
-EPTX12ChnCntr             0x0b4         0x00              0x07                          8
-EPTX13ChnCntr             0x0b5         0x00              0x07                          8
+EPTX11ChnCntr             0x0b3         0x00              0x00                          8
+EPTX12ChnCntr             0x0b4         0x00              0x00                          8
+EPTX13ChnCntr             0x0b5         0x00              0x00                          8
 EPTX20ChnCntr             0x0b6         0x00              0x8f                          8
-EPTX21ChnCntr             0x0b7         0x00              0x07                          8
-EPTX22ChnCntr             0x0b8         0x00              0x07                          8
-EPTX23ChnCntr             0x0b9         0x00              0x07                          8
+EPTX21ChnCntr             0x0b7         0x00              0x00                          8
+EPTX22ChnCntr             0x0b8         0x00              0x00                          8
+EPTX23ChnCntr             0x0b9         0x00              0x00                          8
 EPTX30ChnCntr             0x0ba         0x00              0x8f                          8
-EPTX31ChnCntr             0x0bb         0x00              0x07                          8
-EPTX32ChnCntr             0x0bc         0x00              0x07                          8
-EPTX33ChnCntr             0x0bd         0x00              0x07                          8
+EPTX31ChnCntr             0x0bb         0x00              0x00                          8
+EPTX32ChnCntr             0x0bc         0x00              0x00                          8
+EPTX33ChnCntr             0x0bd         0x00              0x00                          8
 EPTX01_00ChnCntr          0x0be         0x00              0x08                          8
 EPTX03_02ChnCntr          0x0bf         0x00              0x00                          8
 EPTX11_10ChnCntr          0x0c0         0x00              0x00                          8

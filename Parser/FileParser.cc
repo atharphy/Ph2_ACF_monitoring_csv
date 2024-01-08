@@ -997,17 +997,17 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                 cMasterId = (cHybridId % 2 == 0) ? 2 : 0; // Default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
             os << BOLDBLUE << "I2C Master Id is " << +cMasterId << RESET << std::endl;
 
-            uint8_t invertClock;
-            if(pHybridNode.attribute("invertClock")) { invertClock = pHybridNode.attribute("invertClock").as_int(); } // can overwrite default from xml
-            else
-                invertClock = 1;
-            os << BOLDBLUE << "invertClock " << +invertClock << RESET << std::endl;
+            if(pHybridNode.attribute("invertClock")) 
+            {
+                uint8_t invertClock = pHybridNode.attribute("invertClock").as_int(); 
+                if(pOpticalGroup->flpGBT != nullptr) pOpticalGroup->flpGBT->setInvertClock(cHybridId, invertClock != 0);
+                os << BOLDBLUE << "invertClock " << +invertClock << RESET << std::endl;
+            } // can overwrite default from xml
 
             cHybrid = pOpticalGroup->addHybridContainer(cHybridId, new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), cHybridId));
 
             cHybrid->setMasterId(cMasterId);
 
-            if(pOpticalGroup->flpGBT != nullptr) pOpticalGroup->flpGBT->setInvertClock(cHybridId, invertClock != 0);
 
             cHybrid->setOptical(pBoard->isOptical());
             os << BOLDBLUE << "|       |       | HybridOpticalId is " << +cHybrid->getOpticalGroupId() << RESET;
