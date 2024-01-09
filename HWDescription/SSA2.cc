@@ -82,6 +82,7 @@ void SSA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::regex("^bist_output$"));
     fListOfFreeRegisters.push_back(std::regex("^AC_ReadCounter$"));
     fListOfFreeRegisters.push_back(std::regex("^status_reg$"));
+    fListOfFreeRegisters.push_back(std::regex("^Fuse_Value_b[0-3]$"));
 }
 
 void SSA2::loadfRegMap(const std::string& filename)

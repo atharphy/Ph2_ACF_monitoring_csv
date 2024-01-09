@@ -72,8 +72,7 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
-    bool cReInitialize = true;
-    cTool.ConfigureHw(cReInitialize);
+    cTool.ConfigureHw();
 
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     cDirectory += "WorkerTest";

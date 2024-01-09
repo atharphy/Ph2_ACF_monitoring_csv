@@ -221,6 +221,8 @@ void Tool::Stop()
             thePacketHeader.addPacketHeader(doneWithRunMessage);
             fDQMStreamer->broadcast(doneWithRunMessage);
         }
+
+        SaveAndClose();
     }
 }
 

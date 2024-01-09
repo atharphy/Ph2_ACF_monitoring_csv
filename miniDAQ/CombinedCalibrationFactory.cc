@@ -25,8 +25,10 @@
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
+#include "tools/TuneLpGBTVref.h"
 //#include "tools/SSAPhysics.h"
 #include "tools/CicFEAlignment.h"
+#include "tools/ConfigureOnly.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/PSPhysics.h"
 #include "tools/Physics2S.h"
@@ -36,14 +38,18 @@ using namespace MessageUtils;
 
 CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
+    // Common calibrations
+    Register<TuneLpGBTVref>("tunelpgbtvref");
+    Register<ConfigureOnly>("configureonly");
+
     // OT calibrations
     Register<OTVTRXLightOff>("vtrxoff");
+    Register<LinkAlignmentOT, CicFEAlignment>("alignment");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("takedata"); // will be used in future version of GIPHT
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, KIRA>("calibrationandkira");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, KIRA>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    Register<PSAlignment, LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise");
-    // Register<OTTemperature, PSAlignment, LinkAlignmentOT, CicFEAlignment, PedeNoise, OTTemperature>("pedenoise");
+    Register<OTTemperature, PSAlignment, LinkAlignmentOT, CicFEAlignment, PedeNoise, OTTemperature>("pedenoise");
     Register<OTTemperature, PSAlignment, LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, OTTemperature>("calibrationandpedenoise");
     Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample");
     Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("cbcpulseshape");

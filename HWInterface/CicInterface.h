@@ -93,12 +93,13 @@ class CicInterface : public ChipInterface
     bool                              CheckReSync(Ph2_HwDescription::Chip* pChip);
     bool                              SoftReset(Ph2_HwDescription::Chip* pChip, uint32_t cWait_ms = 100);
     bool                              CheckSoftReset(Ph2_HwDescription::Chip* pChip);
-    bool                              StartUp(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 7, uint8_t pUseNegEdge = 1);
+    bool                              StartUp(Ph2_HwDescription::Chip* pChip);
     bool                              ManualBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pBx0delay = 8);
     std::vector<std::vector<uint8_t>> GetWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool                              SelectMode(Ph2_HwDescription::Chip* pChip, uint8_t pMode = 0);
     bool                              SelectOutput(Ph2_HwDescription::Chip* pChip, bool pFixedPattern = true);
     bool                              EnableFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFEs = {0, 1, 2, 3, 4, 5, 6, 7}, bool pEnable = true);
+    bool                              configureEnabledFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFeIds);
     bool                              PhaseAlignerStatus(Ph2_HwDescription::Chip* pChip, std::vector<std::vector<uint8_t>>& pPhaseTaps, std::vector<std::vector<uint8_t>>& pPhaseTapsFEs);
     bool                              AutoBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
     bool                              SelectMux(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort);
