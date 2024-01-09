@@ -294,8 +294,6 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                         thelpGBT->setRxDataRate(theChild.attribute("RxDataRate").as_uint());
                     else if(std::string(attr.name()) == "TxDataRate")
                         thelpGBT->setTxDataRate(theChild.attribute("TxDataRate").as_uint());
-                    else if(std::string(attr.name()) == "ClockFrequency")
-                        thelpGBT->setClockFrequency(theChild.attribute("ClockFrequency").as_uint());
                 }
             }
 
@@ -502,7 +500,6 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
     ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
     cSSA->setOptical(pHybrid->isOptical());
     cSSA->setNumberOfChannels(NSSACHANNELS);
-    cSSA->setClockFrequency(320);
     cSSA->setMasterId(pHybrid->getMasterId());
 
     os << BOLDCYAN << "|"
@@ -649,7 +646,6 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     ReadoutChip* cSSA2 = pHybrid->addChipContainer(cChipId, new SSA2(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
     cSSA2->setOptical(pHybrid->isOptical());
     cSSA2->setNumberOfChannels(NSSACHANNELS);
-    cSSA2->setClockFrequency(320);
     cSSA2->setMasterId(pHybrid->getMasterId());
 }
 
@@ -791,7 +787,6 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
     cMPA->setOptical(pHybrid->isOptical());
     cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
-    cMPA->setClockFrequency(320);
     cMPA->setMasterId(pHybrid->getMasterId());
 
     os << BOLDCYAN << "|"
@@ -826,7 +821,6 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
 
     cMPA->setOptical(pHybrid->isOptical());
     cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
-    cMPA->setClockFrequency(320);
     cMPA->setMasterId(pHybrid->getMasterId());
 
     os << BOLDCYAN << "|"
@@ -1306,11 +1300,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                     uint16_t cMask        = (~(1 << cBitPosition)) & 0xFF;
 
                                     uint16_t cValueFromFile = cChildGlobal.attribute(cAttribute.c_str()).as_uint();
-                                    if(cAttribute == "clockFrequency")
-                                    {
-                                        cValueFromFile = (cValueFromFile == 320) ? 0 : 1;
-                                        cCic->setClockFrequency(cValueFromFile);
-                                    }
                                     if(cAttribute == "clockFrequency" && cCIC1) continue;
                                     if(cAttribute == "enableSparsification")
                                     {
@@ -1328,11 +1317,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                     LOG(INFO) << BOLDBLUE << "  Setting [ " << cRegName << " " << *it << " == " << +cValueFromFile << "]-- set to. Mask " << std::bitset<5>(cMask) << " -- old value "
                                               << std::bitset<5>(cRegValue) << " -- new value " << std::bitset<5>(cNewValue) << RESET;
                                     cCic->setReg(cRegName, cNewValue);
-                                }
-                                if(cChildGlobal.attribute("driveStrength"))
-                                {
-                                    uint8_t cDriveStrength = cChildGlobal.attribute("driveStrength").as_uint();
-                                    cCic->setDriveStrength(cDriveStrength);
                                 }
                             }
                         }
@@ -1548,7 +1532,6 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     uint32_t     cChipId = pCbcNode.attribute("Id").as_uint();
     ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cChipId, cFileName));
     cCbc->setOptical(cHybrid->isOptical());
-    cCbc->setClockFrequency(320);
     cCbc->setNumberOfChannels(254);
     cCbc->setMasterId(cHybrid->getMasterId());
 

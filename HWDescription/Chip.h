@@ -173,17 +173,6 @@ class Chip : public FrontEndDescription
      */
     uint8_t getMasterId() const { return fMasterId; };
 
-    /*!
-     * \brief Set the clock frequency
-     * \param cClkFrequency
-     */
-    void setClockFrequency(uint16_t cClkFrequency) { fClockFrequency = cClkFrequency; }
-
-    /*!
-     * \brief Get the clock frequency
-     * \return the clock frequency
-     */
-    uint16_t        getClockFrequency() { return fClockFrequency; }
     virtual uint8_t getNumberOfBits(const std::string& dacName) = 0;
     void            printChipType(std::ostream& os) const { os << "FrontEndType\t--> " << FrontEndDescription::getFrontEndName(fType); }
 
@@ -248,7 +237,6 @@ class Chip : public FrontEndDescription
     uint8_t                 fChipId;
     uint8_t                 fChipAddress; // I2C addess of chip
     uint16_t                fMaxRegValue;
-    uint16_t                fClockFrequency;
     uint8_t                 fMasterId;
     ChipRegMap              fRegMap;
     ChipRegMap              fModifiedRegs;

@@ -872,7 +872,6 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         {
             auto     cChipRate     = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(clpGBT);
             uint16_t cClkFrequency = (cChipRate == 5) ? 320 : 640;
-            cCic->setClockFrequency(cClkFrequency);
             uint8_t cFeConfigReg  = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
             bool is640clockBitEnabled = ((cFeConfigReg >> 1) & 0x1) == 1;
             bool is640clockBitNeedToBeEnabled = (cClkFrequency == 640);
