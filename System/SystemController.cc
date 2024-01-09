@@ -645,19 +645,6 @@ void SystemController::InitializeOT(BeBoard* pBoard)
         }
     }
 
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// return;
-
     // CIC reset
     for(auto cOpticalGroup: *pBoard)
     {
@@ -670,7 +657,6 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" <
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
         }
     }
-
 
     // CIC start-up
     for(auto cOpticalGroup: *pBoard)
@@ -760,6 +746,13 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" <
 
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
+    // Set board sparisification
+    // based on what is configured in the fw register
+    // read CIC sparsification setting from fW register
+    // make sure board is also set to the same thing
+    pBoard->setSparsification(fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+    InitializeOT(pBoard);
+
     // Hard reset Chips on hybrid if lpGBT is there; if no lpGBT this
     // is already taken care of by ConfigureBoard
     for(auto cOpticalGroup: *pBoard)
@@ -767,39 +760,35 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         auto& clpGBT = cOpticalGroup->flpGBT;
         for(auto cHybrid: *cOpticalGroup)
         {
-            if(clpGBT == nullptr) continue;
+            if(clpGBT != nullptr)
+            {
+                uint8_t cSide = cHybrid->getId() % 2;
+                LOG(INFO) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
 
-            uint8_t cSide = cHybrid->getId() % 2;
-            LOG(INFO) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
+                if(cHybrid->getReset() == 0)
+                {
+                    LOG(INFO) << BOLDYELLOW << "Will not send a hard-reset to Chips on Hybrid#" << +cHybrid->getId() << RESET;
+                }
+                else
+                {
+                    // no SSA because I don't want to reset it here. . already done earlier
+                    if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
+                    {
+                        LOG(DEBUG) << BOLDBLUE << "\t... Applying hard reset to MPAs" << RESET;
+                        static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
+                    }
+                    if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+                    {
+                        LOG(DEBUG) << BOLDBLUE << "\t... Applying hard reset to CBCs" << RESET;
+                        static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cSide);
 
-            if(cHybrid->getReset() == 0)
-            {
-                LOG(INFO) << BOLDYELLOW << "Will not send a hard-reset to Chips on Hybrid#" << +cHybrid->getId() << RESET;
-                continue;
+                    }
+                }
             }
-            // cWithLpGBT=true;
-            // no SSA because I don't want to reset it here. . already done earlier
-            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
-            {
-                LOG(DEBUG) << BOLDBLUE << "\t... Applying hard reset to MPAs" << RESET;
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetMPA(clpGBT, cSide);
-            }
-            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
-            {
-                LOG(DEBUG) << BOLDBLUE << "\t... Applying hard reset to CBCs" << RESET;
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cSide);
-            }
+
+            for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChip(cChip); } // Chip config
         } // hybrid
     }     // OG
-
-    // configure chips
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChip(cChip); } // Chip config
-        }                                                                              // hybrid
-    }                                                                                  // OG
     LOG(INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
 }
 
@@ -849,7 +838,6 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         ExceptionHandler::getInstance()->disableHybrid(cBoardId, cOpticalGroupId, hybridId);
     };
 
-
     auto& clpGBT   = pOpticalGroup->flpGBT;
     bool  cSuccess = false;
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
@@ -859,21 +847,6 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         if(cCic == NULL) continue;
 
         LOG(INFO) << BOLDMAGENTA << "SystemController::CicStartUp for OpticalGroup#" << +pOpticalGroup->getId() << " CIC#" << +cCic->getHybridId() << RESET;
-
-        // CIC start-up
-        // Select CIC mode
-        if(!cIs2S) //TODO: make sure it works for PS
-        {
-            uint8_t cModeSelect = 1;
-            if(!fCicInterface->SelectMode(cCic, cModeSelect))
-            {
-                exceptionHandleFunction(cHybrid->getId(), "configure CIC mode");
-                continue;
-            }
-            LOG(INFO) << BOLDMAGENTA << "CIC configured for PS readout." << RESET;
-        }
-
-        // Updating the CIC FE_ENABLE based on the CBC or MPA enable in the xml config file
 
         std::stringstream enabledFEsPrintout;
         enabledFEsPrintout << "Overriding FE_ENABLE for CIC on Hybrid " << +cHybrid->getId() << " OpticalGroup " << +cOpticalGroupId << " BeBoard " << +cBoardId << " to enable ";
@@ -894,9 +867,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         }
         LOG(INFO) << BOLDMAGENTA << enabledFEsPrintout.str() << RESET;
 
-        // Make sure data rate is correctly configured
-        // if there is an lpGBT .
-        // its configuration overwrites whatever is in the xml
+        // Make sure the CIC data rate matches the LpGBT one
         if(clpGBT != nullptr && cCic->getFrontEndType() == FrontEndType::CIC2)
         {
             auto     cChipRate     = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(clpGBT);
@@ -909,19 +880,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             {
                 uint8_t cNewValue     = (cFeConfigReg & 0xFD) | ((is640clockBitNeedToBeEnabled ? 1 : 0) << 1);
                 fCicInterface->WriteChipReg(cCic, "FE_CONFIG", cNewValue);
-                LOG(INFO) << BOLDMAGENTA << "Overriding FE_CONFIG for CIC on Hybrid " << +cHybrid->getId() << " OpticalGroup " << +cOpticalGroupId << " BeBoard " << +cBoardId << " to run with " << cClkFrequency << " MHz clock to match LpGBT configuration" << RESET;
-            }
-        }
-
-        // CIC start-up sequence
-        if(!cIs2S) //TODO: make sure it works for PS
-        {
-            uint8_t cClkTerm = 0;
-            uint8_t cRxTerm  = 1;
-            if(!fCicInterface->ConfigureTermination(cCic, cClkTerm, cRxTerm))
-            {
-                exceptionHandleFunction(cHybrid->getId(), "configure CIC Termination");
-                continue;
+                LOG(INFO) << BOLDMAGENTA << "Overriding FE_CONFIG to 0x" << std::hex << cNewValue << std::dec << " for CIC on Hybrid " << +cHybrid->getId() << " OpticalGroup " << +cOpticalGroupId << " BeBoard " << +cBoardId << " to run with " << cClkFrequency << " MHz clock to match LpGBT configuration" << RESET;
             }
         }
 
@@ -930,28 +889,9 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
             fCicInterface->StartUp(cCic);
         }
-        else LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence.. but will configure drive strength and FCMD edge from xml.." << RESET;
+        else LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence..." << RESET;
 
-        if(!cIs2S) //TODO: make sure it works for PS
-        {
-            if(!fCicInterface->ConfigureStubOutput(cCic))
-            {
-                exceptionHandleFunction(cHybrid->getId(), "configure CIC stub output");
-                continue;
-            }
-        }
-
-        if(!cIs2S) //TODO: make sure it works for PS
-        {
-            uint8_t cBx0Delay = 22;
-            if(!fCicInterface->ManualBx0Alignment(cCic, cBx0Delay))
-            {
-                exceptionHandleFunction(cHybrid->getId(), "configure CIC Bx0 delay");
-                continue;
-            }
-        }
-
-        cSuccess = true; // At least on hybrid is working fine
+        cSuccess = true; // At least one hybrid is working fine
     }                    // All hybrids connected to this OG
 #ifdef __TCUSB__
     cSuccess = true; // No hybrids in the SEH/ROH test system
@@ -983,110 +923,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
         // #################
         // # Outer Tracker #
         // #################
-        if(cBoard->getBoardType() == BoardType::D19C)
-        {
-            // Set board sparisification
-            // based on what is configured in the fw register
-            // read CIC sparsification setting from fW register
-            // make sure board is also set to the same thing
-            cBoard->setSparsification(fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
-            if(pReInitialize == true)
-            {
-                InitializeOT(cBoard); // sets the clocks and configures the CICs, enables the FE readout chips (same as below?!)
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RETURNING FOR DEBUG" << std::endl;
-// return;
-            }
-            else // lpGBT + CIC will need to be configured  (and also maybe reset)
-            {
-                // LpGBT config
-                for(auto cOpticalGroup: *cBoard)
-                {
-                    if(cOpticalGroup->flpGBT == nullptr) continue;
-                    LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << +cBoard->getId() << RESET;
-                    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-                    if(cOpticalGroup->getReset() == 0)
-                    {
-                        LOG(INFO) << BOLDYELLOW << "Will not re-configure lpGBT on Link#" << +cOpticalGroup->getId() << RESET;
-                        continue;
-                    }
-
-                    if(!clpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT))
-                    {
-                        LOG(INFO) << BOLDRED << "SOMETHING FUNNY" << RESET;
-                        continue;
-                    }
-                }
-
-                // CIC hard reset
-                for(auto cOpticalGroup: *cBoard)
-                {
-                    auto& clpGBT = cOpticalGroup->flpGBT;
-                    if(clpGBT == nullptr) continue;
-
-                    for(auto cHybrid: *cOpticalGroup)
-                    {
-                        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                        if(cCic == NULL) continue;
-                        uint8_t cSide = cHybrid->getId() % 2;
-                        if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide); }
-                        static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCIC(clpGBT, cSide);
-                    }
-                }
-
-                // CIC configure
-                for(auto cOpticalGroup: *cBoard)
-                {
-                    // auto& clpGBT = cOpticalGroup->flpGBT;
-                    // if(clpGBT == nullptr) continue;
-                    // CIC configuration part .. first configure
-                    LOG(INFO) << BOLDYELLOW << "Configuring CIC connected to OG#" << +cOpticalGroup->getId() << RESET;
-                    for(auto cHybrid: *cOpticalGroup)
-                    {
-                        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                        if(cCic == NULL) continue;
-
-                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
-                        fCicInterface->ConfigureChip(cCic);
-                        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
-                    }
-                    bool cSuccess = CicStartUp(cOpticalGroup, false);
-                    if(!cSuccess)
-                    {
-                        LOG(INFO) << BOLDRED << "Failed start-up sequence on Board id " << +cBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
-                                  << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
-                        ExceptionHandler::getInstance()->disableOpticalGroup(cBoard->getId(), cOpticalGroup->getId());
-                        continue;
-                    }
-                }
-            }
-            ConfigureOT(cBoard);
-            /*
-            const BeBoard* cFirstBoard = fDetectorContainer->getFirstObject();
-            auto cFirstOpticalGroup = cFirstBoard->getFirstObject();
-            if(!cBoard->isOptical() && cFirstOpticalGroup->flpGBT != nullptr)
-            {
-                LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
-                auto cLinkInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getLinkInterface();
-                cLinkInterface->GeneralLinkReset(cBoard);
-            }
-            if(configureOT)
-            {
-                ConfigureOT(cBoard); // Configures the readout chips but the CIC is done above in the InitializeOT function
-            }
-            */
-
-            LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
-        }
+        if(cBoard->getBoardType() == BoardType::D19C) ConfigureOT(cBoard);
         // #################
         // # Inner Tracker #
         // #################

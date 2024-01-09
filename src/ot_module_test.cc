@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("vtrxLightOff"))
     {
-        cTool.ConfigureHw(true);
+        cTool.ConfigureHw();
         LOG(INFO) << BOLDBLUE << "Turn off light output of VTRX..." << RESET;
         OTVTRXLightOff cLightOff;
         cLightOff.Inherit(&cTool);
@@ -552,11 +552,9 @@ int main(int argc, char* argv[])
     }
 
     // align CIC-lpGBT-BE
-
-    bool cReInitialize = true;
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
-        cTool.ConfigureHw(cReInitialize);
+        cTool.ConfigureHw();
         // just to check
         // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         // for(const auto cBoard: *cTool.fDetectorContainer)
@@ -627,12 +625,11 @@ int main(int argc, char* argv[])
         // }
     }
     // reconfigure hardware (ie reload chip registers) without running the alignment
-    if(!cmd.foundOption("read") && cmd.foundOption("configure")) { cTool.ConfigureHw(cReInitialize); }
+    if(!cmd.foundOption("read") && cmd.foundOption("configure")) { cTool.ConfigureHw(); }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
     {
-        // //cReInitialize=false;
-        cTool.ConfigureHw(cReInitialize);
+        cTool.ConfigureHw();
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;

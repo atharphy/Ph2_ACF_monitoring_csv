@@ -58,6 +58,7 @@ void lpGBT::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::regex("^FALossOfLockCount$"));
     fListOfFreeRegisters.push_back(std::regex("^ConfigErrorCounter[HL]$"));
     fListOfFreeRegisters.push_back(std::regex("^POWERUP2$"));
+    fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]DllStatus$"));
 }
 
 void lpGBT::loadfRegMap(const std::string& fileName)
@@ -165,29 +166,7 @@ std::stringstream lpGBT::getRegMapStream()
 }
 
 void lpGBT::setInvertClock(uint8_t hybridId, bool pInvertClock)
-{
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    
+{   
     std::string registerName = (hybridId % 2 == 0) ? "EPCLK1ChnCntrH" : "EPCLK11ChnCntrH";
     auto& theRegister = fRegMap[registerName];
     theRegister.fValue = (theRegister.fValue & 0xBF) | ((pInvertClock ? 1 : 0) << 6);

@@ -63,23 +63,9 @@ void MPA2::initializeFreeRegisters()
 {
     fListOfFreeRegisters.push_back(std::regex("^Mask$"));
     fListOfFreeRegisters.push_back(std::regex("^EfuseProg[0-3]$"));
+    fListOfFreeRegisters.push_back(std::regex("^EfuseValue[0-3]$"));
 
     // Brodcast registers cannot be reset to avoid overriding local changes
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
-    fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
     fListOfFreeRegisters.push_back(std::regex(".*_ALL"));
 }
 
