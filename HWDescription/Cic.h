@@ -60,8 +60,8 @@ class Cic : public Chip
 
     virtual uint8_t getNumberOfBits(const std::string& dacName) { return 8; };
 
-    void    setDriveStrength(uint8_t pDriveStrength);
-    void    setEdgeSelect(uint8_t pEdgeSel);
+    void setDriveStrength(uint8_t pDriveStrength);
+    void setEdgeSelect(uint8_t pEdgeSel);
 
   private:
     static std::map<uint8_t, uint8_t> fTxDriveStrength;

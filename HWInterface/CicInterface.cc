@@ -273,10 +273,10 @@ bool CicInterface::ManualBx0Alignment(Chip* pChip, uint8_t pBx0delay)
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Manually settomg BX0 delay value in CIC on FE" << +pChip->getHybridId() << " to " << +pBx0delay << " clock cycles." << RESET;
     bool cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValue << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValue << std::dec << std::endl;
     if(!cSuccess) return cSuccess;
     cSuccess = cSuccess && this->WriteChipReg(pChip, "EXT_BX0_DELAY", pBx0delay);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing EXT_BX0_DELAY to 0x" << std::hex << +pBx0delay << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing EXT_BX0_DELAY to 0x" << std::hex << +pBx0delay << std::dec << std::endl;
     return cSuccess;
 }
 // run automated Bx0 alignment - FIX ME
@@ -449,19 +449,19 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
     }
     if(!this->WriteChipMultReg(pChip, listOfRegisters))
     {
-            LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
-                << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                  << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
 
     // disable resets
-    for(auto& registerAndValue : listOfRegisters) registerAndValue.second = 0x00;
+    for(auto& registerAndValue: listOfRegisters) registerAndValue.second = 0x00;
     if(!this->WriteChipMultReg(pChip, listOfRegisters))
     {
-            LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
-                << " --- Hybrid will be disabled" << RESET;
+        LOG(INFO) << BOLDRED << "Error setting CIC DLL reset on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+                  << " --- Hybrid will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
         return false;
     }
@@ -1143,11 +1143,11 @@ bool CicInterface::configureEnabledFEs(Chip* pChip, std::vector<uint8_t> pFeIds)
     std::vector<uint8_t> cFeMapping = getMapping(pChip);
     // read enable register
     std::string cRegName = "FE_ENABLE";
-    uint8_t    cValue   = 0;
+    uint8_t     cValue   = 0;
     for(auto pFeId: pFeIds)
     {
         uint8_t cChipId_forCic = cFeMapping[pFeId];
-        cValue = cValue | (1u << cChipId_forCic);
+        cValue                 = cValue | (1u << cChipId_forCic);
     }
     LOG(DEBUG) << BOLDMAGENTA << "New value of FE_ENABLE for CIC is " << std::hex << +cValue << std::dec << RESET;
     return this->WriteChipReg(pChip, cRegName, cValue);
@@ -1170,7 +1170,7 @@ bool CicInterface::ConfigureStubOutput(Chip* pChip, uint8_t pLineSel)
     uint8_t cNlines       = 5 + cValue;
     LOG(INFO) << BOLDMAGENTA << "Configuring CIC" << +pChip->getHybridId() << " to produce stubs on " << +cNlines << "/6 output lines... writing 0x" << std::hex << +cValueToWrite << std::dec
               << " to CIC register " << cRegName << RESET;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValueToWrite << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValueToWrite << std::dec << std::endl;
     return this->WriteChipReg(pChip, cRegName, cValueToWrite);
 }
 bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)
@@ -1259,7 +1259,7 @@ bool CicInterface::ConfigureTermination(Chip* pChip, uint8_t pClkTerm, uint8_t p
     LOG(INFO) << BOLDBLUE << "Configuring termination on CIC CLk + Rx pads . register set to 0x" << std::hex << +cValue << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "\t\t.. Clk Term set to " << +pClkTerm << RESET;
     LOG(INFO) << BOLDBLUE << "\t\t.. Rx Term set to " << +pRxTerm << RESET;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] SLVS_PADS_CONFIG  to 0x" << std::hex << cValue << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] SLVS_PADS_CONFIG  to 0x" << std::hex << cValue << std::dec << std::endl;
     return this->WriteChipReg(pChip, "SLVS_PADS_CONFIG", cValue);
 }
 // configure drive strength
@@ -1333,9 +1333,9 @@ bool CicInterface::StartUp(Chip* pChip)
         cOut += " for CIC2.";
     LOG(INFO) << BOLDBLUE << cOut << RESET;
 
-    auto boardId = pChip->getBeBoardId();
+    auto boardId        = pChip->getBeBoardId();
     auto opticalGroupId = pChip->getOpticalGroupId();
-    auto hybridId = pChip->getOpticalGroupId();
+    auto hybridId       = pChip->getOpticalGroupId();
 
     auto exceptionHandleFunction = [boardId, opticalGroupId, hybridId, this](const std::string&& failMode) {
         LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +boardId << " OpticalGroup id " << +opticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;

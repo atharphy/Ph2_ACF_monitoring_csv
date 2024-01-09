@@ -1,29 +1,14 @@
 #include "tools/ConfigureOnly.h"
 #include "System/RegisterHelper.h"
 
+ConfigureOnly::ConfigureOnly() : Tool() {}
 
-ConfigureOnly::ConfigureOnly()
-: Tool()
-{
-}
+ConfigureOnly::~ConfigureOnly() {}
 
-ConfigureOnly::~ConfigureOnly()
-{
-}
+void ConfigureOnly::Running() {}
 
-void ConfigureOnly::Running()
-{
-}
+void ConfigureOnly::Stop() {}
 
-void ConfigureOnly::Stop()
-{
-}
+void ConfigureOnly::Pause() {}
 
-void ConfigureOnly::Pause()
-{
-}
-
-void ConfigureOnly::Resume()
-{
-}
-
+void ConfigureOnly::Resume() {}

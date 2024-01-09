@@ -690,7 +690,6 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
                 cValueInMemory          = (cValueInMemory & 0x1F) + ((cMode & 0x03) << 5);
                 cChip->setReg("ENFLAGS", cValueInMemory);
                 os << BOLDCYAN << "|\t|\t|----ENFLAGS to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec << RESET << std::endl;
-
             }
         }
 
@@ -742,7 +741,6 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
                 cChip->setReg("StripControl2", cMemStripControl2);
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut
                    << " read for StripControl2 is 0x" << cChip->getReg("StripControl2") << std::dec << RESET << std::endl;
-
             }
         }
 
@@ -755,7 +753,7 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
                 if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("stripCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("stripFine").value());
-                
+
                 cChip->setReg("ClockDeskewing_coarse", cCoarse);
 
                 ChipRegMask cMask;
@@ -874,9 +872,9 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 uint8_t cWindow = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("window").value()));
                 uint8_t cRegVal = (cMode << 6) | cWindow;
                 cChip->setReg("ECM", cRegVal);
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode
-                          << std::dec << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN
-                          << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode << std::dec
+                   << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex
+                   << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET << std::endl;
             }
         }
         // then hit logic mode
@@ -886,7 +884,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             for(auto cChip: *pHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
-                int cMode       = convertAnyInt(cHitLogicNode.attribute("pixelMode").value());
+                int cMode = convertAnyInt(cHitLogicNode.attribute("pixelMode").value());
                 cChip->setReg("ModeSel_ALL", cMode);
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
                    << std::dec << RESET << std::endl;
@@ -908,7 +906,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                     cRegName << "CalDAC" << +cIndx;
                     cChip->setReg(cRegName.str(), cInjPxls);
                 }
-                os  << BOLDCYAN << "|\t|\t|----Applying global MPA injection settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjPxls
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA injection settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjPxls
                    << std::dec << RESET << std::endl;
             }
         }
@@ -920,9 +918,9 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             for(auto cChip: *pHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
-                int cLatency      = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
+                int cLatency = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
 
-                cChip->setReg("L1Offset_1_ALL", cLatency & 0xFF);       
+                cChip->setReg("L1Offset_1_ALL", cLatency & 0xFF);
                 cChip->setReg("L1Offset_2_ALL", (cLatency >> 8) & 0xFF);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
@@ -955,7 +953,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("pixelFine").value());
                 cChip->setReg("PhaseShift", cCoarse);
-                
+
                 cChip->setReg("ConfDLL", cFine);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
@@ -1003,8 +1001,8 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                     cRegName << "ThDAC" << +cIndx;
                     cChip->setReg(cRegName.str(), cThresholdPxls);
                 }
-                os  << BOLDCYAN << "|\t|\t|----Applying global threshold MPA Settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << std::hex
-                           << +cThresholdPxls << std::dec << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global threshold MPA Settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << std::hex
+                   << +cThresholdPxls << std::dec << RESET << std::endl;
             }
         }
 
@@ -1019,9 +1017,9 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 uint8_t cWindow = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("window").value()));
                 uint8_t cRegVal = (cMode << 6) | cWindow;
                 cChip->setReg("ECM", cRegVal);
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode
-                          << std::dec << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN
-                          << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA stub settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Stub Mode is  0x" << std::hex << +cMode << std::dec
+                   << RESET << GREEN << "|\t|\t|\t|---- Stub Window is  " << (float)cWindow / 2. << " half-pixels " << RESET << GREEN << "|\t|\t|\t|---- register value [ECM] is set to 0x" << std::hex
+                   << +cRegVal << " and we read back from memory " << cChip->getReg("ECM") << std::dec << RESET << std::endl;
             }
         }
         // then hit logic mode
@@ -1078,7 +1076,7 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 int cLatencyRx320 = ((convertAnyInt(cLatencyNode.attribute("LatencyRx320L1").value())) & 0x7) + ((convertAnyInt(cLatencyNode.attribute("LatencyRx320Trigger").value()) & 0x7) << 3);
                 int cEdgeSelT1Raw = convertAnyInt(cLatencyNode.attribute("EdgeSelT1Raw").value());
                 int cEdgeSelTrig  = convertAnyInt(cLatencyNode.attribute("EdgeSelTrig").value());
-                if(cEdgeSelTrig == 1) cEdgeSelTrig = 255; // 255 is 0xFF in hex and sets 1 for all SSAs.                
+                if(cEdgeSelTrig == 1) cEdgeSelTrig = 255; // 255 is 0xFF in hex and sets 1 for all SSAs.
                 cChip->setReg("MemoryControl_1_ALL", cLatency & 0xFF);
                 uint16_t memoryControl_2 = cChip->getReg("MemoryControl_2_ALL");
                 memoryControl_2          = (memoryControl_2 & 0xFE) + ((cLatency >> 8) & 0x01);
@@ -1094,7 +1092,7 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 cChip->setReg("EdgeSelT1Raw", cEdgeSelT1Raw);
                 LOG(INFO) << BOLDYELLOW << "cEdgeSelTrig: 0x" << std::hex << cEdgeSelTrig << std::dec << RESET;
                 cChip->setReg("EdgeSelTrig", cEdgeSelTrig);
-                
+
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
                    << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
             }
@@ -1108,7 +1106,7 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCut = convertAnyInt(cHIPmode.attribute("pixelCut").value());
-                
+
                 ChipRegMask cMask;
                 cMask.fNbits    = 3;
                 cMask.fBitShift = 5;
@@ -1125,8 +1123,8 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
             for(auto cChip: *pHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
-                int cCoarse = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value());
-                int cFine   = convertAnyInt(cSamplingDelay.attribute("pixelFine").value());
+                int         cCoarse = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value());
+                int         cFine   = convertAnyInt(cSamplingDelay.attribute("pixelFine").value());
                 ChipRegMask cMask;
                 cMask.fNbits    = 3;
                 cMask.fBitShift = 5;
@@ -1186,9 +1184,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                 cMasterId = (cHybridId % 2 == 0) ? 2 : 0; // Default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
             os << BOLDBLUE << "I2C Master Id is " << +cMasterId << RESET << std::endl;
 
-            if(pHybridNode.attribute("invertClock")) 
+            if(pHybridNode.attribute("invertClock"))
             {
-                uint8_t invertClock = pHybridNode.attribute("invertClock").as_int(); 
+                uint8_t invertClock = pHybridNode.attribute("invertClock").as_int();
                 if(pOpticalGroup->flpGBT != nullptr) pOpticalGroup->flpGBT->setInvertClock(cHybridId, invertClock != 0);
                 os << BOLDBLUE << "invertClock " << +invertClock << RESET << std::endl;
             } // can overwrite default from xml
@@ -1196,7 +1194,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cHybrid = pOpticalGroup->addHybridContainer(cHybridId, new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), cHybridId));
 
             cHybrid->setMasterId(cMasterId);
-
 
             cHybrid->setOptical(pBoard->isOptical());
             os << BOLDBLUE << "|       |       | HybridOpticalId is " << +cHybrid->getOpticalGroupId() << RESET;
@@ -1285,8 +1282,10 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                 if(cChildGlobal.attribute("edgeSelect"))
                                 {
                                     uint8_t cEdgeSelect = cChildGlobal.attribute("edgeSelect").as_uint();
-                                    if(cEdgeSelect == 0 || cEdgeSelect == 1) cCic->setEdgeSelect(cEdgeSelect);
-                                    else throw std::runtime_error("CIC edgeSelect can only be either 0 or 1");
+                                    if(cEdgeSelect == 0 || cEdgeSelect == 1)
+                                        cCic->setEdgeSelect(cEdgeSelect);
+                                    else
+                                        throw std::runtime_error("CIC edgeSelect can only be either 0 or 1");
                                 }
                                 LOG(INFO) << BOLDBLUE << " Global settings " << cNameGlobal << RESET;
                                 std::vector<std::string> cAttributes{"clockFrequency", "enableBend", "enableLastLine", "enableSparsification"};

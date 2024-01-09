@@ -37,20 +37,20 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cIter++;
     } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
     if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state " + fPUSMStatusMap[cChipVersion][cPUSMState])); }
-    
+
     // Configuring chip
     ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
     cRegVec.clear();
     uint16_t maximumWritableRegister = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F;
-    
+
     for(const auto& cRegItem: clpGBTRegMap)
     {
         if(cRegItem.second.fAddress <= maximumWritableRegister) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
     } // get read/write registers
-    
+
     WriteChipMultReg(pChip, cRegVec);
-    
+
     // Setting PUSM Done bits
     SetPUSMDone(pChip, true, true);
     // Checking if lpGBT reaches Ready state
@@ -185,7 +185,6 @@ void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
 #endif
 }
 
-
 void D19clpGBTInterface::holdPSModuleResets(Ph2_HwDescription::Chip* pChip)
 {
     // Reset I2C Masters
@@ -209,7 +208,6 @@ void D19clpGBTInterface::holdPSModuleResets(Ph2_HwDescription::Chip* pChip)
 #endif
 }
 
-
 void D19clpGBTInterface::configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
 {
     fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
@@ -221,8 +219,10 @@ void D19clpGBTInterface::configureClockSettings(Ph2_HwDescription::Chip* pChip, 
 
     std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
     std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg  << " to 0x" << std::hex << (fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq) << std::dec << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg  << " to 0x" << std::hex << (fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth) << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex << (fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq)
+              << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg << " to 0x" << std::hex
+              << (fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth) << std::dec << std::endl;
     WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
     WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
 }
@@ -539,26 +539,30 @@ void D19clpGBTInterface::AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip)
 
 void D19clpGBTInterface::updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chip* pChip)
 {
-    auto theChipRate = this->GetChipRate(pChip);
+    auto        theChipRate               = this->GetChipRate(pChip);
     std::string cicClockRightRegisterName = "EPCLK" + std::to_string(fClock_RHS_CIC) + "ChnCntrH";
     std::string cicClockLeftRegisterName  = "EPCLK" + std::to_string(fClock_LHS_CIC) + "ChnCntrH";
 
     uint8_t expectedCicClockSetting;
-    if(theChipRate == 5) expectedCicClockSetting = 0x4;
-    else if(theChipRate == 10) expectedCicClockSetting = 0x5;
+    if(theChipRate == 5)
+        expectedCicClockSetting = 0x4;
+    else if(theChipRate == 10)
+        expectedCicClockSetting = 0x5;
     else
     {
-        std::string errorMessage = std::string(__PRETTY_FUNCTION__)  + " LpGBT TX rate not identified on BeBoard " + std::to_string(pChip->getBeBoardId()) +  " OpticalGroup " + std::to_string(pChip->getOpticalGroupId());
+        std::string errorMessage =
+            std::string(__PRETTY_FUNCTION__) + " LpGBT TX rate not identified on BeBoard " + std::to_string(pChip->getBeBoardId()) + " OpticalGroup " + std::to_string(pChip->getOpticalGroupId());
         throw std::runtime_error(errorMessage);
     }
 
-    auto updateClockFunction = [this, theChipRate, pChip, expectedCicClockSetting](std::string registerName)
-    {
+    auto updateClockFunction = [this, theChipRate, pChip, expectedCicClockSetting](std::string registerName) {
         auto theCurrentRegisterValue = this->ReadChipReg(pChip, registerName);
         if((theCurrentRegisterValue & 0x7) != expectedCicClockSetting)
         {
             uint16_t theNewRegisterValue = (theCurrentRegisterValue & 0xF8) | (expectedCicClockSetting & 0x7);
-            LOG(INFO) << BOLDYELLOW << "Attention! Updating " << registerName << " from 0x" << std::hex << +theCurrentRegisterValue << " to 0x" << +theNewRegisterValue << std::dec <<  " to provide the CIC with the correct clock based on the LpGBT data rate (" << +theChipRate << "Gb) for on BeBoard " << +pChip->getBeBoardId() <<  " OpticalGroup " << +pChip->getOpticalGroupId() << RESET;
+            LOG(INFO) << BOLDYELLOW << "Attention! Updating " << registerName << " from 0x" << std::hex << +theCurrentRegisterValue << " to 0x" << +theNewRegisterValue << std::dec
+                      << " to provide the CIC with the correct clock based on the LpGBT data rate (" << +theChipRate << "Gb) for on BeBoard " << +pChip->getBeBoardId() << " OpticalGroup "
+                      << +pChip->getOpticalGroupId() << RESET;
             this->WriteChipReg(pChip, registerName, theNewRegisterValue);
         }
     };
@@ -566,6 +570,5 @@ void D19clpGBTInterface::updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chi
     updateClockFunction(cicClockRightRegisterName);
     updateClockFunction(cicClockLeftRegisterName);
 }
-
 
 } // namespace Ph2_HwInterface

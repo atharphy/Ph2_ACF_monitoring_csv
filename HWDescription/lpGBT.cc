@@ -166,11 +166,10 @@ std::stringstream lpGBT::getRegMapStream()
 }
 
 void lpGBT::setInvertClock(uint8_t hybridId, bool pInvertClock)
-{   
+{
     std::string registerName = (hybridId % 2 == 0) ? "EPCLK1ChnCntrH" : "EPCLK11ChnCntrH";
-    auto& theRegister = fRegMap[registerName];
-    theRegister.fValue = (theRegister.fValue & 0xBF) | ((pInvertClock ? 1 : 0) << 6);
+    auto&       theRegister  = fRegMap[registerName];
+    theRegister.fValue       = (theRegister.fValue & 0xBF) | ((pInvertClock ? 1 : 0) << 6);
 }
-
 
 } // namespace Ph2_HwDescription

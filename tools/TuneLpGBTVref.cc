@@ -1,15 +1,9 @@
 #include "tools/TuneLpGBTVref.h"
 #include "System/RegisterHelper.h"
 
+TuneLpGBTVref::TuneLpGBTVref() : Tool() {}
 
-TuneLpGBTVref::TuneLpGBTVref()
-: Tool()
-{
-}
-
-TuneLpGBTVref::~TuneLpGBTVref()
-{
-}
+TuneLpGBTVref::~TuneLpGBTVref() {}
 
 void TuneLpGBTVref::Initialise()
 {
@@ -17,10 +11,7 @@ void TuneLpGBTVref::Initialise()
     fRegisterHelper->freeFrontEndRegister(FrontEndType::LpGBT, "VREFTUNE");
 }
 
-void TuneLpGBTVref::reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void TuneLpGBTVref::reset() { fRegisterHelper->restoreSnapshot(); }
 
 void TuneLpGBTVref::tuneVref()
 {
@@ -43,15 +34,8 @@ void TuneLpGBTVref::Running()
     reset();
 }
 
-void TuneLpGBTVref::Stop()
-{
-}
+void TuneLpGBTVref::Stop() {}
 
-void TuneLpGBTVref::Pause()
-{
-}
+void TuneLpGBTVref::Pause() {}
 
-void TuneLpGBTVref::Resume()
-{
-}
-
+void TuneLpGBTVref::Resume() {}

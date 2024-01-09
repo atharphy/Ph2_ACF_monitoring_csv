@@ -339,8 +339,8 @@ void lpGBTInterface::ConfigureClocks(Chip*                       pChip,
         // #######################################################################################################################
         std::string cClkHReg = "EPCLK" + std::to_string(cClock) + "ChnCntrH";
         std::string cClkLReg = "EPCLK" + std::to_string(cClock) + "ChnCntrL";
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex << (pInvert << 6 | pDriveStr << 3 | pFreq) << std::dec << std::endl;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg << " to 0x" << std::hex << (pPreEmphStr << 5 | pPreEmphMode << 3 | pPreEmphWidth) << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex << (pInvert << 6 | pDriveStr << 3 | pFreq) << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg << " to 0x" << std::hex << (pPreEmphStr << 5 | pPreEmphMode << 3 | pPreEmphWidth) << std::dec << std::endl;
         WriteChipReg(pChip, cClkHReg, pInvert << 6 | pDriveStr << 3 | pFreq);
         WriteChipReg(pChip, cClkLReg, pPreEmphStr << 5 | pPreEmphMode << 3 | pPreEmphWidth);
     }
@@ -722,9 +722,9 @@ void lpGBTInterface::ConfigureGPIOLevel(Chip* pChip, const std::vector<uint8_t>&
             cOutH = (cOutH & ~(1 << (cGPIO - 8))) | (pOut << (cGPIO - 8));
     }
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing PIOOutH to 0x" <<std::hex << +cOutH << ::std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing PIOOutH to 0x" << std::hex << +cOutH << ::std::dec << std::endl;
     WriteChipReg(pChip, "PIOOutH", cOutH);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing PIOOutL to 0x" <<std::hex << +cOutL << ::std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing PIOOutL to 0x" << std::hex << +cOutL << ::std::dec << std::endl;
     WriteChipReg(pChip, "PIOOutL", cOutL);
 }
 
@@ -1608,8 +1608,8 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::Chip* pChip, const std::strin
 
     std::string cAdcStr = "ADC_" + fADCGainMap[pGain];
 
-    float cCalRes =
-        ((fCalibration[cAdcStr + "_SLOPE"] + fTemperature * fCalibration[cAdcStr + "_SLOPE_TEMP"]) * cResult + fCalibration[cAdcStr + "_OFFSET"] + fTemperature * fCalibration[cAdcStr + "_OFFSET_TEMP"]);
+    float cCalRes = ((fCalibration[cAdcStr + "_SLOPE"] + fTemperature * fCalibration[cAdcStr + "_SLOPE_TEMP"]) * cResult + fCalibration[cAdcStr + "_OFFSET"] +
+                     fTemperature * fCalibration[cAdcStr + "_OFFSET_TEMP"]);
 
     LOG(DEBUG) << BOLDGREEN << "Measured calibrated Vin for " << pADCInputP << " and " << pADCInputN << " is " << cCalRes << " [V]" << RESET;
     return cCalRes;

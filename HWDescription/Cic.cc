@@ -136,8 +136,8 @@ std::stringstream Cic::getRegMapStream()
 
 void Cic::setDriveStrength(uint8_t pDriveStrength)
 {
-    auto& theRegister = fRegMap["SLVS_PADS_CONFIG"];
-    auto convertedRegisterValue = 0;
+    auto& theRegister            = fRegMap["SLVS_PADS_CONFIG"];
+    auto  convertedRegisterValue = 0;
     try
     {
         convertedRegisterValue = fTxDriveStrength.at(pDriveStrength);
@@ -153,11 +153,10 @@ void Cic::setDriveStrength(uint8_t pDriveStrength)
 
 void Cic::setEdgeSelect(uint8_t pEdgeSel)
 {
-    bool cNegEdge = (pEdgeSel == 1);
-    auto& theRegister = fRegMap["MISC_CTRL"];
+    bool  cNegEdge     = (pEdgeSel == 1);
+    auto& theRegister  = fRegMap["MISC_CTRL"];
     theRegister.fValue = (theRegister.fValue & 0xF7) | ((cNegEdge ? 1 : 0) << 3);
 }
-
 
 std::map<uint8_t, uint8_t> Cic::fTxDriveStrength = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
 

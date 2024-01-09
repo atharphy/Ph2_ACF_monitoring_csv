@@ -670,8 +670,8 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
             if(!fCicInterface->ConfigureChip(cCic))
             {
-                LOG(INFO) << BOLDRED << "FAILED to configure CIC on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id "
-                            << +cHybrid->getId() << " --- Hybrid will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "FAILED to configure CIC on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
+                          << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
                 continue;
             }
@@ -765,10 +765,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                 uint8_t cSide = cHybrid->getId() % 2;
                 LOG(INFO) << BOLDBLUE << "Configuring ReadoutOutChips on Hybrid" << +cHybrid->getId() << RESET;
 
-                if(cHybrid->getReset() == 0)
-                {
-                    LOG(INFO) << BOLDYELLOW << "Will not send a hard-reset to Chips on Hybrid#" << +cHybrid->getId() << RESET;
-                }
+                if(cHybrid->getReset() == 0) { LOG(INFO) << BOLDYELLOW << "Will not send a hard-reset to Chips on Hybrid#" << +cHybrid->getId() << RESET; }
                 else
                 {
                     // no SSA because I don't want to reset it here. . already done earlier
@@ -781,20 +778,19 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                     {
                         LOG(DEBUG) << BOLDBLUE << "\t... Applying hard reset to CBCs" << RESET;
                         static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cSide);
-
                     }
                 }
             }
 
             for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChip(cChip); } // Chip config
-        } // hybrid
-    }     // OG
+        }                                                                              // hybrid
+    }                                                                                  // OG
     LOG(INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
 }
 
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 {
-    auto cBoardId   = pOpticalGroup->getBeBoardId();
+    auto cBoardId = pOpticalGroup->getBeBoardId();
     LOG(INFO) << BOLDBLUE << "SystemController::ModuleStartUpPS for BeBoard#" << +cBoardId << " OpticalGroup#" << +pOpticalGroup->getId() << RESET;
 
     auto& clpGBT = pOpticalGroup->flpGBT;
@@ -807,7 +803,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 
         for(auto cHybrid: *pOpticalGroup)
         {
-            uint8_t  cSide        = cHybrid->getId() % 2;
+            uint8_t cSide = cHybrid->getId() % 2;
             LOG(INFO) << BOLDBLUE << "Resetting SSA" << RESET;
             theD19clpGBTInterface->resetSSA(clpGBT, cSide);
         } // hybrid
@@ -816,22 +812,19 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 
 void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
 {
-    auto cBoardId   = pOpticalGroup->getBeBoardId();
+    auto cBoardId = pOpticalGroup->getBeBoardId();
     LOG(INFO) << BOLDBLUE << "SystemController::ModuleStartUp2S for BeBoard#" << +cBoardId << " OpticalGroup#" << +pOpticalGroup->getId() << RESET;
 
     // reset I2C and old chip resets
     auto& clpGBT = pOpticalGroup->flpGBT;
-    if(clpGBT != nullptr)
-    {
-        static_cast<D19clpGBTInterface*>(flpGBTInterface)->hold2SModuleResets(clpGBT);
-    } // lpGBT part ... resets + clocks
+    if(clpGBT != nullptr) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->hold2SModuleResets(clpGBT); } // lpGBT part ... resets + clocks
 }
 
 bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStartUpSequence)
 {
     auto cBoardId        = pOpticalGroup->getBeBoardId();
     auto cOpticalGroupId = pOpticalGroup->getId();
-    bool cIs2S = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S);
+    bool cIs2S           = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S);
 
     auto exceptionHandleFunction = [cBoardId, cOpticalGroupId, this](uint16_t hybridId, const std::string&& failMode) {
         LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
@@ -850,8 +843,10 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
 
         std::stringstream enabledFEsPrintout;
         enabledFEsPrintout << "Overriding FE_ENABLE for CIC on Hybrid " << +cHybrid->getId() << " OpticalGroup " << +cOpticalGroupId << " BeBoard " << +cBoardId << " to enable ";
-        if(cIs2S) enabledFEsPrintout << " CBCs ";
-        else enabledFEsPrintout << " MPAs ";
+        if(cIs2S)
+            enabledFEsPrintout << " CBCs ";
+        else
+            enabledFEsPrintout << " MPAs ";
         std::vector<uint8_t> cChipIds(0);
         for(auto cReadoutChip: *cHybrid)
         {
@@ -870,16 +865,17 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         // Make sure the CIC data rate matches the LpGBT one
         if(clpGBT != nullptr && cCic->getFrontEndType() == FrontEndType::CIC2)
         {
-            auto     cChipRate     = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(clpGBT);
-            uint16_t cClkFrequency = (cChipRate == 5) ? 320 : 640;
-            uint8_t cFeConfigReg  = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
-            bool is640clockBitEnabled = ((cFeConfigReg >> 1) & 0x1) == 1;
-            bool is640clockBitNeedToBeEnabled = (cClkFrequency == 640);
+            auto     cChipRate                    = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(clpGBT);
+            uint16_t cClkFrequency                = (cChipRate == 5) ? 320 : 640;
+            uint8_t  cFeConfigReg                 = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
+            bool     is640clockBitEnabled         = ((cFeConfigReg >> 1) & 0x1) == 1;
+            bool     is640clockBitNeedToBeEnabled = (cClkFrequency == 640);
             if(is640clockBitEnabled != is640clockBitNeedToBeEnabled)
             {
-                uint8_t cNewValue     = (cFeConfigReg & 0xFD) | ((is640clockBitNeedToBeEnabled ? 1 : 0) << 1);
+                uint8_t cNewValue = (cFeConfigReg & 0xFD) | ((is640clockBitNeedToBeEnabled ? 1 : 0) << 1);
                 fCicInterface->WriteChipReg(cCic, "FE_CONFIG", cNewValue);
-                LOG(INFO) << BOLDMAGENTA << "Overriding FE_CONFIG to 0x" << std::hex << cNewValue << std::dec << " for CIC on Hybrid " << +cHybrid->getId() << " OpticalGroup " << +cOpticalGroupId << " BeBoard " << +cBoardId << " to run with " << cClkFrequency << " MHz clock to match LpGBT configuration" << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Overriding FE_CONFIG to 0x" << std::hex << cNewValue << std::dec << " for CIC on Hybrid " << +cHybrid->getId() << " OpticalGroup " << +cOpticalGroupId
+                          << " BeBoard " << +cBoardId << " to run with " << cClkFrequency << " MHz clock to match LpGBT configuration" << RESET;
             }
         }
 
@@ -888,7 +884,8 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             LOG(INFO) << BOLDYELLOW << "Launching CIC start-up sequence.." << RESET;
             fCicInterface->StartUp(cCic);
         }
-        else LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence..." << RESET;
+        else
+            LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence..." << RESET;
 
         cSuccess = true; // At least one hybrid is working fine
     }                    // All hybrids connected to this OG
