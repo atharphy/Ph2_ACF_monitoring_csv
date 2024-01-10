@@ -103,10 +103,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
 
     pugi::xml_node cBoardConfigurationNode = pBeBordNode.child("configuration");
 
-    if(cBoardConfigurationNode != nullptr)
-    {   
-        parseBeBoardConfigurationFile(expandEnvironmentVariables(cBoardConfigurationNode.attribute("file_name").value()), cBeBoard, os);
-    }
+    if(cBoardConfigurationNode != nullptr) { parseBeBoardConfigurationFile(expandEnvironmentVariables(cBoardConfigurationNode.attribute("file_name").value()), cBeBoard, os); }
 
     std::string cBoardType = cBoardTypeAttribute.value();
 
