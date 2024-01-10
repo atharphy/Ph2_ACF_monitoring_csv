@@ -5,7 +5,10 @@ ConfigureOnly::ConfigureOnly() : Tool() {}
 
 ConfigureOnly::~ConfigureOnly() {}
 
-void ConfigureOnly::Running() {}
+void ConfigureOnly::Running()
+{
+    // fRegisterHelper->dumpBeBoardRegisterIntoXml("Results/outputTest.xml");
+}
 
 void ConfigureOnly::Stop() {}
 
