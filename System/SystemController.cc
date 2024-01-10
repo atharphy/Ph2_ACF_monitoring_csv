@@ -439,7 +439,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
     }
 
-    fRegisterHelper = new RegisterHelper(fDetectorContainer, fBeBoardInterface, fReadoutChipInterface, flpGBTInterface, fCicInterface);
+    fRegisterHelper = new RegisterHelper(fDetectorContainer, fBeBoardInterface, fReadoutChipInterface, flpGBTInterface, fCicInterface, &fBeBoardFWMap);
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }

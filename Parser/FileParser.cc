@@ -101,6 +101,13 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         exit(EXIT_FAILURE);
     }
 
+    pugi::xml_node cBoardConfigurationNode = pBeBordNode.child("configuration");
+
+    if(cBoardConfigurationNode != nullptr)
+    {   
+        parseBeBoardConfigurationFile(expandEnvironmentVariables(cBoardConfigurationNode.attribute("file_name").value()), cBeBoard, os);
+    }
+
     std::string cBoardType = cBoardTypeAttribute.value();
 
     bool     cConfigureCDCE = false;
@@ -1825,6 +1832,25 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxPolarity(cTxPolarities[0]);
+        }
+    }
+}
+
+void FileParser::parseBeBoardConfigurationFile(const std::string& pFilename, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os)
+{
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
+
+    os << "Parsing BeBoard registers from file " << pFilename << "\n\n";
+    pugi::xml_node cBeBoardConfigurationNode = doc.child("BeBoardRegister");
+
+    for(pugi::xml_node cBeBoardRegNode = cBeBoardConfigurationNode.child("Register"); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling())
+    {
+        if(std::string(cBeBoardRegNode.name()) == "Register")
+        {
+            std::string cNameString;
+            double      cValue;
+            parseRegister(cBeBoardRegNode, cNameString, cValue, pBoard, os);
         }
     }
 }
