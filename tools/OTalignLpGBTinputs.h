@@ -36,7 +36,6 @@ class OTalignLpGBTinputs : public Tool
   private:
     void AlignLpGBTInputs();
 
-    
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTalignLpGBTinputs fDQMHistogramOTalignLpGBTinputs;

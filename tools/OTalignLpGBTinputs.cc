@@ -1,6 +1,6 @@
 #include "tools/OTalignLpGBTinputs.h"
-#include "System/RegisterHelper.h"
 #include "HWInterface/ExceptionHandler.h"
+#include "System/RegisterHelper.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -22,23 +22,19 @@ void OTalignLpGBTinputs::Initialise(void)
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
     }
 
-
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTalignLpGBTinputs.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
-void OTalignLpGBTinputs::ConfigureCalibration()
-{
-
-}
+void OTalignLpGBTinputs::ConfigureCalibration() {}
 
 void OTalignLpGBTinputs::AlignLpGBTInputs()
 {
-    for(auto theBoard : *fDetectorContainer)
+    for(auto theBoard: *fDetectorContainer)
     {
-        for(auto theOpticalGroup : *theBoard)
+        for(auto theOpticalGroup: *theBoard)
         {
             LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::AlignLpGBTInputs ..." << RESET;
             auto cBoardId   = theOpticalGroup->getBeBoardId();
@@ -98,7 +94,8 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
             auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
             if(cMode == 15)
             {
-                LOG(INFO) << BOLDRED << "FAILED to align LpGBT inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " --- OpticalGroup will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "FAILED to align LpGBT inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " --- OpticalGroup will be disabled"
+                          << RESET;
                 ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
                 continue;
             }
@@ -119,29 +116,18 @@ void OTalignLpGBTinputs::Running()
 void OTalignLpGBTinputs::Stop(void)
 {
     LOG(INFO) << "Stopping OTalignLpGBTinputs measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTalignLpGBTinputs.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTalignLpGBTinputs.process();
+#endif
     dumpConfigFiles();
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTalignLpGBTinputs stopped.";
 }
 
-void OTalignLpGBTinputs::Pause()
-{
+void OTalignLpGBTinputs::Pause() {}
 
-}
+void OTalignLpGBTinputs::Resume() {}
 
-
-void OTalignLpGBTinputs::Resume()
-{
-
-}
-
-
-void OTalignLpGBTinputs::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTalignLpGBTinputs::Reset() { fRegisterHelper->restoreSnapshot(); }

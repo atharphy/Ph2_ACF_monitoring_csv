@@ -30,11 +30,10 @@
 #include "tools/CicFEAlignment.h"
 #include "tools/ConfigureOnly.h"
 #include "tools/LinkAlignmentOT.h"
+#include "tools/OTalignLpGBTinputs.h"
 #include "tools/PSPhysics.h"
 #include "tools/Physics2S.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/OTalignLpGBTinputs.h"
-
 
 using namespace MessageUtils;
 
