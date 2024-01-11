@@ -778,6 +778,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
 
     // modifying FC7 configuration based on CIC
+    // TODO: avoid hardcoding sparsification and stubs?
     cVecReg.clear();
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
     {

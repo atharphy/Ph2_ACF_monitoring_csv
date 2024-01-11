@@ -285,34 +285,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
                         fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
                     }
-
-                    /*if(cSSAtype && !cMPAtype) // SSA boards?
-                    {
-                        if(cWithSSA)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
-                            fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-                        }
-                        if(cWithSSA2)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA2(s)" << RESET;
-                            fReadoutChipInterface = new SSA2Interface(fBeBoardFWMap);
-                        }
-                    }
-
-                    if(cMPAtype && !cSSAtype) // MPA boards?
-                    {
-                        if(cWithMPA)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
-                            fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-                        }
-                        if(cWithMPA2)
-                        {
-                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA2(s)" << RESET;
-                            fReadoutChipInterface = new MPA2Interface(fBeBoardFWMap);
-                        }
-                    }*/
                     if((cMPAtype || cSSAtype) && cWithLpGBT)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS module(s)" << RESET;
@@ -324,7 +296,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Readout chip interface aware of the lpGBT connected to this board ... " << RESET;
                         if(cWithMPA || cWithSSA) static_cast<PSInterface*>(fReadoutChipInterface)->SetOptical();
                     }
-                } // creat Chip interfaces
+                } // create Chip interfaces
 
                 LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                 fCicInterface = new CicInterface(fBeBoardFWMap);

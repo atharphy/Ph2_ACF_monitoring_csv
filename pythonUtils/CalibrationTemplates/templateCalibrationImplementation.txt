@@ -53,3 +53,9 @@ void CLASS_NAME_TEMPLATE::Resume()
 {
 
 }
+
+
+void CLASS_NAME_TEMPLATE::Reset()
+{
+
+}
