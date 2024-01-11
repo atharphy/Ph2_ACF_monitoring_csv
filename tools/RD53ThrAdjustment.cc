@@ -185,11 +185,11 @@ void ThrAdjustment::fillHisto()
 
 void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue)
 {
-    char        zeroC = '0'; // '0' and '1' are for bootstrap, 'H' and 'L' are for full regime
-    float       zeroF = 0;
-    uint16_t    init;
-    uint16_t    numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
-    const float goldenRatio  = (sqrt(5) - 1) / 2.;
+    char           zeroC = '0'; // '0' and '1' are for bootstrap, 'H' and 'L' are for full regime
+    float          zeroF = 0;
+    uint16_t       init;
+    const uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
+    const float    goldenRatio  = (sqrt(5) - 1) / 2.;
 
     DetectorDataContainer outputMidH;
     DetectorDataContainer outputMidL;
@@ -245,8 +245,8 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                             midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
-                            outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                            outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() =
+                                outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
 
                             midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
@@ -262,8 +262,8 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                             midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
-                            outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                            outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() =
+                                outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
 
                             midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
@@ -371,9 +371,9 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
 
 void ThrAdjustment::bitWiseScanGlobal_Zero(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue)
 {
-    float    tmp;
-    uint16_t init;
-    uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
+    float          tmp = 0;
+    uint16_t       init;
+    const uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
@@ -387,7 +387,7 @@ void ThrAdjustment::bitWiseScanGlobal_Zero(const std::vector<const char*>& regNa
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
 
     // #########################################
     // # Set VCAL_HIGH to get target threshold #

@@ -180,10 +180,10 @@ void ThrMinimization::fillHisto()
 
 void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, float threshold, uint16_t startValue, uint16_t stopValue)
 {
-    float    tmp;
-    uint16_t init;
-    size_t   totalPixels  = RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols();
-    uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
+    float          tmp = 0;
+    uint16_t       init;
+    const size_t   totalPixels  = RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols();
+    const uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
@@ -197,7 +197,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {

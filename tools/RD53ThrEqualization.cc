@@ -435,9 +435,9 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
 
 void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue)
 {
-    float    tmp;
-    uint16_t init;
-    uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
+    float          tmp = 0;
+    uint16_t       init;
+    const uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
@@ -451,7 +451,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -531,9 +531,9 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
 
 void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
 {
-    float    tmp;
-    uint16_t init;
-    uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
+    float          tmp;
+    uint16_t       init;
+    const uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
