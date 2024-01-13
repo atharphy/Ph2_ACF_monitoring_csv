@@ -21,6 +21,8 @@
 #include "tools/MetadataHandlerIT.h"
 #include "tools/MetadataHandlerOT.h"
 
+#include "Parser/FileDumper.h"
+
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -815,56 +817,12 @@ void Tool::HttpServerProcess()
 
 void Tool::dumpConfigFiles()
 {
+    if(fDetectorContainer->getFirstObject()->getBoardType() == BoardType::RD53) return; // IT does not dump the files
+
     if(!fDirectoryName.empty())
     {
-        // Fabio: CBC specific -> to be moved out from Tool
-        for(auto board: *fDetectorContainer)
-        {
-            if(board->getBoardType() == BoardType::RD53) break;
-
-            for(auto opticalGroup: *board)
-            {
-                auto& clpGBT = opticalGroup->flpGBT;
-                if(clpGBT != nullptr)
-                {
-                    auto cRegMap = clpGBT->getRegMap();
-                    for(auto cItemInMap: cRegMap)
-                    {
-                        auto cReg = flpGBTInterface->ReadChipReg(clpGBT, cItemInMap.first);
-                        clpGBT->setReg(cItemInMap.first, cReg);
-                    }
-                    std::string cFilename =
-                        "../../" + fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_lpGBT" + std::to_string(clpGBT->getId());
-                    cFilename += "_";
-                    LOG(DEBUG) << BOLDBLUE << "Dumping lpgbt configuration to " << cFilename << RESET;
-                    clpGBT->saveRegMap(cFilename.data());
-                }
-
-                for(auto hybrid: *opticalGroup)
-                {
-                    for(auto chip: *hybrid)
-                    {
-                        std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + convertToString(hybrid->getId()) +
-                                                "_Chip" + convertToString(chip->getId());
-                        LOG(DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
-                        if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2) cFilename += "SSA";
-                        if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2) cFilename += "MPA";
-                        cFilename += ".txt";
-                        chip->saveRegMap(cFilename.data());
-                    }
-                    auto& cCic = static_cast<OuterTrackerHybrid*>(hybrid)->fCic;
-                    if(cCic != NULL)
-                    {
-                        std::string cFilename =
-                            "../../" + fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(hybrid->getId());
-                        cFilename += "_";
-                        LOG(DEBUG) << BOLDBLUE << "Dumping CIC configuration to " << cFilename << RESET;
-                        cCic->saveRegMap(cFilename.data());
-                    }
-                }
-            }
-        }
-        LOG(INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fDirectoryName << RESET;
+        FileDumper theFileDumper(fDirectoryName);
+        theFileDumper.dumpConfigurationFiles(fDetectorContainer, fSettingsMap);
     }
     else
         LOG(ERROR) << "Error: no results Directory initialized" << RESET;
