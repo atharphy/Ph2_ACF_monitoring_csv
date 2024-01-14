@@ -25,6 +25,7 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
+#include "Parser/ParserDefinitions.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -90,6 +91,8 @@ void SystemController::Inherit(const SystemController* pController)
     fCalibrationName                = pController->fCalibrationName;
     fConfigurationFileContent       = pController->fConfigurationFileContent;
     fRegisterHelper                 = pController->fRegisterHelper;
+    fCommunicationSettingConfig     = pController->fCommunicationSettingConfig;
+    fDetectorMonitorConfig          = pController->fDetectorMonitorConfig;
 }
 
 void SystemController::StopMonitoring()
@@ -157,6 +160,12 @@ void SystemController::Destroy()
     delete fRegisterHelper;
     fRegisterHelper = nullptr;
 
+    delete fCommunicationSettingConfig;
+    fCommunicationSettingConfig = nullptr;
+
+    delete fDetectorMonitorConfig;
+    fDetectorMonitorConfig = nullptr;
+    
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
 
@@ -191,22 +200,26 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os)
 {
-    CommunicationSettingConfig theCommunicationSettingConfig;
-    this->fParser.parseCommunicationSettings(pFilename, theCommunicationSettingConfig, os);
+    if(fCommunicationSettingConfig != nullptr)
+    {
+        throw std::runtime_error("Error: SystemController::InitializeHw was already called once, this should never happen");
+    }
+    fCommunicationSettingConfig = new CommunicationSettingConfig();
+    this->fParser.parseCommunicationSettings(pFilename, *fCommunicationSettingConfig, os);
 
-    fDQMStreamerEnabled = theCommunicationSettingConfig.fDQMCommunication.fEnable;
+    fDQMStreamerEnabled = fCommunicationSettingConfig->fDQMCommunication.fEnable;
     if(fDQMStreamerEnabled && (fDQMStreamer == nullptr))
     {
-        fDQMStreamer = new TCPPublishServer(theCommunicationSettingConfig.fDQMCommunication.fPort, 1);
+        fDQMStreamer = new TCPPublishServer(fCommunicationSettingConfig->fDQMCommunication.fPort, 1);
         fDQMStreamer->startAccept();
     }
 
     LOG(INFO) << GREEN << "Bootstrapping TCP Server..." << RESET;
 
-    fMonitorDQMStreamerEnabled = theCommunicationSettingConfig.fMonitorDQMCommunication.fEnable;
+    fMonitorDQMStreamerEnabled = fCommunicationSettingConfig->fMonitorDQMCommunication.fEnable;
     if(fMonitorDQMStreamerEnabled && (fMonitorDQMStreamer == nullptr))
     {
-        fMonitorDQMStreamer = new TCPPublishServer(theCommunicationSettingConfig.fMonitorDQMCommunication.fPort, 1);
+        fMonitorDQMStreamer = new TCPPublishServer(fCommunicationSettingConfig->fMonitorDQMCommunication.fPort, 1);
         fMonitorDQMStreamer->startAccept();
     }
 
@@ -228,9 +241,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     LOG(INFO) << GREEN << "Trying to connect to the Power Supply Server..." << RESET;
 
-    if(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fEnable == true)
+    if(fCommunicationSettingConfig->fPowerSupplyDQMCommunication.fEnable == true)
     {
-        fPowerSupplyClient = new TCPClient(theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fIP, theCommunicationSettingConfig.fPowerSupplyDQMCommunication.fPort);
+        fPowerSupplyClient = new TCPClient(fCommunicationSettingConfig->fPowerSupplyDQMCommunication.fIP, fCommunicationSettingConfig->fPowerSupplyDQMCommunication.fPort);
         if(!fPowerSupplyClient->connect(1))
         {
             LOG(INFO) << GREEN << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
@@ -334,19 +347,19 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     // ###################
     // # Set module type #
     // ###################
-    DetectorMonitorConfig theDetectorMonitorConfig;
-    std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os);
+    fDetectorMonitorConfig = new DetectorMonitorConfig();
+    fParser.parseMonitor(pFilename, *fDetectorMonitorConfig, os);
 
-    if(monitoringType != "None")
+    if(fDetectorMonitorConfig->fEnable)
     {
-        if(monitoringType == "2S")
-            fDetectorMonitor = new CBCMonitor(this, theDetectorMonitorConfig);
-        else if((monitoringType == "RD53A") || (monitoringType == "RD53B"))
-            fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
-        else if(monitoringType == "2SSEH")
-            fDetectorMonitor = new SEHMonitor(this, theDetectorMonitorConfig);
-        else if(monitoringType == "PS")
-            fDetectorMonitor = new PSMonitor(this, theDetectorMonitorConfig);
+        if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2S_VALUE)
+            fDetectorMonitor = new CBCMonitor(this, *fDetectorMonitorConfig);
+        else if((fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_RD53A_VALUE) || (fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_RD53B_VALUE))
+            fDetectorMonitor = new RD53Monitor(this, *fDetectorMonitorConfig);
+        else if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2SSEH_VALUE)
+            fDetectorMonitor = new SEHMonitor(this, *fDetectorMonitorConfig);
+        else if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_PS_VALUE)
+            fDetectorMonitor = new PSMonitor(this, *fDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;

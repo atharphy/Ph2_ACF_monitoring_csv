@@ -822,7 +822,7 @@ void Tool::dumpConfigFiles()
     if(!fDirectoryName.empty())
     {
         FileDumper theFileDumper(fDirectoryName);
-        theFileDumper.dumpConfigurationFiles(fDetectorContainer, fSettingsMap);
+        theFileDumper.dumpConfigurationFiles(fDetectorContainer, fSettingsMap, fCommunicationSettingConfig, fDetectorMonitorConfig);
     }
     else
         LOG(ERROR) << "Error: no results Directory initialized" << RESET;

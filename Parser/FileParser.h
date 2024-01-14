@@ -53,11 +53,11 @@ class FileParser
     FileParser() {}
     ~FileParser() {}
 
-    void        parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void        parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
-    std::string parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
-    void        parseCommunicationSettings(const std::string& pFilename, CommunicationSettingConfig& theCommunicationSettingConfig, std::ostream& os);
-    void        openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
+    void parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
+    void parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
+    void parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
+    void parseCommunicationSettings(const std::string& pFilename, CommunicationSettingConfig& theCommunicationSettingConfig, std::ostream& os);
+    void openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
     std::map<uint16_t, std::tuple<std::string, std::string, std::string>> getRegManagerInfoList(const std::string& pFilename);
 
   protected:

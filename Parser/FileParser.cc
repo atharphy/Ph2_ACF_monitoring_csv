@@ -2003,60 +2003,64 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 }
 // ########################
 
-std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os)
+void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os)
 {
     pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
-    if(!bool(doc.child(HW_DESCRIPTION_NODE_NAME).child("MonitoringSettings")))
+    if(!bool(doc.child(HW_DESCRIPTION_NODE_NAME).child(MONITORINGSETTINGS_NODE_NAME)))
     {
         os << BOLDYELLOW << "Monitoring not defined in " << pFilename << RESET << std::endl;
         os << BOLDYELLOW << "No monitoring will be run" << RESET << std::endl;
-        return "None";
+        theDetectorMonitorConfig.fEnable = false;
+        return;
     }
 
-    pugi::xml_node theMonitorNode = doc.child(HW_DESCRIPTION_NODE_NAME).child("MonitoringSettings").child("Monitoring");
-    if(std::string(theMonitorNode.attribute("enable").value()) == "0") return "None";
+    pugi::xml_node theMonitorNode = doc.child(HW_DESCRIPTION_NODE_NAME).child(MONITORINGSETTINGS_NODE_NAME).child(MONITORING_NODE_NAME);
+    theDetectorMonitorConfig.fMonitoringType = theMonitorNode.attribute(MONITORING_NODE_TYPE_ATTRIBUTE_NAME).value();
+    std::string enableString = theMonitorNode.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value();
+    if(enableString == "1") theDetectorMonitorConfig.fEnable = true;
+    else if(enableString == "0") theDetectorMonitorConfig.fEnable = false;
+    else throw std::runtime_error("FileParser::parseMonitor: Error - monitor enable flag not recognized");
 
-    theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child("MonitoringSleepTime").first_child().value());
+    theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child(MONITORINGSLEEPTIME_NODE_NAME).first_child().value());
 
     os << std::endl;
 
-    for(pugi::xml_node monitorElement = theMonitorNode.child("MonitoringElement"); monitorElement; monitorElement = monitorElement.next_sibling())
+    for(pugi::xml_node monitorElement = theMonitorNode.child(MONITORINGELEMENT_NODE_NAME); monitorElement; monitorElement = monitorElement.next_sibling())
     {
-        if(convertAnyInt(monitorElement.attribute("enable").value()) == 0) continue;
-
-        const std::string chipName     = monitorElement.attribute("device").value();
-        const std::string registerName = monitorElement.attribute("register").value();
-        os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << chipName << RESET << ":" << BOLDYELLOW << "Register " << registerName << RESET << std::endl;
-        theDetectorMonitorConfig.addElementToMonitor(chipName, registerName);
+        const std::string chipName     = monitorElement.attribute(MONITORINGELEMENT_DEVICE_ATTRIBUTE_NAME).value();
+        const std::string registerName = monitorElement.attribute(MONITORINGELEMENT_REGISTER_ATTRIBUTE_NAME).value();
+        const bool enable = convertAnyInt(monitorElement.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value()) != 0;
+        if(enable) os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << chipName << RESET << ":" << BOLDYELLOW << "Register " << registerName << RESET << std::endl;
+        theDetectorMonitorConfig.addElementToMonitor(chipName, registerName, enable);
     }
 
-    if(theDetectorMonitorConfig.getNumberOfMonitoredRegisters() == 0) return "None";
-    return theMonitorNode.attribute("type").value();
+    if(theDetectorMonitorConfig.getNumberOfMonitoredRegisters() == 0) theDetectorMonitorConfig.fEnable = false;
+    return;
 }
 
 void FileParser::parseCommunicationSettings(const std::string& pFilename, CommunicationSettingConfig& theCommunicationSettingConfig, std::ostream& os)
 {
     pugi::xml_document doc;
     openHWconfig(pFilename, doc);
-    auto theCommunicationSettingsNode = doc.child(HW_DESCRIPTION_NODE_NAME).child("CommunicationSettings");
+    auto theCommunicationSettingsNode = doc.child(HW_DESCRIPTION_NODE_NAME).child(COMMUNICATIONSETTINGS_NODE_NAME);
     if(bool(theCommunicationSettingsNode))
     {
-        auto retrieveDQMParameters = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting& theCommunicationSetting, const std::string& theNodeName) {
-            auto theDQMnode = theCommunicationSettingsNode.child(theNodeName.c_str());
-            if(bool(theDQMnode))
+        auto retrieveMonitorParameters = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting& theCommunicationSetting, const std::string& theNodeName) {
+            auto theMonitorNode = theCommunicationSettingsNode.child(theNodeName.c_str());
+            if(bool(theMonitorNode))
             {
-                theCommunicationSetting = CommunicationSettingConfig::CommunicationSetting(std::string(theDQMnode.attribute("ip").value()),
-                                                                                           uint16_t(convertAnyInt(theDQMnode.attribute("port").value())),
-                                                                                           bool(convertAnyInt(theDQMnode.attribute("enableConnection").value())));
+                theCommunicationSetting = CommunicationSettingConfig::CommunicationSetting(std::string(theMonitorNode.attribute(COMMUNICATIONSETTINGS_IP_ATTRIBUTE_NAME).value()),
+                                                                                           uint16_t(convertAnyInt(theMonitorNode.attribute(COMMUNICATIONSETTINGS_PORT_ATTRIBUTE_NAME).value())),
+                                                                                           bool(convertAnyInt(theMonitorNode.attribute(COMMUNICATIONSETTINGS_ENABLECONNECTION_ATTRIBUTE_NAME).value())));
             }
         };
 
-        retrieveDQMParameters(theCommunicationSettingConfig.fControllerCommunication, "Controller");
-        retrieveDQMParameters(theCommunicationSettingConfig.fDQMCommunication, "DQM");
-        retrieveDQMParameters(theCommunicationSettingConfig.fMonitorDQMCommunication, "MonitorDQM");
-        retrieveDQMParameters(theCommunicationSettingConfig.fPowerSupplyDQMCommunication, "PowerSupplyClient");
+        retrieveMonitorParameters(theCommunicationSettingConfig.fControllerCommunication, COMMUNICATIONSETTINGS_CONTROLLER_NODE_NAME);
+        retrieveMonitorParameters(theCommunicationSettingConfig.fDQMCommunication, COMMUNICATIONSETTINGS_DQM_NODE_NAME);
+        retrieveMonitorParameters(theCommunicationSettingConfig.fMonitorDQMCommunication, COMMUNICATIONSETTINGS_MONITORDQM_NODE_NAME);
+        retrieveMonitorParameters(theCommunicationSettingConfig.fPowerSupplyDQMCommunication, COMMUNICATIONSETTINGS_POWERSUPPLYCLIENT_NODE_NAME);
     }
 }
 

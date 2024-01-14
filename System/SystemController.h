@@ -67,6 +67,7 @@ class DetectorMonitor;
 class ChannelGroupHandler;
 class ConfigureInfo;
 class StartInfo;
+class CommunicationSettingConfig;
 
 /*!
  * \namespace Ph2_System
@@ -382,6 +383,8 @@ class SystemController
     std::string            fCalibrationName{""};
     std::string            fConfigurationFileContent{""};
     BoardType              fBoardType{BoardType::UNDEFINED};
+    CommunicationSettingConfig* fCommunicationSettingConfig {nullptr};
+    DetectorMonitorConfig*      fDetectorMonitorConfig {nullptr};
 };
 
 } // namespace Ph2_System

@@ -10,6 +10,8 @@
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "Parser/ParserDefinitions.h"
 #include "Parser/FileParser.h"
+#include "Parser/CommunicationSettingConfig.h"
+#include <math.h>
 
 using namespace Ph2_HwDescription;
 
@@ -20,7 +22,7 @@ FileDumper::FileDumper(const std::string& outputDirectory)
 
 FileDumper::~FileDumper(){}
 
-void FileDumper::dumpConfigurationFiles(DetectorContainer* theDetectorContainer, const Ph2_Parser::SettingsMap& theSettingMap)
+void FileDumper::dumpConfigurationFiles(DetectorContainer* theDetectorContainer, const Ph2_Parser::SettingsMap& theSettingMap, CommunicationSettingConfig* theCommunicationSettingConfig, DetectorMonitorConfig* theDetectorMonitorConfig)
 {
     pugi::xml_document doc;
 
@@ -31,19 +33,16 @@ void FileDumper::dumpConfigurationFiles(DetectorContainer* theDetectorContainer,
 
     pugi::xml_node hwDescriptionNode = doc.append_child(HW_DESCRIPTION_NODE_NAME);
 
-    // Fabio: CBC specific -> to be moved out from Tool
     for(auto board: *theDetectorContainer)
     {
         dumpBoardConfigurationFile(hwDescriptionNode, board);
     }
 
-    pugi::xml_node theSettingMainNode = hwDescriptionNode.append_child(SETTINGS_NODE_NAME);
-    for(const auto& theSetting : theSettingMap)
-    {
-        pugi::xml_node theSettingNode = theSettingMainNode.append_child(SETTING_NODE_NAME);
-        theSettingNode.append_child(pugi::node_pcdata).set_value(std::to_string(boost::any_cast<double>(theSetting.second)).c_str());
-        theSettingNode.append_attribute(COMMON_NAME_ATTRIBUTE_NAME) = theSetting.first.c_str();
-    }
+    dumpSettings(hwDescriptionNode, theSettingMap);
+
+    dumpMonitorSettings(hwDescriptionNode, theDetectorMonitorConfig);
+
+    dumpCommunicationSettings(hwDescriptionNode, theCommunicationSettingConfig);
 
     std::string outputFileName = fOutputDirectory + "/Configuration.xml";
 
@@ -219,4 +218,91 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
     pugi::xml_node theReadoutChipNode = theMotherNode.append_child(theReadoutChipNodeName.c_str());
     theReadoutChipNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME) = std::to_string(theReadoutChip->getId()).c_str();
     theReadoutChipNode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
+}
+
+void FileDumper::dumpSettings(pugi::xml_node theMotherNode, const std::unordered_map<std::string, boost::any>& theSettingMap)
+{
+    pugi::xml_node theSettingMainNode = theMotherNode.append_child(SETTINGS_NODE_NAME);
+    for(const auto& theSetting : theSettingMap)
+    {
+        pugi::xml_node theSettingNode = theSettingMainNode.append_child(SETTING_NODE_NAME);
+        theSettingNode.append_attribute(COMMON_NAME_ATTRIBUTE_NAME) = theSetting.first.c_str();
+        try
+        {
+            double theValue = boost::any_cast<double>(theSetting.second);
+            // check if the value is an integer
+            double integerPart;
+            modf(theValue , &integerPart);
+            if(integerPart == theValue)
+            {
+                theSettingNode.append_child(pugi::node_pcdata).set_value(std::to_string(int(theValue)).c_str());
+            }
+            else
+            {
+                std::string stringValue = std::to_string(theValue);
+                stringValue.erase ( stringValue.find_last_not_of('0') + 1, std::string::npos );
+                theSettingNode.append_child(pugi::node_pcdata).set_value(stringValue.c_str());
+            }
+
+        }
+        catch(const std::exception& e)
+        {
+            try
+            {
+                // the any_cast to double failed, trying to cast to a string
+                theSettingNode.append_child(pugi::node_pcdata).set_value(boost::any_cast<std::string>(theSetting.second).c_str());
+            }
+            catch(const std::exception& e)
+            {
+                throw std::runtime_error("FileDumper error: Setting value type not recognized");
+            }
+        }
+    }
+}
+
+void FileDumper::dumpMonitorSettings(pugi::xml_node theMotherNode, DetectorMonitorConfig* theDetectorMonitorConfig)
+{
+    pugi::xml_node theMonitorSettingsNode = theMotherNode.append_child(MONITORINGSETTINGS_NODE_NAME);
+    if(theDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_NONE_VALUE) return;
+
+    pugi::xml_node theMonitoringNode = theMonitorSettingsNode.append_child(MONITORING_NODE_NAME);
+    theMonitoringNode.append_attribute(MONITORING_NODE_TYPE_ATTRIBUTE_NAME) = theDetectorMonitorConfig->fMonitoringType.c_str();
+    theMonitoringNode.append_attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME) = theDetectorMonitorConfig->fEnable ? "1" : "0";
+    pugi::xml_node theMonitoringSleepTimeNode = theMonitorSettingsNode.append_child(MONITORINGSLEEPTIME_NODE_NAME);
+    theMonitoringSleepTimeNode.append_child(pugi::node_pcdata).set_value(std::to_string(theDetectorMonitorConfig->fSleepTimeMs).c_str());
+
+    const auto& theMonitorDeviceList = theDetectorMonitorConfig->fMonitorElementList;
+
+    for(const auto& theMonitorElementList : theMonitorDeviceList)
+    {
+        for(const auto& theElementList : theMonitorElementList.second)
+        {
+            pugi::xml_node theMonitorElementNode = theMonitorSettingsNode.append_child(MONITORINGELEMENT_NODE_NAME);
+            theMonitorElementNode.append_attribute(MONITORINGELEMENT_DEVICE_ATTRIBUTE_NAME) = theMonitorElementList.first.c_str();
+            theMonitorElementNode.append_attribute(MONITORINGELEMENT_REGISTER_ATTRIBUTE_NAME) = theElementList.first.c_str();
+            theMonitorElementNode.append_attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME) = theElementList.second ? "1" : "0";
+        }
+    }
+
+}
+
+void FileDumper::dumpCommunicationSettings(pugi::xml_node theMotherNode, CommunicationSettingConfig* theCommunicationSettingConfig)
+{
+    pugi::xml_node theCommunicationSettingsNode = theMotherNode.append_child(COMMUNICATIONSETTINGS_NODE_NAME);
+
+    auto dumpCommunicationSetting = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting theCommunicationSetting, const std::string& nodeName)
+    {
+        if(theCommunicationSetting.fIP != "")
+        {
+            pugi::xml_node theSettingNode = theCommunicationSettingsNode.append_child(nodeName.c_str());
+            theSettingNode.append_attribute(COMMUNICATIONSETTINGS_IP_ATTRIBUTE_NAME) = theCommunicationSetting.fIP.c_str();
+            theSettingNode.append_attribute(COMMUNICATIONSETTINGS_PORT_ATTRIBUTE_NAME) = std::to_string(theCommunicationSetting.fPort).c_str();
+            theSettingNode.append_attribute(COMMUNICATIONSETTINGS_ENABLECONNECTION_ATTRIBUTE_NAME) = theCommunicationSetting.fEnable ? "1" : "0";
+        }
+    };
+
+    dumpCommunicationSetting(theCommunicationSettingConfig->fControllerCommunication, COMMUNICATIONSETTINGS_CONTROLLER_NODE_NAME);
+    dumpCommunicationSetting(theCommunicationSettingConfig->fDQMCommunication, COMMUNICATIONSETTINGS_DQM_NODE_NAME);
+    dumpCommunicationSetting(theCommunicationSettingConfig->fMonitorDQMCommunication, COMMUNICATIONSETTINGS_MONITORDQM_NODE_NAME);
+    dumpCommunicationSetting(theCommunicationSettingConfig->fPowerSupplyDQMCommunication, COMMUNICATIONSETTINGS_POWERSUPPLYCLIENT_NODE_NAME);
 }
