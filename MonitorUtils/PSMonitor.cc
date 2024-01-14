@@ -26,9 +26,12 @@ void PSMonitor::runMonitor()
 {
     std::recursive_mutex                  theMutex;
     std::lock_guard<std::recursive_mutex> theGuard(theMutex);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("SSA2")) if(registerName.second) runSSA2RegisterMonitor(registerName.first);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("MPA2")) if(registerName.second) runMPA2RegisterMonitor(registerName.first);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("SSA2"))
+        if(registerName.second) runSSA2RegisterMonitor(registerName.first);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("MPA2"))
+        if(registerName.second) runMPA2RegisterMonitor(registerName.first);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+        if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
 }
 
 void PSMonitor::runSSA2RegisterMonitor(std::string registerName)

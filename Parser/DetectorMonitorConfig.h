@@ -1,21 +1,21 @@
 #ifndef DETECTOR_MONITOR_CONFIG_H
 #define DETECTOR_MONITOR_CONFIG_H
 
+#include "Parser/ParserDefinitions.h"
 #include <algorithm>
 #include <cstdint>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "Parser/ParserDefinitions.h"
 
 struct DetectorMonitorConfig
 {
     DetectorMonitorConfig()
     {
-        fMonitorElementList["Board"] = {};
-        fMonitorElementList["LpGBT"] = {};
-        fMonitorElementList["CIC"]   = {};
+        fMonitorElementList["Board"]       = {};
+        fMonitorElementList["LpGBT"]       = {};
+        fMonitorElementList["CIC"]         = {};
         fMonitorElementList["MPA2"]        = {};
         fMonitorElementList["SSA2"]        = {};
         fMonitorElementList["CBC"]         = {};
@@ -23,9 +23,9 @@ struct DetectorMonitorConfig
         fMonitorElementList["PowerSupply"] = {};
         fMonitorElementList["TestCard"]    = {};
     }
-    int fSleepTimeMs {1000};
-    std::string fMonitoringType {MONITORING_NODE_TYPE_ATTRIBUTE_NONE_VALUE};
-    bool fEnable {false};
+    int         fSleepTimeMs{1000};
+    std::string fMonitoringType{MONITORING_NODE_TYPE_ATTRIBUTE_NONE_VALUE};
+    bool        fEnable{false};
 
     void addElementToMonitor(const std::string& chipName, const std::string& registerName, const bool enable)
     {
@@ -43,7 +43,7 @@ struct DetectorMonitorConfig
     uint16_t getNumberOfMonitoredRegisters() const { return fNumberOfMonitoredRegister; }
 
     std::map<std::string, std::vector<std::pair<std::string, bool>>> fMonitorElementList;
-    uint16_t                                        fNumberOfMonitoredRegister {0};
+    uint16_t                                                         fNumberOfMonitoredRegister{0};
 };
 
 #endif

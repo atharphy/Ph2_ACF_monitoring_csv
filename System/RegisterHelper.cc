@@ -5,9 +5,9 @@
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/CicInterface.h"
 #include "HWInterface/lpGBTInterface.h"
+#include "Parser/ParserDefinitions.h"
 #include "Utils/Container.h"
 #include "pugixml.hpp"
-#include "Parser/ParserDefinitions.h"
 
 #include "iostream"
 
@@ -193,7 +193,7 @@ void RegisterHelper::dumpBeBoardRegisterIntoXml(std::string outputFileName)
         if(node.getPermission() != uhal::defs::READWRITE) return;
         // if(!((int)node.getPermission() & true)) return;
 
-        pugi::xml_node theChildNode           = theMotherNode.append_child(BEBOARD_REGISTER_NODE_NAME);
+        pugi::xml_node theChildNode                               = theMotherNode.append_child(BEBOARD_REGISTER_NODE_NAME);
         theChildNode.append_attribute(COMMON_NAME_ATTRIBUTE_NAME) = theNodeName.c_str();
 
         if((++node.begin() == node.end()))

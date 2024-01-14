@@ -10,12 +10,12 @@
  */
 
 #include "BeBoard.h"
+#include "Parser/ParserDefinitions.h"
+#include "pugixml.hpp"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include "Parser/ParserDefinitions.h"
-#include "pugixml.hpp"
 
 namespace Ph2_HwDescription
 {
@@ -121,7 +121,7 @@ void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttribut
             pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
             pValue = convertAnyDouble(pRegisterNode.first_child().value());
             std::cout << GREEN << "|\t|\t|"
-               << "----" << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std::endl;
+                      << "----" << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std::endl;
             this->setReg(pAttributeString, pValue);
         }
     }
@@ -131,7 +131,7 @@ void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttribut
 
 void BeBoard::loadConfigFile(const std::string& filename)
 {
-    pugi::xml_document doc;
+    pugi::xml_document     doc;
     pugi::xml_parse_result result = doc.load_file(filename.c_str());
     if(!result) // Try if it is not a file, but a string containing the full xml
         result = doc.load_string(filename.c_str());
@@ -197,8 +197,7 @@ void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRe
 void BeBoard::saveRegMap(const std::string& fileName)
 {
     std::function<void(std::string, std::vector<std::string>&)> splitRegister;
-    splitRegister = [&splitRegister](std::string theFullRegister, std::vector<std::string>& theSplittedRegister)
-    {
+    splitRegister = [&splitRegister](std::string theFullRegister, std::vector<std::string>& theSplittedRegister) {
         auto nextSplitPoint = theFullRegister.find(".");
         if(nextSplitPoint == std::string::npos)
         {
@@ -208,13 +207,13 @@ void BeBoard::saveRegMap(const std::string& fileName)
         else
         {
             theSplittedRegister.push_back(theFullRegister.substr(0, nextSplitPoint));
-            splitRegister(theFullRegister.erase(0, nextSplitPoint+1), theSplittedRegister);
+            splitRegister(theFullRegister.erase(0, nextSplitPoint + 1), theSplittedRegister);
         }
     };
 
     std::vector<std::pair<std::vector<std::string>, uint32_t>> theRegisterListSplitted;
 
-    for(const auto& theRegisterNameAndValue : fRegMap)
+    for(const auto& theRegisterNameAndValue: fRegMap)
     {
         std::vector<std::string> theSplittedRegisterName;
         splitRegister(theRegisterNameAndValue.first, theSplittedRegisterName);
@@ -224,33 +223,31 @@ void BeBoard::saveRegMap(const std::string& fileName)
     }
 
     std::function<void(pugi::xml_node&, const std::vector<std::pair<std::vector<std::string>, uint32_t>>&)> groupByRegisterAndDumpIntoFile;
-    groupByRegisterAndDumpIntoFile = [&groupByRegisterAndDumpIntoFile](pugi::xml_node& theMotherNode, const std::vector<std::pair<std::vector<std::string>, uint32_t>>& theRegisterListSplitted)
-    {
+    groupByRegisterAndDumpIntoFile = [&groupByRegisterAndDumpIntoFile](pugi::xml_node& theMotherNode, const std::vector<std::pair<std::vector<std::string>, uint32_t>>& theRegisterListSplitted) {
         std::map<std::string, std::vector<std::pair<std::vector<std::string>, uint32_t>>> theMapOfTheRegisterListSplitted;
-        for(const auto& theRegisterSplittedAndValue : theRegisterListSplitted)
+        for(const auto& theRegisterSplittedAndValue: theRegisterListSplitted)
         {
             const std::vector<std::string>& theRegisterSplitted = theRegisterSplittedAndValue.first;
-            const uint32_t& theRegisterValue = theRegisterSplittedAndValue.second;
-            if(theRegisterSplitted.size()==1)
+            const uint32_t&                 theRegisterValue    = theRegisterSplittedAndValue.second;
+            if(theRegisterSplitted.size() == 1)
             {
-                auto theRegisterNode = theMotherNode.append_child(BEBOARD_REGISTER_NODE_NAME);
+                auto theRegisterNode                                         = theMotherNode.append_child(BEBOARD_REGISTER_NODE_NAME);
                 theRegisterNode.append_attribute(COMMON_NAME_ATTRIBUTE_NAME) = theRegisterSplitted.at(0).c_str();
                 theRegisterNode.append_child(pugi::node_pcdata).set_value(std::to_string(theRegisterValue).c_str());
             }
             else
             {
-                std::vector<std::string> theSubVector(theRegisterSplitted.begin()+1, theRegisterSplitted.end());
+                std::vector<std::string> theSubVector(theRegisterSplitted.begin() + 1, theRegisterSplitted.end());
                 theMapOfTheRegisterListSplitted[theRegisterSplitted.at(0)].push_back(std::make_pair(theSubVector, theRegisterValue));
             }
         }
 
-        for(const auto& theMapElement : theMapOfTheRegisterListSplitted)
+        for(const auto& theMapElement: theMapOfTheRegisterListSplitted)
         {
-            auto theRegisterNode = theMotherNode.append_child(BEBOARD_REGISTER_NODE_NAME);
+            auto theRegisterNode                                         = theMotherNode.append_child(BEBOARD_REGISTER_NODE_NAME);
             theRegisterNode.append_attribute(COMMON_NAME_ATTRIBUTE_NAME) = theMapElement.first.c_str();
             groupByRegisterAndDumpIntoFile(theRegisterNode, theMapElement.second);
         }
-
     };
 
     pugi::xml_document doc;
@@ -269,7 +266,6 @@ void BeBoard::saveRegMap(const std::string& fileName)
     {
         LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
     }
-
 }
 
 } // namespace Ph2_HwDescription

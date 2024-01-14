@@ -16,11 +16,11 @@
 #include "Utils/Container.h"
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
+#include "pugixml.hpp"
 #include <map>
 #include <regex>
 #include <stdint.h>
 #include <vector>
-#include "pugixml.hpp"
 
 /*!
  * \namespace Ph2_HwDescription

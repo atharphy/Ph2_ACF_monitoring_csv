@@ -35,8 +35,10 @@ void MonitorDQMPlotSEH::book(TFile* theOutputFile, DetectorContainer& theDetecto
     // SoC utilities only - END
 
     // for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT")) if(registerName.second) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName.first);
-    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("PowerSupply")) if(registerName.second) bookPowerSupplyPlots(theOutputFile, theDetectorStructure, registerName.first);
-    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("TestCard")) if(registerName.second) bookTestCardPlots(theOutputFile, theDetectorStructure, registerName.first);
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("PowerSupply"))
+        if(registerName.second) bookPowerSupplyPlots(theOutputFile, theDetectorStructure, registerName.first);
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("TestCard"))
+        if(registerName.second) bookTestCardPlots(theOutputFile, theDetectorStructure, registerName.first);
 }
 
 // //========================================================================================================================

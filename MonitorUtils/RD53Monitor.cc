@@ -29,11 +29,14 @@ void RD53Monitor::runMonitor()
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
     {
         std::vector<std::string> listOfRegisters;
-        for(const auto& registerName : fDetectorMonitorConfig.fMonitorElementList.at("RD53")) if(registerName.second) listOfRegisters.push_back(registerName.first);
+        for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53"))
+            if(registerName.second) listOfRegisters.push_back(registerName.first);
         fTheSystemController->ReadSystemMonitor(cBoard, listOfRegisters);
 
-        for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53")) if(registerName.second) runRD53RegisterMonitor(registerName.first);
-        for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
+        for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53"))
+            if(registerName.second) runRD53RegisterMonitor(registerName.first);
+        for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+            if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
     }
 }
 

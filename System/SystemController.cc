@@ -22,10 +22,10 @@
 #include "MonitorUtils/SEHMonitor.h"
 #include "Parser/CommunicationSettingConfig.h"
 #include "Parser/DetectorMonitorConfig.h"
+#include "Parser/ParserDefinitions.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
-#include "Parser/ParserDefinitions.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -165,7 +165,7 @@ void SystemController::Destroy()
 
     delete fDetectorMonitorConfig;
     fDetectorMonitorConfig = nullptr;
-    
+
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
 
@@ -200,10 +200,7 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os)
 {
-    if(fCommunicationSettingConfig != nullptr)
-    {
-        throw std::runtime_error("Error: SystemController::InitializeHw was already called once, this should never happen");
-    }
+    if(fCommunicationSettingConfig != nullptr) { throw std::runtime_error("Error: SystemController::InitializeHw was already called once, this should never happen"); }
     fCommunicationSettingConfig = new CommunicationSettingConfig();
     this->fParser.parseCommunicationSettings(pFilename, *fCommunicationSettingConfig, os);
 

@@ -8,8 +8,8 @@
 #include "HWDescription/RD53B.h"
 #include "HWDescription/SSA2.h"
 #include "HWDescription/lpGBT.h"
-#include "Utils/Utilities.h"
 #include "Parser/ParserDefinitions.h"
+#include "Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -80,9 +80,9 @@ std::map<uint16_t, std::tuple<std::string, std::string, std::string>> FileParser
         if(static_cast<std::string>(cBeBoardNode.name()) != BEBOARD_NODE_NAME) continue;
         pugi::xml_node cBeBoardConnectionNode = cBeBoardNode.child(BEBOARD_CONNECTION_NODE_NAME);
 
-        std::string cId                                         = cBeBoardConnectionNode.attribute(BEBOARD_CONNECTION_ID_ATTRIBUTE_NAME).value();
-        std::string cUri                                        = cBeBoardConnectionNode.attribute(BEBOARD_CONNECTION_URI_ATTRIBUTE_NAME).value();
-        std::string cAddressTable                               = expandEnvironmentVariables(cBeBoardConnectionNode.attribute(BEBOARD_CONNECTION_ADDRESS_TABLE_ATTRIBUTE_NAME).value());
+        std::string cId           = cBeBoardConnectionNode.attribute(BEBOARD_CONNECTION_ID_ATTRIBUTE_NAME).value();
+        std::string cUri          = cBeBoardConnectionNode.attribute(BEBOARD_CONNECTION_URI_ATTRIBUTE_NAME).value();
+        std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute(BEBOARD_CONNECTION_ADDRESS_TABLE_ATTRIBUTE_NAME).value());
         theRegManagerMap[cBeBoardNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int()] = std::tuple<std::string, std::string, std::string>(cId, cUri, cAddressTable);
     }
 
@@ -91,11 +91,14 @@ std::map<uint16_t, std::tuple<std::string, std::string, std::string>> FileParser
 
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
-    uint32_t cBeId    = pBeBordNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
-    BeBoard* cBeBoard;
+    uint32_t       cBeId = pBeBordNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
+    BeBoard*       cBeBoard;
     pugi::xml_node cBoardConfigurationNode = pBeBordNode.child(BEBOARD_CONFIGURATION_NODE_NAME);
-    if(cBoardConfigurationNode != nullptr) cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId, expandEnvironmentVariables(cBoardConfigurationNode.attribute(BEBOARD_CONFIGURATION_FILE_NAME_ATTRIBUTE_NAME).value())));
-    else cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId));
+    if(cBoardConfigurationNode != nullptr)
+        cBeBoard =
+            pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId, expandEnvironmentVariables(cBoardConfigurationNode.attribute(BEBOARD_CONFIGURATION_FILE_NAME_ATTRIBUTE_NAME).value())));
+    else
+        cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId));
 
     pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute(BEBOARD_TYPE_ATTRIBUTE_NAME);
 
@@ -104,8 +107,6 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         LOG(ERROR) << BOLDRED << "Error: Board Type not specified - aborting!" << RESET;
         exit(EXIT_FAILURE);
     }
-
-
 
     std::string cBoardType = cBoardTypeAttribute.value();
 
@@ -174,8 +175,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     cBeBoard->setLinkReset(cReset);
 
     os << BOLDBLUE << "|"
-       << "----" << pBeBordNode.name() << " --> " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute(COMMON_ID_ATTRIBUTE_NAME).value() << BOLDBLUE << ", BoardType: " << BOLDYELLOW
-       << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << BOLDBLUE << ", Configure: " << BOLDYELLOW << configureBoardFlag << RESET << std::endl;
+       << "----" << pBeBordNode.name() << " --> " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute(COMMON_ID_ATTRIBUTE_NAME).value() << BOLDBLUE
+       << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << BOLDBLUE << ", Configure: " << BOLDYELLOW << configureBoardFlag << RESET
+       << std::endl;
 
     pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child(BEBOARD_CONNECTION_NODE_NAME);
 
@@ -229,15 +231,18 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
 
 void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os)
 {
-    std::string   cFilePath       = "";
-    uint32_t      cOpticalGroupId = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
-    uint32_t      cFMCId;
+    std::string cFilePath       = "";
+    uint32_t    cOpticalGroupId = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
+    uint32_t    cFMCId;
     std::string inputFMCid = pOpticalGroupNode.attribute(OPTICALGROUP_FMCID_ATTRIBUTE_NAME).value();
-    if(inputFMCid == OPTICALGROUP_FMCID_ATTRIBUTE_L12_VALUE) cFMCId = 12;
-    else if(inputFMCid == OPTICALGROUP_FMCID_ATTRIBUTE_L8_VALUE) cFMCId = 8;
+    if(inputFMCid == OPTICALGROUP_FMCID_ATTRIBUTE_L12_VALUE)
+        cFMCId = 12;
+    else if(inputFMCid == OPTICALGROUP_FMCID_ATTRIBUTE_L8_VALUE)
+        cFMCId = 8;
     else
     {
-        std::string errorMessage = "Error parsing xml configuration: " + std::string(OPTICALGROUP_FMCID_ATTRIBUTE_NAME) + " value of " + inputFMCid + " not recognized, only acceptable values are " + OPTICALGROUP_FMCID_ATTRIBUTE_L12_VALUE + " or " + OPTICALGROUP_FMCID_ATTRIBUTE_L8_VALUE;
+        std::string errorMessage = "Error parsing xml configuration: " + std::string(OPTICALGROUP_FMCID_ATTRIBUTE_NAME) + " value of " + inputFMCid + " not recognized, only acceptable values are " +
+                                   OPTICALGROUP_FMCID_ATTRIBUTE_L12_VALUE + " or " + OPTICALGROUP_FMCID_ATTRIBUTE_L8_VALUE;
         throw std::runtime_error(errorMessage);
     }
 
@@ -1155,8 +1160,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
         {
-            cHybrid = pOpticalGroup->addHybridContainer(pHybridNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int(),
-                                                        new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), pHybridNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int()));
+            cHybrid = pOpticalGroup->addHybridContainer(
+                pHybridNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int(),
+                new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), pHybridNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int()));
 
             uint8_t cHybridReset = convertAnyInt(pHybridNode.attribute(COMMON_RESET_ATTRIBUTE_NAME).value());
             cHybrid->setReset(cHybridReset);
@@ -1199,7 +1205,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 
             if(cIsTrackerASIC)
             {
-                if(cName.find(CHIP_FILES_APPEND_NODE_NAME) != std::string::npos) { cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value())); }
+                if(cName.find(CHIP_FILES_APPEND_NODE_NAME) != std::string::npos)
+                { cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value())); }
                 else
                 {
                     int         cChipId   = cChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int();
@@ -1237,8 +1244,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                            << "|"
                            << "   "
                            << "|"
-                           << "----" << cName << "  "
-                           << COMMON_ID_ATTRIBUTE_NAME << cChipId << " , File: " << cFileName << RESET << std::endl;
+                           << "----" << cName << "  " << COMMON_ID_ATTRIBUTE_NAME << cChipId << " , File: " << cFileName << RESET << std::endl;
                         Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cChipId, cFileName);
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
                         cCic->setFrontEndType(cType);
@@ -1537,8 +1543,8 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     for(pugi::xml_node cCbcRegisterNode = pCbcNode.child("Register"); cCbcRegisterNode; cCbcRegisterNode = cCbcRegisterNode.next_sibling())
     {
         cCbc->setReg(std::string(cCbcRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()), convertAnyInt(cCbcRegisterNode.first_child().value()));
-        os << BLUE << "|\t|\t|\t|----Register: " << std::string(cCbcRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()) << " : " << RED << std::hex << "0x" << convertAnyInt(cCbcRegisterNode.first_child().value())
-           << RESET << std::dec << std::endl;
+        os << BLUE << "|\t|\t|\t|----Register: " << std::string(cCbcRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()) << " : " << RED << std::hex << "0x"
+           << convertAnyInt(cCbcRegisterNode.first_child().value()) << RESET << std::dec << std::endl;
     }
 }
 
@@ -1746,7 +1752,8 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
     openHWconfig(pFilename, doc);
 
     if(doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME) == 0) LOG(WARNING) << BOLDRED << "No -Settings- tag found in XML file: " << BOLDYELLOW << pFilename << RESET;
-    for(pugi::xml_node nSettings = doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME); nSettings == doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME) && nSettings != 0; nSettings = nSettings.next_sibling())
+    for(pugi::xml_node nSettings = doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME); nSettings == doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME) && nSettings != 0;
+        nSettings                = nSettings.next_sibling())
     {
         os << std::endl;
 
@@ -1969,12 +1976,15 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
         return;
     }
 
-    pugi::xml_node theMonitorNode = doc.child(HW_DESCRIPTION_NODE_NAME).child(MONITORINGSETTINGS_NODE_NAME).child(MONITORING_NODE_NAME);
+    pugi::xml_node theMonitorNode            = doc.child(HW_DESCRIPTION_NODE_NAME).child(MONITORINGSETTINGS_NODE_NAME).child(MONITORING_NODE_NAME);
     theDetectorMonitorConfig.fMonitoringType = theMonitorNode.attribute(MONITORING_NODE_TYPE_ATTRIBUTE_NAME).value();
-    std::string enableString = theMonitorNode.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value();
-    if(enableString == "1") theDetectorMonitorConfig.fEnable = true;
-    else if(enableString == "0") theDetectorMonitorConfig.fEnable = false;
-    else throw std::runtime_error("FileParser::parseMonitor: Error - monitor enable flag not recognized");
+    std::string enableString                 = theMonitorNode.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value();
+    if(enableString == "1")
+        theDetectorMonitorConfig.fEnable = true;
+    else if(enableString == "0")
+        theDetectorMonitorConfig.fEnable = false;
+    else
+        throw std::runtime_error("FileParser::parseMonitor: Error - monitor enable flag not recognized");
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child(MONITORINGSLEEPTIME_NODE_NAME).first_child().value());
 
@@ -1984,7 +1994,7 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
     {
         const std::string chipName     = monitorElement.attribute(MONITORINGELEMENT_DEVICE_ATTRIBUTE_NAME).value();
         const std::string registerName = monitorElement.attribute(MONITORINGELEMENT_REGISTER_ATTRIBUTE_NAME).value();
-        const bool enable = convertAnyInt(monitorElement.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value()) != 0;
+        const bool        enable       = convertAnyInt(monitorElement.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value()) != 0;
         if(enable) os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << chipName << RESET << ":" << BOLDYELLOW << "Register " << registerName << RESET << std::endl;
         theDetectorMonitorConfig.addElementToMonitor(chipName, registerName, enable);
     }
@@ -2004,9 +2014,10 @@ void FileParser::parseCommunicationSettings(const std::string& pFilename, Commun
             auto theMonitorNode = theCommunicationSettingsNode.child(theNodeName.c_str());
             if(bool(theMonitorNode))
             {
-                theCommunicationSetting = CommunicationSettingConfig::CommunicationSetting(std::string(theMonitorNode.attribute(COMMUNICATIONSETTINGS_IP_ATTRIBUTE_NAME).value()),
-                                                                                           uint16_t(convertAnyInt(theMonitorNode.attribute(COMMUNICATIONSETTINGS_PORT_ATTRIBUTE_NAME).value())),
-                                                                                           bool(convertAnyInt(theMonitorNode.attribute(COMMUNICATIONSETTINGS_ENABLECONNECTION_ATTRIBUTE_NAME).value())));
+                theCommunicationSetting =
+                    CommunicationSettingConfig::CommunicationSetting(std::string(theMonitorNode.attribute(COMMUNICATIONSETTINGS_IP_ATTRIBUTE_NAME).value()),
+                                                                     uint16_t(convertAnyInt(theMonitorNode.attribute(COMMUNICATIONSETTINGS_PORT_ATTRIBUTE_NAME).value())),
+                                                                     bool(convertAnyInt(theMonitorNode.attribute(COMMUNICATIONSETTINGS_ENABLECONNECTION_ATTRIBUTE_NAME).value())));
             }
         };
 

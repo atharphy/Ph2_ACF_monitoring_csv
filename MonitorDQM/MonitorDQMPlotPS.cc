@@ -39,14 +39,17 @@ void MonitorDQMPlotPS::book(TFile* theOutputFile, DetectorContainer& theDetector
     auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     std::string theMPAqueryFunctionString = "MPAqueryFunction";
     theDetectorStructure.addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
-    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("MPA2")) if(registerName.second) bookMPA2Plots(theOutputFile, theDetectorStructure, registerName.first);
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("MPA2"))
+        if(registerName.second) bookMPA2Plots(theOutputFile, theDetectorStructure, registerName.first);
     theDetectorStructure.removeReadoutChipQueryFunction(theMPAqueryFunctionString);
     auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     std::string theSSAqueryFunctionString = "SSAqueryFunction";
     theDetectorStructure.addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
-    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("SSA2")) if(registerName.second) bookSSA2Plots(theOutputFile, theDetectorStructure, registerName.first);
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("SSA2"))
+        if(registerName.second) bookSSA2Plots(theOutputFile, theDetectorStructure, registerName.first);
     theDetectorStructure.removeReadoutChipQueryFunction(theSSAqueryFunctionString);
-    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT")) if(registerName.second) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName.first);
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+        if(registerName.second) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName.first);
 }
 
 //========================================================================================================================
