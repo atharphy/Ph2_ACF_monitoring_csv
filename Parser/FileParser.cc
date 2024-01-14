@@ -92,7 +92,10 @@ std::map<uint16_t, std::tuple<std::string, std::string, std::string>> FileParser
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
     uint32_t cBeId    = pBeBordNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
-    BeBoard* cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId)); // FIX Change it to Reference!!!!
+    BeBoard* cBeBoard;
+    pugi::xml_node cBoardConfigurationNode = pBeBordNode.child(BEBOARD_CONFIGURATION_NODE_NAME);
+    if(cBoardConfigurationNode != nullptr) cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId, expandEnvironmentVariables(cBoardConfigurationNode.attribute(BEBOARD_CONFIGURATION_FILE_NAME_ATTRIBUTE_NAME).value())));
+    else cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId));
 
     pugi::xml_attribute cBoardTypeAttribute = pBeBordNode.attribute(BEBOARD_TYPE_ATTRIBUTE_NAME);
 
@@ -102,9 +105,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         exit(EXIT_FAILURE);
     }
 
-    pugi::xml_node cBoardConfigurationNode = pBeBordNode.child(BEBOARD_CONFIGURATION_NODE_NAME);
 
-    if(cBoardConfigurationNode != nullptr) { parseBeBoardConfigurationFile(expandEnvironmentVariables(cBoardConfigurationNode.attribute(BEBOARD_CONFIGURATION_FILE_NAME_ATTRIBUTE_NAME).value()), cBeBoard, os); }
 
     std::string cBoardType = cBoardTypeAttribute.value();
 
@@ -209,7 +210,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         {
             std::string cNameString;
             double      cValue;
-            parseRegister(cBeBoardRegNode, cNameString, cValue, cBeBoard, os);
+            cBeBoard->parseRegister(cBeBoardRegNode, cNameString, cValue);
         }
     }
 
@@ -331,35 +332,6 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             std::string cNTCADC         = std::string(theChild.attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME).value());
             std::string cNTCLookUpTable = expandEnvironmentVariables(std::string(theChild.attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME).value()));
             theOpticalGroup->addNTC(cNTCType, cNTCADC, cNTCLookUpTable);
-        }
-    }
-}
-
-void FileParser::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue, BeBoard* pBoard, std::ostream& os)
-{
-    if(std::string(pRegisterNode.name()) == "Register")
-    {
-        if(std::string(pRegisterNode.first_child().value()).empty())
-        {
-            if(!pAttributeString.empty()) pAttributeString += ".";
-
-            pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
-
-            for(pugi::xml_node cNode = pRegisterNode.child("Register"); cNode; cNode = cNode.next_sibling())
-            {
-                std::string cAttributeString = pAttributeString;
-                parseRegister(cNode, cAttributeString, pValue, pBoard, os);
-            }
-        }
-        else
-        {
-            if(!pAttributeString.empty()) pAttributeString += ".";
-
-            pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
-            pValue = convertAnyDouble(pRegisterNode.first_child().value());
-            os << GREEN << "|\t|\t|"
-               << "----" << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std::endl;
-            pBoard->setReg(pAttributeString, pValue);
         }
     }
 }
@@ -1840,25 +1812,6 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxPolarity(cTxPolarities[0]);
-        }
-    }
-}
-
-void FileParser::parseBeBoardConfigurationFile(const std::string& pFilename, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os)
-{
-    pugi::xml_document doc;
-    openHWconfig(pFilename, doc);
-
-    os << "Parsing BeBoard registers from file " << pFilename << "\n\n";
-    pugi::xml_node cBeBoardConfigurationNode = doc.child("BeBoardRegister");
-
-    for(pugi::xml_node cBeBoardRegNode = cBeBoardConfigurationNode.child("Register"); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling())
-    {
-        if(std::string(cBeBoardRegNode.name()) == "Register")
-        {
-            std::string cNameString;
-            double      cValue;
-            parseRegister(cBeBoardRegNode, cNameString, cValue, pBoard, os);
         }
     }
 }

@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include "Parser/ParserDefinitions.h"
 
 namespace Ph2_HwDescription
 {
@@ -96,39 +97,60 @@ void BeBoard::updateCondData(uint32_t& pTDCVal)
     }
 }
 
+void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue)
+{
+    if(std::string(pRegisterNode.name()) == "Register")
+    {
+        if(std::string(pRegisterNode.first_child().value()).empty())
+        {
+            if(!pAttributeString.empty()) pAttributeString += ".";
+
+            pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
+
+            for(pugi::xml_node cNode = pRegisterNode.child("Register"); cNode; cNode = cNode.next_sibling())
+            {
+                std::string cAttributeString = pAttributeString;
+                parseRegister(cNode, cAttributeString, pValue);
+            }
+        }
+        else
+        {
+            if(!pAttributeString.empty()) pAttributeString += ".";
+
+            pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
+            pValue = convertAnyDouble(pRegisterNode.first_child().value());
+            std::cout << GREEN << "|\t|\t|"
+               << "----" << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std::endl;
+            this->setReg(pAttributeString, pValue);
+        }
+    }
+}
+
 // Private Members:
 
 void BeBoard::loadConfigFile(const std::string& filename)
-
 {
-    std::ifstream cFile(filename.c_str(), std::ios::in);
-
-    if(!cFile)
-        LOG(ERROR) << "The BeBoard Settings File " << filename << " could not be opened!";
-    else
+    pugi::xml_document doc;
+    pugi::xml_parse_result result = doc.load_file(filename.c_str());
+    if(!result) // Try if it is not a file, but a string containing the full xml
+        result = doc.load_string(filename.c_str());
+    if(!result)
     {
-        fRegMap.clear();
-        std::string cLine, cName, cValue, cFound;
+        LOG(ERROR) << BOLDRED << "ERROR : Unable to open the file : " << RESET << filename << std::endl;
+        LOG(ERROR) << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
+        throw Exception("Unable to parse BeBoard XML source!");
+    }
 
-        while(!(getline(cFile, cLine).eof()))
+    pugi::xml_node cBeBoardConfigurationNode = doc.child("BeBoardRegister");
+
+    for(pugi::xml_node cBeBoardRegNode = cBeBoardConfigurationNode.child("Register"); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling())
+    {
+        if(std::string(cBeBoardRegNode.name()) == "Register")
         {
-            if(cLine.find_first_not_of(" \t") == std::string::npos) continue;
-
-            if(cLine.at(0) == '#' || cLine.at(0) == '*') continue;
-
-            if(cLine.find(":") == std::string::npos) continue;
-
-            std::istringstream input(cLine);
-            input >> cName >> cFound >> cValue;
-
-            // Here the Reg name sits in cName and the Reg value sits in cValue
-            if(cValue.find("0x") != std::string::npos)
-                fRegMap[cName] = strtol(cValue.c_str(), 0, 16);
-            else
-                fRegMap[cName] = strtol(cValue.c_str(), 0, 10);
+            std::string cNameString;
+            double      cValue;
+            parseRegister(cBeBoardRegNode, cNameString, cValue);
         }
-
-        cFile.close();
     }
 }
 

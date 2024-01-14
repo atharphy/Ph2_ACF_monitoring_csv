@@ -20,6 +20,7 @@
 #include <regex>
 #include <stdint.h>
 #include <vector>
+#include "pugixml.hpp"
 
 /*!
  * \namespace Ph2_HwDescription
@@ -183,6 +184,8 @@ class BeBoard : public BoardContainer
     std::vector<std::pair<std::string, uint32_t>> getSnapshot() const;
     void                                          clearFreeRegisters();
     void                                          addFreeRegister(const std::regex& theRegisterName);
+
+    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue);
 
   protected:
     BoardType    fBoardType;
