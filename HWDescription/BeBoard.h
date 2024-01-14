@@ -179,6 +179,8 @@ class BeBoard : public BoardContainer
         for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
     }
 
+    void saveRegMap(const std::string& fileName);
+
     void                                          takeSnapshot();
     void                                          clearSnapshot();
     std::vector<std::pair<std::string, uint32_t>> getSnapshot() const;

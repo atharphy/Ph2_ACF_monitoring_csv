@@ -44,14 +44,16 @@ void FileDumper::dumpConfigurationFiles(DetectorContainer* theDetectorContainer,
 
     dumpCommunicationSettings(hwDescriptionNode, theCommunicationSettingConfig);
 
-    std::string outputFileName = fOutputDirectory + "/Configuration.xml";
+    std::string outputFileName = fOutputDirectory + "Configuration.xml";
 
-    if(doc.save_file(outputFileName.c_str())) { LOG(INFO) << BOLDBLUE << "XML file " << outputFileName << " created successfully." << std::endl; }
+    LOG(INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fOutputDirectory << RESET;
+
+    if(doc.save_file(outputFileName.c_str())) { LOG(INFO) << BOLDYELLOW << "New configuration file saved: " << outputFileName << std::endl; }
     else
     {
-        LOG(ERROR) << BOLDRED << "Error saving XML file." << RESET;
+        LOG(ERROR) << BOLDRED << "Error saving the new configuration file." << RESET;
     }
-    LOG(INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fOutputDirectory << RESET;
+
 }
 
 void FileDumper::dumpBoardConfigurationFile(pugi::xml_node theMotherNode, BeBoard* theBoard)
@@ -85,9 +87,13 @@ void FileDumper::dumpBoardConfigurationFile(pugi::xml_node theMotherNode, BeBoar
     theBoardConnectionNode.append_attribute(BEBOARD_CONNECTION_URI_ATTRIBUTE_NAME) = theBoard->getConnectionUri().c_str();
     theBoardConnectionNode.append_attribute(BEBOARD_CONNECTION_ADDRESS_TABLE_ATTRIBUTE_NAME) = theBoard->getAddressTable().c_str();
 
-    //TODO: Correct board config file name after board register dump ir ready
+    std::string theFileName = "BE" + std::to_string(theBoard->getId()) + "_Config.xml";
+    std::string theFullFileName = fOutputDirectory + theFileName;
+    LOG(DEBUG) << BOLDBLUE << "Dumping BeBoard configuration to " << theFullFileName << RESET;
+    theBoard->saveRegMap(theFullFileName);
+
     pugi::xml_node theBoardConfigurationNode = theBoardNode.append_child(BEBOARD_CONFIGURATION_NODE_NAME);
-    theBoardConfigurationNode.append_attribute(BEBOARD_CONFIGURATION_FILE_NAME_ATTRIBUTE_NAME) = "/home/modtest/Programming/Ph2_ACF_Dev/settings/BeBoardFiles/uDTC_registers.xml";
+    theBoardConfigurationNode.append_attribute(BEBOARD_CONFIGURATION_FILE_NAME_ATTRIBUTE_NAME) = theFullFileName.c_str();
 
     pugi::xml_node theBoardCDCENode = theBoardNode.append_child(BEBOARD_CDCE_NODE_NAME);
     theBoardCDCENode.append_attribute(BEBOARD_CDCE_CONFIGURE_ATTRIBUTE_NAME) = "0"; //Always forcing it to 0 to avoid overriding eprom too many times

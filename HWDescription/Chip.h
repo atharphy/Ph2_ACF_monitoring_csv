@@ -118,7 +118,7 @@ class Chip : public FrontEndDescription
 
     /*!
      * \brief Write the registers of the Map in a file
-     * \param fName2Add
+     * \param fileName
      */
     void saveRegMap(const std::string& fileName);
 

@@ -204,9 +204,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
        << "Address Table: " << BOLDYELLOW << cAddressTable << std::endl
        << RESET;
 
-    for(pugi::xml_node cBeBoardRegNode = pBeBordNode.child("Register"); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling())
+    for(pugi::xml_node cBeBoardRegNode = pBeBordNode.child(BEBOARD_REGISTER_NODE_NAME); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling())
     {
-        if(std::string(cBeBoardRegNode.name()) == "Register")
+        if(std::string(cBeBoardRegNode.name()) == BEBOARD_REGISTER_NODE_NAME)
         {
             std::string cNameString;
             double      cValue;
