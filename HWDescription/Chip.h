@@ -118,9 +118,9 @@ class Chip : public FrontEndDescription
 
     /*!
      * \brief Write the registers of the Map in a file
-     * \param fName2Add
+     * \param fileName
      */
-    void saveRegMap(const std::string& fName2Add = "");
+    void saveRegMap(const std::string& fileName);
 
     /*!
      * \brief Prepare a stream with the registers of the Map
@@ -217,7 +217,7 @@ class Chip : public FrontEndDescription
     void        setRegisterTracking(uint8_t pEnable) { fTrackRegisters = pEnable; }
     uint8_t     getRegisterTracking() { return fTrackRegisters; }
 
-    std::string getFileName(const std::string& fName2Add) const
+    std::string getFileName(const std::string& fName2Add = "") const
     {
         std::string output = this->configFileName;
         output.insert(output.find_last_of("/\\") + 1, fName2Add);

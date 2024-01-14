@@ -16,6 +16,7 @@
 #include "Utils/Container.h"
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
+#include "pugixml.hpp"
 #include <map>
 #include <regex>
 #include <stdint.h>
@@ -178,11 +179,15 @@ class BeBoard : public BoardContainer
         for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
     }
 
+    void saveRegMap(const std::string& fileName);
+
     void                                          takeSnapshot();
     void                                          clearSnapshot();
     std::vector<std::pair<std::string, uint32_t>> getSnapshot() const;
     void                                          clearFreeRegisters();
     void                                          addFreeRegister(const std::regex& theRegisterName);
+
+    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue);
 
   protected:
     BoardType    fBoardType;

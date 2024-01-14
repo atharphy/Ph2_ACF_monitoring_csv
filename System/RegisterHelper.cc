@@ -5,6 +5,7 @@
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/CicInterface.h"
 #include "HWInterface/lpGBTInterface.h"
+#include "Parser/ParserDefinitions.h"
 #include "Utils/Container.h"
 #include "pugixml.hpp"
 
@@ -192,8 +193,8 @@ void RegisterHelper::dumpBeBoardRegisterIntoXml(std::string outputFileName)
         if(node.getPermission() != uhal::defs::READWRITE) return;
         // if(!((int)node.getPermission() & true)) return;
 
-        pugi::xml_node theChildNode           = theMotherNode.append_child("Register");
-        theChildNode.append_attribute("name") = theNodeName.c_str();
+        pugi::xml_node theChildNode                               = theMotherNode.append_child(BEBOARD_REGISTER_NODE_NAME);
+        theChildNode.append_attribute(COMMON_NAME_ATTRIBUTE_NAME) = theNodeName.c_str();
 
         if((++node.begin() == node.end()))
         {
@@ -222,7 +223,7 @@ void RegisterHelper::dumpBeBoardRegisterIntoXml(std::string outputFileName)
         declarationNode.append_attribute("version")  = "1.0";
         declarationNode.append_attribute("encoding") = "utf-8";
 
-        pugi::xml_node boardRegisterNode = doc.append_child("BeBoardRegister");
+        pugi::xml_node boardRegisterNode = doc.append_child(BEBOARDREGISTER_NODE_NAME);
         LOG(INFO) << GREEN << "Firmware register content for [board = " << BOLDYELLOW << cBoard->getId() << GREEN << "]" << RESET;
 
         const auto theBeBoardFW = this->fBeBoardFWMap->at(cBoard->getId());

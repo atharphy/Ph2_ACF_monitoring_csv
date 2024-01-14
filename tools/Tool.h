@@ -109,23 +109,10 @@ class Tool : public Ph2_System::SystemController
     void Stop() override;
 
     void waitForRunToBeCompleted();
-    void privateRunning(std::promise<int>&& thePromise);
+    // void privateRunning(std::promise<int>&& thePromise);
     void SaveResults();
     void SaveAndClose();
     void CloseResultFile();
-    void initMetadataAndFillInitialConditions();
-    void fillOTMetadataInitialConditions();
-    void fillITMetadataInitialConditions();
-    void fillMetadataFinalConditions();
-    void fillOTMetadataFinalConditions();
-    void fillITMetadataFinalConditions();
-    void fillNameContainerWithChipIDs();
-    void fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer);
-    void fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer);
-    void fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContainer);
-    void fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer);
-    void fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer);
-    void fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurationContainer);
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp

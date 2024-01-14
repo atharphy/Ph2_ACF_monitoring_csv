@@ -30,6 +30,7 @@
 #include "tools/CicFEAlignment.h"
 #include "tools/ConfigureOnly.h"
 #include "tools/LinkAlignmentOT.h"
+#include "tools/OTalignLpGBTinputs.h"
 #include "tools/PSPhysics.h"
 #include "tools/Physics2S.h"
 #include "tools/StubBackEndAlignment.h"
@@ -44,6 +45,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     // OT calibrations
     Register<OTVTRXLightOff>("vtrxoff");
+    Register<OTalignLpGBTinputs>("OTalignLpGBTinputs");
     Register<LinkAlignmentOT, CicFEAlignment>("alignment");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("takedata"); // will be used in future version of GIPHT

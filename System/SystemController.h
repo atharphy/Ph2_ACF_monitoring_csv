@@ -67,6 +67,7 @@ class DetectorMonitor;
 class ChannelGroupHandler;
 class ConfigureInfo;
 class StartInfo;
+class CommunicationSettingConfig;
 
 /*!
  * \namespace Ph2_System
@@ -374,14 +375,16 @@ class SystemController
     DetectorDataContainer* fChannelGroupHandlerContainer;
 
   protected:
-    DetectorDataContainer* fNameContainer;
-    bool                   fSameChannelGroupForAllChannels{true};
-    uint8_t                fInitializeInterfaces{1};
-    std::string            fConfigurationFileName{""};
-    std::string            fSettingsFileName{""};
-    std::string            fCalibrationName{""};
-    std::string            fConfigurationFileContent{""};
-    BoardType              fBoardType{BoardType::UNDEFINED};
+    DetectorDataContainer*      fNameContainer;
+    bool                        fSameChannelGroupForAllChannels{true};
+    uint8_t                     fInitializeInterfaces{1};
+    std::string                 fConfigurationFileName{""};
+    std::string                 fSettingsFileName{""};
+    std::string                 fCalibrationName{""};
+    std::string                 fConfigurationFileContent{""};
+    BoardType                   fBoardType{BoardType::UNDEFINED};
+    CommunicationSettingConfig* fCommunicationSettingConfig{nullptr};
+    DetectorMonitorConfig*      fDetectorMonitorConfig{nullptr};
 };
 
 } // namespace Ph2_System
