@@ -158,10 +158,21 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerify, uint32_t pBlockSize)
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pCic->getId() << "]" << RESET;
     ChipRegMap cCicRegMap = pCic->getRegMap();
     // get register map
-    std::vector<ChipRegItem> cRegItems;
-    for(auto cItem: cCicRegMap) { cRegItems.push_back(cItem.second); }
-    bool cSuccess = fBoardFW->MultiRegisterWrite(pCic, cRegItems, pVerify);
-    // fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerify);
+    std::vector<std::pair<std::string, uint16_t>> cRegItems;
+    auto                                          theListOfFreeRegisters = pCic->getFreeRegisters();
+    for(auto cItem: cCicRegMap)
+    {
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: theListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(cItem.first, freeRegister.first);
+            if(isFreeRegister) break;
+        }
+        if(isFreeRegister) continue; // skipping readonly registers
+
+        cRegItems.push_back(std::make_pair(cItem.first, cItem.second.fValue));
+    }
+    bool cSuccess = WriteChipMultReg(pCic, cRegItems, pVerify);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Succesful write to " << cRegItems.size() << " registers on CIC" << RESET;
     return cSuccess;
 }
@@ -208,6 +219,32 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
     return fBoardFW->SingleRegisterRead(pChip, cRegItem);
 }
+
+std::vector<std::pair<std::string, uint16_t>> CicInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
+{
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: theRegisterList)
+    {
+        auto cIterator = cRegMap.find(cReq);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "SSA2Interface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            abort();
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cRegItems.push_back(cItem);
+    }
+
+    fBoardFW->MultiRegisterRead(pChip, cRegItems);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    return theRegisterValues;
+}
+
 bool CicInterface::GetResyncRequest(Chip* pChip)
 {
     uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAD : 0xA6;

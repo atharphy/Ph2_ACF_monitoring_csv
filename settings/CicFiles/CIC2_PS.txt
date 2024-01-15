@@ -122,17 +122,77 @@ MASK_BLOCK1                                     0x01    0x3D    0x00    0xFF
 MASK_BLOCK2                                     0x02    0x5D    0x00    0xFF
 MASK_BLOCK3                                     0x03    0x7D    0x00    0xFF
 *--------------------------------------------------------------------------------
-* SEU Counters ( these are actually read only... so here only for reference  )
-* ASYNC_CNTL_BLOCK0                             0x00    0x1E    0x00    0x00
-* ASYNC_CNTL_BLOCK1                             0x00    0x3E    0x00    0x00
-* ASYNC_CNTL_BLOCK2                             0x00    0x5E    0x00    0x00
-* ASYNC_CNTL_BLOCK3                             0x00    0x7E    0x00    0x00
-* SYNC_CNTL_BLOCK0                              0x00    0x1F    0x00    0x00
-* SYNC_CNTL_BLOCK1                              0x00    0x3F    0x00    0x00
-* SYNC_CNTL_BLOCK2                              0x00    0x5F    0x00    0x00
-* SYNC_CNTL_BLOCK3                              0x00    0x7F    0x00    0x00
+* SEU Counters (Read only)
 *--------------------------------------------------------------------------------
-* Fused ID specific 
+ASYNC_CNTL_BLOCK0                             0x00    0x1E    0x00    0x00
+ASYNC_CNTL_BLOCK1                             0x00    0x3E    0x00    0x00
+ASYNC_CNTL_BLOCK2                             0x00    0x5E    0x00    0x00
+ASYNC_CNTL_BLOCK3                             0x00    0x7E    0x00    0x00
+SYNC_CNTL_BLOCK0                              0x00    0x1F    0x00    0x00
+SYNC_CNTL_BLOCK1                              0x00    0x3F    0x00    0x00
+SYNC_CNTL_BLOCK2                              0x00    0x5F    0x00    0x00
+SYNC_CNTL_BLOCK3                              0x00    0x7F    0x00    0x00
+*--------------------------------------------------------------------------------
+* Read only registers
+*--------------------------------------------------------------------------------
+scPhaseSelectB0o0                               0x04    0x80    0x00    0x00
+scPhaseSelectB0o1                               0x04    0x81    0x00    0x00
+scPhaseSelectB0o2                               0x04    0x82    0x00    0x00
+scPhaseSelectB0o3                               0x04    0x83    0x00    0x00
+scPhaseSelectB0o4                               0x04    0x84    0x00    0x00
+scPhaseSelectB0o5                               0x04    0x85    0x00    0x00
+scPhaseSelectB1o0                               0x04    0x86    0x00    0x00
+scPhaseSelectB1o1                               0x04    0x87    0x00    0x00
+scPhaseSelectB1o2                               0x04    0x88    0x00    0x00
+scPhaseSelectB1o3                               0x04    0x89    0x00    0x00
+scPhaseSelectB1o4                               0x04    0x8A    0x00    0x00
+scPhaseSelectB1o5                               0x04    0x8B    0x00    0x00
+scPhaseSelectB2o0                               0x04    0x8C    0x00    0x00
+scPhaseSelectB2o1                               0x04    0x8D    0x00    0x00
+scPhaseSelectB2o2                               0x04    0x8E    0x00    0x00
+scPhaseSelectB2o3                               0x04    0x9F    0x00    0x00
+scPhaseSelectB2o4                               0x04    0x90    0x00    0x00
+scPhaseSelectB2o5                               0x04    0x91    0x00    0x00
+scPhaseSelectB3o0                               0x04    0x92    0x00    0x00
+scPhaseSelectB3o1                               0x04    0x93    0x00    0x00
+scPhaseSelectB3o2                               0x04    0x94    0x00    0x00
+scPhaseSelectB3o3                               0x04    0x95    0x00    0x00
+scPhaseSelectB3o4                               0x04    0x96    0x00    0x00
+scPhaseSelectB3o5                               0x04    0x97    0x00    0x00
+scDllInstantLock0                               0x04    0x98    0x00    0x00
+scDllInstantLock1                               0x04    0x99    0x00    0x00
+scDllLocked0                                    0x04    0x9A    0x00    0x00
+scDllLocked1                                    0x04    0x9B    0x00    0x00
+scChannelLocked0                                0x05    0xA0    0x00    0x00
+scChannelLocked1                                0x05    0xA1    0x00    0x00
+scChannelLocked2                                0x05    0xA2    0x00    0x00
+scChannelLocked3                                0x05    0xA3    0x00    0x00
+scChannelLocked4                                0x05    0xA4    0x00    0x00
+scChannelLocked5                                0x05    0xA5    0x00    0x00
+timingStatusBits                                0x05    0xA6    0x00    0x00
+BX0_DEALY                                       0x05    0xA7    0x00    0x00
+WA_DELAY00                                      0x05    0xA8    0x00    0x00
+WA_DELAY01                                      0x05    0xA9    0x00    0x00
+WA_DELAY02                                      0x05    0xAA    0x00    0x00
+WA_DELAY03                                      0x05    0xAB    0x00    0x00
+WA_DELAY04                                      0x05    0xAC    0x00    0x00
+WA_DELAY05                                      0x05    0xAD    0x00    0x00
+WA_DELAY06                                      0x05    0xAE    0x00    0x00
+WA_DELAY07                                      0x05    0xAF    0x00    0x00
+WA_DELAY08                                      0x05    0xB0    0x00    0x00
+WA_DELAY09                                      0x05    0xB1    0x00    0x00
+WA_DELAY10                                      0x05    0xB2    0x00    0x00
+WA_DELAY11                                      0x05    0xB3    0x00    0x00
+WA_DELAY12                                      0x05    0xB4    0x00    0x00
+WA_DELAY13                                      0x05    0xB5    0x00    0x00
+WA_DELAY14                                      0x05    0xB6    0x00    0x00
+WA_DELAY15                                      0x05    0xB7    0x00    0x00
+WA_DELAY16                                      0x05    0xB8    0x00    0x00
+WA_DELAY17                                      0x05    0xB9    0x00    0x00
+WA_DELAY18                                      0x05    0xBA    0x00    0x00
+WA_DELAY19                                      0x05    0xBB    0x00    0x00
+*--------------------------------------------------------------------------------
+* Fused ID specific (Read only)
 *--------------------------------------------------------------------------------
 EFUSEMODE                                       0x03    0x67    0x00    0x00
 EfuseValue0                                     0x05    0xBC    0x00    0x00

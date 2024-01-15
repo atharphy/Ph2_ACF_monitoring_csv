@@ -58,11 +58,6 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     }
     fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
 
-    // configure W/R registers
-    // do not overwrite these registers..
-    std::vector<std::string> cRegsToSkip{"mask_strip", "mask_peri_A", "mask_peri_D"};
-    std::vector<std::string> cReadOnlyRegs{"SEUcnt", "Ring_oscillator", "ADC_out", "bist_output", "AC_ReadCounter", "status_reg"};
-
     cRegItems.clear();
     // need to split between control and enable registers
     // don't read back enable registers
@@ -72,12 +67,16 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     // std::vector<std::string> cLocalRegItemsNames;
     // std::vector<std::string> cRegItemsNames;
     cCntrlRegItems.clear();
+    auto theListOfFreeRegisters = pSSA2->getFreeRegisters();
     for(auto cMapItem: cSSA2RegMap)
     {
-        if(std::find(cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first) != cRegsToSkip.end()) continue;
-        bool cReadOnly = false;
-        for(auto cReadOnlyReg: cReadOnlyRegs) cReadOnly = cReadOnly || (cMapItem.first.find(cReadOnlyReg) != std::string::npos);
-        if(cReadOnly) continue;
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: theListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(cMapItem.first, freeRegister.first);
+            if(isFreeRegister) break;
+        }
+        if(isFreeRegister) continue; // skipping readonly registers
 
         if(cMapItem.second.fControlReg)
         {
@@ -893,6 +892,32 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     return true;
 }
+
+std::vector<std::pair<std::string, uint16_t>> SSA2Interface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
+{
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: theRegisterList)
+    {
+        auto cIterator = cRegMap.find(cReq);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "SSA2Interface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            abort();
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cRegItems.push_back(cItem);
+    }
+
+    fBoardFW->MultiRegisterRead(pChip, cRegItems);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    return theRegisterValues;
+}
+
 //	// AMUX CONFIGURATION:
 bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, bool pVerify)
 {

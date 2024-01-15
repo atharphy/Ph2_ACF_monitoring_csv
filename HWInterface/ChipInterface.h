@@ -106,6 +106,8 @@ class ChipInterface
      */
     virtual uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) = 0;
 
+    virtual std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList);
+
     // this does not need to be virtual as its the same for all types of readout chips
     bool lpGBTCheck(const Ph2_HwDescription::BeBoard* pBoard)
     {

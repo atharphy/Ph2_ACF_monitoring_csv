@@ -190,7 +190,7 @@ std::vector<std::pair<std::string, uint32_t>> BeBoard::getSnapshot() const
     return theModifiedRegisterVector;
 }
 
-void BeBoard::clearFreeRegisters() { fListOfFreeRegisters.clear(); }
+void BeBoard::reinitializeFreeRegisters() { fListOfFreeRegisters.clear(); }
 
 void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(theRegisterName); }
 

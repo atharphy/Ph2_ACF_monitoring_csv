@@ -157,19 +157,19 @@ void RegisterHelper::resetFreeRegisters()
 {
     for(auto theBoard: *fDetectorContainer)
     {
-        theBoard->clearFreeRegisters();
+        theBoard->reinitializeFreeRegisters();
         for(auto theOpticalGroup: *theBoard)
         {
             auto theLpGBT = theOpticalGroup->flpGBT;
-            if(theLpGBT != nullptr) { theLpGBT->clearFreeRegisters(); }
+            if(theLpGBT != nullptr) { theLpGBT->reinitializeFreeRegisters(); }
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(fCicInterface != nullptr) // easy check if it is IT or OT
                 {
                     auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                    if(theCic != nullptr) { theCic->clearFreeRegisters(); }
+                    if(theCic != nullptr) { theCic->reinitializeFreeRegisters(); }
                 }
-                for(auto theChip: *theHybrid) { theChip->clearFreeRegisters(); }
+                for(auto theChip: *theHybrid) { theChip->reinitializeFreeRegisters(); }
             }
         }
     }

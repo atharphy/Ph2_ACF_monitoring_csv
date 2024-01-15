@@ -106,6 +106,8 @@ class CbcInterface : public ReadoutChipInterface
      */
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode) override;
 
+    std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
+
     // cbc specific functions
     std::vector<uint8_t> createHitListFromStubs(uint8_t pSeed, bool pSeedLayer);
     std::vector<uint8_t> stubInjectionPattern(uint8_t pStubAddress, int pStubBend,

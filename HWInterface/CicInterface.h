@@ -63,8 +63,10 @@ class CicInterface : public ChipInterface
      * \param pChip
      * \param pRegNode : Node of the register to read
      */
-    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
-    uint8_t  ReadFCMDEdge(Ph2_HwDescription::Chip* pChip);
+    uint16_t                                      ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
+    std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
+
+    uint8_t ReadFCMDEdge(Ph2_HwDescription::Chip* pChip);
 
     uint32_t                          ReadChipFuseID(Ph2_HwDescription::Chip* pCic);
     bool                              SetFePhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId, int pPhaseTap);
