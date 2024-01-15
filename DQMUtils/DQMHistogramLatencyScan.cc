@@ -261,8 +261,8 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                         cHitMap->SetBinContent(cBin, channel.fOccupancy);
                         cHitMap->SetBinError(cBin, channel.fOccupancyError);
                         if(channel.fOccupancy > 0)
-                            LOG(INFO) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " global strip number " << +cStripId
-                                      << " - have found " << channel.fOccupancy << " hits." << RESET;
+                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " global strip number " << +cStripId
+                                       << " - have found " << channel.fOccupancy << " hits." << RESET;
                         cChnlIndx++;
                     }
                     TH2F* cLatencyTDC = fLatencyTDCHistograms.getObject(board->getId())
@@ -303,10 +303,10 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
         auto* cBrdHitsS1 = theLatencyS1.getObject(board->getId());
         for(auto opticalGroup: *board)
         {
-            auto* cOGHitsS1 = cBrdHitsS1->getObject(board->getId());
+            auto* cOGHitsS1 = cBrdHitsS1->getObject(opticalGroup->getId());
             for(auto hybrid: *opticalGroup)
             {
-                auto* cHybridHitsS1 = cOGHitsS1->getObject(board->getId());
+                auto* cHybridHitsS1 = cOGHitsS1->getObject(hybrid->getId());
 
                 bool cFillS0 = (hybrid->hasSummary());
                 bool cFillS1 = (cHybridHitsS1->hasSummary());

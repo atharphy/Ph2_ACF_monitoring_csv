@@ -29,7 +29,7 @@ Chip::Chip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
 }
 
 // Copy C'tor
-Chip::Chip(const Chip& chipObj) : FrontEndDescription(chipObj), fChipId(chipObj.fChipId), fRegMap(chipObj.fRegMap), fModifiedRegs(chipObj.fModifiedRegs), fCommentMap(chipObj.fCommentMap) {}
+// Chip::Chip(const Chip& chipObj) : FrontEndDescription(chipObj), fChipId(chipObj.fChipId), fRegMap(chipObj.fRegMap), fModifiedRegs(chipObj.fModifiedRegs), fCommentMap(chipObj.fCommentMap) {}
 
 // D'Tor
 Chip::~Chip()
@@ -37,6 +37,7 @@ Chip::~Chip()
     fRegMap.clear();
     fCommentMap.clear();
     fModifiedRegs.clear();
+    fListOfFreeRegisters.clear();
 }
 
 const ChipRegItem& Chip::getRegItem(const std::string& pReg) const
@@ -81,9 +82,20 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
         LOG(ERROR) << "Chip register are at most " << fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg;
     else
     {
+        auto oldRegister     = i->second;
         i->second.fValue     = psetValue & fMaxRegValue;
         i->second.fStatusReg = pStatusReg;
         i->second.fPrmptCfg  = pPrmptCfg;
+        if(fTrackModifiedRegistersEnabled)
+        {
+            bool isFreeRegister = false;
+            for(const auto& freeRegister: fListOfFreeRegisters)
+            {
+                isFreeRegister = std::regex_match(pReg, freeRegister);
+                if(isFreeRegister) break;
+            }
+            if(!isFreeRegister && oldRegister != i->second) fModifiedRegisters[i->first] = oldRegister.fValue;
+        }
     }
 }
 
@@ -174,9 +186,8 @@ bool RegItemComparer::operator()(const ChipRegPair& pRegItem1, const ChipRegPair
 }
 
 // Write RegValues in a file
-void Chip::saveRegMap(const std::string& fName2Add)
+void Chip::saveRegMap(const std::string& fileName)
 {
-    std::string   fileName = this->getFileName(fName2Add);
     std::ofstream file(fileName, std::ios::out | std::ios::trunc);
 
     if(file)
@@ -188,6 +199,33 @@ void Chip::saveRegMap(const std::string& fName2Add)
     }
     else
         LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+}
+
+void Chip::takeSnapshot()
+{
+    clearSnapshot();
+    clearFreeRegisters();
+    fTrackModifiedRegistersEnabled = true;
+}
+
+void Chip::clearSnapshot()
+{
+    fTrackModifiedRegistersEnabled = false;
+    fModifiedRegisters.clear();
+}
+
+void Chip::clearFreeRegisters()
+{
+    fListOfFreeRegisters.clear();
+    initializeFreeRegisters();
+}
+
+void Chip::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(theRegisterName); }
+
+std::vector<std::pair<std::string, uint16_t>> Chip::getSnapshot() const
+{
+    std::vector<std::pair<std::string, uint16_t>> theModifiedRegisterVector(fModifiedRegisters.begin(), fModifiedRegisters.end());
+    return theModifiedRegisterVector;
 }
 
 } // namespace Ph2_HwDescription

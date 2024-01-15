@@ -67,6 +67,7 @@ class DetectorMonitor;
 class ChannelGroupHandler;
 class ConfigureInfo;
 class StartInfo;
+class CommunicationSettingConfig;
 
 /*!
  * \namespace Ph2_System
@@ -74,6 +75,8 @@ class StartInfo;
  */
 namespace Ph2_System
 {
+class RegisterHelper;
+
 // using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
 using BeBoardFWMap = std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>; /*!< Map of Board connected */
 
@@ -102,6 +105,7 @@ class SystemController
     TCPPublishServer*       fMonitorDQMStreamer;
     DetectorMonitor*        fDetectorMonitor;
     TCPClient*              fPowerSupplyClient{nullptr};
+    RegisterHelper*         fRegisterHelper{nullptr};
     /*!
      * \brief Constructor of the SystemController class
      */
@@ -371,14 +375,16 @@ class SystemController
     DetectorDataContainer* fChannelGroupHandlerContainer;
 
   protected:
-    DetectorDataContainer* fNameContainer;
-    bool                   fSameChannelGroupForAllChannels{true};
-    uint8_t                fInitializeInterfaces{1};
-    std::string            fConfigurationFileName{""};
-    std::string            fSettingsFileName{""};
-    std::string            fCalibrationName{""};
-    std::string            fConfigurationFileContent{""};
-    BoardType              fBoardType{BoardType::UNDEFINED};
+    DetectorDataContainer*      fNameContainer;
+    bool                        fSameChannelGroupForAllChannels{true};
+    uint8_t                     fInitializeInterfaces{1};
+    std::string                 fConfigurationFileName{""};
+    std::string                 fSettingsFileName{""};
+    std::string                 fCalibrationName{""};
+    std::string                 fConfigurationFileContent{""};
+    BoardType                   fBoardType{BoardType::UNDEFINED};
+    CommunicationSettingConfig* fCommunicationSettingConfig{nullptr};
+    DetectorMonitorConfig*      fDetectorMonitorConfig{nullptr};
 };
 
 } // namespace Ph2_System

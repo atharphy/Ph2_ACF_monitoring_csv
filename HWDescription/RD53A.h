@@ -64,6 +64,7 @@ class RD53A : public RD53
 
     RD53A() {}
     RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
+    RD53A(const RD53A&) = delete;
 
     size_t                   getMaxBCIDvalue() const override { return RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID); }
     size_t                   getMaxTRIGIDvalue() const override { return RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID); }

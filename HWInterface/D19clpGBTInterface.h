@@ -31,6 +31,11 @@ class D19clpGBTInterface : public lpGBTInterface
     // General configuration of the lpGBT chip from register file
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;
+
+    void hold2SModuleResets(Ph2_HwDescription::Chip* pChip);
+    void holdPSModuleResets(Ph2_HwDescription::Chip* pChip);
+
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pOptical, bool pToggleTC = false);
     // configure PS-ROH
@@ -108,23 +113,10 @@ class D19clpGBTInterface : public lpGBTInterface
         std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
     }
 
-    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
-    {
-        fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
-        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
-        fClkConfig.fClkDriveStr     = pClkCnfg.fClkDriveStr;
-        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
-        fClkConfig.fClkPreEmphWidth = pClkCnfg.fClkPreEmphWidth;
-        fClkConfig.fClkPreEmphMode  = pClkCnfg.fClkPreEmphMode;
-        fClkConfig.fClkPreEmphStr   = pClkCnfg.fClkPreEmphStr;
-
-        std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
-        std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
-        WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
-        WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
-    }
+    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg);
     void cicClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg); }
     void hybridClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
+    void updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chip* pChip);
 
     void                 setFrontEndType(FrontEndType pType) { fFeType = pType; }
     FrontEndType         getFrontEndType() { return fFeType; }

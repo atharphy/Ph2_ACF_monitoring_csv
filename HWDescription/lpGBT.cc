@@ -20,6 +20,47 @@ lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChi
     lpGBT::loadfRegMap(configFileName);
 }
 
+void lpGBT::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::regex("^ConfigPins$"));
+    fListOfFreeRegisters.push_back(std::regex("^I2CSlaveAddress$"));
+    fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]Locked$"));
+    fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]CurrentPhase[13][02]$"));
+    fListOfFreeRegisters.push_back(std::regex("^EPRXEcCurrentPhase$"));
+    fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]DLLStatus$"));
+    fListOfFreeRegisters.push_back(std::regex(R"(^I2CM[0-2](?!Config$).*)"));
+    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Data[0-3]$"));
+    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Cmd$"));
+    fListOfFreeRegisters.push_back(std::regex("^PSStatus$"));
+    fListOfFreeRegisters.push_back(std::regex("^PIOIn[HL]$"));
+    fListOfFreeRegisters.push_back(std::regex("^FUSE.*"));
+    fListOfFreeRegisters.push_back(std::regex("^FuseMagic$"));
+    fListOfFreeRegisters.push_back(std::regex("^ProcessMonitorStatus$"));
+    fListOfFreeRegisters.push_back(std::regex("^PMFreq[A-C]$"));
+    fListOfFreeRegisters.push_back(std::regex("^SEUCount[HL]$"));
+    fListOfFreeRegisters.push_back(std::regex("^CLKGStatus[0-9]$"));
+    fListOfFreeRegisters.push_back(std::regex("^DLDPFecCorrectionCount[0-3]$"));
+    fListOfFreeRegisters.push_back(std::regex("^ADCStatus[HL]$"));
+    fListOfFreeRegisters.push_back(std::regex("^EOMStatus$"));
+    fListOfFreeRegisters.push_back(std::regex("^EOMCounterValue[HL]$"));
+    fListOfFreeRegisters.push_back(std::regex("^EOMCounter40M[HL]$"));
+    fListOfFreeRegisters.push_back(std::regex("^BERTStatus$"));
+    fListOfFreeRegisters.push_back(std::regex("^BERTResult[0-4]$"));
+    fListOfFreeRegisters.push_back(std::regex("^ROM$"));
+    fListOfFreeRegisters.push_back(std::regex("^PORBOR$"));
+    fListOfFreeRegisters.push_back(std::regex("^PUSM.*"));
+    fListOfFreeRegisters.push_back(std::regex("^CRCValue[0-3]$"));
+    fListOfFreeRegisters.push_back(std::regex("^FailedCRC$"));
+    fListOfFreeRegisters.push_back(std::regex("^TOValue$"));
+    fListOfFreeRegisters.push_back(std::regex("^SCStatus$"));
+    fListOfFreeRegisters.push_back(std::regex("^FAState$"));
+    fListOfFreeRegisters.push_back(std::regex("^FAHeader.*"));
+    fListOfFreeRegisters.push_back(std::regex("^FALossOfLockCount$"));
+    fListOfFreeRegisters.push_back(std::regex("^ConfigErrorCounter[HL]$"));
+    fListOfFreeRegisters.push_back(std::regex("^POWERUP2$"));
+    fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]DllStatus$"));
+}
+
 void lpGBT::loadfRegMap(const std::string& fileName)
 {
     std::ifstream     file(fileName.c_str(), std::ios::in);
@@ -122,6 +163,13 @@ std::stringstream lpGBT::getRegMapStream()
     }
 
     return theStream;
+}
+
+void lpGBT::setInvertClock(uint8_t hybridId, bool pInvertClock)
+{
+    std::string registerName = (hybridId % 2 == 0) ? "EPCLK1ChnCntrH" : "EPCLK11ChnCntrH";
+    auto&       theRegister  = fRegMap[registerName];
+    theRegister.fValue       = (theRegister.fValue & 0xBF) | ((pInvertClock ? 1 : 0) << 6);
 }
 
 } // namespace Ph2_HwDescription

@@ -140,10 +140,9 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.StartHttpServer();
 
-    bool cReInitialize = true;
     if(cmd.foundOption("reconfigure"))
     {
-        cTool.ConfigureHw(cReInitialize);
+        cTool.ConfigureHw();
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
@@ -188,8 +187,7 @@ int main(int argc, char* argv[])
     // reload settings on-to FE chips
     if(cmd.foundOption("reload"))
     {
-        // //cReInitialize=false;
-        cTool.ConfigureHw(cReInitialize);
+        cTool.ConfigureHw();
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;

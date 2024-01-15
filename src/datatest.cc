@@ -44,9 +44,6 @@ int main(int argc, char* argv[])
     // options
     cmd.setHelpOption("h", "help", "Print this help page");
 
-    cmd.defineOption("ignoreI2c", "Ignore I2C configuration of CBCs. Allows to run acquisition on a bare board without CBC.");
-    cmd.defineOptionAlternative("ignoreI2c", "i");
-
     cmd.defineOption("file", "Hw Description File . Default value: settings/HWDescription_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("file", "f");
 
@@ -127,7 +124,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     outp.str("");
 
-    if(!cmd.foundOption("read")) cSystemController.ConfigureHw(cmd.foundOption("ignoreI2c"));
+    if(!cmd.foundOption("read")) cSystemController.ConfigureHw();
 
     t.stop();
     t.show("Time to Initialize/configure the system: ");

@@ -26,7 +26,12 @@ using namespace MessageUtils;
 
 DQMCalibrationFactory::DQMCalibrationFactory()
 {
+    // Common calibrations
+    Register<DQMMetadataOT>("tunelpgbtvref");
+    Register<DQMMetadataOT>("configureonly");
+
     // OT calibrations
+    Register<DQMMetadataOT>("OTalignLpGBTinputs");
     Register<DQMMetadataOT, DQMHistogramPedestalEqualization>("calibration");
     Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
     Register<DQMMetadataOT, DQMHistogramPedestalEqualization, DQMHistogramKira>("calibrationandkira");

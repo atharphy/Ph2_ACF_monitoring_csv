@@ -10,7 +10,7 @@
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
 
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
+        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1_2S.txt">
           <Settings
           />
           <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -37,7 +37,7 @@
             <CBC Id="7" configfile="CBC3_default.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_2S.txt" />
         </Hybrid>
         <Hybrid Id="1" enable="1" reset="1">
             <Global>
@@ -61,7 +61,7 @@
             <CBC Id="7" configfile="CBC3_default.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_2S.txt" />
         </Hybrid>
     </OpticalGroup>
     <!-- 15 - default (internal oscillator), 0 - AMC13 -->

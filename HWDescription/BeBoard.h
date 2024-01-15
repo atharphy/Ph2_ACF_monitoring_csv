@@ -16,7 +16,9 @@
 #include "Utils/Container.h"
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
+#include "pugixml.hpp"
 #include <map>
+#include <regex>
 #include <stdint.h>
 #include <vector>
 
@@ -54,6 +56,8 @@ class BeBoard : public BoardContainer
      * \param filename of the configuration file
      */
     BeBoard(uint8_t pBeId, const std::string& filename);
+
+    BeBoard(const BeBoard&) = delete;
 
     /*!
      * \brief Destructor
@@ -175,12 +179,21 @@ class BeBoard : public BoardContainer
         for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
     }
 
+    void saveRegMap(const std::string& fileName);
+
+    void                                          takeSnapshot();
+    void                                          clearSnapshot();
+    std::vector<std::pair<std::string, uint32_t>> getSnapshot() const;
+    void                                          clearFreeRegisters();
+    void                                          addFreeRegister(const std::regex& theRegisterName);
+
+    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue);
+
   protected:
     BoardType    fBoardType;
     EventType    fEventType;
     FrontEndType fFrontEndType;
 
-    BeBoardRegMap     fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
     ConditionDataSet* fCondDataSet;
     bool              fOptical{false};
     bool              fConfigureCDCE{false};
@@ -200,7 +213,11 @@ class BeBoard : public BoardContainer
      * \brief Load RegMap from a file
      * \param filename
      */
-    void loadConfigFile(const std::string& filename);
+    void                    loadConfigFile(const std::string& filename);
+    BeBoardRegMap           fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
+    bool                    fTrackModifiedRegistersEnabled{false};
+    BeBoardRegMap           fModifiedRegisters{};
+    std::vector<std::regex> fListOfFreeRegisters{};
 };
 } // namespace Ph2_HwDescription
 

@@ -10,6 +10,8 @@
  */
 
 #include "BeBoard.h"
+#include "Parser/ParserDefinitions.h"
+#include "pugixml.hpp"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -40,7 +42,21 @@ uint32_t BeBoard::getReg(const std::string& pReg) const
         return i->second;
 }
 
-void BeBoard::setReg(const std::string& pReg, uint32_t psetValue) { fRegMap[pReg] = psetValue; }
+void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
+{
+    auto oldRegister = fRegMap[pReg];
+    fRegMap[pReg]    = psetValue;
+    if(fTrackModifiedRegistersEnabled)
+    {
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: fListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(pReg, freeRegister);
+            if(isFreeRegister) break;
+        }
+        if(!isFreeRegister && oldRegister != psetValue) fModifiedRegisters[pReg] = oldRegister;
+    }
+}
 
 void BeBoard::updateCondData(uint32_t& pTDCVal)
 {
@@ -82,39 +98,60 @@ void BeBoard::updateCondData(uint32_t& pTDCVal)
     }
 }
 
+void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue)
+{
+    if(std::string(pRegisterNode.name()) == BEBOARD_REGISTER_NODE_NAME)
+    {
+        if(std::string(pRegisterNode.first_child().value()).empty())
+        {
+            if(!pAttributeString.empty()) pAttributeString += ".";
+
+            pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
+
+            for(pugi::xml_node cNode = pRegisterNode.child(BEBOARD_REGISTER_NODE_NAME); cNode; cNode = cNode.next_sibling())
+            {
+                std::string cAttributeString = pAttributeString;
+                parseRegister(cNode, cAttributeString, pValue);
+            }
+        }
+        else
+        {
+            if(!pAttributeString.empty()) pAttributeString += ".";
+
+            pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
+            pValue = convertAnyDouble(pRegisterNode.first_child().value());
+            std::cout << GREEN << "|\t|\t|"
+                      << "----" << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std::endl;
+            this->setReg(pAttributeString, pValue);
+        }
+    }
+}
+
 // Private Members:
 
 void BeBoard::loadConfigFile(const std::string& filename)
-
 {
-    std::ifstream cFile(filename.c_str(), std::ios::in);
-
-    if(!cFile)
-        LOG(ERROR) << "The BeBoard Settings File " << filename << " could not be opened!";
-    else
+    pugi::xml_document     doc;
+    pugi::xml_parse_result result = doc.load_file(filename.c_str());
+    if(!result) // Try if it is not a file, but a string containing the full xml
+        result = doc.load_string(filename.c_str());
+    if(!result)
     {
-        fRegMap.clear();
-        std::string cLine, cName, cValue, cFound;
+        LOG(ERROR) << BOLDRED << "ERROR : Unable to open the file : " << RESET << filename << std::endl;
+        LOG(ERROR) << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
+        throw Exception("Unable to parse BeBoard XML source!");
+    }
 
-        while(!(getline(cFile, cLine).eof()))
+    pugi::xml_node cBeBoardConfigurationNode = doc.child("BeBoardRegister");
+
+    for(pugi::xml_node cBeBoardRegNode = cBeBoardConfigurationNode.child(BEBOARD_REGISTER_NODE_NAME); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling())
+    {
+        if(std::string(cBeBoardRegNode.name()) == BEBOARD_REGISTER_NODE_NAME)
         {
-            if(cLine.find_first_not_of(" \t") == std::string::npos) continue;
-
-            if(cLine.at(0) == '#' || cLine.at(0) == '*') continue;
-
-            if(cLine.find(":") == std::string::npos) continue;
-
-            std::istringstream input(cLine);
-            input >> cName >> cFound >> cValue;
-
-            // Here the Reg name sits in cName and the Reg value sits in cValue
-            if(cValue.find("0x") != std::string::npos)
-                fRegMap[cName] = strtol(cValue.c_str(), 0, 16);
-            else
-                fRegMap[cName] = strtol(cValue.c_str(), 0, 10);
+            std::string cNameString;
+            double      cValue;
+            parseRegister(cBeBoardRegNode, cNameString, cValue);
         }
-
-        cFile.close();
     }
 }
 
@@ -134,4 +171,101 @@ std::vector<FrontEndType> BeBoard::connectedFrontEndTypes() const
     }         // opticalGroup
     return cFrontEndTypes;
 }
+
+void BeBoard::takeSnapshot()
+{
+    clearSnapshot();
+    fTrackModifiedRegistersEnabled = true;
+}
+
+void BeBoard::clearSnapshot()
+{
+    fTrackModifiedRegistersEnabled = false;
+    fModifiedRegisters.clear();
+}
+
+std::vector<std::pair<std::string, uint32_t>> BeBoard::getSnapshot() const
+{
+    std::vector<std::pair<std::string, uint32_t>> theModifiedRegisterVector(fModifiedRegisters.begin(), fModifiedRegisters.end());
+    return theModifiedRegisterVector;
+}
+
+void BeBoard::clearFreeRegisters() { fListOfFreeRegisters.clear(); }
+
+void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(theRegisterName); }
+
+void BeBoard::saveRegMap(const std::string& fileName)
+{
+    std::function<void(std::string, std::vector<std::string>&)> splitRegister;
+    splitRegister = [&splitRegister](std::string theFullRegister, std::vector<std::string>& theSplittedRegister) {
+        auto nextSplitPoint = theFullRegister.find(".");
+        if(nextSplitPoint == std::string::npos)
+        {
+            theSplittedRegister.push_back(theFullRegister);
+            return;
+        }
+        else
+        {
+            theSplittedRegister.push_back(theFullRegister.substr(0, nextSplitPoint));
+            splitRegister(theFullRegister.erase(0, nextSplitPoint + 1), theSplittedRegister);
+        }
+    };
+
+    std::vector<std::pair<std::vector<std::string>, uint32_t>> theRegisterListSplitted;
+
+    for(const auto& theRegisterNameAndValue: fRegMap)
+    {
+        std::vector<std::string> theSplittedRegisterName;
+        splitRegister(theRegisterNameAndValue.first, theSplittedRegisterName);
+        // for(const auto& reg : theSplittedRegisterName) std::cout<<reg<< " | ";
+        // std::cout<<std::endl;
+        theRegisterListSplitted.push_back(std::make_pair(theSplittedRegisterName, theRegisterNameAndValue.second));
+    }
+
+    std::function<void(pugi::xml_node&, const std::vector<std::pair<std::vector<std::string>, uint32_t>>&)> groupByRegisterAndDumpIntoFile;
+    groupByRegisterAndDumpIntoFile = [&groupByRegisterAndDumpIntoFile](pugi::xml_node& theMotherNode, const std::vector<std::pair<std::vector<std::string>, uint32_t>>& theRegisterListSplitted) {
+        std::map<std::string, std::vector<std::pair<std::vector<std::string>, uint32_t>>> theMapOfTheRegisterListSplitted;
+        for(const auto& theRegisterSplittedAndValue: theRegisterListSplitted)
+        {
+            const std::vector<std::string>& theRegisterSplitted = theRegisterSplittedAndValue.first;
+            const uint32_t&                 theRegisterValue    = theRegisterSplittedAndValue.second;
+            if(theRegisterSplitted.size() == 1)
+            {
+                auto theRegisterNode                                         = theMotherNode.append_child(BEBOARD_REGISTER_NODE_NAME);
+                theRegisterNode.append_attribute(COMMON_NAME_ATTRIBUTE_NAME) = theRegisterSplitted.at(0).c_str();
+                theRegisterNode.append_child(pugi::node_pcdata).set_value(std::to_string(theRegisterValue).c_str());
+            }
+            else
+            {
+                std::vector<std::string> theSubVector(theRegisterSplitted.begin() + 1, theRegisterSplitted.end());
+                theMapOfTheRegisterListSplitted[theRegisterSplitted.at(0)].push_back(std::make_pair(theSubVector, theRegisterValue));
+            }
+        }
+
+        for(const auto& theMapElement: theMapOfTheRegisterListSplitted)
+        {
+            auto theRegisterNode                                         = theMotherNode.append_child(BEBOARD_REGISTER_NODE_NAME);
+            theRegisterNode.append_attribute(COMMON_NAME_ATTRIBUTE_NAME) = theMapElement.first.c_str();
+            groupByRegisterAndDumpIntoFile(theRegisterNode, theMapElement.second);
+        }
+    };
+
+    pugi::xml_document doc;
+
+    // Add a declaration node
+    pugi::xml_node declarationNode               = doc.prepend_child(pugi::node_declaration);
+    declarationNode.append_attribute("version")  = "1.0";
+    declarationNode.append_attribute("encoding") = "utf-8";
+
+    pugi::xml_node boardRegisterNode = doc.append_child(BEBOARDREGISTER_NODE_NAME);
+
+    groupByRegisterAndDumpIntoFile(boardRegisterNode, theRegisterListSplitted);
+
+    if(doc.save_file(fileName.c_str())) { LOG(INFO) << BOLDGREEN << "XML file " << fileName << " created successfully." << RESET; }
+    else
+    {
+        LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+    }
+}
+
 } // namespace Ph2_HwDescription

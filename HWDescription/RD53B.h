@@ -63,6 +63,7 @@ class RD53B : public RD53
 
     RD53B() {}
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
+    RD53B(const RD53B&) = delete;
 
     size_t getMaxBCIDvalue() const override
     {

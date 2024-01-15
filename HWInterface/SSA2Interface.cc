@@ -402,7 +402,6 @@ bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<st
 
 bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify)
 {
-    bool cSuccess = true;
     setBoard(pSSA2->getBeBoardId());
     auto cRegMap = pSSA2->getRegMap();
 
@@ -416,20 +415,51 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
     // Preserve the original register values changing only the needed bits
     registerValue = (registerValue & ~mask) + (pValue << posOfFirstOne);
 
-    // write mask registers
-    std::vector<std::string> cMaskRegs{"mask_strip", "mask_peri_A", "mask_peri_D"};
-    std::vector<ChipRegItem> cRegItems{cRegMap[cMaskRegs[0]], cRegMap[cMaskRegs[1]], cRegMap[cMaskRegs[2]]};
-    for(unsigned i = 0; i < cRegItems.size(); i++) { cRegItems[i].fValue = (cMaskRegs[i] == pMaskReg) ? mask : 0xFF; }
-    if(fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false))
-    {
-        auto cRegItem   = cRegMap[pRegNode];
-        cRegItem.fValue = registerValue;
-        cSuccess        = fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
-    }
+    // Preparing registers and masks
+    auto theMaskRegisterMasked   = cRegMap[pMaskReg];
+    theMaskRegisterMasked.fValue = mask;
+    auto success                 = fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterMasked, false);
 
-    for(auto& cItem: cRegItems) { cItem.fValue = 0xFF; }
+    auto theRegister   = cRegMap[pRegNode];
+    theRegister.fValue = registerValue;
+    success &= fBoardFW->SingleRegisterWrite(pSSA2, theRegister, pVerify);
 
-    return cSuccess && fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
+    auto theMaskRegisterUnmasked   = cRegMap[pMaskReg];
+    theMaskRegisterUnmasked.fValue = 0xFF;
+    success &= fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterUnmasked, false);
+
+    return success;
+
+    // Fabio's comment: I do see the reason why you need to rewrite all the masks and not only the one that changes
+    // Also, I think one can write new mask, register and original mask in one shot (FW should write them in the same order)
+    // bool cSuccess = true;
+    // setBoard(pSSA2->getBeBoardId());
+    // auto cRegMap = pSSA2->getRegMap();
+
+    // uint16_t registerValue = pSSA2->getReg(pRegNode);
+    // unsigned posOfFirstOne = 0;
+    // // ASSUMING THAT MASK BITS ARE ALWAYS CONSECUTIVE. CANNOT BE MASK 0b101 BUT ONLY WORKS FOR 0b11000
+    // for(; posOfFirstOne < 8; posOfFirstOne++) // 8bits
+    // {
+    //     if((mask & (1 << posOfFirstOne))) break;
+    // }
+    // // Preserve the original register values changing only the needed bits
+    // registerValue = (registerValue & ~mask) + (pValue << posOfFirstOne);
+
+    // // write mask registers
+    // std::vector<std::string> cMaskRegs{"mask_strip", "mask_peri_A", "mask_peri_D"};
+    // std::vector<ChipRegItem> cRegItems{cRegMap[cMaskRegs[0]], cRegMap[cMaskRegs[1]], cRegMap[cMaskRegs[2]]};
+    // for(unsigned i = 0; i < cRegItems.size(); i++) { cRegItems[i].fValue = (cMaskRegs[i] == pMaskReg) ? mask : 0xFF; }
+    // if(fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false))
+    // {
+    //     auto cRegItem   = cRegMap[pRegNode];
+    //     cRegItem.fValue = registerValue;
+    //     cSuccess        = fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
+    // }
+
+    // for(auto& cItem: cRegItems) { cItem.fValue = 0xFF; }
+
+    // return cSuccess && fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
 
     /*
         // Old implementation - it seemed harder to follow when Irene and Lorenzo looked at how to write registers.
