@@ -216,7 +216,7 @@ void Chip::clearSnapshot()
 
 void Chip::reinitializeFreeRegisters()
 {
-    std::remove_if(fListOfFreeRegisters.begin(), fListOfFreeRegisters.end(), [](std::pair<std::regex, RegisterType> theRegister){return (theRegister.second == RegisterType::User);});
+    std::remove_if(fListOfFreeRegisters.begin(), fListOfFreeRegisters.end(), [](std::pair<std::regex, RegisterType> theRegister) { return (theRegister.second == RegisterType::User); });
 }
 
 void Chip::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(std::make_pair(theRegisterName, RegisterType::User)); }
@@ -230,9 +230,9 @@ std::vector<std::pair<std::string, uint16_t>> Chip::getSnapshot() const
 std::vector<std::string> Chip::getReadOnlyRegisterList() const
 {
     std::vector<std::string> readOnlyRegisterList;
-    for(const auto& registerItem : fRegMap)
+    for(const auto& registerItem: fRegMap)
     {
-        for(const auto& freeRegister : fListOfFreeRegisters)
+        for(const auto& freeRegister: fListOfFreeRegisters)
         {
             if(freeRegister.second != RegisterType::ReadOnly) continue;
             if(std::regex_match(registerItem.first, freeRegister.first))
@@ -244,6 +244,5 @@ std::vector<std::string> Chip::getReadOnlyRegisterList() const
     }
     return readOnlyRegisterList;
 }
-
 
 } // namespace Ph2_HwDescription

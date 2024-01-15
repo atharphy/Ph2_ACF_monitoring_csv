@@ -159,9 +159,9 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerify, uint32_t pBlockSize)
     ChipRegMap cCicRegMap = pCic->getRegMap();
     // get register map
     std::vector<std::pair<std::string, uint16_t>> cRegItems;
-    auto theListOfFreeRegisters = pCic->getFreeRegisters();
+    auto                                          theListOfFreeRegisters = pCic->getFreeRegisters();
     for(auto cItem: cCicRegMap)
-    { 
+    {
         bool isFreeRegister = false;
         for(const auto& freeRegister: theListOfFreeRegisters)
         {
@@ -223,7 +223,7 @@ uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 std::vector<std::pair<std::string, uint16_t>> CicInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
 {
     setBoard(pChip->getBeBoardId());
-    auto cRegMap = pChip->getRegMap();
+    auto                     cRegMap = pChip->getRegMap();
     std::vector<ChipRegItem> cRegItems;
     for(auto cReq: theRegisterList)
     {
@@ -241,7 +241,7 @@ std::vector<std::pair<std::string, uint16_t>> CicInterface::ReadChipMultReg(Ph2_
     fBoardFW->MultiRegisterRead(pChip, cRegItems);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(size_t i=0; i<theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
     return theRegisterValues;
 }
 

@@ -49,9 +49,9 @@ Cbc::Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
 }
 
 void Cbc::initializeFreeRegisters()
-{ 
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ChipIDFuse[1-3]$"), RegisterType::ReadOnly)); 
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BandgapFuse$"), RegisterType::ReadOnly)); 
+{
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ChipIDFuse[1-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BandgapFuse$"), RegisterType::ReadOnly));
 }
 
 // load fRegMap from file

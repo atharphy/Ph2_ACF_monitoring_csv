@@ -67,7 +67,7 @@ void lpGBT::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-2]Cmd$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-2]Data[0-3]$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^POWERUP2$"), RegisterType::Utility));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EPRX[0-6][0-3]ChnCntr_phase$"),  RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EPRX[0-6][0-3]ChnCntr_phase$"), RegisterType::Utility));
 }
 
 void lpGBT::loadfRegMap(const std::string& fileName)

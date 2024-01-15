@@ -931,7 +931,7 @@ bool MPA2Interface::WriteChipMultReg(Chip* pMPA2, const std::vector<std::pair<st
 std::vector<std::pair<std::string, uint16_t>> MPA2Interface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
 {
     setBoard(pChip->getBeBoardId());
-    auto cRegMap = pChip->getRegMap();
+    auto                     cRegMap = pChip->getRegMap();
     std::vector<ChipRegItem> cRegItems;
     for(auto cReq: theRegisterList)
     {
@@ -949,10 +949,9 @@ std::vector<std::pair<std::string, uint16_t>> MPA2Interface::ReadChipMultReg(Ph2
     fBoardFW->MultiRegisterRead(pChip, cRegItems);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(size_t i=0; i<theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
     return theRegisterValues;
 }
-
 
 bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify) // unchanged from MPA1 -- to check
 
@@ -1033,7 +1032,7 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     // std::vector<std::string>
     auto theListOfFreeRegisters = pMPA2->getFreeRegisters();
 
-    uint8_t maskValue = 0xFF;
+    uint8_t maskValue    = 0xFF;
     uint8_t maskAllValue = 0xFF;
 
     for(auto cMapItem: cRegMap)
@@ -1066,7 +1065,7 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
             cRegItems.push_back(cMapItem.second);
     }
 
-    //Mask need to be written first, default value is 0
+    // Mask need to be written first, default value is 0
     this->WriteChipReg(pMPA2, "Mask", maskValue, false);
     this->WriteChipReg(pMPA2, "Mask_ALL", maskAllValue, false);
 

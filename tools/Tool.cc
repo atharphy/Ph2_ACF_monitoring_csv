@@ -821,9 +821,9 @@ void Tool::dumpConfigFiles()
 
     LOG(INFO) << BOLDBLUE << "Reading all the read-only registers to update output files" << RESET;
 
-    for(auto theBoard : *fDetectorContainer)
+    for(auto theBoard: *fDetectorContainer)
     {
-        for(auto theOpticalGroup : *theBoard)
+        for(auto theOpticalGroup: *theBoard)
         {
             auto theLpGBT = theOpticalGroup->flpGBT;
             if(theLpGBT != nullptr)
@@ -831,17 +831,19 @@ void Tool::dumpConfigFiles()
                 LOG(INFO) << BOLDYELLOW << "Reading read-only registers for BeBoard " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " LpGBT" << RESET;
                 flpGBTInterface->ReadChipMultReg(theLpGBT, theLpGBT->getReadOnlyRegisterList());
             }
-            for(auto theHybrid : *theOpticalGroup)
+            for(auto theHybrid: *theOpticalGroup)
             {
                 if(fCicInterface != nullptr)
                 {
-                    LOG(INFO) << BOLDYELLOW << "Reading read-only registers for BeBoard " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId() << " CIC" << RESET;
+                    LOG(INFO) << BOLDYELLOW << "Reading read-only registers for BeBoard " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId()
+                              << " CIC" << RESET;
                     auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                     fCicInterface->ReadChipMultReg(theCic, theCic->getReadOnlyRegisterList());
                 }
-                for(auto theChip : *theHybrid)
+                for(auto theChip: *theHybrid)
                 {
-                    LOG(INFO) << BOLDYELLOW << "Reading read-only registers for BeBoard " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId() << " Chip " << +theChip->getId() << RESET;
+                    LOG(INFO) << BOLDYELLOW << "Reading read-only registers for BeBoard " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId()
+                              << " Chip " << +theChip->getId() << RESET;
                     fReadoutChipInterface->ReadChipMultReg(theChip, theChip->getReadOnlyRegisterList());
                 }
             }

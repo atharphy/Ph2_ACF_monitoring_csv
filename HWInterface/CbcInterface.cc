@@ -503,7 +503,7 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
 std::vector<std::pair<std::string, uint16_t>> CbcInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
 {
     setBoard(pChip->getBeBoardId());
-    auto cRegMap = pChip->getRegMap();
+    auto                     cRegMap = pChip->getRegMap();
     std::vector<ChipRegItem> cRegItems;
     for(auto cReq: theRegisterList)
     {
@@ -521,7 +521,7 @@ std::vector<std::pair<std::string, uint16_t>> CbcInterface::ReadChipMultReg(Ph2_
     fBoardFW->MultiRegisterRead(pChip, cRegItems);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(size_t i=0; i<theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
     return theRegisterValues;
 }
 
