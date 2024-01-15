@@ -227,4 +227,23 @@ std::vector<std::pair<std::string, uint16_t>> Chip::getSnapshot() const
     return theModifiedRegisterVector;
 }
 
+std::vector<std::string> Chip::getReadOnlyRegisterList() const
+{
+    std::vector<std::string> readOnlyRegisterList;
+    for(const auto& registerItem : fRegMap)
+    {
+        for(const auto& freeRegister : fListOfFreeRegisters)
+        {
+            if(freeRegister.second != RegisterType::ReadOnly) continue;
+            if(std::regex_match(registerItem.first, freeRegister.first))
+            {
+                readOnlyRegisterList.push_back(registerItem.first);
+                break;
+            }
+        }
+    }
+    return readOnlyRegisterList;
+}
+
+
 } // namespace Ph2_HwDescription

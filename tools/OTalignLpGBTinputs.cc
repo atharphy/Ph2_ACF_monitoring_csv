@@ -120,9 +120,6 @@ void OTalignLpGBTinputs::Stop(void)
     // Calibration is not running on the SoC: processing the histograms
     fDQMHistogramOTalignLpGBTinputs.process();
 #endif
-    dumpConfigFiles();
-    SaveResults();
-    closeFileHandler();
     LOG(INFO) << "OTalignLpGBTinputs stopped.";
 }
 

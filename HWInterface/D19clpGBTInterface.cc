@@ -144,6 +144,31 @@ bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const 
     return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
 }
 
+std::vector<std::pair<std::string, uint16_t>> D19clpGBTInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
+{
+    setBoard(pChip->getBeBoardId());
+    auto cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: theRegisterList)
+    {
+        auto cIterator = cRegMap.find(cReq);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            abort();
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cRegItems.push_back(cItem);
+    }
+
+    fBoardFW->MultiRegisterRead(pChip, cRegItems);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(size_t i=0; i<theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    return theRegisterValues;
+}
+
 void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
 {
     if(pOptical)

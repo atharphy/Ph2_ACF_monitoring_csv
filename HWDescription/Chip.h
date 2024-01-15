@@ -232,6 +232,7 @@ class Chip : public FrontEndDescription
     void                                             reinitializeFreeRegisters();
     void                                             addFreeRegister(const std::regex& theRegisterName);
     std::vector<std::pair<std::regex, RegisterType>> getFreeRegisters() const {return fListOfFreeRegisters;}
+    std::vector<std::string>                         getReadOnlyRegisterList() const;
 
   protected:
     virtual void            initializeFreeRegisters() {};
