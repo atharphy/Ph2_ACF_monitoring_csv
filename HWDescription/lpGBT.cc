@@ -22,43 +22,52 @@ lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChi
 
 void lpGBT::initializeFreeRegisters()
 {
-    fListOfFreeRegisters.push_back(std::regex("^ConfigPins$"));
-    fListOfFreeRegisters.push_back(std::regex("^I2CSlaveAddress$"));
-    fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]Locked$"));
-    fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]CurrentPhase[13][02]$"));
-    fListOfFreeRegisters.push_back(std::regex("^EPRXEcCurrentPhase$"));
-    fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]DLLStatus$"));
-    fListOfFreeRegisters.push_back(std::regex(R"(^I2CM[0-2](?!Config$).*)"));
-    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Data[0-3]$"));
-    fListOfFreeRegisters.push_back(std::regex("^I2CM[0-2]Cmd$"));
-    fListOfFreeRegisters.push_back(std::regex("^PSStatus$"));
-    fListOfFreeRegisters.push_back(std::regex("^PIOIn[HL]$"));
-    fListOfFreeRegisters.push_back(std::regex("^FUSE.*"));
-    fListOfFreeRegisters.push_back(std::regex("^FuseMagic$"));
-    fListOfFreeRegisters.push_back(std::regex("^ProcessMonitorStatus$"));
-    fListOfFreeRegisters.push_back(std::regex("^PMFreq[A-C]$"));
-    fListOfFreeRegisters.push_back(std::regex("^SEUCount[HL]$"));
-    fListOfFreeRegisters.push_back(std::regex("^CLKGStatus[0-9]$"));
-    fListOfFreeRegisters.push_back(std::regex("^DLDPFecCorrectionCount[0-3]$"));
-    fListOfFreeRegisters.push_back(std::regex("^ADCStatus[HL]$"));
-    fListOfFreeRegisters.push_back(std::regex("^EOMStatus$"));
-    fListOfFreeRegisters.push_back(std::regex("^EOMCounterValue[HL]$"));
-    fListOfFreeRegisters.push_back(std::regex("^EOMCounter40M[HL]$"));
-    fListOfFreeRegisters.push_back(std::regex("^BERTStatus$"));
-    fListOfFreeRegisters.push_back(std::regex("^BERTResult[0-4]$"));
-    fListOfFreeRegisters.push_back(std::regex("^ROM$"));
-    fListOfFreeRegisters.push_back(std::regex("^PORBOR$"));
-    fListOfFreeRegisters.push_back(std::regex("^PUSM.*"));
-    fListOfFreeRegisters.push_back(std::regex("^CRCValue[0-3]$"));
-    fListOfFreeRegisters.push_back(std::regex("^FailedCRC$"));
-    fListOfFreeRegisters.push_back(std::regex("^TOValue$"));
-    fListOfFreeRegisters.push_back(std::regex("^SCStatus$"));
-    fListOfFreeRegisters.push_back(std::regex("^FAState$"));
-    fListOfFreeRegisters.push_back(std::regex("^FAHeader.*"));
-    fListOfFreeRegisters.push_back(std::regex("^FALossOfLockCount$"));
-    fListOfFreeRegisters.push_back(std::regex("^ConfigErrorCounter[HL]$"));
-    fListOfFreeRegisters.push_back(std::regex("^POWERUP2$"));
-    fListOfFreeRegisters.push_back(std::regex("^EPRX[0-6]DllStatus$"));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ConfigPins$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CSlaveAddress$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EPRX[0-6]Locked$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EPRX[0-6]CurrentPhase[13][02]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EPRXEcCurrentPhase$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EPRX[0-6]DLLStatus$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-2]Ctrl$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-2]Mask$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-2]Status$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-2]TranCnt$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-2]Read.*"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^PSStatus$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^PIOIn[HL]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FUSEStatus$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FUSEValues[A-D]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ProcessMonitorStatus$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^PMFreq[A-C]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^SEUCount[HL]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^CLKGStatus[0-9]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^DLDPFecCorrectionCount[0-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ADCStatus[HL]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EOMStatus$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EOMCounterValue[HL]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EOMCounter40M[HL]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BERTStatus$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BERTResult[0-4]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ROM$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^PORBOR$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^PUSM.*"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^CRCValue[0-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FailedCRC$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^TOValue$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^SCStatus$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FAState$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FAHeader.*"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FALossOfLockCount$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ConfigErrorCounter[HL]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FUSEControl$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FUSEBlowData[A-D]$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FUSEBlowAdd[HL]$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^FuseMagic$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-1]Address$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-2]Cmd$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^I2CM[0-2]Data[0-3]$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^POWERUP2$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EPRX[0-6][0-3]ChnCntr_phase$"),  RegisterType::Utility));
 }
 
 void lpGBT::loadfRegMap(const std::string& fileName)
@@ -68,6 +77,7 @@ void lpGBT::loadfRegMap(const std::string& fileName)
 
     if(file.good() == true)
     {
+        initializeFreeRegisters();
         std::string line, fName, fAddress_str, fDefValue_str, fValue_str, fBitSize_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;

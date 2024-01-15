@@ -43,8 +43,16 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerify, uint32_t pBlockSize)
     ChipRegMap                                       cCbcRegMap = pCbc->getRegMap();
     std::vector<std::pair<std::string, ChipRegItem>> cRegList;
     cRegList.clear();
+    auto theListOfFreeRegisters = pCbc->getFreeRegisters();
     for(auto cMapItem: cCbcRegMap)
     {
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: theListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(cMapItem.first, freeRegister.first);
+            if(isFreeRegister) break;
+        }
+        if(isFreeRegister) continue; // skipping readonly registers
         std::pair<std::string, ChipRegItem> cItem;
         cItem.first  = cMapItem.first;
         cItem.second = cMapItem.second;
@@ -63,8 +71,6 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerify, uint32_t pBlockSize)
     std::vector<ChipRegItem> cRegItemsPg1;
     for(auto& cReg: cRegList)
     {
-        // skip fused registers .. can't write to them
-        if(cReg.first.find("Fuse") != std::string::npos) continue;
         if(cReg.second.fPage == 0)
             cRegItemsPg0.push_back(cReg.second);
         else

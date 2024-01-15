@@ -91,7 +91,7 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
             bool isFreeRegister = false;
             for(const auto& freeRegister: fListOfFreeRegisters)
             {
-                isFreeRegister = std::regex_match(pReg, freeRegister);
+                isFreeRegister = std::regex_match(pReg, freeRegister.first);
                 if(isFreeRegister) break;
             }
             if(!isFreeRegister && oldRegister != i->second) fModifiedRegisters[i->first] = oldRegister.fValue;
@@ -204,7 +204,7 @@ void Chip::saveRegMap(const std::string& fileName)
 void Chip::takeSnapshot()
 {
     clearSnapshot();
-    clearFreeRegisters();
+    reinitializeFreeRegisters();
     fTrackModifiedRegistersEnabled = true;
 }
 
@@ -214,13 +214,12 @@ void Chip::clearSnapshot()
     fModifiedRegisters.clear();
 }
 
-void Chip::clearFreeRegisters()
+void Chip::reinitializeFreeRegisters()
 {
-    fListOfFreeRegisters.clear();
-    initializeFreeRegisters();
+    std::remove_if(fListOfFreeRegisters.begin(), fListOfFreeRegisters.end(), [](std::pair<std::regex, RegisterType> theRegister){return (theRegister.second == RegisterType::User);});
 }
 
-void Chip::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(theRegisterName); }
+void Chip::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(std::make_pair(theRegisterName, RegisterType::User)); }
 
 std::vector<std::pair<std::string, uint16_t>> Chip::getSnapshot() const
 {

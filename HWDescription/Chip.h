@@ -224,14 +224,17 @@ class Chip : public FrontEndDescription
         return output;
     }
 
-    void                                          takeSnapshot();
-    void                                          clearSnapshot();
-    std::vector<std::pair<std::string, uint16_t>> getSnapshot() const;
-    void                                          clearFreeRegisters();
-    void                                          addFreeRegister(const std::regex& theRegisterName);
-    virtual void                                  initializeFreeRegisters(){};
+    enum class RegisterType {ReadOnly, Utility, User};
+
+    void                                             takeSnapshot();
+    void                                             clearSnapshot();
+    std::vector<std::pair<std::string, uint16_t>>    getSnapshot() const;
+    void                                             reinitializeFreeRegisters();
+    void                                             addFreeRegister(const std::regex& theRegisterName);
+    std::vector<std::pair<std::regex, RegisterType>> getFreeRegisters() const {return fListOfFreeRegisters;}
 
   protected:
+    virtual void            initializeFreeRegisters() {};
     std::string             configFileName;
     uint8_t                 fChipCode;
     uint8_t                 fChipId;
@@ -241,7 +244,7 @@ class Chip : public FrontEndDescription
     ChipRegMap              fRegMap;
     ChipRegMap              fModifiedRegs;
     CommentMap              fCommentMap;
-    std::vector<std::regex> fListOfFreeRegisters{};
+    std::vector<std::pair<std::regex, RegisterType>> fListOfFreeRegisters{};
 
   private:
     uint32_t                                  fI2CWrites         = 0;

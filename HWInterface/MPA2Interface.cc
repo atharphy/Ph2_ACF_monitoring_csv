@@ -1005,8 +1005,23 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
 
     auto cOriginalMask = static_cast<ReadoutChip*>(pMPA2)->getChipOriginalMask();
     // std::vector<std::string>
+    auto theListOfFreeRegisters = pMPA2->getFreeRegisters();
+
+    uint8_t maskValue = 0xFF;
+    uint8_t maskAllValue = 0xFF;
+
     for(auto cMapItem: cRegMap)
     {
+        if(cMapItem.first == "Mask") maskValue = cMapItem.second.fValue;
+        if(cMapItem.first == "Mask_ALL") maskAllValue = cMapItem.second.fValue;
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: theListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(cMapItem.first, freeRegister.first);
+            if(isFreeRegister) break;
+        }
+        if(isFreeRegister) continue; // skipping readonly registers
+
         if(cMapItem.second.fControlReg)
             cCntrlRegItems.push_back(cMapItem.second);
         else if((cMapItem.first.find("_P") != std::string::npos))
@@ -1024,8 +1039,10 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         else
             cRegItems.push_back(cMapItem.second);
     }
-    this->WriteChipReg(pMPA2, "Mask", 0xFF, false);
-    this->WriteChipReg(pMPA2, "Mask_ALL", 0xFF, false);
+
+    //Mask need to be written first, default value is 0
+    this->WriteChipReg(pMPA2, "Mask", maskValue, false);
+    this->WriteChipReg(pMPA2, "Mask_ALL", maskAllValue, false);
 
     // cntrl
     bool cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cCntrlRegItems, false);

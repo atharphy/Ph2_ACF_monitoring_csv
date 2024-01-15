@@ -43,7 +43,20 @@ Cic::Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     setFrontEndType(FrontEndType::CIC);
 }
 
-void Cic::initializeFreeRegisters() { fListOfFreeRegisters.push_back(std::regex("^EfuseValue[0-3]$")); }
+void Cic::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EfuseValue[0-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ASYNC_CNTL_BLOCK[0-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^SYNC_CNTL_BLOCK[0-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scPhaseSelectB[0-3]o[0-5]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scDllInstantLock[01]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scDllLocked[01]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scChannelLocked[0-5]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^timingStatusBits$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BX0_DEALY$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^WA_DELAY\\d{2}$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^MASK_BLOCK[0-3]$"), RegisterType::Utility));
+}
 
 // load fRegMap from file
 void Cic::loadfRegMap(const std::string& filename)
@@ -52,6 +65,7 @@ void Cic::loadfRegMap(const std::string& filename)
 
     if(file)
     {
+        initializeFreeRegisters();
         std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;

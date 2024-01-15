@@ -81,6 +81,7 @@ void RD53::loadfRegMap(const std::string& fileName)
 
     if(file.good() == true)
     {
+        initializeFreeRegisters();
         std::string  line, fName, fAddress_str, fDefValue_str, fValue_str, fBitSize_str;
         bool         foundPixelConfig = false;
         int          cLineCounter     = 0;

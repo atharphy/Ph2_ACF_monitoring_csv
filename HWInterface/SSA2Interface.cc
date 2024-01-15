@@ -58,11 +58,6 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     }
     fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
 
-    // configure W/R registers
-    // do not overwrite these registers..
-    std::vector<std::string> cRegsToSkip{"mask_strip", "mask_peri_A", "mask_peri_D"};
-    std::vector<std::string> cReadOnlyRegs{"SEUcnt", "Ring_oscillator", "ADC_out", "bist_output", "AC_ReadCounter", "status_reg"};
-
     cRegItems.clear();
     // need to split between control and enable registers
     // don't read back enable registers
@@ -72,12 +67,16 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     // std::vector<std::string> cLocalRegItemsNames;
     // std::vector<std::string> cRegItemsNames;
     cCntrlRegItems.clear();
+    auto theListOfFreeRegisters = pSSA2->getFreeRegisters();
     for(auto cMapItem: cSSA2RegMap)
     {
-        if(std::find(cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first) != cRegsToSkip.end()) continue;
-        bool cReadOnly = false;
-        for(auto cReadOnlyReg: cReadOnlyRegs) cReadOnly = cReadOnly || (cMapItem.first.find(cReadOnlyReg) != std::string::npos);
-        if(cReadOnly) continue;
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: theListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(cMapItem.first, freeRegister.first);
+            if(isFreeRegister) break;
+        }
+        if(isFreeRegister) continue; // skipping readonly registers
 
         if(cMapItem.second.fControlReg)
         {
