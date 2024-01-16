@@ -840,11 +840,19 @@ void Tool::dumpConfigFiles()
                     auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                     fCicInterface->ReadChipMultReg(theCic, theCic->getReadOnlyRegisterList());
                 }
+                FrontEndType theCurrentFrontEndType = FrontEndType::UNDEFINED;
+                std::vector<std::string> readOnlyRegisters {};
                 for(auto theChip: *theHybrid)
                 {
+                    if(theCurrentFrontEndType != theChip->getFrontEndType())
+                    {
+                        theCurrentFrontEndType = theChip->getFrontEndType();
+                        readOnlyRegisters.clear();
+                        readOnlyRegisters = theChip->getReadOnlyRegisterList();
+                    }
                     LOG(INFO) << BOLDYELLOW << "Reading read-only registers for BeBoard " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId()
                               << " Chip " << +theChip->getId() << RESET;
-                    fReadoutChipInterface->ReadChipMultReg(theChip, theChip->getReadOnlyRegisterList());
+                    fReadoutChipInterface->ReadChipMultReg(theChip, readOnlyRegisters);
                 }
             }
         }
