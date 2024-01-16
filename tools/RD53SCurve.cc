@@ -63,19 +63,19 @@ void SCurve::ConfigureCalibration()
 
 void SCurve::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[SCurve::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[SCurve::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_SCurve.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_SCurve.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     SCurve::run();
     SCurve::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(doUpdateChip);
     SCurve::sendData();
 }
 
@@ -113,10 +113,14 @@ void SCurve::Stop()
 
 void SCurve::localConfigure(const std::string& histoFileName, int currentRun)
 {
-    histos        = nullptr;
-    theCurrentRun = currentRun;
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
 
-    LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    histos = nullptr;
+
+    LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -190,7 +194,7 @@ void SCurve::run()
 
 void SCurve::draw(bool saveData)
 {
-    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -203,7 +207,7 @@ void SCurve::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
     }
 
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookWhateverSaveMetadata(histos);
     SCurve::fillHisto();
     histos->process();
     doSaveData = saveData;
@@ -214,7 +218,7 @@ void SCurve::draw(bool saveData)
     // #####################
     // # @TMP@ : CalibFile #
     // #####################
-    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, theCurrentRun, dacList, offset, nEvents, "SCurve");
+    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, dacList, offset, nEvents, "SCurve");
 }
 
 std::shared_ptr<DetectorDataContainer> SCurve::analyze()

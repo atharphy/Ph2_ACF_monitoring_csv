@@ -69,19 +69,19 @@ void Gain::ConfigureCalibration()
 
 void Gain::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[Gain::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Gain::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Gain.raw", 'w');
+        this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_Gain.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     Gain::run();
     Gain::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(doUpdateChip);
     Gain::sendData();
 }
 
@@ -119,10 +119,14 @@ void Gain::Stop()
 
 void Gain::localConfigure(const std::string& histoFileName, int currentRun)
 {
-    histos        = nullptr;
-    theCurrentRun = currentRun;
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
 
-    LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    histos = nullptr;
+
+    LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -196,7 +200,7 @@ void Gain::run()
 
 void Gain::draw(bool saveData)
 {
-    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -209,7 +213,7 @@ void Gain::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
     }
 
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookWhateverSaveMetadata(histos);
     Gain::fillHisto();
     histos->process();
     doSaveData = saveData;
@@ -220,7 +224,7 @@ void Gain::draw(bool saveData)
     // #####################
     // # @TMP@ : CalibFile #
     // #####################
-    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, theCurrentRun, dacList, offset, nEvents, "Gain");
+    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, dacList, offset, nEvents, "Gain");
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze()

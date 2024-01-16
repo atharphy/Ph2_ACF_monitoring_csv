@@ -67,19 +67,19 @@ void ThrEqualization::ConfigureCalibration()
 
 void ThrEqualization::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[ThrEqualization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[ThrEqualization::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(PixelAlive::saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrEqualization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_ThrEqualization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     ThrEqualization::run();
     ThrEqualization::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(doUpdateChip);
     ThrEqualization::sendData();
     PixelAlive::sendData();
 }
@@ -118,9 +118,8 @@ void ThrEqualization::localConfigure(const std::string& histoFileName, int curre
 {
     histos             = nullptr;
     PixelAlive::histos = nullptr;
-    theCurrentRun      = currentRun;
 
-    LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -210,7 +209,7 @@ void ThrEqualization::run()
 
 void ThrEqualization::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -223,7 +222,7 @@ void ThrEqualization::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
     }
 
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookWhateverSaveMetadata(histos);
     ThrEqualization::fillHisto();
     histos->process();
 

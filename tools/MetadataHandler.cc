@@ -264,3 +264,10 @@ void MetadataHandler::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuse
         }
     }
 }
+
+void MetadataHandler::justBookDQMMetadata()
+{
+#ifdef __USE_ROOT__
+    fDQMMetadata->book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}

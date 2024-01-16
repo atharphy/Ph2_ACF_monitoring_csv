@@ -89,7 +89,6 @@ class Physics : public CalibBase
     bool        saveBinaryData;
     std::string dataOutputDir;
 
-    int                  theCurrentRun;
     size_t               numberOfEventsPerRun;
     std::recursive_mutex theMtx;
     evtConvType          genericEvtConverter;

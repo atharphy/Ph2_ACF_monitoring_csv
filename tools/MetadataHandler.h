@@ -19,6 +19,8 @@ class MetadataHandler : public Tool
     virtual void fillInitalConditionsHardwareSpecific() = 0;
     virtual void fillFinalConditionsHardwareSpecific()  = 0;
 
+    void justBookDQMMetadata();
+
   protected:
     DQMMetadata* fDQMMetadata{nullptr};
 

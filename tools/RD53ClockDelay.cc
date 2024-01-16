@@ -48,19 +48,19 @@ void ClockDelay::ConfigureCalibration()
 
 void ClockDelay::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[ClockDelay::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[ClockDelay::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(PixelAlive::saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ClockDelay.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_ClockDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     ClockDelay::run();
     ClockDelay::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
+    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
     ClockDelay::sendData();
     la.sendData();
 }
@@ -91,13 +91,17 @@ void ClockDelay::Stop()
 
 void ClockDelay::localConfigure(const std::string& histoFileName, int currentRun)
 {
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
+
     histos                = nullptr;
     la.histos             = nullptr;
     la.PixelAlive::histos = nullptr;
     PixelAlive::histos    = nullptr;
-    theCurrentRun         = currentRun;
 
-    LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -177,7 +181,7 @@ void ClockDelay::run()
 
 void ClockDelay::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
+    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
     la.draw(false);
 
 #ifdef __USE_ROOT__
@@ -191,7 +195,7 @@ void ClockDelay::draw(bool saveData)
         LOG(INFO) << BOLDBLUE << "\t--> ClockDelay saving histograms..." << RESET;
     }
 
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookWhateverSaveMetadata(histos);
     ClockDelay::fillHisto();
     histos->process();
 

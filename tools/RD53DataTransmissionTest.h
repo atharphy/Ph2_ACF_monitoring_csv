@@ -49,8 +49,6 @@ class DataTransmissionTest : public BERtest
     double BERtarget;
     bool   given_time;
     double frames_or_time;
-
-    int theCurrentRun;
 };
 
 #endif

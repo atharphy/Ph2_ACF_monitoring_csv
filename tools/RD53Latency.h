@@ -62,8 +62,6 @@ class Latency : public PixelAlive
   protected:
     size_t startValue;
     size_t stopValue;
-
-    int theCurrentRun;
 };
 
 #endif

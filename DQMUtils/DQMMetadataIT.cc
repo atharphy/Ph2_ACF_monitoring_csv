@@ -9,15 +9,36 @@ void DQMMetadataIT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
     DQMMetadata::book(theOutputFile, theDetectorStructure, pSettingsMap);
 
     // child book here
+    StringContainer fEndOfCalibStringContainer("ITEndOfCalib");
+    RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fEndOfCalibContainer, fEndOfCalibStringContainer);
+}
+
+void DQMMetadataIT::fillEndOfCalib(const DetectorDataContainer& theDetectorData)
+{
+    for(const auto cBoard: theDetectorData)
+    {
+        if(cBoard->hasSummary() == false) continue;
+        fEndOfCalibContainer.getObject(cBoard->getId())->getSummary<StringContainer>().saveString(cBoard->getSummary<std::string>().c_str());
+    }
 }
 
 bool DQMMetadataIT::fill(std::string& inputStream)
 {
-    bool motherClassFillResult = DQMMetadata::fill(inputStream);
-    if(motherClassFillResult) { return true; }
+    const bool motherClassFillResult = DQMMetadata::fill(inputStream);
+
+    if(motherClassFillResult == true)
+        return true;
     else
     {
         // child fill here
+        ContainerSerialization theMetadataSerialization("MetadataITEndOfCalib");
+
+        if(theMetadataSerialization.attachDeserializer(inputStream))
+        {
+            DetectorDataContainer theDetectorData = theMetadataSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+            DQMMetadataIT::fillEndOfCalib(theDetectorData);
+            return true;
+        }
     }
 
     return false;
