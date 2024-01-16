@@ -142,20 +142,14 @@ void ThrAdjustment::run()
 
 void ThrAdjustment::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> ThrAdjustment saving histograms..." << RESET;
-    }
-
-    CalibBase::bookWhateverSaveMetadata(histos);
+    CalibBase::bookHistoSaveMetadata(histos);
     ThrAdjustment::fillHisto();
     histos->process();
 

@@ -140,20 +140,14 @@ void GainOptimization::run()
 
 void GainOptimization::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
-    }
-
-    CalibBase::bookWhateverSaveMetadata(histos);
+    CalibBase::bookHistoSaveMetadata(histos);
     GainOptimization::fillHisto();
     histos->process();
 

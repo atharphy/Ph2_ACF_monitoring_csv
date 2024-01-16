@@ -11,7 +11,24 @@ void MetadataHandlerIT::initMetadataHardwareSpecific()
 #endif
 }
 
-void MetadataHandlerIT::fillInitalConditionsHardwareSpecific() {}
+void MetadataHandlerIT::fillInitalConditionsHardwareSpecific()
+{
+    __attribute__((unused)) const bool isInitialValue = true;
+    DetectorDataContainer              theBeginOfCalibContainer;
+    ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theBeginOfCalibContainer);
+    MetadataHandlerIT::fillBeginOfCalib(theBeginOfCalibContainer);
+
+#ifdef __USE_ROOT__
+    auto* theITDQMMetadata = static_cast<DQMMetadataIT*>(fDQMMetadata);
+    theITDQMMetadata->fillBeginOfCalib(theBeginOfCalibContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theMetadataSerialization("MetadataITBeginOfCalib");
+        theMetadataSerialization.streamByHybridContainer(fDQMStreamer, theBeginOfCalibContainer, isInitialValue);
+    }
+#endif
+}
 
 void MetadataHandlerIT::fillFinalConditionsHardwareSpecific()
 {
@@ -24,7 +41,6 @@ void MetadataHandlerIT::fillFinalConditionsHardwareSpecific()
     auto* theITDQMMetadata = static_cast<DQMMetadataIT*>(fDQMMetadata);
     theITDQMMetadata->fillEndOfCalib(theEndOfCalibContainer);
 #else
-
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theMetadataSerialization("MetadataITEndOfCalib");
@@ -33,12 +49,16 @@ void MetadataHandlerIT::fillFinalConditionsHardwareSpecific()
 #endif
 }
 
+void MetadataHandlerIT::fillBeginOfCalib(DetectorDataContainer& theBeginOfCalibContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+        theBeginOfCalibContainer.getObject(cBoard->getId())->getSummary<std::string>() =
+            std::to_string(static_cast<Ph2_HwInterface::RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->getChipCommunicationStatus());
+}
+
 void MetadataHandlerIT::fillEndOfCalib(DetectorDataContainer& theEndOfCalibContainer)
 {
     for(auto cBoard: *fDetectorContainer)
-    {
-        uint32_t value = 1314;
-
-        theEndOfCalibContainer.getObject(cBoard->getId())->getSummary<std::string>() = std::to_string(value);
-    }
+        theEndOfCalibContainer.getObject(cBoard->getId())->getSummary<std::string>() =
+            std::to_string(static_cast<Ph2_HwInterface::RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->getNCorruptedNEvents());
 }

@@ -141,11 +141,10 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
 #ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
-    this->InitResultFile(CalibBase::theHistoFileName);
 #endif
+    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
 }
 
 void Physics::run()
@@ -188,13 +187,7 @@ void Physics::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
-    }
-
-    CalibBase::bookWhateverSaveMetadata(histos);
+    CalibBase::bookHistoSaveMetadata(histos);
     Physics::fillHisto();
     histos->process();
 

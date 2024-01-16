@@ -178,7 +178,7 @@ void InjectionDelay::run()
 
 void InjectionDelay::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
     la.draw(false);
 
 #ifdef __USE_ROOT__
@@ -186,13 +186,7 @@ void InjectionDelay::draw(bool saveData)
 
     if(PixelAlive::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
-    }
-
-    CalibBase::bookWhateverSaveMetadata(histos);
+    CalibBase::bookHistoSaveMetadata(histos);
     InjectionDelay::fillHisto();
     histos->process();
 

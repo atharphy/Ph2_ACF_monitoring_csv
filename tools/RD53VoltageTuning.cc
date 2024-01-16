@@ -340,13 +340,7 @@ void VoltageTuning::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> VoltageTuning saving histograms..." << RESET;
-    }
-
-    CalibBase::bookWhateverSaveMetadata(histos);
+    CalibBase::bookHistoSaveMetadata(histos);
     VoltageTuning::fillHisto();
     histos->process();
 

@@ -140,20 +140,14 @@ void GenericDacDacScan::run()
 
 void GenericDacDacScan::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(PixelAlive::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saving histograms..." << RESET;
-    }
-
-    CalibBase::bookWhateverSaveMetadata(histos);
+    CalibBase::bookHistoSaveMetadata(histos);
     GenericDacDacScan::fillHisto();
     histos->process();
 

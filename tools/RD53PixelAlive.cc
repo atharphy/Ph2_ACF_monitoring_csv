@@ -123,9 +123,9 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
     // ##########################
     PixelAlive::ConfigureCalibration();
 
-    // #########################################
-    // # Initialize histogram and binary files #
-    // #########################################
+    // ###################################################
+    // # Initialize histograms and binary and root files #
+    // ###################################################
     CalibBase::initializeFiles<PixelAliveHistograms>(histoFileName, "PixelAlive", histos, currentRun, saveBinaryData);
 }
 
@@ -261,13 +261,7 @@ void PixelAlive::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saving histograms..." << RESET;
-    }
-
-    CalibBase::bookWhateverSaveMetadata(histos);
+    CalibBase::bookHistoSaveMetadata(histos);
     PixelAlive::fillHisto();
     histos->process();
     doSaveData = saveData;

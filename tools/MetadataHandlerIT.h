@@ -27,6 +27,7 @@ class MetadataHandlerIT : public MetadataHandler
     void fillFinalConditionsHardwareSpecific() override;
 
   private:
+    void fillBeginOfCalib(DetectorDataContainer& theEndOfCalibContainer);
     void fillEndOfCalib(DetectorDataContainer& theEndOfCalibContainer);
 };
 

@@ -1,8 +1,8 @@
 /*!
-        \file                   Tool.h
+        \file                                    Tool.h
         \brief                                   Controller of the System, overall wrapper of the framework
         \author                                  Georg AUZINGER
-        \version                 1.0
+        \version                                 1.0
         \date                                    06/02/15
         Support :                                mail to : georg.auzinger@cern.ch
  */

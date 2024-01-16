@@ -24,6 +24,7 @@ class DQMMetadataIT : public DQMMetadata
 
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
+    void fillBeginOfCalib(const DetectorDataContainer& theDetectorData);
     void fillEndOfCalib(const DetectorDataContainer& theDetectorData);
 
     bool fill(std::string& inputStream) override;
@@ -31,6 +32,7 @@ class DQMMetadataIT : public DQMMetadata
     void reset(void) override;
 
   private:
+    DetectorDataContainer fBeginOfCalibContainer;
     DetectorDataContainer fEndOfCalibContainer;
 };
 

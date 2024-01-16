@@ -9,8 +9,20 @@ void DQMMetadataIT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
     DQMMetadata::book(theOutputFile, theDetectorStructure, pSettingsMap);
 
     // child book here
+    StringContainer fBeginOfCalibStringContainer("ITBeginOfCalib");
+    RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fBeginOfCalibContainer, fBeginOfCalibStringContainer);
+
     StringContainer fEndOfCalibStringContainer("ITEndOfCalib");
     RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fEndOfCalibContainer, fEndOfCalibStringContainer);
+}
+
+void DQMMetadataIT::fillBeginOfCalib(const DetectorDataContainer& theDetectorData)
+{
+    for(const auto cBoard: theDetectorData)
+    {
+        if(cBoard->hasSummary() == false) continue;
+        fBeginOfCalibContainer.getObject(cBoard->getId())->getSummary<StringContainer>().saveString(cBoard->getSummary<std::string>().c_str());
+    }
 }
 
 void DQMMetadataIT::fillEndOfCalib(const DetectorDataContainer& theDetectorData)
@@ -31,11 +43,21 @@ bool DQMMetadataIT::fill(std::string& inputStream)
     else
     {
         // child fill here
-        ContainerSerialization theMetadataSerialization("MetadataITEndOfCalib");
+        ContainerSerialization theMetadataBeginOfCalibSerialization("MetadataITBeginOfCalib");
+        ContainerSerialization theMetadataEndOfCalibSerialization("MetadataITEndOfCalib");
 
-        if(theMetadataSerialization.attachDeserializer(inputStream))
+        if(theMetadataBeginOfCalibSerialization.attachDeserializer(inputStream))
         {
-            DetectorDataContainer theDetectorData = theMetadataSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+            DetectorDataContainer theDetectorData =
+                theMetadataBeginOfCalibSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+            DQMMetadataIT::fillBeginOfCalib(theDetectorData);
+            return true;
+        }
+
+        if(theMetadataEndOfCalibSerialization.attachDeserializer(inputStream))
+        {
+            DetectorDataContainer theDetectorData =
+                theMetadataEndOfCalibSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
             DQMMetadataIT::fillEndOfCalib(theDetectorData);
             return true;
         }

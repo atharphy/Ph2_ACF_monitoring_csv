@@ -42,28 +42,26 @@ class CalibBase : public Tool
     virtual size_t getNumberIterations() { return 0; };
 
     template <typename T>
-    void bookWhateverSaveMetadata(T* histos)
+    void bookHistoSaveMetadata(T* histos)
     {
-        if(histos->AreHistoBooked == false)
+        if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+
+        // ##################################
+        // # Fill metadata final conditions #
+        // ##################################
+        if(this->fMetadataHandler != nullptr)
         {
-            histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
-
-            this->fMetadataHandler = new MetadataHandlerIT();
-            this->fMetadataHandler->Inherit(this);
-            this->fMetadataHandler->initMetadata();
-            this->fMetadataHandler->justBookDQMMetadata();
+            LOG(INFO) << BOLDBLUE << "\t--> Saving and/or shipping metadata..." << RESET;
+            this->fMetadataHandler->fillFinalConditionsHardwareSpecific();
         }
-
-        if(this->fMetadataHandler != nullptr) this->fMetadataHandler->fillFinalConditionsHardwareSpecific();
     }
 
     template <typename T>
     void initializeFiles(const std::string& histoFileName, const std::string& calibName, T*& histos, int currentRun = -1, bool saveBinaryData = false)
     {
-        theHistoFileName = histoFileName;
-
         if(saveBinaryData == true)
         {
+            LOG(INFO) << BOLDBLUE << "\t--> Calibration initializing raw data file..." << RESET;
             this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
             this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_" + calibName + ".raw", 'w');
             this->initializeWriteFileHandler();
@@ -71,6 +69,29 @@ class CalibBase : public Tool
 
         delete histos;
         histos = new T;
+
+        if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+        {
+            LOG(INFO) << BOLDBLUE << "\t--> Calibration initializing root file..." << RESET;
+            this->InitResultFile(histoFileName);
+
+            // #################
+            // # Book metadata #
+            // #################
+            if(this->fMetadataHandler == nullptr)
+            {
+                this->fMetadataHandler = new MetadataHandlerIT();
+                this->fMetadataHandler->Inherit(this);
+                this->fMetadataHandler->initMetadata();
+                this->fMetadataHandler->justBookDQMMetadata();
+            }
+
+            // ####################################
+            // # Fill metadata initial conditions #
+            // ####################################
+            this->fMetadataHandler->fillInitalConditionsHardwareSpecific();
+            this->WriteRootFile();
+        }
     }
 
     template <typename T>
@@ -95,7 +116,6 @@ class CalibBase : public Tool
   protected:
     int         theCurrentRun;
     bool        showErrorReport;
-    std::string theHistoFileName;
     std::string dataOutputDir;
 
   private:
