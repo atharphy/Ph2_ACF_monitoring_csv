@@ -8,12 +8,12 @@
 */
 
 #include "HWInterface/D19clpGBTInterface.h"
+#include "HWDescription/lpGBT.h"
 #include <chrono>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <thread>
-#include "HWDescription/lpGBT.h"
 
 using namespace Ph2_HwDescription;
 

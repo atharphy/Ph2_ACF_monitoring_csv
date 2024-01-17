@@ -36,7 +36,7 @@ const float    ACCELERATOR_CLK   = 40e6;   // Accelerator clock frequency [Hz]
 
 namespace Ph2_HwDescription
 {
-    class lpGBT;
+class lpGBT;
 }
 
 namespace Ph2_HwInterface

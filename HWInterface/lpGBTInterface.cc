@@ -9,8 +9,8 @@
 */
 
 #include "HWInterface/lpGBTInterface.h"
-#include "HWInterface/ExceptionHandler.h"
 #include "HWDescription/lpGBT.h"
+#include "HWInterface/ExceptionHandler.h"
 
 using namespace Ph2_HwDescription;
 
@@ -1396,7 +1396,8 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
     // # LpgbtCalibrationWarning: If loading fCalibration data failed.
     // # FileNotFoundError: If the file does not exis
 
-    LOG(INFO) << BOLDGREEN << "Loading Calibration data for LpGBT on Board " << +pChip->getBeBoardId() << " OpticalGroup " << +pChip->getOpticalGroupId() << " with Fuse ID 0x" << std::hex << +pChipId << std::dec << " from " << pFileName << RESET;
+    LOG(INFO) << BOLDGREEN << "Loading Calibration data for LpGBT on Board " << +pChip->getBeBoardId() << " OpticalGroup " << +pChip->getOpticalGroupId() << " with Fuse ID 0x" << std::hex << +pChipId
+              << std::dec << " from " << pFileName << RESET;
     bool cCalibrationLoaded = false;
 
     std::ifstream                         file(pFileName.c_str(), std::ios::in);
@@ -1440,13 +1441,14 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
                 }
                 pChip->setADCCalibrationData(theADCcalibrationMap);
                 cCalibrationLoaded = true;
-                
+
                 break;
             }
         }
         if(!cCalibrationLoaded)
         {
-            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Calibration data not available for LpGBT on Board " << +pChip->getBeBoardId() << " OpticalGroup " << +pChip->getOpticalGroupId() << " with Fuse ID 0x" << std::hex << +pChipId << std::dec << RESET;
+            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Calibration data not available for LpGBT on Board " << +pChip->getBeBoardId() << " OpticalGroup "
+                      << +pChip->getOpticalGroupId() << " with Fuse ID 0x" << std::hex << +pChipId << std::dec << RESET;
             LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Using default calibration data" << RESET;
             // throw std::runtime_error(std::string("LpgbtCalibrationError"));
         }
@@ -1486,7 +1488,7 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* p
     // # Return:
     // #    Temperature estimate in degree C.
 
-    uint8_t cVrefCode = (uint32_t)std::round( pChip->getADCCalibrationData()["VREF_OFFSET"]);
+    uint8_t cVrefCode = (uint32_t)std::round(pChip->getADCCalibrationData()["VREF_OFFSET"]);
     LOG(DEBUG) << BOLDGREEN << "Enable VREF at code: 0x" << std::hex << +cVrefCode << std::dec << " [LSB]" << RESET;
 
     EnableInternalVref(pChip, true);
@@ -1579,8 +1581,8 @@ void lpGBTInterface::VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltage
         LOG(ERROR) << BOLDRED << "lpGBTInterface::VdacSetVout: Invalid voltage for VDAC" << RESET;
         throw std::runtime_error(std::string("Invalid voltage for VDAC"));
     }
-    int32_t cDacCode =
-        (int32_t)std::round((pChip->getADCCalibrationData()["VDAC_SLOPE"] + fTemperature * pChip->getADCCalibrationData()["VDAC_SLOPE_TEMP"]) * pVoltageV + pChip->getADCCalibrationData()["VDAC_OFFSET"] + fTemperature * pChip->getADCCalibrationData()["VDAC_OFFSET_TEMP"]);
+    int32_t cDacCode = (int32_t)std::round((pChip->getADCCalibrationData()["VDAC_SLOPE"] + fTemperature * pChip->getADCCalibrationData()["VDAC_SLOPE_TEMP"]) * pVoltageV +
+                                           pChip->getADCCalibrationData()["VDAC_OFFSET"] + fTemperature * pChip->getADCCalibrationData()["VDAC_OFFSET_TEMP"]);
 
     if(cDacCode < 0 or cDacCode > 4095)
     {
@@ -1611,8 +1613,8 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::stri
 
     std::string cAdcStr = "ADC_" + fADCGainMap[pGain];
 
-    float cCalRes = ((pChip->getADCCalibrationData()[cAdcStr + "_SLOPE"] + fTemperature * pChip->getADCCalibrationData()[cAdcStr + "_SLOPE_TEMP"]) * cResult + pChip->getADCCalibrationData()[cAdcStr + "_OFFSET"] +
-                     fTemperature * pChip->getADCCalibrationData()[cAdcStr + "_OFFSET_TEMP"]);
+    float cCalRes = ((pChip->getADCCalibrationData()[cAdcStr + "_SLOPE"] + fTemperature * pChip->getADCCalibrationData()[cAdcStr + "_SLOPE_TEMP"]) * cResult +
+                     pChip->getADCCalibrationData()[cAdcStr + "_OFFSET"] + fTemperature * pChip->getADCCalibrationData()[cAdcStr + "_OFFSET_TEMP"]);
 
     LOG(DEBUG) << BOLDGREEN << "Measured calibrated Vin for " << pADCInputP << " and " << pADCInputN << " is " << cCalRes << " [V]" << RESET;
     return cCalRes;
@@ -1690,8 +1692,9 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::lpGBT* 
         throw std::runtime_error(std::string("Invalid CDAC current"));
     }
 
-    uint16_t cCode = (uint16_t)std::round((pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]) * pCurrentA +
-                                          pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_OFFSET"] + fTemperature * pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]);
+    uint16_t cCode = (uint16_t)std::round(
+        (pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_SLOPE"] + fTemperature * pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]) * pCurrentA +
+        pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_OFFSET"] + fTemperature * pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_OFFSET_TEMP"]);
 
     /* code = round(
             (

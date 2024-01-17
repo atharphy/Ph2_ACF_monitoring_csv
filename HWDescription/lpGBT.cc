@@ -184,8 +184,7 @@ void lpGBT::setInvertClock(uint8_t hybridId, bool pInvertClock)
 
 void lpGBT::setADCCalibrationData(const std::map<std::string, float>& theInputMap)
 {
-    for(const auto& theInput : theInputMap) fADCcalibrationData[theInput.first] = theInput.second;
+    for(const auto& theInput: theInputMap) fADCcalibrationData[theInput.first] = theInput.second;
 }
-
 
 } // namespace Ph2_HwDescription

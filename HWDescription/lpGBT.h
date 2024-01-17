@@ -78,11 +78,11 @@ class lpGBT : public Chip
     uint16_t                getTuneVrefVoltage() { return fTuneVrefVoltage; }
     std::pair<float, float> getTemperatureCoefficients() { return fTemperatureCoefficients; }
 
-    void                    setIsCalibrationDataLoaded(bool isLoaded) {fIsCalibrationDataLoaded = isLoaded;}
-    bool                    getIsCalibrationDataLoaded() const {return fIsCalibrationDataLoaded;}
+    void setIsCalibrationDataLoaded(bool isLoaded) { fIsCalibrationDataLoaded = isLoaded; }
+    bool getIsCalibrationDataLoaded() const { return fIsCalibrationDataLoaded; }
 
-    std::map<std::string, float> getADCCalibrationData() const {return fADCcalibrationData;}
-    void setADCCalibrationData(const std::map<std::string, float>& theInputMap);
+    std::map<std::string, float> getADCCalibrationData() const { return fADCcalibrationData; }
+    void                         setADCCalibrationData(const std::map<std::string, float>& theInputMap);
 
   private:
     bool                         phaseRxAligned; // @TMP@
@@ -108,7 +108,7 @@ class lpGBT : public Chip
     uint16_t                fTuneVrefVoltage{500};                                   // Voltage is given in mV!
     std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021, 0.475)}; // In V per Celsius and Volt coming from the lpGBTv0 manual
 
-    bool                         fIsCalibrationDataLoaded {false};
+    bool fIsCalibrationDataLoaded{false};
     // Default values, will be overwritten ons the calibration is loaded
     std::map<std::string, float> fADCcalibrationData = {
         {"VREF_SLOPE", -3.3638e-01},
