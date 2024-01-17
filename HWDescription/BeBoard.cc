@@ -120,8 +120,6 @@ void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttribut
 
             pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
             pValue = convertAnyDouble(pRegisterNode.first_child().value());
-            std::cout << GREEN << "|\t|\t|"
-                      << "----" << pAttributeString << ": " << BOLDYELLOW << pValue << RESET << std::endl;
             this->setReg(pAttributeString, pValue);
         }
     }

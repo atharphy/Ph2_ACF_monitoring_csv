@@ -34,9 +34,9 @@ void CalibBase::copyMaskFromDefault(const std::string& which) const
                 for(const auto cChip: *cHybrid) static_cast<RD53*>(cChip)->copyMaskFromDefault(which);
 }
 
-void CalibBase::saveChipRegisters(int currentRun, bool doUpdateChip)
+void CalibBase::saveChipRegisters(bool doUpdateChip)
 {
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
+    const std::string fileReg("Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_");
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -117,7 +117,6 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
 }
 
 void CalibBase::saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector,
-                                        int                                        theCurrentRun,
                                         const std::vector<uint16_t>&               dacList,
                                         size_t                                     offset,
                                         size_t                                     nEvents,
@@ -195,3 +194,5 @@ void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
     fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryName);
     fDetectorContainer->setEnabledAll(true);
 }
+
+void CalibBase::localConfigure(const std::string& histoFileName, int currentRun) { theCurrentRun = currentRun; }

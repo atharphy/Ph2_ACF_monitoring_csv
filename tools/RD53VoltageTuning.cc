@@ -30,8 +30,8 @@ void VoltageTuning::ConfigureCalibration()
 
 void VoltageTuning::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[VoltageTuning::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[VoltageTuning::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     VoltageTuning::run();
     VoltageTuning::analyze();
@@ -64,10 +64,14 @@ void VoltageTuning::Stop()
 
 void VoltageTuning::localConfigure(const std::string& histoFileName, int currentRun)
 {
-    histos        = nullptr;
-    theCurrentRun = currentRun;
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
 
-    LOG(INFO) << GREEN << "[VoltageTuning::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    histos = nullptr;
+
+    LOG(INFO) << GREEN << "[VoltageTuning::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -336,13 +340,7 @@ void VoltageTuning::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> VoltageTuning saving histograms..." << RESET;
-    }
-
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookHistoSaveMetadata(histos);
     VoltageTuning::fillHisto();
     histos->process();
 

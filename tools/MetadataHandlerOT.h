@@ -10,7 +10,7 @@ class MetadataHandlerOT : public MetadataHandler
     ~MetadataHandlerOT();
 
     void initMetadataHardwareSpecific() override;
-    void fillInitalConditionsHardwareSpecific() override;
+    void fillInitialConditionsHardwareSpecific() override;
     void fillFinalConditionsHardwareSpecific() override;
 
   private:

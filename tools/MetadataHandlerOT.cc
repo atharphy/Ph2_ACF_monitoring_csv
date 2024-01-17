@@ -20,7 +20,7 @@ void MetadataHandlerOT::initMetadataHardwareSpecific()
 #endif
 }
 
-void MetadataHandlerOT::fillInitalConditionsHardwareSpecific()
+void MetadataHandlerOT::fillInitialConditionsHardwareSpecific()
 {
     bool                  isInitialValue = true;
     DetectorDataContainer theCICFuseIdContainer;

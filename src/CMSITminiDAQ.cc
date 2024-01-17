@@ -102,8 +102,8 @@ int main(int argc, char** argv)
     cmd.defineOption("file", "Hardware description file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("file", "f");
 
-    cmd.defineOption("settingsFile", "Settings override file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative("settingsFile", "s");
+    cmd.defineOption("calibSettingsFile", "Calibration settings override file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("calibSettingsFile", "s");
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj"
@@ -159,7 +159,7 @@ int main(int argc, char** argv)
     // # Retrieve options #
     // ####################
     std::string configFile        = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
-    std::string settingsFile      = cmd.foundOption("settingsFile") == true ? cmd.optionValue("settingsFile") : configFile;
+    std::string calibSettingsFile = cmd.foundOption("calibSettingsFile") == true ? cmd.optionValue("calibSettingsFile") : configFile;
     std::string whichCalib        = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
     std::string EUDAQproducerNAME = cmd.foundOption("prodName") == true ? cmd.optionValue("prodName") : "";
     std::string binaryFile        = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
@@ -194,7 +194,7 @@ int main(int argc, char** argv)
     {
         std::stringstream outp;
         mySysCntr.InitializeHw(configFile, outp);
-        mySysCntr.InitializeSettings(settingsFile, outp);
+        mySysCntr.InitializeSettings(calibSettingsFile, outp);
 
         // ##################
         // # Reset hardware #
@@ -230,7 +230,7 @@ int main(int argc, char** argv)
         // #######################
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
         ConfigureInfo theConfigureInfo;
-        theConfigureInfo.setConfigurationFiles(configFile, settingsFile);
+        theConfigureInfo.setConfigurationFiles(configFile, calibSettingsFile);
         theConfigureInfo.setCalibrationName(whichCalib);
         mySysCntr.Configure(theConfigureInfo, !skipcfg);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
@@ -617,7 +617,7 @@ int main(int argc, char** argv)
         system(("cp " + fileName + " " + outputFile).c_str());
     };
     copyConfigFile(configFile);
-    if(configFile != settingsFile) copyConfigFile(settingsFile);
+    if(configFile != calibSettingsFile) copyConfigFile(calibSettingsFile);
 
     // #####################
     // # Update run number #

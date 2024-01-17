@@ -1,8 +1,8 @@
 /*!
-        \file                   Tool.h
+        \file                                    Tool.h
         \brief                                   Controller of the System, overall wrapper of the framework
         \author                                  Georg AUZINGER
-        \version                 1.0
+        \version                                 1.0
         \date                                    06/02/15
         Support :                                mail to : georg.auzinger@cern.ch
  */
@@ -121,12 +121,12 @@ class Tool : public Ph2_System::SystemController
      */
     void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true);
 
-/*!
- * \brief Initialize the result Root file
- * \param pFilename : Root filename
- */
-#ifdef __USE_ROOT__
+    /*!
+     * \brief Initialize the result Root file
+     * \param pFilename : Root filename
+     */
     void InitResultFile(const std::string& pFilename);
+#ifdef __USE_ROOT__
     void AddMetadata();
     void StartHttpServer(const int pPort = 8080, bool pReadonly = true);
     void HttpServerProcess();
