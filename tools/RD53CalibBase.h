@@ -44,7 +44,9 @@ class CalibBase : public Tool
     template <typename T>
     void bookHistoSaveMetadata(T* histos)
     {
+#ifdef __USE_ROOT__
         if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 
         // ##################################
         // # Fill metadata final conditions #
@@ -93,7 +95,7 @@ class CalibBase : public Tool
             // ####################################
             // # Fill metadata initial conditions #
             // ####################################
-            this->fMetadataHandler->fillInitalConditionsHardwareSpecific();
+            this->fMetadataHandler->fillInitialConditionsHardwareSpecific();
             this->WriteRootFile();
         }
     }

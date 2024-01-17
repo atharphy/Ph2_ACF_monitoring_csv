@@ -121,10 +121,10 @@ class Tool : public Ph2_System::SystemController
      */
     void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true);
 
-/*!
- * \brief Initialize the result Root file
- * \param pFilename : Root filename
- */
+    /*!
+     * \brief Initialize the result Root file
+     * \param pFilename : Root filename
+     */
     void InitResultFile(const std::string& pFilename);
 #ifdef __USE_ROOT__
     void AddMetadata();

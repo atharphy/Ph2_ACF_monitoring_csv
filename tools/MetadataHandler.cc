@@ -21,7 +21,7 @@ MetadataHandler::~MetadataHandler()
 
 void MetadataHandler::initMetadata() { initMetadataHardwareSpecific(); }
 
-void MetadataHandler::fillInitalConditions()
+void MetadataHandler::fillInitialConditions()
 {
     fillNameContainerWithChipIDs();
 
@@ -141,7 +141,7 @@ void MetadataHandler::fillInitalConditions()
     }
 #endif
 
-    fillInitalConditionsHardwareSpecific();
+    fillInitialConditionsHardwareSpecific();
 }
 
 void MetadataHandler::fillFinalConditions()

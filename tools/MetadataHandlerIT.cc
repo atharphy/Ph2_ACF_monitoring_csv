@@ -11,7 +11,7 @@ void MetadataHandlerIT::initMetadataHardwareSpecific()
 #endif
 }
 
-void MetadataHandlerIT::fillInitalConditionsHardwareSpecific()
+void MetadataHandlerIT::fillInitialConditionsHardwareSpecific()
 {
     __attribute__((unused)) const bool isInitialValue = true;
     DetectorDataContainer              theBeginOfCalibContainer;

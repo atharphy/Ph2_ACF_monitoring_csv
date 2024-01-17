@@ -12,12 +12,12 @@ class MetadataHandler : public Tool
     ~MetadataHandler();
 
     void initMetadata();
-    void fillInitalConditions();
+    void fillInitialConditions();
     void fillFinalConditions();
 
-    virtual void initMetadataHardwareSpecific()         = 0;
-    virtual void fillInitalConditionsHardwareSpecific() = 0;
-    virtual void fillFinalConditionsHardwareSpecific()  = 0;
+    virtual void initMetadataHardwareSpecific()          = 0;
+    virtual void fillInitialConditionsHardwareSpecific() = 0;
+    virtual void fillFinalConditionsHardwareSpecific()   = 0;
 
     void justBookDQMMetadata();
 

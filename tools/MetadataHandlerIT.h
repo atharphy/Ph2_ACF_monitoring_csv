@@ -10,6 +10,7 @@
 #ifndef MetadataHandlerIT_H
 #define MetadataHandlerIT_H
 
+#include "Utils/ContainerSerialization.h"
 #include "tools/MetadataHandler.h"
 
 #ifdef __USE_ROOT__
@@ -23,7 +24,7 @@ class MetadataHandlerIT : public MetadataHandler
     ~MetadataHandlerIT();
 
     void initMetadataHardwareSpecific() override;
-    void fillInitalConditionsHardwareSpecific() override;
+    void fillInitialConditionsHardwareSpecific() override;
     void fillFinalConditionsHardwareSpecific() override;
 
   private:
