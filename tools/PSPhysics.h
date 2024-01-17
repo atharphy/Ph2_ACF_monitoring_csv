@@ -40,6 +40,8 @@ class PSPhysics : public Tool
     // void fillDataContainer(BoardContainer* const& cBoard, Ph2_HwInterface::Event* event);
     void fillDataContainer(BoardContainer* const& cBoard, const std::vector<Ph2_HwInterface::Event*> eventList);
 
+    static std::string fCalibrationDescription;
+
   private:
     // DetectorDataContainer fPSSyncContainer   ;
     DetectorDataContainer fStubContainer;

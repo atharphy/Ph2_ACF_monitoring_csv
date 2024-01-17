@@ -85,8 +85,6 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("file", "f");
 
     std::string calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
-    // CombinedCalibrationFactory theCombinedCalibrationFactory;
-    // for(const auto& calibration: theCombinedCalibrationFactory.getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
 
     cmd.defineOption("calibration", calibrationHelpMessage, ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");

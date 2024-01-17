@@ -33,6 +33,8 @@ class CLASS_NAME_TEMPLATE : public Tool
     void Resume() override;
     void Reset();
 
+    static std::string fCalibrationDescription;
+    
   private:
   //
     

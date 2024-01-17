@@ -9,6 +9,8 @@
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 
+std::string LatencyScan::fCalibrationDescription = "Run latency scan";
+
 LatencyScan::LatencyScan() : Tool() {}
 
 LatencyScan::~LatencyScan() {}

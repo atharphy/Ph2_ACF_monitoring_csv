@@ -6,6 +6,8 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
+std::string OTalignLpGBTinputs::fCalibrationDescription = "Optimize LpGBT Rx phases to properly decode the inputs from the CICs";
+
 OTalignLpGBTinputs::OTalignLpGBTinputs() : Tool() {}
 
 OTalignLpGBTinputs::~OTalignLpGBTinputs() {}

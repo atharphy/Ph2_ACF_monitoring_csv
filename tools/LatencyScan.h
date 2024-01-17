@@ -58,6 +58,8 @@ class LatencyScan : public Tool
     void Pause() override;
     void Resume() override;
 
+    static std::string fCalibrationDescription;
+
   protected:
     void cleanContainerMap();
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }

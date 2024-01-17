@@ -1,14 +1,13 @@
 #include "tools/ConfigureOnly.h"
 #include "System/RegisterHelper.h"
 
+std::string ConfigureOnly::fCalibrationDescription = "Run only configuration step";
+
 ConfigureOnly::ConfigureOnly() : Tool() {}
 
 ConfigureOnly::~ConfigureOnly() {}
 
-void ConfigureOnly::Running()
-{
-    // fRegisterHelper->dumpBeBoardRegisterIntoXml("Results/outputTest.xml");
-}
+void ConfigureOnly::Running() {}
 
 void ConfigureOnly::Stop() {}
 

@@ -32,6 +32,8 @@ class CBCPulseShape : public PedeNoise
     // State machine
     void Running() override;
     void Stop(void) override;
+    
+    static std::string fCalibrationDescription;
 
   private:
     uint16_t fInitialLatency{0};
