@@ -172,7 +172,7 @@ void Tool::Start(const StartInfo& theStartInfo)
     {
         fMetadataHandler->Inherit(this);
         fMetadataHandler->initMetadata();
-        fMetadataHandler->fillInitalConditions();
+        fMetadataHandler->fillInitialConditions();
     }
 
     // doExit       = false;
