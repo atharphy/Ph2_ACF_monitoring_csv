@@ -70,9 +70,13 @@ class CalibBase : public Tool
         delete histos;
         histos = new T;
 
+#ifdef __USE_ROOT__
         if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
         {
             LOG(INFO) << BOLDBLUE << "\t--> Calibration initializing root file..." << RESET;
+#else
+        {
+#endif
             this->InitResultFile(histoFileName);
 
             // #################

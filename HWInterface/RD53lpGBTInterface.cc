@@ -20,20 +20,8 @@ namespace Ph2_HwInterface
 
 bool RD53lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify)
 {
-    bool writeGood;
-
-    try
-    {
-        RD53lpGBTInterface::WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerify);
-        pChip->setReg(pRegNode, pValue);
-        writeGood = true;
-    }
-    catch(const std::exception& e)
-    {
-        LOG(WARNING) << BOLDRED << "Error: " << BOLDYELLOW << e.what() << RESET;
-        writeGood = false;
-    }
-
+    bool writeGood = RD53lpGBTInterface::WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerify);
+    pChip->setReg(pRegNode, pValue);
     return writeGood;
 }
 
@@ -46,17 +34,24 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
 
 uint16_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode) { return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); }
 
-void RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify)
+bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify)
 {
     const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
 
     this->setBoard(pChip->getBeBoardId());
 
     if(pValue > RD53Shared::setBits(RD53Shared::MAXBITCHIPREG))
-        throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT registers are 8 bits, impossible to write " + std::to_string(pValue) + " to address " + std::to_string(pAddress));
+    {
+        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress
+                   << RESET;
+        return false;
+    }
 
     if(pAddress >= cMaxWriteAddress)
-        throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT read-write registers end at " + std::to_string(cMaxWriteAddress) + " ... impossible to write to address " + std::to_string(pAddress));
+    {
+        LOG(WARNING) << "[RD53lpGBTInterface::WriteReg] LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
+        return false;
+    }
 
     int  nAttempts = 0;
     bool status;
@@ -66,7 +61,13 @@ void RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
         nAttempts++;
     } while((pVerify == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
-    if((pVerify == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
+    if((pVerify == true) && (status == false))
+    {
+        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT register writing issue" << RESET;
+        return false;
+    }
+
+    return true;
 }
 
 uint16_t RD53lpGBTInterface::ReadReg(Chip* pChip, uint16_t pAddress)

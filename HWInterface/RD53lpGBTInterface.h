@@ -40,7 +40,7 @@ class RD53lpGBTInterface : public lpGBTInterface
                               ReadoutChipInterface*                  pReadoutChipInterface);
 
   private:
-    void     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify = true);
+    bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify = true);
     uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
 };
 
