@@ -17,76 +17,121 @@ enum class ChipType
 
 std::map<std::string, ChipType> theChipTypeMap{{"LpGBT", ChipType::LpGBT}, {"CIC", ChipType::CIC}, {"MPA", ChipType::MPA}, {"SSA", ChipType::SSA}, {"CBC", ChipType::CBC}};
 
-std::map<ChipType, std::vector<std::regex>> listOfFreeRegistersMap;
+enum class RegisterType
+{
+    ReadOnly,
+    Utility,
+    User
+};
+
+std::map<ChipType, std::vector<std::pair<std::regex, RegisterType>>> listOfFreeRegistersMap;
 
 void initializeFreeRegisters()
 {
-    listOfFreeRegistersMap[ChipType::LpGBT] = {std::regex("^ConfigPins$"),
-                                               std::regex("^I2CSlaveAddress$"),
-                                               std::regex("^EPRX[0-6]Locked$"),
-                                               std::regex("^EPRX[0-6]CurrentPhase[13][02]$"),
-                                               std::regex("^EPRXEcCurrentPhase$"),
-                                               std::regex("^EPRX[0-6]DLLStatus$"),
-                                               std::regex(R"(^I2CM[0-2](?!Config$).*)"),
-                                               std::regex("^I2CM[0-2]Data[0-3]$"),
-                                               std::regex("^I2CM[0-2]Cmd$"),
-                                               std::regex("^PSStatus$"),
-                                               std::regex("^PIOIn[HL]$"),
-                                               std::regex("^FUSE.*"),
-                                               std::regex("^FuseMagic$"),
-                                               std::regex("^ProcessMonitorStatus$"),
-                                               std::regex("^PMFreq[A-C]$"),
-                                               std::regex("^SEUCount[HL]$"),
-                                               std::regex("^CLKGStatus[0-9]$"),
-                                               std::regex("^DLDPFecCorrectionCount[0-3]$"),
-                                               std::regex("^ADCStatus[HL]$"),
-                                               std::regex("^EOMStatus$"),
-                                               std::regex("^EOMCounterValue[HL]$"),
-                                               std::regex("^EOMCounter40M[HL]$"),
-                                               std::regex("^BERTStatus$"),
-                                               std::regex("^BERTResult[0-4]$"),
-                                               std::regex("^ROM$"),
-                                               std::regex("^PORBOR$"),
-                                               std::regex("^PUSM.*"),
-                                               std::regex("^CRCValue[0-3]$"),
-                                               std::regex("^FailedCRC$"),
-                                               std::regex("^TOValue$"),
-                                               std::regex("^SCStatus$"),
-                                               std::regex("^FAState$"),
-                                               std::regex("^FAHeader.*"),
-                                               std::regex("^FALossOfLockCount$"),
-                                               std::regex("^ConfigErrorCounter[HL]$"),
-                                               std::regex("^POWERUP2$"),
-                                               std::regex("^EPRX[0-6]DllStatus$")};
+    listOfFreeRegistersMap[ChipType::LpGBT] = {std::make_pair(std::regex("^ConfigPins$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^I2CSlaveAddress$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^EPRX[0-6]Locked$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^EPRX[0-6]CurrentPhase[13][02]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^EPRXEcCurrentPhase$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^EPRX[0-6]DLLStatus$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^I2CM[0-2]Ctrl$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^I2CM[0-2]Mask$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^I2CM[0-2]Status$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^I2CM[0-2]TranCnt$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^I2CM[0-2]Read.*"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^PSStatus$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^PIOIn[HL]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^FUSEStatus$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^FUSEValues[A-D]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^ProcessMonitorStatus$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^PMFreq[A-C]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^SEUCount[HL]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^CLKGStatus[0-9]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^DLDPFecCorrectionCount[0-3]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^ADCStatus[HL]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^EOMStatus$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^EOMCounterValue[HL]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^EOMCounter40M[HL]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^BERTStatus$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^BERTResult[0-4]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^ROM$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^PORBOR$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^PUSM.*"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^CRCValue[0-3]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^FailedCRC$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^TOValue$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^SCStatus$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^FAState$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^FAHeader.*"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^FALossOfLockCount$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^ConfigErrorCounter[HL]$"), RegisterType::ReadOnly),
+                                               std::make_pair(std::regex("^FUSEControl$"), RegisterType::Utility),
+                                               std::make_pair(std::regex("^FUSEBlowData[A-D]$"), RegisterType::Utility),
+                                               std::make_pair(std::regex("^FUSEBlowAdd[HL]$"), RegisterType::Utility),
+                                               std::make_pair(std::regex("^FuseMagic$"), RegisterType::Utility),
+                                               std::make_pair(std::regex("^I2CM[0-1]Address$"), RegisterType::Utility),
+                                               std::make_pair(std::regex("^I2CM[0-2]Cmd$"), RegisterType::Utility),
+                                               std::make_pair(std::regex("^I2CM[0-2]Data[0-3]$"), RegisterType::Utility),
+                                               std::make_pair(std::regex("^POWERUP2$"), RegisterType::Utility),
+                                               std::make_pair(std::regex("^EPRX[0-6][0-3]ChnCntr_phase$"), RegisterType::Utility)};
 
-    listOfFreeRegistersMap[ChipType::CIC] = {std::regex("^EfuseValue[0-3]$")};
+    listOfFreeRegistersMap[ChipType::CIC] = {std::make_pair(std::regex("^EfuseValue[0-3]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^ASYNC_CNTL_BLOCK[0-3]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^SYNC_CNTL_BLOCK[0-3]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^scPhaseSelectB[0-3]o[0-5]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^scDllInstantLock[01]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^scDllLocked[01]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^scChannelLocked[0-5]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^timingStatusBits$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^BX0_DEALY$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^WA_DELAY\\d{2}$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^MASK_BLOCK[0-3]$"), RegisterType::Utility)};
 
-    listOfFreeRegistersMap[ChipType::CBC] = {std::regex("^ChipIDFuse[1-3]$")};
+    listOfFreeRegistersMap[ChipType::CBC] = {std::make_pair(std::regex("^ChipIDFuse[1-3]$"), RegisterType::ReadOnly), std::make_pair(std::regex("^BandgapFuse$"), RegisterType::ReadOnly)};
 
-    listOfFreeRegistersMap[ChipType::MPA] = {std::regex("^Mask$"), std::regex("^EfuseProg[0-3]$"), std::regex(".*_ALL"), std::regex("^EfuseValue[0-3]$")};
+    listOfFreeRegistersMap[ChipType::MPA] = {std::make_pair(std::regex("^EfuseValue[0-3]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex(".*ync_SEUcnt.*"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^ErrorL1$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^Ofcnt$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^DLLlocked$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex(".*_[ML]SB.*"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^L1_.*_.*"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^OF_.*_count$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex(".*BIST_.*"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^EfuseProg[0-3]$"), RegisterType::Utility),
+                                             std::make_pair(std::regex("^Mask$"), RegisterType::Utility),
+                                             std::make_pair(std::regex(".*_ALL"), RegisterType::Utility)};
 
-    listOfFreeRegistersMap[ChipType::SSA] = {std::regex("^mask_strip$"),
-                                             std::regex("^mask_peri_[AD]$"),
-                                             std::regex("^Fuse_Prog_b[0-3]$"),
-                                             std::regex("^ENFLAGS$"),
-                                             std::regex("^StripControl2$"),
-                                             std::regex("^THTRIMMING$"),
-                                             std::regex("^DigCalibPattern_[LH]$"),
-                                             std::regex("^AC_ReadCounter[LM]SB$"),
-                                             std::regex("^SEUcnt$"),
-                                             std::regex("^Ring_oscillator$"),
-                                             std::regex("^ADC_out$"),
-                                             std::regex("^bist_output$"),
-                                             std::regex("^AC_ReadCounter$"),
-                                             std::regex("^status_reg$"),
-                                             std::regex("^Fuse_Value_b[0-3]$")};
+    listOfFreeRegistersMap[ChipType::SSA] = {std::make_pair(std::regex("^SEUcnt$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^Ring_oscillator$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^ADC_out$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^bist_output$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^AC_ReadCounter$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^status_reg$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^Fuse_Value_b[0-3]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^AC_ReadCounter[LM]SB_S.*"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^status_reg$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex(".*_Cnt_[LH]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^bist_output$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^ADC_out_[LH]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^Ring_oscillator_out_loc[TB][LCR]_T[12]_[HL]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^bist_memory_sram_output_[HL]_[0-9A-F]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex(".*ync_SEUcnt_.*"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^mask_strip$"), RegisterType::Utility),
+                                             std::make_pair(std::regex("^mask_peri_[AD]$"), RegisterType::Utility),
+                                             std::make_pair(std::regex("^Fuse_Prog_b[0-3]$"), RegisterType::Utility),
+                                             std::make_pair(std::regex("^ENFLAGS$"), RegisterType::Utility),
+                                             std::make_pair(std::regex("^StripControl2$"), RegisterType::Utility),
+                                             std::make_pair(std::regex("^THTRIMMING$"), RegisterType::Utility),
+                                             std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Utility),
+                                             std::make_pair(std::regex("^AC_ReadCounter[LM]SB$"), RegisterType::Utility)};
 }
 
 bool matchWithPatternList(ChipType theChipType, std::string registerName)
 {
     for(const auto pattern: listOfFreeRegistersMap[theChipType])
     {
-        if(std::regex_search(registerName, pattern)) { return true; }
+        if(std::regex_search(registerName, pattern.first)) { return true; }
     }
     return false;
 }

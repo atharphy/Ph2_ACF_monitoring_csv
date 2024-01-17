@@ -184,7 +184,7 @@ class BeBoard : public BoardContainer
     void                                          takeSnapshot();
     void                                          clearSnapshot();
     std::vector<std::pair<std::string, uint32_t>> getSnapshot() const;
-    void                                          clearFreeRegisters();
+    void                                          reinitializeFreeRegisters();
     void                                          addFreeRegister(const std::regex& theRegisterName);
 
     void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue);
