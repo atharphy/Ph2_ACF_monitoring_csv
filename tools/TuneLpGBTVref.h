@@ -20,6 +20,7 @@ class TuneLpGBTVref : public Tool
   private:
     void reset();
     void tuneVref();
+    bool fDoManualVrefTuning {false};
 };
 
 #endif

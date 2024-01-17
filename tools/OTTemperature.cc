@@ -21,7 +21,6 @@ void OTTemperature::Running()
 {
     Initialise();
     fSuccess = true;
-    TuneLpGBTVref();
     ReadModuleTemperatures();
     Reset();
 }
@@ -183,22 +182,6 @@ void OTTemperature::ReadModuleTemperatures()
             } while(fLoopReadout);
         }
     }
-}
-
-uint8_t OTTemperature::TuneLpGBTVref()
-{
-    uint8_t vref = 0;
-    for(const auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& clpGBT = cOpticalGroup->flpGBT;
-            if(clpGBT == nullptr) continue;
-            flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
-            vref = flpGBTInterface->TuneVref(clpGBT);
-        }
-    }
-    return vref;
 }
 
 void OTTemperature::Stop() {}
