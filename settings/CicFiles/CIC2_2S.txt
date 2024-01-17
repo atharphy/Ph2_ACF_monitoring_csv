@@ -150,7 +150,7 @@ scPhaseSelectB1o5                               0x04    0x8B    0x00    0x00
 scPhaseSelectB2o0                               0x04    0x8C    0x00    0x00
 scPhaseSelectB2o1                               0x04    0x8D    0x00    0x00
 scPhaseSelectB2o2                               0x04    0x8E    0x00    0x00
-scPhaseSelectB2o3                               0x04    0x9F    0x00    0x00
+scPhaseSelectB2o3                               0x04    0x8F    0x00    0x00
 scPhaseSelectB2o4                               0x04    0x90    0x00    0x00
 scPhaseSelectB2o5                               0x04    0x91    0x00    0x00
 scPhaseSelectB3o0                               0x04    0x92    0x00    0x00
