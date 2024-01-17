@@ -38,6 +38,8 @@ class SSA : public ReadoutChip
     SSA(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
     // C'tors with object FE Description
     SSA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
+    SSA(const SSA&) = delete;
+
     uint8_t           fPartnerId;
     uint8_t           getPartid() { return fPartnerId; }
     virtual void      accept(HwDescriptionVisitor& pVisitor) { pVisitor.visitChip(*this); }

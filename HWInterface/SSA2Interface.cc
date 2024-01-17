@@ -58,11 +58,6 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     }
     fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
 
-    // configure W/R registers
-    // do not overwrite these registers..
-    std::vector<std::string> cRegsToSkip{"mask_strip", "mask_peri_A", "mask_peri_D"};
-    std::vector<std::string> cReadOnlyRegs{"SEUcnt", "Ring_oscillator", "ADC_out", "bist_output", "AC_ReadCounter", "status_reg"};
-
     cRegItems.clear();
     // need to split between control and enable registers
     // don't read back enable registers
@@ -72,12 +67,16 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     // std::vector<std::string> cLocalRegItemsNames;
     // std::vector<std::string> cRegItemsNames;
     cCntrlRegItems.clear();
+    auto theListOfFreeRegisters = pSSA2->getFreeRegisters();
     for(auto cMapItem: cSSA2RegMap)
     {
-        if(std::find(cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first) != cRegsToSkip.end()) continue;
-        bool cReadOnly = false;
-        for(auto cReadOnlyReg: cReadOnlyRegs) cReadOnly = cReadOnly || (cMapItem.first.find(cReadOnlyReg) != std::string::npos);
-        if(cReadOnly) continue;
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: theListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(cMapItem.first, freeRegister.first);
+            if(isFreeRegister) break;
+        }
+        if(isFreeRegister) continue; // skipping readonly registers
 
         if(cMapItem.second.fControlReg)
         {
@@ -402,7 +401,6 @@ bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<st
 
 bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify)
 {
-    bool cSuccess = true;
     setBoard(pSSA2->getBeBoardId());
     auto cRegMap = pSSA2->getRegMap();
 
@@ -416,20 +414,51 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
     // Preserve the original register values changing only the needed bits
     registerValue = (registerValue & ~mask) + (pValue << posOfFirstOne);
 
-    // write mask registers
-    std::vector<std::string> cMaskRegs{"mask_strip", "mask_peri_A", "mask_peri_D"};
-    std::vector<ChipRegItem> cRegItems{cRegMap[cMaskRegs[0]], cRegMap[cMaskRegs[1]], cRegMap[cMaskRegs[2]]};
-    for(unsigned i = 0; i < cRegItems.size(); i++) { cRegItems[i].fValue = (cMaskRegs[i] == pMaskReg) ? mask : 0xFF; }
-    if(fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false))
-    {
-        auto cRegItem   = cRegMap[pRegNode];
-        cRegItem.fValue = registerValue;
-        cSuccess        = fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
-    }
+    // Preparing registers and masks
+    auto theMaskRegisterMasked   = cRegMap[pMaskReg];
+    theMaskRegisterMasked.fValue = mask;
+    auto success                 = fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterMasked, false);
 
-    for(auto& cItem: cRegItems) { cItem.fValue = 0xFF; }
+    auto theRegister   = cRegMap[pRegNode];
+    theRegister.fValue = registerValue;
+    success &= fBoardFW->SingleRegisterWrite(pSSA2, theRegister, pVerify);
 
-    return cSuccess && fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
+    auto theMaskRegisterUnmasked   = cRegMap[pMaskReg];
+    theMaskRegisterUnmasked.fValue = 0xFF;
+    success &= fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterUnmasked, false);
+
+    return success;
+
+    // Fabio's comment: I do see the reason why you need to rewrite all the masks and not only the one that changes
+    // Also, I think one can write new mask, register and original mask in one shot (FW should write them in the same order)
+    // bool cSuccess = true;
+    // setBoard(pSSA2->getBeBoardId());
+    // auto cRegMap = pSSA2->getRegMap();
+
+    // uint16_t registerValue = pSSA2->getReg(pRegNode);
+    // unsigned posOfFirstOne = 0;
+    // // ASSUMING THAT MASK BITS ARE ALWAYS CONSECUTIVE. CANNOT BE MASK 0b101 BUT ONLY WORKS FOR 0b11000
+    // for(; posOfFirstOne < 8; posOfFirstOne++) // 8bits
+    // {
+    //     if((mask & (1 << posOfFirstOne))) break;
+    // }
+    // // Preserve the original register values changing only the needed bits
+    // registerValue = (registerValue & ~mask) + (pValue << posOfFirstOne);
+
+    // // write mask registers
+    // std::vector<std::string> cMaskRegs{"mask_strip", "mask_peri_A", "mask_peri_D"};
+    // std::vector<ChipRegItem> cRegItems{cRegMap[cMaskRegs[0]], cRegMap[cMaskRegs[1]], cRegMap[cMaskRegs[2]]};
+    // for(unsigned i = 0; i < cRegItems.size(); i++) { cRegItems[i].fValue = (cMaskRegs[i] == pMaskReg) ? mask : 0xFF; }
+    // if(fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false))
+    // {
+    //     auto cRegItem   = cRegMap[pRegNode];
+    //     cRegItem.fValue = registerValue;
+    //     cSuccess        = fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
+    // }
+
+    // for(auto& cItem: cRegItems) { cItem.fValue = 0xFF; }
+
+    // return cSuccess && fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
 
     /*
         // Old implementation - it seemed harder to follow when Irene and Lorenzo looked at how to write registers.
@@ -863,6 +892,32 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     return true;
 }
+
+std::vector<std::pair<std::string, uint16_t>> SSA2Interface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
+{
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: theRegisterList)
+    {
+        auto cIterator = cRegMap.find(cReq);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "SSA2Interface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            abort();
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cRegItems.push_back(cItem);
+    }
+
+    fBoardFW->MultiRegisterRead(pChip, cRegItems);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    return theRegisterValues;
+}
+
 //	// AMUX CONFIGURATION:
 bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, bool pVerify)
 {

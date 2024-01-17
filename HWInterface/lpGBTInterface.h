@@ -207,7 +207,7 @@ class lpGBTInterface : public ChipInterface
     // # no per-chip calibration data is loaded. In order to improve the quality
     // # of calibration the user is expected to call load_calibration_data method.
 
-    std::map<std::string, float> calibration = {
+    std::map<std::string, float> fCalibration = {
         {"VREF_SLOPE", -3.3638e-01},
         {"VREF_OFFSET", 1.3426e+02},
         {"VDAC_SLOPE", 4.0906e+03},

@@ -67,8 +67,6 @@ class GainOptimization : public Gain
     size_t KrumCurrStop;
     bool   doUpdateChip;
     bool   doDisplay;
-
-    int theCurrentRun;
 };
 
 #endif

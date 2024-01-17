@@ -1,8 +1,8 @@
 /*!
-        \file                   Tool.h
+        \file                                    Tool.h
         \brief                                   Controller of the System, overall wrapper of the framework
         \author                                  Georg AUZINGER
-        \version                 1.0
+        \version                                 1.0
         \date                                    06/02/15
         Support :                                mail to : georg.auzinger@cern.ch
  */
@@ -29,7 +29,7 @@ class ChannelGroupBase;
 class ScanBase;
 class ConfigureInfo;
 class StartInfo;
-class DQMMetadata;
+class MetadataHandler;
 
 #ifdef __HTTP__
 #include "THttpServer.h"
@@ -109,23 +109,10 @@ class Tool : public Ph2_System::SystemController
     void Stop() override;
 
     void waitForRunToBeCompleted();
-    void privateRunning(std::promise<int>&& thePromise);
+    // void privateRunning(std::promise<int>&& thePromise);
     void SaveResults();
     void SaveAndClose();
     void CloseResultFile();
-    void initMetadataAndFillInitialConditions();
-    void fillOTMetadataInitialConditions();
-    void fillITMetadataInitialConditions();
-    void fillMetadataFinalConditions();
-    void fillOTMetadataFinalConditions();
-    void fillITMetadataFinalConditions();
-    void fillNameContainerWithChipIDs();
-    void fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer);
-    void fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer);
-    void fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContainer);
-    void fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer);
-    void fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer);
-    void fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurationContainer);
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp
@@ -383,7 +370,6 @@ class Tool : public Ph2_System::SystemController
     TTree*              fSummaryTree; /*< TTree for summary of results*/
     static std::string  fSummaryTreeParameter;
     static double       fSummaryTreeValue;
-    DQMMetadata*        fDQMMetadata;
 #endif
 
     FrontEndType        fType;
@@ -424,6 +410,8 @@ class Tool : public Ph2_System::SystemController
     uint8_t fNormalize{1};
 
     std::ofstream* fOfStream;
+
+    MetadataHandler* fMetadataHandler;
 };
 
 #endif
