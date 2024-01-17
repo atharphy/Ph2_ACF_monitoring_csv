@@ -34,12 +34,11 @@ class OTTemperature : public OTTool
     // void Reset();
     void writeObjects();
     // configure setttings for reading
-    void    SetGain(uint8_t pGain) { fGain = pGain; }
-    void    SetVref(float pVref) { fVref = pVref; }
-    void    Set2SInputVoltage(float pInput) { fVinput2S = pInput; }
-    void    SetCurrents(std::vector<uint8_t> pCurrents);
-    uint8_t TuneLpGBTVref();
-    void    LoopReadout(bool pLoopReadout) { fLoopReadout = pLoopReadout; }
+    void SetGain(uint8_t pGain) { fGain = pGain; }
+    void SetVref(float pVref) { fVref = pVref; }
+    void Set2SInputVoltage(float pInput) { fVinput2S = pInput; }
+    void SetCurrents(std::vector<uint8_t> pCurrents);
+    void LoopReadout(bool pLoopReadout) { fLoopReadout = pLoopReadout; }
 
     static std::string fCalibrationDescription;
 

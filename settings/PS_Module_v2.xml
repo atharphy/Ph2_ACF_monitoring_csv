@@ -380,6 +380,8 @@
 
     <Setting name="SkipConfigureHW">1</Setting><!-- FOR OTSDAQ-->
 
+    <Setting name="DoManualVrefTuning"      >  0</Setting>
+
 </Settings>
 
 

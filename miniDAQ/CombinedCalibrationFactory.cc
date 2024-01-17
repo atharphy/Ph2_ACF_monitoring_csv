@@ -51,8 +51,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("Outer Tracker", "takedata"); // will be used in future version of GIPHT
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, KIRA>("Outer Tracker", "calibrationandkira");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, KIRA>("Outer Tracker", "calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    Register<OTTemperature, PSAlignment, LinkAlignmentOT, CicFEAlignment, PedeNoise, OTTemperature>("Outer Tracker", "pedenoise");
-    Register<TuneLpGBTVref, OTTemperature, PSAlignment, LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, OTTemperature>("Outer Tracker", "calibrationandpedenoise");
+    Register<TuneLpGBTVref, OTTemperature, PSAlignment, LinkAlignmentOT, CicFEAlignment, PedeNoise, TuneLpGBTVref, OTTemperature>("Outer Tracker", "pedenoise");
+    Register<TuneLpGBTVref, OTTemperature, PSAlignment, LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, TuneLpGBTVref, OTTemperature>("Outer Tracker", "calibrationandpedenoise");
     Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("Outer Tracker", "calibrationexample");
     Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("Outer Tracker", "otlatency");
 

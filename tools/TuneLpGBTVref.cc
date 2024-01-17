@@ -1,7 +1,7 @@
 #include "tools/TuneLpGBTVref.h"
 #include "System/RegisterHelper.h"
 
-std::string TuneLpGBTVref::fCalibrationDescription = "Tune Vref value for LpGBT calibration";
+std::string TuneLpGBTVref::fCalibrationDescription = "Tune Vref value for LpGBT ADC";
 
 TuneLpGBTVref::TuneLpGBTVref() : Tool() {}
 
@@ -11,6 +11,8 @@ void TuneLpGBTVref::Initialise()
 {
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeFrontEndRegister(FrontEndType::LpGBT, "VREFTUNE");
+
+    fDoManualVrefTuning = (findValueInSettings<double>("DoManualVrefTuning", 0) > 0);
 }
 
 void TuneLpGBTVref::reset() { fRegisterHelper->restoreSnapshot(); }
@@ -23,8 +25,15 @@ void TuneLpGBTVref::tuneVref()
         {
             auto& clpGBT = cOpticalGroup->flpGBT;
             if(clpGBT == nullptr) continue;
-            flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
-            flpGBTInterface->TuneVref(clpGBT);
+            if(fDoManualVrefTuning)
+            {
+                flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
+                flpGBTInterface->TuneVref(clpGBT);
+            }
+            else
+            {
+                flpGBTInterface->AutoTuneVref(clpGBT);
+            }
         }
     }
 }

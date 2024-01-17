@@ -8,6 +8,7 @@
 */
 
 #include "HWInterface/D19clpGBTInterface.h"
+#include "HWDescription/lpGBT.h"
 #include <chrono>
 #include <cstring>
 #include <fstream>
@@ -74,7 +75,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     {
         LOG(INFO) << BOLDBLUE << "Load calibration data and automatically tune vref (repeat if temperature changes)!" << RESET;
 
-        LoadCalibrationData(pChip, ReadChipID(pChip, cChipVersion));
+        LoadCalibrationData(static_cast<lpGBT*>(pChip), ReadChipID(pChip, cChipVersion));
 
         // Fabio's comment: auto tune should not be done here because if it gets calibrated and you try to reload again the registers
         // it will be overwritten
