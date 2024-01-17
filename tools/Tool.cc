@@ -165,9 +165,8 @@ void Tool::Start(const StartInfo& theStartInfo)
         std::string resultDirectory = getResultDirectoryName(theStartInfo);
         CreateResultDirectory(resultDirectory, false, false);
     }
-#ifdef __USE_ROOT__
+
     InitResultFile("Results");
-#endif
 
     if(fMetadataHandler != nullptr)
     {
@@ -665,9 +664,9 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
  * \brief Initialize the result Root file
  * \param pFilename : Root filename
  */
-#ifdef __USE_ROOT__
 void Tool::InitResultFile(const std::string& pFilename)
 {
+#ifdef __USE_ROOT__
     if(fResultFile != nullptr) return;
     if(!fDirectoryName.empty())
     {
@@ -686,8 +685,8 @@ void Tool::InitResultFile(const std::string& pFilename)
     }
     else
         LOG(INFO) << RED << "ERROR: " << RESET << "No result directory initialized - not saving results!";
-}
 #endif
+}
 
 void Tool::CloseResultFile()
 {

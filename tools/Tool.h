@@ -125,8 +125,8 @@ class Tool : public Ph2_System::SystemController
  * \brief Initialize the result Root file
  * \param pFilename : Root filename
  */
-#ifdef __USE_ROOT__
     void InitResultFile(const std::string& pFilename);
+#ifdef __USE_ROOT__
     void AddMetadata();
     void StartHttpServer(const int pPort = 8080, bool pReadonly = true);
     void HttpServerProcess();
