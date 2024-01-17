@@ -21,7 +21,7 @@ MetadataHandler::~MetadataHandler()
 
 void MetadataHandler::initMetadata() { initMetadataHardwareSpecific(); }
 
-void MetadataHandler::fillInitalConditions()
+void MetadataHandler::fillInitialConditions()
 {
     fillNameContainerWithChipIDs();
 
@@ -141,7 +141,7 @@ void MetadataHandler::fillInitalConditions()
     }
 #endif
 
-    fillInitalConditionsHardwareSpecific();
+    fillInitialConditionsHardwareSpecific();
 }
 
 void MetadataHandler::fillFinalConditions()
@@ -263,4 +263,11 @@ void MetadataHandler::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuse
             theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(chipFuseId);
         }
     }
+}
+
+void MetadataHandler::justBookDQMMetadata()
+{
+#ifdef __USE_ROOT__
+    fDQMMetadata->book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 }

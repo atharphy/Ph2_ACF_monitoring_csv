@@ -83,8 +83,6 @@ class ThrEqualization : public PixelAlive
     size_t doNSteps;
     bool   doUpdateChip;
     bool   doDisplay;
-
-    int theCurrentRun;
 };
 
 #endif

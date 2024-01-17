@@ -42,13 +42,14 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
 
     if(pValue > RD53Shared::setBits(RD53Shared::MAXBITCHIPREG))
     {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress << RESET;
+        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress
+                   << RESET;
         return false;
     }
 
     if(pAddress >= cMaxWriteAddress)
     {
-        LOG(WARNING) << "LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
+        LOG(WARNING) << "[RD53lpGBTInterface::WriteReg] LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
         return false;
     }
 
@@ -60,7 +61,11 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
         nAttempts++;
     } while((pVerify == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
-    if((pVerify == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
+    if((pVerify == true) && (status == false))
+    {
+        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT register writing issue" << RESET;
+        return false;
+    }
 
     return true;
 }
@@ -155,7 +160,14 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
                 static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
             }
             else
-                RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                try
+                {
+                    RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                }
+                catch(const std::exception& e)
+                {
+                    LOG(WARNING) << BOLDRED << "Error: " << BOLDYELLOW << e.what() << RESET;
+                }
         }
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 

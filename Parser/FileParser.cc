@@ -39,7 +39,7 @@ void FileParser::parseHW(const std::string& pFilename, DetectorContainer* pDetec
     // ##################################
     for(pugi::xml_node cBeBoardNode = doc.child(HW_DESCRIPTION_NODE_NAME).child(BEBOARD_NODE_NAME); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
     {
-        if(static_cast<std::string>(cBeBoardNode.name()) == BEBOARD_NODE_NAME) { parseBeBoard(cBeBoardNode, pDetectorContainer, os); }
+        if(static_cast<std::string>(cBeBoardNode.name()) == BEBOARD_NODE_NAME) parseBeBoard(cBeBoardNode, pDetectorContainer, os);
     }
 
     for(i = 0; i < 80; i++) os << "*";
@@ -225,6 +225,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
             parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
         }
     }
+
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");
     parseSLink(cSLinkNode, cBeBoard, os);
 }

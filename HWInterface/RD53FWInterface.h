@@ -96,6 +96,8 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     bool                          CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
     RD53FWconstants::ReadoutSpeed ReadoutSpeed();
+    bool                          getChipCommunicationStatus() { return isChipCommunicationOK; }
+    size_t                        getNCorruptedNEvents() { return NCorruptedNEvents; }
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
@@ -226,6 +228,8 @@ class RD53FWInterface : public BeBoardFWInterface
     bool               singleChip;
     uint32_t           FWinfo;
     uint16_t           enabledHybrids;
+    bool               isChipCommunicationOK{false};
+    size_t             NCorruptedNEvents{0};
 };
 
 } // namespace Ph2_HwInterface

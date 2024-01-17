@@ -437,6 +437,8 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 {
     LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;
 
+    isChipCommunicationOK = true;
+
     // ########################################
     // # Check communication with the chip(s) #
     // ########################################
@@ -468,12 +470,13 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
     if(nAttempts == RD53Shared::MAXATTEMPTS)
     {
+        isChipCommunicationOK = false;
         LOG(ERROR) << BOLDRED << "\t--> Error, not all data lanes are active, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") " << RESET;
         throw Exception("[RD53FWInterface::CheckChipCommunication] Some data lanes are enabled but inactive");
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
-    return true;
+    return isChipCommunicationOK;
 }
 
 RD53FWconstants::ReadoutSpeed RD53FWInterface::ReadoutSpeed()
@@ -531,6 +534,7 @@ void RD53FWInterface::Start(const BeBoard* pBoard)
     RD53FWInterface::ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
     RD53FWInterface::ResetReadoutBlk();
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
+    NCorruptedNEvents = 0;
 }
 
 void RD53FWInterface::Stop() { RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.stop_trigger"); }
@@ -724,6 +728,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     {
         LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
+        NCorruptedNEvents++;
     }
 
     // #################

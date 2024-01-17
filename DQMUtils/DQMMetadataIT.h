@@ -7,10 +7,14 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef DQMMetadataIT
-#define DQMMEtadataIT
+#ifndef DQMMetadataIT_H
+#define DQMMEtadataIT_H
 
 #include "DQMUtils/DQMMetadata.h"
+#include "RootUtils/StringContainer.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/EmptyContainer.h"
 
 class DQMMetadataIT : public DQMMetadata
 {
@@ -20,9 +24,16 @@ class DQMMetadataIT : public DQMMetadata
 
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
+    void fillBeginOfCalib(const DetectorDataContainer& theDetectorData);
+    void fillEndOfCalib(const DetectorDataContainer& theDetectorData);
+
     bool fill(std::string& inputStream) override;
     void process() override;
     void reset(void) override;
+
+  private:
+    DetectorDataContainer fBeginOfCalibContainer;
+    DetectorDataContainer fEndOfCalibContainer;
 };
 
 #endif

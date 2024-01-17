@@ -76,7 +76,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
 
     if(cSuccess == false)
     {
-        LOG(INFO) << BOLDRED << "LpGBT register writing issue on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
+        LOG(INFO) << BOLDRED << "LpGBT register writing issue on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --> OpticalGroup will be disabled"
                   << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return cSuccess;
@@ -99,7 +99,7 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
         auto cRegisterMap = pChip->getRegMap();
         cValue            = fBoardFW->SingleRegisterRead(pChip, cRegisterMap[pDacName]);
     }
-    else if(pChip->isOptical())
+    else if(pChip->isOptical() == true)
         cValue = fBoardFW->ReadOptoLinkRegister(pChip, cAddress);
 
     pChip->setReg(pDacName, cValue);
