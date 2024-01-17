@@ -41,6 +41,8 @@ class OTTemperature : public OTTool
     uint8_t TuneLpGBTVref();
     void    LoopReadout(bool pLoopReadout) { fLoopReadout = pLoopReadout; }
 
+    static std::string fCalibrationDescription;
+
   protected:
   private:
     bool                 fLoopReadout{false};

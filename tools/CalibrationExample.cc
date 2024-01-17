@@ -9,6 +9,8 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+std::string CalibrationExample::fCalibrationDescription = "Run a simple occupancy measurement";
+
 CalibrationExample::CalibrationExample() : Tool(), fEventsPerPoint(0) {}
 
 CalibrationExample::~CalibrationExample() {}

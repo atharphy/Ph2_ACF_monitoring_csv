@@ -13,6 +13,8 @@ class ConfigureOnly : public Tool
     void Stop() override;
     void Pause() override;
     void Resume() override;
+
+    static std::string fCalibrationDescription;
 };
 
 #endif

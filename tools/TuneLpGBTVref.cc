@@ -1,6 +1,8 @@
 #include "tools/TuneLpGBTVref.h"
 #include "System/RegisterHelper.h"
 
+std::string TuneLpGBTVref::fCalibrationDescription = "Tune Vref value for LpGBT calibration";
+
 TuneLpGBTVref::TuneLpGBTVref() : Tool() {}
 
 TuneLpGBTVref::~TuneLpGBTVref() {}

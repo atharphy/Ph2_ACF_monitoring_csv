@@ -33,6 +33,8 @@ class OTalignLpGBTinputs : public Tool
     void Resume() override;
     void Reset();
 
+    static std::string fCalibrationDescription;
+
   private:
     void AlignLpGBTInputs();
 
