@@ -175,11 +175,11 @@ std::string MiddlewareMessageHandler::calibrationList(const std::string& message
         auto theCalibrationPerHardwareTypeListMessage = theCalibrationList.add_calibrationperhardwaretype();
         theCalibrationPerHardwareTypeListMessage->set_hardwaretype(calibrationHardware.first);
 
-        for(const auto& theCalibrationList : calibrationHardware.second)
+        for(const auto& theCalibrationList: calibrationHardware.second)
         {
             auto theCalibrationListMessage = theCalibrationPerHardwareTypeListMessage->add_calibrationinfo();
             theCalibrationListMessage->set_calibrationname(theCalibrationList.first);
-            for(const auto& theSubCalibrationList : theCalibrationList.second)
+            for(const auto& theSubCalibrationList: theCalibrationList.second)
             {
                 auto theSubCalibrationListMessage = theCalibrationListMessage->add_subcalibrationinfo();
                 theSubCalibrationListMessage->set_subcalibrationname(theSubCalibrationList.first);

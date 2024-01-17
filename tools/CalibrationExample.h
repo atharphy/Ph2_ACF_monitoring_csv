@@ -36,7 +36,7 @@ class CalibrationExample : public Tool
     void Stop(void) override;
 
     static std::string fCalibrationDescription;
-    
+
   private:
     uint32_t fEventsPerPoint;
 

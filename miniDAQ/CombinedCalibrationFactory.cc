@@ -81,7 +81,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
 CombinedCalibrationFactory::~CombinedCalibrationFactory()
 {
-    for(auto& calibrationListPerHardware : fCalibrationMap)
+    for(auto& calibrationListPerHardware: fCalibrationMap)
     {
         delete calibrationListPerHardware.second.second;
         calibrationListPerHardware.second.second = nullptr;

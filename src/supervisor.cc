@@ -132,14 +132,14 @@ int main(int argc, char* argv[])
 
     std::string                calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
     CombinedCalibrationFactory theCombinedCalibrationFactory;
-    for(const auto& calibrationList : theCombinedCalibrationFactory.getAvailableCalibrations())
+    for(const auto& calibrationList: theCombinedCalibrationFactory.getAvailableCalibrations())
     {
         std::cout << "--------------------------------------------------------------------------" << std::endl;
         std::cout << BOLDGREEN << calibrationList.first << RESET << std::endl;
-        for(const auto& calibration : calibrationList.second)
+        for(const auto& calibration: calibrationList.second)
         {
             std::cout << BOLDBLUE << "\t" << calibration.first << RESET << std::endl;
-            for(const auto& subCalibration : calibration.second)
+            for(const auto& subCalibration: calibration.second)
             {
                 std::cout << "\t\t" << subCalibration.first;
                 if(subCalibration.second != "") std::cout << ": " << subCalibration.second;
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
             }
         }
         std::cout << "--------------------------------------------------------------------------" << std::endl;
-    }  
+    }
 
     cmd.defineOption("calibration", calibrationHelpMessage, ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");

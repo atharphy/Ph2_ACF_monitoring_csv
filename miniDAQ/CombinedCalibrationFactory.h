@@ -13,58 +13,61 @@ class BaseCreator
   public:
     BaseCreator() {}
     virtual ~BaseCreator() {}
-    virtual Tool* Create() const = 0;
-    std::vector<std::pair<std::string, std::string>> fSubCalibrationAndDescriptionList {};
+    virtual Tool*                                    Create() const = 0;
+    std::vector<std::pair<std::string, std::string>> fSubCalibrationAndDescriptionList{};
 };
 
-template<typename T>
+template <typename T>
 std::string getClassName()
 {
     int32_t     status;
-    std::string className     = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status);
+    std::string className = abi::__cxa_demangle(typeid(T).name(), 0, 0, &status);
     return className;
 }
 
 namespace CombinedCalibrationFactory_detail
 {
-    template <typename>
-    struct sfinae_true : std::true_type{};
+template <typename>
+struct sfinae_true : std::true_type
+{
+};
 
-    template <typename T>
-    static auto test_calibrationDescription(int) -> sfinae_true<decltype(T::fCalibrationDescription)>;
-    template <typename>
-    static auto test_calibrationDescription(long) -> std::false_type;
-}
+template <typename T>
+static auto test_calibrationDescription(int) -> sfinae_true<decltype(T::fCalibrationDescription)>;
+template <typename>
+static auto test_calibrationDescription(long) -> std::false_type;
+} // namespace CombinedCalibrationFactory_detail
 
 template <typename T>
 struct has_calibrationDescription : decltype(CombinedCalibrationFactory_detail::test_calibrationDescription<T>(0))
-{};
+{
+};
 
-template<typename T, bool hasCalibrationDescription>
+template <typename T, bool hasCalibrationDescription>
 struct GetCalibrationDescription
 {
-    std::pair<std::string, std::string> operator()() {return std::make_pair(getClassName<T>(), "");}
+    std::pair<std::string, std::string> operator()() { return std::make_pair(getClassName<T>(), ""); }
 };
 
-template<typename T>
+template <typename T>
 struct GetCalibrationDescription<T, true>
 {
-    std::pair<std::string, std::string> operator()() {return std::make_pair(getClassName<T>(), T::fCalibrationDescription);}
+    std::pair<std::string, std::string> operator()() { return std::make_pair(getClassName<T>(), T::fCalibrationDescription); }
 };
 
-template<typename T>
+template <typename T>
 void getFullDescription(std::vector<std::pair<std::string, std::string>>& theFullCalibrationDescription)
 {
-    GetCalibrationDescription<T, has_calibrationDescription<T>::value>  theGetCalibrationDescription;
-    std::pair<std::string, std::string> theCalibrationDescription = theGetCalibrationDescription();
+    GetCalibrationDescription<T, has_calibrationDescription<T>::value> theGetCalibrationDescription;
+    std::pair<std::string, std::string>                                theCalibrationDescription = theGetCalibrationDescription();
     theFullCalibrationDescription.push_back(theCalibrationDescription);
 }
 
-template<typename T, typename U, typename... Args>
+template <typename T, typename U, typename... Args>
 void getFullDescription(std::vector<std::pair<std::string, std::string>>& theFullCalibrationDescription)
 {
-    GetCalibrationDescription<T, has_calibrationDescription<T>::value>  theGetCalibrationDescription;
-    std::pair<std::string, std::string> theCalibrationDescription = theGetCalibrationDescription();
+    GetCalibrationDescription<T, has_calibrationDescription<T>::value> theGetCalibrationDescription;
+    std::pair<std::string, std::string>                                theCalibrationDescription = theGetCalibrationDescription();
     theFullCalibrationDescription.push_back(theCalibrationDescription);
     getFullDescription<U, Args...>(theFullCalibrationDescription);
 }
@@ -73,7 +76,7 @@ template <typename... Args>
 class Creator : public BaseCreator
 {
   public:
-    Creator() {getFullDescription<Args...>(fSubCalibrationAndDescriptionList);}
+    Creator() { getFullDescription<Args...>(fSubCalibrationAndDescriptionList); }
     virtual ~Creator() {}
     Tool* Create() const override { return new CombinedCalibration<Args...>(); };
     // ##################################################
