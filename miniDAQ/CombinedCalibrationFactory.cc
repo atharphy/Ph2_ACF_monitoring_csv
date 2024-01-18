@@ -44,6 +44,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<ConfigureOnly>("Common", "configureonly");
 
     // OT calibrations
+    Register<PedeNoise>("Outer Tracker", "noiseOT");
     Register<OTVTRXLightOff>("Outer Tracker", "vtrxoff");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<LinkAlignmentOT, CicFEAlignment>("Outer Tracker", "alignment");

@@ -26,7 +26,7 @@ void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, 
             if(!pAttributeString.empty()) pAttributeString += ".";
 
             pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
-            pValue = std::stoi(pRegisterNode.first_child().value());
+            pValue = std::stol(pRegisterNode.first_child().value());
             theRegisterMap[pAttributeString] = pValue;
         }
     }

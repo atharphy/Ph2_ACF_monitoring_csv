@@ -825,6 +825,22 @@ void Tool::dumpConfigFiles()
 
     for(auto theBoard: *fDetectorContainer)
     {
+        LOG(INFO) << BOLDYELLOW << "Reading all readable registers for BeBoard " << +theBoard->getId() << RESET;
+
+        const auto theBeBoardFW = this->fBeBoardFWMap[theBoard->getId()];
+        const auto hwInterface  = theBeBoardFW->getHardwareInterface();
+
+        for(const auto& path: hwInterface->getNodes())
+        {
+            const auto& node = hwInterface->getNode(path);
+
+            if((node.getPermission() == uhal::defs::READWRITE)  && (++node.begin() == node.end()))
+            // if((node.getPermission() == uhal::defs::READWRITE || node.getPermission() == uhal::defs::READ)  && (++node.begin() == node.end()))
+            {
+                fBeBoardInterface->ReadBoardReg(theBoard, path);
+            }
+        }
+
         for(auto theOpticalGroup: *theBoard)
         {
             auto theLpGBT = theOpticalGroup->flpGBT;
