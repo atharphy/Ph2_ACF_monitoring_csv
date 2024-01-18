@@ -19,7 +19,7 @@ FileDumper::FileDumper(const std::string& outputDirectory) { fOutputDirectory = 
 
 FileDumper::~FileDumper() {}
 
-void FileDumper::dumpConfigurationFiles(DetectorContainer*             theDetectorContainer,
+std::stringstream FileDumper::dumpConfigurationFiles(DetectorContainer*             theDetectorContainer,
                                         const Ph2_Parser::SettingsMap& theSettingMap,
                                         CommunicationSettingConfig*    theCommunicationSettingConfig,
                                         DetectorMonitorConfig*         theDetectorMonitorConfig)
@@ -50,6 +50,10 @@ void FileDumper::dumpConfigurationFiles(DetectorContainer*             theDetect
     {
         LOG(ERROR) << BOLDRED << "Error saving the new configuration file." << RESET;
     }
+
+    std::stringstream finalConfigurationStream;
+    doc.save(finalConfigurationStream);
+    return finalConfigurationStream;
 }
 
 void FileDumper::dumpBoardConfigurationFile(pugi::xml_node theMotherNode, BeBoard* theBoard)

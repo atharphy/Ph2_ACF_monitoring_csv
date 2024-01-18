@@ -89,7 +89,7 @@ void SystemController::Inherit(const SystemController* pController)
     fConfigurationFileName          = pController->fConfigurationFileName;
     fSettingsFileName               = pController->fSettingsFileName;
     fCalibrationName                = pController->fCalibrationName;
-    fConfigurationFileContent       = pController->fConfigurationFileContent;
+    fInitialConfigurationFileContent       = pController->fInitialConfigurationFileContent;
     fRegisterHelper                 = pController->fRegisterHelper;
     fCommunicationSettingConfig     = pController->fCommunicationSettingConfig;
     fDetectorMonitorConfig          = pController->fDetectorMonitorConfig;
@@ -1006,8 +1006,8 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pRe
     // #######################################
     // # Save raw configuration file content #
     // #######################################
-    fConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
-    if(fConfigurationFileName != fSettingsFileName) fConfigurationFileContent += theConfigureInfo.getConfigFileStream(fSettingsFileName);
+    fInitialConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
+    if(fConfigurationFileName != fSettingsFileName) fInitialConfigurationFileContent += theConfigureInfo.getConfigFileStream(fSettingsFileName);
 
     // ##################
     // # Initialization #

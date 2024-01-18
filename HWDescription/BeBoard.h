@@ -180,6 +180,7 @@ class BeBoard : public BoardContainer
     }
 
     void saveRegMap(const std::string& fileName);
+    std::stringstream getRegMapStream() const;
 
     void                                          takeSnapshot();
     void                                          clearSnapshot();
@@ -193,6 +194,7 @@ class BeBoard : public BoardContainer
     BoardType    fBoardType;
     EventType    fEventType;
     FrontEndType fFrontEndType;
+    std::unique_ptr<pugi::xml_document> createRegisterPugiDocument() const;
 
     ConditionDataSet* fCondDataSet;
     bool              fOptical{false};

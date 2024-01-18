@@ -213,6 +213,7 @@ void Tool::Stop()
         }
         SystemController::Stop();
 
+        Tool::dumpConfigFiles();
         if(fMetadataHandler != nullptr) { fMetadataHandler->fillFinalConditions(); }
 
         if(fDQMStreamerEnabled)
@@ -223,7 +224,9 @@ void Tool::Stop()
             fDQMStreamer->broadcast(doneWithRunMessage);
         }
 
-        SaveAndClose();
+        Tool::SaveResults();
+        Tool::WriteRootFile();
+        Tool::CloseResultFile();
     }
 }
 
@@ -860,10 +863,14 @@ void Tool::dumpConfigFiles()
     if(!fDirectoryName.empty())
     {
         FileDumper theFileDumper(fDirectoryName);
-        theFileDumper.dumpConfigurationFiles(fDetectorContainer, fSettingsMap, fCommunicationSettingConfig, fDetectorMonitorConfig);
+        auto fileDumpStream = theFileDumper.dumpConfigurationFiles(fDetectorContainer, fSettingsMap, fCommunicationSettingConfig, fDetectorMonitorConfig).str();
+        if(fMetadataHandler != nullptr) fMetadataHandler->setFinalConfigurationFileContent(fileDumpStream);
     }
     else
+    {
         LOG(ERROR) << "Error: no results Directory initialized" << RESET;
+        abort();
+    }
 }
 
 void Tool::setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState, bool pHoleMode)

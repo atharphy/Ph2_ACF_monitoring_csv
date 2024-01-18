@@ -381,7 +381,7 @@ class SystemController
     std::string                 fConfigurationFileName{""};
     std::string                 fSettingsFileName{""};
     std::string                 fCalibrationName{""};
-    std::string                 fConfigurationFileContent{""};
+    std::string                 fInitialConfigurationFileContent{""};
     BoardType                   fBoardType{BoardType::UNDEFINED};
     CommunicationSettingConfig* fCommunicationSettingConfig{nullptr};
     DetectorMonitorConfig*      fDetectorMonitorConfig{nullptr};

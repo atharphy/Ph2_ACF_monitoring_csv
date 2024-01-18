@@ -130,33 +130,31 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("file", "f");
 
-    std::string                calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
     CombinedCalibrationFactory theCombinedCalibrationFactory;
+    std::stringstream calibrationHelpMessage;
+    calibrationHelpMessage << "Calibration to run. List of available calibrations:\n";
     for(const auto& calibrationList: theCombinedCalibrationFactory.getAvailableCalibrations())
     {
-        std::cout << "--------------------------------------------------------------------------" << std::endl;
-        std::cout << BOLDGREEN << calibrationList.first << RESET << std::endl;
+       calibrationHelpMessage << "--------------------------------------------------------------------------" << std::endl;
+       calibrationHelpMessage << BOLDGREEN << calibrationList.first << " Calibrations" << RESET << std::endl;
+       calibrationHelpMessage << "--------------------------------------------------------------------------" << std::endl;
         for(const auto& calibration: calibrationList.second)
         {
-            std::cout << BOLDBLUE << "\t" << calibration.first << RESET << std::endl;
+           calibrationHelpMessage << BOLDBLUE << "\t" << calibration.first << RESET << std::endl;
             for(const auto& subCalibration: calibration.second)
             {
-                std::cout << "\t\t" << subCalibration.first;
-                if(subCalibration.second != "") std::cout << ": " << subCalibration.second;
-                std::cout << std::endl;
+               calibrationHelpMessage << "\t\t" << subCalibration.first;
+                if(subCalibration.second != "")calibrationHelpMessage << ": " << subCalibration.second;
+               calibrationHelpMessage << std::endl;
             }
         }
-        std::cout << "--------------------------------------------------------------------------" << std::endl;
     }
 
-    cmd.defineOption("calibration", calibrationHelpMessage, ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
+    cmd.defineOption("calibration", calibrationHelpMessage.str(), ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");
 
     cmd.defineOption("output", "Output Directory. Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("output", "o");
-
-    cmd.defineOption("allChan", "Do calibration using all channels? Default: false", ArgvParser::NoOptionAttribute);
-    cmd.defineOptionAlternative("allChan", "a");
 
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");

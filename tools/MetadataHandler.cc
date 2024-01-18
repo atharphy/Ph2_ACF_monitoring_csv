@@ -65,13 +65,17 @@ void MetadataHandler::fillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationNameContainer);
     theCalibrationNameContainer.getSummary<std::string>() = fCalibrationName;
 
-    DetectorDataContainer theDetectorConfigurationContainer;
-    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorConfigurationContainer);
-    theDetectorConfigurationContainer.getSummary<std::string>() = fConfigurationFileContent;
+    DetectorDataContainer theDetectorInitialConfigurationContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorInitialConfigurationContainer);
+    theDetectorInitialConfigurationContainer.getSummary<std::string>() = fInitialConfigurationFileContent;
 
     DetectorDataContainer theCalibrationTimestampContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationTimestampContainer);
     theCalibrationTimestampContainer.getSummary<std::string>() = getTimeStampString();
+
+    DetectorDataContainer theBoardConfigurationContainer;
+    ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theBoardConfigurationContainer);
+    fillBoardConfigurationContainer(theBoardConfigurationContainer);
 
     DetectorDataContainer theReadoutChipConfigurationContainer;
     ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
@@ -97,8 +101,9 @@ void MetadataHandler::fillInitialConditions()
     fDQMMetadata->fillHostName(theHostNameContainer);
     fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
     fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
-    fDQMMetadata->fillDetectorConfiguration(theDetectorConfigurationContainer);
+    fDQMMetadata->fillDetectorConfiguration(theDetectorInitialConfigurationContainer, isInitialValue);
     fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
+    fDQMMetadata->fillBoardConfiguration(theBoardConfigurationContainer, isInitialValue);
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTFuseId(theLpGBTFuseIdContainer);
@@ -122,10 +127,13 @@ void MetadataHandler::fillInitialConditions()
         theCalibrationNameSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationNameContainer);
 
         ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
-        theDetectorConfigurationSerialization.streamByDetectorContainer(fDQMStreamer, theDetectorConfigurationContainer);
+        theDetectorConfigurationSerialization.streamByDetectorContainer(fDQMStreamer, theDetectorInitialConfigurationContainer, isInitialValue);
 
         ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
         theCalibrationTimestampSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationTimestampContainer, isInitialValue);
+
+        ContainerSerialization theBoardConfigurationSerialization("MetadataBoardConfiguration");
+        theBoardConfigurationSerialization.streamByBoardContainer(fDQMStreamer, theBoardConfigurationContainer, isInitialValue);
 
         ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
         theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isInitialValue);
@@ -147,6 +155,14 @@ void MetadataHandler::fillInitialConditions()
 void MetadataHandler::fillFinalConditions()
 {
     bool                  isInitialValue = false;
+    DetectorDataContainer theDetectorFinalConfigurationContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theDetectorFinalConfigurationContainer);
+    theDetectorFinalConfigurationContainer.getSummary<std::string>() = fFinalConfigurationFileContent;
+
+    DetectorDataContainer theBoardConfigurationContainer;
+    ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theBoardConfigurationContainer);
+    fillBoardConfigurationContainer(theBoardConfigurationContainer);
+
     DetectorDataContainer theReadoutChipConfigurationContainer;
     ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
     fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
@@ -160,12 +176,20 @@ void MetadataHandler::fillFinalConditions()
     theCalibrationTimestampContainer.getSummary<std::string>() = getTimeStampString();
 
 #ifdef __USE_ROOT__
+    fDQMMetadata->fillDetectorConfiguration(theDetectorFinalConfigurationContainer, isInitialValue);
+    fDQMMetadata->fillBoardConfiguration(theBoardConfigurationContainer, isInitialValue);
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
     fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
 #else
     if(fDQMStreamerEnabled)
     {
+        ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
+        theDetectorConfigurationSerialization.streamByDetectorContainer(fDQMStreamer, theDetectorFinalConfigurationContainer, isInitialValue);
+
+        ContainerSerialization theBoardConfigurationSerialization("MetadataBoardConfiguration");
+        theBoardConfigurationSerialization.streamByBoardContainer(fDQMStreamer, theBoardConfigurationContainer, isInitialValue);
+
         ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
         theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isInitialValue);
 
@@ -262,6 +286,14 @@ void MetadataHandler::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuse
             // Temporary function in lpgbt interface until VTRx interface is implemented
             theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(chipFuseId);
         }
+    }
+}
+
+void MetadataHandler::fillBoardConfigurationContainer(DetectorDataContainer& theBoardConfigurationContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        theBoardConfigurationContainer.getObject(cBoard->getId())->getSummary<std::string, EmptyContainer>() = cBoard->getRegMapStream().str();
     }
 }
 

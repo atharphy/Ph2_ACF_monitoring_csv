@@ -17,6 +17,8 @@
 #include "argvparser.h"
 #include <iostream>
 #include <sstream>
+#include <boost/algorithm/string/classification.hpp> // Include boost::for is_any_of
+#include <boost/algorithm/string/split.hpp> // Include for boost::split
 
 using namespace std;
 using namespace CommandLineProcessing;
@@ -349,7 +351,14 @@ string ArgvParser::usageDescription(unsigned int _width) const
         usage += formatString(os, _width) + "\n";
 
         if(option2descr.find(it->first) != option2descr.end())
-            usage += formatString(option2descr.find(it->first)->second, _width, 4);
+        {
+            std::vector<std::string> lineList;
+            boost::split(lineList, option2descr.find(it->first)->second, boost::is_any_of("\n"), boost::token_compress_on);
+            for(const auto& line : lineList)
+            {
+                usage += ("\t" + line + "\n");
+            }
+        }
         else
             usage += formatString("(no description)", _width, 4);
 

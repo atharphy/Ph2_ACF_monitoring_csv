@@ -19,6 +19,8 @@ class MetadataHandler : public Tool
     virtual void fillInitialConditionsHardwareSpecific() = 0;
     virtual void fillFinalConditionsHardwareSpecific()   = 0;
 
+    void setFinalConfigurationFileContent(const std::string& theConfigurationFileContent) {fFinalConfigurationFileContent = theConfigurationFileContent;}
+
     void justBookDQMMetadata();
 
   protected:
@@ -30,6 +32,10 @@ class MetadataHandler : public Tool
     void fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer);
     void fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContainer);
     void fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer);
+    void fillBoardConfigurationContainer(DetectorDataContainer& theBoardConfigurationContainer);
+
+    std::string fFinalConfigurationFileContent {""};
+
 };
 
 #endif

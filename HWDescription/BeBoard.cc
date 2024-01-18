@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 namespace Ph2_HwDescription
 {
@@ -129,10 +130,10 @@ void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttribut
 
 void BeBoard::loadConfigFile(const std::string& filename)
 {
-    pugi::xml_document     doc;
-    pugi::xml_parse_result result = doc.load_file(filename.c_str());
+    pugi::xml_document     registerPugiDocument;
+    pugi::xml_parse_result result = registerPugiDocument.load_file(filename.c_str());
     if(!result) // Try if it is not a file, but a string containing the full xml
-        result = doc.load_string(filename.c_str());
+        result = registerPugiDocument.load_string(filename.c_str());
     if(!result)
     {
         LOG(ERROR) << BOLDRED << "ERROR : Unable to open the file : " << RESET << filename << std::endl;
@@ -140,7 +141,7 @@ void BeBoard::loadConfigFile(const std::string& filename)
         throw Exception("Unable to parse BeBoard XML source!");
     }
 
-    pugi::xml_node cBeBoardConfigurationNode = doc.child("BeBoardRegister");
+    pugi::xml_node cBeBoardConfigurationNode = registerPugiDocument.child("BeBoardRegister");
 
     for(pugi::xml_node cBeBoardRegNode = cBeBoardConfigurationNode.child(BEBOARD_REGISTER_NODE_NAME); cBeBoardRegNode; cBeBoardRegNode = cBeBoardRegNode.next_sibling())
     {
@@ -192,7 +193,8 @@ void BeBoard::reinitializeFreeRegisters() { fListOfFreeRegisters.clear(); }
 
 void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(theRegisterName); }
 
-void BeBoard::saveRegMap(const std::string& fileName)
+
+std::unique_ptr<pugi::xml_document> BeBoard::createRegisterPugiDocument() const
 {
     std::function<void(std::string, std::vector<std::string>&)> splitRegister;
     splitRegister = [&splitRegister](std::string theFullRegister, std::vector<std::string>& theSplittedRegister) {
@@ -248,22 +250,37 @@ void BeBoard::saveRegMap(const std::string& fileName)
         }
     };
 
-    pugi::xml_document doc;
+    std::unique_ptr<pugi::xml_document> registerPugiDocument = std::make_unique<pugi::xml_document>();
 
     // Add a declaration node
-    pugi::xml_node declarationNode               = doc.prepend_child(pugi::node_declaration);
+    pugi::xml_node declarationNode               = registerPugiDocument->prepend_child(pugi::node_declaration);
     declarationNode.append_attribute("version")  = "1.0";
     declarationNode.append_attribute("encoding") = "utf-8";
 
-    pugi::xml_node boardRegisterNode = doc.append_child(BEBOARDREGISTER_NODE_NAME);
+    pugi::xml_node boardRegisterNode = registerPugiDocument->append_child(BEBOARDREGISTER_NODE_NAME);
 
     groupByRegisterAndDumpIntoFile(boardRegisterNode, theRegisterListSplitted);
 
-    if(doc.save_file(fileName.c_str())) { LOG(INFO) << BOLDGREEN << "XML file " << fileName << " created successfully." << RESET; }
+    return registerPugiDocument;
+}
+
+
+void BeBoard::saveRegMap(const std::string& fileName)
+{
+    auto registerPugiDocument = createRegisterPugiDocument();
+    if(registerPugiDocument->save_file(fileName.c_str())) { LOG(INFO) << BOLDGREEN << "XML file " << fileName << " created successfully." << RESET; }
     else
     {
         LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
     }
+}
+
+std::stringstream BeBoard::getRegMapStream() const
+{
+    std::stringstream theStream;
+    auto registerPugiDocument = createRegisterPugiDocument();
+    registerPugiDocument->save(theStream);
+    return theStream;
 }
 
 } // namespace Ph2_HwDescription
