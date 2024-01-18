@@ -291,10 +291,7 @@ void MetadataHandler::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuse
 
 void MetadataHandler::fillBoardConfigurationContainer(DetectorDataContainer& theBoardConfigurationContainer)
 {
-    for(auto cBoard: *fDetectorContainer)
-    {
-        theBoardConfigurationContainer.getObject(cBoard->getId())->getSummary<std::string, EmptyContainer>() = cBoard->getRegMapStream().str();
-    }
+    for(auto cBoard: *fDetectorContainer) { theBoardConfigurationContainer.getObject(cBoard->getId())->getSummary<std::string, EmptyContainer>() = cBoard->getRegMapStream().str(); }
 }
 
 void MetadataHandler::justBookDQMMetadata()

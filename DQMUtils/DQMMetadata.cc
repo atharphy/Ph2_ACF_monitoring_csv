@@ -181,7 +181,6 @@ void DQMMetadata::fillCalibrationTimestamp(const DetectorDataContainer& theCalib
     theTimestampPlotContainer->getSummary<StringContainer>().saveString(theCalibrationTimestampContainer.getSummary<std::string>());
 }
 
-
 void DQMMetadata::fillBoardConfiguration(const DetectorDataContainer& theBoardConfigurationContainer, bool initialValue)
 {
     for(const auto board: theBoardConfigurationContainer)
@@ -348,7 +347,8 @@ bool DQMMetadata::fill(std::string& inputStream)
         std::cout << "Matched Metadata DetectorConfiguration!!!!!\n";
         bool                  isInitial;
         DetectorDataContainer theDetectorData =
-            theDetectorConfigurationSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
+            theDetectorConfigurationSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer,
+                                                                                                                                                                            isInitial);
         fillDetectorConfiguration(theDetectorData, isInitial);
         return true;
     }
@@ -366,7 +366,8 @@ bool DQMMetadata::fill(std::string& inputStream)
     {
         std::cout << "Matched Metadata BoardConfiguration!!!!!\n";
         bool                  isInitial;
-        DetectorDataContainer theDetectorData = theBoardConfigurationSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
+        DetectorDataContainer theDetectorData =
+            theBoardConfigurationSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
         fillBoardConfiguration(theDetectorData, isInitial);
         return true;
     }

@@ -15,8 +15,8 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <memory>
+#include <sstream>
 
 namespace Ph2_HwDescription
 {
@@ -193,7 +193,6 @@ void BeBoard::reinitializeFreeRegisters() { fListOfFreeRegisters.clear(); }
 
 void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(theRegisterName); }
 
-
 std::unique_ptr<pugi::xml_document> BeBoard::createRegisterPugiDocument() const
 {
     std::function<void(std::string, std::vector<std::string>&)> splitRegister;
@@ -264,7 +263,6 @@ std::unique_ptr<pugi::xml_document> BeBoard::createRegisterPugiDocument() const
     return registerPugiDocument;
 }
 
-
 void BeBoard::saveRegMap(const std::string& fileName)
 {
     auto registerPugiDocument = createRegisterPugiDocument();
@@ -278,7 +276,7 @@ void BeBoard::saveRegMap(const std::string& fileName)
 std::stringstream BeBoard::getRegMapStream() const
 {
     std::stringstream theStream;
-    auto registerPugiDocument = createRegisterPugiDocument();
+    auto              registerPugiDocument = createRegisterPugiDocument();
     registerPugiDocument->save(theStream);
     return theStream;
 }

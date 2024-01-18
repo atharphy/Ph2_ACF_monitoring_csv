@@ -131,21 +131,21 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("file", "f");
 
     CombinedCalibrationFactory theCombinedCalibrationFactory;
-    std::stringstream calibrationHelpMessage;
+    std::stringstream          calibrationHelpMessage;
     calibrationHelpMessage << "Calibration to run. List of available calibrations:\n";
     for(const auto& calibrationList: theCombinedCalibrationFactory.getAvailableCalibrations())
     {
-       calibrationHelpMessage << "--------------------------------------------------------------------------" << std::endl;
-       calibrationHelpMessage << BOLDGREEN << calibrationList.first << " Calibrations" << RESET << std::endl;
-       calibrationHelpMessage << "--------------------------------------------------------------------------" << std::endl;
+        calibrationHelpMessage << "--------------------------------------------------------------------------" << std::endl;
+        calibrationHelpMessage << BOLDGREEN << calibrationList.first << " Calibrations" << RESET << std::endl;
+        calibrationHelpMessage << "--------------------------------------------------------------------------" << std::endl;
         for(const auto& calibration: calibrationList.second)
         {
-           calibrationHelpMessage << BOLDBLUE << "\t" << calibration.first << RESET << std::endl;
+            calibrationHelpMessage << BOLDBLUE << "\t" << calibration.first << RESET << std::endl;
             for(const auto& subCalibration: calibration.second)
             {
-               calibrationHelpMessage << "\t\t" << subCalibration.first;
-                if(subCalibration.second != "")calibrationHelpMessage << ": " << subCalibration.second;
-               calibrationHelpMessage << std::endl;
+                calibrationHelpMessage << "\t\t" << subCalibration.first;
+                if(subCalibration.second != "") calibrationHelpMessage << ": " << subCalibration.second;
+                calibrationHelpMessage << std::endl;
             }
         }
     }

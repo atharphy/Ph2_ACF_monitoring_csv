@@ -863,7 +863,7 @@ void Tool::dumpConfigFiles()
     if(!fDirectoryName.empty())
     {
         FileDumper theFileDumper(fDirectoryName);
-        auto fileDumpStream = theFileDumper.dumpConfigurationFiles(fDetectorContainer, fSettingsMap, fCommunicationSettingConfig, fDetectorMonitorConfig).str();
+        auto       fileDumpStream = theFileDumper.dumpConfigurationFiles(fDetectorContainer, fSettingsMap, fCommunicationSettingConfig, fDetectorMonitorConfig).str();
         if(fMetadataHandler != nullptr) fMetadataHandler->setFinalConfigurationFileContent(fileDumpStream);
     }
     else

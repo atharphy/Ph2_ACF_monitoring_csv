@@ -15,10 +15,10 @@
  *   GNU General Public License for more details.
  */
 #include "argvparser.h"
+#include <boost/algorithm/string/classification.hpp> // Include boost::for is_any_of
+#include <boost/algorithm/string/split.hpp>          // Include for boost::split
 #include <iostream>
 #include <sstream>
-#include <boost/algorithm/string/classification.hpp> // Include boost::for is_any_of
-#include <boost/algorithm/string/split.hpp> // Include for boost::split
 
 using namespace std;
 using namespace CommandLineProcessing;
@@ -354,10 +354,7 @@ string ArgvParser::usageDescription(unsigned int _width) const
         {
             std::vector<std::string> lineList;
             boost::split(lineList, option2descr.find(it->first)->second, boost::is_any_of("\n"), boost::token_compress_on);
-            for(const auto& line : lineList)
-            {
-                usage += ("\t" + line + "\n");
-            }
+            for(const auto& line: lineList) { usage += ("\t" + line + "\n"); }
         }
         else
             usage += formatString("(no description)", _width, 4);

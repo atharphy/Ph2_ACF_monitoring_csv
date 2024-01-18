@@ -20,9 +20,9 @@ FileDumper::FileDumper(const std::string& outputDirectory) { fOutputDirectory = 
 FileDumper::~FileDumper() {}
 
 std::stringstream FileDumper::dumpConfigurationFiles(DetectorContainer*             theDetectorContainer,
-                                        const Ph2_Parser::SettingsMap& theSettingMap,
-                                        CommunicationSettingConfig*    theCommunicationSettingConfig,
-                                        DetectorMonitorConfig*         theDetectorMonitorConfig)
+                                                     const Ph2_Parser::SettingsMap& theSettingMap,
+                                                     CommunicationSettingConfig*    theCommunicationSettingConfig,
+                                                     DetectorMonitorConfig*         theDetectorMonitorConfig)
 {
     pugi::xml_document doc;
 
