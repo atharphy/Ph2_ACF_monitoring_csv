@@ -79,20 +79,20 @@ void SystemController::Inherit(const SystemController* pController)
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
     fEventList                    = pController->fEventList;
     // fFuture                       = pController->fFuture;
-    fEventSize                      = pController->fEventSize;
-    fNCbc                           = pController->fNCbc;
-    fParser                         = pController->fParser;
-    fSameChannelGroupForAllChannels = pController->fSameChannelGroupForAllChannels;
-    fInitializeInterfaces           = pController->fInitializeInterfaces;
-    fNameContainer                  = pController->fNameContainer;
-    fBoardType                      = pController->fBoardType;
-    fConfigurationFileName          = pController->fConfigurationFileName;
-    fSettingsFileName               = pController->fSettingsFileName;
-    fCalibrationName                = pController->fCalibrationName;
-    fConfigurationFileContent       = pController->fConfigurationFileContent;
-    fRegisterHelper                 = pController->fRegisterHelper;
-    fCommunicationSettingConfig     = pController->fCommunicationSettingConfig;
-    fDetectorMonitorConfig          = pController->fDetectorMonitorConfig;
+    fEventSize                       = pController->fEventSize;
+    fNCbc                            = pController->fNCbc;
+    fParser                          = pController->fParser;
+    fSameChannelGroupForAllChannels  = pController->fSameChannelGroupForAllChannels;
+    fInitializeInterfaces            = pController->fInitializeInterfaces;
+    fNameContainer                   = pController->fNameContainer;
+    fBoardType                       = pController->fBoardType;
+    fConfigurationFileName           = pController->fConfigurationFileName;
+    fSettingsFileName                = pController->fSettingsFileName;
+    fCalibrationName                 = pController->fCalibrationName;
+    fInitialConfigurationFileContent = pController->fInitialConfigurationFileContent;
+    fRegisterHelper                  = pController->fRegisterHelper;
+    fCommunicationSettingConfig      = pController->fCommunicationSettingConfig;
+    fDetectorMonitorConfig           = pController->fDetectorMonitorConfig;
 }
 
 void SystemController::StopMonitoring()
@@ -1006,8 +1006,8 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pRe
     // #######################################
     // # Save raw configuration file content #
     // #######################################
-    fConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
-    if(fConfigurationFileName != fSettingsFileName) fConfigurationFileContent += theConfigureInfo.getConfigFileStream(fSettingsFileName);
+    fInitialConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
+    if(fConfigurationFileName != fSettingsFileName) fInitialConfigurationFileContent += theConfigureInfo.getConfigFileStream(fSettingsFileName);
 
     // ##################
     // # Initialization #

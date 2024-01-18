@@ -33,7 +33,8 @@ listOfCalibration = theStateMachine.getCalibrationList()
 listOfCalibrationPrint = ""
 for hardwareType, calibrationListPerHardware in listOfCalibration.items():
     listOfCalibrationPrint = listOfCalibrationPrint + "--------------------------------------------------------------------------\n";
-    listOfCalibrationPrint = listOfCalibrationPrint + "\033[1m\033[32m" + hardwareType + "\033[0m" + "\n"
+    listOfCalibrationPrint = listOfCalibrationPrint + "\033[1m\033[32m" + hardwareType + " Calibrations\033[0m" + "\n"
+    listOfCalibrationPrint = listOfCalibrationPrint + "--------------------------------------------------------------------------\n";
     for calibrationName, subCalibrationList in calibrationListPerHardware.items():
         listOfCalibrationPrint = listOfCalibrationPrint + "\033[1m\033[34m" + "\t" + calibrationName + "\033[0m" + "\n"
         for subCalibration in subCalibrationList:
