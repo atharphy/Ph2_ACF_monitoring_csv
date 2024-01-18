@@ -54,6 +54,7 @@ class BeamTestCheck : public OTTool
     // void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void DisableAllFEs();
     void ScanStubLatency(uint8_t pContinuousReadout);
+    void ScanStubLatencyLea();
     void ScanL1Latency(uint8_t pContinuousReadout);
 
     void ConfigureScans(uint8_t pStatusL1, uint8_t pStatusStubs)

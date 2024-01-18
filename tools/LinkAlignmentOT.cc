@@ -1751,6 +1751,218 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
     return cCorrectDelay;
 }
+// Copied from Sarah
+// really simple package alignment
+bool LinkAlignmentOT::AlignStubPackageSarah(BeBoard* pBoard)
+{
+    LOG(INFO) << BOLDYELLOW << "BackendAlignmentOT::AlignStubPackage For BeBoard#" << +pBoard->getId() << RESET;
+    // bool cVerify    = true;
+    fBeBoardInterface->setBoard(pBoard->getId());
+    std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    cVecReg.clear();
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 0x3});
+    cVecReg.push_back({"fc7_daq_cnfg.ttc.ttc_enable", 0x0});
+    cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cVecReg);
+    
+    // when doing this want to make sure all stubs are disabled 
+    // I think I can just disable the FEs? 
+    std::vector<uint8_t> cFeEnableRegs(0);
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
+            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+        }//disable all FEs from CIC so you only receive L1 headers
+    }
+
+    std::vector<uint16_t> cHybridIds(0);
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            uint16_t cId = (cOpticalGroup->getId() << 8) | (cHybrid->getId());
+            cHybridIds.push_back(cId);
+        }
+    }
+
+    std::map<uint8_t, uint8_t> cGoodPackageDelays; 
+    std::map<std::string,uint32_t> cConfigurationValues; 
+    cConfigurationValues["fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9"]=0x00;
+    cConfigurationValues["fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11"]=0x00;
+    for(auto cOpticalGroup: *pBoard)
+    {
+        LOG (INFO) << BOLDYELLOW << "For hybrids connected to Link#" << +cOpticalGroup->getId() << RESET;
+        std::map<uint8_t,bool> cAlignmentMap ; 
+        std::string cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
+        if( cOpticalGroup->getId() > 9 ) cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
+        for(uint8_t cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
+        {
+            // LOG (INFO) << BOLDYELLOW << "Package delay of " << +cPackageDelay << " on link#" << +cOpticalGroup->getId() << RESET;
+            uint32_t cRegValue = (cPackageDelay << cOpticalGroup->getId()%10*3);   
+            
+            fBeBoardInterface->WriteBoardReg(pBoard, cRegName, cRegValue );
+            fBeBoardInterface->ChipReSync(pBoard);
+            // read events and fill vector 
+            ReadNEvents(pBoard, 10);
+            const std::vector<Event*>& cEvents = this->GetEvents();
+            // BxIds for hybrids on this link 
+            std::map<uint8_t, std::vector<size_t>> cBxIdsThisDelay; 
+            cAlignmentMap[cPackageDelay]=true;
+            for(auto& cEvent: cEvents)
+            {
+                int cBxDifference = 0; 
+                std::stringstream cOut;
+                int cNHybrids=0;
+                for(auto cId : cHybridIds)
+                {
+                    if( (cId >> 8) != cOpticalGroup->getId() ) continue; 
+                    auto cBxId  = cEvent->BxId(cId&0xFF);
+                    cBxIdsThisDelay[cId&0xFF].push_back(cBxId);
+                    // LOG (INFO) << BOLDYELLOW << "\t.. BxId " << cBxId << " Hybrid#" << +(cId&0xFF) << RESET;
+            
+                    if(cNHybrids == 0 ) cBxDifference = cBxId; 
+                    else cBxDifference = cBxDifference - cBxId; 
+                    cNHybrids++;
+                }// all hybrid ids from all links 
+                cAlignmentMap[cPackageDelay] = cAlignmentMap[cPackageDelay];
+                if( cNHybrids > 1 )  cAlignmentMap[cPackageDelay] = cAlignmentMap[cPackageDelay] && (cBxDifference == 0 );
+            }//events from the readout 
+
+            // check BxIds from each hybrid
+            // for a given hybrid not all can be the same
+            if(!cAlignmentMap[cPackageDelay]){ 
+                LOG (INFO) << BOLDRED << "\t... Pkg Delay of " << +cPackageDelay << " Mismatch in BxIds for hybrids on the same link!!!" << RESET;
+                continue;
+            }
+            else LOG (INFO) << BOLDYELLOW << "\t... Matching BxIds for hybrids on the same link!!!" << RESET;
+            for(auto cId : cHybridIds)
+            {
+                if( (cId >> 8) != cOpticalGroup->getId() ) LOG(INFO) << BOLDGREEN << "No printout H#" << (cId&0xFF) << RESET;
+                std::stringstream cOut;
+                cOut << "Hybrid#" << (cId&0xFF) << "\t.. Package delay of " << +cPackageDelay << " -- reg value " << std::bitset<32>(cRegValue);
+                for(auto cBxId : cBxIdsThisDelay[cId&0xFF] )
+                {
+                    cOut << " BxId" << cBxId << ", ";
+                }//loop over BxIds from the readout events 
+                sort(cBxIdsThisDelay[cId&0xFF].begin(), cBxIdsThisDelay[cId&0xFF].end());
+                auto cIter = std::unique(cBxIdsThisDelay[cId&0xFF].begin(), cBxIdsThisDelay[cId&0xFF].end());  
+                cBxIdsThisDelay[cId&0xFF].resize(distance(cBxIdsThisDelay[cId&0xFF].begin(),cIter));  
+                cAlignmentMap[cPackageDelay] = cAlignmentMap[cPackageDelay] && cBxIdsThisDelay[cId&0xFF].size() > 1;
+                if(!cAlignmentMap[cPackageDelay]) 
+                {
+                    // LOG (INFO) << BOLDRED << cOut.str() << RESET;
+                    continue;
+                }
+                // cant just have 0-7 in the BxIds
+                // explicitly check here
+                cAlignmentMap[cPackageDelay]=false;
+                for(auto cBxId : cBxIdsThisDelay[cId&0xFF]) 
+                {
+                    if(cBxId > 7) cAlignmentMap[cPackageDelay]=true;
+                }
+                if( cAlignmentMap[cPackageDelay] ){ 
+                    LOG (INFO) << BOLDGREEN << cOut.str() << RESET;
+                    auto cStbCnfg = cOpticalGroup->getStubCnfg();
+                    cStbCnfg.first = cPackageDelay;
+                    cOpticalGroup->setStubCnfg(cStbCnfg);
+                }
+                // else LOG (INFO) << BOLDRED << cOut.str() << RESET;
+            }
+        }
+        for(auto cMapItem : cAlignmentMap )
+        {
+            if( cMapItem.second == true ){
+                cGoodPackageDelays[cOpticalGroup->getId()] = cMapItem.first; 
+                cConfigurationValues[cRegName] = cConfigurationValues[cRegName] | (cMapItem.first << (cOpticalGroup->getId()%10)*3);   
+            }
+        }
+    }
+    // set value of package delays 
+    auto cIter = cConfigurationValues.begin();
+    do
+    {
+        LOG (INFO) << BOLDYELLOW << "Want to set package delay register " << cIter->first << " to " << std::bitset<32>(cIter->second) << RESET;
+        fBeBoardInterface->WriteBoardReg(pBoard,cIter->first, cIter->second );
+        cIter++;
+    }while(cIter != cConfigurationValues.end());
+    fBeBoardInterface->ChipReSync(pBoard);
+    // if(cVerify)
+    // {
+    //     fBeBoardInterface->WriteBoardReg(pBoard,"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity",0);
+    //     fBeBoardInterface->WriteBoardReg(pBoard,"fc7_daq_ctrl.fast_command_block.control.load_config",0x1);
+
+    //     // configure TP
+    //     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    //     D19cTriggerInterface* cTriggerInterface  = dynamic_cast<D19cTriggerInterface*>(cInterface->getTriggerInterface());
+    //     TestPulseTriggerConfiguration cTPCnfg;
+    //     cTPCnfg.fDelayAfterFastReset=100;
+    //     cTPCnfg.fDelayAfterTP=100;
+    //     cTPCnfg.fDelayBeforeNextTP=200;
+    //     cTPCnfg.fEnableFastReset=0;
+    //     cTPCnfg.fEnableTP=1;
+    //     cTPCnfg.fEnableL1A=1;
+    //     cTriggerInterface->ConfigureTestPulseFSM(cTPCnfg);
+
+    //     // read events and fill vector 
+    //     ReadNEvents(pBoard, 10);
+    //     const std::vector<Event*>& cEvents = this->GetEvents();
+    //     std::map<uint8_t, std::vector<size_t>> cBxIds; 
+    //     for(auto& cEvent: cEvents)
+    //     {
+    //         for(auto cId : cHybridIds)
+    //         {
+    //             auto cBxId  = cEvent->BxId(cId&0xFF);
+    //             cBxIds[cId&0xFF].push_back(cBxId);
+    //         }// all hybrid ids from all links 
+    //     }//events from the readout 
+
+    //     // check BxIds from each hybrid
+    //     // for a given hybrid not all can be the same
+    //     std::ofstream delay_file;
+    //     delay_file.open("delays.txt",std::ios::out);
+        
+    //     for(auto cId : cHybridIds)
+    //     {
+    //         auto cOpticalGroupId = cId >> 8; 
+    //         std::string cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
+    //         if( cOpticalGroupId > 9 ) cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
+        
+    //         std::stringstream cOut;
+    //         uint8_t cPackageDelay = (cConfigurationValues[cRegName] >> (cOpticalGroupId%10)*3) & 0x7;
+    //         cOut << "Hybrid#" << (cId&0xFF) << "\t.. Package delay of " << +cPackageDelay;
+    //         if ( (cId & 0xFF) % 2 == 0) delay_file << +cPackageDelay << ",";
+    //         int cBxIdCount = 0;
+    //         for(auto cBxId : cBxIds[cId&0xFF] )
+    //         {
+    //             if((cId & 0xFF) % 2 == 0 && cBxIdCount == 0) {delay_file << cBxId << "\n";}
+    //             cOut << " BxId" << cBxId << ", ";
+    //             cBxIdCount++;
+    //         }//loop over BxIds from the readout events 
+    //         sort(cBxIds[cId&0xFF].begin(), cBxIds[cId&0xFF].end());
+    //         auto cIter = std::unique(cBxIds[cId&0xFF].begin(), cBxIds[cId&0xFF].end());  
+    //         cBxIds[cId&0xFF].resize(distance(cBxIds[cId&0xFF].begin(),cIter));  
+    //         if( cBxIds[cId&0xFF].size() > 1 ) LOG (INFO) << BOLDGREEN << cOut.str() << RESET;
+    //         else LOG (INFO) << BOLDRED << cOut.str() << RESET;
+    //     }
+    //     delay_file.close();
+
+    // }
+
+    size_t cIndx = 0;
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
+            cIndx++;
+        }//reselect FEs
+    }
+    return cGoodPackageDelays.size() > 0 ;
+}
 // State machine control functions
 void LinkAlignmentOT::Running()
 {
