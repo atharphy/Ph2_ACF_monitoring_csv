@@ -194,6 +194,32 @@ void BeamTestCheck::Validate()
     LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
     fDetectorContainer->getFirstObject()->dumpRegisters();
 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            // Get register name dependent of OG
+            std::string cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
+            if( cOpticalGroup->getId() > 9 ) cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
+
+            auto cStubPackageRegister = fBeBoardInterface->ReadBoardReg(cBoard, cRegName);
+            LOG(INFO) << "Stub package reg on Link#" << cOpticalGroup->getId() << " is " << std::bitset<32>(cStubPackageRegister) << RESET;
+        }
+
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto cStubCnfg = cOpticalGroup->getStubCnfg();
+            auto cPackageDelay = cStubCnfg.first;
+            int               cBaseLinkId = cOpticalGroup->getId() / 3;
+            std::stringstream cRegName;
+            cRegName << "fc7_daq_cnfg.readout_block.stub_latency_link" << cBaseLinkId * 3;
+            cRegName << "_link" << cBaseLinkId * 3 + 2;
+            uint32_t cVal           = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
+            LOG(INFO) << "Link#" << +cOpticalGroup->getId() << " Pkg Delay " << +cPackageDelay
+                    << cRegName.str() << " set to " << std::bitset<32>(cVal) << RESET;
+        } // Read latency for all links
+    }
+
     // validate
     // read events
     if(fReadoutMode == 0) ContinuousReadout();
@@ -1780,6 +1806,8 @@ void BeamTestCheck::ScanStubLatencyLea()
         }         // offset
         // TODO Comment in and add this funciton from Sarahs branch???
         // ConfigureStubReadout(cBoard);
+        // Test if this does what Sarah did in ConfigureStubReadout. It should do sth like that as I see
+        PrepareForTP(cBoard);
         for(auto cOpticalGroup: *cBoard)
         {
             int               cBaseLinkId = cOpticalGroup->getId() / 3;
@@ -1815,6 +1843,19 @@ void BeamTestCheck::ScanStubLatencyLea()
     {
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto cStubCnfg = cOpticalGroup->getStubCnfg();
+            auto cPackageDelay = cStubCnfg.first;
+            int               cBaseLinkId = cOpticalGroup->getId() / 3;
+            std::stringstream cRegName;
+            cRegName << "fc7_daq_cnfg.readout_block.stub_latency_link" << cBaseLinkId * 3;
+            cRegName << "_link" << cBaseLinkId * 3 + 2;
+            uint32_t cVal           = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
+            LOG(INFO) << BOLDYELLOW << "Link#" << +cOpticalGroup->getId() << " Pkg Delay " << +cPackageDelay
+                    << cRegName.str() << " set to " << std::bitset<32>(cVal) << RESET;
+        } // Read latency for all links
 
         // look what you've got
         ReadNEvents(cBoard, 1);
