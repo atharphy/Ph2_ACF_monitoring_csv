@@ -834,7 +834,7 @@ void Tool::dumpConfigFiles()
         {
             const auto& node = hwInterface->getNode(path);
 
-            if((node.getPermission() == uhal::defs::READWRITE)  && (++node.begin() == node.end()))
+            if((node.getPermission() == uhal::defs::READWRITE) && (++node.begin() == node.end()))
             // if((node.getPermission() == uhal::defs::READWRITE || node.getPermission() == uhal::defs::READ)  && (++node.begin() == node.end()))
             {
                 fBeBoardInterface->ReadBoardReg(theBoard, path);

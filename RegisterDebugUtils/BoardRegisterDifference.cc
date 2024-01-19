@@ -1,9 +1,9 @@
-#include "pugixml.hpp"
 #include "../Parser/ParserDefinitions.h"
+#include "pugixml.hpp"
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
-#include <fstream>
 
 void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue, std::map<std::string, uint32_t>& theRegisterMap)
 {
@@ -26,24 +26,20 @@ void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, 
             if(!pAttributeString.empty()) pAttributeString += ".";
 
             pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
-            pValue = std::stol(pRegisterNode.first_child().value());
+            pValue                           = std::stol(pRegisterNode.first_child().value());
             theRegisterMap[pAttributeString] = pValue;
         }
     }
 }
 
-
 std::map<std::string, uint32_t> loadConfigFile(const std::string& filename)
 {
     std::map<std::string, uint32_t> theRegisterMap;
-    pugi::xml_document     registerPugiDocument;
-    pugi::xml_parse_result result = registerPugiDocument.load_file(filename.c_str());
+    pugi::xml_document              registerPugiDocument;
+    pugi::xml_parse_result          result = registerPugiDocument.load_file(filename.c_str());
     if(!result) // Try if it is not a file, but a string containing the full xml
         result = registerPugiDocument.load_string(filename.c_str());
-    if(!result)
-    {
-        std::cerr << "Error: unable to open board file " << filename << std::endl;
-    }
+    if(!result) { std::cerr << "Error: unable to open board file " << filename << std::endl; }
 
     pugi::xml_node cBeBoardConfigurationNode = registerPugiDocument.child("BeBoardRegister");
 
@@ -60,20 +56,22 @@ std::map<std::string, uint32_t> loadConfigFile(const std::string& filename)
 }
 
 // Function to compare two maps and print differences
-void compareAndPrintDifferences(const std::map<std::string, uint32_t>& originalRegisterMap, const std::map<std::string, uint32_t>& finalRegisterMap) {
-    for (auto originalRegister = originalRegisterMap.begin(); originalRegister != originalRegisterMap.end(); ++originalRegister) {
+void compareAndPrintDifferences(const std::map<std::string, uint32_t>& originalRegisterMap, const std::map<std::string, uint32_t>& finalRegisterMap)
+{
+    for(auto originalRegister = originalRegisterMap.begin(); originalRegister != originalRegisterMap.end(); ++originalRegister)
+    {
         auto finalRegister = finalRegisterMap.find(originalRegister->first);
-        if (finalRegister == finalRegisterMap.end()) {
-            std::cout << std::hex << "Register " << originalRegister->first << " not found in the final configuration" << std::dec << std::endl;
-        } else if (originalRegister->second != finalRegister->second) {
+        if(finalRegister == finalRegisterMap.end()) { std::cout << std::hex << "Register " << originalRegister->first << " not found in the final configuration" << std::dec << std::endl; }
+        else if(originalRegister->second != finalRegister->second)
+        {
             std::cout << std::hex << "Modified register: " << originalRegister->first << " 0x" << originalRegister->second << " -> 0x" << finalRegister->second << std::dec << std::endl;
         }
     }
 
-    for (auto finalRegister= finalRegisterMap.begin(); finalRegister!= finalRegisterMap.end(); ++finalRegister) {
-        if(originalRegisterMap.find(finalRegister->first) == originalRegisterMap.end()) {
-            std::cout << std::hex << "Register " << finalRegister->first << " not found in the original configuration" << std::dec << std::endl;
-        }
+    for(auto finalRegister = finalRegisterMap.begin(); finalRegister != finalRegisterMap.end(); ++finalRegister)
+    {
+        if(originalRegisterMap.find(finalRegister->first) == originalRegisterMap.end())
+        { std::cout << std::hex << "Register " << finalRegister->first << " not found in the original configuration" << std::dec << std::endl; }
     }
 }
 
@@ -91,7 +89,7 @@ int main(int argc, char* argv[])
     std::string file2(argv[2]);
 
     auto originalRegisterMap = loadConfigFile(argv[1]);
-    auto finalRegisterMap = loadConfigFile(argv[2]);
+    auto finalRegisterMap    = loadConfigFile(argv[2]);
 
     compareAndPrintDifferences(originalRegisterMap, finalRegisterMap);
 
