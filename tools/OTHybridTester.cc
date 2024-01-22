@@ -868,9 +868,7 @@ bool OTHybridTester::LpGBTTestVTRx()
             // Configuring I2C Master pull-ups
             clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 1 << 3 | 1 << 4 | 1 << 5 | 1 << 6);
 
-            LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 1);
+            clpGBTInterface->resetVTRxLLD(clpGBT);
 
             uint8_t cMasterId = 1, cSlaveAddress = 0x50, cSlaveData = 0x15, cNbyte = 1, cFrequency = 2;
             uint8_t cMasterConfig = (cNbyte << 2) | (cFrequency << 0);
@@ -933,9 +931,7 @@ bool OTHybridTester::LpGBTTestVTRx()
                 cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
                 if(cReadBackValue == 0xAC)
                 {
-                    LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 0);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 1);
+                    clpGBTInterface->resetVTRxLLD(clpGBT);
                     cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d);
                     cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
                     if(cReadBackValue == 0xA0)

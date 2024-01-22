@@ -107,6 +107,15 @@ class D19clpGBTInterface : public lpGBTInterface
         cbcReset(pChip, 0, pSide);
         std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
     }
+    // Reset of the VTRx+ quad laser driver (affects internal registers - does not kill link)
+    void resetVTRxLLD(Ph2_HwDescription::Chip* pChip)
+    {
+        VTRxLLDReset(pChip, 1);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        VTRxLLDReset(pChip, 0);
+    }
+    // Active low (in reset on start-up)
+    void VTRxLLDReset(Ph2_HwDescription::Chip* pChip, bool pEnable) { ConfigureGPIOLevel(pChip, {fReset_VTRx}, (pEnable) ? 0 : 1); }
 
     void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
     {
