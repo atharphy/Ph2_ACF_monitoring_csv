@@ -1283,57 +1283,6 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
     auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
 
 
-    // Code Lea for first check:
-    // gethybrid IDs
-    // std::vector<uint8_t>                    cHybridIds(0);
-    // std::map<uint8_t, std::vector<uint8_t>> cHybridIdsMap;
-    // for(auto cOpticalGroup: *pBoard)
-    // {
-    //     auto cIter = cHybridIdsMap.find(cOpticalGroup->getId());
-    //     if(cIter == cHybridIdsMap.end())
-    //     {
-    //         std::vector<uint8_t> cDummy;
-    //         cDummy.clear();
-    //         cHybridIdsMap[cOpticalGroup->getId()] = cDummy;
-    //         cIter                                 = cHybridIdsMap.find(cOpticalGroup->getId());
-    //     }
-    //     bool cFirstOnLink = true;
-    //     for(auto cHybrid: *cOpticalGroup)
-    //     {
-    //         if(!cFirstOnLink) continue;
-    //         cHybridIds.push_back(cHybrid->getId());
-    //         cIter->second.push_back(cHybrid->getId());
-    //         cFirstOnLink = false;
-    //     }
-    // }
-
-    // uint32_t cNevents      = 10;
-    // uint8_t  cPackageDelay = cOriginalDelay;
-
-    // LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
-    // // LOG(DEBUG) << cMaxBxCounter << RESET;
-    // size_t cAttempt = 0;
-    // LOG(INFO) << BOLDMAGENTA << "Package delay alignment attempt#" << +cAttempt << RESET;
-    // for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
-    // {
-    //     LOG(INFO) << BOLDMAGENTA << "Trying a stub package delay set to " << +cPackageDelay << ".. check BxIds in SW" << RESET;
-    //     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
-    //     cInterface->Bx0Alignment();
-
-    //     ReadNEvents(pBoard, cNevents);
-    //     const std::vector<Event*>& cEvents = this->GetEvents();
-    //     LOG(DEBUG) << BOLDBLUE << "Read back " << +cEvents.size() << " events from the FC7 ..." << RESET;
-
-    //     for(auto& cEvent: cEvents)
-    //     {
-    //         for(auto cId: cHybridIds)
-    //         {
-    //             LOG(INFO) << BOLDYELLOW << "Event#" << +cEvent->GetEventCount() << "\t.. Hybrid#" << +cId << " BxId is " << cEvent->BxId(cId) << RESET;
-    //         }
-    //     }
-    // }
-
-
     bool    cSkip       = false;
     uint8_t cFinalDelay = cOriginalDelay;
     uint32_t cFinalDelayTest = 0;
@@ -1407,7 +1356,7 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
                     LOG(INFO) << BOLDMAGENTA << "Trying a stub package delay set to " << +cPackageDelay << ".. check BxIds in SW" << RESET;
                     // Get register value according to OG and write it to register
                     uint32_t cRegValue = (cPackageDelay << cOpticalGroup->getId()%10*3) + cFinalDelayTest;
-                    LOG(INFO) << BOLDYELLOW << "OG#" << cOpticalGroup->getId() << "\t.. Package delay of " << +cPackageDelay << " -- reg value " << std::bitset<32>(cRegValue);
+                    LOG(INFO) << BOLDYELLOW << "OG#" << cOpticalGroup->getId() << "\t.. Package delay of " << +cPackageDelay << " -- reg value " << std::bitset<32>(cRegValue) << RESET;
                     fBeBoardInterface->WriteBoardReg(pBoard, cRegName, cRegValue );
                     // fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
                     cInterface->Bx0Alignment();
@@ -1597,6 +1546,7 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
     // make sure you do this with internal triggers
     ReadNEvents(pBoard, 10);
     const std::vector<Event*>& cEvents = this->GetEvents();
+    int cEventCount = 0;
     for(auto& cEvent: cEvents)
     {
         for(auto cOpticalGroup: *pBoard)
@@ -1604,9 +1554,13 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto cBx = (int)cEvent->BxId(cHybrid->getId());
-                LOG(INFO) << BOLDGREEN << "Link#" << +cOpticalGroup->getId() << " Hybrid#" << +cHybrid->getId() << " BxId " << cBx << RESET;
+                LOG(INFO) << BOLDGREEN << "Event#" << cEventCount <<
+                " Link#" << +cOpticalGroup->getId() <<
+                " Hybrid#" << +cHybrid->getId() <<
+                " BxId " << cBx << RESET;
             }
         }
+        cEventCount++;
     }
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc);
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
