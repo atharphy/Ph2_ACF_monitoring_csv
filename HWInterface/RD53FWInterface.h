@@ -98,6 +98,7 @@ class RD53FWInterface : public BeBoardFWInterface
     RD53FWconstants::ReadoutSpeed ReadoutSpeed();
     bool                          getChipCommunicationStatus() { return isChipCommunicationOK; }
     size_t                        getNCorruptedNEvents() { return NCorruptedNEvents; }
+    void                          resetNCorruptedNEvents() { NCorruptedNEvents = 0; }
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #

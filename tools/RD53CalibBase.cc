@@ -195,4 +195,8 @@ void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
     fDetectorContainer->setEnabledAll(true);
 }
 
-void CalibBase::localConfigure(const std::string& histoFileName, int currentRun) { theCurrentRun = currentRun; }
+void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
+{
+    theCurrentRun = currentRun;
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->resetNCorruptedNEvents();
+}
