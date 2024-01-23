@@ -23,6 +23,8 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+std::string PSPhysics::fCalibrationDescription = "Take data";
+
 void PSPhysics::ConfigureCalibration()
 {
     PSAlignment cPSAlignment;

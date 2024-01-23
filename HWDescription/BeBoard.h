@@ -179,7 +179,8 @@ class BeBoard : public BoardContainer
         for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
     }
 
-    void saveRegMap(const std::string& fileName);
+    void              saveRegMap(const std::string& fileName);
+    std::stringstream getRegMapStream() const;
 
     void                                          takeSnapshot();
     void                                          clearSnapshot();
@@ -190,9 +191,10 @@ class BeBoard : public BoardContainer
     void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue);
 
   protected:
-    BoardType    fBoardType;
-    EventType    fEventType;
-    FrontEndType fFrontEndType;
+    BoardType                           fBoardType;
+    EventType                           fEventType;
+    FrontEndType                        fFrontEndType;
+    std::unique_ptr<pugi::xml_document> createRegisterPugiDocument() const;
 
     ConditionDataSet* fCondDataSet;
     bool              fOptical{false};

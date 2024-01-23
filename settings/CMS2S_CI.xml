@@ -241,6 +241,8 @@
     <Setting name="Check2SRefSide">1</Setting>   <!-- L == 1  ; R== 0 -->
     <Setting name="Check2SRefChip">0</Setting>   <!-- L == 1  ; R== 0 -->
 
+    <Setting name="DoManualVrefTuning"      >  0</Setting>
+
 </Settings>
 
 <CommunicationSettings>

@@ -378,7 +378,7 @@
     <Setting name="PedeNoiseUntrimmedLimit">999.</Setting>-->
 
 
-
+    <Setting name="DoManualVrefTuning"      >  0</Setting>
 
 </Settings>
 

@@ -13,6 +13,8 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+std::string CBCPulseShape::fCalibrationDescription = "Run multiple SCurve with injection changing sampling point to reconstruct pulse shape";
+
 CBCPulseShape::CBCPulseShape() : PedeNoise() {}
 
 CBCPulseShape::~CBCPulseShape() {}

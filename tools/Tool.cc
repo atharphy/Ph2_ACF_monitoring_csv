@@ -213,6 +213,7 @@ void Tool::Stop()
         }
         SystemController::Stop();
 
+        Tool::dumpConfigFiles();
         if(fMetadataHandler != nullptr) { fMetadataHandler->fillFinalConditions(); }
 
         if(fDQMStreamerEnabled)
@@ -223,7 +224,9 @@ void Tool::Stop()
             fDQMStreamer->broadcast(doneWithRunMessage);
         }
 
-        SaveAndClose();
+        Tool::SaveResults();
+        Tool::WriteRootFile();
+        Tool::CloseResultFile();
     }
 }
 
@@ -860,10 +863,14 @@ void Tool::dumpConfigFiles()
     if(!fDirectoryName.empty())
     {
         FileDumper theFileDumper(fDirectoryName);
-        theFileDumper.dumpConfigurationFiles(fDetectorContainer, fSettingsMap, fCommunicationSettingConfig, fDetectorMonitorConfig);
+        auto       fileDumpStream = theFileDumper.dumpConfigurationFiles(fDetectorContainer, fSettingsMap, fCommunicationSettingConfig, fDetectorMonitorConfig).str();
+        if(fMetadataHandler != nullptr) fMetadataHandler->setFinalConfigurationFileContent(fileDumpStream);
     }
     else
+    {
         LOG(ERROR) << "Error: no results Directory initialized" << RESET;
+        abort();
+    }
 }
 
 void Tool::setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState, bool pHoleMode)
@@ -2143,11 +2150,7 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;
 
     if(fNormalize)
-    {
-        auto cTmp =
-            fDetectorDataContainer->getObject(boardId)->normalizeAndAverageContainers(fDetectorContainer->getObject(boardId), getChannelGroupHandlerContainer()->getObject(boardId), numberOfEvents);
-        LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << cTmp << RESET;
-    }
+        fDetectorDataContainer->getObject(boardId)->normalizeAndAverageContainers(fDetectorContainer->getObject(boardId), getChannelGroupHandlerContainer()->getObject(boardId), numberOfEvents);
     fUseReadNEvents = cUseReadNEvents;
     // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end " << RESET;
 }
