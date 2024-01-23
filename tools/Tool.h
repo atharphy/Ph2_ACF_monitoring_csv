@@ -411,7 +411,7 @@ class Tool : public Ph2_System::SystemController
 
     std::ofstream* fOfStream;
 
-    MetadataHandler* fMetadataHandler;
+    MetadataHandler* fMetadataHandler{nullptr};
 };
 
 #endif
