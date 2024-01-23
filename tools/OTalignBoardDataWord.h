@@ -11,11 +11,16 @@
 #define OTalignBoardDataWord_h__
 
 #include "Tool.h"
-#include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
 #endif
+
+namespace Ph2_HwDescription
+{
+    class BeBoard;
+    class OpticalGroup;
+}
 
 class OTalignBoardDataWord : public Tool
 {
@@ -36,7 +41,13 @@ class OTalignBoardDataWord : public Tool
     static std::string fCalibrationDescription;
     
   private:
-  //
+    DetectorDataContainer fBeBitSlip;
+
+    void WordAlignBEdata();
+    bool WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    bool L1WordAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope);
+    std::pair<bool, uint8_t> PhaseTuneLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId);
+    void ManuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip);
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
