@@ -130,18 +130,31 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("file", "f");
 
-    std::string                calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
     CombinedCalibrationFactory theCombinedCalibrationFactory;
-    for(const auto& calibration: theCombinedCalibrationFactory.getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
+    std::stringstream          calibrationHelpMessage;
+    calibrationHelpMessage << "Calibration to run. List of available calibrations:\n";
+    for(const auto& calibrationList: theCombinedCalibrationFactory.getAvailableCalibrations())
+    {
+        calibrationHelpMessage << "--------------------------------------------------------------------------" << std::endl;
+        calibrationHelpMessage << BOLDGREEN << calibrationList.first << " Calibrations" << RESET << std::endl;
+        calibrationHelpMessage << "--------------------------------------------------------------------------" << std::endl;
+        for(const auto& calibration: calibrationList.second)
+        {
+            calibrationHelpMessage << BOLDBLUE << "\t" << calibration.first << RESET << std::endl;
+            for(const auto& subCalibration: calibration.second)
+            {
+                calibrationHelpMessage << "\t\t" << subCalibration.first;
+                if(subCalibration.second != "") calibrationHelpMessage << ": " << subCalibration.second;
+                calibrationHelpMessage << std::endl;
+            }
+        }
+    }
 
-    cmd.defineOption("calibration", calibrationHelpMessage, ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
+    cmd.defineOption("calibration", calibrationHelpMessage.str(), ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");
 
     cmd.defineOption("output", "Output Directory. Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("output", "o");
-
-    cmd.defineOption("allChan", "Do calibration using all channels? Default: false", ArgvParser::NoOptionAttribute);
-    cmd.defineOptionAlternative("allChan", "a");
 
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");

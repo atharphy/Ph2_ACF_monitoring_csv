@@ -14,6 +14,8 @@ using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+std::string PedestalEqualization::fCalibrationDescription = "Equalize the pedestal/threshold for all channels";
+
 PedestalEqualization::PedestalEqualization() : Tool() {}
 
 PedestalEqualization::~PedestalEqualization() {}

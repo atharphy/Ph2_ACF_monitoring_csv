@@ -351,6 +351,8 @@
 
     <Setting name="PSOccupancyPulseAmplitude">150</Setting>
 
+    <Setting name="DoManualVrefTuning"      >  0</Setting>
+
 </Settings>
 
 <CommunicationSettings>

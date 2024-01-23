@@ -43,14 +43,23 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
     StringContainer theCalibrationNameStringContainer("CalibrationName");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fCalibrationNameContainer, theCalibrationNameStringContainer);
 
-    StringContainer theDetectorConfigurationStringContainer("DetectorConfiguration");
-    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fDetectorConfigurationContainer, theDetectorConfigurationStringContainer);
+    StringContainer theInitialDetectorConfigurationStringContainer("InitialDetectorConfiguration");
+    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fInitialDetectorConfigurationContainer, theInitialDetectorConfigurationStringContainer);
+
+    StringContainer theFinalDetectorConfigurationStringContainer("FinalDetectorConfiguration");
+    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFinalDetectorConfigurationContainer, theFinalDetectorConfigurationStringContainer);
 
     StringContainer theCalibrationStartTimestampStringContainer("CalibrationStartTimestamp");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fCalibrationStartTimestampContainer, theCalibrationStartTimestampStringContainer);
 
     StringContainer theCalibrationStopTimestampStringContainer("CalibrationStopTimestamp");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fCalibrationStopTimestampContainer, theCalibrationStopTimestampStringContainer);
+
+    StringContainer theInitialBoardConfigurationStringContainer("InitialBoardConfiguration");
+    RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fInitialBoardConfigurationContainer, theInitialBoardConfigurationStringContainer);
+
+    StringContainer theFinalBoardConfigurationStringContainer("FinalBoardConfiguration");
+    RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFinalBoardConfigurationContainer, theFinalBoardConfigurationStringContainer);
 
     StringContainer theInitialReadoutChipConfigurationStringContainer("InitialReadoutChipConfiguration");
     RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fInitialReadoutChipConfigurationContainer, theInitialReadoutChipConfigurationStringContainer);
@@ -153,9 +162,12 @@ void DQMMetadata::fillCalibrationName(const DetectorDataContainer& theCalibratio
     fCalibrationNameContainer.getSummary<StringContainer>().saveString(theCalibrationNameContainer.getSummary<std::string>());
 }
 
-void DQMMetadata::fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer)
+void DQMMetadata::fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer, bool initialValue)
 {
-    fDetectorConfigurationContainer.getSummary<StringContainer>().saveString(theDetectorConfigurationContainer.getSummary<std::string>());
+    if(initialValue)
+        fInitialDetectorConfigurationContainer.getSummary<StringContainer>().saveString(theDetectorConfigurationContainer.getSummary<std::string>());
+    else
+        fFinalDetectorConfigurationContainer.getSummary<StringContainer>().saveString(theDetectorConfigurationContainer.getSummary<std::string>());
 }
 
 void DQMMetadata::fillCalibrationTimestamp(const DetectorDataContainer& theCalibrationTimestampContainer, bool start)
@@ -167,6 +179,20 @@ void DQMMetadata::fillCalibrationTimestamp(const DetectorDataContainer& theCalib
         theTimestampPlotContainer = &fCalibrationStopTimestampContainer;
     }
     theTimestampPlotContainer->getSummary<StringContainer>().saveString(theCalibrationTimestampContainer.getSummary<std::string>());
+}
+
+void DQMMetadata::fillBoardConfiguration(const DetectorDataContainer& theBoardConfigurationContainer, bool initialValue)
+{
+    for(const auto board: theBoardConfigurationContainer)
+    {
+        BoardDataContainer* theTreeContainerBoard;
+        if(initialValue)
+            theTreeContainerBoard = fInitialBoardConfigurationContainer.getObject(board->getId());
+        else
+            theTreeContainerBoard = fFinalBoardConfigurationContainer.getObject(board->getId());
+
+        theTreeContainerBoard->getSummary<StringContainer>().saveString(board->getSummary<std::string>().c_str());
+    }
 }
 
 void DQMMetadata::fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool initialValue)
@@ -259,6 +285,7 @@ bool DQMMetadata::fill(std::string& inputStream)
     ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
     ContainerSerialization theDetectorConfigurationSerialization("MetadataDetectorConfiguration");
     ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
+    ContainerSerialization theBoardConfigurationSerialization("MetadataBoardConfiguration");
     ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
     ContainerSerialization theLpGBTConfigurationSerialization("MetadataLpGBTConfiguration");
     ContainerSerialization theLpGBTFuseIdSerialization("MetadataLpGBTFuseId");
@@ -318,9 +345,11 @@ bool DQMMetadata::fill(std::string& inputStream)
     if(theDetectorConfigurationSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched Metadata DetectorConfiguration!!!!!\n";
+        bool                  isInitial;
         DetectorDataContainer theDetectorData =
-            theDetectorConfigurationSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
-        fillDetectorConfiguration(theDetectorData);
+            theDetectorConfigurationSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer,
+                                                                                                                                                                            isInitial);
+        fillDetectorConfiguration(theDetectorData, isInitial);
         return true;
     }
     if(theCalibrationTimestampSerialization.attachDeserializer(inputStream))
@@ -331,6 +360,15 @@ bool DQMMetadata::fill(std::string& inputStream)
             theCalibrationTimestampSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer,
                                                                                                                                                                            isInitial);
         fillCalibrationTimestamp(theDetectorData, isInitial);
+        return true;
+    }
+    if(theBoardConfigurationSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched Metadata BoardConfiguration!!!!!\n";
+        bool                  isInitial;
+        DetectorDataContainer theDetectorData =
+            theBoardConfigurationSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
+        fillBoardConfiguration(theDetectorData, isInitial);
         return true;
     }
     if(theReadoutChipConfigurationSerialization.attachDeserializer(inputStream))

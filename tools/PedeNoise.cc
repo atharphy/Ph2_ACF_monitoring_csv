@@ -19,6 +19,8 @@
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #endif
 
+std::string PedeNoise::fCalibrationDescription = "Measure noise and Pedestal/pulse peak, set threshold at 5 sigma from the pedestal and run occupancy measurement";
+
 PedeNoise::PedeNoise() : Tool() {}
 
 PedeNoise::~PedeNoise() { clearDataMembers(); }

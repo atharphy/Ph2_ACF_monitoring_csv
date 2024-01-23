@@ -24,10 +24,10 @@ class FileDumper
     FileDumper(const std::string& outputDirectory);
     ~FileDumper();
 
-    void dumpConfigurationFiles(DetectorContainer*                                 theDetectorContainer,
-                                const std::unordered_map<std::string, boost::any>& theSettingMap,
-                                CommunicationSettingConfig*                        theCommunicationSettingConfig,
-                                DetectorMonitorConfig*                             theDetectorMonitorConfig);
+    std::stringstream dumpConfigurationFiles(DetectorContainer*                                 theDetectorContainer,
+                                             const std::unordered_map<std::string, boost::any>& theSettingMap,
+                                             CommunicationSettingConfig*                        theCommunicationSettingConfig,
+                                             DetectorMonitorConfig*                             theDetectorMonitorConfig);
 
   private:
     void        dumpBoardConfigurationFile(pugi::xml_node theMotherNode, Ph2_HwDescription::BeBoard* theBoardContainer);
