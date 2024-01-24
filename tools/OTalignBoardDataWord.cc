@@ -143,7 +143,7 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
                 if(((cHybrid->getId() % 2) == 0) & ((cLineId - 1) == 4) & (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
                 {
                     LOG(INFO) << BOLDYELLOW << "Attention! ignoring alignment failure on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
-                    continue; 
+                    continue;
                 } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                 LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +theBoardId << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id"
                           << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;

@@ -54,7 +54,6 @@ std::string getResultDirectoryName(const int runNumber)
     return resultDirectory;
 }
 
-
 int returnPreviousRunNumber(std::string cFileName)
 {
     std::string   cLine;
@@ -74,7 +73,7 @@ int returnPreviousRunNumber(std::string cFileName)
 
 int returnAndIncreaseRunNumber(std::string cFileName)
 {
-    int cRunNumber = returnPreviousRunNumber(cFileName) + 1;
+    int           cRunNumber = returnPreviousRunNumber(cFileName) + 1;
     std::ofstream cRunLog;
     cRunLog.open(cFileName, std::fstream::app);
     cRunLog << cRunNumber << "\n";
@@ -82,7 +81,6 @@ int returnAndIncreaseRunNumber(std::string cFileName)
 
     return cRunNumber;
 }
-
 
 const std::string currentDateTime()
 {

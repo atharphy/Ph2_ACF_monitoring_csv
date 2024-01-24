@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "Parser/ParserDefinitions.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
 #include "Utils/Timer.h"
@@ -8,7 +9,6 @@
 #include "Utils/easylogging++.h"
 #include "boost/format.hpp"
 #include "miniDAQ/MiddlewareStateMachine.h"
-#include "Parser/ParserDefinitions.h"
 
 #include "TApplication.h"
 #include "TROOT.h"
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     }
 
     std::string configurationFile;
-    int numberOfConfiguratioFileOptions = 0;
+    int         numberOfConfiguratioFileOptions = 0;
     if(cmd.foundOption("file"))
     {
         ++numberOfConfiguratioFileOptions;
@@ -113,14 +113,14 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("run"))
     {
         ++numberOfConfiguratioFileOptions;
-        int runNumber = stoi(cmd.optionValue("run"));
+        int runNumber     = stoi(cmd.optionValue("run"));
         configurationFile = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/") + getResultDirectoryName(runNumber) + "/" + OUTPUT_CONFIGURATION_FILE;
         LOG(INFO) << "Using configuration file from run " << runNumber << ": " << configurationFile << std::endl;
     }
     if(cmd.foundOption("last"))
     {
         ++numberOfConfiguratioFileOptions;
-        int runNumber = returnPreviousRunNumber("RunNumbers.dat");
+        int runNumber     = returnPreviousRunNumber("RunNumbers.dat");
         configurationFile = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/") + getResultDirectoryName(runNumber) + "/" + OUTPUT_CONFIGURATION_FILE;
         LOG(INFO) << "Using configuration file from last run (" << runNumber << "): " << configurationFile << std::endl;
     }
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
         {
         case HALTED:
         {
-            std::string   calibrationName   = cmd.optionValue("calibration");
+            std::string   calibrationName = cmd.optionValue("calibration");
             ConfigureInfo theConfigureInfo;
             theConfigureInfo.setConfigurationFiles(configurationFile);
             theConfigureInfo.setCalibrationName(calibrationName);
