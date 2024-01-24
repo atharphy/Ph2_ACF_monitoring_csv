@@ -57,6 +57,12 @@ void myflush(std::istream& in);
 
 std::string getResultDirectoryName(const StartInfo& theStartInfo);
 
+std::string getResultDirectoryName(const int runNumber);
+
+int returnPreviousRunNumber(std::string cFileName);
+
+int returnAndIncreaseRunNumber(std::string cFileName);
+
 /*!
  * \brief Wait for Enter key press
  */
