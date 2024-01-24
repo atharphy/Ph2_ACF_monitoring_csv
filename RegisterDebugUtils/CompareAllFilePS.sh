@@ -7,8 +7,15 @@ if [ "$#" -ne 1 ]; then
 fi
 
 g++ -o ${PH2ACF_BASE_DIR}/RegisterDebugUtils/RegisterDifference ${PH2ACF_BASE_DIR}/RegisterDebugUtils/RegisterDifference.cc
+g++ -o ${PH2ACF_BASE_DIR}/RegisterDebugUtils/BoardRegisterDifference ${PH2ACF_BASE_DIR}/RegisterDebugUtils/BoardRegisterDifference.cc -lpugixml
 
 run_number="$1"
+
+echo "Comparing Board files"
+${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareBoardFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers.xml ${run_number}
+echo
+echo
+echo
 
 echo "Comparing LpGBT files"
 ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpGBT_v1_PS.txt ${run_number} "BE*_OG*_lpGBT*_lpGBT_v1_PS.txt" LpGBT
