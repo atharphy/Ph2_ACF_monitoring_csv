@@ -56,19 +56,19 @@ void GenericDacDacScan::ConfigureCalibration()
 
 void GenericDacDacScan::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[GenericDacDacScan::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[GenericDacDacScan::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(PixelAlive::saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GenericDacDacScan.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_GenericDacDacScan.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     GenericDacDacScan::run();
     GenericDacDacScan::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
+    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
     GenericDacDacScan::sendData();
 }
 
@@ -98,11 +98,15 @@ void GenericDacDacScan::Stop()
 
 void GenericDacDacScan::localConfigure(const std::string& histoFileName, int currentRun)
 {
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
+
     histos             = nullptr;
     PixelAlive::histos = nullptr;
-    theCurrentRun      = currentRun;
 
-    LOG(INFO) << GREEN << "[GenericDacDacScan::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[GenericDacDacScan::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -136,20 +140,14 @@ void GenericDacDacScan::run()
 
 void GenericDacDacScan::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(PixelAlive::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saving histograms..." << RESET;
-    }
-
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookHistoSaveMetadata(histos);
     GenericDacDacScan::fillHisto();
     histos->process();
 

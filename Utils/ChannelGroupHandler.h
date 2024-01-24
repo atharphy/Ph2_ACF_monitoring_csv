@@ -174,7 +174,7 @@ class ChannelGroupHandler
     {
       public:
         using iterator_category = std::output_iterator_tag;
-        using value_type = uint32_t;
+        using value_type        = uint32_t;
         explicit ChannelGroupIterator(ChannelGroupHandler& channelGroupHandler, uint32_t groupNumber) : channelGroupHandler_(channelGroupHandler), groupNumber_(groupNumber) { ; }
         const std::shared_ptr<ChannelGroupBase> operator*() const { return channelGroupHandler_.getTestGroup(groupNumber_); }
         ChannelGroupIterator&                   operator++()

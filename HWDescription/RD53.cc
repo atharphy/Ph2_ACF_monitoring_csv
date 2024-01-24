@@ -73,8 +73,6 @@ RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybr
     myChipLane     = pRD53Lane;
 }
 
-RD53::RD53(const RD53& chipObj) : ReadoutChip(chipObj) {}
-
 void RD53::loadfRegMap(const std::string& fileName)
 {
     std::stringstream myString;
@@ -83,6 +81,7 @@ void RD53::loadfRegMap(const std::string& fileName)
 
     if(file.good() == true)
     {
+        initializeFreeRegisters();
         std::string  line, fName, fAddress_str, fDefValue_str, fValue_str, fBitSize_str;
         bool         foundPixelConfig = false;
         int          cLineCounter     = 0;

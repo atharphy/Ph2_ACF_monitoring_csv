@@ -40,6 +40,8 @@ class OpticalGroup
     // Default C'tor
     OpticalGroup();
 
+    OpticalGroup(const OpticalGroup&) = delete;
+
     // D'tor
     ~OpticalGroup() { delete flpGBT; };
 
@@ -66,6 +68,8 @@ class OpticalGroup
     }
 
     void addNTC(std::string cNTCType, std::string cNTCADC, std::string cNTCLookUpTable) { fNTCMap.insert(std::make_pair(cNTCType, std::make_pair(cNTCADC, cNTCLookUpTable))); }
+
+    std::map<std::string, std::pair<std::string, std::string>> getNTCMap() const { return fNTCMap; }
 
     std::map<std::string, std::pair<std::string, std::string>> fNTCMap;
 

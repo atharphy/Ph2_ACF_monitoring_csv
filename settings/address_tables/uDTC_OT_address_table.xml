@@ -8,11 +8,8 @@
         <node id="coax_select"      address="0x00000004" mask="0x00000800" description="Coax select, values : 1 = ( select internal oscillator) , 0 = select coax input"/>
         <node id="clock_source_u7"  address="0x00000004" mask="0x0003c000" description="Clock source switch, values: 15 = internal (default), 0 = AMC13"/>
         <node id="clock_source_u8"  address="0x00000004" mask="0x00300000" description="Clock source switch, values: 3 = internal oscillator (default), 2 = fmc_l8_clk1, 1 = fmc_l8_clk0, 0 = COAX_IN"/>
-    <!-- GLIB user logic registers -->
+    
     <!-- firmware configurations -->
-    <node id="user_stat" address ="0x40000000" permission="r" mode="block" size="0x0000000F">
-    </node>
-
     <node id="fc7_daq_cnfg" address="0x40010000" permission="rw" > 
         	<node id="sfp_ddmi"           address="0xD009">
 	            <node id="enable"                      mask="0x00080000"/>
@@ -818,9 +815,6 @@
     </node>
 
     <node id="fc7_daq_ddr3" address="0xC0000000" permission="r" mode="incremental" size="134217728"/>
-    <!--Present in Glib or FC7 address table for fpgaconfig-->
-    <node id="flash_async_read_cmd" address="0x0800bddf"  mask="0xFFFFFFFF" description="FLASH memory asynchronous read mode"/>
-        <node id="flash_block" address="0x08000000"     mode="block" size="0x00800000" permission="rw" description="FLASH memory for FPGA configuration"/>
     <!-- ICAP MEMORY SPACE -->
         <node id="icap" address="0x00000200" mask="0xffffffff" permission="rw" />
 

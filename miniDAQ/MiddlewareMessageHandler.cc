@@ -170,7 +170,23 @@ std::string MiddlewareMessageHandler::calibrationList(const std::string& message
     MessageUtils::CalibrationListReplyMessage theCalibrationList;
     theCalibrationList.mutable_reply_type()->set_type(MessageUtils::ReplyType::SUCCESS);
 
-    for(const auto& theCalibrationPair: fMiddlewareStateMachine.getCombinedCalibrationFactory().getAvailableCalibrations()) { theCalibrationList.add_calibration(theCalibrationPair); }
+    for(const auto& calibrationHardware: fMiddlewareStateMachine.getCombinedCalibrationFactory().getAvailableCalibrations())
+    {
+        auto theCalibrationPerHardwareTypeListMessage = theCalibrationList.add_calibrationperhardwaretype();
+        theCalibrationPerHardwareTypeListMessage->set_hardwaretype(calibrationHardware.first);
+
+        for(const auto& theCalibrationList: calibrationHardware.second)
+        {
+            auto theCalibrationListMessage = theCalibrationPerHardwareTypeListMessage->add_calibrationinfo();
+            theCalibrationListMessage->set_calibrationname(theCalibrationList.first);
+            for(const auto& theSubCalibrationList: theCalibrationList.second)
+            {
+                auto theSubCalibrationListMessage = theCalibrationListMessage->add_subcalibrationinfo();
+                theSubCalibrationListMessage->set_subcalibrationname(theSubCalibrationList.first);
+                theSubCalibrationListMessage->set_subcalibrationdescription(theSubCalibrationList.second);
+            }
+        }
+    }
 
     return serializeMessage(theCalibrationList);
 }

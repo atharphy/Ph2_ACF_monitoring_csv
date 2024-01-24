@@ -43,8 +43,16 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerify, uint32_t pBlockSize)
     ChipRegMap                                       cCbcRegMap = pCbc->getRegMap();
     std::vector<std::pair<std::string, ChipRegItem>> cRegList;
     cRegList.clear();
+    auto theListOfFreeRegisters = pCbc->getFreeRegisters();
     for(auto cMapItem: cCbcRegMap)
     {
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: theListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(cMapItem.first, freeRegister.first);
+            if(isFreeRegister) break;
+        }
+        if(isFreeRegister) continue; // skipping readonly registers
         std::pair<std::string, ChipRegItem> cItem;
         cItem.first  = cMapItem.first;
         cItem.second = cMapItem.second;
@@ -63,8 +71,6 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerify, uint32_t pBlockSize)
     std::vector<ChipRegItem> cRegItemsPg1;
     for(auto& cReg: cRegList)
     {
-        // skip fused registers .. can't write to them
-        if(cReg.first.find("Fuse") != std::string::npos) continue;
         if(cReg.second.fPage == 0)
             cRegItemsPg0.push_back(cReg.second);
         else
@@ -493,6 +499,32 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
     }
     return false;
 }
+
+std::vector<std::pair<std::string, uint16_t>> CbcInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
+{
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: theRegisterList)
+    {
+        auto cIterator = cRegMap.find(cReq);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "CbcInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            abort();
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cRegItems.push_back(cItem);
+    }
+
+    fBoardFW->MultiRegisterRead(pChip, cRegItems);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    return theRegisterValues;
+}
+
 bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
 {
     // only written for optical .. electrical readout the fw takes care of this

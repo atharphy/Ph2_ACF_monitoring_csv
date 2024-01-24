@@ -9,6 +9,8 @@
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 
+std::string LatencyScan::fCalibrationDescription = "Run latency scan";
+
 LatencyScan::LatencyScan() : Tool() {}
 
 LatencyScan::~LatencyScan() {}
@@ -56,13 +58,42 @@ void LatencyScan::Initialize()
 
     initializeRecycleBin();
 
-    fStartLatency = findValueInSettings<double>("StartLatency", 1);
-    fLatencyRange = findValueInSettings<double>("LatencyRange", 1);
-    fStartPhase   = findValueInSettings<double>("StartPhase", 0);
-    fPhaseRange   = findValueInSettings<double>("PhaseRange", 15);
-    fHoleMode     = findValueInSettings<double>("HoleMode", 1);
-    fNevents      = findValueInSettings<double>("Nevents", 10);
+    fStartLatency   = findValueInSettings<double>("StartLatency", 1);
+    fLatencyRange   = findValueInSettings<double>("LatencyRange", 1);
+    fStartPhase     = findValueInSettings<double>("StartPhase", 0);
+    fPhaseRange     = findValueInSettings<double>("PhaseRange", 15);
+    fHoleMode       = findValueInSettings<double>("HoleMode", 1);
+    fNevents        = findValueInSettings<double>("Nevents", 10);
+    fPulseAmplitude = findValueInSettings<double>("fLatencyPulseAmplitude", 200);
     std::cout << "Going to read " << fNevents << " events" << std::endl;
+
+    bool originalAllChannelFlag = this->fAllChan;
+    if(fPulseAmplitude != 0 && originalAllChannelFlag && cWithCBC)
+    {
+        this->SetTestAllChannels(false);
+        LOG(INFO) << RED << "Cannot inject pulse for all channels, test in groups enabled. " << RESET;
+    }
+
+    // configure TP amplitude
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cWithPSv2)
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
+        else
+            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+    }
+
+    if(fPulseAmplitude != 0)
+    {
+        LOG(INFO) << BOLDYELLOW << "Enabled test pulse. " << RESET;
+        this->enableTestPulse(true);
+        this->SetTestAllChannels(false);
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "sweepSCurves without TP injection" << RESET;
+        this->enableTestPulse(false);
+    }
 
 #ifdef __USE_ROOT__
     fDQMHistogramLatencyScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -188,6 +219,15 @@ void LatencyScan::ScanLatency()
 
         for(auto cBoard: *fDetectorContainer)
         {
+            // std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.trigger_source = " << fBeBoardInterface->ReadBoardReg(cBoard,
+            // "fc7_daq_cnfg.fast_command_block.trigger_source") << RESET << std::endl; std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.delay_after_test_pulse = " <<
+            // fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") << RESET << std::endl; std::cout << GREEN << "Reading back from Board
+            // fc7_daq_cnfg.fast_command_block.en_test_pulse = " << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_test_pulse") << RESET << std::endl; std::cout
+            // << GREEN << "Reading TriggerLatency from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TriggerLatency") << RESET <<
+            // std::endl; std::cout << GREEN << "Reading TestPulsePotNodeSel from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(),
+            // "TestPulsePotNodeSel") << RESET << std::endl; std::cout << GREEN << "Reading TestPulse from CBC = " <<
+            // fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TestPulse") << RESET << std::endl;
+
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)

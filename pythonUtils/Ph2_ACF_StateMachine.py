@@ -263,7 +263,17 @@ class StateMachine(object):
             return "FAILED"
         theCalibrationListReply = Reply.CalibrationListReplyMessage()
         theCalibrationListReply.ParseFromString(replyBuffer)
-        listOfCalibrations = []
-        for calibration in theCalibrationListReply.calibration:
-            listOfCalibrations.append(calibration)
+        listOfCalibrations = {}
+        for calibrationPerHardware in theCalibrationListReply.calibrationPerHardwareType:
+            hardwareType  = calibrationPerHardware.hardwareType
+            calibrationListPerHardware = {}
+            for calibration in calibrationPerHardware.calibrationInfo:
+                calibrationName = calibration.calibrationName
+                subCalibrationList = []
+                for subCalibration in calibration.subCalibrationInfo:
+                    subCalibrationName = subCalibration.subCalibrationName
+                    subCalibrationDescription = subCalibration.subCalibrationDescription
+                    subCalibrationList.append([subCalibrationName, subCalibrationDescription])
+                calibrationListPerHardware[calibrationName] = subCalibrationList
+            listOfCalibrations[hardwareType] = calibrationListPerHardware
         return listOfCalibrations

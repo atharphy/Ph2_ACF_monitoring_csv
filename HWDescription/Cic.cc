@@ -43,6 +43,21 @@ Cic::Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     setFrontEndType(FrontEndType::CIC);
 }
 
+void Cic::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EfuseValue[0-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ASYNC_CNTL_BLOCK[0-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^SYNC_CNTL_BLOCK[0-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scPhaseSelectB[0-3]o[0-5]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scDllInstantLock[01]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scDllLocked[01]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scChannelLocked[0-5]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^timingStatusBits$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BX0_DEALY$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^WA_DELAY\\d{2}$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^MASK_BLOCK[0-3]$"), RegisterType::Utility));
+}
+
 // load fRegMap from file
 void Cic::loadfRegMap(const std::string& filename)
 {
@@ -50,6 +65,7 @@ void Cic::loadfRegMap(const std::string& filename)
 
     if(file)
     {
+        initializeFreeRegisters();
         std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;
@@ -131,5 +147,31 @@ std::stringstream Cic::getRegMapStream()
 
     return theStream;
 }
+
+void Cic::setDriveStrength(uint8_t pDriveStrength)
+{
+    auto& theRegister            = fRegMap["SLVS_PADS_CONFIG"];
+    auto  convertedRegisterValue = 0;
+    try
+    {
+        convertedRegisterValue = fTxDriveStrength.at(pDriveStrength);
+    }
+    catch(const std::exception& e)
+    {
+        std::string errorMessage = "Error: impossible to set CIC driver strenght to " + std::to_string(pDriveStrength);
+        throw std::runtime_error(errorMessage);
+    }
+
+    theRegister.fValue = (theRegister.fValue & 0xF8) | (convertedRegisterValue & 0x7);
+}
+
+void Cic::setEdgeSelect(uint8_t pEdgeSel)
+{
+    bool  cNegEdge     = (pEdgeSel == 1);
+    auto& theRegister  = fRegMap["MISC_CTRL"];
+    theRegister.fValue = (theRegister.fValue & 0xF7) | ((cNegEdge ? 1 : 0) << 3);
+}
+
+std::map<uint8_t, uint8_t> Cic::fTxDriveStrength = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
 
 } // namespace Ph2_HwDescription

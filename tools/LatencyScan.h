@@ -58,6 +58,8 @@ class LatencyScan : public Tool
     void Pause() override;
     void Resume() override;
 
+    static std::string fCalibrationDescription;
+
   protected:
     void cleanContainerMap();
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
@@ -79,6 +81,7 @@ class LatencyScan : public Tool
     uint32_t fNCbc;
     uint8_t  fTestPulseAmplitude;
     uint32_t trigSource;
+    uint8_t  fPulseAmplitude;
 
     const uint32_t fTDCBins = TDCBINS;
 

@@ -1,8 +1,11 @@
 #include "tools/CLASS_NAME_TEMPLATE.h"
+#include "System/RegisterHelper.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
+
+std::string CLASS_NAME_TEMPLATE::fCalibrationDescription = "Insert brief calibration description here";
 
 CLASS_NAME_TEMPLATE::CLASS_NAME_TEMPLATE() : Tool() {}
 
@@ -10,7 +13,8 @@ CLASS_NAME_TEMPLATE::~CLASS_NAME_TEMPLATE() {}
 
 void CLASS_NAME_TEMPLATE::Initialise(void)
 {
-   
+    fRegisterHelper->takeSnapshot();
+    // free the registers in case any
 
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -28,6 +32,7 @@ void CLASS_NAME_TEMPLATE::Running()
     LOG(INFO) << "Starting CLASS_NAME_TEMPLATE measurement.";
     Initialise();
     LOG(INFO) << "Done with CLASS_NAME_TEMPLATE.";
+    Reset();
 }
 
 void CLASS_NAME_TEMPLATE::Stop(void)
@@ -52,4 +57,10 @@ void CLASS_NAME_TEMPLATE::Pause()
 void CLASS_NAME_TEMPLATE::Resume()
 {
 
+}
+
+
+void CLASS_NAME_TEMPLATE::Reset()
+{
+    fRegisterHelper->restoreSnapshot();
 }

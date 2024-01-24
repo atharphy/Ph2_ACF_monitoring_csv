@@ -21,6 +21,8 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+std::string Physics2S::fCalibrationDescription = "Take data";
+
 void Physics2S::ConfigureCalibration()
 {
     // #######################

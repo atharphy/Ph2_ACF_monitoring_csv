@@ -64,8 +64,6 @@ class ThrMinimization : public PixelAlive
     size_t stopValue;
     bool   doDisplay;
     bool   doUpdateChip;
-
-    int theCurrentRun;
 };
 
 #endif

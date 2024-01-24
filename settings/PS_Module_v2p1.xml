@@ -8,27 +8,27 @@
         
     <OpticalGroup Id="0" FMCId="L12" reset="1">
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
+        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1_PS.txt">
           <Settings/>
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1" invertClock="0">
             <Global>                 
-              <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
-              <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-              <Latencies       stripLatency="296" pixelLatency="295" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" EdgeSelT1Raw="0" EdgeSelTrig="0"/> <!-- LatencyRx320: MPA register for phase selction of Strip input, L1 should be 7 for v2 and 6 for v2.1 --> <!-- EdgeSelT1Raw selects the sampling edge for the T1 and Raw Input, it should be 2 for PSv2 and 0 for PSv2.1 --> <!-- EdgeSelTrig selects the sampling edge for the Strip Input -->
-	          <Thresholds      stripThreshold="60" stripThresholdHigh="100" pixelThreshold="120"/> 
-              <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode -->
-              <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-              <InjectedCharge  stripCharge="200" pixelCharge="200"/> <!-- in DAC units for each chip type - their electron value is different though! -->
-              <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+                <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
+                <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
+                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" EdgeSelT1Raw="0" EdgeSelTrig="0"/> <!-- LatencyRx320: MPA register for phase selction of Strip input, L1 should be 7 for v2 and 6 for v2.1 --> <!-- EdgeSelT1Raw selects the sampling edge for the T1 and Raw Input, it should be 2 for PSv2 and 0 for PSv2.1 --> <!-- EdgeSelTrig selects the sampling edge for the Strip Input -->
+	            <Thresholds      stripThreshold="60" stripThresholdHigh="120" pixelThreshold="120"/> 
+                <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode -->
+                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <InjectedCharge  stripCharge="70" pixelCharge="70"/> <!-- in DAC units for each chip type - their electron value is different though! -->
+                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
             </Global>
 
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA2 Id="0" configfile="SSA2.txt" />
             <SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
-            <!-- <SSA2 Id="3" configfile="SSA2.txt" />
-            <SSA2 Id="4" configfile="SSA2.txt" /> -->
+            <SSA2 Id="3" configfile="SSA2.txt" />
+            <SSA2 Id="4" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
             <SSA2 Id="7" configfile="SSA2.txt" />
@@ -44,19 +44,19 @@
             <MPA2 Id="15" configfile="MPA2.txt" />
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_PS.txt" />
         </Hybrid>
         
         <Hybrid Id="1" enable="1" reset="1" invertClock="0">
             <Global>
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
-                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" EdgeSelT1Raw="0" EdgeSelTrig="0"/> <!-- LatencyRx320: MPA register for phase selction of Strip input, L1 should be 7 for v2 and 6 for v2.1 --><!-- EdgeSelT1Raw selects the sampling edge for the T1 and Raw Input, it should be 2 for PSv2 and 0 for PSv2.1 --> <!-- EdgeSelTrig selects the sampling edge for the Strip Input -->
-                <Thresholds      stripThreshold="60" stripThresholdHigh="100" pixelThreshold="120"/>  <!-- in DAC units for each chip type - their electron value is different though! -->
-                <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode, 0 means disabled for pixels -->
-                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <InjectedCharge  stripCharge="200" pixelCharge="200"/> <!-- in DAC units for each chip type - their electron value is different though! -->
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/> 
+                <Latencies       stripLatency="296" pixelLatency="295" retimePix="4" LatencyRx320L1="6" LatencyRx320Trigger="6" EdgeSelT1Raw="0" EdgeSelTrig="0"/> <!-- LatencyRx320: MPA register for phase selction of Strip input, L1 should be 7 for v2 and 6 for v2.1 --> <!-- EdgeSelT1Raw selects the sampling edge for the T1 and Raw Input, it should be 2 for PSv2 and 0 for PSv2.1 --> <!-- EdgeSelTrig selects the sampling edge for the Strip Input -->
+	            <Thresholds      stripThreshold="60" stripThresholdHigh="120" pixelThreshold="120"/> 
+                <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode -->
+                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <InjectedCharge  stripCharge="70" pixelCharge="70"/> <!-- in DAC units for each chip type - their electron value is different though! -->
+                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
             </Global>
 
             
@@ -81,7 +81,7 @@
             <MPA2 Id="15" configfile="MPA2.txt" />
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_PS.txt" />
         </Hybrid>
     </OpticalGroup>
 
@@ -369,6 +369,8 @@
     <Setting name="PSOccupancyPulseAmplitude">200</Setting>
 
     <Setting name="SkipConfigureHW">1</Setting><!-- FOR OTSDAQ-->
+
+    <Setting name="DoManualVrefTuning"      >  0</Setting>
 
 </Settings>
 

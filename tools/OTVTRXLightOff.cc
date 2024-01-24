@@ -30,9 +30,7 @@ void OTVTRXLightOff::Running()
 
 void OTVTRXLightOff::TurnOffLight()
 {
-    // bool cIgnoreI2c    = true;
-    // bool cReInitialize = true;
-    // this->ConfigureHw(cIgnoreI2c, cReInitialize);
+    // this->ConfigureHw();
     for(const auto cBoard: *fDetectorContainer)
     {
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);

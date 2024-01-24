@@ -69,8 +69,6 @@ class ThrAdjustment : public PixelAlive
     size_t stopValue;
     bool   doUpdateChip;
     bool   doDisplay;
-
-    int theCurrentRun;
 };
 
 #endif

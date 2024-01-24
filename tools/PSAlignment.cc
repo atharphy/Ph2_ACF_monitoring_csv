@@ -1843,26 +1843,12 @@ void PSAlignment::writeObjects() {}
 void PSAlignment::Running()
 {
     Initialise();
-    fSuccess = this->Align();
-    if(!fSuccess)
-    {
-        LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-// gui::message("Backend alignment failed"); //How
-#ifdef __USE_ROOT__
-        SaveResults();
-        WriteRootFile();
-        CloseResultFile();
-#endif
-        Destroy();
-    }
+    MapMPAOutputs();
+    ConfigureDefaultAlignmentParameters();
+    Reset();
 }
 
-void PSAlignment::Stop()
-{
-    dumpConfigFiles();
-
-    // Destroy();
-}
+void PSAlignment::Stop() { dumpConfigFiles(); }
 
 void PSAlignment::Pause() {}
 
