@@ -1,12 +1,12 @@
 #include "tools/OTalignBoardDataWord.h"
-#include "System/RegisterHelper.h"
-#include "HWInterface/D19cDebugFWInterface.h"
-#include "HWInterface/D19cBackendAlignmentFWInterface.h"
-#include "HWInterface/D19cFWInterface.h"
 #include "HWDescription/BeBoard.h"
-#include "HWDescription/OpticalGroup.h"
 #include "HWDescription/Hybrid.h"
+#include "HWDescription/OpticalGroup.h"
+#include "HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "HWInterface/D19cDebugFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/ExceptionHandler.h"
+#include "System/RegisterHelper.h"
 #include "Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
@@ -24,9 +24,8 @@ void OTalignBoardDataWord::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    //TODO: probably not needed to be data member
+    // TODO: probably not needed to be data member
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeBitSlip);
-
 
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -34,10 +33,7 @@ void OTalignBoardDataWord::Initialise(void)
 #endif
 }
 
-void OTalignBoardDataWord::ConfigureCalibration()
-{
-
-}
+void OTalignBoardDataWord::ConfigureCalibration() {}
 
 void OTalignBoardDataWord::Running()
 {
@@ -50,38 +46,27 @@ void OTalignBoardDataWord::Running()
 void OTalignBoardDataWord::Stop(void)
 {
     LOG(INFO) << "Stopping OTalignBoardDataWord measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTalignBoardDataWord.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTalignBoardDataWord.process();
+#endif
     dumpConfigFiles();
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTalignBoardDataWord stopped.";
 }
 
-void OTalignBoardDataWord::Pause()
-{
+void OTalignBoardDataWord::Pause() {}
 
-}
+void OTalignBoardDataWord::Resume() {}
 
-
-void OTalignBoardDataWord::Resume()
-{
-
-}
-
-
-void OTalignBoardDataWord::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTalignBoardDataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTalignBoardDataWord::WordAlignBEdata()
 {
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::WordAlignBEdata" << RESET;
 
-    for(auto theBoard : *fDetectorContainer)
+    for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
         {
@@ -89,7 +74,7 @@ void OTalignBoardDataWord::WordAlignBEdata()
             if(!cAligned)
             {
                 LOG(INFO) << BOLDRED << "Could not word align-BE data in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
-                        << " --- OpticalGroup will be disabled" << RESET;
+                          << " --- OpticalGroup will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
                 continue;
             }
@@ -99,10 +84,10 @@ void OTalignBoardDataWord::WordAlignBEdata()
 
 bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
 {
-    bool isStubDebug      = true;
-    bool cAligned   = false;
-    auto theBoardId   = theOpticalGroup->getBeBoardId();
-    auto  theBoard  = fDetectorContainer->getObject(theBoardId);
+    bool isStubDebug = true;
+    bool cAligned    = false;
+    auto theBoardId  = theOpticalGroup->getBeBoardId();
+    auto theBoard    = fDetectorContainer->getObject(theBoardId);
     LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::WordAlignBEdata for an OG " << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
@@ -227,11 +212,10 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
     return cAligned;
 }
 
-
 bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pScope)
 {
-    auto theBoardId   = pOpticalGroup->getBeBoardId();
-    auto theBoard  = fDetectorContainer->getObject(theBoardId);
+    auto theBoardId = pOpticalGroup->getBeBoardId();
+    auto theBoard   = fDetectorContainer->getObject(theBoardId);
     fBeBoardInterface->setBoard(theBoardId);
     LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::L1WordAlignment " << RESET;
 

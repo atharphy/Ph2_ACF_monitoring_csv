@@ -20,7 +20,6 @@ void DQMHistogramOTalignBoardDataWord::book(TFile* theOutputFile, DetectorContai
     // make fDetectorData ready to receive the information fromm the stream
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     // SoC utilities only - END
-    
 }
 
 //========================================================================================================================
@@ -28,7 +27,6 @@ void DQMHistogramOTalignBoardDataWord::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -46,7 +44,7 @@ bool DQMHistogramOTalignBoardDataWord::fill(std::string& inputStream)
 
     // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTalignBoardDataWord"
     // ContainerSerialization myStreamer("OTalignBoardDataWord");
-    
+
     // if(myStreamer.attachDeserializer(inputStream))
     // {
     //     // It matched! Decoding data
@@ -57,7 +55,7 @@ bool DQMHistogramOTalignBoardDataWord::fill(std::string& inputStream)
     //     myFillplotFunction(theDetectorData);
     //     return true;
     // }
-    //the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
+    // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
     // for this stream)
     return false;
     // SoC utilities only - END
