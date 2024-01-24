@@ -42,11 +42,47 @@ void mypause()
 
 std::string getResultDirectoryName(const StartInfo& theStartInfo)
 {
-    std::string resultDirectory = "Results/Run_" + std::to_string(theStartInfo.getRunNumber());
+    std::string resultDirectory = getResultDirectoryName(theStartInfo.getRunNumber());
     std::string append          = theStartInfo.getAppendInformation();
     if(append != "") resultDirectory = resultDirectory + "_" + append;
     return resultDirectory;
 }
+
+std::string getResultDirectoryName(const int runNumber)
+{
+    std::string resultDirectory = "Results/Run_" + std::to_string(runNumber);
+    return resultDirectory;
+}
+
+
+int returnPreviousRunNumber(std::string cFileName)
+{
+    std::string   cLine;
+    int           cRunNumber = -1;
+    std::ifstream cStream(cFileName);
+    if(cStream.is_open())
+    {
+        while(std::getline(cStream, cLine))
+        {
+            std::istringstream cIStream(cLine);
+            cIStream >> cRunNumber;
+        }
+    }
+
+    return cRunNumber;
+}
+
+int returnAndIncreaseRunNumber(std::string cFileName)
+{
+    int cRunNumber = returnPreviousRunNumber(cFileName) + 1;
+    std::ofstream cRunLog;
+    cRunLog.open(cFileName, std::fstream::app);
+    cRunLog << cRunNumber << "\n";
+    cRunLog.close();
+
+    return cRunNumber;
+}
+
 
 const std::string currentDateTime()
 {

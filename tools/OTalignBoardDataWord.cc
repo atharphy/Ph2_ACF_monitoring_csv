@@ -39,6 +39,7 @@ void OTalignBoardDataWord::Running()
 {
     LOG(INFO) << "Starting OTalignBoardDataWord measurement.";
     Initialise();
+    WordAlignBEdata();
     LOG(INFO) << "Done with OTalignBoardDataWord.";
     Reset();
 }
@@ -140,7 +141,10 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
             if(!cAligned)
             {
                 if(((cHybrid->getId() % 2) == 0) & ((cLineId - 1) == 4) & (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
-                { continue; } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
+                {
+                    LOG(INFO) << BOLDYELLOW << "Attention! ignoring alignment failure on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
+                    continue; 
+                } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                 LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +theBoardId << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id"
                           << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(theBoardId, theOpticalGroup->getId(), cHybrid->getId());
@@ -157,22 +161,8 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
         for(auto cItem: cThisBeBitSlip) cBitSlipHist[cItem]++;
         auto cMode = std::max_element(cBitSlipHist.begin(), cBitSlipHist.end()) - cBitSlipHist.begin();
         LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << " most frequent bitslip is " << +cMode << RESET;
-        // now if any line has a bit-slip that isn't the mode.. set it to the mode
-        // for( size_t cLineId =1 ; cLineId <= cNlines; cLineId++)
-        // {
-        //     if(cThisBeBitSlip[cLineId] != cMode ){
-        //         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-        //         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        //         for( uint8_t cBitSlip=0; cBitSlip < 8; cBitSlip++)
-        //         {
-        //             LOG (INFO) << BOLDMAGENTA << "Manually setting BitSlip on Line#" << +cLineId << " to " << +cBitSlip << RESET;
-        //             cTuner.SetLineMode(cInterface, cHybrid->getId(), 0, cLineId, 0);
-        //             cTuner.SetLineMode(cInterface, cHybrid->getId(), 0, cLineId, 2, 0, cMode, 0, 0);
-        //             cDebugInterface->StubDebug( true, cNlines );
-        //         }
-        //     }
-        // }
     }
+
     if(isStubDebug)
     {
         for(auto cHybrid: *theOpticalGroup)

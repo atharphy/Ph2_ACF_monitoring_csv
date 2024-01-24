@@ -11,6 +11,8 @@
 #include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
 #include "miniDAQ/CombinedCalibrationFactory.h"
+#include "Parser/ParserDefinitions.h"
+#include "Utils/Utilities.h"
 
 #include <cstring>
 #include <errno.h>
@@ -49,30 +51,6 @@ void interruptHandler(int handler)
     exit(EXIT_FAILURE);
 
     controlC = true;
-}
-
-int returnRunNumber(std::string cFileName)
-{
-    std::string   cLine;
-    int           cRunNumber = -1;
-    std::ifstream cStream(cFileName);
-    if(cStream.is_open())
-    {
-        while(std::getline(cStream, cLine))
-        {
-            std::istringstream cIStream(cLine);
-            cIStream >> cRunNumber;
-            // LOG(INFO) << BOLDMAGENTA << cRunNumber << RESET;
-        }
-    }
-
-    cRunNumber++;
-    std::ofstream cRunLog;
-    cRunLog.open(cFileName, std::fstream::app);
-    cRunLog << cRunNumber << "\n";
-    cRunLog.close();
-
-    return cRunNumber;
 }
 
 bool checkExitStatus(int status, std::string programName)
@@ -127,8 +105,14 @@ int main(int argc, char* argv[])
     // options
     cmd.setHelpOption("h", "help", "Print this help page");
 
-    cmd.defineOption("file", "Hw Description File", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
+    cmd.defineOption("file", "Hw Description File", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("file", "f");
+
+    cmd.defineOption("last", "Use HW Description in the result directory of the last run");
+    cmd.defineOptionAlternative("last", "l");
+
+    cmd.defineOption("run", "Use HW Description in the result directory of the specified run", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("run", "r");
 
     CombinedCalibrationFactory theCombinedCalibrationFactory;
     std::stringstream          calibrationHelpMessage;
@@ -153,9 +137,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("calibration", calibrationHelpMessage.str(), ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");
 
-    cmd.defineOption("output", "Output Directory. Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
-    cmd.defineOptionAlternative("output", "o");
-
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
 
@@ -170,10 +151,38 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    // now query the parsing results
-    std::string cHWFile    = cmd.optionValue("file");
-    std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    cDirectory += cmd.optionValue("calibration");
+    std::string configurationFile;
+    int numberOfConfiguratioFileOptions = 0;
+    if(cmd.foundOption("file"))
+    {
+        ++numberOfConfiguratioFileOptions;
+        configurationFile = cmd.optionValue("file");
+    }
+    if(cmd.foundOption("run"))
+    {
+        ++numberOfConfiguratioFileOptions;
+        int runNumber = stoi(cmd.optionValue("run"));
+        configurationFile = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/") + getResultDirectoryName(runNumber) + "/" + OUTPUT_CONFIGURATION_FILE;
+        LOG(INFO) << "Using configuration file from run " << runNumber << ": " << configurationFile << std::endl;
+    }
+    if(cmd.foundOption("last"))
+    {
+        ++numberOfConfiguratioFileOptions;
+        int runNumber = returnPreviousRunNumber("RunNumbers.dat");
+        configurationFile = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/") + getResultDirectoryName(runNumber) + "/" + OUTPUT_CONFIGURATION_FILE;
+        LOG(INFO) << "Using configuration file from last run (" << runNumber << "): " << configurationFile << std::endl;
+    }
+
+    if(numberOfConfiguratioFileOptions == 0)
+    {
+        LOG(ERROR) << BOLDRED << "ERROR: HW configuration file needs to be specified using options file, run or last" << RESET;
+        exit(1);
+    }
+    if(numberOfConfiguratioFileOptions > 1)
+    {
+        LOG(ERROR) << BOLDRED << "ERROR: options file, run and last are mutually exclusive, please use just one of them" << RESET;
+        exit(1);
+    }
 
     bool batchMode = (cmd.foundOption("batch")) ? true : false;
 
@@ -307,7 +316,6 @@ int main(int argc, char* argv[])
                 {
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
                     std::string   calibrationName   = cmd.optionValue("calibration");
-                    std::string   configurationFile = cmd.optionValue("file");
                     ConfigureInfo theConfigureInfo;
                     theConfigureInfo.setConfigurationFiles(configurationFile);
                     theConfigureInfo.setCalibrationName(calibrationName);
@@ -319,7 +327,7 @@ int main(int argc, char* argv[])
                 }
                 case CONFIGURED:
                 {
-                    int runNumber = returnRunNumber("RunNumbers.dat");
+                    int runNumber = returnAndIncreaseRunNumber("RunNumbers.dat");
                     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] RunNumber = " << runNumber << std::endl;
                     StartInfo theStartInfo;
                     theStartInfo.setRunNumber(runNumber);

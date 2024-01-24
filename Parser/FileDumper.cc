@@ -41,7 +41,7 @@ std::stringstream FileDumper::dumpConfigurationFiles(DetectorContainer*         
 
     dumpCommunicationSettings(hwDescriptionNode, theCommunicationSettingConfig);
 
-    std::string outputFileName = fOutputDirectory + "Configuration.xml";
+    std::string outputFileName = fOutputDirectory + OUTPUT_CONFIGURATION_FILE;
 
     LOG(INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fOutputDirectory << RESET;
 
