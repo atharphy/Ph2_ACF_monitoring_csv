@@ -30,6 +30,7 @@
 #include "tools/CicFEAlignment.h"
 #include "tools/ConfigureOnly.h"
 #include "tools/LinkAlignmentOT.h"
+#include "tools/OTalignBoardDataWord.h"
 #include "tools/OTalignLpGBTinputs.h"
 #include "tools/PSPhysics.h"
 #include "tools/Physics2S.h"
@@ -44,8 +45,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<ConfigureOnly>("Common", "configureonly");
 
     // OT calibrations
+    Register<PedeNoise>("Outer Tracker", "noiseOT");
     Register<OTVTRXLightOff>("Outer Tracker", "vtrxoff");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
+    Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
     Register<LinkAlignmentOT, CicFEAlignment>("Outer Tracker", "alignment");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("Outer Tracker", "calibration");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("Outer Tracker", "takedata"); // will be used in future version of GIPHT
