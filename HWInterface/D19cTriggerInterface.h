@@ -2,14 +2,17 @@
 #define _D19cTriggerInterface_H__
 
 #include "HWInterface/TriggerInterface.h"
+#include <vector>
+#include <string>
 
 namespace Ph2_HwInterface
 {
+
+class RegManager;
 class D19cTriggerInterface : public TriggerInterface
 {
   public: // constructors
-    D19cTriggerInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cTriggerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cTriggerInterface(RegManager* theRegManager);
     ~D19cTriggerInterface();
 
   public: // virtual functions

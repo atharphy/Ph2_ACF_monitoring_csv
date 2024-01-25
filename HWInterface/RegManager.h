@@ -10,16 +10,15 @@
 #ifndef REGMANAGER_H
 #define REGMANAGER_H
 
-#include "Utils/easylogging++.h"
-#include <chrono>
-#include <map>
 #include <mutex>
 #include <string>
-#include <thread>
-#include <uhal/uhal.hpp>
-#include <utility>
 #include <vector>
 
+namespace uhal
+{
+    class HwInterface;
+    class Node;
+}
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
@@ -134,14 +133,7 @@ class RegManager
     /*!
      * \brief Reset the HW Interface with different Id, Uri and Address Table
      */
-    virtual void ResetRegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
-    {
-        if(fBoard)
-        {
-            delete fBoard;
-            fBoard = new uhal::HwInterface(uhal::ConnectionManager::getDevice(pId, pUri, pAddressTable));
-        }
-    }
+    virtual void ResetRegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
 
     /*!
      * \brief Stack the commands, deliver when full or timeout

@@ -1,6 +1,7 @@
 #include "HWInterface/D19cCommandProcessorInterface.h"
 #include "HWInterface/RegManager.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
 #include <iomanip>
 
 namespace Ph2_HwInterface

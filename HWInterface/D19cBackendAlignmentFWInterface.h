@@ -73,7 +73,7 @@ class D19cBackendAlignmentFWInterface
     std::pair<bool, uint8_t> WordAlignLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod, uint8_t pSamplingDelay, uint8_t pOptical);
     void                     ManuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip, uint8_t pOptical);
 
-    RegManager* fTheRegManager;
+    RegManager* fTheRegManager {nullptr};
 
   private:
     AlignerObject     fAlignerObject;

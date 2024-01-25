@@ -42,7 +42,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
@@ -82,7 +82,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
@@ -120,7 +120,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
@@ -160,7 +160,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)

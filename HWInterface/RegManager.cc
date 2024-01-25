@@ -7,6 +7,7 @@
   Support :                     mail to : nico.pierre@icloud.com
 */
 
+#include "Utils/easylogging++.h"
 #include "HWInterface/RegManager.h"
 #include "HWDescription/Definition.h"
 #include "Utils/ConsoleColor.h"
@@ -338,6 +339,15 @@ bool RegManager::pollRegister(const std::string& pRegisterName, uint32_t pValue,
         std::cout.flush();
     }
     return cStopCondition;
+}
+
+void RegManager::ResetRegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
+{
+    if(fBoard)
+    {
+        delete fBoard;
+        fBoard = new uhal::HwInterface(uhal::ConnectionManager::getDevice(pId, pUri, pAddressTable));
+    }
 }
 
 // ##############################################
