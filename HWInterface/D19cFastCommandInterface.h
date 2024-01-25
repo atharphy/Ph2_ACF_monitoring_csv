@@ -5,11 +5,12 @@
 
 namespace Ph2_HwInterface
 {
+
+class RegManager;
 class D19cFastCommandInterface : public FastCommandInterface
 {
   public: // constructors
-    D19cFastCommandInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cFastCommandInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cFastCommandInterface(RegManager* theRegManager);
     ~D19cFastCommandInterface();
 
   public:                                                                // functions

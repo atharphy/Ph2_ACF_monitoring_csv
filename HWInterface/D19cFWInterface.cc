@@ -47,7 +47,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
@@ -87,7 +87,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
@@ -125,7 +125,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
@@ -165,7 +165,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)

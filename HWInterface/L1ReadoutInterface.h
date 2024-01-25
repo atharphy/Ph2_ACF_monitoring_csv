@@ -5,6 +5,8 @@
 #include "Utils/Utilities.h"
 #include "Utils/easylogging++.h"
 #include <string>
+#include "Utils/ConsoleColor.h"
+#include "HWDescription/BeBoard.h"
 
 #include "HWInterface/FastCommandInterface.h"
 #include "HWInterface/TriggerInterface.h"
