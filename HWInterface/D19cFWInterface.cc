@@ -62,7 +62,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
@@ -102,7 +102,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
@@ -140,7 +140,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
@@ -180,7 +180,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;

@@ -39,9 +39,9 @@ class RegManager
     const std::string                             fUri;
     const std::string                             fAddressTable;
     const std::string                             fId;
-    std::recursive_mutex                          fMutex;
 
   public:
+    std::recursive_mutex                          fMutex;
     // Connection w uHal
     /*!
      * \brief Constructor of the RegManager class

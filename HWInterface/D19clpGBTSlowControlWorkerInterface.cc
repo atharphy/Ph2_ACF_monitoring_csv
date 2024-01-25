@@ -1,16 +1,16 @@
 #include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
+#include "Utils/ConsoleColor.h"
+#include "HWInterface/RegManager.h"
+#include "HWDescription/Chip.h"
+#include "HWDescription/ChipRegItem.h"
+#include "Utils/ConsoleColor.h"
 
 namespace Ph2_HwInterface
 {
-D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
-    : D19cCommandProcessorInterface(pId, pUri, pAddressTable)
+D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(RegManager* theRegManager)
+    : D19cCommandProcessorInterface(theRegManager)
 {
     PrintState();
-    LOG(INFO) << BOLDYELLOW << "D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface Constructor" << RESET;
-}
-
-D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : D19cCommandProcessorInterface(puHalConfigFileName, pBoardId)
-{
     LOG(INFO) << BOLDYELLOW << "D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface Constructor" << RESET;
 }
 
@@ -19,7 +19,7 @@ D19clpGBTSlowControlWorkerInterface::~D19clpGBTSlowControlWorkerInterface() {}
 void D19clpGBTSlowControlWorkerInterface::Reset()
 {
     uint32_t                              sleepTimeInUs = 100000;
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
     LOG(DEBUG) << BOLDBLUE << "Resetting Command Processor" << RESET;
     // Soft reset the GBT-SC worker
     std::vector<uint32_t> cCommandVector;
@@ -28,46 +28,46 @@ void D19clpGBTSlowControlWorkerInterface::Reset()
     // reset should be 0x00020010
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
 
-    WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 1);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 1);
     usleep(sleepTimeInUs);
-    WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0);
-    usleep(sleepTimeInUs);
-
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 1);
-    usleep(sleepTimeInUs);
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 0);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0);
     usleep(sleepTimeInUs);
 
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 1);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 1);
     usleep(sleepTimeInUs);
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 0);
-    usleep(sleepTimeInUs);
-
-    WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
-    usleep(sleepTimeInUs);
-    ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.command_fifo_reset", 0);
     usleep(sleepTimeInUs);
 
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.state_reset", 1);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 1);
     usleep(sleepTimeInUs);
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.state_reset", 0);
-    usleep(sleepTimeInUs);
-
-    WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset", 1);
-    usleep(sleepTimeInUs);
-    WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset", 0);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.reply_fifo_reset", 0);
     usleep(sleepTimeInUs);
 
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 1);
+    fTheRegManager->WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
     usleep(sleepTimeInUs);
-    WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0);
+    fTheRegManager->ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
+    usleep(sleepTimeInUs);
+
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.state_reset", 1);
+    usleep(sleepTimeInUs);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.state_reset", 0);
+    usleep(sleepTimeInUs);
+
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset", 1);
+    usleep(sleepTimeInUs);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset", 0);
+    usleep(sleepTimeInUs);
+
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 1);
+    usleep(sleepTimeInUs);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0);
     usleep(sleepTimeInUs);
 }
 
 void D19clpGBTSlowControlWorkerInterface::SelectLink(uint8_t pLinkId)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    WriteReg("fc7_daq_cnfg.optical_block.link_select", pLinkId);
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
+    fTheRegManager->WriteReg("fc7_daq_cnfg.optical_block.link_select", pLinkId);
 }
 std::vector<uint32_t>
 D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, const std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems, bool pVerify)
@@ -145,13 +145,13 @@ D19clpGBTSlowControlWorkerInterface::EncodeCommandI2C(uint8_t pFunctionId, Ph2_H
 
 void D19clpGBTSlowControlWorkerInterface::PrintState()
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    auto cCommandState = CommandProcessorArbitrators::COMMAND_ARBITRATOR_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.command_arbitrator_fsm_state"));
-    auto cReplyState   = CommandProcessorArbitrators::REPLY_ARBITRATOR_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.reply_arbitrator_fsm_state"));
-    auto cWorkerState  = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state"));
-    auto cICState      = LpGBTSlowControlWorker::IC_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.ic_state"));
-    auto cI2CState     = LpGBTSlowControlWorker::I2C_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.i2c_state"));
-    auto cFEState      = LpGBTSlowControlWorker::FE_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state"));
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
+    auto cCommandState = CommandProcessorArbitrators::COMMAND_ARBITRATOR_FSM_STATE_MAP.at(fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.command_arbitrator_fsm_state"));
+    auto cReplyState   = CommandProcessorArbitrators::REPLY_ARBITRATOR_FSM_STATE_MAP.at(fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.reply_arbitrator_fsm_state"));
+    auto cWorkerState  = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state"));
+    auto cICState      = LpGBTSlowControlWorker::IC_FSM_STATE_MAP.at(fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.ic_state"));
+    auto cI2CState     = LpGBTSlowControlWorker::I2C_FSM_STATE_MAP.at(fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.i2c_state"));
+    auto cFEState      = LpGBTSlowControlWorker::FE_FSM_STATE_MAP.at(fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state"));
     LOG(INFO) << BLUE << "Command Arbitrator State = " << BOLDYELLOW << cCommandState << RESET;
     LOG(INFO) << BLUE << "Reply Arbitrator State = " << BOLDYELLOW << cReplyState << RESET;
     LOG(INFO) << BLUE << "Worker state = " << BOLDYELLOW << cWorkerState << RESET;
@@ -183,23 +183,23 @@ bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
 
 bool D19clpGBTSlowControlWorkerInterface::IsDone(uint8_t pFunctionId)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint8_t                               cState        = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state");
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
+    uint8_t                               cState        = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state");
     bool                                  cWorkerDone   = (cState == 1);
     bool                                  cFunctionDone = false;
     if((pFunctionId == LpGBTSlowControlWorker::READ_IC) || (pFunctionId == LpGBTSlowControlWorker::WRITE_IC))
     {
-        uint8_t cState = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.ic_state");
+        uint8_t cState = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.ic_state");
         cFunctionDone  = (cState == 1);
     }
     else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C) || (pFunctionId == LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C))
     {
-        uint8_t cState = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.i2c_state");
+        uint8_t cState = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.i2c_state");
         cFunctionDone  = (cState == 1);
     }
     else if((pFunctionId == LpGBTSlowControlWorker::READ_FE) || (pFunctionId == LpGBTSlowControlWorker::WRITE_FE))
     {
-        uint8_t cState = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state");
+        uint8_t cState = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state");
         cFunctionDone  = (cState == 1);
     }
     else
@@ -212,17 +212,17 @@ bool D19clpGBTSlowControlWorkerInterface::IsDone(uint8_t pFunctionId)
 
 uint8_t D19clpGBTSlowControlWorkerInterface::GetTryCounter(uint8_t pFunctionId)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
     uint8_t                               cCntr = 255;
     if((pFunctionId == LpGBTSlowControlWorker::READ_IC) || (pFunctionId == LpGBTSlowControlWorker::WRITE_IC))
-    { cCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.ic_tool"); }
+    { cCntr = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.ic_tool"); }
     else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C) || (pFunctionId == LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C))
     {
-        cCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.i2c_tool");
+        cCntr = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.i2c_tool");
     }
     else if((pFunctionId == LpGBTSlowControlWorker::READ_FE) || (pFunctionId == LpGBTSlowControlWorker::WRITE_FE))
     {
-        cCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.fe_tool");
+        cCntr = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.fe_tool");
     }
     else
     {

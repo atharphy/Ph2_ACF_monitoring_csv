@@ -1,10 +1,26 @@
 #include "HWInterface/CommandProcessorInterface.h"
+#include "HWInterface/RegManager.h"
+#include "HWDescription/BeBoard.h"
+#include "Utils/ConsoleColor.h"
 
 namespace Ph2_HwInterface
 {
-CommandProcessorInterface::CommandProcessorInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable) {}
-CommandProcessorInterface::CommandProcessorInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId)
+CommandProcessorInterface::CommandProcessorInterface(RegManager* theRegManager) : fTheRegManager(theRegManager) {}
+
+void CommandProcessorInterface::Reset() 
 {
-    LOG(INFO) << BOLDYELLOW << "CommandProcessorInterface::CommandProcessorInteface Constructor" << RESET;
+    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::Reset is absent" << RESET; 
 }
+
+void CommandProcessorInterface::WriteCommand(const std::vector<uint32_t>& pCommand)
+{
+    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::WriteCommand is absent" << RESET;
+}
+
+std::vector<uint32_t> CommandProcessorInterface::ReadReply(int pNWords)
+{
+    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::ReadReply is absent" << RESET;
+    return {};
+}
+
 } // namespace Ph2_HwInterface
