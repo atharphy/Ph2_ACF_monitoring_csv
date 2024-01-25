@@ -51,12 +51,11 @@ struct Reply
     bool              fSuccess;
 };
 
-class D19cBackendAlignmentFWInterface : public RegManager
+class RegManager;
+class D19cBackendAlignmentFWInterface
 {
   public:
-    D19cBackendAlignmentFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cBackendAlignmentFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
-
+    D19cBackendAlignmentFWInterface(RegManager* theRegManager);
     ~D19cBackendAlignmentFWInterface();
 
     void              InitializeConfiguration();
@@ -76,6 +75,8 @@ class D19cBackendAlignmentFWInterface : public RegManager
     std::pair<bool, uint8_t> PhaseTuneLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pOptical);
     std::pair<bool, uint8_t> WordAlignLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod, uint8_t pSamplingDelay, uint8_t pOptical);
     void                     ManuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip, uint8_t pOptical);
+
+    RegManager* fTheRegManager;
 
   private:
     AlignerObject     fAlignerObject;

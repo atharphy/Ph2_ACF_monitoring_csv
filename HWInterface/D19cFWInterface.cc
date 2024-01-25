@@ -52,7 +52,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
@@ -92,7 +92,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
@@ -130,7 +130,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
@@ -170,7 +170,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
