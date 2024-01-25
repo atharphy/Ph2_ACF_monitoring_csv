@@ -24,8 +24,8 @@ void OTalignBoardDataWord::Initialise(void)
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeBoardRegister("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
     // free the registers in case any
-    
-    size_t numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+
+    size_t               numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
     std::vector<uint8_t> initialBitSlipVector(numberOfLines, 0);
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeBitSlip, initialBitSlipVector);
 
@@ -63,10 +63,7 @@ void OTalignBoardDataWord::Pause() {}
 
 void OTalignBoardDataWord::Resume() {}
 
-void OTalignBoardDataWord::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTalignBoardDataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTalignBoardDataWord::WordAlignBEdata()
 {
@@ -76,8 +73,8 @@ void OTalignBoardDataWord::WordAlignBEdata()
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theOpticalGroup id = " << +theOpticalGroup->getId() << std::endl;
-            
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theOpticalGroup id = " << +theOpticalGroup->getId() << std::endl;
+
             bool cAligned = this->WordAlignBEdata(theOpticalGroup);
             if(!cAligned)
             {
@@ -129,7 +126,7 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
     {
         for(auto cHybrid: *theOpticalGroup)
         {
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             auto& cBeBitSlipHybrd = cBeBitSlipOG->getObject(cHybrid->getId());
             auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
 
@@ -143,12 +140,12 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
             cLineCnfg.fPattern       = 0xEA;
             cLineCnfg.fPatternPeriod = 8;
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-            cAligned                = cAlignerInterface->IsLineWordAligned();
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] cThisBeBitSlip size = " << cThisBeBitSlip.size() << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+            cAligned = cAlignerInterface->IsLineWordAligned();
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] cThisBeBitSlip size = " << cThisBeBitSlip.size() << std::endl;
             cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             if(!cAligned)
             {
                 if(((cHybrid->getId() % 2) == 0) & ((cLineId - 1) == 4) & (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
