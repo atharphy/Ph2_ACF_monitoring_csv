@@ -1,4 +1,7 @@
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "HWInterface/RegManager.h"
+#include "Utils/ConsoleColor.h"
+#include "HWDescription/Chip.h"
 
 using namespace Ph2_HwDescription;
 

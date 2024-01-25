@@ -1,11 +1,8 @@
 #ifndef __D19cBackendAlignmentFWInterface_H__
 #define __D19cBackendAlignmentFWInterface_H__
 
-#include "HWDescription/BeBoard.h"
-#include "HWInterface/RegManager.h"
-#include "Utils/Utilities.h"
-#include "Utils/easylogging++.h"
 #include <string>
+#include <map>
 
 namespace Ph2_HwDescription
 {

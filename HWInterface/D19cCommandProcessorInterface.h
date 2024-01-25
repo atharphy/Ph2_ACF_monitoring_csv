@@ -2,6 +2,7 @@
 #define _D19cCommandProcessorInterface_H__
 
 #include "HWInterface/CommandProcessorInterface.h"
+#include <map>
 
 namespace CommandProcessorArbitrators
 {

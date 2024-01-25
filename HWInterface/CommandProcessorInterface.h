@@ -1,9 +1,8 @@
 #ifndef _CommandProcessorInterface_H__
 #define _CommandProcessorInterface_H__
 
-#include "Utils/Utilities.h"
-#include "Utils/easylogging++.h"
 #include <string>
+#include <vector>
 
 namespace Ph2_HwInterface
 {
