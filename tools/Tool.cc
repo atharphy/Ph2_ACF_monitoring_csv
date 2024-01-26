@@ -307,14 +307,11 @@ void Tool::SoftDestroy()
         delete fOfStream;
         fOfStream = nullptr;
     }
-#if defined(__TCUSB__)
-#else
     if(fMetadataHandler != nullptr)
     {
         delete fMetadataHandler;
         fMetadataHandler = nullptr;
     }
-#endif
 #ifdef __USE_ROOT__
     if(fResultFile != nullptr)
     {
