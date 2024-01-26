@@ -5,7 +5,6 @@
 
 namespace Ph2_HwInterface
 {
-
 class RegManager;
 class D19clpGBTSlowControlWorkerInterface;
 class D19cOpticalInterface : public FEConfigurationInterface
@@ -34,7 +33,7 @@ class D19cOpticalInterface : public FEConfigurationInterface
     std::vector<uint16_t> MultiSingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData);
 
   private:
-    D19clpGBTSlowControlWorkerInterface* flpGBTSlowControlWorkerInterface {nullptr};
+    D19clpGBTSlowControlWorkerInterface* flpGBTSlowControlWorkerInterface{nullptr};
 
   private:
     // IC and FE functions

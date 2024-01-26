@@ -1,16 +1,16 @@
 #include "HWInterface/D19cPSCounterFWInterface.h"
-#include "HWInterface/RegManager.h"
-#include "HWInterface/FastCommandInterface.h"
-#include "HWInterface/TriggerInterface.h"
-#include "Utils/easylogging++.h"
-#include "Utils/ConsoleColor.h"
 #include "HWDescription/BeBoard.h"
-#include "HWDescription/OpticalGroup.h"
-#include "HWDescription/Hybrid.h"
 #include "HWDescription/Chip.h"
 #include "HWDescription/ChipRegItem.h"
-#include <thread>
+#include "HWDescription/Hybrid.h"
+#include "HWDescription/OpticalGroup.h"
 #include "HWInterface/FEConfigurationInterface.h"
+#include "HWInterface/FastCommandInterface.h"
+#include "HWInterface/RegManager.h"
+#include "HWInterface/TriggerInterface.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
+#include <thread>
 
 using namespace Ph2_HwDescription;
 

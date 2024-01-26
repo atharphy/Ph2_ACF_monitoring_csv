@@ -1,7 +1,7 @@
 #include "HWInterface/FastCommandInterface.h"
 #include "HWInterface/RegManager.h"
-#include "Utils/easylogging++.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
 
 namespace Ph2_HwInterface
 {

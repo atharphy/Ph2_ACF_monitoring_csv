@@ -10,16 +10,16 @@
 #ifndef __CHIPINTERFACE_H__
 #define __CHIPINTERFACE_H__
 
+#include <map>
 #include <mutex>
 #include <vector>
-#include <map>
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
-    class Chip;
-    class Hybrid;
-}
+class BeBoard;
+class Chip;
+class Hybrid;
+} // namespace Ph2_HwDescription
 
 template <typename T>
 class ChannelContainer;
@@ -87,7 +87,7 @@ class ChipInterface
      * \param pChip
      * \param pVecReq : Vector of pair: Node of the register to write versus value to write
      */
-    virtual bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true);
+    virtual bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true);
     virtual uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip);
 
     /*!

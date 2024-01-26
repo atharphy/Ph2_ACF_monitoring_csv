@@ -45,7 +45,6 @@ const uint16_t HITS_CBC     = 254;
 
 namespace Ph2_HwInterface
 {
-
 class RegManager;
 class D19cL1ReadoutInterface : public L1ReadoutInterface
 {

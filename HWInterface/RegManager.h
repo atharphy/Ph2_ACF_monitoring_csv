@@ -16,13 +16,13 @@
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
+class BeBoard;
 }
 namespace uhal
 {
-    class HwInterface;
-    class Node;
-}
+class HwInterface;
+class Node;
+} // namespace uhal
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
@@ -44,7 +44,7 @@ class RegManager
     const std::string                             fId;
 
   public:
-    std::recursive_mutex                          fMutex;
+    std::recursive_mutex fMutex;
     // Connection w uHal
     /*!
      * \brief Constructor of the RegManager class
@@ -191,11 +191,11 @@ class RegManager
         Replay
     };
 
-    static Mode           mode;
-    uint32_t              replayRead();
-    std::vector<uint32_t> replayBlockRead(size_t size);
-    void                  captureRead(uint32_t value);
-    void                  captureBlockRead(std::vector<uint32_t> data);
+    static Mode                 mode;
+    uint32_t                    replayRead();
+    std::vector<uint32_t>       replayBlockRead(size_t size);
+    void                        captureRead(uint32_t value);
+    void                        captureBlockRead(std::vector<uint32_t> data);
     Ph2_HwDescription::BeBoard* fTheBoardPointer;
 };
 } // namespace Ph2_HwInterface

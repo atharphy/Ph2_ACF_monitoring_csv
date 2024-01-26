@@ -7,7 +7,6 @@
 
  */
 
-#include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/CicInterface.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"

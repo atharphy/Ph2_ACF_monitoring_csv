@@ -1,6 +1,6 @@
 #include "HWInterface/FEConfigurationInterface.h"
-#include "Utils/easylogging++.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
 
 using namespace Ph2_HwDescription;
 

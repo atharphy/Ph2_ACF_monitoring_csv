@@ -76,12 +76,11 @@ const std::map<int, std::string> FE_FSM_STATE_MAP{{0, "UNDEFINED"},
 
 namespace Ph2_HwDescription
 {
-    class Chip;
-    class ChipRegItem;
-}
+class Chip;
+class ChipRegItem;
+} // namespace Ph2_HwDescription
 namespace Ph2_HwInterface
 {
-
 class RegManager;
 class D19clpGBTSlowControlWorkerInterface : public D19cCommandProcessorInterface
 {

@@ -7,12 +7,11 @@
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
+class BeBoard;
 }
 
 namespace Ph2_HwInterface
 {
-
 class RegManager;
 
 class D19cI2CInterface : public FEConfigurationInterface

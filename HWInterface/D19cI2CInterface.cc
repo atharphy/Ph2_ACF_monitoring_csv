@@ -2,10 +2,10 @@
 
 using namespace Ph2_HwDescription;
 
-#include "HWDescription/OuterTrackerHybrid.h"
-#include "HWInterface/RegManager.h"
 #include "HWDescription/BeBoard.h"
 #include "HWDescription/OpticalGroup.h"
+#include "HWDescription/OuterTrackerHybrid.h"
+#include "HWInterface/RegManager.h"
 #include <thread>
 namespace Ph2_HwInterface
 {

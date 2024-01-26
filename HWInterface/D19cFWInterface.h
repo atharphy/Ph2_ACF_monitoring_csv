@@ -32,7 +32,7 @@
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
+class BeBoard;
 }
 /*!
  * \namespace Ph2_HwInterface

@@ -2,12 +2,11 @@
 #define _D19cTriggerInterface_H__
 
 #include "HWInterface/TriggerInterface.h"
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace Ph2_HwInterface
 {
-
 class RegManager;
 class D19cTriggerInterface : public TriggerInterface
 {

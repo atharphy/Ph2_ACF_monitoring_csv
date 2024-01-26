@@ -5,8 +5,14 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cMuxBackplaneFWInterface::D19cMuxBackplaneFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, BeBoard* theBoard) : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard) {}
-D19cMuxBackplaneFWInterface::D19cMuxBackplaneFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler, BeBoard* theBoard) : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard) {}
+D19cMuxBackplaneFWInterface::D19cMuxBackplaneFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard)
+{
+}
+D19cMuxBackplaneFWInterface::D19cMuxBackplaneFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard)
+{
+}
 D19cMuxBackplaneFWInterface::~D19cMuxBackplaneFWInterface() {}
 
 // disconnect setup with multiplexing backplane

@@ -7,11 +7,11 @@
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
-    class OpticalGroup;
-    class Hybrid;
-    class Chip;
-}
+class BeBoard;
+class OpticalGroup;
+class Hybrid;
+class Chip;
+} // namespace Ph2_HwDescription
 namespace Ph2_HwInterface
 {
 #ifndef PSCounterData
@@ -56,7 +56,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     void configureFastReadout(uint8_t pEnable, uint8_t pMode = 0) { fPSCounterFast = pEnable; }
 
   private:
-    FEConfigurationInterface* fFEConfigurationInterface {nullptr};
+    FEConfigurationInterface* fFEConfigurationInterface{nullptr};
 
     uint32_t fFCDupe{4};
     uint32_t fWait_us{100};

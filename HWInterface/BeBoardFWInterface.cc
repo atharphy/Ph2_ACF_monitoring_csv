@@ -8,14 +8,17 @@
 */
 
 #include "HWInterface/BeBoardFWInterface.h"
-#include "HWInterface/FpgaConfig.h"
 #include "HWDescription/BeBoard.h"
+#include "HWInterface/FpgaConfig.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-BeBoardFWInterface::BeBoardFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, BeBoard* theBoard) : RegManager(puHalConfigFileName, pBoardId, theBoard), fSaveToFile(false), fFileHandler(nullptr) {}
+BeBoardFWInterface::BeBoardFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, BeBoard* theBoard)
+    : RegManager(puHalConfigFileName, pBoardId, theBoard), fSaveToFile(false), fFileHandler(nullptr)
+{
+}
 
 BeBoardFWInterface::BeBoardFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
     : RegManager(pId, pUri, pAddressTable, theBoard), fSaveToFile(false), fFileHandler(nullptr)

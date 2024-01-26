@@ -57,10 +57,7 @@ void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
                 isFreeRegister = std::regex_match(pReg, freeRegister);
                 if(isFreeRegister) break;
             }
-            if(!isFreeRegister && oldRegister != psetValue)
-            {
-                fModifiedRegisters[pReg] = oldRegister;
-            }
+            if(!isFreeRegister && oldRegister != psetValue) { fModifiedRegisters[pReg] = oldRegister; }
         }
     }
 }

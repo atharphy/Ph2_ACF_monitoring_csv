@@ -5,7 +5,6 @@
 
 namespace Ph2_HwInterface
 {
-
 class RegManager;
 class D19cFastCommandInterface : public FastCommandInterface
 {

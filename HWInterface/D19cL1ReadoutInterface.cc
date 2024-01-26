@@ -1,10 +1,10 @@
 #include "HWInterface/D19cL1ReadoutInterface.h"
 #include "HWInterface/RegManager.h"
-#include "Utils/easylogging++.h"
-#include "Utils/ConsoleColor.h"
-#include <thread>
-#include <bitset>
 #include "HWInterface/TriggerInterface.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
+#include <bitset>
+#include <thread>
 
 using namespace Ph2_HwDescription;
 

@@ -7,13 +7,13 @@
   Support :                     mail to : nico.pierre@icloud.com
 */
 
-#include "Utils/easylogging++.h"
 #include "HWInterface/RegManager.h"
+#include "HWDescription/BeBoard.h"
 #include "HWDescription/Definition.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 #include <uhal/uhal.hpp>
-#include "HWDescription/BeBoard.h"
 
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -38,7 +38,8 @@ RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId
     }
 }
 
-RegManager::RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard) : fBoard(nullptr), fUri(pUri), fAddressTable(pAddressTable), fId(pId), fTheBoardPointer(theBoard)
+RegManager::RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
+    : fBoard(nullptr), fUri(pUri), fAddressTable(pAddressTable), fId(pId), fTheBoardPointer(theBoard)
 {
     if(mode != Mode::Replay)
     {

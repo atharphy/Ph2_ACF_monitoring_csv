@@ -27,7 +27,7 @@
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
+class BeBoard;
 }
 
 /*!

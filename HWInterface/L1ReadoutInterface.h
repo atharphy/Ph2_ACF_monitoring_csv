@@ -6,11 +6,10 @@
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
+class BeBoard;
 }
 namespace Ph2_HwInterface
 {
-
 class RegManager;
 class FastCommandInterface;
 class TriggerInterface;
@@ -21,16 +20,16 @@ class L1ReadoutInterface
     virtual ~L1ReadoutInterface();
 
   protected:
-    FastCommandInterface* fFastCommandInterface {nullptr};
-    TriggerInterface*     fTriggerInterface {nullptr};
+    FastCommandInterface* fFastCommandInterface{nullptr};
+    TriggerInterface*     fTriggerInterface{nullptr};
     uint8_t               fHandshake;
     std::vector<uint32_t> fData;
-    uint32_t              fNEvents {100};
+    uint32_t              fNEvents{100};
     uint32_t              fNReadoutEvents;
     uint32_t              fMaxAttempts{10};
     uint32_t              fReadoutAttempt{0};
     uint32_t              fTimeout_us{5000000}; // time-out after 5s
-    RegManager*           fTheRegManager {nullptr};
+    RegManager*           fTheRegManager{nullptr};
 
   public: // virtual functions
     virtual void FillData();

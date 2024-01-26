@@ -8,11 +8,11 @@
  */
 
 #include "HWInterface/ChipInterface.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/Chip.h"
+#include "HWDescription/Hybrid.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/easylogging++.h"
-#include "HWDescription/BeBoard.h"
-#include "HWDescription/Hybrid.h"
-#include "HWDescription/Chip.h"
 
 #define DEV_FLAG 0
 

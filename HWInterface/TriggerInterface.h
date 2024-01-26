@@ -25,21 +25,21 @@ class TriggerInterface
     virtual void ResetTriggerFSM();
     virtual void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
 
-    virtual bool Start();
-    virtual bool Stop();
+    virtual bool     Start();
+    virtual bool     Stop();
     virtual void     Pause();
     virtual void     Resume();
     virtual uint32_t GetTriggerState();
-    virtual bool RunTriggerFSM();
-    virtual bool WaitForNTriggers(uint32_t pNTriggers);
-    virtual bool SendNTriggers(uint32_t pNTriggers);
-    virtual void PrintStatus();
+    virtual bool     RunTriggerFSM();
+    virtual bool     WaitForNTriggers(uint32_t pNTriggers);
+    virtual bool     SendNTriggers(uint32_t pNTriggers);
+    virtual void     PrintStatus();
 
-    uint8_t  getTriggerSource() { return fTriggerConfiguration.fTriggerSource; }
-    uint8_t  getTriggerRate() { return fTriggerConfiguration.fTriggerRate; }
-    void     setTimeout(uint32_t pTimeout_us) { fTimeout_us = pTimeout_us; }
-    uint32_t getTimeout() { return fTimeout_us; }
-    RegManager* fTheRegManager {nullptr};
+    uint8_t     getTriggerSource() { return fTriggerConfiguration.fTriggerSource; }
+    uint8_t     getTriggerRate() { return fTriggerConfiguration.fTriggerRate; }
+    void        setTimeout(uint32_t pTimeout_us) { fTimeout_us = pTimeout_us; }
+    uint32_t    getTimeout() { return fTimeout_us; }
+    RegManager* fTheRegManager{nullptr};
 
   protected:
     uint32_t             fWait_us{10};

@@ -1,7 +1,7 @@
 #include "HWInterface/D19cDebugFWInterface.h"
-#include "Utils/easylogging++.h"
-#include "Utils/ConsoleColor.h"
 #include "HWInterface/RegManager.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
 #include <bitset>
 
 using namespace Ph2_HwInterface;

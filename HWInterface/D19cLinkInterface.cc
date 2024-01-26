@@ -1,11 +1,11 @@
 #include "HWInterface/D19cLinkInterface.h"
-#include "HWInterface/ExceptionHandler.h"
-#include "HWInterface/RegManager.h"
-#include <thread>
-#include "Utils/easylogging++.h"
-#include "Utils/ConsoleColor.h"
 #include "HWDescription/BeBoard.h"
 #include "HWDescription/OpticalGroup.h"
+#include "HWInterface/ExceptionHandler.h"
+#include "HWInterface/RegManager.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
+#include <thread>
 
 using namespace Ph2_HwDescription;
 

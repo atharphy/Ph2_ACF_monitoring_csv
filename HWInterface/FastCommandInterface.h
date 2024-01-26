@@ -25,17 +25,17 @@ class FastCommandInterface
 
   protected:
     FastCommand fFastCmd;
-    RegManager* fTheRegManager {nullptr};
+    RegManager* fTheRegManager{nullptr};
 
   public: // virtual functions
     void setDuration(uint32_t pDuration) { fFastCmd.duration = pDuration; }
 
-    virtual void SendGlobalReSync(uint8_t pDuration = 0); // 1 clk cycle
-    virtual void SendGlobalCalPulse(uint8_t pDuration = 0); // 1 clk cycle
-    virtual void SendGlobalL1A(uint8_t pDuration = 0); // 1 clk cycle
-    virtual void SendGlobalCounterReset(uint8_t pDuration = 0); // 1 clk cycle
-    virtual void SendGlobalCounterResetResync(uint8_t pDuration = 0); // 1 clk cycle  // BC0 + ReScync
-    virtual void SendGlobalCounterResetL1A(uint8_t pDuration = 0); // 1 clk cycle  // BC0 + ReScync
+    virtual void SendGlobalReSync(uint8_t pDuration = 0);               // 1 clk cycle
+    virtual void SendGlobalCalPulse(uint8_t pDuration = 0);             // 1 clk cycle
+    virtual void SendGlobalL1A(uint8_t pDuration = 0);                  // 1 clk cycle
+    virtual void SendGlobalCounterReset(uint8_t pDuration = 0);         // 1 clk cycle
+    virtual void SendGlobalCounterResetResync(uint8_t pDuration = 0);   // 1 clk cycle  // BC0 + ReScync
+    virtual void SendGlobalCounterResetL1A(uint8_t pDuration = 0);      // 1 clk cycle  // BC0 + ReScync
     virtual void SendGlobalCounterResetCalPulse(uint8_t pDuration = 0); // 1 clk cycle  // BC0 + ReScync
     virtual void SendGlobalCustomFastCommands(std::vector<FastCommand>& pFastCmd);
     virtual void ComposeFastCommand(const FastCommand& pFastCommand);

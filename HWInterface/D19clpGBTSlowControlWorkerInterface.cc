@@ -1,14 +1,12 @@
 #include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
-#include "Utils/ConsoleColor.h"
-#include "HWInterface/RegManager.h"
 #include "HWDescription/Chip.h"
 #include "HWDescription/ChipRegItem.h"
+#include "HWInterface/RegManager.h"
 #include "Utils/ConsoleColor.h"
 
 namespace Ph2_HwInterface
 {
-D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(RegManager* theRegManager)
-    : D19cCommandProcessorInterface(theRegManager)
+D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(RegManager* theRegManager) : D19cCommandProcessorInterface(theRegManager)
 {
     PrintState();
     LOG(INFO) << BOLDYELLOW << "D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface Constructor" << RESET;

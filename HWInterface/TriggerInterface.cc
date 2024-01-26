@@ -5,7 +5,7 @@
 
 namespace Ph2_HwInterface
 {
-TriggerInterface::TriggerInterface(RegManager *theRegManager) : fTheRegManager(theRegManager) {}
+TriggerInterface::TriggerInterface(RegManager* theRegManager) : fTheRegManager(theRegManager) {}
 
 TriggerInterface::~TriggerInterface() {}
 
@@ -15,10 +15,7 @@ bool TriggerInterface::SetNTriggersToAccept(uint32_t pNTriggersToAccept)
     return false;
 }
 
-void TriggerInterface::ResetTriggerFSM()
-{
-    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::ResetTriggerFSM is absent" << RESET;
-}
+void TriggerInterface::ResetTriggerFSM() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::ResetTriggerFSM is absent" << RESET; }
 
 void TriggerInterface::ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig)
 {
@@ -37,15 +34,9 @@ bool TriggerInterface::Stop()
     return false;
 }
 
-void     TriggerInterface::Pause()
-{
-    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::Start is absent" << RESET;
-}
+void TriggerInterface::Pause() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::Start is absent" << RESET; }
 
-void     TriggerInterface::Resume()
-{
-    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::Stop is absent" << RESET;
-}
+void TriggerInterface::Resume() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::Stop is absent" << RESET; }
 
 uint32_t TriggerInterface::GetTriggerState()
 {

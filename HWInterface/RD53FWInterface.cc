@@ -8,14 +8,17 @@
 */
 
 #include "HWInterface/RD53FWInterface.h"
-#include "HWInterface/RD53Interface.h"
 #include "HWDescription/BeBoard.h"
+#include "HWInterface/RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard) : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), ddr3Offset(0), FWinfo(0) {}
+RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), ddr3Offset(0), FWinfo(0)
+{
+}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 {

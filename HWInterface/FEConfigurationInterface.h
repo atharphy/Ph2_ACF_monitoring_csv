@@ -6,9 +6,9 @@
 
 namespace Ph2_HwDescription
 {
-    class ChipRegItem;
-    class Chip;
-}
+class ChipRegItem;
+class Chip;
+} // namespace Ph2_HwDescription
 namespace Ph2_HwInterface
 {
 struct Configuration
@@ -59,7 +59,7 @@ class FEConfigurationInterface
     void              setRegisterTracking(uint8_t pTrackRegisters) { fTrackRegisters = pTrackRegisters; }
 
   protected:
-    RegManager*       fTheRegManager {nullptr};
+    RegManager*       fTheRegManager{nullptr};
     Configuration     fConfiguration;
     uint8_t           fTrackRegisters{0};
     uint8_t           fNReadoutChip{0};

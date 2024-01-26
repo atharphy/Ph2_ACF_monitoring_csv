@@ -1,7 +1,7 @@
 #include "HWInterface/D19cOpticalInterface.h"
+#include "HWDescription/Chip.h"
 #include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
 #include "HWInterface/RegManager.h"
-#include "HWDescription/Chip.h"
 
 using namespace Ph2_HwDescription;
 
@@ -11,10 +11,7 @@ namespace Ph2_HwInterface
 // # Constructors #
 // #########################################
 
-D19cOpticalInterface::D19cOpticalInterface(RegManager* theRegMaster) : FEConfigurationInterface(theRegMaster)
-{
-    fType = ConfigurationType::IC;
-}
+D19cOpticalInterface::D19cOpticalInterface(RegManager* theRegMaster) : FEConfigurationInterface(theRegMaster) { fType = ConfigurationType::IC; }
 
 D19cOpticalInterface::~D19cOpticalInterface() {}
 // ##########################################

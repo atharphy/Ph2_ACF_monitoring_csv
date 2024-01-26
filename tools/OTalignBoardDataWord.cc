@@ -137,7 +137,7 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
             cLineCnfg.fPattern       = 0xEA;
             cLineCnfg.fPatternPeriod = 8;
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-            cAligned = cAlignerInterface->IsLineWordAligned();
+            cAligned                = cAlignerInterface->IsLineWordAligned();
             cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
             if(!cAligned)
             {
