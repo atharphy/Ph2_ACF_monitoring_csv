@@ -490,7 +490,7 @@ void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
     delete fL1ReadoutInterface;
-    fL1ReadoutInterface = new D19cPSCounterFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+    fL1ReadoutInterface = new D19cPSCounterFWInterface(this);
     static_cast<D19cPSCounterFWInterface*>(fL1ReadoutInterface)->LinkFEConfigurationInterface(fFEConfigurationInterface);
     LOG(INFO) << BOLDYELLOW << "Initialized D19cPSCounterFWInterface ..." << fL1ReadoutInterface << RESET;
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
@@ -500,7 +500,7 @@ void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
     delete fL1ReadoutInterface;
-    fL1ReadoutInterface = new D19cL1ReadoutInterface(this->getId(), this->getUri(), this->getAddressTable());
+    fL1ReadoutInterface = new D19cL1ReadoutInterface(this);
     LOG(INFO) << BOLDYELLOW << "Initialized D19cL1ReadoutInterface ..." << fL1ReadoutInterface << RESET;
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
     fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);

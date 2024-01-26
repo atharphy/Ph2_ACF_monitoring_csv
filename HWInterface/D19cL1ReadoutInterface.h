@@ -45,11 +45,12 @@ const uint16_t HITS_CBC     = 254;
 
 namespace Ph2_HwInterface
 {
+
+class RegManager;
 class D19cL1ReadoutInterface : public L1ReadoutInterface
 {
   public:
-    D19cL1ReadoutInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cL1ReadoutInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cL1ReadoutInterface(RegManager* theRegManager);
     ~D19cL1ReadoutInterface();
 
   public:
