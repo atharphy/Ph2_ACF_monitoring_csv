@@ -4,8 +4,14 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cPSTestBoardFWInterface::D19cPSTestBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler) : BeBoardFWInterface(puHalConfigFileName, pBoardId) {}
-D19cPSTestBoardFWInterface::D19cPSTestBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler) : BeBoardFWInterface(pId, pUri, pAddressTable) {}
+D19cPSTestBoardFWInterface::D19cPSTestBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard)
+{
+}
+D19cPSTestBoardFWInterface::D19cPSTestBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard)
+{
+}
 D19cPSTestBoardFWInterface::~D19cPSTestBoardFWInterface() {}
 
 void D19cPSTestBoardFWInterface::PSInterfaceBoard_PowerOn_SSA(float VDDPST, float DVDD, float AVDD, float VBF, float BG, uint8_t ENABLE)

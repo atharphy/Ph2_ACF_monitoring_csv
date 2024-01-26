@@ -2,6 +2,7 @@
 #define _D19cCommandProcessorInterface_H__
 
 #include "HWInterface/CommandProcessorInterface.h"
+#include <map>
 
 namespace CommandProcessorArbitrators
 {
@@ -22,11 +23,11 @@ const std::map<int, std::string> REPLY_ARBITRATOR_FSM_STATE_MAP{{0, "UNDEFINED"}
 
 namespace Ph2_HwInterface
 {
+class RegManager;
 class D19cCommandProcessorInterface : public CommandProcessorInterface
 {
   public:
-    D19cCommandProcessorInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cCommandProcessorInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cCommandProcessorInterface(RegManager* theRegManager);
     ~D19cCommandProcessorInterface();
 
   public:

@@ -1,14 +1,14 @@
 #ifndef _FEConfigurationInterface_H__
 #define _FEConfigurationInterface_H__
 
-#include "HWDescription/BeBoard.h"
-#include "HWDescription/Chip.h"
-#include "HWDescription/ChipRegItem.h"
-#include "HWInterface/RegManager.h"
-#include "Utils/Utilities.h"
-#include "Utils/easylogging++.h"
 #include <string>
+#include <vector>
 
+namespace Ph2_HwDescription
+{
+class ChipRegItem;
+class Chip;
+} // namespace Ph2_HwDescription
 namespace Ph2_HwInterface
 {
 struct Configuration
@@ -35,55 +35,22 @@ enum class ConfigurationType
     SLAVE = 4  // to an I2C slave on the optical link
 };
 
-class FEConfigurationInterface : public RegManager
+class RegManager;
+
+class FEConfigurationInterface
 {
   public:
-    FEConfigurationInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    FEConfigurationInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
-    ~FEConfigurationInterface();
+    FEConfigurationInterface(RegManager* theRegManager);
+    virtual ~FEConfigurationInterface();
 
   public:
-    virtual bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::MultiWrite is absent" << RESET;
-        return false;
-    }
-
-    virtual bool MultiRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::MultiRead is absent" << RESET;
-        return 0;
-    }
-
-    virtual bool SingleWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::SingleWrite is absent" << RESET;
-        return false;
-    }
-
-    virtual bool MultiWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::MultiWriteRead is absent" << RESET;
-        return false;
-    }
-
-    virtual bool SingleWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::SingleWrite is absent" << RESET;
-        return false;
-    }
-
-    virtual bool SingleRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::SingleRead is absent" << RESET;
-        return 0;
-    }
-
-    virtual void PrintStatus()
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::PrintStatus is absent" << RESET;
-        return;
-    }
+    virtual bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems);
+    virtual bool MultiRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems);
+    virtual bool SingleWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
+    virtual bool MultiWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem);
+    virtual bool SingleWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
+    virtual bool SingleRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
+    virtual void PrintStatus();
 
     void Configure(Configuration pConfiguration);
 
@@ -92,6 +59,7 @@ class FEConfigurationInterface : public RegManager
     void              setRegisterTracking(uint8_t pTrackRegisters) { fTrackRegisters = pTrackRegisters; }
 
   protected:
+    RegManager*       fTheRegManager{nullptr};
     Configuration     fConfiguration;
     uint8_t           fTrackRegisters{0};
     uint8_t           fNReadoutChip{0};

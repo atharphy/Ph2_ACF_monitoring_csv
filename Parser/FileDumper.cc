@@ -166,7 +166,7 @@ void FileDumper::dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode,
 void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybrid* theHybrid)
 {
     pugi::xml_node theHybridNode                                 = theMotherNode.append_child(HYBRID_NODE_NAME);
-    theHybridNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME)     = std::to_string(theHybrid->getId()).c_str();
+    theHybridNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME)     = std::to_string(theHybrid->getId() % 2).c_str();
     theHybridNode.append_attribute(HYBRID_ENABLE_ATTRIBUTE_NAME) = "1"; // If it was disabled, it would not be here
     theHybridNode.append_attribute(COMMON_RESET_ATTRIBUTE_NAME)  = (theHybrid->getReset() > 0) ? "1" : "0";
 
@@ -177,7 +177,8 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
         auto        theCICFilePathNode                                  = theHybridNode.append_child(theCICFilePathNodeName.c_str());
         theCICFilePathNode.append_attribute(COMMON_PATH_ATTRIBUTE_NAME) = fOutputDirectory.c_str();
 
-        std::string theFileName = "BE" + std::to_string(theHybrid->getBeBoardId()) + "_OG" + std::to_string(theHybrid->getOpticalGroupId()) + "_FE" + std::to_string(theHybrid->getId()) + "_CIC.txt";
+        std::string theFileName =
+            "BE" + std::to_string(theHybrid->getBeBoardId()) + "_OG" + std::to_string(theHybrid->getOpticalGroupId()) + "_FE" + std::to_string(theHybrid->getId() % 2) + "_CIC.txt";
         std::string theFullFileName = fOutputDirectory + theFileName;
         LOG(DEBUG) << BOLDBLUE << "Dumping CIC configuration to " << theFullFileName << RESET;
         cCic->saveRegMap(theFullFileName);
@@ -232,7 +233,7 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
         throw std::runtime_error("FileDumper error: Readout chip type not recognized");
 
     std::string theFileName = "BE" + std::to_string(theReadoutChip->getBeBoardId()) + "_OG" + std::to_string(theReadoutChip->getOpticalGroupId()) + "_FE" +
-                              convertToString(theReadoutChip->getHybridId()) + "_Chip" + convertToString(theReadoutChip->getId());
+                              convertToString(theReadoutChip->getHybridId() % 2) + "_Chip" + convertToString(theReadoutChip->getId());
     if(theReadoutChip->getFrontEndType() == FrontEndType::SSA || theReadoutChip->getFrontEndType() == FrontEndType::SSA2) theFileName += "SSA";
     if(theReadoutChip->getFrontEndType() == FrontEndType::MPA || theReadoutChip->getFrontEndType() == FrontEndType::MPA2) theFileName += "MPA";
     theFileName += ".txt";

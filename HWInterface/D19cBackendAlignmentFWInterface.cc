@@ -1,15 +1,15 @@
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "HWDescription/Chip.h"
+#include "HWInterface/RegManager.h"
+#include "Utils/ConsoleColor.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable) {}
-D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId)
-{
-    LOG(INFO) << BOLDYELLOW << "D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface Constructor" << RESET;
-}
+D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(RegManager* theRegManager) : fTheRegManager(theRegManager) {}
 D19cBackendAlignmentFWInterface::~D19cBackendAlignmentFWInterface() {}
+
 void D19cBackendAlignmentFWInterface::SetAlignerObject(AlignerObject pAlignerObject)
 {
     fAlignerObject.fHybrid  = (pAlignerObject.fHybrid);
@@ -167,12 +167,12 @@ void D19cBackendAlignmentFWInterface::SendCommand(std::string pCmdToTuner)
                    << " on Hybrid#" << +fAlignerObject.fHybrid << " for Chip#" << +fAlignerObject.fChip << " Optical set to " << +fAlignerObject.fOptical << " Cmd type set to "
                    << +fAlignerObject.fType << " Tuner mode set to " << +fLineConfiguration.fMode << RESET;
 
-    WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", fAlignerObject.fCommand);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", fAlignerObject.fCommand);
     std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
 }
 void D19cBackendAlignmentFWInterface::GetReply(std::string pCmdToTuner)
 {
-    fAlignerObject.fReply = ReadReg("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
+    fAlignerObject.fReply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
     if(pCmdToTuner == "ReturnConfig")
     {
         std::map<std::string, int> cCnfgMap = (fAlignerObject.fOptical == 1) ? fTunerCnfgBitMap_Optical : fTunerCnfgBitMap_Electrical;
