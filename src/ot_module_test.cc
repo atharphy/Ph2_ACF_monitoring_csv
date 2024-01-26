@@ -211,6 +211,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("readSensorTemperature", "Read sensor temperature", ArgvParser::NoOptionAttribute);
     cmd.defineOption("measureQuickNoise", "measure occupancy of all channels");
     cmd.defineOption("measureChannelTransmission", "measure data about transmission for given acquisition card channel", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("latency", "scan the trigger latency", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("stublatency", "scan the stub latency", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -221,20 +223,22 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
-    bool        batchMode        = (cmd.foundOption("batch")) ? true : false;
-    bool        cCheckData       = (cmd.foundOption("checkData"));
-    bool        cSaveToFile      = cmd.foundOption("save");
-    std::string cSkip            = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
-    std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
-    std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
-    std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    int         cKiraPort        = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
-    std::string cKiraID          = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
-    bool        cKiraCalibration = cmd.foundOption("kiracalibration");
-    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
-    // int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
+    std::string cHWFile             = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
+    bool        batchMode           = (cmd.foundOption("batch")) ? true : false;
+    bool        cCheckData          = (cmd.foundOption("checkData"));
+    bool        cSaveToFile         = cmd.foundOption("save");
+    std::string cSkip               = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
+    std::string cInjectionSource    = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
+    std::string cSrcLnkTst          = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
+    std::string cModuleId           = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
+    int         cKiraPort           = std::stoi((cmd.foundOption("kiraport")) ? cmd.optionValue("kiraport") : "7010");
+    std::string cKiraID             = (cmd.foundOption("kiraid")) ? cmd.optionValue("kiraid") : "myArduino";
+    bool        cKiraCalibration    = cmd.foundOption("kiracalibration");
+    std::string cDirectory          = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    bool        cPulseShape         = (cmd.foundOption("pulseShape")) ? true : false;
+    int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
+    bool        cLatency            = (cmd.foundOption("latency")) ? true : false;
+    bool        cStubLatency        = (cmd.foundOption("stublatency")) ? true : false;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -293,7 +297,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("vtrxLightOff"))
     {
-        cTool.ConfigureHw(true);
+        cTool.ConfigureHw();
         LOG(INFO) << BOLDBLUE << "Turn off light output of VTRX..." << RESET;
         OTVTRXLightOff cLightOff;
         cLightOff.Inherit(&cTool);
@@ -308,65 +312,65 @@ int main(int argc, char* argv[])
         std::ofstream* outStream = new std::ofstream(cmd.optionValue("writeJson"));
         cTool.setOfStream(outStream);
     }
-    /*
-            if(cmd.foundOption("readTemperatures"))
-            {
-                LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
-                auto cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
-                OTTemperature cTemperatureReader;
-                cTemperatureReader.Inherit(&cTool);
-                cTemperatureReader.SetGain(cGain);
-            cTemperatureReader.LoopReadout(true);
-                StartInfo theStartInfo;
-                theStartInfo.setRunNumber(cRunNumber);
-                cTemperatureReader.Start(theStartInfo);
-                cTemperatureReader.waitForRunToBeCompleted();
-            }
 
-            if(cmd.foundOption("readSensorTemperature"))
-            {
-                LOG(INFO) << BOLDBLUE << "Reading sensor temperature" << RESET;
-                OTSensorTemperature cSensorTemperature;
-                cSensorTemperature.Inherit(&cTool);
-                StartInfo theStartInfo;
-                theStartInfo.setRunNumber(cRunNumber);
-                cSensorTemperature.Start(theStartInfo);
-                cSensorTemperature.waitForRunToBeCompleted();
-            }
+    if(cmd.foundOption("readTemperatures"))
+    {
+        LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
+        auto          cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
+        OTTemperature cTemperatureReader;
+        cTemperatureReader.Inherit(&cTool);
+        cTemperatureReader.SetGain(cGain);
+        cTemperatureReader.LoopReadout(true);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cTemperatureReader.Start(theStartInfo);
+        cTemperatureReader.waitForRunToBeCompleted();
+    }
 
-            if(cmd.foundOption("readlpGBTIDs"))
-            {
-                LOG(INFO) << BOLDBLUE << "Reading lpGBT IDs" << RESET;
-                OTlpGBTID clpGBTDIReader;
-                clpGBTDIReader.Inherit(&cTool);
-                StartInfo theStartInfo;
-                theStartInfo.setRunNumber(cRunNumber);
-                clpGBTDIReader.Start(theStartInfo);
-                clpGBTDIReader.waitForRunToBeCompleted();
-            }
+    if(cmd.foundOption("readSensorTemperature"))
+    {
+        LOG(INFO) << BOLDBLUE << "Reading sensor temperature" << RESET;
+        OTSensorTemperature cSensorTemperature;
+        cSensorTemperature.Inherit(&cTool);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cSensorTemperature.Start(theStartInfo);
+        cSensorTemperature.waitForRunToBeCompleted();
+    }
 
-            if(cmd.foundOption("measureQuickNoise"))
-            {
-                LOG(INFO) << BOLDBLUE << "Computing occupancy over 10000 triggers" << RESET;
-                OTQuickNoise cQuickNoiseReader;
-                cQuickNoiseReader.Inherit(&cTool);
-                StartInfo theStartInfo;
-                theStartInfo.setRunNumber(cRunNumber);
-                cQuickNoiseReader.Start(theStartInfo);
-                cQuickNoiseReader.waitForRunToBeCompleted();
-            }
+    if(cmd.foundOption("readlpGBTIDs"))
+    {
+        LOG(INFO) << BOLDBLUE << "Reading lpGBT IDs" << RESET;
+        OTlpGBTID clpGBTDIReader;
+        clpGBTDIReader.Inherit(&cTool);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        clpGBTDIReader.Start(theStartInfo);
+        clpGBTDIReader.waitForRunToBeCompleted();
+    }
 
-            if(cTansmissionChannel > 0)
-            {
-                LOG(INFO) << BOLDBLUE << "Getting transciever data" << RESET;
-                OTLightTransmission cLightTransmissionReader(cTansmissionChannel);
-                cLightTransmissionReader.Inherit(&cTool);
-                StartInfo theStartInfo;
-                theStartInfo.setRunNumber(cRunNumber);
-                cLightTransmissionReader.Start(theStartInfo);
-                cLightTransmissionReader.waitForRunToBeCompleted();
-            }
-        */
+    if(cmd.foundOption("measureQuickNoise"))
+    {
+        LOG(INFO) << BOLDBLUE << "Computing occupancy over 10000 triggers" << RESET;
+        OTQuickNoise cQuickNoiseReader;
+        cQuickNoiseReader.Inherit(&cTool);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cQuickNoiseReader.Start(theStartInfo);
+        cQuickNoiseReader.waitForRunToBeCompleted();
+    }
+
+    if(cTansmissionChannel > 0)
+    {
+        LOG(INFO) << BOLDBLUE << "Getting transciever data" << RESET;
+        OTLightTransmission cLightTransmissionReader(cTansmissionChannel);
+        cLightTransmissionReader.Inherit(&cTool);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cLightTransmissionReader.Start(theStartInfo);
+        cLightTransmissionReader.waitForRunToBeCompleted();
+    }
+
     if(cmd.foundOption("calibrateADC"))
     {
         LOG(INFO) << BOLDBLUE << "Calibrating ADC.." << RESET;
@@ -548,11 +552,9 @@ int main(int argc, char* argv[])
     }
 
     // align CIC-lpGBT-BE
-
-    bool cReInitialize = true;
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
-        cTool.ConfigureHw(cReInitialize);
+        cTool.ConfigureHw();
         // just to check
         // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         // for(const auto cBoard: *cTool.fDetectorContainer)
@@ -568,14 +570,13 @@ int main(int argc, char* argv[])
         // }
 
         // map MPA outputs for PS module
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
-        cPSAlignment.Initialise();
-        // LORENZO 2023_06_29
-        cPSAlignment.MapMPAOutputs(); // for MPA only. MPA2 OutSetting writtent during the configure hardware step above.
-        // LORENZO 2023_06_29
-        cPSAlignment.ConfigureDefaultAlignmentParameters();
-        cPSAlignment.Reset();
+        cPSAlignment.Start(theStartInfo);
+        cPSAlignment.waitForRunToBeCompleted();
 
         // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
@@ -606,8 +607,6 @@ int main(int argc, char* argv[])
         cCicAligner.Inherit(&cTool);
 
         // Doesnt work PSv2
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(cRunNumber);
         cCicAligner.Start(theStartInfo);
         cCicAligner.waitForRunToBeCompleted();
         //\Doesnt work PSv2
@@ -626,12 +625,11 @@ int main(int argc, char* argv[])
         // }
     }
     // reconfigure hardware (ie reload chip registers) without running the alignment
-    if(!cmd.foundOption("read") && cmd.foundOption("configure")) { cTool.ConfigureHw(cReInitialize); }
+    if(!cmd.foundOption("read") && cmd.foundOption("configure")) { cTool.ConfigureHw(); }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
     {
-        // //cReInitialize=false;
-        cTool.ConfigureHw(cReInitialize);
+        cTool.ConfigureHw();
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
@@ -1230,7 +1228,7 @@ int main(int argc, char* argv[])
         cPedeNoise.Inherit(&cTool);
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
-        // cPedeNoise.Validate();
+        cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.Reset();
@@ -1480,7 +1478,6 @@ int main(int argc, char* argv[])
 
     if(cPulseShape)
     {
-        std::cout << "I am in" << std::endl;
         Timer t;
         t.start();
         CBCPulseShape cCBCPulseShape;
@@ -1512,6 +1509,16 @@ int main(int argc, char* argv[])
 
         t.stop();
         t.show("Time to check stubs on shared channels");
+    }
+
+    if(cLatency || cStubLatency)
+    {
+        LatencyScan cLatencyScan;
+        cLatencyScan.Inherit(&cTool);
+        cLatencyScan.Initialize();
+        if(cLatency) cLatencyScan.ScanLatency();
+        if(cStubLatency) cLatencyScan.StubLatencyScan();
+        cLatencyScan.writeObjects();
     }
 
     cTool.SaveResults();

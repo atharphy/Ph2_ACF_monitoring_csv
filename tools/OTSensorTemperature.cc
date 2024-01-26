@@ -1,6 +1,8 @@
 #include "OTSensorTemperature.h"
+#ifdef __USE_ROOT__
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+#endif
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -27,6 +29,7 @@ void OTSensorTemperature::Running()
 
 void OTSensorTemperature::ReadThermistors(const OpticalGroup* pOpticalGroup)
 {
+#ifdef __USE_ROOT__
     std::map<std::string, std::pair<std::string, std::string>> cNTCMap = pOpticalGroup->fNTCMap;
     for(auto it = cNTCMap.begin(); it != cNTCMap.end(); it++)
     {
@@ -43,6 +46,7 @@ void OTSensorTemperature::ReadThermistors(const OpticalGroup* pOpticalGroup)
             *(fOfStream) << j << std::endl;
         }
     }
+#endif
 }
 
 // Read thermistor temperature

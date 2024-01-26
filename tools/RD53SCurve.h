@@ -80,7 +80,6 @@ class SCurve : public CalibBase
     bool   doUpdateChip;
     bool   saveBinaryData;
 
-    int  theCurrentRun;
     bool doSaveData;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;

@@ -48,19 +48,19 @@ void InjectionDelay::ConfigureCalibration()
 
 void InjectionDelay::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[InjectionDelay::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[InjectionDelay::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(PixelAlive::saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_InjectionDelay.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_InjectionDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     InjectionDelay::run();
     InjectionDelay::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
+    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
     InjectionDelay::sendData();
     la.sendData();
 }
@@ -91,13 +91,17 @@ void InjectionDelay::Stop()
 
 void InjectionDelay::localConfigure(const std::string& histoFileName, int currentRun)
 {
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
+
     histos                = nullptr;
     la.histos             = nullptr;
     la.PixelAlive::histos = nullptr;
     PixelAlive::histos    = nullptr;
-    theCurrentRun         = currentRun;
 
-    LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -174,7 +178,7 @@ void InjectionDelay::run()
 
 void InjectionDelay::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, PixelAlive::doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
     la.draw(false);
 
 #ifdef __USE_ROOT__
@@ -182,13 +186,7 @@ void InjectionDelay::draw(bool saveData)
 
     if(PixelAlive::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
-    }
-
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookHistoSaveMetadata(histos);
     InjectionDelay::fillHisto();
     histos->process();
 

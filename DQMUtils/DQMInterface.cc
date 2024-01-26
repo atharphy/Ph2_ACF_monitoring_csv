@@ -91,7 +91,7 @@ void DQMInterface::startProcessingData(const StartInfo& theStartInfo)
     {
         LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result Directory: " << e.what() << RESET;
     }
-    std::string fileName = resultDirectoryName + "/Result.root";
+    std::string fileName = resultDirectoryName + "/Results.root";
     fOutputFile          = new TFile(fileName.c_str(), "RECREATE");
     for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, fSettingsMap);
     fRunning       = true;

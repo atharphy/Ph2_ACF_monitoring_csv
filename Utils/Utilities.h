@@ -57,6 +57,12 @@ void myflush(std::istream& in);
 
 std::string getResultDirectoryName(const StartInfo& theStartInfo);
 
+std::string getResultDirectoryName(const int runNumber);
+
+int returnPreviousRunNumber(std::string cFileName);
+
+int returnAndIncreaseRunNumber(std::string cFileName);
+
 /*!
  * \brief Wait for Enter key press
  */
@@ -103,6 +109,17 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
  * \param s input string
  * \return Result with variables expanded */
 std::string expandEnvironmentVariables(std::string s);
+
+/*! \brief Convert value to a string AVOIDING THE USAGE OF std::to_string()
+ * \param value input value
+ * \return Result string */
+template <typename T>
+std::string convertToString(T value)
+{
+    std::stringstream ss;
+    ss << +value;
+    return ss.str();
+}
 
 // get run number from file
 void getRunNumber(const std::string& pPath, int& pRunNumber, bool pIncrement = true);

@@ -29,9 +29,18 @@ def getNewRunNumber():
 ###########OPTIONS
 theStateMachine = Ph2_ACF_StateMachine.StateMachine()
 listOfCalibration = theStateMachine.getCalibrationList()
+
 listOfCalibrationPrint = ""
-for calibration in listOfCalibration:
-    listOfCalibrationPrint = listOfCalibrationPrint + calibration + "\n"
+for hardwareType, calibrationListPerHardware in listOfCalibration.items():
+    listOfCalibrationPrint = listOfCalibrationPrint + "--------------------------------------------------------------------------\n";
+    listOfCalibrationPrint = listOfCalibrationPrint + "\033[1m\033[32m" + hardwareType + " Calibrations\033[0m" + "\n"
+    listOfCalibrationPrint = listOfCalibrationPrint + "--------------------------------------------------------------------------\n";
+    for calibrationName, subCalibrationList in calibrationListPerHardware.items():
+        listOfCalibrationPrint = listOfCalibrationPrint + "\033[1m\033[34m" + "\t" + calibrationName + "\033[0m" + "\n"
+        for subCalibration in subCalibrationList:
+            listOfCalibrationPrint = listOfCalibrationPrint + "\t\t" + subCalibration[0]
+            if subCalibration[1] != "": listOfCalibrationPrint = listOfCalibrationPrint + ": " + subCalibration[1]
+            listOfCalibrationPrint = listOfCalibrationPrint + "\n"
 
 parser = argparse.ArgumentParser(description='Command line parser of skim options', formatter_class=RawTextHelpFormatter)
 parser.add_argument('-f', dest='configurationFile', help='xml configuration file', required = True)

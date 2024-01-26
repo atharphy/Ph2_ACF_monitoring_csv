@@ -48,6 +48,12 @@ Cbc::Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     setFrontEndType(FrontEndType::CBC3);
 }
 
+void Cbc::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ChipIDFuse[1-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BandgapFuse$"), RegisterType::ReadOnly));
+}
+
 // load fRegMap from file
 void Cbc::loadfRegMap(const std::string& filename)
 {
@@ -55,6 +61,7 @@ void Cbc::loadfRegMap(const std::string& filename)
 
     if(file)
     {
+        initializeFreeRegisters();
         std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;

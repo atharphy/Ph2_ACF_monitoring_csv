@@ -34,8 +34,10 @@ void MonitorDQMPlotCBC::book(TFile* theOutputFile, DetectorContainer& theDetecto
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("CBC")) bookCBCPlots(theOutputFile, theDetectorStructure, registerName);
-    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT")) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName);
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("CBC"))
+        if(registerName.second) bookCBCPlots(theOutputFile, theDetectorStructure, registerName.first);
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+        if(registerName.second) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName.first);
 }
 
 //========================================================================================================================

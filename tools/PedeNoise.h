@@ -47,12 +47,13 @@ class PedeNoise : public Tool
     void Resume() override;
     void Reset();
 
+    static std::string fCalibrationDescription;
+
   protected:
     void measureSCurves(uint16_t pStripStartValue = 0, uint16_t pPixelStartValue = 0);
     void findPedestal(bool forceAllChannels = false);
     void extractPedeNoise();
     void disableStubLogic();
-    void reloadStubLogic();
     void cleanContainerVector();
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
@@ -76,6 +77,7 @@ class PedeNoise : public Tool
     uint32_t fNeventsForValidation{0};
     float    fMaskingThreshold{0};
     bool     fMaskNoisyChannels{0};
+    uint16_t fPedeNoiseLatency{0};
 
     DetectorDataContainer*                     fThresholdAndNoiseContainer;
     std::map<uint16_t, DetectorDataContainer*> fSCurveStripOccupancyMap, fSCurvePixelOccupancyMap;

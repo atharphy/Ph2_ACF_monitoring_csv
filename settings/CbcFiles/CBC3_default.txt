@@ -4,7 +4,7 @@
 * RegName                                    	Page	Addr	Defval	Value
 *--------------------------------------------------------------------------------
 FeCtrl&TrgLat2                                  0x00	0x00	0x7c	0x40
-TriggerLatency1                               	0x00	0x01	0xc8	0xC8
+TriggerLatency1                               	0x00	0x01	0xc8	0x6C
 BetaMult&SLVS                                	0x00	0x02	0x18	0x51
 Ipre1                                        	0x00	0x03	0x0a	0x2D
 Ipre2                                        	0x00	0x04	0x2e	0x50
@@ -13,13 +13,13 @@ Ipa                                          	0x00	0x06	0x6A	0x50
 Ipaos                                        	0x00	0x07	0x4B	0x2D
 Icomp                                        	0x00	0x09	0x23	0x23
 Vplus1&2                                       	0x00	0x0B	0x77	0x77
-HIP&TestMode                                  	0x00	0x0C	0x10	0x00
-TestPulsePotNodeSel                           	0x00	0x0D	0x00	0x00
+HIP&TestMode                                  	0x00	0x0C	0x10	0x40
+TestPulsePotNodeSel                           	0x00	0x0D	0x00	0xC0
 TestPulseDel&ChanGroup                      	0x00	0x0E	0x00	0x00
-MiscTestPulseCtrl&AnalogMux                    	0x00	0x0F	0x00	0x20
+MiscTestPulseCtrl&AnalogMux                    	0x00	0x0F	0x00	0x40
 CALIbias                                       	0x00	0x10	0x64	0x63
 CALVcasc                                       	0x00	0x11	0x3f	0x3F
-Pipe&StubInpSel&Ptwidth                        	0x00	0x12	0x03	0x5F
+Pipe&StubInpSel&Ptwidth                        	0x00	0x12	0x03	0x0E
 CoincWind&Offset34                            	0x00	0x13	0x00	0x00
 CoincWind&Offset12                             	0x00	0x14	0x00	0x00
 BandgapFuse                                  	0x00	0x15	0x00	0x40
@@ -27,7 +27,7 @@ ChipIDFuse1                                  	0x00	0x16	0x00	0x00
 ChipIDFuse2                                  	0x00	0x17	0x00	0x00
 ChipIDFuse3                                 	0x00	0x18	0x00	0x00
 LayerSwap&CluWidth                              0x00    0x1B    0x00    0x04
-40MhzClk&Or254                                  0x00    0x1C    0x00    0x84
+40MhzClk&Or254                                  0x00    0x1C    0x00    0x8A
 *SerialIface&Error                               0x00    0x1D    0x05    0x00
 *--------------------------------------------------------------------------------
 * Channel Masks
@@ -93,8 +93,8 @@ Bend14                                          0x00    0x4E    0x87    0x87
 *--------------------------------------------------------------------------------
 * RegName                                    	Page	Addr	Defval	Value
 *--------------------------------------------------------------------------------
-VCth1                                            0x00    0x4F    0x00    0x84
-VCth2                                            0x00    0x50    0x02    0x03
+VCth1                                            0x00    0x4F    0x00    0x08
+VCth2                                            0x00    0x50    0x02    0x02
 
 *--------------------------------------------------------------------------------
 * Channel Offsets

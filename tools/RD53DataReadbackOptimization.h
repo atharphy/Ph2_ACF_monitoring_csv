@@ -69,8 +69,6 @@ class DataReadbackOptimization : public BERtest
     size_t stopValueTAP2;
     bool   invTAP2;
     bool   doUpdateChip;
-
-    int theCurrentRun;
 };
 
 #endif

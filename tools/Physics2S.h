@@ -43,6 +43,8 @@ class Physics2S : public Tool
     // void fillDataContainer(BoardContainer* const& cBoard);
     void fillDataContainer(BoardContainer* cBoard, const std::vector<Ph2_HwInterface::Event*> eventList);
 
+    static std::string fCalibrationDescription;
+
   private:
     // DetectorDataContainer f2SDataContainer;
     DetectorDataContainer fStubContainer;

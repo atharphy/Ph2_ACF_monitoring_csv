@@ -34,4 +34,13 @@ void ChipInterface::setBoard(uint16_t pBoardIdentifier)
     }
 }
 
+std::vector<std::pair<std::string, uint16_t>> ChipInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
+{
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(const auto& registerName: theRegisterList) theRegisterValues.push_back(std::make_pair(registerName, ReadChipReg(pChip, registerName)));
+    return theRegisterValues;
+}
+
 } // namespace Ph2_HwInterface

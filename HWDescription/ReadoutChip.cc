@@ -20,8 +20,5 @@ ReadoutChip::ReadoutChip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGro
 {
 }
 
-// Copy C'tor
-ReadoutChip::ReadoutChip(const ReadoutChip& chipObj) : Chip(chipObj), ChipContainer(chipObj.fChipId) {}
-
 ReadoutChip::~ReadoutChip() {}
 } // namespace Ph2_HwDescription

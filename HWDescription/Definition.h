@@ -11,8 +11,7 @@
 #ifndef _DEFINITION_H__
 #define _DEFINITION_H__
 
-#include <iostream>
-#include <map>
+#include <string>
 
 //-----------------------------------------------------------------------------
 // Glib Config Files

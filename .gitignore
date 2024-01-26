@@ -35,4 +35,5 @@ FEH_PS*/
 *.bin
 .vscode/*
 pythonUtils/__pycache__/
-settings/.vscode/settings.json
+RegisterDebugUtils/RegisterDifference
+RegisterDebugUtils/BoardRegisterDifference

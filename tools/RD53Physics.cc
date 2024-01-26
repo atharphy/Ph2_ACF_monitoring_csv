@@ -47,13 +47,13 @@ void Physics::ConfigureCalibration()
 
 void Physics::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[Physics::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Physics::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_Physics.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
@@ -66,11 +66,12 @@ void Physics::Running()
                 for(const auto cChip: *cHybrid) fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
 
     StartInfo theStartInfo;
-    theStartInfo.setRunNumber(theCurrentRun);
+    theStartInfo.setRunNumber(CalibBase::theCurrentRun);
     SystemController::Start(theStartInfo);
 
     numberOfEventsPerRun  = 0;
     corruptedEventCounter = 0;
+    LOG(INFO) << BOLDBLUE << "[Physics::Running]\t--> Run started" << RESET;
     Physics::run();
 }
 
@@ -108,7 +109,7 @@ void Physics::Stop()
     // #######################
     // # Save chip registers #
     // #######################
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(doUpdateChip);
 
     Physics::draw();
     this->SaveAndClose();
@@ -124,9 +125,8 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 {
     corruptedEventCounter = 0;
     histos                = nullptr;
-    theCurrentRun         = currentRun;
 
-    LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -141,11 +141,10 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
 #ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
-    this->InitResultFile(CalibBase::theHistoFileName);
 #endif
+    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
 }
 
 void Physics::run()
@@ -188,13 +187,7 @@ void Physics::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
-    }
-
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookHistoSaveMetadata(histos);
     Physics::fillHisto();
     histos->process();
 

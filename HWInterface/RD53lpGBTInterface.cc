@@ -36,20 +36,20 @@ uint16_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNod
 
 bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify)
 {
-    const uint16_t maxRegValue      = 0xFF;                                                            // @CONST@
     const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
 
     this->setBoard(pChip->getBeBoardId());
 
-    if(pValue > maxRegValue)
+    if(pValue > RD53Shared::setBits(RD53Shared::MAXBITCHIPREG))
     {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress << RESET;
+        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress
+                   << RESET;
         return false;
     }
 
     if(pAddress >= cMaxWriteAddress)
     {
-        LOG(ERROR) << "LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
+        LOG(WARNING) << "[RD53lpGBTInterface::WriteReg] LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
         return false;
     }
 
@@ -61,7 +61,11 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
         nAttempts++;
     } while((pVerify == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
-    if((pVerify == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
+    if((pVerify == true) && (status == false))
+    {
+        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT register writing issue" << RESET;
+        return false;
+    }
 
     return true;
 }
@@ -116,6 +120,11 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
 
+    // #########################################
+    // # Configure optical high-speed polarity #
+    // #########################################
+    this->ConfigureHighSpeedPolarity(pChip, static_cast<lpGBT*>(pChip)->getTxHSLPolarity(), static_cast<lpGBT*>(pChip)->getRxHSLPolarity());
+
     // ######################
     // # Configure Up links #
     // ######################
@@ -134,11 +143,6 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         this->ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, 3, 3, 0, 0, TxProperty.Polarity);
     }
 
-    // #################################
-    // # Configure high-speed polarity #
-    // #################################
-    this->ConfigureHighSpeedPolarity(pChip, static_cast<lpGBT*>(pChip)->getTxHSLPolarity(), static_cast<lpGBT*>(pChip)->getRxHSLPolarity());
-
     // ####################################################
     // # Programming registers as from configuration file #
     // ####################################################
@@ -156,7 +160,14 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
                 static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
             }
             else
-                RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                try
+                {
+                    RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                }
+                catch(const std::exception& e)
+                {
+                    LOG(WARNING) << BOLDRED << "Error: " << BOLDYELLOW << e.what() << RESET;
+                }
         }
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
@@ -186,7 +197,7 @@ void RD53lpGBTInterface::SetDownLinkMapping(const OpticalGroup* pOpticalGroup)
         for(const auto cChip: *cHybrid)
         {
             auto pChip = static_cast<RD53*>(cChip);
-            auto fwGr  = mapLpGBTGrCh2fwGr[pChip->getTxGroup() * 10 + pChip->getTxChannel()];
+            auto fwGr  = pChip->getTxGroup() * 2 + (pChip->getTxChannel() == 2 ? 1 : 0);
             static_cast<RD53FWInterface*>(fBoardFW)->SetDownLinkMapping(pOpticalGroup->getOpticalGroupId(), fwGr, cHybrid->getId());
         }
 }

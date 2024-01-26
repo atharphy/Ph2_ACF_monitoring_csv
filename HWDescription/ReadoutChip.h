@@ -51,7 +51,7 @@ class ReadoutChip
     ReadoutChip(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue = 255);
 
     // Copy C'tor
-    ReadoutChip(const ReadoutChip& chipObj);
+    ReadoutChip(const ReadoutChip&) = delete;
 
     ~ReadoutChip();
 
