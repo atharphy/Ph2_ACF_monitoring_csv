@@ -10,7 +10,6 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #ifndef BEBOARDFWINTERFACE_H
 #define BEBOARDFWINTERFACE_H
 
-#include "HWDescription/BeBoard.h"
 #include "HWDescription/Chip.h"
 #include "HWDescription/ChipRegItem.h"
 #include "HWDescription/Definition.h"
@@ -31,6 +30,11 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include <fstream>
 #include <iostream>
 #include <iterator>
+
+namespace Ph2_HwDescription
+{
+    class BeBoard;
+}
 
 namespace Ph2_HwInterface
 {
