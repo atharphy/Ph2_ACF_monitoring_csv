@@ -3,20 +3,19 @@
 using namespace Ph2_HwDescription;
 
 #include "HWDescription/OuterTrackerHybrid.h"
+#include "HWInterface/RegManager.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/OpticalGroup.h"
+#include <thread>
 namespace Ph2_HwInterface
 {
-D19cI2CInterface::D19cI2CInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : FEConfigurationInterface(pId, pUri, pAddressTable)
+D19cI2CInterface::D19cI2CInterface(RegManager* theRegManager) : FEConfigurationInterface(theRegManager)
 {
-    fI2CVersion = RegManager::ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version");
+    fI2CVersion = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version");
     fI2CSlaveMap.clear();
     fType = ConfigurationType::I2C;
 }
-D19cI2CInterface::D19cI2CInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : FEConfigurationInterface(puHalConfigFileName, pBoardId)
-{
-    fI2CVersion = RegManager::ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version");
-    fI2CSlaveMap.clear();
-    fType = ConfigurationType::I2C;
-}
+
 D19cI2CInterface::~D19cI2CInterface() {}
 
 void D19cI2CInterface::PrintStatus()
@@ -27,7 +26,7 @@ void D19cI2CInterface::PrintStatus()
 
     ReadErrors();
 
-    int i2c_replies_empty = ReadReg("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+    int i2c_replies_empty = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
     if(i2c_replies_empty == 0)
         LOG(INFO) << "I2C Replies Available: " << BOLDGREEN << "Yes" << RESET;
     else
@@ -127,7 +126,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                 uint32_t    final_item = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
                 std::string curreg     = "fc7_daq_cnfg.command_processor_block.i2c_address_table.slave_" + std::to_string(std::distance(fI2CSlaveMap.begin(), cIterator)) + "_config";
                 LOG(INFO) << BOLDMAGENTA << "Writing " << std::bitset<32>(final_item) << " to register " << curreg << RESET;
-                this->WriteReg(curreg, final_item);
+                fTheRegManager->WriteReg(curreg, final_item);
             }
         }
     }
@@ -312,11 +311,11 @@ bool D19cI2CInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uin
     // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     bool cFailed(false);
     // reset the I2C controller
-    RegManager::WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0x1);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0x1);
     // usleep (10);
     try
     {
-        RegManager::WriteBlockReg("fc7_daq_ctrl.command_processor_block.i2c.command_fifo", pVecSend);
+        fTheRegManager->WriteBlockReg("fc7_daq_ctrl.command_processor_block.i2c.command_fifo", pVecSend);
     }
     catch(Exception& except)
     {
@@ -369,7 +368,7 @@ bool D19cI2CInterface::ReadI2C(uint32_t pNReplies, std::vector<uint32_t>& pRepli
     while(cNReplies != pNReplies)
     {
         std::this_thread::sleep_for(std::chrono::microseconds(single_WaitingTime));
-        cNReplies = ReadReg("fc7_daq_stat.command_processor_block.i2c.nreplies");
+        cNReplies = fTheRegManager->ReadReg("fc7_daq_stat.command_processor_block.i2c.nreplies");
 
         if(counter_Attempts > max_Attempts)
         {
@@ -383,7 +382,7 @@ bool D19cI2CInterface::ReadI2C(uint32_t pNReplies, std::vector<uint32_t>& pRepli
 
     try
     {
-        pReplies = RegManager::ReadBlockReg("fc7_daq_ctrl.command_processor_block.i2c.reply_fifo", cNReplies);
+        pReplies = fTheRegManager->ReadBlockReg("fc7_daq_ctrl.command_processor_block.i2c.reply_fifo", cNReplies);
     }
     catch(Exception& except)
     {
@@ -395,13 +394,13 @@ bool D19cI2CInterface::ReadI2C(uint32_t pNReplies, std::vector<uint32_t>& pRepli
 }
 void D19cI2CInterface::ReadErrors()
 {
-    int error_counter = ReadReg("fc7_daq_stat.general.global_error.counter");
+    int error_counter = fTheRegManager->ReadReg("fc7_daq_stat.general.global_error.counter");
 
     if(error_counter == 0)
         LOG(INFO) << "No Errors detected";
     else
     {
-        std::vector<uint32_t> pErrors = RegManager::ReadBlockReg("fc7_daq_stat.general.global_error.full_error", error_counter);
+        std::vector<uint32_t> pErrors = fTheRegManager->ReadBlockReg("fc7_daq_stat.general.global_error.full_error", error_counter);
 
         for(auto& cError: pErrors)
         {
@@ -486,7 +485,7 @@ void D19cI2CInterface::ReadChipBlockReg(std::vector<uint32_t>& pVecReg)
 void D19cI2CInterface::ChipI2CRefresh()
 {
     // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1);
 }
 
 void D19cI2CInterface::BCEncodeReg(const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)

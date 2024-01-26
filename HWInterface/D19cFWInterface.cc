@@ -518,7 +518,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         if(!pBoard->isOptical())
         {
             LOG(INFO) << BOLDYELLOW << "Electrical readout.. initialize I2C interface" << RESET;
-            fFEConfigurationInterface = new D19cI2CInterface(this->getId(), this->getUri(), this->getAddressTable());
+            fFEConfigurationInterface = new D19cI2CInterface(this);
             (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
             cConfiguration.fRetry       = 0;
             cConfiguration.fVerify      = 0;
@@ -527,7 +527,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         else
         {
             LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface for FE configuration" << RESET;
-            fFEConfigurationInterface   = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
+            fFEConfigurationInterface   = new D19cOpticalInterface(this);
             cConfiguration.fRetryIC     = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.ic_retry");
             cConfiguration.fMaxRetryIC  = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_ic_retry");
             cConfiguration.fRetryI2C    = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.i2c_retry");

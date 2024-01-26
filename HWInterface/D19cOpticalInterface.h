@@ -1,16 +1,17 @@
 #ifndef _D19cOpticalInterface_H__
 #define __D19cOpticalInterface_H__
 
-#include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
 #include "HWInterface/FEConfigurationInterface.h"
 
 namespace Ph2_HwInterface
 {
+
+class RegManager;
+class D19clpGBTSlowControlWorkerInterface;
 class D19cOpticalInterface : public FEConfigurationInterface
 {
   public:
-    D19cOpticalInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cOpticalInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cOpticalInterface(RegManager* theRegManager);
     ~D19cOpticalInterface();
 
     void LinkLpGBTSlowControlWorkerInterface(D19clpGBTSlowControlWorkerInterface* pInterface) { flpGBTSlowControlWorkerInterface = pInterface; }
@@ -33,7 +34,7 @@ class D19cOpticalInterface : public FEConfigurationInterface
     std::vector<uint16_t> MultiSingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData);
 
   private:
-    D19clpGBTSlowControlWorkerInterface* flpGBTSlowControlWorkerInterface;
+    D19clpGBTSlowControlWorkerInterface* flpGBTSlowControlWorkerInterface {nullptr};
 
   private:
     // IC and FE functions

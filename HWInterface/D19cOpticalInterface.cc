@@ -1,4 +1,7 @@
 #include "HWInterface/D19cOpticalInterface.h"
+#include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
+#include "HWInterface/RegManager.h"
+#include "HWDescription/Chip.h"
 
 using namespace Ph2_HwDescription;
 
@@ -8,12 +11,10 @@ namespace Ph2_HwInterface
 // # Constructors #
 // #########################################
 
-D19cOpticalInterface::D19cOpticalInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : FEConfigurationInterface(pId, pUri, pAddressTable)
+D19cOpticalInterface::D19cOpticalInterface(RegManager* theRegMaster) : FEConfigurationInterface(theRegMaster)
 {
     fType = ConfigurationType::IC;
 }
-
-D19cOpticalInterface::D19cOpticalInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : FEConfigurationInterface(puHalConfigFileName, pBoardId) { fType = ConfigurationType::IC; }
 
 D19cOpticalInterface::~D19cOpticalInterface() {}
 // ##########################################
@@ -22,7 +23,7 @@ D19cOpticalInterface::~D19cOpticalInterface() {}
 //
 bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
     flpGBTSlowControlWorkerInterface->SelectLink(pChip->getOpticalGroupId());
     uint8_t                  cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::READ_IC : LpGBTSlowControlWorker::READ_FE;
     std::vector<ChipRegItem> cRegisterBlock;
@@ -86,7 +87,7 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
 
 bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems, bool pVerify)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
     flpGBTSlowControlWorkerInterface->SelectLink(pChip->getOpticalGroupId());
     uint8_t                  cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::WRITE_IC : LpGBTSlowControlWorker::WRITE_FE;
     std::vector<ChipRegItem> cRegisterBlock;
@@ -195,7 +196,7 @@ bool D19cOpticalInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>&
 
 bool D19cOpticalInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData, bool pWaitToBeDone = true)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
     flpGBTSlowControlWorkerInterface->SelectLink(pChip->getOpticalGroupId());
     uint8_t               cFunctionId = LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C;
     std::vector<uint32_t> cDataBlock;
@@ -250,7 +251,7 @@ bool D19cOpticalInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMas
 
 std::vector<uint16_t> D19cOpticalInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
     flpGBTSlowControlWorkerInterface->SelectLink(pChip->getOpticalGroupId());
     uint8_t               cFunctionId = LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C;
     std::vector<uint32_t> cDataBlock;
