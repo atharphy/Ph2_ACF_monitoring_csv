@@ -57,7 +57,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
@@ -97,7 +97,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
@@ -135,7 +135,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
@@ -175,7 +175,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
