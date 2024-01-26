@@ -34,7 +34,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, BeBoard* theBoard) : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
     // can only link one type of trigger + FC interface to this type of FW
@@ -69,8 +69,8 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
-    : BeBoardFWInterface(puHalConfigFileName, pBoardId), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
         fSaveToFile = false;
@@ -109,8 +109,8 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
-    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(nullptr), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), fFileHandler(nullptr), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     LOG(INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
     std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
@@ -147,8 +147,8 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler)
-    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
         fSaveToFile = false;

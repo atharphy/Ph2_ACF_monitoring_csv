@@ -21,6 +21,11 @@
 
 #include <uhal/uhal.hpp>
 
+namespace Ph2_HwDescription
+{
+    class BeBoard;
+}
+
 // #######################
 // # FW useful constants #
 // #######################
@@ -49,7 +54,7 @@ namespace Ph2_HwInterface
 class RD53FWInterface : public BeBoardFWInterface
 {
   public:
-    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
     ~RD53FWInterface() { delete fFileHandler; }
 
     // #############################

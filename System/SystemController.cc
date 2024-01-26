@@ -228,9 +228,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         std::string cId           = theBoard->getConnectionId();
         std::string cUri          = theBoard->getConnectionUri();
         std::string cAddressTable = theBoard->getAddressTable();
-        if(theBoard->getBoardType() == BoardType::D19C) { fBeBoardFWMap[theBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable); }
+        if(theBoard->getBoardType() == BoardType::D19C) { fBeBoardFWMap[theBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable, theBoard); }
         else if(theBoard->getBoardType() == BoardType::RD53)
-            fBeBoardFWMap[theBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable);
+            fBeBoardFWMap[theBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable, theBoard);
     }
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);

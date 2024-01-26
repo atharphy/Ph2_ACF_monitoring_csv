@@ -13,6 +13,7 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/Utilities.h"
 #include <uhal/uhal.hpp>
+#include "HWDescription/BeBoard.h"
 
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -20,9 +21,11 @@
 
 #define DEV_FLAG 0
 
+using namespace Ph2_HwDescription;
+
 namespace Ph2_HwInterface
 {
-RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId) : fUHalConfigFileName(puHalConfigFileName)
+RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId, BeBoard* theBoard) : fUHalConfigFileName(puHalConfigFileName), fTheBoardPointer(theBoard)
 {
     if(mode != Mode::Replay)
     {
@@ -35,7 +38,7 @@ RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId
     }
 }
 
-RegManager::RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : fBoard(nullptr), fUri(pUri), fAddressTable(pAddressTable), fId(pId)
+RegManager::RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard) : fBoard(nullptr), fUri(pUri), fAddressTable(pAddressTable), fId(pId), fTheBoardPointer(theBoard)
 {
     if(mode != Mode::Replay)
     {

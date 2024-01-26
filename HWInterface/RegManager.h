@@ -14,6 +14,10 @@
 #include <string>
 #include <vector>
 
+namespace Ph2_HwDescription
+{
+    class BeBoard;
+}
 namespace uhal
 {
     class HwInterface;
@@ -48,7 +52,7 @@ class RegManager
      * \param pBoardId Board Id in the XML configuration file. The uHAL connection name will be boardX where X is the
      * number Id.
      */
-    RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId);
+    RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId, Ph2_HwDescription::BeBoard* theBoard);
 
     /*!
      * \brief Constructor of the RegManager class
@@ -56,7 +60,7 @@ class RegManager
      * \param pUri: URI string for uHAL
      * \param pAddressTable: address table path
      */
-    RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
 
     RegManager(const RegManager&) = delete;
 
@@ -192,6 +196,7 @@ class RegManager
     std::vector<uint32_t> replayBlockRead(size_t size);
     void                  captureRead(uint32_t value);
     void                  captureBlockRead(std::vector<uint32_t> data);
+    Ph2_HwDescription::BeBoard* fTheBoardPointer;
 };
 } // namespace Ph2_HwInterface
 

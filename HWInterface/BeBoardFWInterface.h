@@ -14,9 +14,7 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "HWDescription/ChipRegItem.h"
 #include "HWDescription/Definition.h"
 #include "HWDescription/Hybrid.h"
-#include "HWDescription/MPA.h"
 #include "HWDescription/ReadoutChip.h"
-#include "HWDescription/SSA.h"
 #include "HWInterface/RegManager.h"
 #include "NetworkUtils/TCPClient.h"
 #include "Utils/Exception.h"
@@ -62,8 +60,8 @@ class BeBoardFWInterface : public RegManager
     /*!
      * \brief Constructor of the BeBoardFWInterface class
      * \param puHalConfigFileName : path of the uHal Config File*/
-    BeBoardFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    BeBoardFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    BeBoardFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, Ph2_HwDescription::BeBoard* theBoard);
+    BeBoardFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
     // BeBoardFWInterface(RegManager&& theRegManager);
 
     /*!
