@@ -22,7 +22,7 @@ OTalignBoardDataWord::~OTalignBoardDataWord() {}
 void OTalignBoardDataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
-    fRegisterHelper->freeBoardRegister("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
+    fRegisterHelper->freeBoardRegister("fc7_daq_stat\\.physical_interface_block\\.phase_tuning_reply");
     // free the registers in case any
 
     size_t               numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;

@@ -68,6 +68,7 @@ bool RegManager::WriteReg(const std::string& pRegNode, const uint32_t& pVal)
 
     fBoard->getNode(pRegNode).write(pVal);
     fBoard->dispatch();
+    fTheBoardPointer->setReg(pRegNode, pVal);
 
     // Verify if the writing is done correctly
     if(DEV_FLAG)
@@ -94,7 +95,11 @@ bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t
     std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
     if(mode == Mode::Replay) return true;
 
-    for(auto const& v: pVecReg) fBoard->getNode(v.first).write(v.second);
+    for(auto const& v: pVecReg)
+    {
+        fBoard->getNode(v.first).write(v.second);
+        fTheBoardPointer->setReg(v.first, v.second);
+    }
 
     try
     {
@@ -220,6 +225,8 @@ uint32_t RegManager::ReadReg(const std::string& pRegNode)
     }
 
     if(mode == Mode::Capture) captureRead(cValRead.value());
+
+    fTheBoardPointer->setReg(pRegNode, cValRead.value());
 
     return cValRead.value();
 }
