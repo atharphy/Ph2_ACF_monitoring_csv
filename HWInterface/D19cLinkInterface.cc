@@ -1,5 +1,11 @@
 #include "HWInterface/D19cLinkInterface.h"
 #include "HWInterface/ExceptionHandler.h"
+#include "HWInterface/RegManager.h"
+#include <thread>
+#include "Utils/easylogging++.h"
+#include "Utils/ConsoleColor.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/OpticalGroup.h"
 
 using namespace Ph2_HwDescription;
 
@@ -9,18 +15,11 @@ namespace Ph2_HwInterface
 // # Constructors #
 // #########################################
 
-D19cLinkInterface::D19cLinkInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : LinkInterface(pId, pUri, pAddressTable)
+D19cLinkInterface::D19cLinkInterface(RegManager* theRegManager) : LinkInterface(theRegManager)
 {
     fConfiguration.fResetWait_ms = 2000;
     fConfiguration.fReTry        = 1;
     fConfiguration.fMaxAttempts  = 5;
-}
-
-D19cLinkInterface::D19cLinkInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : LinkInterface(puHalConfigFileName, pBoardId)
-{
-    fConfiguration.fResetWait_ms = 2000;
-    fConfiguration.fReTry        = 1;
-    fConfiguration.fMaxAttempts  = 10;
 }
 
 D19cLinkInterface::~D19cLinkInterface() {}
@@ -28,9 +27,9 @@ D19cLinkInterface::~D19cLinkInterface() {}
 void D19cLinkInterface::ResetLinks()
 {
     // reset lpGBT core - for now there is one reset signal for all links
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
     std::this_thread::sleep_for(std::chrono::milliseconds(fConfiguration.fResetWait_ms));
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
     std::this_thread::sleep_for(std::chrono::milliseconds(fWait_ms));
 }
 bool D19cLinkInterface::GetLinkStatus(uint8_t pLinkId)
@@ -38,11 +37,11 @@ bool D19cLinkInterface::GetLinkStatus(uint8_t pLinkId)
     bool     cLocked    = true;
     uint8_t  cCommandId = 1; // command id for  link status request is 1
     uint32_t cCommand   = ((pLinkId & 0x3f) << 26) | (cCommandId << 22);
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
     std::this_thread::sleep_for(std::chrono::milliseconds(fWait_ms));
     // read back status register
     LOG(INFO) << BOLDBLUE << "lpGBT Link Status..." << RESET;
-    uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
+    uint32_t cLinkStatus = fTheRegManager->ReadReg("fc7_daq_stat.optical_block");
     LOG(INFO) << BOLDBLUE << "lpGBT Link" << +pLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
     std::vector<std::string> cStates = {"lpGBT TX Ready", "MGT Ready", "lpGBT RX Ready"};
     uint8_t                  cIndex  = 1;

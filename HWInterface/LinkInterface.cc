@@ -1,14 +1,33 @@
 #include "HWInterface/LinkInterface.h"
+#include "Utils/easylogging++.h"
+#include "Utils/ConsoleColor.h"
 
 using namespace Ph2_HwDescription;
-
 namespace Ph2_HwInterface
 {
-LinkInterface::LinkInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable) {}
-LinkInterface::LinkInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId)
-{
-    LOG(INFO) << BOLDYELLOW << "LinkInterface::LinkInterface Constructor" << RESET;
-}
+LinkInterface::LinkInterface(RegManager* theRegManager) : fTheRegManager(theRegManager) {}
+
 LinkInterface::~LinkInterface() {}
+
+void LinkInterface::ResetLinks()
+{
+    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function LinkInterface::ResetLinks is absent" << RESET;
+}
+
+void LinkInterface::ResetLink(uint8_t pLinkId)
+{
+    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function LinkInterface::ResetLink is absent" << RESET;
+}
+
+bool LinkInterface::GetLinkStatus(uint8_t pLinkId)
+{
+    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function LinkInterface::GetLinkStatus is absent" << RESET;
+    return false;
+}
+
+void LinkInterface::GeneralLinkReset(const BeBoard* pBoard)
+{
+    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function LinkInterface::GeneralLinkReset is absent" << RESET;
+}
 
 } // namespace Ph2_HwInterface

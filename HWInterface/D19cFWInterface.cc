@@ -510,7 +510,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
     if(fLinkInterface == nullptr && pBoard->isOptical())
     {
         LOG(INFO) << BOLDBLUE << "Optical readout . initializing link control interface" << RESET;
-        fLinkInterface = new D19cLinkInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fLinkInterface = new D19cLinkInterface(this);
     }
     if(fFEConfigurationInterface == nullptr)
     {
