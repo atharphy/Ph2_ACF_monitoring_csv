@@ -35,6 +35,7 @@
 #include "tools/PSPhysics.h"
 #include "tools/Physics2S.h"
 #include "tools/StubBackEndAlignment.h"
+#include "tools/OTalignStubPackage.h"
 
 using namespace MessageUtils;
 
@@ -49,6 +50,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTVTRXLightOff>("Outer Tracker", "vtrxoff");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
+    Register<OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
     Register<LinkAlignmentOT, CicFEAlignment>("Outer Tracker", "alignment");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("Outer Tracker", "calibration");
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("Outer Tracker", "takedata"); // will be used in future version of GIPHT
