@@ -71,6 +71,8 @@ void OTalignBoardDataWord::WordAlignBEdata()
 
     for(auto theBoard: *fDetectorContainer)
     {
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
+
         for(auto theOpticalGroup: *theBoard)
         {
             bool cAligned = this->WordAlignBEdata(theOpticalGroup);
@@ -82,6 +84,9 @@ void OTalignBoardDataWord::WordAlignBEdata()
                 continue;
             }
         } // optical groups connected to this  board
+
+        LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::WordAlignBEdata ... trying to readout L1 data.. " << RESET;
+        ReadNEvents(theBoard, 10);
     }
 }
 
