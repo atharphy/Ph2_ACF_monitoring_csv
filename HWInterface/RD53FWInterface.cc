@@ -231,7 +231,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##################
     // # Reset Metadata #
     // ##################
-    RD53FWInterface::resetNCorruptedNEvents();
+    RD53FWInterface::resetNcorruptedNevents();
+    RD53FWInterface::resetNtrialsNevents();
 }
 
 void RD53FWInterface::PrintFWstatus()
@@ -718,12 +719,14 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
         if(RD53Event::EvtErrorHandler(status) == false)
         {
+            NtrialsNevents++;
             retry = true;
             continue;
         }
 
         if(RD53Event::decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
         {
+            NtrialsNevents++;
             LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
                        << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
@@ -736,7 +739,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     {
         LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
-        NCorruptedNEvents++;
+        NcorruptedNevents++;
     }
 
     // #################
