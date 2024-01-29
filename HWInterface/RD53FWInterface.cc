@@ -442,13 +442,17 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 {
     LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;
 
-    isChipCommunicationOK = true;
+    isChipCommunicationOK = false;
 
     // ########################################
     // # Check communication with the chip(s) #
     // ########################################
     uint32_t chips_en = RD53FWInterface::GetBoardEnabledChips(pBoard, true);
-    if(chips_en == 0) throw Exception("[RD53FWInterface::CheckChipCommunication] No data lane is enabled: aborting");
+    if(chips_en == 0)
+    {
+        LOG(ERROR) << "\t--> No data lane is enabled: aborting" << RESET;
+        return isChipCommunicationOK;
+    }
     LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << ", i.e. "
               << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
 
@@ -475,12 +479,12 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
     if(nAttempts == RD53Shared::MAXATTEMPTS)
     {
-        isChipCommunicationOK = false;
-        LOG(ERROR) << BOLDRED << "\t--> Error, not all data lanes are active, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") " << RESET;
-        throw Exception("[RD53FWInterface::CheckChipCommunication] Some data lanes are enabled but inactive");
+        LOG(ERROR) << BOLDRED << "\t--> Error, some data lanes are enabled but inactive, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") " << RESET;
+        return isChipCommunicationOK;
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
+    isChipCommunicationOK = true;
     return isChipCommunicationOK;
 }
 
