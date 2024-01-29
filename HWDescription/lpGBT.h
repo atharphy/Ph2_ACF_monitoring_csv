@@ -84,6 +84,13 @@ class lpGBT : public Chip
     std::map<std::string, float> getADCCalibrationData() const { return fADCcalibrationData; }
     void                         setADCCalibrationData(const std::map<std::string, float>& theInputMap);
 
+    // # Set the junction temperature. It should be updated by the user based on:
+    // # - thermal simulations and measurements performed in the final system, or
+    // # - data of its internal temperature sensor obtained during production testing
+    // #   (estimate_temperature_uncalib_vref)
+    void  setTemperature(float cTemperature) { fTemperature = cTemperature; }
+    float getTemperature() { return fTemperature; }
+
   private:
     bool                         phaseRxAligned; // @TMP@
     uint16_t                     fRxDataRate, fTxDataRate, fChipAddress;
@@ -108,8 +115,9 @@ class lpGBT : public Chip
     uint16_t                fTuneVrefVoltage{500};                                   // Voltage is given in mV!
     std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021, 0.475)}; // In V per Celsius and Volt coming from the lpGBTv0 manual
 
-    bool fIsCalibrationDataLoaded{false};
-    // Default values, will be overwritten ons the calibration is loaded
+    bool  fIsCalibrationDataLoaded{false};
+    float fTemperature = 0.0;
+    // Default values, will be overwritten once the calibration is loaded
     std::map<std::string, float> fADCcalibrationData = {
         {"VREF_SLOPE", -3.3638e-01},
         {"VREF_OFFSET", 1.3426e+02},
