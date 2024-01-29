@@ -99,7 +99,7 @@ void BeamTestCheck::Initialise()
 
     // optimal latencies
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, fOptimalL1Latency);
-    ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, fOptimalStubLatency);
+    ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, fOptimalStubLatency);
     // TDC per board
     ContainerFactory::copyAndInitBoard<GenericDataArray<TDCBINS, uint16_t>>(*fDetectorContainer, fTDCContainer);
 
@@ -148,8 +148,8 @@ void BeamTestCheck::CheckWithTP(uint8_t pContinuousReadout)
         PrepareForTP(cBoard);
     }
     if(fScanL1Latency) ScanL1Latency(pContinuousReadout);
-    // if(fScanStubLatency) ScanStubLatency(pContinuousReadout);
-    if(fScanStubLatency) ScanStubLatencyLea();
+    if(fScanStubLatency) ScanStubLatencyTest(pContinuousReadout);
+    // if(fScanStubLatency) ScanStubLatencyLea();
 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
@@ -1763,7 +1763,7 @@ void BeamTestCheck::ScanStubLatencyLea()
                 cVal                    = cVal | cBitShiftedVal; // cStubLatency+cOff;//cVal | ((cStubLatency+cOff) << (cOpticalGroup->getId()%3)*9);
                 fBeBoardInterface->WriteBoardReg(cBoard, cRegName.str(), cVal);
                 cVal = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
-                LOG(DEBUG) << BOLDYELLOW << "Stub Latency" << cLatency << " on Link#" << +cOpticalGroup->getId() << " " << cRegName.str() << " set to " << std::bitset<32>(cVal) << RESET;
+                LOG(DEBUG) << BOLDYELLOW << "Stub Latency " << cLatency << " on Link#" << +cOpticalGroup->getId() << " " << cRegName.str() << " set to " << std::bitset<32>(cVal) << RESET;
             } // set this latency for all links
 
             // read events and check for stubs
@@ -1981,36 +1981,6 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
     else
         cOffset = (int)(fLatencyRange / 2.);
 
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            // Get register name dependent of OG
-            std::string cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
-            if( cOpticalGroup->getId() > 9 ) cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
-
-            auto cStubPackageRegister = fBeBoardInterface->ReadBoardReg(cBoard, cRegName);
-            LOG(INFO) << "Stub package reg on Link#" << cOpticalGroup->getId() << " is " << std::bitset<32>(cStubPackageRegister) << RESET;
-        }
-    }
-
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            // Get register name dependent of OG
-            std::string cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
-            if( cOpticalGroup->getId() > 9 ) cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
-
-            auto cStubPackageRegister = fBeBoardInterface->ReadBoardReg(cBoard, cRegName);
-            LOG(INFO) << "Stub package reg on Link#" << cOpticalGroup->getId() << " is " << std::bitset<32>(cStubPackageRegister) << RESET;
-        }
-    }
-    
-    // TODO
-    // Scan of stub latencies (common stub data delay) for each OG
-    // this has to be written to the new registers
-
     fOptimalLatency = 0;
     size_t cLatStep = 0;
     do
@@ -2063,31 +2033,242 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
                             auto& cStubs = cStubContainer->getObject(cChip->getId())->getSummary<uint32_t>();
                             cLatencyContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId] += cStubs;
                             cStubCount += cStubs;
+                            if(cStubCount > cMaxCount)
+                            {
+                                cMaxCount                                                       = cStubCount;
+                                fOptimalStubLatency.getObject(cBrdIndx)->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
+                                LOG(INFO) << BOLDYELLOW << "Brd#" << +cBoard->getId() << " Trigger# " << +cTriggerId << " found new optimal stub latency of "
+                                        << fOptimalStubLatency.getObject(cBrdIndx)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint32_t>();
+                            }
                         }
                     }
-                }
-                if(cStubCount > cMaxCount)
-                {
-                    cMaxCount                                                       = cStubCount;
-                    fOptimalStubLatency.getObject(cBrdIndx)->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
-                    LOG(INFO) << BOLDYELLOW << "Brd#" << +cBoard->getId() << " Trigger# " << +cTriggerId << " found new optimal stub latency of "
-                              << fOptimalStubLatency.getObject(cBrdIndx)->getSummary<uint32_t>() << RESET;
                 }
             }
         }
         cLatStep++;
     } while(cLatStep < fLatencyRange);
 
-    // // configure optimal stub latency
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     auto& cLat = fOptimalStubLatency.getObject(cBoard->getId())->getSummary<uint32_t>();
-    //     LOG(INFO) << BOLDYELLOW << "Setting common_stubdata_delay on BeBoard#" << +cBoard->getId() << " to " << cLat << RESET;
-    //     fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cLat);
-    // }
+    // configure optimal stub latency
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cLat = fOptimalStubLatency.getObject(cBoard->getId())->getSummary<uint32_t>();
+        LOG(INFO) << BOLDYELLOW << "Setting common_stubdata_delay on BeBoard#" << +cBoard->getId() << " to " << cLat << RESET;
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cLat);
+    }
+}
+void BeamTestCheck::ScanStubLatencyTest(uint8_t pContinuousReadout)
+{
+    // bool cUseReadNevents = false;
+    LOG(INFO) << __PRETTY_FUNCTION__ << "Scanning Stub Latency ... ContinuousReadout set to " << +pContinuousReadout << RESET;
+    // stub offset already set for this board
+    // LOG(INFO) << BOLDBLUE << "Stub offset for BeBoard#" << +pBoard->getId() << " set to " << +pBoard->getStubOffset() << RESET;
+    // figure out latency scan range
+    DetectorDataContainer cBrdLatency;
+    ContainerFactory::copyAndInitBoard<uint16_t>(*fDetectorContainer, cBrdLatency);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        cBrdLatency.getObject(cBoard->getId())->getSummary<uint16_t>() = 0;
+        uint16_t cMinLatency                                           = 0;
+        uint16_t cMaxLatency                                           = 0;
+        // get mode for stub latency
+        std::vector<uint16_t> cLatencyBins(512, 0);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-    // Copied from Sarah:
-    // now configure stub latency on each link 
+                    auto cLat = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
+                    if(cLat > 0) cLatencyBins[cLat]++;
+                    if(cMinLatency == 0) cMinLatency = cLat;
+                    if(cMaxLatency == 0) cMaxLatency = cLat;
+
+                    if(cLat > cMaxLatency) cMaxLatency = cLat;
+                    if(cLat < cMaxLatency) cMinLatency = cLat;
+                }
+            }
+        }
+        auto cModeLatency = std::max_element(cLatencyBins.begin(), cLatencyBins.end()) - cLatencyBins.begin();
+        // set latency for the board to the minium
+        LOG(INFO) << BOLDMAGENTA << "Min L1 latency on this board is " << cMinLatency << " 40 MHz clock cycles" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Max L1 latency on this board is " << cMaxLatency << " 40 MHz clock cycles" << RESET;
+        LOG(INFO) << BOLDBLUE << "Mode L1 latency on this board is " << cModeLatency << " 40 MHz clock cycles" << RESET;
+        cBrdLatency.getObject(cBoard->getId())->getSummary<uint16_t>() = cModeLatency;
+        // setSameDacBeBoard(cBoard, "TriggerLatency", cModeLatency);
+        // fBeBoardInterface->ChipReSync(cBoard);
+    }
+
+    // container to hold trigger multiplicity per board
+    DetectorDataContainer cBrdTriggerMult;
+    ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cBrdTriggerMult);
+    for(auto cBoard: *fDetectorContainer)
+    { cBrdTriggerMult.getObject(cBoard->getId())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"); }
+
+    // zero container
+    // that hold latency per hybrid
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cLatencyContainer = fStubLatencyContainer.getObject(cBoard->getId());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(uint16_t cIndx = 0; cIndx < fLatencyRange; cIndx++)
+                { cLatencyContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0; }
+            } // hybrid
+        }     // optical group
+    }
+
+    // need a container to hold maximum stub count per chip
+    // and one to hold best latency per chip
+    // DetectorDataContainer cStubCount, cMaximumStubCount;
+    DetectorDataContainer cMaximumStubCount;
+    ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, cMaximumStubCount);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cLat      = fOptimalStubLatency.getObject(cBoard->getId());
+        auto& cMaxCount = cMaximumStubCount.getObject(cBoard->getId());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cLatThisOG      = cLat->getObject(cOpticalGroup->getId());
+            auto& cMaxCountThisOG = cMaxCount->getObject(cOpticalGroup->getId());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cLatThisHybrid      = cLatThisOG->getObject(cHybrid->getId());
+                auto& cMaxCountThisHybrid = cMaxCountThisOG->getObject(cHybrid->getId());
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cLatThisChip                        = cLatThisHybrid->getObject(cChip->getId());
+                    auto& cMaxCountThisChip                   = cMaxCountThisHybrid->getObject(cChip->getId());
+                    cLatThisChip->getSummary<uint16_t>()      = 0;
+                    cMaxCountThisChip->getSummary<uint32_t>() = 0;
+                }
+            } // hybrid
+        }     // optical group
+    }
+
+    // prepare container to hold stub information per OG
+    DetectorDataContainer cStubContainer;
+    ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, cStubContainer);
+
+    // check if stub alignment has already been run
+    bool cAlignmentRun = true;
+    for(auto cBoard: *fDetectorContainer) { cAlignmentRun = cAlignmentRun && (cBoard->getStubOffset() != 0); }
+    int cOffset = 0;
+    // if no alignment has been run .. use scan range
+    if(!cAlignmentRun)
+    {
+        uint32_t cScanStart = findValueInSettings<double>("StubAlignmentScanStart", 100);
+        cOffset             = cScanStart;
+    }
+    else
+        cOffset = (int)(fLatencyRange / 2.);
+
+    fOptimalLatency = 0;
+    size_t cLatStep = 0;
+    do
+    {
+        // set stub latency on all BE boards
+        std::vector<uint8_t> cSet(0);
+        for(auto cBoard: *fDetectorContainer)
+        {
+            auto  cBrdIndx     = cBoard->getId();
+            auto& cTriggerMult = cBrdTriggerMult.getObject(cBrdIndx)->getSummary<uint32_t>();
+            int   cStubLatency = cBrdLatency.getObject(cBrdIndx)->getSummary<uint16_t>() - (cOffset - cLatStep * (1 + cTriggerMult));
+            if(cStubLatency < 0)
+            {
+                LOG(INFO) << BOLDYELLOW << +cTriggerMult << " " << +cStubLatency << " " << cStubLatency << RESET;
+                cSet.push_back(0);
+                continue;
+            }
+            // fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
+            for(auto cOpticalGroup: *cBoard)
+            {
+                int               cBaseLinkId = cOpticalGroup->getId() / 3;
+                std::stringstream cRegName;
+                cRegName << "fc7_daq_cnfg.readout_block.stub_latency_link" << cBaseLinkId * 3;
+                cRegName << "_link" << cBaseLinkId * 3 + 2;
+                fBeBoardInterface->WriteBoardReg(cBoard, cRegName.str(), 0);
+            } // reset stub latency register for all links back to  0
+            for(auto cOpticalGroup: *cBoard)
+            {
+                int               cBaseLinkId = cOpticalGroup->getId() / 3;
+                std::stringstream cRegName;
+                cRegName << "fc7_daq_cnfg.readout_block.stub_latency_link" << cBaseLinkId * 3;
+                cRegName << "_link" << cBaseLinkId * 3 + 2;
+                uint32_t cVal           = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
+                uint32_t cBitShiftedVal = (cStubLatency << (cOpticalGroup->getId() % 3) * 9);
+                LOG(INFO) << "Stub latency: " << cStubLatency << " Bit shifted val: " << std::bitset<32>(cBitShiftedVal) << RESET;
+                cVal                    = cVal | cBitShiftedVal; // cStubLatency+cOff;//cVal | ((cStubLatency+cOff) << (cOpticalGroup->getId()%3)*9);
+                fBeBoardInterface->WriteBoardReg(cBoard, cRegName.str(), cVal);
+                cVal = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
+                LOG(INFO) << BOLDYELLOW << "Link#" << +cOpticalGroup->getId()
+                        << " Stub Latency " << cStubLatency << " "
+                        << cRegName.str() << " set to " << std::bitset<32>(cVal) << RESET;
+            } // set this latency for all links
+            LOG(INFO) << BOLDBLUE << "Setting stub latency on BeBoard#" << +cBoard->getId() << " to " << cStubLatency << " [stub offset is "
+                      << (cBrdLatency.getObject(cBrdIndx)->getSummary<uint16_t>() - cStubLatency) << " ]" << RESET;
+            cSet.push_back(1);
+        }
+        // read events
+        ContinuousReadout();
+
+        for(auto cBoard: *fDetectorContainer)
+        {
+            if(cSet[cBoard->getId()] == 0) continue;
+            fBeBoardInterface->setBoard(cBoard->getId());
+            const std::vector<Event*>& cEvents              = this->GetEvents();
+            auto&                      cTriggerMult         = cBrdTriggerMult.getObject(cBoard->getId())->getSummary<uint32_t>();
+            float                      cNormalizationFactor = cEvents.size() / (1 + cTriggerMult);
+            LOG(DEBUG) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
+
+            for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
+            {
+                Count(cEvents, cTriggerId);
+                // fill containers for DQMUtils
+                // and search for optimal stub latency per chip
+                auto   cBrdIndx          = cBoard->getId();
+                auto&  cLatencyContainer = fStubLatencyContainer.getObject(cBrdIndx);
+                size_t cStubCount        = 0;
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        auto& cStubContainer = fStubOccupancy.getObject(cBrdIndx)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId());
+                        for(auto cChip: *cHybrid)
+                        {
+                            auto& cStubs = cStubContainer->getObject(cChip->getId())->getSummary<uint32_t>();
+                            cLatencyContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep + cTriggerId] += cStubs;
+                            auto& cMaxCount = cMaximumStubCount.getObject(cBrdIndx)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint32_t>();
+                            cStubCount += cStubs;
+
+                            if(cStubs >= cMaxCount && cStubs > 0)
+                            {
+                                int               cBaseLinkId = cOpticalGroup->getId() / 3;
+                                std::stringstream cRegName;
+                                cRegName << "fc7_daq_cnfg.readout_block.stub_latency_link" << cBaseLinkId * 3;
+                                cRegName << "_link" << cBaseLinkId * 3 + 2;
+                                uint32_t cStubLat = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
+                                LOG(INFO) << BOLDYELLOW << "\t\t..New maximum found for Chip#" << +cChip->getId() << " on Hybrid#" << +cHybrid->getId()
+                                            << " for an L1 latency of " << cStubLat << RESET;
+                                            // << " -- previous maximum was " << cMaxCnt << " -- now is " << cCrntCnt << RESET;
+                                cMaxCount = cStubs;
+                                fOptimalStubLatency.getObject(cBrdIndx)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint32_t>() = cStubLat;
+                            }
+                            // else
+                            //     LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChip->getId() << " -- previous maximum was " << cMaxCnt << " -- current hit count is " << cCrntCnt << RESET;
+                        }
+                    }
+                }
+            }
+
+        }
+        cLatStep++;
+    } while(cLatStep < fLatencyRange);
+
+    // configure optimal stub latency
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -2098,28 +2279,29 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
             cRegName << "_link" << cBaseLinkId * 3 + 2;
             fBeBoardInterface->WriteBoardReg(cBoard, cRegName.str(), 0);
         } // reset stub latency register for all links back to  0
-    }
-
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup : *cBoard ) 
+        for(auto cOpticalGroup: *cBoard)
         {
-            auto cStubCnfg = cOpticalGroup->getStubCnfg();
-            LOG (INFO) << BOLDYELLOW << "Link#" << +cOpticalGroup->getId() 
-                << " Stub latency set to " << +cStubCnfg.second 
-                << RESET;
-                int cBaseLinkId = cOpticalGroup->getId() / 3;
-            std::stringstream cRegName;
-            cRegName << "fc7_daq_cnfg.readout_block.stub_latency_link" << cBaseLinkId * 3;
-            cRegName << "_link" << cBaseLinkId * 3 + 2;
-            auto     cLatency       = cStubCnfg.second;
-            uint32_t cVal           = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
-            uint32_t cBitShiftedVal = (cLatency << (cOpticalGroup->getId() % 3) * 9);
-            cVal                    = cVal | cBitShiftedVal; // cStubLatency+cOff;//cVal | ((cStubLatency+cOff) << (cOpticalGroup->getId()%3)*9);
-            fBeBoardInterface->WriteBoardReg(cBoard, cRegName.str(), cVal);
-            cVal = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
-            LOG(INFO) << BOLDYELLOW << "Stub Latency" << cLatency << " on Link#" << +cOpticalGroup->getId() << " " << cRegName.str() << " set to " << std::bitset<32>(cVal) << RESET;
-        }// configure stub latency 
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cLat = fOptimalStubLatency.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                    LOG(INFO) << BOLDMAGENTA << "Found optimal Stub Latency for Chip#" << +cChip->getId() << " to be " << cLat << RESET;
+                    int               cBaseLinkId = cOpticalGroup->getId() / 3;
+                    std::stringstream cRegName;
+                    cRegName << "fc7_daq_cnfg.readout_block.stub_latency_link" << cBaseLinkId * 3;
+                    cRegName << "_link" << cBaseLinkId * 3 + 2;
+                    uint32_t cVal           = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
+                    uint32_t cBitShiftedVal = (cLat << (cOpticalGroup->getId() % 3) * 9);
+                    cVal                    = cVal | cBitShiftedVal; // cStubLatency+cOff;//cVal | ((cStubLatency+cOff) << (cOpticalGroup->getId()%3)*9);
+                    fBeBoardInterface->WriteBoardReg(cBoard, cRegName.str(), cVal);
+                    cVal = fBeBoardInterface->ReadBoardReg(cBoard, cRegName.str());
+                    LOG(INFO) << BOLDYELLOW << "Link#" << +cOpticalGroup->getId()
+                            << " Stub Latency " << cLat << " "
+                            << cRegName.str() << " set to " << std::bitset<32>(cVal) << RESET;
+                }
+            } // hybrid
+        }     // optical group
     }
 }
 void BeamTestCheck::PrepareForExternalTP(BeBoard* pBoard)

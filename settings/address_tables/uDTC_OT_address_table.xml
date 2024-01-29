@@ -201,10 +201,10 @@
                 </node>
                 <node id="timeout"                          address="0x002" mask="0x0000fff"/> 
                 <!-- Added from Sarah: -->
-                <node id="stub_latency_link0_link2"         address="0x003" mask="0xffffffff"/> 
-                <node id="stub_latency_link3_link5"         address="0x004" mask="0xffffffff"/> 
-                <node id="stub_latency_link6_link8"         address="0x005" mask="0xffffffff"/> 
-                <node id="stub_latency_link9_link11"        address="0x006" mask="0xffffffff"/> 
+                <node id="stub_latency_link0_link2"         address="0x003" mask="0x07ffffff"/> 
+                <node id="stub_latency_link3_link5"         address="0x004" mask="0x07ffffff"/> 
+                <node id="stub_latency_link6_link8"         address="0x005" mask="0x07ffffff"/> 
+                <node id="stub_latency_link9_link11"        address="0x006" mask="0x07ffffff"/> 
             </node>
 
             <node id="dio5_block"                   address="0x6000">

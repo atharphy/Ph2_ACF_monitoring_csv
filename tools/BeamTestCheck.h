@@ -54,6 +54,7 @@ class BeamTestCheck : public OTTool
     // void SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void DisableAllFEs();
     void ScanStubLatency(uint8_t pContinuousReadout);
+    void ScanStubLatencyTest(uint8_t pContinuousReadout);
     void ScanStubLatencyLea();
     void ScanL1Latency(uint8_t pContinuousReadout);
 
@@ -126,6 +127,7 @@ class BeamTestCheck : public OTTool
     void ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
     void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations = 0, uint8_t pPrintOut = 0);
     void Validate();
+    std::string GetStubLatencyRegName(uint8_t pOGId);
 
     std::vector<Ph2_HwInterface::Injection> fInjections;
 
