@@ -365,6 +365,10 @@ The following procedure will install (in order):
 5. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
 6. `root` with all its needed libraries
 7. `cmake`, tools for clang, including `clang-format` and `git-extras`
+8. `devtoolset 12`
+9. `python3`
+10. `protobuf`
+11. `pybind11`
 
 #### Complete the CERN installation
 Make sure that the CERN installation is complete by running
