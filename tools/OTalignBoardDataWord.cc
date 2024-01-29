@@ -22,10 +22,12 @@ OTalignBoardDataWord::~OTalignBoardDataWord() {}
 void OTalignBoardDataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
+    fRegisterHelper->freeBoardRegister("fc7_daq_stat\\.physical_interface_block\\.phase_tuning_reply");
     // free the registers in case any
 
-    // TODO: probably not needed to be data member
-    ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeBitSlip);
+    size_t               numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+    std::vector<uint8_t> initialBitSlipVector(numberOfLines, 0);
+    ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeBitSlip, initialBitSlipVector);
 
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -71,7 +73,7 @@ void OTalignBoardDataWord::WordAlignBEdata()
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            bool cAligned = WordAlignBEdata(theOpticalGroup);
+            bool cAligned = this->WordAlignBEdata(theOpticalGroup);
             if(!cAligned)
             {
                 LOG(INFO) << BOLDRED << "Could not word align-BE data in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
@@ -137,7 +139,6 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
             cAligned                = cAlignerInterface->IsLineWordAligned();
             cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
-
             if(!cAligned)
             {
                 if(((cHybrid->getId() % 2) == 0) & ((cLineId - 1) == 4) & (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))

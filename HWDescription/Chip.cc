@@ -88,13 +88,16 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
         i->second.fPrmptCfg  = pPrmptCfg;
         if(fTrackModifiedRegistersEnabled)
         {
-            bool isFreeRegister = false;
-            for(const auto& freeRegister: fListOfFreeRegisters)
+            if(fModifiedRegisters.find(i->first) == fModifiedRegisters.end()) // check if it already tracked
             {
-                isFreeRegister = std::regex_match(pReg, freeRegister.first);
-                if(isFreeRegister) break;
+                bool isFreeRegister = false;
+                for(const auto& freeRegister: fListOfFreeRegisters)
+                {
+                    isFreeRegister = std::regex_match(pReg, freeRegister.first);
+                    if(isFreeRegister) break;
+                }
+                if(!isFreeRegister && oldRegister != i->second) fModifiedRegisters[i->first] = oldRegister.fValue;
             }
-            if(!isFreeRegister && oldRegister != i->second) fModifiedRegisters[i->first] = oldRegister.fValue;
         }
     }
 }

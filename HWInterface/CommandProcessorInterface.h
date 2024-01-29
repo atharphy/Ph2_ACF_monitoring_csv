@@ -1,34 +1,25 @@
 #ifndef _CommandProcessorInterface_H__
 #define _CommandProcessorInterface_H__
 
-#include "HWDescription/BeBoard.h"
-#include "HWInterface/RegManager.h"
-#include "Utils/Utilities.h"
-#include "Utils/easylogging++.h"
 #include <string>
+#include <vector>
 
 namespace Ph2_HwInterface
 {
-class CommandProcessorInterface : public RegManager
+class RegManager;
+class CommandProcessorInterface
 {
   public: // constructors
-    CommandProcessorInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    CommandProcessorInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    CommandProcessorInterface(RegManager* theRegManager);
     virtual ~CommandProcessorInterface(){};
 
   public: // Virtual functions
-    virtual void Reset() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::Reset is absent" << RESET; }
+    virtual void                  Reset();
+    virtual void                  WriteCommand(const std::vector<uint32_t>& pCommand);
+    virtual std::vector<uint32_t> ReadReply(int pNWords);
 
-    virtual void WriteCommand(const std::vector<uint32_t>& pCommand)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::WriteCommand is absent" << RESET;
-    }
-
-    virtual std::vector<uint32_t> ReadReply(int pNWords)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::ReadReply is absent" << RESET;
-        return {};
-    }
+  protected:
+    RegManager* fTheRegManager{nullptr};
 };
 } // namespace Ph2_HwInterface
 

@@ -6,9 +6,9 @@
 	<Register name="coax_select">1</Register>
 	<Register name="icap">4294967257</Register>
 	<Register name="buf_cta">
-		<Register name="FIFO">4294967295</Register>
-		<Register name="FPGAtoMMCcounters">65540</Register>
-		<Register name="MMCtoFPGAcounters">983059</Register>
+		<Register name="FIFO">131074</Register>
+		<Register name="FPGAtoMMCcounters">33488896</Register>
+		<Register name="MMCtoFPGAcounters">197631</Register>
 	</Register>
 	<Register name="fc7_daq_cnfg">
 		<Register name="amc13">
@@ -41,14 +41,14 @@
 		<Register name="dio5_block">
 			<Register name="dio5_en">0</Register>
 			<Register name="ch1">
-				<Register name="out_enable">0</Register>
-				<Register name="term_enable">1</Register>
-				<Register name="threshold">50</Register>
-			</Register>
-			<Register name="ch2">
 				<Register name="out_enable">1</Register>
 				<Register name="term_enable">0</Register>
 				<Register name="threshold">0</Register>
+			</Register>
+			<Register name="ch2">
+				<Register name="out_enable">0</Register>
+				<Register name="term_enable">0</Register>
+				<Register name="threshold">50</Register>
 			</Register>
 			<Register name="ch3">
 				<Register name="out_enable">1</Register>
@@ -56,20 +56,20 @@
 				<Register name="threshold">0</Register>
 			</Register>
 			<Register name="ch4">
-				<Register name="out_enable">1</Register>
-				<Register name="term_enable">0</Register>
-				<Register name="threshold">0</Register>
+				<Register name="out_enable">0</Register>
+				<Register name="term_enable">1</Register>
+				<Register name="threshold">50</Register>
 			</Register>
 			<Register name="ch5">
 				<Register name="out_enable">0</Register>
 				<Register name="term_enable">1</Register>
-				<Register name="threshold">0</Register>
+				<Register name="threshold">50</Register>
 			</Register>
 		</Register>
 		<Register name="fast_command_block">
 			<Register name="antenna_trigger_delay_value">1</Register>
 			<Register name="delay_between_two_consecutive">25</Register>
-			<Register name="ext_trigger_delay_value">72</Register>
+			<Register name="ext_trigger_delay_value">269</Register>
 			<Register name="generic_fcmd_addr">0</Register>
 			<Register name="generic_fcmd_data">0</Register>
 			<Register name="stub_trigger_delay_value">0</Register>
@@ -77,7 +77,7 @@
 			<Register name="stubs_mask">1</Register>
 			<Register name="trigger_source">3</Register>
 			<Register name="triggers_to_accept">0</Register>
-			<Register name="user_trigger_frequency">10</Register>
+			<Register name="user_trigger_frequency">1000</Register>
 			<Register name="generic_fcmd">
 				<Register name="number_of_cmds_to_play">0</Register>
 				<Register name="number_of_repetitions">0</Register>
@@ -105,17 +105,17 @@
 				<Register name="select_even">0</Register>
 			</Register>
 			<Register name="test_pulse">
-				<Register name="delay_after_fast_reset">100</Register>
-				<Register name="delay_after_test_pulse">200</Register>
-				<Register name="delay_before_next_pulse">200</Register>
-				<Register name="en_fast_reset">0</Register>
+				<Register name="delay_after_fast_reset">300</Register>
+				<Register name="delay_after_test_pulse">300</Register>
+				<Register name="delay_before_next_pulse">5000</Register>
+				<Register name="en_fast_reset">1</Register>
 				<Register name="en_l1a">1</Register>
 				<Register name="en_shutter">0</Register>
 				<Register name="en_test_pulse">1</Register>
 			</Register>
 		</Register>
 		<Register name="global">
-			<Register name="chips_enable_hyb_00">255</Register>
+			<Register name="chips_enable_hyb_00">231</Register>
 			<Register name="chips_enable_hyb_01">255</Register>
 			<Register name="chips_enable_hyb_02">255</Register>
 			<Register name="chips_enable_hyb_03">255</Register>
@@ -139,10 +139,10 @@
 			<Register name="chips_enable_hyb_21">254</Register>
 			<Register name="chips_enable_hyb_22">255</Register>
 			<Register name="chips_enable_hyb_23">255</Register>
-			<Register name="hybrid_enable">0</Register>
+			<Register name="hybrid_enable">3</Register>
 		</Register>
 		<Register name="optical_block">
-			<Register name="link_select">1</Register>
+			<Register name="link_select">0</Register>
 			<Register name="lpgbt_version">1</Register>
 			<Register name="enable">
 				<Register name="l12">0</Register>
@@ -186,7 +186,7 @@
 			<Register name="debug_blk_signal">0</Register>
 			<Register name="ps_counters_raw_en">0</Register>
 			<Register name="cic">
-				<Register name="2s_sparsified_enable">0</Register>
+				<Register name="2s_sparsified_enable">1</Register>
 				<Register name="clock_enable">1</Register>
 				<Register name="fast_commands_enable">0</Register>
 				<Register name="power_enable">0</Register>
@@ -210,17 +210,17 @@
 			<Register name="slvs_debug">
 				<Register name="auto_l1_capture">0</Register>
 				<Register name="chip_select">0</Register>
-				<Register name="hybrid_select">0</Register>
+				<Register name="hybrid_select">1</Register>
 			</Register>
 			<Register name="stubs">
-				<Register name="stub_package_delay">7</Register>
+				<Register name="stub_package_delay">2</Register>
 			</Register>
 		</Register>
 		<Register name="readout_block">
 			<Register name="packet_nbr">999</Register>
-			<Register name="timeout">0</Register>
+			<Register name="timeout">400</Register>
 			<Register name="global">
-				<Register name="common_stubdata_delay">26</Register>
+				<Register name="common_stubdata_delay">217</Register>
 				<Register name="data_handshake_enable">0</Register>
 				<Register name="data_type">0</Register>
 				<Register name="int_trig_enable">0</Register>
@@ -238,15 +238,15 @@
 		<Register name="sync_block">
 			<Register name="delay">10000</Register>
 			<Register name="enable">0</Register>
-			<Register name="is_bc0_enable">0</Register>
+			<Register name="is_bc0_enable">1</Register>
 			<Register name="is_resync_enable">0</Register>
-			<Register name="num_triggers">499</Register>
+			<Register name="num_triggers">99</Register>
 		</Register>
 		<Register name="tlu_block">
-			<Register name="handshake_mode">0</Register>
+			<Register name="handshake_mode">2</Register>
 			<Register name="phase_select">255</Register>
 			<Register name="tlu_enabled">0</Register>
-			<Register name="trigger_id_delay">2</Register>
+			<Register name="trigger_id_delay">1</Register>
 		</Register>
 		<Register name="ttc">
 			<Register name="ttc_enable">0</Register>
@@ -392,8 +392,8 @@
 		<Register name="be_proc">
 			<Register name="frame_counters">
 				<Register name="hybrid0">
-					<Register name="chip0">0</Register>
-					<Register name="chip1">95843415</Register>
+					<Register name="chip0">10</Register>
+					<Register name="chip1">478551030</Register>
 					<Register name="chip2">0</Register>
 					<Register name="chip3">0</Register>
 					<Register name="chip4">0</Register>
@@ -404,7 +404,7 @@
 			</Register>
 			<Register name="general">
 				<Register name="data_payload_buf_empty">1</Register>
-				<Register name="evnt_cnt">0</Register>
+				<Register name="evnt_cnt">10</Register>
 				<Register name="evnt_cnt_buf_empty">1</Register>
 				<Register name="trigdata_buf_empty">1</Register>
 			</Register>
@@ -460,17 +460,17 @@
 			</Register>
 		</Register>
 		<Register name="fast_command_block">
-			<Register name="running_time">0</Register>
-			<Register name="trigger_in_counter">0</Register>
+			<Register name="running_time">3849</Register>
+			<Register name="trigger_in_counter">10</Register>
 			<Register name="general">
 				<Register name="antenna_async_done">0</Register>
-				<Register name="configured">0</Register>
+				<Register name="configured">1</Register>
 				<Register name="fsm_state">0</Register>
-				<Register name="source">1</Register>
+				<Register name="source">3</Register>
 			</Register>
 		</Register>
 		<Register name="general">
-			<Register name="firmware_timestamp">1353782185</Register>
+			<Register name="firmware_timestamp">3098605575</Register>
 			<Register name="clock_generator">
 				<Register name="clk_40_locked">1</Register>
 				<Register name="ref_clk_locked">0</Register>
@@ -556,9 +556,9 @@
 			<Register name="fcmd_debug_ssa_r">0</Register>
 			<Register name="hardware_ready">1</Register>
 			<Register name="input_lines_debug_done">0</Register>
-			<Register name="l1a_debug">0</Register>
+			<Register name="l1a_debug">2863311530</Register>
 			<Register name="mpa_to_cic_cntr">0</Register>
-			<Register name="phase_tuning_reply">0</Register>
+			<Register name="phase_tuning_reply">17468928</Register>
 			<Register name="serializer_done_cbc0">0</Register>
 			<Register name="serializer_done_cbc1">0</Register>
 			<Register name="state_tuning_cbc0">0</Register>
@@ -659,7 +659,7 @@
 				<Register name="fcmd_from_ssa2_test_stat">0</Register>
 			</Register>
 			<Register name="slvs_debug">
-				<Register name="first_header_delay">0</Register>
+				<Register name="first_header_delay">223</Register>
 				<Register name="ps_counters_fsm_state">0</Register>
 				<Register name="ps_counters_ready">0</Register>
 			</Register>
@@ -703,9 +703,9 @@
 		<Register name="board_id">1178810144</Register>
 		<Register name="rev_id">825699892</Register>
 		<Register name="buf_test">
-			<Register name="FIFO">4294967295</Register>
-			<Register name="FPGAtoMMCcounters">65540</Register>
-			<Register name="MMCtoFPGAcounters">917523</Register>
+			<Register name="FIFO">131074</Register>
+			<Register name="FPGAtoMMCcounters">33488896</Register>
+			<Register name="MMCtoFPGAcounters">132095</Register>
 		</Register>
 		<Register name="ctrl">
 			<Register name="cdce_ctrl_sel">1</Register>

@@ -49,13 +49,16 @@ void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
     fRegMap[pReg]    = psetValue;
     if(fTrackModifiedRegistersEnabled)
     {
-        bool isFreeRegister = false;
-        for(const auto& freeRegister: fListOfFreeRegisters)
+        if(fModifiedRegisters.find(pReg) == fModifiedRegisters.end()) // check if it already tracked
         {
-            isFreeRegister = std::regex_match(pReg, freeRegister);
-            if(isFreeRegister) break;
+            bool isFreeRegister = false;
+            for(const auto& freeRegister: fListOfFreeRegisters)
+            {
+                isFreeRegister = std::regex_match(pReg, freeRegister);
+                if(isFreeRegister) break;
+            }
+            if(!isFreeRegister && oldRegister != psetValue) { fModifiedRegisters[pReg] = oldRegister; }
         }
-        if(!isFreeRegister && oldRegister != psetValue) fModifiedRegisters[pReg] = oldRegister;
     }
 }
 

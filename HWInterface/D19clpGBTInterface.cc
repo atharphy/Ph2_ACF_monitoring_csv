@@ -396,6 +396,8 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         size_t cMaxAttempts = 5;
         for(size_t cAttempt = 0; cAttempt < cMaxAttempts; cAttempt++)
         {
+            uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
+            if(cChipVersion == 0) { ResetRxDll(pChip, {cGroup}); }
             // Enable training
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
 
