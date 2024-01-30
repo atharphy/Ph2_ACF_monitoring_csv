@@ -129,6 +129,7 @@ class BeamTestCheck : public OTTool
     void Validate();
     std::string GetStubLatencyRegName(int pOGId);
     void SetStubLatencyOG(BeBoard* pBoard, int pOGId, int pStubLatency);
+    unsigned GetBitsFromStubLatency(uint32_t pStubLatency, uint8_t pOGId);
 
     std::vector<Ph2_HwInterface::Injection> fInjections;
 
