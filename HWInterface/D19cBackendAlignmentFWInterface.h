@@ -1,9 +1,9 @@
 #ifndef __D19cBackendAlignmentFWInterface_H__
 #define __D19cBackendAlignmentFWInterface_H__
 
+#include <cstdint>
 #include <map>
 #include <string>
-#include <cstdint>
 
 namespace Ph2_HwDescription
 {

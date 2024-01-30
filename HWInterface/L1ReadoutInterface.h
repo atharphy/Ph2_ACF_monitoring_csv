@@ -1,9 +1,9 @@
 #ifndef _L1ReadoutInterface_H__
 #define _L1ReadoutInterface_H__
 
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <cstdint>
 
 namespace Ph2_HwDescription
 {
