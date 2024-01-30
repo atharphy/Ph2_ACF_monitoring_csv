@@ -2,6 +2,7 @@
 #define _LinkInterface_H__
 
 #include <string>
+#include <cstdint>
 
 namespace Ph2_HwDescription
 {

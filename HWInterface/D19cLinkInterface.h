@@ -2,6 +2,7 @@
 #define _D19cLinkInterface_H__
 
 #include "HWInterface/LinkInterface.h"
+#include <cstdint>
 
 namespace Ph2_HwInterface
 {

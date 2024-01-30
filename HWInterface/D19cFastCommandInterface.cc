@@ -34,6 +34,7 @@ void D19cFastCommandInterface::SendGlobalL1A(uint8_t pDuration)
     ComposeFastCommand(fFastCmd);
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control", fFastCommand);
 }
+
 void D19cFastCommandInterface::SendGlobalCounterReset(uint8_t pDuration)
 {
     FastCommand cFastCommand;
