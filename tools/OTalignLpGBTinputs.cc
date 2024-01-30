@@ -16,6 +16,9 @@ void OTalignLpGBTinputs::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeFrontEndRegister(FrontEndType::LpGBT, "^EPRX\\d{2}ChnCntr$");
+    fRegisterHelper->freeBoardRegister("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state");
+    fRegisterHelper->freeBoardRegister("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state");
+    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.stub_counter_block.general.shutter_close"); //TODO: not sure if needed
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -38,7 +41,7 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::AlignLpGBTInputs ..." << RESET;
+            LOG(INFO) << BOLDYELLOW << "OTalignLpGBTinputs::AlignLpGBTInputs ..." << RESET;
             auto cBoardId   = theOpticalGroup->getBeBoardId();
             auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
             // stop triggers to make sure that there are no L1 packets from the CIC

@@ -45,7 +45,6 @@ void OTalignStubPackage::Stop(void)
         // Calibration is not running on the SoC: processing the histograms
         fDQMHistogramOTalignStubPackage.process();
     #endif
-    dumpConfigFiles();
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTalignStubPackage stopped.";
@@ -85,9 +84,9 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
     std::vector<uint8_t> cFeEnableRegs(0);
     // disable FEs for all hybrids
     if(cSparsified)
-        LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::AlignStubPackage Sparsification on " << RESET;
+        LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::AlignStubPackage Sparsification on " << RESET;
     else
-        LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::AlignStubPackage Sparsification off " << RESET;
+        LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::AlignStubPackage Sparsification off " << RESET;
 
     for(auto cOpticalGroup: *pBoard)
     {
@@ -135,7 +134,7 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
             cFirstOnLink = false;
         }
     }
-    LOG(INFO) << BOLDBLUE << "LinkAlignmentOT::AlignStubPackage setting hybrid enable register to " << std::bitset<32>(cNewMask) << RESET;
+    LOG(INFO) << BOLDBLUE << "OTalignStubPackage::AlignStubPackage setting hybrid enable register to " << std::bitset<32>(cNewMask) << RESET;
     auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
 
     bool    cSkip       = false;
@@ -329,7 +328,7 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
     // set everything back to original values .. except for the trigger source
     // like I wasn't here
     // reset fast command registers
-    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
     cRegVec.clear();
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
@@ -341,7 +340,7 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // reconfigure sparsification + FEs enabled in this CIC
-    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting Sparsification" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::FindPackageDelay Resetting Sparsification" << RESET;
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
     size_t cIndx = 0;
     for(auto cOpticalGroup: *pBoard)
@@ -375,7 +374,7 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
 
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
-    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
     cRegVec.clear();
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
