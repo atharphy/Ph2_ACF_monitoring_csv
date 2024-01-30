@@ -4,6 +4,7 @@
 #include "HWInterface/TriggerInterface.h"
 #include <string>
 #include <vector>
+#include <cstdint>
 
 namespace Ph2_HwInterface
 {

@@ -13,6 +13,8 @@
 #include <map>
 #include <mutex>
 #include <vector>
+#include <string>
+#include <cstdint>
 
 namespace Ph2_HwDescription
 {

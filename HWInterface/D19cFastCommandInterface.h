@@ -2,6 +2,7 @@
 #define _D19cFastCommandInterface_H__
 
 #include "HWInterface/FastCommandInterface.h"
+#include <cstdint>
 
 namespace Ph2_HwInterface
 {

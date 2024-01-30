@@ -2,6 +2,7 @@
 #define __D19cL1ReadoutInterface_H__
 
 #include "HWInterface/L1ReadoutInterface.h"
+#include <cstdint>
 
 namespace D19cL1EvntEncoder
 {

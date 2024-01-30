@@ -2,6 +2,7 @@
 #define __D19cOpticalInterface_H__
 
 #include "HWInterface/FEConfigurationInterface.h"
+#include <cstdint>
 
 namespace Ph2_HwInterface
 {
