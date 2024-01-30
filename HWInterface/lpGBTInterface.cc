@@ -1452,7 +1452,7 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
             LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Using default calibration data" << RESET;
             // throw std::runtime_error(std::string("LpgbtCalibrationError"));
         }
-        for(auto it = pChip->getADCCalibrationData().cbegin(); it != pChip->getADCCalibrationData().cend(); ++it) { LOG(DEBUG) << BOLDBLUE << it->first << " = " << it->second << RESET; }
+        //for(auto it = pChip->getADCCalibrationData().cbegin(); it != pChip->getADCCalibrationData().cend(); ++it) { LOG(DEBUG) << BOLDBLUE << it->first << " = " << it->second << RESET; }
     }
     else
     {
