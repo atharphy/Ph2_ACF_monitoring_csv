@@ -1257,7 +1257,6 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
     uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
     uint16_t cOriginalTPdelay    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
     uint16_t cOriginalResetEn    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset");
-    uint16_t cOriginalStubDelay  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay");
     uint16_t cOriginalTriggerSrc = cTriggerSrc;
     uint16_t cOrignalTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint8_t  cOriginalTLUconfig  = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled");
@@ -1268,7 +1267,6 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cDelayAfterTP});
-    cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", 200});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 1});
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
@@ -1297,6 +1295,7 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
     uint32_t cFinalDelayTest = 0;
     if(!cSkip)
     {
+        // Loop over all OG, stub package delay can be different for each OG
         for(auto cOpticalGroup: *pBoard)
         {
             // Get register name dependent of OG
@@ -1306,8 +1305,6 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
             // gethybrid IDs
             std::vector<uint8_t>                    cHybridIds(0);
             std::map<uint8_t, std::vector<uint8_t>> cHybridIdsMap;
-            // for(auto cOpticalGroup: *pBoard)
-            // {
             auto cIter = cHybridIdsMap.find(cOpticalGroup->getId());
             if(cIter == cHybridIdsMap.end())
             {
@@ -1324,7 +1321,6 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
                 cIter->second.push_back(cHybrid->getId());
                 cFirstOnLink = false;
             }
-            // }
 
             // Check latency (This is not the problem, always 0 here for all links)
             auto cStubCnfg = cOpticalGroup->getStubCnfg();
@@ -1337,13 +1333,6 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
             cRegNameLat << "_link" << cBaseLinkId * 3 + 2;
             uint32_t cVal = fBeBoardInterface->ReadBoardReg(pBoard, cRegNameLat.str());
             LOG(INFO) << BOLDYELLOW << "Stub Latency on Link#" << +cOpticalGroup->getId() << " " << cRegNameLat.str() << " set to " << std::bitset<32>(cVal) << RESET;
-
-            // TODO: This for all OGs after each other
-            // for on all OGs
-            // in each of that find corect package delay for that OG
-            // And the write those to the registers:
-            // 1. Place values in register after each for step
-            // 2. Store values in vector and do write outside
 
             // unique ids for each hybrid
             bool cCorrectDelay = false;
@@ -1392,11 +1381,6 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
                             LOG(INFO) << BOLDYELLOW << "Event#" << +cEvent->GetEventCount() << "\t.. Hybrid#" << +cId << " BxId is " << cEvent->BxId(cId) << RESET;
                         }
                     }
-                    
-                    // for (auto& cId : cBxIds.second)
-                    // {
-                    //     LOG(INFO) << "Bx ID: " << cId << RESET;
-                    // }
 
                     // check that BxIds are synchronous across single links
                     std::vector<uint8_t> cIdsToCompare(0);
@@ -1531,7 +1515,6 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cOrignalTriggerMult});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cOriginalTPdelay});
-    cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cOriginalStubDelay});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", cOriginalResetEn});
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
@@ -1582,7 +1565,6 @@ bool LinkAlignmentOT::AlignStubPackageLea(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cOrignalTriggerMult});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cOriginalTPdelay});
-    cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cOriginalStubDelay});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", cOriginalResetEn});
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);

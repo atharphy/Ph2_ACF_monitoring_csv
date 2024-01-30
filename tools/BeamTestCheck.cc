@@ -32,7 +32,6 @@ void BeamTestCheck::Initialise()
                       << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay") << RESET;
         }
         std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay",
-                                                "fc7_daq_cnfg.readout_block.global.common_stubdata_delay",
                                                 "fc7_daq_cnfg.fast_command_block.trigger_source",
                                                 "fc7_daq_cnfg.tlu_block.handshake_mode"};
         SetBrdRegstoPerserve(cBrdRegsToKeep);
@@ -202,18 +201,21 @@ void BeamTestCheck::Validate()
             std::string cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
             if( cOpticalGroup->getId() > 9 ) cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
 
-            auto cStubPackageRegister = fBeBoardInterface->ReadBoardReg(cBoard, cRegName);
-            LOG(INFO) << "Stub package reg on Link#" << cOpticalGroup->getId() << " is " << std::bitset<32>(cStubPackageRegister) << RESET;
+            auto cVal = fBeBoardInterface->ReadBoardReg(cBoard, cRegName);
+            LOG(INFO) << "Link#" << cOpticalGroup->getId()
+                        << " Stub package register " << cRegName
+                        << " set to " <<  cVal
+                        << " binary: " << std::bitset<32>(cVal) << RESET;
         } // Read package delay for all links
 
         for(auto cOpticalGroup: *cBoard)
         {
-            auto cStubCnfg = cOpticalGroup->getStubCnfg();
-            auto cStubLatency = cStubCnfg.second;
             std::string cRegName    = GetStubLatencyRegName(cOpticalGroup->getId());
             uint32_t cVal           = fBeBoardInterface->ReadBoardReg(cBoard, cRegName);
-            LOG(INFO) << "Link#" << +cOpticalGroup->getId() << " Stub latency " << +cStubLatency << " "
-                    << cRegName << " set to " << std::bitset<32>(cVal) << RESET;
+            LOG(INFO) << "Link#" << +cOpticalGroup->getId()
+                        << " Stub latency register " << cRegName
+                        << " set to " << cVal
+                        << " binary " << std::bitset<32>(cVal) << RESET;
         } // Read latency for all links
     }
 
@@ -2165,7 +2167,6 @@ void BeamTestCheck::ScanStubLatencyTest(uint8_t pContinuousReadout)
                 cSet.push_back(0);
                 continue;
             }
-            // fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
             for (auto cOpticalGroup: *cBoard)
             {
                 SetStubLatencyOG(cBoard, cOpticalGroup->getId(), cStubLatency);
@@ -2231,15 +2232,12 @@ void BeamTestCheck::ScanStubLatencyTest(uint8_t pContinuousReadout)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            // TODO: Search for optimal stub lat value per OG
-            // max? or most probable value?
             uint32_t cLatOG = 0;
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
                     auto& cLat = fOptimalStubLatency.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-
                     if (cLat > cLatOG)
                     {
                         cLatOG = cLat;
@@ -2269,11 +2267,17 @@ void BeamTestCheck::SetStubLatencyOG(BeBoard* pBoard, int pOGId, int pStubLatenc
 
     uint32_t cVal = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
     // Set all bits of OG with id pOGId to 0 before setting the correct value
-    // TODO: nicer with a mask!
-    for (int i = 0; i < 9; i++)
-    {
-        cVal = cVal & ~(1 << ((pOGId % 3) * 9 + i));
-    }
+    uint32_t cStartBit = (pOGId % 3) * 9;
+    unsigned cMask = ((1 << 9) - 1) << cStartBit;
+    cMask = ~cMask;
+
+    LOG(DEBUG) << "Link#" << pOGId
+                << " Using mask " << std::bitset<32>(cMask)
+                << " to set stub latency to 0" << RESET;
+    LOG(DEBUG) << "Link#" << pOGId
+                << " Stub latency value was " << std::bitset<32>(cVal)
+                << " and is now " << std::bitset<32>(cVal & cMask) << RESET;
+    cVal = cVal & cMask;
 
     fBeBoardInterface->WriteBoardReg(pBoard, cRegName, cVal);
     cVal           = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
@@ -2438,7 +2442,6 @@ void BeamTestCheck::PrepareForTLU(BeBoard* pBoard)
 {
     BeBoardRegMap cRegMap         = pBoard->getBeBoardRegMap();
     uint32_t      cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
-    uint32_t      cStubDataDaelay = cRegMap["fc7_daq_cnfg.readout_block.global.common_stubdata_delay"];
 
     // configure trigger
     // make sure I am accepting all triggers
@@ -2461,7 +2464,6 @@ void BeamTestCheck::PrepareForTLU(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_cnfg.dio5_block.dio5_en", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 0});
     cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.term_enable", 1});
-    cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDaelay});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 1);
     std::string cRegName   = "fc7_daq_cnfg.tlu_block.handshake_mode";
@@ -2519,10 +2521,8 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
     // make sure I am accepting all triggers
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
     // trigger config
-    uint32_t cStubDataDaelay = cRegMap["fc7_daq_cnfg.readout_block.global.common_stubdata_delay"];
     uint32_t cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
 
-    LOG(INFO) << BOLDYELLOW << "Common stub data delay set to " << +cStubDataDaelay << RESET;
     uint8_t                                       cTriggerSource = 5;
     std::vector<std::string>                      cFcmdRegs{"trigger_source", "triggers_to_accept"};
     std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource, 0}; // fNevents};
@@ -2541,7 +2541,6 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x0});
     cRegVec.push_back({"fc7_daq_cnfg.dio5_block.dio5_en", 0x1});
     cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 10});
-    cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDaelay});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
