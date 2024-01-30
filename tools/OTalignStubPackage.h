@@ -19,7 +19,7 @@
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
+class BeBoard;
 }
 
 class OTalignStubPackage : public Tool
@@ -43,10 +43,9 @@ class OTalignStubPackage : public Tool
     bool AlignStubPackage(Ph2_HwDescription::BeBoard* pBoard);
     void AlignStubPackage();
 
-    
   private:
-  //
-    
+    //
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTalignStubPackage fDQMHistogramOTalignStubPackage;

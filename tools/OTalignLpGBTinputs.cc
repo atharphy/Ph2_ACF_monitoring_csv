@@ -18,7 +18,7 @@ void OTalignLpGBTinputs::Initialise(void)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::LpGBT, "^EPRX\\d{2}ChnCntr$");
     fRegisterHelper->freeBoardRegister("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state");
     fRegisterHelper->freeBoardRegister("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state");
-    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.stub_counter_block.general.shutter_close"); //TODO: not sure if needed
+    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.stub_counter_block.general.shutter_close"); // TODO: not sure if needed
 
     for(const auto cBoard: *fDetectorContainer)
     {

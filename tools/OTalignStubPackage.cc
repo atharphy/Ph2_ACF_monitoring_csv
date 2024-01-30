@@ -1,7 +1,7 @@
 #include "tools/OTalignStubPackage.h"
-#include "System/RegisterHelper.h"
 #include "HWDescription/BeBoard.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "System/RegisterHelper.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -24,10 +24,7 @@ void OTalignStubPackage::Initialise(void)
 #endif
 }
 
-void OTalignStubPackage::ConfigureCalibration()
-{
-
-}
+void OTalignStubPackage::ConfigureCalibration() {}
 
 void OTalignStubPackage::Running()
 {
@@ -41,29 +38,20 @@ void OTalignStubPackage::Running()
 void OTalignStubPackage::Stop(void)
 {
     LOG(INFO) << "Stopping OTalignStubPackage measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTalignStubPackage.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTalignStubPackage.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTalignStubPackage stopped.";
 }
 
-void OTalignStubPackage::Pause()
-{
+void OTalignStubPackage::Pause() {}
 
-}
+void OTalignStubPackage::Resume() {}
 
-void OTalignStubPackage::Resume()
-{
-
-}
-
-void OTalignStubPackage::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTalignStubPackage::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTalignStubPackage::AlignStubPackage()
 {

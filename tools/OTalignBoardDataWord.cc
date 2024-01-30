@@ -99,8 +99,8 @@ void OTalignBoardDataWord::WordAlignBEdata()
 
 bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
 {
-    auto theBoardId  = theOpticalGroup->getBeBoardId();
-    auto theBoard    = fDetectorContainer->getObject(theBoardId);
+    auto theBoardId = theOpticalGroup->getBeBoardId();
+    auto theBoard   = fDetectorContainer->getObject(theBoardId);
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::WordAlignBEdata for an OG " << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
@@ -138,17 +138,19 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
             cAlignerObjct.fLine    = cLineId;
             cAlignerObjct.fOptical = 1;
             LineConfiguration cLineCnfg;
-            cLineCnfg.fPattern       = 0xEA;
-            cLineCnfg.fPatternPeriod = 8;
-            bool isLineAligned = false;
-            int maxNumberOfIterations = 10;
-            int currentIterationNumber = 0;
+            cLineCnfg.fPattern          = 0xEA;
+            cLineCnfg.fPatternPeriod    = 8;
+            bool isLineAligned          = false;
+            int  maxNumberOfIterations  = 10;
+            int  currentIterationNumber = 0;
             while(!isLineAligned && currentIterationNumber < maxNumberOfIterations)
             {
                 ++currentIterationNumber;
                 cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
                 isLineAligned = cAlignerInterface->IsLineWordAligned();
-                if(!isLineAligned) LOG(INFO) << BOLDYELLOW << "Alignment on Board " << +theOpticalGroup->getBeBoardId() << " OpticalGroup " << +theOpticalGroup->getId() << " " << +theHybrid->getId() << " line " << cLineId << " failed, retrying " << maxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
+                if(!isLineAligned)
+                    LOG(INFO) << BOLDYELLOW << "Alignment on Board " << +theOpticalGroup->getBeBoardId() << " OpticalGroup " << +theOpticalGroup->getId() << " " << +theHybrid->getId() << " line "
+                              << cLineId << " failed, retrying " << maxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
             }
             if(!isLineAligned)
             {
@@ -159,7 +161,8 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
                 } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                 return false;
             }
-            fBeBitSlip.getObject(theBoardId)->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>()[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
+            fBeBitSlip.getObject(theBoardId)->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>()[cLineId] =
+                cAlignerInterface->GetLineConfiguration().fBitslip;
         }
     }
     // check for 0 bit slips
@@ -299,8 +302,10 @@ bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* pOpticalGroup, bo
         cLineStatus.second = cAlignerInterface->GetLineConfiguration().fBitslip;
         cSuccess           = cLineStatus.first;
         if(cSuccess) cThisBeBitSlip.push_back(cLineStatus.second);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.phase_tuning_reply = 0x" << std::hex << +fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.phase_tuning_reply") << std::dec << std::endl;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl = 0x"  << std::hex << +fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl")  << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.phase_tuning_reply = 0x" << std::hex
+                  << +fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.phase_tuning_reply") << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl = 0x" << std::hex
+                  << +fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl") << std::dec << std::endl;
 
         // if the above doesn't work.. try and find the correct bitslip manually in software
         if(!cSuccess)

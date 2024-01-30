@@ -241,9 +241,9 @@ Reply D19cBackendAlignmentFWInterface::AlignWord(AlignerObject pAlignerObject, L
     }
     SendCommand("AlignLine");
 
-    bool isDone = false;
-    int maxNumberOfIterations = 10;
-    int currentInterationNumber = 0;
+    bool isDone                  = false;
+    int  maxNumberOfIterations   = 10;
+    int  currentInterationNumber = 0;
     while(!isDone && currentInterationNumber < maxNumberOfIterations)
     {
         ++currentInterationNumber;
