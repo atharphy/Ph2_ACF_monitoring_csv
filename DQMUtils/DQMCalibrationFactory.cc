@@ -6,6 +6,7 @@
 #include "DQMUtils/DQMHistogramLatencyScan.h"
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #include "DQMUtils/DQMHistogramPedestalEqualization.h"
+#include "DQMUtils/DQMHistogramOTCMNoise.h"
 #include "DQMUtils/DQMMetadataIT.h"
 #include "DQMUtils/DQMMetadataOT.h"
 #include "DQMUtils/PSPhysicsHistograms.h"
@@ -36,6 +37,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
     Register<DQMMetadataOT, CBCHistogramPulseShape>("cbcpulseshape");
     Register<DQMMetadataOT, DQMHistogramLatencyScan>("otlatency");
+    Register<DQMMetadataOT, DQMHistogramOTCMNoise>("commonmodemeas");
 
     // IT calibrations
     Register<DQMMetadataIT, PixelAliveHistograms>("pixelalive");

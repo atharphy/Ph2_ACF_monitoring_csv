@@ -1,7 +1,7 @@
 /*!
         \file                DQMHistogramOTCMNoise.h
         \brief               DQM class for OTCMNoise
-        \author              Lesya Horyn
+        \author              Lesya Horyn, Martin Delcourt
         \date                17/02/22
 */
 
@@ -10,6 +10,8 @@
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
+
+enum OTCMNoisePlotType { OTCMNoiseOdd, OTCMNoiseEven, OTCMNoiseSum};
 
 class TFile;
 
@@ -45,9 +47,14 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
      */
     bool fill(std::string& inputStream) override;
 
-    bool fillHitPlots(DetectorDataContainer& theHitDataSum, DetectorDataContainer& theHitDataOdd, DetectorDataContainer& theHitDataEven);
+    bool fillHitPlots(DetectorDataContainer& theHitDataSum, OTCMNoisePlotType thePlotType);
+    bool fillHitPlotsSum(DetectorDataContainer& theHitData);
+    bool fillHitPlotsOdd(DetectorDataContainer& theHitData);
+    bool fillHitPlotsEven(DetectorDataContainer& theHitData);
+
     bool fill2DHitPlots(DetectorDataContainer& theHitData);
-    bool fillCorrelationPlots(DetectorDataContainer& theHybridData, DetectorDataContainer& theSensorData);
+    bool fillHybridCorrelationPlots(DetectorDataContainer& theHybridData);
+    bool fillSensorCorrelationPlots(DetectorDataContainer& theSensorData);
     bool fillHitProfile(DetectorDataContainer& theHitData);
 
     /*!
@@ -85,6 +92,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     DetectorDataContainer f2DChipSensorCorrelation;
     DetectorDataContainer f2DHybridCorrelation;
     DetectorDataContainer f2DChipCorrelation;
+
 
     uint32_t fNevents;
     bool     f2DHistograms;

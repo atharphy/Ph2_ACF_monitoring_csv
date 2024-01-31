@@ -11,6 +11,7 @@
 #include "tools/OTVTRXLightOff.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/OTCMNoise.h"
 #include "tools/RD53ClockDelay.h"
 #include "tools/RD53DataTransmissionTest.h"
 #include "tools/RD53Gain.h"
@@ -46,6 +47,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample");
     Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("cbcpulseshape");
     Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("otlatency");
+    Register<OTTemperature, LinkAlignmentOT, CicFEAlignment,OTCMNoise>("commonmodemeas");
 
     // IT calibrations
     Register<PixelAlive>("pixelalive");

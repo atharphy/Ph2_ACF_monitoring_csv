@@ -269,20 +269,38 @@ void OTCMNoise::TakeData()
         }     // end acquisition loop
     }
 #ifdef __USE_ROOT__
-    fDQMHistogramOTCMNoise.fillHitPlots(theHitContainerSum, theHitContainerOdd, theHitContainerEven);
-    fDQMHistogramOTCMNoise.fillCorrelationPlots(the2DHybridCorrelationContainer, the2DSensorCorrelationContainer);
+    fDQMHistogramOTCMNoise.fillHitPlotsSum(theHitContainerSum);
+    fDQMHistogramOTCMNoise.fillHitPlotsOdd(theHitContainerOdd);
+    fDQMHistogramOTCMNoise.fillHitPlotsEven(theHitContainerEven);
+    fDQMHistogramOTCMNoise.fillHybridCorrelationPlots(the2DHybridCorrelationContainer);
+    fDQMHistogramOTCMNoise.fillSensorCorrelationPlots(the2DSensorCorrelationContainer);
     if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
 
 #else
     if(fDQMStreamerEnabled)
     {
-        ContainerSerialization theHitSerialization("OTCMNoiseHitStream");
-        theHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, theHitContainer);
+        LOG(INFO)<<"Serializing..."<<RESET;
         if(f2DHistograms)
         {
+            LOG(INFO)<<BOLDRED<<"OTCMNoise2DHitStream"<<RESET;
             ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
-            the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, theHitContainer);
+            the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DHitContainer);
+            
         }
+
+        LOG(INFO)<<BOLDRED<<"OTCMNoiseHitStreamSum"<<RESET;
+        ContainerSerialization theHitSerializationSum("OTCMNoiseHitStreamSum");
+        theHitSerializationSum.streamByOpticalGroupContainer(fDQMStreamer, theHitContainerSum);
+        LOG(INFO)<<BOLDRED<<"OTCMNoiseHitStreamOdd"<<RESET;
+        ContainerSerialization theHitSerializationOdd("OTCMNoiseHitStreamOdd");
+        theHitSerializationOdd.streamByOpticalGroupContainer(fDQMStreamer, theHitContainerOdd);
+        ContainerSerialization theHitSerializationEven("OTCMNoiseHitStreamEven");
+        theHitSerializationEven.streamByOpticalGroupContainer(fDQMStreamer, theHitContainerEven);
+        ContainerSerialization the2DHybridSerialization("OTCMNoise2DHybridCorrelationStream");
+        the2DHybridSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DHybridCorrelationContainer);
+        ContainerSerialization the2DSensorSerialization("OTCMNoise2DSensorCorrelationStream");
+        the2DSensorSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DSensorCorrelationContainer);
+
     }
 #endif
 }
@@ -290,7 +308,7 @@ void OTCMNoise::TakeData()
 void OTCMNoise::parseSettings()
 {
     // now read the settings from the map
-    fNevents      = findValueInSettings<double>("Nevents", 100);
+    fNevents      = findValueInSettings<double>("CMNoise_Nevents", 100);
     f2DHistograms = findValueInSettings<double>("CMNoise_2DHistograms", 0);
     fManualVcth   = findValueInSettings<double>("CMNoise_manualVcth", 0);
 
