@@ -35,7 +35,7 @@ void OTalignBoardDataWord::Initialise(void)
 
     size_t               numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
     std::vector<uint8_t> initialBitSlipVector(numberOfLines, 0);
-    ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeBitSlip, initialBitSlipVector);
+    ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeBitSlipContainer, initialBitSlipVector);
 
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -95,6 +95,12 @@ void OTalignBoardDataWord::WordAlignBEdata()
         LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::WordAlignBEdata ... trying to readout L1 data.. " << RESET;
         ReadNEvents(theBoard, 10);
     }
+
+    #ifdef __USE_ROOT__
+    fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBeBitSlipContainer);
+    #else
+    #endif
+
 }
 
 bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
@@ -161,19 +167,9 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
                 } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                 return false;
             }
-            fBeBitSlip.getObject(theBoardId)->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>()[cLineId] =
+            fBeBitSlipContainer.getObject(theBoardId)->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>()[cLineId] =
                 cAlignerInterface->GetLineConfiguration().fBitslip;
         }
-    }
-    // check for 0 bit slips
-    for(auto theHybrid: *theOpticalGroup)
-    {
-        auto&                cBeBitSlipHybrd = fBeBitSlip.getObject(theBoardId)->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId());
-        auto&                cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
-        std::vector<uint8_t> cBitSlipHist(15, 0);
-        for(auto cItem: cThisBeBitSlip) cBitSlipHist[cItem]++;
-        auto cMode = std::max_element(cBitSlipHist.begin(), cBitSlipHist.end()) - cBitSlipHist.begin();
-        LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +theHybrid->getId() << " most frequent bitslip is " << +cMode << RESET;
     }
 
     for(auto theHybrid: *theOpticalGroup)
@@ -200,14 +196,6 @@ bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)
     LOG(INFO) << BOLDMAGENTA << "OTalignBoardDataWord::WordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
     bool isHybridAligned = L1WordAlignment(theOpticalGroup, fL1Debug);
 
-    size_t cIndx = 0;
-    // re-confiure enabled FEs
-    for(auto theHybrid: *theOpticalGroup)
-    {
-        auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-        fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
-        cIndx++;
-    }
     LOG(INFO) << BOLDYELLOW << "Reached end of WordAlignBEData" << RESET;
     return isHybridAligned;
 }
@@ -244,7 +232,7 @@ bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* pOpticalGroup, bo
     cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
 
-    auto& cBeBitSlip   = fBeBitSlip.getObject(theBoardId);
+    auto& cBeBitSlip   = fBeBitSlipContainer.getObject(theBoardId);
     auto& cBeBitSlipOG = cBeBitSlip->getObject(pOpticalGroup->getId());
 
     bool cAllowZeroBitslip = true;

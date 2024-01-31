@@ -835,8 +835,8 @@ void Tool::dumpConfigFiles()
             const auto& node = hwInterface->getNode(path);
 
             if((node.getPermission() == uhal::defs::READWRITE) && (++node.begin() == node.end()))
-            // if((node.getPermission() == uhal::defs::READWRITE || node.getPermission() == uhal::defs::READ)  && (++node.begin() == node.end()))
             {
+                if(path == "sysreg.buf_test.FIFO" || path == "buf_cta.FIFO") continue;
                 fBeBoardInterface->ReadBoardReg(theBoard, path);
             }
         }

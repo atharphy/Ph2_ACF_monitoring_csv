@@ -2,6 +2,7 @@
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "TH1I.h"
 
 #include "TFile.h"
 
@@ -20,7 +21,41 @@ void DQMHistogramOTalignBoardDataWord::book(TFile* theOutputFile, DetectorContai
     // make fDetectorData ready to receive the information fromm the stream
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     // SoC utilities only - END
+
+    size_t numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+    HistContainer<TH1I> bitSlipHistogram("BitSlipValues", "Bit slip values", numberOfLines, -0.5, numberOfLines - 0.5);
+    bitSlipHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
+    bitSlipHistogram.fTheHistogram->GetYaxis()->SetTitle("Bitslip value");
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBitSlipHistogramContainer, bitSlipHistogram);
+
 }
+
+//========================================================================================================================
+
+void DQMHistogramOTalignBoardDataWord::fillBitSlipValues(DetectorDataContainer& theBitSlipContainer)
+{
+    for(auto board: theBitSlipContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                if(!hybrid->hasSummary()) continue;
+                TH1I* hybridBitSlipHistogram = fBitSlipHistogramContainer.getObject(board->getId())
+                                                ->getObject(opticalGroup->getId())
+                                                ->getObject(hybrid->getId())
+                                                ->getSummary<HistContainer<TH1I>>()
+                                                .fTheHistogram;
+                auto theHybridBitSlipVector = hybrid->getSummary<std::vector<uint8_t>>();
+                for(size_t lineId = 0; lineId < theHybridBitSlipVector.size(); ++lineId)
+                {
+                    hybridBitSlipHistogram->SetBinContent(lineId+1, theHybridBitSlipVector[lineId]);
+                }
+            }
+        }
+    }
+}
+
 
 //========================================================================================================================
 void DQMHistogramOTalignBoardDataWord::process()
