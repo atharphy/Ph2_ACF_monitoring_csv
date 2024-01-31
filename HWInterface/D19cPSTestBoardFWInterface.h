@@ -3,17 +3,18 @@
 
 #include "HWInterface/BeBoardFWInterface.h"
 #include <string>
+namespace Ph2_HwDescription
+{
+class BeBoard;
+}
 
 namespace Ph2_HwInterface
 {
 class D19cPSTestBoardFWInterface : public BeBoardFWInterface
 {
   public:
-    D19cPSTestBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
-    D19cPSTestBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
-
-    D19cPSTestBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
-    D19cPSTestBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
+    D19cPSTestBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, Ph2_HwDescription::BeBoard* theBoard);
+    D19cPSTestBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler, Ph2_HwDescription::BeBoard* theBoard);
     ~D19cPSTestBoardFWInterface();
 
   public:

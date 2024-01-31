@@ -1410,4 +1410,5 @@ bool CicInterface::StartUp(Chip* pChip)
     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " locked fast command decoder in CIC." << RESET;
     return true;
 }
+
 } // namespace Ph2_HwInterface

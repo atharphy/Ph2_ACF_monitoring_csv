@@ -10,16 +10,19 @@
 #ifndef REGMANAGER_H
 #define REGMANAGER_H
 
-#include "Utils/easylogging++.h"
-#include <chrono>
-#include <map>
 #include <mutex>
 #include <string>
-#include <thread>
-#include <uhal/uhal.hpp>
-#include <utility>
 #include <vector>
 
+namespace Ph2_HwDescription
+{
+class BeBoard;
+}
+namespace uhal
+{
+class HwInterface;
+class Node;
+} // namespace uhal
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
@@ -39,9 +42,9 @@ class RegManager
     const std::string                             fUri;
     const std::string                             fAddressTable;
     const std::string                             fId;
-    std::recursive_mutex                          fMutex;
 
   public:
+    std::recursive_mutex fMutex;
     // Connection w uHal
     /*!
      * \brief Constructor of the RegManager class
@@ -49,7 +52,7 @@ class RegManager
      * \param pBoardId Board Id in the XML configuration file. The uHAL connection name will be boardX where X is the
      * number Id.
      */
-    RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId);
+    RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId, Ph2_HwDescription::BeBoard* theBoard);
 
     /*!
      * \brief Constructor of the RegManager class
@@ -57,7 +60,7 @@ class RegManager
      * \param pUri: URI string for uHAL
      * \param pAddressTable: address table path
      */
-    RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
 
     RegManager(const RegManager&) = delete;
 
@@ -134,14 +137,7 @@ class RegManager
     /*!
      * \brief Reset the HW Interface with different Id, Uri and Address Table
      */
-    virtual void ResetRegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
-    {
-        if(fBoard)
-        {
-            delete fBoard;
-            fBoard = new uhal::HwInterface(uhal::ConnectionManager::getDevice(pId, pUri, pAddressTable));
-        }
-    }
+    virtual void ResetRegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
 
     /*!
      * \brief Stack the commands, deliver when full or timeout
@@ -195,11 +191,12 @@ class RegManager
         Replay
     };
 
-    static Mode           mode;
-    uint32_t              replayRead();
-    std::vector<uint32_t> replayBlockRead(size_t size);
-    void                  captureRead(uint32_t value);
-    void                  captureBlockRead(std::vector<uint32_t> data);
+    static Mode                 mode;
+    uint32_t                    replayRead();
+    std::vector<uint32_t>       replayBlockRead(size_t size);
+    void                        captureRead(uint32_t value);
+    void                        captureBlockRead(std::vector<uint32_t> data);
+    Ph2_HwDescription::BeBoard* fTheBoardPointer;
 };
 } // namespace Ph2_HwInterface
 

@@ -73,13 +73,19 @@ const std::map<int, std::string> FE_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                   {8, "WAIT_I2C_WR_DONE"},
                                                   {9, "WAIT_I2C_WR_DONE"}};
 } // namespace LpGBTSlowControlWorker
+
+namespace Ph2_HwDescription
+{
+class Chip;
+class ChipRegItem;
+} // namespace Ph2_HwDescription
 namespace Ph2_HwInterface
 {
+class RegManager;
 class D19clpGBTSlowControlWorkerInterface : public D19cCommandProcessorInterface
 {
   public:
-    D19clpGBTSlowControlWorkerInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19clpGBTSlowControlWorkerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19clpGBTSlowControlWorkerInterface(RegManager* theRegManager);
     ~D19clpGBTSlowControlWorkerInterface();
 
   public:
