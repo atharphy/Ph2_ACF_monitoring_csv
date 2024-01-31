@@ -11,11 +11,18 @@
 #define OTalignBoardDataWord_h__
 
 #include "Tool.h"
+#include <vector>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
 #endif
 
+namespace Ph2_HwInterface
+{
+    class AlignerObject;
+    class LineConfiguration;
+    class D19cBackendAlignmentFWInterface;
+}
 namespace Ph2_HwDescription
 {
 class BeBoard;
@@ -42,12 +49,13 @@ class OTalignBoardDataWord : public Tool
 
   private:
     DetectorDataContainer fBeBitSlipContainer;
+    DetectorDataContainer fAlignmentRetryContainer;
 
-    void                     WordAlignBEdata();
-    bool                     WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    bool                     L1WordAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope);
-    std::pair<bool, uint8_t> PhaseTuneLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId);
-    void                     ManuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip);
+    void                     wordAlignBEdata();
+    bool                     wordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    bool                     L1WordAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void                     manuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip);
+    bool                     tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, uint8_t lineId, Ph2_HwInterface::AlignerObject& theAlignerObject, Ph2_HwInterface::LineConfiguration& theLineConfiguration, std::vector<uint8_t>& theHybridBitSlipVector,std::vector<uint8_t>& theHybridAlignmentRetryVector);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

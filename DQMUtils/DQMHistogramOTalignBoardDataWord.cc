@@ -27,6 +27,11 @@ void DQMHistogramOTalignBoardDataWord::book(TFile* theOutputFile, DetectorContai
     bitSlipHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bitSlipHistogram.fTheHistogram->GetYaxis()->SetTitle("Bitslip value");
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBitSlipHistogramContainer, bitSlipHistogram);
+
+    HistContainer<TH1I> alignmentRetryHistogram("WordAlignmentRetryNumbers", "Word alignment retry numbers", numberOfLines, -0.5, numberOfLines - 0.5);
+    alignmentRetryHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
+    alignmentRetryHistogram.fTheHistogram->GetYaxis()->SetTitle("Retry number");
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fAlignmentRetryHistogramContainer, alignmentRetryHistogram);
 }
 
 //========================================================================================================================
@@ -42,12 +47,33 @@ void DQMHistogramOTalignBoardDataWord::fillBitSlipValues(DetectorDataContainer& 
                 if(!hybrid->hasSummary()) continue;
                 TH1I* hybridBitSlipHistogram =
                     fBitSlipHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
-                auto theHybridBitSlipVector = hybrid->getSummary<std::vector<uint8_t>>();
-                for(size_t lineId = 0; lineId < theHybridBitSlipVector.size(); ++lineId) { hybridBitSlipHistogram->SetBinContent(lineId + 1, theHybridBitSlipVector[lineId]); }
+                auto theHybridRetryNumberVector = hybrid->getSummary<std::vector<uint8_t>>();
+                for(size_t lineId = 0; lineId < theHybridRetryNumberVector.size(); ++lineId) { hybridBitSlipHistogram->SetBinContent(lineId + 1, theHybridRetryNumberVector[lineId]); }
             }
         }
     }
 }
+
+//========================================================================================================================
+
+void DQMHistogramOTalignBoardDataWord::fillAlignmentRetryNumber(DetectorDataContainer& theAlignmentRetryContainer)
+{
+    for(auto board: theAlignmentRetryContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                if(!hybrid->hasSummary()) continue;
+                TH1I* hybridRetryNumberHistogram =
+                    fAlignmentRetryHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
+                auto theHybridRetryNumberVector = hybrid->getSummary<std::vector<uint8_t>>();
+                for(size_t lineId = 0; lineId < theHybridRetryNumberVector.size(); ++lineId) { hybridRetryNumberHistogram->SetBinContent(lineId + 1, theHybridRetryNumberVector[lineId]); }
+            }
+        }
+    }
+}
+
 
 //========================================================================================================================
 void DQMHistogramOTalignBoardDataWord::process()
