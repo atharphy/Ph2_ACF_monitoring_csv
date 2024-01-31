@@ -96,11 +96,10 @@ void OTalignBoardDataWord::WordAlignBEdata()
         ReadNEvents(theBoard, 10);
     }
 
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBeBitSlipContainer);
-    #else
-    #endif
-
+#else
+#endif
 }
 
 bool OTalignBoardDataWord::WordAlignBEdata(const OpticalGroup* theOpticalGroup)

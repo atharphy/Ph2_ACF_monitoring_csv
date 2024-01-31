@@ -11,6 +11,7 @@
  */
 
 #include "HWInterface/D19cFWInterface.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Hybrid.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
@@ -28,7 +29,6 @@
 #include <chrono>
 #include <time.h>
 #include <uhal/uhal.hpp>
-#include "HWDescription/BeBoardRegItem.h"
 // #pragma GCC diagnostic ignored "-Wpedantic"
 
 using namespace Ph2_HwDescription;

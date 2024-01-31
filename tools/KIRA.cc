@@ -1,9 +1,9 @@
 #include "KIRA.h"
 
+#include "HWDescription/BeBoardRegItem.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/Occupancy.h"
-#include "HWDescription/BeBoardRegItem.h"
 
 KIRA::KIRA() : OTTool() { fTargetIntensity = 0; }
 KIRA::~KIRA() {}

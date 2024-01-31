@@ -1,4 +1,5 @@
 #include "tools/PedeNoise.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Cbc.h"
 #include "HWDescription/SSA.h"
 #include "HWInterface/D19cFWInterface.h"
@@ -14,7 +15,6 @@
 #include "Utils/ThresholdAndNoise.h"
 #include "boost/format.hpp"
 #include <math.h>
-#include "HWDescription/BeBoardRegItem.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMHistogramPedeNoise.h"

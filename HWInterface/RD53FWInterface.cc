@@ -9,8 +9,8 @@
 
 #include "HWInterface/RD53FWInterface.h"
 #include "HWDescription/BeBoard.h"
-#include "HWInterface/RD53Interface.h"
 #include "HWDescription/BeBoardRegItem.h"
+#include "HWInterface/RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 

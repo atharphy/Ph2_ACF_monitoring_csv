@@ -1,4 +1,5 @@
 #include "tools/PSPixelAlive.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Cbc.h"
 #include "HWDescription/SSA.h"
 #include "HWInterface/D19cFWInterface.h"
@@ -13,7 +14,6 @@
 #include "Utils/ThresholdAndNoise.h"
 #include "boost/format.hpp"
 #include <math.h>
-#include "HWDescription/BeBoardRegItem.h"
 
 PSPixelAlive::PSPixelAlive() : Tool() {}
 

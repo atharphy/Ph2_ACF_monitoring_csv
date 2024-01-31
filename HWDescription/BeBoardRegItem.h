@@ -18,8 +18,8 @@ struct BeBoardRegItem
     BeBoardRegItem(uint32_t pValue) : fValue(pValue) {}
     BeBoardRegItem(const BeBoardRegItem&) = default;
 
-    uint32_t fValue      = 0;
-    bool     fPrmptCfg   = false;
+    uint32_t fValue    = 0;
+    bool     fPrmptCfg = false;
 
     bool operator==(const BeBoardRegItem& theBeBoardRegItem) const { return fValue == theBeBoardRegItem.fValue; }
 

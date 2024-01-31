@@ -10,6 +10,7 @@
  */
 
 #include "HWDescription/BeBoard.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "Parser/ParserDefinitions.h"
 #include "pugixml.hpp"
 #include <fstream>
@@ -17,7 +18,6 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
-#include "HWDescription/BeBoardRegItem.h"
 
 namespace Ph2_HwDescription
 {
@@ -46,8 +46,8 @@ uint32_t BeBoard::getReg(const std::string& pReg) const
 
 void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
 {
-    auto oldRegister = fRegMap[pReg].fValue;
-    fRegMap[pReg].fValue    = psetValue;
+    auto oldRegister     = fRegMap[pReg].fValue;
+    fRegMap[pReg].fValue = psetValue;
     if(fTrackModifiedRegistersEnabled)
     {
         if(fModifiedRegisters.find(pReg) == fModifiedRegisters.end()) // check if it already tracked
@@ -126,7 +126,7 @@ void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttribut
             pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
             pValue = convertAnyDouble(pRegisterNode.first_child().value());
             BeBoardRegItem theRegister(pValue);
-            theRegister.fPrmptCfg = true;
+            theRegister.fPrmptCfg     = true;
             fRegMap[pAttributeString] = theRegister;
         }
     }

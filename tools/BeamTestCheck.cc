@@ -1,11 +1,11 @@
 #include "BeamTestCheck.h"
 
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Cbc.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/Occupancy.h"
-#include "HWDescription/BeBoardRegItem.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
