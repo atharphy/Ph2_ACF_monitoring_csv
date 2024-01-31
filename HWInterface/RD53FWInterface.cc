@@ -672,8 +672,9 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 
 void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
-    bool retry;
-    int  nAttempts = 0;
+    uint32_t status;
+    bool     retry;
+    int      nAttempts = 0;
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
 
@@ -689,11 +690,10 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
-    uint32_t status;
     do
     {
-        nAttempts++;
         retry = false;
+        nAttempts++;
         pData.clear();
 
         // ####################

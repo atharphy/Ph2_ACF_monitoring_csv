@@ -92,6 +92,11 @@ void ThrMinimization::Stop()
 
 void ThrMinimization::localConfigure(const std::string& histoFileName, int currentRun)
 {
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
+
     histos             = nullptr;
     PixelAlive::histos = nullptr;
 

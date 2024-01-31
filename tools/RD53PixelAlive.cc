@@ -176,6 +176,7 @@ void PixelAlive::run()
                                 // # Run analysis #
                                 // ################
                                 this->SetTestPulse(false);
+                                this->fMaskChannelsFromOtherGroups = false;
                                 this->measureData(1, 1);
 
                                 // #####################
