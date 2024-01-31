@@ -54,7 +54,7 @@ void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
             bool isFreeRegister = false;
             for(const auto& freeRegister: fListOfFreeRegisters)
             {
-                isFreeRegister = std::regex_match(pReg, freeRegister);
+                isFreeRegister = std::regex_match(pReg, freeRegister.first);
                 if(isFreeRegister) break;
             }
             if(!isFreeRegister && oldRegister != psetValue) { fModifiedRegisters[pReg] = oldRegister; }
@@ -133,6 +133,7 @@ void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttribut
 
 void BeBoard::loadConfigFile(const std::string& filename)
 {
+    initializeFreeRegisters();
     pugi::xml_document     registerPugiDocument;
     pugi::xml_parse_result result = registerPugiDocument.load_file(filename.c_str());
     if(!result) // Try if it is not a file, but a string containing the full xml
@@ -192,9 +193,18 @@ std::vector<std::pair<std::string, uint32_t>> BeBoard::getSnapshot() const
     return theModifiedRegisterVector;
 }
 
-void BeBoard::reinitializeFreeRegisters() { fListOfFreeRegisters.clear(); }
+void BeBoard::reinitializeFreeRegisters()
+{
+    std::remove_if(fListOfFreeRegisters.begin(), fListOfFreeRegisters.end(), [](std::pair<std::regex, RegisterType> theRegister) { return (theRegister.second == RegisterType::User); });
+}
 
-void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(theRegisterName); }
+void BeBoard::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("sysreg\\.buf_test\\..*"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("buf_cta\\..*"), RegisterType::Utility));
+}
+
+void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(std::make_pair(theRegisterName, RegisterType::User)); }
 
 std::unique_ptr<pugi::xml_document> BeBoard::createRegisterPugiDocument() const
 {
