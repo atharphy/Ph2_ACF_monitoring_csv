@@ -41,7 +41,7 @@ class OTalignBoardDataWord : public Tool
     static std::string fCalibrationDescription;
 
   private:
-    DetectorDataContainer fBeBitSlip;
+    DetectorDataContainer fBeBitSlipContainer;
 
     void                     WordAlignBEdata();
     bool                     WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
