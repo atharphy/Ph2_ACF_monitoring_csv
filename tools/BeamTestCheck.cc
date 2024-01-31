@@ -2241,7 +2241,9 @@ void BeamTestCheck::ScanStubLatencyTest(uint8_t pContinuousReadout)
                     if (cLat > cLatOG)
                     {
                         cLatOG = cLat;
-                        LOG(INFO) << BOLDMAGENTA << "Found optimal Stub Latency for Chip#" << +cChip->getId() << " to be " << cLat << RESET;
+                        LOG(INFO) << BOLDMAGENTA << "Link#" << +cOpticalGroup->getId()
+                        << " Found optimal Stub Latency for Chip#" << +cChip->getId()
+                        << " to be " << cLat << RESET;
                     }
                 }
             } // hybrid
