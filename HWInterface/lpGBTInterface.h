@@ -213,7 +213,6 @@ class lpGBTInterface : public ChipInterface
     // # of calibration the user is expected to call load_calibration_data method.
 
     void    LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32_t pChipId, std::string pFileName = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv"));
-    void    SetTemperature(Ph2_HwDescription::Chip* pChip, float pTemperature);
     float   EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor = true);
     void    TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pEnable = true);
     void    AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor = true);
@@ -227,8 +226,6 @@ class lpGBTInterface : public ChipInterface
     void    VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltageV, bool pEnable = true);
     float   MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples = 1, bool pResetTempSensor = true);
     float   MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples = 1, bool pDisableMonitorAfterMeasurement = true);
-
-    float fTemperature = 0.0;
 
   protected:
     // ##############

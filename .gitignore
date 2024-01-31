@@ -36,3 +36,4 @@ FEH_PS*/
 .vscode/*
 pythonUtils/__pycache__/
 RegisterDebugUtils/RegisterDifference
+RegisterDebugUtils/BoardRegisterDifference
