@@ -34,7 +34,7 @@ void MetadataHandlerIT::fillFinalConditionsHardwareSpecific()
 {
     __attribute__((unused)) const bool isInitialValue = false;
     DetectorDataContainer              theEndOfCalibContainer;
-    ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theEndOfCalibContainer);
+    ContainerFactory::copyAndInitBoard<std::array<std::string, RD53Shared::NENDOFCALIB>>(*fDetectorContainer, theEndOfCalibContainer);
     MetadataHandlerIT::fillEndOfCalib(theEndOfCalibContainer);
 
 #ifdef __USE_ROOT__
@@ -59,6 +59,7 @@ void MetadataHandlerIT::fillBeginOfCalib(DetectorDataContainer& theBeginOfCalibC
 void MetadataHandlerIT::fillEndOfCalib(DetectorDataContainer& theEndOfCalibContainer)
 {
     for(auto cBoard: *fDetectorContainer)
-        theEndOfCalibContainer.getObject(cBoard->getId())->getSummary<std::string>() =
-            std::to_string(static_cast<Ph2_HwInterface::RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->getNCorruptedNEvents());
+        theEndOfCalibContainer.getObject(cBoard->getId())->getSummary<std::array<std::string, RD53Shared::NENDOFCALIB>>() = {
+            std::to_string(static_cast<Ph2_HwInterface::RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->getNcorruptedNevents()),
+            std::to_string(static_cast<Ph2_HwInterface::RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->getNtrialsNevents())};
 }

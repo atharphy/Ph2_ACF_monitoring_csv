@@ -32,8 +32,8 @@ class DQMMetadataIT : public DQMMetadata
     void reset(void) override;
 
   private:
-    DetectorDataContainer fBeginOfCalibContainer;
-    DetectorDataContainer fEndOfCalibContainer;
+    DetectorDataContainer                                      fBeginOfCalibContainer;
+    std::array<DetectorDataContainer, RD53Shared::NENDOFCALIB> fEndOfCalibContainerArray;
 };
 
 #endif

@@ -1990,6 +1990,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, i
                                                  ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                  ->getNumberOfGroups())
                                 continue;
+
                             fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
                                                                                      getChannelGroupHandlerContainer()
                                                                                          ->getObject(fDetectorContainer->getObject(boardId)->getId())
@@ -2134,6 +2135,7 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
         */
         fUseReadNEvents = true;
     }
+
     doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
     // If in async mode normalization is a little different ..
@@ -2146,13 +2148,13 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
     // }
 
     if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
-    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
+        numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
+
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;
 
     if(fNormalize)
         fDetectorDataContainer->getObject(boardId)->normalizeAndAverageContainers(fDetectorContainer->getObject(boardId), getChannelGroupHandlerContainer()->getObject(boardId), numberOfEvents);
     fUseReadNEvents = cUseReadNEvents;
-    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end " << RESET;
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
