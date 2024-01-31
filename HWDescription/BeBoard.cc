@@ -9,7 +9,7 @@
 
  */
 
-#include "BeBoard.h"
+#include "HWDescription/BeBoard.h"
 #include "Parser/ParserDefinitions.h"
 #include "pugixml.hpp"
 #include <fstream>
@@ -17,6 +17,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include "HWDescription/BeBoardRegItem.h"
 
 namespace Ph2_HwDescription
 {
@@ -40,13 +41,13 @@ uint32_t BeBoard::getReg(const std::string& pReg) const
         return 0;
     }
     else
-        return i->second;
+        return i->second.fValue;
 }
 
 void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
 {
-    auto oldRegister = fRegMap[pReg];
-    fRegMap[pReg]    = psetValue;
+    auto oldRegister = fRegMap[pReg].fValue;
+    fRegMap[pReg].fValue    = psetValue;
     if(fTrackModifiedRegistersEnabled)
     {
         if(fModifiedRegisters.find(pReg) == fModifiedRegisters.end()) // check if it already tracked
@@ -124,7 +125,9 @@ void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttribut
 
             pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
             pValue = convertAnyDouble(pRegisterNode.first_child().value());
-            this->setReg(pAttributeString, pValue);
+            BeBoardRegItem theRegister(pValue);
+            theRegister.fPrmptCfg = true;
+            fRegMap[pAttributeString] = theRegister;
         }
     }
 }
@@ -231,7 +234,7 @@ std::unique_ptr<pugi::xml_document> BeBoard::createRegisterPugiDocument() const
         splitRegister(theRegisterNameAndValue.first, theSplittedRegisterName);
         // for(const auto& reg : theSplittedRegisterName) std::cout<<reg<< " | ";
         // std::cout<<std::endl;
-        theRegisterListSplitted.push_back(std::make_pair(theSplittedRegisterName, theRegisterNameAndValue.second));
+        theRegisterListSplitted.push_back(std::make_pair(theSplittedRegisterName, theRegisterNameAndValue.second.fValue));
     }
 
     std::function<void(pugi::xml_node&, const std::vector<std::pair<std::vector<std::string>, uint32_t>>&)> groupByRegisterAndDumpIntoFile;
@@ -292,6 +295,11 @@ std::stringstream BeBoard::getRegMapStream() const
     auto              registerPugiDocument = createRegisterPugiDocument();
     registerPugiDocument->save(theStream);
     return theStream;
+}
+
+void BeBoard::dumpRegisters()
+{
+    for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second.fValue << std::endl;
 }
 
 } // namespace Ph2_HwDescription

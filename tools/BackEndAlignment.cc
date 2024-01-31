@@ -521,7 +521,6 @@ bool BackEndAlignment::Align()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         // read back register map before you've done anything
-        auto cBoardRegisterMap = theBoard->getBeBoardRegMap();
         bool cWithCIC          = false;
         bool cWithCBC          = false;
         bool cWithSSA          = false;

@@ -14,6 +14,7 @@
 #include "Utils/ThresholdAndNoise.h"
 #include "boost/format.hpp"
 #include <math.h>
+#include "HWDescription/BeBoardRegItem.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMHistogramPedeNoise.h"
@@ -59,7 +60,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoardRegMap cRegMap      = cBoard->getBeBoardRegMap();
-        uint32_t      cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"];
+        uint32_t      cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"].fValue;
 
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
         cRegVec.clear();

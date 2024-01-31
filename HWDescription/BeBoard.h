@@ -21,6 +21,7 @@
 #include <regex>
 #include <stdint.h>
 #include <vector>
+#include "HWDescription/BeBoardRegItem.h"
 
 /*!
  * \namespace Ph2_HwDescription
@@ -28,7 +29,8 @@
  */
 namespace Ph2_HwDescription
 {
-using BeBoardRegMap = std::map<std::string, uint32_t>; /*!< Map containing the registers of a board */
+
+using BeBoardRegMap = std::map<std::string, BeBoardRegItem>; /*!< Map containing the registers of a board */
 
 /*!
  * \class BeBoard
@@ -174,10 +176,7 @@ class BeBoard : public BoardContainer
     std::vector<FrontEndType> connectedFrontEndTypes() const;
     int                       dummyValue_ = 1989;
 
-    void dumpRegisters()
-    {
-        for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
-    }
+    void dumpRegisters();
 
     void              saveRegMap(const std::string& fileName);
     std::stringstream getRegMapStream() const;
@@ -227,7 +226,7 @@ class BeBoard : public BoardContainer
     void                    initializeFreeRegisters();
     BeBoardRegMap           fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
     bool                    fTrackModifiedRegistersEnabled{false};
-    BeBoardRegMap           fModifiedRegisters{};
+    std::map<std::string, uint32_t> fModifiedRegisters{};
     std::vector<std::pair<std::regex, RegisterType>> fListOfFreeRegisters{};
 
 };

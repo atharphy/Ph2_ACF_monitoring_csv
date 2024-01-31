@@ -28,6 +28,7 @@
 #include <chrono>
 #include <time.h>
 #include <uhal/uhal.hpp>
+#include "HWDescription/BeBoardRegItem.h"
 // #pragma GCC diagnostic ignored "-Wpedantic"
 
 using namespace Ph2_HwDescription;
@@ -567,10 +568,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     std::vector<std::pair<std::string, uint32_t>> cBoardRegs;
     for(auto const& it: cRegMap)
     {
-        cBoardRegs.push_back({it.first, it.second});
-        if(it.first == "fc7_daq_cnfg.dio5_block.dio5_en") cEnableDIO5 = (bool)it.second;
-        if(it.first == "fc7_daq_cnfg.optical_block.enable.l8") { cL8Enable = std::bitset<12>(it.second); }
-        if(it.first == "fc7_daq_cnfg.optical_block.enable.l12") { c12Enable = std::bitset<12>(it.second); }
+        cBoardRegs.push_back({it.first, it.second.fValue});
+        if(it.first == "fc7_daq_cnfg.dio5_block.dio5_en") cEnableDIO5 = (bool)it.second.fValue;
+        if(it.first == "fc7_daq_cnfg.optical_block.enable.l8") { cL8Enable = std::bitset<12>(it.second.fValue); }
+        if(it.first == "fc7_daq_cnfg.optical_block.enable.l12") { c12Enable = std::bitset<12>(it.second.fValue); }
         if(it.first == "fc7_daq_cnfg.readout_block.global.zero_suppression_enable") { cBoardRegs.push_back({it.first, pBoard->getEventType() == EventType::ZS}); }
     }
     // configure CDCE - if needed
@@ -578,8 +579,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     bool                          cSecondaryReference = false;
     for(auto const& it: cRegMap)
     {
-        if(it.first == "fc7_daq_cnfg.clock.ext_clk_en") cSecondaryReference = cSecondaryReference | (it.second == 0);
-        if(it.first == "fc7_daq_cnfg.ttc.ttc_enable") cSecondaryReference = cSecondaryReference | (it.second == 1);
+        if(it.first == "fc7_daq_cnfg.clock.ext_clk_en") cSecondaryReference = cSecondaryReference | (it.second.fValue == 0);
+        if(it.first == "fc7_daq_cnfg.ttc.ttc_enable") cSecondaryReference = cSecondaryReference | (it.second.fValue == 1);
     }
     LOG(INFO) << BOLDBLUE << "External clock " << ((cSecondaryReference) ? "Disabled" : "Enabled") << RESET;
     if(cSecondaryReference)
@@ -1013,7 +1014,7 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
         if(cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos)
         {
             // LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
-            cVecReg.push_back({it.first, it.second});
+            cVecReg.push_back({it.first, it.second.fValue});
         }
     }
     this->WriteStackReg(cVecReg);

@@ -13,6 +13,7 @@
 #include "Utils/ThresholdAndNoise.h"
 #include "boost/format.hpp"
 #include <math.h>
+#include "HWDescription/BeBoardRegItem.h"
 
 PSPixelAlive::PSPixelAlive() : Tool() {}
 
@@ -37,7 +38,7 @@ void PSPixelAlive::Initialise()
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoardRegMap cRegMap      = cBoard->getBeBoardRegMap();
-        uint32_t      cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"];
+        uint32_t      cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"].fValue;
 
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
         cRegVec.clear();
@@ -175,7 +176,7 @@ void PSPixelAlive::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
+        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second.fValue)); }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         for(auto cOpticalGroup: *cBoard)
