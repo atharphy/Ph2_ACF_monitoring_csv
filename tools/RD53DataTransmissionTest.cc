@@ -35,8 +35,8 @@ void DataTransmissionTest::ConfigureCalibration()
 
 void DataTransmissionTest::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[DataTransmissionTest::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[DataTransmissionTest::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     DataTransmissionTest::run();
     DataTransmissionTest::sendData();
@@ -59,18 +59,23 @@ void DataTransmissionTest::Stop()
     LOG(INFO) << GREEN << "[DataTransmissionTest::Stop] Stopping" << RESET;
 
     Tool::Stop();
+
     DataTransmissionTest::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
 
 void DataTransmissionTest::localConfigure(const std::string& histoFileName, int currentRun)
 {
-    histos        = nullptr;
-    theCurrentRun = currentRun;
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
 
-    LOG(INFO) << GREEN << "[DataTransmissionTest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    histos = nullptr;
+
+    LOG(INFO) << GREEN << "[DataTransmissionTest::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ##########################
     // # Initialize calibration #
@@ -101,17 +106,11 @@ void DataTransmissionTest::draw(bool saveData)
 
     if(BERtest::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(CalibBase::theHistoFileName);
-    LOG(INFO) << BOLDBLUE << "\t--> DataTransmissionTest saving histograms..." << RESET;
-
-    histos->book(fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookHistoSaveMetadata(histos);
     DataTransmissionTest::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(BERtest::doDisplay == true) myApp->Run(true);
-
-    this->CloseResultFile();
 #endif
 }
 

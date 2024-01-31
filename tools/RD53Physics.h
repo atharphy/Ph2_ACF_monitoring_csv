@@ -66,7 +66,7 @@ class Physics : public CalibBase
 
     void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
 
-    size_t                                   errors;
+    size_t                                   corruptedEventCounter;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     DetectorDataContainer                    theOccContainer;
@@ -89,7 +89,6 @@ class Physics : public CalibBase
     bool        saveBinaryData;
     std::string dataOutputDir;
 
-    int                  theCurrentRun;
     size_t               numberOfEventsPerRun;
     std::recursive_mutex theMtx;
     evtConvType          genericEvtConverter;

@@ -56,6 +56,8 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
 
     auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
+
+    AreHistoBooked = true;
 }
 
 bool SCurveHistograms::fill(std::string& inputStream)

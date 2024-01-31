@@ -47,13 +47,13 @@ void Physics::ConfigureCalibration()
 
 void Physics::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[Physics::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Physics::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_Physics.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
@@ -65,14 +65,13 @@ void Physics::Running()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid) fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChnGroupHandler->allChannelGroup(), true, false);
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ChipReSync();
-
     StartInfo theStartInfo;
-    theStartInfo.setRunNumber(theCurrentRun);
+    theStartInfo.setRunNumber(CalibBase::theCurrentRun);
     SystemController::Start(theStartInfo);
 
-    numberOfEventsPerRun = 0;
-    errors               = 0;
+    numberOfEventsPerRun  = 0;
+    corruptedEventCounter = 0;
+    LOG(INFO) << BOLDBLUE << "[Physics::Running]\t--> Run started" << RESET;
     Physics::run();
 }
 
@@ -97,28 +96,37 @@ void Physics::Stop()
 
     Tool::Stop();
 
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
+
     // ################
     // # Error report #
     // ################
-    Physics::chipErrorReport();
+    CalibBase::chipErrorReport();
+
+    // #######################
+    // # Save chip registers #
+    // #######################
+    CalibBase::saveChipRegisters(doUpdateChip);
 
     Physics::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers (i.e. events): " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of corrupted bunch crossings: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / numberOfEventsPerRun * 100. << "%)"
-              << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of corrupted bunch crossings: " << BOLDYELLOW << std::setprecision(3) << corruptedEventCounter << " ("
+              << 1. * corruptedEventCounter / numberOfEventsPerRun * 100. << "%)" << std::setprecision(-1) << RESET;
 }
 
 void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 {
-    errors        = 0;
-    histos        = nullptr;
-    theCurrentRun = currentRun;
+    corruptedEventCounter = 0;
+    histos                = nullptr;
 
-    LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -133,11 +141,10 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
 #ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
-    this->InitResultFile(CalibBase::theHistoFileName);
 #endif
+    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
 }
 
 void Physics::run()
@@ -148,9 +155,9 @@ void Physics::run()
     {
         RD53Event::decodedEvents.clear();
         Physics::analyze();
+        Physics::draw();
 
-        // @TMP@
-        if(strcmp(frontEnd->name, "SYNC") == 0)
+        if(strcmp(frontEnd->name, "SYNC") == 0) // @TMP@
             for(const auto cBoard: *fDetectorContainer)
             {
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
@@ -163,8 +170,8 @@ void Physics::run()
 
         theGuard.lock();
         genericEvtConverter(RD53Event::decodedEvents);
-        numberOfEventsPerRun += RD53Event::decodedEvents.size();
         theGuard.unlock();
+        numberOfEventsPerRun += RD53Event::decodedEvents.size();
 
         if((RD53Event::decodedEvents.size() != 0) && (numberOfEventsPerRun % PRINTeventsEVERY == 0))
             LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings up to now: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
@@ -175,20 +182,12 @@ void Physics::run()
 
 void Physics::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
-
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
-    }
-
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookHistoSaveMetadata(histos);
     Physics::fillHisto();
     histos->process();
 
@@ -198,7 +197,6 @@ void Physics::draw(bool saveData)
 
 void Physics::analyze(bool doReadBinary)
 {
-    bool gotData = false;
     for(const auto cBoard: *fDetectorContainer)
     {
         size_t dataSize = 0;
@@ -211,13 +209,10 @@ void Physics::analyze(bool doReadBinary)
             SystemController::DecodeData(cBoard, {}, 0, cBoard->getBoardType());
         }
 
-        if(dataSize != 0)
-        {
-            Physics::fillDataContainer(*cBoard);
-            gotData = true;
-        }
+        if(dataSize != 0) Physics::fillDataContainer(*cBoard);
     }
-    if(gotData) Physics::sendData();
+
+    Physics::sendData();
 }
 
 void Physics::fillHisto()
@@ -250,7 +245,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
         if(RD53Event::EvtErrorHandler(static_cast<RD53Event*>(event)->eventStatus) == false)
         {
             LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << evtCounter << RESET;
-            errors++;
+            corruptedEventCounter++;
             RD53Event::PrintEvents({*static_cast<RD53Event*>(event)});
         }
 

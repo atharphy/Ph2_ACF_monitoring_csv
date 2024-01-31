@@ -63,8 +63,8 @@ class ClockDelay : public PixelAlive
   protected:
     size_t startValue;
     size_t stopValue;
-
-    int theCurrentRun;
+    bool   doDisplay;
+    bool   doUpdateChip;
 };
 
 #endif

@@ -55,7 +55,6 @@ void BeBoardInterface::WriteBoardReg(BeBoard* pBoard, const std::string& pRegNod
 
     setBoard(pBoard->getId());
     fBoardFW->WriteReg(pRegNode, pVal);
-    pBoard->setReg(pRegNode, pVal);
 }
 
 void BeBoardInterface::WriteBlockBoardReg(BeBoard* pBoard, const std::string& pRegNode, const std::vector<uint32_t>& pValVec)
@@ -72,7 +71,6 @@ void BeBoardInterface::WriteBoardMultReg(BeBoard* pBoard, const std::vector<std:
 
     setBoard(pBoard->getId());
     fBoardFW->WriteStackReg(pRegVec);
-    for(const auto& cReg: pRegVec) pBoard->setReg(cReg.first, cReg.second);
 }
 
 uint32_t BeBoardInterface::ReadBoardReg(BeBoard* pBoard, const std::string& pRegNode, bool updateRegs)
@@ -81,7 +79,6 @@ uint32_t BeBoardInterface::ReadBoardReg(BeBoard* pBoard, const std::string& pReg
 
     setBoard(pBoard->getId());
     uint32_t cRegValue = static_cast<uint32_t>(fBoardFW->ReadReg(pRegNode));
-    if(updateRegs == true) pBoard->setReg(pRegNode, cRegValue);
     return cRegValue;
 }
 
@@ -93,7 +90,6 @@ void BeBoardInterface::ReadBoardMultReg(BeBoard* pBoard, std::vector<std::pair<s
     for(auto& cReg: pRegVec) try
         {
             cReg.second = static_cast<uint32_t>(fBoardFW->ReadReg(cReg.first));
-            pBoard->setReg(cReg.first, cReg.second);
         }
         catch(...)
         {
@@ -142,14 +138,14 @@ void BeBoardInterface::ConfigureBoard(const BeBoard* pBoard)
     fBoardFW->ConfigureBoard(pBoard);
 }
 
-void BeBoardInterface::Start(BeBoard* pBoard)
+void BeBoardInterface::Start(const BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
-    fBoardFW->Start();
+    fBoardFW->Start(pBoard);
 }
-void BeBoardInterface::Stop(BeBoard* pBoard)
+void BeBoardInterface::Stop(const BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
@@ -157,7 +153,7 @@ void BeBoardInterface::Stop(BeBoard* pBoard)
     fBoardFW->Stop();
 }
 
-void BeBoardInterface::Pause(BeBoard* pBoard)
+void BeBoardInterface::Pause(const BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
@@ -165,7 +161,7 @@ void BeBoardInterface::Pause(BeBoard* pBoard)
     fBoardFW->Pause();
 }
 
-void BeBoardInterface::Resume(BeBoard* pBoard)
+void BeBoardInterface::Resume(const BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 

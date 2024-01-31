@@ -39,7 +39,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
                 auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
                 actualValue      = regReadback[0].second;
                 auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
-                if(regReadback.size() == 0 /* @TMP@ */ || regReadback[0].first != row || regReadback[0].second != data) status = false;
+                if((regReadback.size() == 0) || (regReadback[0].first != row) || (regReadback[0].second != data)) status = false;
             }
         }
         else
@@ -50,14 +50,10 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     }
 
     if(status == false)
-    {
-        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
-                   << ", read = " << BOLDYELLOW << actualValue << RESET;
-    }
+        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 id " << BOLDYELLOW << pChip->getId() << BOLDRED << " reg. " << BOLDYELLOW << regName << BOLDRED
+                   << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED << ", read = " << BOLDYELLOW << actualValue << RESET;
     else if((pVerify == true) && (status == true))
-    {
         LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
-    }
 
     // #######################################
     // # Update both real and fake registers #
@@ -85,17 +81,17 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    const int nAttempts = 20; // @CONST@
-    for(auto attempt = 0; attempt < nAttempts; attempt++)
+    for(auto attempt = 0; attempt < RD53Shared::MAXATTEMPTS; attempt++)
     {
         auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
         if(regReadback.size() == 0)
-            LOG(WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET;
+            LOG(WARNING) << BLUE << "Empty register readback from chip id " << YELLOW << pChip->getId() << BLUE << ", attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW
+                         << +RD53Shared::MAXATTEMPTS << RESET;
         else
             return regReadback[0].second;
     }
 
-    LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
+    LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED " attempts" << RESET;
 
     return 0;
 }
@@ -295,9 +291,9 @@ float RD53Interface::convertADC2VorI(ReadoutChip* pChip, uint32_t value, bool is
 // ######################################
 {
     // ################################################################################
-    // # resistorI2V   = 0.01-0.005 [MOhm] resistor for current to voltage conversion #
-    // # ADCoffset     =  63 [1/10 mV] Offset due to ground shift                     #
-    // # actualVrefADC = 839 [mV]      Lower than VrefADC due to parasitics           #
+    // # resistorI2V   = 0.01-0.005 [MOhm] Resistor for current to voltage conversion #
+    // # ADCoffset     =  63 [1/10 mV]     Offset due to ground shift                 #
+    // # actualVrefADC = 839 [mV]          Lower than VrefADC due to parasitics       #
     // ################################################################################
 
     const float resistorI2V   = pChip->getRegItem("RESISTORI2V").fValue / 1e6; // [MOhm]

@@ -28,6 +28,8 @@ class GenericDacDacScanHistograms : public DQMHistogramBase
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer);
     void fillGenericDacDacScan(const DetectorDataContainer& GenericDacDacScanContainer);
 
+    bool AreHistoBooked = false;
+
   private:
     DetectorContainer* fDetectorContainer;
 

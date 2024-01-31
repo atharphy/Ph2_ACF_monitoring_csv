@@ -69,8 +69,6 @@ class VoltageTuning : public CalibBase
     float       toleranceAna;
     bool        doDisplay;
     std::string dataOutputDir;
-
-    int theCurrentRun;
 };
 
 #endif

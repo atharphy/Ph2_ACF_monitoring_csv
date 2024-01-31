@@ -25,7 +25,6 @@ void StubTool::Initialize()
     //                else                   cDirectory += "Commissioning";
     //
     // Tool cTool
-    // LOG (INFO) << " AAAAAAAAA file name: "<<fDirectoryName;
 
     // TFile* ff;
     // ff= TFile::Open ( "out_" + , "RECREATE" );

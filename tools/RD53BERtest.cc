@@ -32,8 +32,8 @@ void BERtest::ConfigureCalibration()
 
 void BERtest::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[BERtest::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[BERtest::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     BERtest::run();
     BERtest::sendData();
@@ -55,17 +55,21 @@ void BERtest::Stop()
     Tool::Stop();
 
     BERtest::draw();
-    this->closeFileHandler();
+    this->SaveAndClose();
 
     RD53RunProgress::reset();
 }
 
 void BERtest::localConfigure(const std::string& histoFileName, int currentRun)
 {
-    histos        = nullptr;
-    theCurrentRun = currentRun;
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
 
-    LOG(INFO) << GREEN << "[BERtest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    histos = nullptr;
+
+    LOG(INFO) << GREEN << "[BERtest::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -142,13 +146,7 @@ void BERtest::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> BERtest saving histograms..." << RESET;
-    }
-
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookHistoSaveMetadata(histos);
     BERtest::fillHisto();
     histos->process();
 

@@ -8,6 +8,7 @@
 */
 
 #include "HWInterface/D19clpGBTInterface.h"
+#include "HWDescription/lpGBT.h"
 #include <chrono>
 #include <cstring>
 #include <fstream>
@@ -37,23 +38,20 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cIter++;
     } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
     if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state " + fPUSMStatusMap[cChipVersion][cPUSMState])); }
+
     // Configuring chip
-    bool cReconfigure = false;
-    if(cReconfigure)
+    ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
+    std::vector<std::pair<std::string, uint16_t>> cRegVec;
+    cRegVec.clear();
+    uint16_t maximumWritableRegister = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F;
+
+    for(const auto& cRegItem: clpGBTRegMap)
     {
-        ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
-        std::vector<std::pair<std::string, uint16_t>> cRegVec;
-        cRegVec.clear();
-        for(const auto& cRegItem: clpGBTRegMap)
-        {
-            if(cRegItem.second.fAddress <= 0x13c && cRegItem.first.find("ChipConfig") == std::string::npos) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
-        } // get read/write registers
-        for(const auto& cReg: cRegVec)
-        {
-            LOG(DEBUG) << BOLDBLUE << "\tWriting 0x" << std::hex << +cReg.second << std::dec << " to " << cReg.first << RESET;
-            WriteChipReg(pChip, cReg.first, cReg.second);
-        }
-    }
+        if(cRegItem.second.fAddress <= maximumWritableRegister) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
+    } // get read/write registers
+
+    WriteChipMultReg(pChip, cRegVec);
+
     // Setting PUSM Done bits
     SetPUSMDone(pChip, true, true);
     // Checking if lpGBT reaches Ready state
@@ -77,43 +75,46 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     {
         LOG(INFO) << BOLDBLUE << "Load calibration data and automatically tune vref (repeat if temperature changes)!" << RESET;
 
-        LoadCalibrationData(pChip, ReadChipID(pChip, cChipVersion));
-        AutoTuneVref(pChip);
+        LoadCalibrationData(static_cast<lpGBT*>(pChip), ReadChipID(pChip, cChipVersion));
 
-        LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC0\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC0", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC1\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC1", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC2\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC2", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC3\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC3", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC4\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC4", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC5\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC5", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC6\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC6", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
-        // Example on how to use the current source to measure resistance
-        // Only for OT-2S
-        // if(pChip->getFrontEndType() == FrontEndType::OuterTracker2S) {
-        // CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
-        // LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
-        // LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;}
-        LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
-        LOG(INFO) << BOLDGREEN << MeasureTemperature(pChip) << " C" << RESET;
+        // Fabio's comment: auto tune should not be done here because if it gets calibrated and you try to reload again the registers
+        // it will be overwritten
+        // AutoTuneVref(pChip);
 
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDTX\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDTX") << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDRX\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDRX") << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDD\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDD") << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDA\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDA") << " V" << RESET;
+        // LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC0\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC0", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC1\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC1", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC2\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC2", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC3\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC3", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC4\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC4", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC5\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC5", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC6\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC6", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
+        // // Example on how to use the current source to measure resistance
+        // // Only for OT-2S
+        // // if(pChip->getFrontEndType() == FrontEndType::OuterTracker2S) {
+        // // CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
+        // // LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
+        // // LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;}
+        // LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasureTemperature(pChip) << " C" << RESET;
+
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDTX\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDTX") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDRX\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDRX") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDD\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDD") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDA\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDA") << " V" << RESET;
     }
     return cReady;
 } //
@@ -121,6 +122,53 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 /*-----------------------*/
 /* OT specific functions */
 /*-----------------------*/
+
+bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
+{
+    // first, identify the correct BeBoardFWInterface
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: pRegVec)
+    {
+        auto cIterator = cRegMap.find(cReq.first);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            continue;
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cItem.fValue      = cReq.second;
+        cRegItems.push_back(cItem);
+    }
+    return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
+}
+
+std::vector<std::pair<std::string, uint16_t>> D19clpGBTInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
+{
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: theRegisterList)
+    {
+        auto cIterator = cRegMap.find(cReq);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            abort();
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cRegItems.push_back(cItem);
+    }
+
+    fBoardFW->MultiRegisterRead(pChip, cRegItems);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    return theRegisterValues;
+}
 
 void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
 {
@@ -138,6 +186,71 @@ void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
         LOG(INFO) << BOLDGREEN << "Using I2C Slave Interface configuration mode" << RESET;
         fOptical = false;
     }
+}
+
+void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
+{
+    // Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
+    // hold resets
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
+    {
+        this->cbcReset(pChip, true, cSide);
+        this->cicReset(pChip, true, cSide);
+    }
+
+    // Fabio: I do not think this part should be here, but I keep it for consistency with the previous code
+#if defined(__TCUSB__)
+    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 0};
+    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 0};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    cEportGroups = {0, 1, 1, 2, 2, 3};
+    cEportChnls  = {2, 0, 2, 0, 2, 2};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+#endif
+}
+
+void D19clpGBTInterface::holdPSModuleResets(Ph2_HwDescription::Chip* pChip)
+{
+    // Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
+    // hold resets
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
+    {
+        this->ssaReset(pChip, true, cSide);
+        this->mpaReset(pChip, true, cSide);
+        this->cicReset(pChip, true, cSide);
+    }
+
+    // Fabio: I do not think this part should be here, but I keep it for consistency with the previous code
+#if defined(__TCUSB__)
+    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 6, 0};
+    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 2, 0};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    cEportGroups = {0, 1, 1, 2, 2, 3, 3};
+    cEportChnls  = {2, 0, 2, 0, 2, 0, 2};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+#endif
+}
+
+void D19clpGBTInterface::configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
+{
+    fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
+    fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+    fClkConfig.fClkDriveStr     = pClkCnfg.fClkDriveStr;
+    fClkConfig.fClkPreEmphWidth = pClkCnfg.fClkPreEmphWidth;
+    fClkConfig.fClkPreEmphMode  = pClkCnfg.fClkPreEmphMode;
+    fClkConfig.fClkPreEmphStr   = pClkCnfg.fClkPreEmphStr;
+
+    std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
+    std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex << (fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq)
+              << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg << " to 0x" << std::hex
+              << (fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth) << std::dec << std::endl;
+    WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
+    WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
 }
 
 // Preliminary
@@ -172,7 +285,8 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 5;
     for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
     { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
-
+    // Configuring I2C Master pull-ups for VTRx+
+    WriteChipReg(pChip, "I2CM1Config", 1 << 4 | 1 << 6);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels Uncomment this for Skeleton test
@@ -282,8 +396,8 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         size_t cMaxAttempts = 5;
         for(size_t cAttempt = 0; cAttempt < cMaxAttempts; cAttempt++)
         {
-            ResetRxDll(pChip, {cGroup});
-
+            uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
+            if(cChipVersion == 0) { ResetRxDll(pChip, {cGroup}); }
             // Enable training
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
 
@@ -351,7 +465,6 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         }
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
-
     // Find mode
     std::vector<uint8_t> cTapsHist(15, 0);
     for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
@@ -451,4 +564,39 @@ void D19clpGBTInterface::AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip)
         static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert);
     }
 }
+
+void D19clpGBTInterface::updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chip* pChip)
+{
+    auto        theChipRate               = this->GetChipRate(pChip);
+    std::string cicClockRightRegisterName = "EPCLK" + std::to_string(fClock_RHS_CIC) + "ChnCntrH";
+    std::string cicClockLeftRegisterName  = "EPCLK" + std::to_string(fClock_LHS_CIC) + "ChnCntrH";
+
+    uint8_t expectedCicClockSetting;
+    if(theChipRate == 5)
+        expectedCicClockSetting = 0x4;
+    else if(theChipRate == 10)
+        expectedCicClockSetting = 0x5;
+    else
+    {
+        std::string errorMessage =
+            std::string(__PRETTY_FUNCTION__) + " LpGBT TX rate not identified on BeBoard " + std::to_string(pChip->getBeBoardId()) + " OpticalGroup " + std::to_string(pChip->getOpticalGroupId());
+        throw std::runtime_error(errorMessage);
+    }
+
+    auto updateClockFunction = [this, theChipRate, pChip, expectedCicClockSetting](std::string registerName) {
+        auto theCurrentRegisterValue = this->ReadChipReg(pChip, registerName);
+        if((theCurrentRegisterValue & 0x7) != expectedCicClockSetting)
+        {
+            uint16_t theNewRegisterValue = (theCurrentRegisterValue & 0xF8) | (expectedCicClockSetting & 0x7);
+            LOG(INFO) << BOLDYELLOW << "Attention! Updating " << registerName << " from 0x" << std::hex << +theCurrentRegisterValue << " to 0x" << +theNewRegisterValue << std::dec
+                      << " to provide the CIC with the correct clock based on the LpGBT data rate (" << +theChipRate << "Gb) for on BeBoard " << +pChip->getBeBoardId() << " OpticalGroup "
+                      << +pChip->getOpticalGroupId() << RESET;
+            this->WriteChipReg(pChip, registerName, theNewRegisterValue);
+        }
+    };
+
+    updateClockFunction(cicClockRightRegisterName);
+    updateClockFunction(cicClockLeftRegisterName);
+}
+
 } // namespace Ph2_HwInterface

@@ -10,49 +10,49 @@
 
         <OpticalGroup Id="0" FMCId="L12" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
+            <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1_2S.txt">
                 <Settings />
             </lpGBT>
         </OpticalGroup>
         <OpticalGroup Id="1" FMCId="L12" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0_2S.txt">
                 <Settings />
             </lpGBT>
         </OpticalGroup>
         <OpticalGroup Id="2" FMCId="L12" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
+            <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1_2S.txt">
                 <Settings />
             </lpGBT>
         </OpticalGroup>
         <!-- <OpticalGroup Id="3" FMCId="L12" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0_2S.txt">
                 <Settings />
             </lpGBT>
         </OpticalGroup>
         <OpticalGroup Id="4" FMCId="L12" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0_2S.txt">
                 <Settings />
             </lpGBT>
         </OpticalGroup>
         <OpticalGroup Id="5" FMCId="L12" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0_2S.txt">
                 <Settings />
             </lpGBT>
         </OpticalGroup>
         <OpticalGroup Id="6" FMCId="L12" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0_2S.txt">
                 <Settings />
             </lpGBT>
         </OpticalGroup>
         <OpticalGroup Id="7" FMCId="L12" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0_2S.txt">
                 <Settings />
             </lpGBT>
         </OpticalGroup> -->
@@ -170,8 +170,8 @@
             <MonitoringElement device="PowerSupply" register="MyRohdeSchwarz_LV_Module3_Current" enable="0" />
             <!-- <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Voltage" enable="1" />
             <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Current" enable="1" /> -->
-            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Voltage" enable="0" />
-            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Current" enable="0" />
+            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Voltage" enable="1" />
+            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Front_Current" enable="1" />
             <!-- High voltage monitoring element needs to contain "_HV_" and end with "Voltage" or "Current!" -->
             <MonitoringElement device="TestCard" register="HV_meas" enable="1" />
         </Monitoring>

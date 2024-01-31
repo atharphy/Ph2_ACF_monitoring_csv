@@ -12,6 +12,7 @@
 #include "HWInterface/MPA2Interface.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/Utilities.h"
 #include <typeinfo>
 
 #define DEV_FLAG 0
@@ -927,6 +928,31 @@ bool MPA2Interface::WriteChipMultReg(Chip* pMPA2, const std::vector<std::pair<st
     return fBoardFW->MultiRegisterWrite(pMPA2, cRegItems, pVerify);
 }
 
+std::vector<std::pair<std::string, uint16_t>> MPA2Interface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
+{
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: theRegisterList)
+    {
+        auto cIterator = cRegMap.find(cReq);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "MPA2Interface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            abort();
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cRegItems.push_back(cItem);
+    }
+
+    fBoardFW->MultiRegisterRead(pChip, cRegItems);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    return theRegisterValues;
+}
+
 bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify) // unchanged from MPA1 -- to check
 
 {
@@ -1004,8 +1030,23 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
 
     auto cOriginalMask = static_cast<ReadoutChip*>(pMPA2)->getChipOriginalMask();
     // std::vector<std::string>
+    auto theListOfFreeRegisters = pMPA2->getFreeRegisters();
+
+    uint8_t maskValue    = 0xFF;
+    uint8_t maskAllValue = 0xFF;
+
     for(auto cMapItem: cRegMap)
     {
+        if(cMapItem.first == "Mask") maskValue = cMapItem.second.fValue;
+        if(cMapItem.first == "Mask_ALL") maskAllValue = cMapItem.second.fValue;
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: theListOfFreeRegisters)
+        {
+            isFreeRegister = std::regex_match(cMapItem.first, freeRegister.first);
+            if(isFreeRegister) break;
+        }
+        if(isFreeRegister) continue; // skipping readonly registers
+
         if(cMapItem.second.fControlReg)
             cCntrlRegItems.push_back(cMapItem.second);
         else if((cMapItem.first.find("_P") != std::string::npos))
@@ -1023,8 +1064,10 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         else
             cRegItems.push_back(cMapItem.second);
     }
-    this->WriteChipReg(pMPA2, "Mask", 0xFF, false);
-    this->WriteChipReg(pMPA2, "Mask_ALL", 0xFF, false);
+
+    // Mask need to be written first, default value is 0
+    this->WriteChipReg(pMPA2, "Mask", maskValue, false);
+    this->WriteChipReg(pMPA2, "Mask_ALL", maskAllValue, false);
 
     // cntrl
     bool cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cCntrlRegItems, false);
@@ -1111,27 +1154,25 @@ void MPA2Interface::Activate_ps(Chip* pMPA2, uint8_t win) { this->WriteChipReg(p
 
 bool MPA2Interface::Set_calibration(Chip* pMPA2, uint32_t cal)
 {
-    bool success = true;
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC0", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC1", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC2", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC3", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC4", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC5", cal));
-    success      = success & (this->WriteChipReg(pMPA2, "CalDAC6", cal));
+    std::vector<std::pair<std::string, uint16_t>> theVector;
+    for(int index = 0; index <= 6; ++index)
+    {
+        std::string registerName = "CalDAC" + convertToString(index);
+        theVector.push_back(std::make_pair(registerName, cal));
+    }
+    bool success = this->WriteChipMultReg(pMPA2, theVector);
     return success;
 }
 
 bool MPA2Interface::Set_threshold(Chip* pMPA2, uint32_t th)
 {
-    bool success = true;
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC0", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC1", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC2", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC3", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC4", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC5", th));
-    success      = success & (this->WriteChipReg(pMPA2, "ThDAC6", th));
+    std::vector<std::pair<std::string, uint16_t>> theVector;
+    for(int index = 0; index <= 6; ++index)
+    {
+        std::string registerName = "ThDAC" + convertToString(index);
+        theVector.push_back(std::make_pair(registerName, th));
+    }
+    bool success = this->WriteChipMultReg(pMPA2, theVector);
     return success;
 }
 

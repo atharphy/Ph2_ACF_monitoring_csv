@@ -21,6 +21,11 @@
 
 #include <uhal/uhal.hpp>
 
+namespace Ph2_HwDescription
+{
+class BeBoard;
+}
+
 // #######################
 // # FW useful constants #
 // #######################
@@ -49,7 +54,7 @@ namespace Ph2_HwInterface
 class RD53FWInterface : public BeBoardFWInterface
 {
   public:
-    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
     ~RD53FWInterface() { delete fFileHandler; }
 
     // #############################
@@ -64,7 +69,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
     void PrintFWstatus() override;
 
-    void Start() override;
+    void Start(const Ph2_HwDescription::BeBoard* pBoard) override;
     void Stop() override;
     void Pause() override;
     void Resume() override;
@@ -96,6 +101,9 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     bool                          CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
     RD53FWconstants::ReadoutSpeed ReadoutSpeed();
+    bool                          getChipCommunicationStatus() { return isChipCommunicationOK; }
+    size_t                        getNCorruptedNEvents() { return NCorruptedNEvents; }
+    void                          resetNCorruptedNEvents() { NCorruptedNEvents = 0; }
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
@@ -212,7 +220,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void     TurnOnFMC();
     void     ConfigureDIO5(const DIO5Config* config);
     void     SendBoardCommandWithStrobe(const std::string& cmdReg);
-    void     SendBoardCommand(const std::string& cmdReg);
     uint32_t GetBoardEnabledChips(const Ph2_HwDescription::BeBoard* pBoard, bool primariesOnly = false);
     uint32_t GetBoardEnabledHybrids(const Ph2_HwDescription::BeBoard* pBoard);
 
@@ -227,6 +234,8 @@ class RD53FWInterface : public BeBoardFWInterface
     bool               singleChip;
     uint32_t           FWinfo;
     uint16_t           enabledHybrids;
+    bool               isChipCommunicationOK{false};
+    size_t             NCorruptedNEvents{0};
 };
 
 } // namespace Ph2_HwInterface

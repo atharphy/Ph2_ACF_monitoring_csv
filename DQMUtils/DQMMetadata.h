@@ -19,7 +19,8 @@ class DQMMetadata : public DQMHistogramBase
     void fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer);
     void fillFirmwareVersion(const DetectorDataContainer& theFirmwareVersionContainer);
     void fillCalibrationName(const DetectorDataContainer& theCalibrationNameContainer);
-    void fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer);
+    void fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer, bool initialValue);
+    void fillBoardConfiguration(const DetectorDataContainer& theBoardConfigurationContainer, bool initialValue);
     void fillCalibrationTimestamp(const DetectorDataContainer& theCalibrationTimestampContainer, bool start);
     void fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool initialValue);
     void fillLpGBTConfiguration(const DetectorDataContainer& theLpGBTConfigurationContainer, bool initialValue);
@@ -40,9 +41,12 @@ class DQMMetadata : public DQMHistogramBase
     DetectorDataContainer fGitCommitHashContainer;
     DetectorDataContainer fFirmwareVersionContainer;
     DetectorDataContainer fCalibrationNameContainer;
-    DetectorDataContainer fDetectorConfigurationContainer;
+    DetectorDataContainer fInitialDetectorConfigurationContainer;
+    DetectorDataContainer fFinalDetectorConfigurationContainer;
     DetectorDataContainer fCalibrationStartTimestampContainer;
     DetectorDataContainer fCalibrationStopTimestampContainer;
+    DetectorDataContainer fInitialBoardConfigurationContainer;
+    DetectorDataContainer fFinalBoardConfigurationContainer;
     DetectorDataContainer fInitialReadoutChipConfigurationContainer;
     DetectorDataContainer fFinalReadoutChipConfigurationContainer;
     DetectorDataContainer fInitialLpGBTConfigurationContainer;

@@ -17,6 +17,8 @@ void BERtestHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 
     auto hBERtest = CanvasContainer<TH1F>("BERtest", "BERtest", 1, 0, 1);
     bookImplementer(theOutputFile, theDetectorStructure, BERtest, hBERtest, "N.A.", "Bit Error Rate value");
+
+    AreHistoBooked = true;
 }
 
 bool BERtestHistograms::fill(std::string& inputStream)

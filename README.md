@@ -35,8 +35,8 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 ### Suggested software and firmware versions:
-- Software git branch / tag : `Dev` / `v4-15`
-- Firmware tag: `v4-07`
+- Software git branch / tag : `Dev` / `v4-18`
+- Firmware tag: `v4-08`
 
 ### Important webpages and information:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
@@ -70,7 +70,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 **IT-DAQ setup and run:**
 1. Folow instructions below to install all needed software packages (like `pugixml`, `boost`, `python`. etc ...)
 2. `mkdir choose_a_name`
-3. `cp settings/RD53Files/CMSIT_RD53A/B.txt choose_a_name`
+3. `cp settings/RD53Files/CMSIT_RD53A/B.txt choose_a_name` (if you are using an optical readout you need also: `cp settings/lpGBTFiles/CMSIT_LpGBT-v0(1).txt choose_a_name`)
 4. `cp settings/CMSIT_RD53A/B.xml choose_a_name`
 5. `cd choose_a_name`
 6. Edit the file `CMSIT_RD53A/B.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
@@ -202,6 +202,13 @@ yum install llvm-toolset-7.0
 formatAll
 ```
 
+### git requirements (required to push after large files have been added!!!)
+
+```bash
+sudo yum install git-lfs
+git-lfs install
+git config lfs.https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git/info/lfs.locksverify true # or your username instead of cms_tk_ph2
+```
 
 ### The Ph2_ACF software
 Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal,  mentioned above):
@@ -214,7 +221,7 @@ cd Ph2_ACF
 source setup.sh
 mkdir build
 cd build
-cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to tall it `cmake3 ..`
+cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to call it `cmake3 ..`
 ```
 
 2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the Ph2_ACF root directory.

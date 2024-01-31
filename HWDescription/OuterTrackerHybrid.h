@@ -46,6 +46,8 @@ class OuterTrackerHybrid : public Hybrid
     // Default C'tor
     OuterTrackerHybrid();
 
+    OuterTrackerHybrid(const OuterTrackerHybrid&) = delete;
+
     // D'tor
     ~OuterTrackerHybrid()
     {

@@ -32,6 +32,15 @@ bool LinkAlignmentOT::Align()
         for(auto cOpticalGroup: *cBoard)
         {
             AlignLpGBTInputs(cOpticalGroup);
+
+            auto& clpGBT = cOpticalGroup->flpGBT;
+            if((cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) && static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(clpGBT) == 10)
+            {
+                // FIXME it is not clear why but it seems to help finishing the reconfigure step.
+                LOG(INFO) << BOLDRED << "ATTENTION!!! Adding Phase Alignment for PS 10G ..." << RESET;
+                PhaseAlignBEdata(cOpticalGroup);
+            }
+
             WordAlignBEdata(cOpticalGroup);
         }
         // check that word alignment of L1 data worked

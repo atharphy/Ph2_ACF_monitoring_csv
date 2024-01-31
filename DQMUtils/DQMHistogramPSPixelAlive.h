@@ -4,7 +4,7 @@
         \author              Adam Kobert
         \version             1.0
         \date                8/21/23
-        Support :            mail to : 
+        Support :            mail to :
 */
 
 #ifndef __DQMHISTOGRAMPIXELALIVE_H__
@@ -53,20 +53,18 @@ class DQMHistogramPSPixelAlive : public DQMHistogramBase
     void reset(void) override;
     // virtual void summarizeHistos();
 
-
     void fillOccupancyPlots(DetectorDataContainer& theOccupancy);
 
   private:
     uint32_t fNPixelChannels = 0, fNStripChannels = 0;
-    bool fWithCBC = false;
-    bool fWithSSA = false;
-    bool fWithMPA = false;
+    bool     fWithCBC = false;
+    bool     fWithSSA = false;
+    bool     fWithMPA = false;
 
-    DetectorContainer*    fDetectorContainer;
-    uint32_t              NCH = 0;
-//    DetectorDataContainer fDetectorOccupancyHistograms;
+    DetectorContainer* fDetectorContainer;
+    uint32_t           NCH = 0;
+    //    DetectorDataContainer fDetectorOccupancyHistograms;
     DetectorDataContainer fDetectorStripOccupancyHistograms;
     DetectorDataContainer fDetectorPixelOccupancyHistograms;
-
 };
 #endif

@@ -1,6 +1,8 @@
 #include "OTQuickNoise.h"
+#ifdef __USE_ROOT__
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+#endif
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
@@ -57,7 +59,7 @@ void OTQuickNoise::TakeData()
                                            GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, theHitContainer);
-
+#ifdef __USE_ROOT__
     for(auto cBoard: theHitContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->getObject(cBoard->getId()));
@@ -91,6 +93,7 @@ void OTQuickNoise::TakeData()
             }
         } // end module loop
     }
+#endif
 }
 
 void OTQuickNoise::parseSettings()

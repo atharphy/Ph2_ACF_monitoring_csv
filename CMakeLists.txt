@@ -93,7 +93,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=format-overflow -Wno-error=pedantic")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context")
     set (GCC_10_NOERROR_FLAGS "-Wno-error=int-in-bool-context")
-    set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=int-in-bool-context")
+    set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=int-in-bool-context -Wno-error=nonnull")
 
     set(CMAKE_CXX_STANDARD $ENV{STDCXX} CACHE STRING "C++ version selection")
     set(CMAKE_CXX_STANDARD_REQUIRED ON)  # optional, ensure standard is supported
@@ -239,9 +239,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         add_subdirectory(DQMUtils)
         add_subdirectory(RootUtils)
         add_subdirectory(MonitorDQM)
-    endif()
-
-    if(NoDataShipping OR CompileForShep)
         add_subdirectory(src)
     endif()
 

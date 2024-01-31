@@ -52,8 +52,6 @@ class BERtest : public CalibBase
     bool        doDisplay;
     std::string dataOutputDir;
 
-    int theCurrentRun;
-
     DetectorDataContainer theBERtestContainer;
 };
 

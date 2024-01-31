@@ -44,6 +44,10 @@ class MPA2 : public ReadoutChip
     // C'tors with object FE Description
     MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename);
 
+    MPA2(const MPA2&) = delete;
+
+    void initializeFreeRegisters() override;
+
     using MPARegPair = std::pair<std::string, ChipRegItem>;
     uint8_t           fPartnerId;
     uint8_t           getPartid() { return fPartnerId; }

@@ -219,9 +219,10 @@
       <node id="l12"                   mask="0xFFFF8000"      permission="rw"      description="Polarity for FMC L12 TX pins" />
     </node>
 
-    <node id="sfp_rx_polarity"      address="0x00000019"      permission="rw"      description="Configuration for SFP connectors">
-      <node id="l8"                    mask="0x00007FFF"      permission="rw"      description="Polarity for FMC L8 RX pins" />
-      <node id="l12"                   mask="0xFFFF8000"      permission="rw"      description="Polarity for FMC L12 RX pins" />
+    <node id="gtx_rx_polarity"      address="0x00000019"      permission="rw"      description="Configuration for GTX polarity">
+      <node id="fmc_l12"               mask="0x00000FFF"      permission="rw"      description="Polarity for FMC L12 RX pins" />
+      <node id="fmc_l8"                mask="0x000FF000"      permission="rw"      description="Polarity for FMC L8 RX pins" />
+      <node id="cmd_strobe"            mask="0x00100000"      permission="rw"      description="Start Procedure to set GTX polarity" />
     </node>
 
   </node>

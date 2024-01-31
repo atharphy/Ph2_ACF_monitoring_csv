@@ -39,7 +39,6 @@
 #define RUNNUMBER 0
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
-#define DELAYAFTERPHYSICS -1 // [seconds]
 #define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
@@ -103,8 +102,8 @@ int main(int argc, char** argv)
     cmd.defineOption("file", "Hardware description file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("file", "f");
 
-    cmd.defineOption("settingsFile", "Settings override file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative("settingsFile", "s");
+    cmd.defineOption("calibSettingsFile", "Calibration settings override file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("calibSettingsFile", "s");
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj"
@@ -160,7 +159,7 @@ int main(int argc, char** argv)
     // # Retrieve options #
     // ####################
     std::string configFile        = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
-    std::string settingsFile      = cmd.foundOption("settingsFile") == true ? cmd.optionValue("settingsFile") : configFile;
+    std::string calibSettingsFile = cmd.foundOption("calibSettingsFile") == true ? cmd.optionValue("calibSettingsFile") : configFile;
     std::string whichCalib        = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
     std::string EUDAQproducerNAME = cmd.foundOption("prodName") == true ? cmd.optionValue("prodName") : "";
     std::string binaryFile        = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
@@ -168,7 +167,7 @@ int main(int argc, char** argv)
     bool        skipcfg           = cmd.foundOption("skipcfg") == true ? true : false;
     bool        reset             = cmd.foundOption("reset") == true ? true : false;
     bool        dumpRegs          = cmd.foundOption("dump") == true ? true : false;
-    int         runtime           = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : DELAYAFTERPHYSICS;
+    int         runtime           = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : -1;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
@@ -195,7 +194,7 @@ int main(int argc, char** argv)
     {
         std::stringstream outp;
         mySysCntr.InitializeHw(configFile, outp);
-        mySysCntr.InitializeSettings(settingsFile, outp);
+        mySysCntr.InitializeSettings(calibSettingsFile, outp);
 
         // ##################
         // # Reset hardware #
@@ -231,7 +230,7 @@ int main(int argc, char** argv)
         // #######################
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
         ConfigureInfo theConfigureInfo;
-        theConfigureInfo.setConfigurationFiles(configFile, settingsFile);
+        theConfigureInfo.setConfigurationFiles(configFile, calibSettingsFile);
         theConfigureInfo.setCalibrationName(whichCalib);
         mySysCntr.Configure(theConfigureInfo, !skipcfg);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
@@ -618,7 +617,7 @@ int main(int argc, char** argv)
         system(("cp " + fileName + " " + outputFile).c_str());
     };
     copyConfigFile(configFile);
-    if(configFile != settingsFile) copyConfigFile(settingsFile);
+    if(configFile != calibSettingsFile) copyConfigFile(calibSettingsFile);
 
     // #####################
     // # Update run number #

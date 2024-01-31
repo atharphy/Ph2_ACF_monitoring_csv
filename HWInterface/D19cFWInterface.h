@@ -30,6 +30,10 @@
 //#include "Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
 
+namespace Ph2_HwDescription
+{
+class BeBoard;
+}
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
@@ -101,8 +105,8 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param puHalConfigFileName : path of the uHal Config File
      * \param pBoardId
      */
-    D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
+    D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, Ph2_HwDescription::BeBoard* theBoard);
+    D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, Ph2_HwDescription::BeBoard* theBoard);
     /*!
      *
      * \brief Constructor of the Cbc3Fc7FWInterface class
@@ -111,8 +115,8 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param pAddressTable: address tabel string
      */
 
-    D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
-    D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler);
+    D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
+    D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler, Ph2_HwDescription::BeBoard* theBoard);
     void setFileHandler(FileHandler* pHandler);
 
     void                                 printReadoutInterface() { LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET; }
@@ -186,7 +190,7 @@ class D19cFWInterface : public BeBoardFWInterface
     /*!
      * \brief Start a DAQ
      */
-    void Start() override;
+    void Start(const Ph2_HwDescription::BeBoard* pBoard) override;
     /*!
      * \brief Stop a DAQ
      */

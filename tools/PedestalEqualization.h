@@ -41,6 +41,8 @@ class PedestalEqualization : public Tool
     void Resume() override;
     void Reset();
 
+    static std::string fCalibrationDescription;
+
   private:
     std::vector<EventType> fEventTypes;
     // Settings

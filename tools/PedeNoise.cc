@@ -2,6 +2,7 @@
 #include "HWDescription/Cbc.h"
 #include "HWDescription/SSA.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "System/RegisterHelper.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
@@ -17,6 +18,8 @@
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #endif
+
+std::string PedeNoise::fCalibrationDescription = "Measure noise and Pedestal/pulse peak, set threshold at 5 sigma from the pedestal and run occupancy measurement";
 
 PedeNoise::PedeNoise() : Tool() {}
 
@@ -45,6 +48,14 @@ void PedeNoise::clearDataMembers()
 
 void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
+    fRegisterHelper->takeSnapshot();
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^VCth\\d$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^MaskChannel-\\d{3}-to-\\d{3}$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC\\d$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ENFLAGS_P\\d+$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^ENFLAG_S\\d+$");
+
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoardRegMap cRegMap      = cBoard->getBeBoardRegMap();
@@ -113,7 +124,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
     fPulseAmplitudePix           = findValueInSettings<double>("PedeNoisePulseAmplitudePix", fPulseAmplitude);
-    std::cout << __PRETTY_FUNCTION__ << " fPulseAmplitude " << +fPulseAmplitudePix << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " fPulseAmplitudePix " << +fPulseAmplitudePix << std::endl;
     fPedeNoiseLimit          = findValueInSettings<double>("PedeNoiseLimit", 10); // NOT IN XML
     fPedeNoiseMask           = findValueInSettings<double>("PedeNoiseMask", 0);   // NOT IN XML
     fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoiseMaskUntrimmed", 0);
@@ -124,9 +135,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fMaxThreshold            = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
     fNeventsForValidation    = findValueInSettings<double>("NeventsForValidation", 10000); // NOT IN XML
     fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
-    // if you forget to use the PedeNoiseUseFixRange setting but instead declare
-    // min and max threshold ... will still work
-    if(!fUseFixRange && fMinThreshold != fMaxThreshold) { fUseFixRange = true; }
+    fPedeNoiseLatency        = findValueInSettings<double>("PedeNoiseLatency", 198);
 
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : fEventsPerPoint;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
@@ -187,50 +196,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedeNoise::Reset()
 {
-    LOG(INFO) << BOLDGREEN << "Resetting registers touched  by PedeNoise" << RESET;
-    // set everything back to original values .. like I wasn't here
-    for(auto cBoard: *fDetectorContainer)
-    {
-        BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
-        std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
-        cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
-        fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
-
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                LOG(DEBUG) << BOLDBLUE << "PedeNoise::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-
-                for(auto cChip: *cHybrid)
-                {
-                    auto cModMap = cChip->GetModifiedRegisterMap();
-                    LOG(DEBUG) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
-                    std::vector<std::pair<std::string, uint16_t>> cRegList;
-                    for(auto cMapItem: cModMap)
-                    {
-                        auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        if(cMapItem.second.fValue == cValueInMemory) continue;
-                        // don't reconfigure the offsets .. whole point of this excercise
-                        if(cMapItem.first.find("VCth") != std::string::npos) continue;
-                        if(cMapItem.first.find("ThDAC") != std::string::npos) continue;
-                        if(cMapItem.first.find("Bias_THDAC") != std::string::npos) continue;
-                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) { cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); };
-                        LOG(DEBUG) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
-                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
-                    }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
-                    // don't track registers + clear mod reg map
-                    cChip->setRegisterTracking(0);
-                    cChip->ClearModifiedRegisterMap();
-                }
-            }
-        }
-    }
+    fRegisterHelper->restoreSnapshot();
     resetPointers();
 }
 void PedeNoise::disableStubLogic()
@@ -258,36 +224,6 @@ void PedeNoise::disableStubLogic()
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cChip), "HIP&TestMode");
                         // fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "Pipe&StubInpSel&Ptwidth", 0x23);
                         // fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), "HIP&TestMode", 0x00);
-                    }
-                }
-            }
-        }
-    }
-}
-
-void PedeNoise::reloadStubLogic()
-{
-    // re-enable stub logic
-
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    RegisterVector cRegVec;
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
-                    {
-                        LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                        cRegVec.push_back(
-                            {"Pipe&StubInpSel&Ptwidth",
-                             fStubLogicValue->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()});
-                        cRegVec.push_back(
-                            {"HIP&TestMode",
-                             fHIPCountValue->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()});
-                        fReadoutChipInterface->WriteChipMultReg(cChip, cRegVec);
                     }
                 }
             }
@@ -337,6 +273,8 @@ void PedeNoise::sweepSCurves()
 
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
+
+        setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TriggerLatency", fPedeNoiseLatency);
     }
 
     bool forceAllChannels = false;
@@ -369,7 +307,6 @@ void PedeNoise::sweepSCurves()
     if(fWithMPA) LOG(INFO) << MAGENTA << "Sweep of Pixel S-curves will start at an average threshold of " << cPixelStartValue << RESET;
 
     measureSCurves(cStripStartValue, cPixelStartValue);
-    // if(fDisableStubLogic) reloadStubLogic();
     this->SetTestAllChannels(originalAllChannelFlag);
     LOG(INFO) << BOLDBLUE << "Finished sweeping SCurves..." << RESET;
     return;
@@ -405,8 +342,8 @@ void PedeNoise::Validate()
 
     LOG(INFO) << "Setting all channels";
     this->SetTestAllChannels(true);
-    LOG(INFO) << "measuring with " << fNeventsForValidation << " events and " << fNEventsPerBurst << " per burst";
-    this->measureData(fNeventsForValidation, fNEventsPerBurst);
+    LOG(INFO) << "measuring with " << fNeventsForValidation << " events and " << fMaxNevents << " per burst";
+    this->measureData(fNeventsForValidation, fMaxNevents);
     LOG(INFO) << "setting al channels v2";
     this->SetTestAllChannels(originalAllChannelFlag);
 #ifdef __USE_ROOT__
@@ -601,6 +538,14 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
             uint8_t cNStripChips = 0, cNPixelChips = 0;
             for(auto cBoard: *fDetectorContainer)
             {
+                // std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.trigger_source = " << fBeBoardInterface->ReadBoardReg(cBoard,
+                // "fc7_daq_cnfg.fast_command_block.trigger_source") << RESET << std::endl; std::cout << GREEN << "Reading back from Board fc7_daq_cnfg.fast_command_block.delay_after_test_pulse = " <<
+                // fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") << RESET << std::endl; std::cout << GREEN << "Reading back from Board
+                // fc7_daq_cnfg.fast_command_block.en_test_pulse = " << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_test_pulse") << RESET << std::endl;
+                // std::cout << GREEN << "Reading TriggerLatency from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TriggerLatency") <<
+                // RESET << std::endl; std::cout << GREEN << "Reading TestPulsePotNodeSel from CBC = " <<
+                // fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TestPulsePotNodeSel") << RESET << std::endl; std::cout << GREEN << "Reading
+                // TestPulse from CBC = " << fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getFirstObject(), "TestPulse") << RESET << std::endl;
                 auto cBoardIdx = cBoard->getId();
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -906,47 +851,7 @@ void PedeNoise::extractPedeNoise()
                 }
             }
         }
-        if(cNormalize == 0)
-        {
-            // auto& cDataContainerThisBrd = fDetectorDataContainer->getObject(cBoard->getId());
-            // for(auto cOpticalGroup: *cBoard)
-            // {
-            //     auto& cDataContainerThisOG = cDataContainerThisBrd->getObject(cOpticalGroup->getId());
-            //     for(auto cHybrid: *cOpticalGroup)
-            //     {
-            //         auto& cDataContainerThisHybrid = cDataContainerThisOG->getObject(cHybrid->getId());
-            //         for(auto cChip: *cHybrid)
-            //         {
-            //             auto& cDataContainerThisChip = cDataContainerThisHybrid->getObject(cChip->getId());
-            //             auto& cSummary = cDataContainerThisChip->getSummary<Occupancy,Occupancy>();
-            //             ChannelGroupHandler* cHandler;
-            //             if( cChip->getFrontEndType() == FrontEndType::MPA ) cHandler = new MPAChannelGroupHandler();
-            //             else cHandler = new SSAChannelGroupHandler();
-            //             LOG (DEBUG) << BOLDYELLOW << " Normalizing assuming " << +getNReadbackEvents()
-            //                 << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels." << RESET;
-            //             cSummary.fOccupancy = 0;
-            //             for( uint16_t cChnl=0; cChnl < cDataContainerThisChip->size(); cChnl++)
-            //             {
-            //                 uint32_t cRow = cChnl%cHandler->allChannelGroup()->getNumberOfRows();
-            //                 uint32_t cCol;
-            //                 if( cHandler->allChannelGroup()->getNumberOfCols() == 0 ) cCol = 0;
-            //                 else  cCol = cChnl/cHandler->allChannelGroup()->getNumberOfRows();
-            //                 if(cHandler->allChannelGroup()->isChannelEnabled(cRow, cCol ))
-            //                 {
-            //                     cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy /= getNReadbackEvents();
-            //                     cGlbOcc += cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy;
-            //                     if( cChnl < 10 || cChnl > 15*120 + 110 ) LOG (DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " <<
-            //                     cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET; cSummary.fOccupancy+= cDataContainerThisChip->getChannel<Occupancy>(cRow,
-            //                     cCol).fOccupancy; cNormGlblOcc++;
-            //                 }
-            //             }
-            //             cSummary.fOccupancy = std::min(cMaxOccupancy, cSummary.fOccupancy/cHandler->allChannelGroup()->getNumberOfEnabledChannels());
-            //         }
-            //     }
-            // }
-        }
-        else
-            board->normalizeAndAverageContainers(fDetectorContainer->getObject(board->getId()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
+        board->normalizeAndAverageContainers(fDetectorContainer->getObject(board->getId()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
     }
     setNormalization(cNormalizationOrig);
 }
@@ -1119,10 +1024,10 @@ void PedeNoise::Running()
 void PedeNoise::Stop()
 {
     LOG(INFO) << "Stopping noise measurement";
-    Reset();
     writeObjects();
     dumpConfigFiles();
     SaveResults();
+    WriteRootFile();
     closeFileHandler();
     clearDataMembers();
     LOG(INFO) << "Noise measurement stopped.";

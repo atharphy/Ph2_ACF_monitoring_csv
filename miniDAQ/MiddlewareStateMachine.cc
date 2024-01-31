@@ -88,7 +88,7 @@ FC7FpgaConfig MiddlewareStateMachine::getFpgaConfig(const std::string& configura
     try
     {
         const auto& theRegManagerInfo = theRegManagerInfoList.at(boardId);
-        return FC7FpgaConfig(RegManager(std::get<0>(theRegManagerInfo), std::get<1>(theRegManagerInfo), std::get<2>(theRegManagerInfo)));
+        return FC7FpgaConfig(RegManager(std::get<0>(theRegManagerInfo), std::get<1>(theRegManagerInfo), std::get<2>(theRegManagerInfo), nullptr));
     }
     catch(const std::exception& e)
     {
