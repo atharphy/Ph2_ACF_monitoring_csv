@@ -1,5 +1,6 @@
 #include "BeamTestCheck.h"
 
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Cbc.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
@@ -178,7 +179,7 @@ void BeamTestCheck::ValidateRaw()
         fBeBoardInterface->setBoard(cBoard->getId());
         const std::vector<Event*>& cEvents      = this->GetEvents();
         BeBoardRegMap              cRegMap      = cBoard->getBeBoardRegMap();
-        uint32_t                   cTriggerMult = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
+        uint32_t                   cTriggerMult = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"].fValue;
         for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
     }
 #ifdef __USE_ROOT__
@@ -232,7 +233,7 @@ void BeamTestCheck::Validate()
         LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
         BeBoardRegMap cRegMap      = cBoard->getBeBoardRegMap();
         std::string   cMultRegName = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
-        size_t        cTriggerMult = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
+        size_t        cTriggerMult = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName].fValue;
         for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
     }
 #ifdef __USE_ROOT__
@@ -1009,7 +1010,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
         auto          cBrdIndx     = cBoard->getId();
         BeBoardRegMap cRegMap      = cBoard->getBeBoardRegMap();
         std::string   cMultRegName = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
-        size_t        cTriggerMult = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
+        size_t        cTriggerMult = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName].fValue;
 
         // zero hit containers for each sensor
         // for each TDC phase
@@ -2316,7 +2317,7 @@ void BeamTestCheck::PrepareForExternalTP(BeBoard* pBoard)
     for(auto cReg: cTPRegs)
     {
         std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cReg;
-        cRegVec.push_back({cRegName, cRegMap[cRegName]});
+        cRegVec.push_back({cRegName, cRegMap[cRegName].fValue});
     }
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSource});
@@ -2443,7 +2444,7 @@ void BeamTestCheck::PrepareForTP(BeBoard* pBoard)
 void BeamTestCheck::PrepareForTLU(BeBoard* pBoard)
 {
     BeBoardRegMap cRegMap         = pBoard->getBeBoardRegMap();
-    uint32_t      cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
+    uint32_t      cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"].fValue;
 
     // configure trigger
     // make sure I am accepting all triggers
@@ -2469,7 +2470,7 @@ void BeamTestCheck::PrepareForTLU(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 1);
     std::string cRegName   = "fc7_daq_cnfg.tlu_block.handshake_mode";
-    size_t      cHandshake = cRegMap[cRegName];
+    size_t      cHandshake = cRegMap[cRegName].fValue;
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.handshake_mode", cHandshake);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.phase_select", 255);
 
@@ -2483,7 +2484,7 @@ void BeamTestCheck::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers)
 {
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
     // triggers
-    uint32_t cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"];
+    uint32_t cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"].fValue;
 
     // configure trigger
     uint8_t                                       cTriggerSource     = 3;
@@ -2523,7 +2524,7 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
     // make sure I am accepting all triggers
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
     // trigger config
-    uint32_t cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
+    uint32_t cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"].fValue;
 
     uint8_t                                       cTriggerSource = 5;
     std::vector<std::string>                      cFcmdRegs{"trigger_source", "triggers_to_accept"};

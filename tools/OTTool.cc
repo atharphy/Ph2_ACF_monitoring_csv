@@ -55,7 +55,7 @@ void OTTool::Reset()
                 LOG(INFO) << BOLDBLUE << "Will not reconfigure " << cReg.first << RESET;
                 continue;
             }
-            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+            cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second.fValue));
         }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
     } // for the board - reset registers
@@ -991,8 +991,8 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
     for(auto cReg: cBoardRegs)
     {
-        LOG(INFO) << BOLDBLUE << "Setting " << cReg << " to " << +cRegMap[cReg] << RESET;
-        fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]);
+        LOG(INFO) << BOLDBLUE << "Setting " << cReg << " to " << +cRegMap[cReg].fValue << RESET;
+        fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg].fValue);
     }
 
     // set MPA Sync with SSA
