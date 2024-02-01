@@ -55,7 +55,11 @@ class DQMHistogramOTverifyBoardDataWord : public DQMHistogramBase
      */
     void reset(void) override;
 
+    void fillPatternMatchingEfficiency(DetectorDataContainer& thePatternMatchingEfficiencyContainer);
+
   private:
-    DetectorDataContainer fDetectorData;
+    DetectorContainer* fDetectorContainer;
+    DetectorDataContainer fMatchingEfficiencyHistogramContainer;
+
 };
 #endif

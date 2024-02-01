@@ -148,6 +148,8 @@
     <Setting name="KiraCalibrationIntensityStart" > 29000 </Setting>
     <Setting name="KiraCalibrationIntensityStop" > 31500 </Setting>
     <Setting name="KiraCalibrationIntensityStep" > 100 </Setting>
+    <Setting name="OTverifyBoardDataWordNumberOfIterations">100</Setting>
+
 </Settings>
 
 

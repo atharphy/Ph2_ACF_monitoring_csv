@@ -119,7 +119,7 @@ void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& 
         }
         else
         {
-            auto cStubLines = cDebugInterface->StubDebug(true, 8, pPrintScoped);
+            auto cStubLines = cDebugInterface->StubDebug(true, 8, pPrintScoped).first;
             cReadLines.push_back(cStubLines);
         }
     }
@@ -501,7 +501,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
 
                 // check output
                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-                cReadLines = cDebugInterface->StubDebug(true, 4, true);
+                cReadLines = cDebugInterface->StubDebug(true, 4, true).first;
 
                 for(int a = 0; a < (int)cReadLines.size(); a++)
                 {

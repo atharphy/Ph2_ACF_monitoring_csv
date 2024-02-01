@@ -113,6 +113,7 @@
     <Setting name="Check2SRefChip">0</Setting>   <!-- L == 1  ; R== 0 -->
 
     <Setting name="DoManualVrefTuning"      >  0</Setting>
+    <Setting name="OTverifyBoardDataWordNumberOfIterations">100</Setting>
 
 </Settings>
 

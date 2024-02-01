@@ -65,7 +65,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     return cBuffer;
 }
-std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
+std::pair<std::vector<std::string>, std::vector<std::vector<uint32_t>>> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
 {
     LOG(DEBUG) << BOLDBLUE << "D19cDebugFWInterface::StubDebug ...." << RESET;
 
@@ -89,17 +89,23 @@ std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, ui
     auto cWords = fTheRegManager->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
     LOG(DEBUG) << BOLDBLUE << "Captured stub debug  ...." << RESET;
 
+    std::vector<std::vector<uint32_t>> lineWordVector(pNlines);
+
     std::vector<std::string> cLines(0);
     size_t                   cLine = 0;
     do
     {
+        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Line " << cLine << " words " << std::hex;
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < 5; cIndex++)
         {
             auto cWord   = cWords[cLine * 10 + cIndex];
+            // std::cout << cWord << " ";
+            lineWordVector[cLine].push_back(cWord);
             auto cString = std::bitset<32>(cWord).to_string();
             for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
         }
+        // std::cout << std::dec << std::endl;
 
         std::string cOutput_wSpace = "";
         std::string cOutput        = "";
@@ -113,7 +119,7 @@ std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, ui
         // cStrLength = cOutput.length();
         cLine++;
     } while(cLine < pNlines);
-    return cLines;
+    return std::make_pair(cLines, lineWordVector);
 }
 std::vector<std::string> D19cDebugFWInterface::ScopeStubLines(bool pWithTestPulse)
 {

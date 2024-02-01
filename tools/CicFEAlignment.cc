@@ -320,7 +320,7 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     // for now .. I need to do this twice
     // figure out why in theFW
     cDebugInterface->StubDebug(true, 6, false);
-    auto cLines        = cDebugInterface->StubDebug(true, 6, false);
+    auto cLines        = cDebugInterface->StubDebug(true, 6, false).first;
     cStatus.second     = cLines[pPhyPortCnfg.second];
     cStatus.first      = 0;
     auto        cFound = cStatus.second.find(cPatternToMatch);
