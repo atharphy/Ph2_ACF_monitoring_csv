@@ -75,7 +75,6 @@ void DQMHistogramOTalignBoardDataWord::fillAlignmentRetryNumber(DetectorDataCont
     }
 }
 
-
 //========================================================================================================================
 void DQMHistogramOTalignBoardDataWord::process()
 {
@@ -98,14 +97,16 @@ bool DQMHistogramOTalignBoardDataWord::fill(std::string& inputStream)
     if(theBitSlipContainerSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTalignBoardDataWord BitSlip!!!!\n";
-        DetectorDataContainer theDetectorData = theBitSlipContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<uint8_t>, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theDetectorData =
+            theBitSlipContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<uint8_t>, EmptyContainer>(fDetectorContainer);
         fillBitSlipValues(theDetectorData);
         return true;
     }
     if(theAlignmentRetryContainerSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTalignBoardDataWord AlignmentRetry!!!!!\n";
-        DetectorDataContainer theDetectorData = theAlignmentRetryContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<uint8_t>, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theDetectorData =
+            theAlignmentRetryContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<uint8_t>, EmptyContainer>(fDetectorContainer);
         fillAlignmentRetryNumber(theDetectorData);
         return true;
     }

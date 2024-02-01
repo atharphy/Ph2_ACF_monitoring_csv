@@ -79,7 +79,7 @@ void OTalignBoardDataWord::wordAlignBEdata()
 
     for(auto theBoard: *fDetectorContainer)
     {
-        stubAndL1WordAlignment(theBoard); 
+        stubAndL1WordAlignment(theBoard);
         LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::wordAlignBEdata ... trying to readout L1 data.. " << RESET;
         ReadNEvents(theBoard, 10);
     }
@@ -99,7 +99,7 @@ void OTalignBoardDataWord::wordAlignBEdata()
 #endif
 }
 
-void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard *theBoard)
+void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
 {
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::stubAndL1WordAlignment for an OG " << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
@@ -119,7 +119,7 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard *theBoard)
         if(!cAligned)
         {
             LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
-                        << " --- OpticalGroup will be disabled" << RESET;
+                      << " --- OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
             continue;
         }
@@ -142,12 +142,11 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard *theBoard)
         if(!cAligned)
         {
             LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
-                        << " --- OpticalGroup will be disabled" << RESET;
+                      << " --- OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
             continue;
         }
     } // optical groups connected to this  board
-
 }
 
 bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
@@ -160,8 +159,9 @@ bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup
         auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
         fCicInterface->SelectOutput(cCic, true);
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-        auto& theHybridBeBitSlip  = fBitSlipContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
-        auto& theHybridAlignmentRetry = fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
+        auto& theHybridBeBitSlip = fBitSlipContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
+        auto& theHybridAlignmentRetry =
+            fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
 
         for(size_t cLineId = 1; cLineId <= cNlines; cLineId++)
         {
@@ -172,9 +172,9 @@ bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup
             theAlignerObject.fLine    = cLineId;
             theAlignerObject.fOptical = 1;
             LineConfiguration theLineConfiguration;
-            theLineConfiguration.fPattern          = 0xEA;
-            theLineConfiguration.fPatternPeriod    = 8;
-            bool isLineAligned = tryLineAlignment(theAlignerInterface, cLineId, theAlignerObject, theLineConfiguration, theHybridBeBitSlip, theHybridAlignmentRetry);
+            theLineConfiguration.fPattern       = 0xEA;
+            theLineConfiguration.fPatternPeriod = 8;
+            bool isLineAligned                  = tryLineAlignment(theAlignerInterface, cLineId, theAlignerObject, theLineConfiguration, theHybridBeBitSlip, theHybridAlignmentRetry);
 
             if(!isLineAligned)
             {
@@ -216,8 +216,9 @@ bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup, 
             continue;
         }
 
-        auto& theHybridBeBitSlip  = fBitSlipContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
-        auto& theHybridAlignmentRetry = fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
+        auto& theHybridBeBitSlip = fBitSlipContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
+        auto& theHybridAlignmentRetry =
+            fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
 
         int     cChipId = cCic->getId();
         uint8_t cLineId = 0;
@@ -241,7 +242,7 @@ bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup, 
         uint16_t cPatternLength = 40;
         LOG(INFO) << BOLDYELLOW << "Trying to align data with pattern length " << +cPatternLength << RESET;
         theLineConfiguration.fPatternPeriod = cPatternLength;
-        cSuccess = cSuccess && tryLineAlignment(theAlignerInterface, cLineId, theAlignerObject, theLineConfiguration, theHybridBeBitSlip, theHybridAlignmentRetry);
+        cSuccess                            = cSuccess && tryLineAlignment(theAlignerInterface, cLineId, theAlignerObject, theLineConfiguration, theHybridBeBitSlip, theHybridAlignmentRetry);
     }
     fBeBoardInterface->Stop(theBoard);
 
@@ -272,7 +273,12 @@ void OTalignBoardDataWord::manuallyConfigureLine(const Chip* pChip, uint8_t pLin
     theAlignerInterface->ManuallyConfigureLine(theAlignerObject, theLineConfiguration);
 }
 
-bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface, uint8_t lineId, AlignerObject& theAlignerObject, LineConfiguration& theLineConfiguration, std::vector<uint8_t>& theHybridBitSlipVector, std::vector<uint8_t>& theHybridAlignmentRetryVector)
+bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface,
+                                            uint8_t                          lineId,
+                                            AlignerObject&                   theAlignerObject,
+                                            LineConfiguration&               theLineConfiguration,
+                                            std::vector<uint8_t>&            theHybridBitSlipVector,
+                                            std::vector<uint8_t>&            theHybridAlignmentRetryVector)
 {
     bool isLineAligned          = false;
     int  maxNumberOfIterations  = 10;

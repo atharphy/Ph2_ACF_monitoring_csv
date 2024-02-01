@@ -17,15 +17,14 @@
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 #endif
 
-
 namespace Ph2_HwDescription
 {
-    class BeBoard;
+class BeBoard;
 }
 
 namespace Ph2_HwInterface
 {
-    class D19cDebugFWInterface;
+class D19cDebugFWInterface;
 }
 
 class OTverifyBoardDataWord : public Tool
@@ -45,12 +44,12 @@ class OTverifyBoardDataWord : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void runIntegrityTest();
     void runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
     void runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
-    
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTverifyBoardDataWord fDQMHistogramOTverifyBoardDataWord;

@@ -4,6 +4,10 @@
 #include "DQMUtils/DQMHistogramCalibrationExample.h"
 #include "DQMUtils/DQMHistogramKira.h"
 #include "DQMUtils/DQMHistogramLatencyScan.h"
+#include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
+#include "DQMUtils/DQMHistogramOTalignLpGBTinputs.h"
+#include "DQMUtils/DQMHistogramOTalignStubPackage.h"
+#include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #include "DQMUtils/DQMHistogramPedestalEqualization.h"
 #include "DQMUtils/DQMMetadataIT.h"
@@ -21,10 +25,6 @@
 #include "DQMUtils/RD53SCurveHistograms.h"
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
-#include "DQMUtils/DQMHistogramOTalignLpGBTinputs.h"
-#include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
-#include "DQMUtils/DQMHistogramOTalignStubPackage.h"
-#include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 
 using namespace MessageUtils;
 
@@ -42,14 +42,41 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataOT, DQMHistogramOTverifyBoardDataWord>("OTverifyBoardDataWord");
     Register<DQMMetadataOT, DQMHistogramOTalignStubPackage>("OTalignStubPackage");
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage>("alignment");
-    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramPedestalEqualization>("calibration");
-    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramPedestalEqualization, DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
-    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramPedestalEqualization, DQMHistogramKira>("calibrationandkira");
-    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise, DQMHistogramKira>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
+    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramPedestalEqualization>(
+        "calibration");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramKira>("calibrationandkira");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise,
+             DQMHistogramKira>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramPedeNoise>("pedenoise");
-    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramPedestalEqualization, DQMHistogramPedeNoise>("calibrationandpedenoise");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise>("calibrationandpedenoise");
     Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
-    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, CBCHistogramPulseShape>("cbcpulseshape");
+    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, CBCHistogramPulseShape>(
+        "cbcpulseshape");
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramLatencyScan>("otlatency");
 
     // IT calibrations

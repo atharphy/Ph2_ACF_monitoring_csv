@@ -1,8 +1,8 @@
 #include "tools/OTverifyBoardDataWord.h"
-#include "System/RegisterHelper.h"
 #include "HWDescription/BeBoard.h"
-#include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/D19cDebugFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "System/RegisterHelper.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -25,10 +25,7 @@ void OTverifyBoardDataWord::Initialise(void)
 #endif
 }
 
-void OTverifyBoardDataWord::ConfigureCalibration()
-{
-
-}
+void OTverifyBoardDataWord::ConfigureCalibration() {}
 
 void OTverifyBoardDataWord::Running()
 {
@@ -42,40 +39,29 @@ void OTverifyBoardDataWord::Running()
 void OTverifyBoardDataWord::Stop(void)
 {
     LOG(INFO) << "Stopping OTverifyBoardDataWord measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTverifyBoardDataWord.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTverifyBoardDataWord.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTverifyBoardDataWord stopped.";
 }
 
-void OTverifyBoardDataWord::Pause()
-{
+void OTverifyBoardDataWord::Pause() {}
 
-}
+void OTverifyBoardDataWord::Resume() {}
 
-
-void OTverifyBoardDataWord::Resume()
-{
-
-}
-
-
-void OTverifyBoardDataWord::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTverifyBoardDataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTverifyBoardDataWord::runIntegrityTest()
 {
     LOG(INFO) << BOLDYELLOW << "OTverifyBoardDataWord::runIntegrityTest ... start integrity test" << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
-    D19cDebugFWInterface* theDebugInterface   = cInterface->getDebugInterface();
+    D19cDebugFWInterface* theDebugInterface = cInterface->getDebugInterface();
 
-    for(auto theBoard : *fDetectorContainer)
+    for(auto theBoard: *fDetectorContainer)
     {
         runStubIntegrityTest(theBoard, theDebugInterface);
         runL1IntegrityTest(theBoard, theDebugInterface);
@@ -84,16 +70,16 @@ void OTverifyBoardDataWord::runIntegrityTest()
 
 void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
 {
-    for(auto theOpticalGroup : *theBoard)
+    for(auto theOpticalGroup: *theBoard)
     {
         size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
-        for(auto theHybrid : *theOpticalGroup)
+        for(auto theHybrid: *theOpticalGroup)
         {
             LOG(INFO) << BOLDMAGENTA << "Stub debug output - hybrid#" << +theHybrid->getId() << RESET;
             auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
             fCicInterface->SelectOutput(cCic, true);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-        
+
             fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
             fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
             for(size_t cIter = 0; cIter < 1; cIter++)
@@ -118,7 +104,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
     cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
 
-    for(auto theOpticalGroup : *theBoard)
+    for(auto theOpticalGroup: *theBoard)
     {
         for(auto theHybrid: *theOpticalGroup)
         {
