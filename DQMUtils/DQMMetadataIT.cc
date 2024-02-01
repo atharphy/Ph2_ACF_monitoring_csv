@@ -12,8 +12,11 @@ void DQMMetadataIT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
     StringContainer fBeginOfCalibStringContainer("ITBeginOfCalib");
     RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fBeginOfCalibContainer, fBeginOfCalibStringContainer);
 
-    StringContainer fEndOfCalibStringContainer("ITEndOfCalib");
-    RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fEndOfCalibContainer, fEndOfCalibStringContainer);
+    std::array<StringContainer, RD53Shared::NENDOFCALIB> fEndOfCalibStringContainerArray;
+    fEndOfCalibStringContainerArray[0].setName("ITEndOfCalibNcorruptedPackets");
+    fEndOfCalibStringContainerArray[1].setName("ITEndOfCalibNtrialsPackets");
+    for(auto i = 0; i < RD53Shared::NENDOFCALIB; i++)
+        RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fEndOfCalibContainerArray[i], fEndOfCalibStringContainerArray[i]);
 }
 
 void DQMMetadataIT::fillBeginOfCalib(const DetectorDataContainer& theDetectorData)
@@ -30,7 +33,8 @@ void DQMMetadataIT::fillEndOfCalib(const DetectorDataContainer& theDetectorData)
     for(const auto cBoard: theDetectorData)
     {
         if(cBoard->hasSummary() == false) continue;
-        fEndOfCalibContainer.getObject(cBoard->getId())->getSummary<StringContainer>().saveString(cBoard->getSummary<std::string>().c_str());
+        for(auto i = 0; i < RD53Shared::NENDOFCALIB; i++)
+            fEndOfCalibContainerArray[i].getObject(cBoard->getId())->getSummary<StringContainer>().saveString(cBoard->getSummary<std::array<std::string, RD53Shared::NENDOFCALIB>>()[i]);
     }
 }
 
@@ -57,7 +61,8 @@ bool DQMMetadataIT::fill(std::string& inputStream)
         if(theMetadataEndOfCalibSerialization.attachDeserializer(inputStream))
         {
             DetectorDataContainer theDetectorData =
-                theMetadataEndOfCalibSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+                theMetadataEndOfCalibSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::array<std::string, RD53Shared::NENDOFCALIB>, EmptyContainer>(
+                    fDetectorContainer);
             DQMMetadataIT::fillEndOfCalib(theDetectorData);
             return true;
         }

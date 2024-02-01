@@ -196,13 +196,14 @@
             INJtype            = 4:  analog + custom from txt file
             INJtype            = 5:  analog + X-talk coupled pixels
             INJtype            = 6:  analog + X-talk decoupled pixels
-         ResetMask             = 0:  do not enable masked pixels;        ResetMask             = 1: enable all pixels
-         ResetTDAC             = -1: do not reset TDAC;                  ResetTDAC             >=0: reset all TDACs to value
-         DoDataIntegrity       = 0:  no data integrity detection;        DoDataIntegrity       = 1: run data integrity detection
-         DoOnlyNGroups         = 0:  do not consider this option;        DoOnlyNGroups         = n: run only on the specified number of groups
-         DisplayHisto          = 0:  don't display;                      DisplayHisto          = 1: display
-         UpdateChipCfg         = 0:  don't update;                       UpdateChipCfg         = 1: update
-         DisableChannelsAtExit = 0:  don't disable all channels at exit  DisableChannelsAtExit = 1: disable all channels at exit
+         ResetMask             = 0:  do not enable masked pixels;             ResetMask             = 1: enable all pixels
+         ResetTDAC             = -1: do not reset TDAC;                       ResetTDAC             >=0: reset all TDACs to value
+         DoDataIntegrity       = 0:  no data integrity detection;             DoDataIntegrity       = 1: run data integrity detection
+         DoOnlyNGroups         = 0:  do not consider this option;             DoOnlyNGroups         = n: run only on the specified number of groups
+         DisplayHisto          = 0:  don't display;                           DisplayHisto          = 1: display
+         UpdateChipCfg         = 0:  don't update;                            UpdateChipCfg         = 1: update
+         DisableChannelsAtExit = 0:  don't disable all channels at exit       DisableChannelsAtExit = 1: disable all channels at exit
+         StopIfCommFails       = 0:  don't exit if some AURORA lanes are down StopIfCommFails       = 1: exit if some AURORA lanes are down
 
          DoNSteps        (threqu):           if != 0 then run threqu with step of 1 for only DoNSteps times
          TargetCharge    (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
@@ -290,6 +291,7 @@
     <Setting name="DisplayHisto">          0 </Setting>
     <Setting name="UpdateChipCfg">         1 </Setting>
     <Setting name="DisableChannelsAtExit"> 1 </Setting>
+    <Setting name="StopIfCommFails">       1 </Setting>
 
     <!-- === Expert settings ===
          DataOutputDir:   set the output directory for all data. If not specified files will be saved in ./Results/
