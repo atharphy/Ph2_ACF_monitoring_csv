@@ -17,9 +17,9 @@ class D19cDebugFWInterface
 
   public:
     std::pair<std::vector<std::string>, std::vector<std::vector<uint32_t>>> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 6, bool pPrint = true);
-    std::string              L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
-    std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
-    RegManager*              fTheRegManager{nullptr};
+    std::string                                                             L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
+    std::vector<std::string>                                                ScopeStubLines(bool pWithTestPulse = true);
+    RegManager*                                                             fTheRegManager{nullptr};
 };
 } // namespace Ph2_HwInterface
 #endif

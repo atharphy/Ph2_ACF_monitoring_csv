@@ -52,7 +52,7 @@ class OTverifyBoardDataWord : public Tool
     bool isStubPatternMatched(std::vector<uint32_t> theWordVector);
 
     DetectorDataContainer fPatternMatchingEfficiencyContainer;
-    size_t fNumberOfIterations {1000};
+    size_t                fNumberOfIterations{1000};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

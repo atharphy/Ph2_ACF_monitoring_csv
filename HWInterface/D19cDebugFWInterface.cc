@@ -99,7 +99,7 @@ std::pair<std::vector<std::string>, std::vector<std::vector<uint32_t>>> D19cDebu
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < 5; cIndex++)
         {
-            auto cWord   = cWords[cLine * 10 + cIndex];
+            auto cWord = cWords[cLine * 10 + cIndex];
             // std::cout << cWord << " ";
             lineWordVector[cLine].push_back(cWord);
             auto cString = std::bitset<32>(cWord).to_string();

@@ -4,8 +4,8 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 
-#include "TH1F.h"
 #include "TFile.h"
+#include "TH1F.h"
 
 //========================================================================================================================
 DQMHistogramOTverifyBoardDataWord::DQMHistogramOTverifyBoardDataWord() {}
@@ -57,7 +57,8 @@ void DQMHistogramOTverifyBoardDataWord::fillPatternMatchingEfficiency(DetectorDa
                 TH1I* hybridMatchingEfficiencyHistogram =
                     fMatchingEfficiencyHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
                 auto theHybridMatchingEfficiencyVector = hybrid->getSummary<std::vector<float>>();
-                for(size_t lineId = 0; lineId < theHybridMatchingEfficiencyVector.size(); ++lineId) { hybridMatchingEfficiencyHistogram->SetBinContent(lineId + 1, theHybridMatchingEfficiencyVector[lineId]); }
+                for(size_t lineId = 0; lineId < theHybridMatchingEfficiencyVector.size(); ++lineId)
+                { hybridMatchingEfficiencyHistogram->SetBinContent(lineId + 1, theHybridMatchingEfficiencyVector[lineId]); }
             }
         }
     }
