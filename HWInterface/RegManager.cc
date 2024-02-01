@@ -8,9 +8,11 @@
 */
 
 #include "HWInterface/RegManager.h"
+#include "HWDescription/BeBoard.h"
 #include "HWDescription/Definition.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 #include <uhal/uhal.hpp>
 
 #include <boost/iostreams/device/file.hpp>
@@ -19,9 +21,11 @@
 
 #define DEV_FLAG 0
 
+using namespace Ph2_HwDescription;
+
 namespace Ph2_HwInterface
 {
-RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId) : fUHalConfigFileName(puHalConfigFileName)
+RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId, BeBoard* theBoard) : fUHalConfigFileName(puHalConfigFileName), fTheBoardPointer(theBoard)
 {
     if(mode != Mode::Replay)
     {
@@ -34,7 +38,8 @@ RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId
     }
 }
 
-RegManager::RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : fBoard(nullptr), fUri(pUri), fAddressTable(pAddressTable), fId(pId)
+RegManager::RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
+    : fBoard(nullptr), fUri(pUri), fAddressTable(pAddressTable), fId(pId), fTheBoardPointer(theBoard)
 {
     if(mode != Mode::Replay)
     {
@@ -64,6 +69,7 @@ bool RegManager::WriteReg(const std::string& pRegNode, const uint32_t& pVal)
 
     fBoard->getNode(pRegNode).write(pVal);
     fBoard->dispatch();
+    fTheBoardPointer->setReg(pRegNode, pVal);
 
     // Verify if the writing is done correctly
     if(DEV_FLAG)
@@ -90,7 +96,11 @@ bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t
     std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
     if(mode == Mode::Replay) return true;
 
-    for(auto const& v: pVecReg) fBoard->getNode(v.first).write(v.second);
+    for(auto const& v: pVecReg)
+    {
+        fBoard->getNode(v.first).write(v.second);
+        fTheBoardPointer->setReg(v.first, v.second);
+    }
 
     try
     {
@@ -217,6 +227,8 @@ uint32_t RegManager::ReadReg(const std::string& pRegNode)
 
     if(mode == Mode::Capture) captureRead(cValRead.value());
 
+    fTheBoardPointer->setReg(pRegNode, cValRead.value());
+
     return cValRead.value();
 }
 
@@ -338,6 +350,15 @@ bool RegManager::pollRegister(const std::string& pRegisterName, uint32_t pValue,
         std::cout.flush();
     }
     return cStopCondition;
+}
+
+void RegManager::ResetRegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
+{
+    if(fBoard)
+    {
+        delete fBoard;
+        fBoard = new uhal::HwInterface(uhal::ConnectionManager::getDevice(pId, pUri, pAddressTable));
+    }
 }
 
 // ##############################################

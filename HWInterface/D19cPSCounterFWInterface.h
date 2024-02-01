@@ -1,21 +1,31 @@
 #ifndef _D19cPSCounterFWInterface_H__
 #define __D19cPSCounterFWInterface_H__
 
-#include "HWInterface/FEConfigurationInterface.h"
-#include "HWInterface/FastCommandInterface.h"
 #include "HWInterface/L1ReadoutInterface.h"
+#include <map>
+#include <vector>
 
+namespace Ph2_HwDescription
+{
+class BeBoard;
+class OpticalGroup;
+class Hybrid;
+class Chip;
+} // namespace Ph2_HwDescription
 namespace Ph2_HwInterface
 {
 #ifndef PSCounterData
 typedef std::map<uint32_t, std::vector<uint16_t>> PSCounterData; // counter data per FEId
 #endif
 
+class RegManager;
+class FEConfigurationInterface;
+class FastCommandInterface;
+
 class D19cPSCounterFWInterface : public L1ReadoutInterface
 {
   public:
-    D19cPSCounterFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cPSCounterFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cPSCounterFWInterface(RegManager* theRegManager);
     ~D19cPSCounterFWInterface();
 
   public:
@@ -24,11 +34,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     bool WaitForReadout() override;
     bool WaitForNTriggers() override;
     bool PollReadoutData(const Ph2_HwDescription::BeBoard* pBoard, bool pWait = false) override;
-    bool ResetReadout() override
-    {
-        LOG(INFO) << BOLDRED << "Nothing to reset for PS counter interface.." << RESET;
-        return true;
-    }
+    bool ResetReadout() override;
     void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
     void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
     void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };
@@ -50,7 +56,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     void configureFastReadout(uint8_t pEnable, uint8_t pMode = 0) { fPSCounterFast = pEnable; }
 
   private:
-    FEConfigurationInterface* fFEConfigurationInterface;
+    FEConfigurationInterface* fFEConfigurationInterface{nullptr};
 
     uint32_t fFCDupe{4};
     uint32_t fWait_us{100};

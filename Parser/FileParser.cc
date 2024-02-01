@@ -38,9 +38,7 @@ void FileParser::parseHW(const std::string& pFilename, DetectorContainer* pDetec
     // # Iterate over the BeBoard Nodes #
     // ##################################
     for(pugi::xml_node cBeBoardNode = doc.child(HW_DESCRIPTION_NODE_NAME).child(BEBOARD_NODE_NAME); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
-    {
         if(static_cast<std::string>(cBeBoardNode.name()) == BEBOARD_NODE_NAME) parseBeBoard(cBeBoardNode, pDetectorContainer, os);
-    }
 
     for(i = 0; i < 80; i++) os << "*";
 
@@ -1224,7 +1222,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     else if(cName.find(CBC_NODE_NAME) != std::string::npos)
                     {
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::CBC3);
                         parseCbcContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseGlobalCbcSettings(pHybridNode, cHybrid, os);
                     }
@@ -1316,28 +1313,24 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     else if(cName == SSA_NODE_NAME)
                     {
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::SSA);
                         parseSSAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseSSASettings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == SSA2_NODE_NAME)
                     {
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::SSA2);
                         parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseSSA2Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == MPA_NODE_NAME)
                     {
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::MPA);
                         parseMPAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseMPASettings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == MPA2_NODE_NAME)
                     {
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::MPA2);
                         parseMPA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseMPA2Settings(pHybridNode, cHybrid, os);
                     }

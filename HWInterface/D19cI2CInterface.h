@@ -2,14 +2,22 @@
 #define __D19cI2CInterface_H__
 
 #include "HWInterface/FEConfigurationInterface.h"
+#include <map>
+#include <vector>
+
+namespace Ph2_HwDescription
+{
+class BeBoard;
+}
 
 namespace Ph2_HwInterface
 {
+class RegManager;
+
 class D19cI2CInterface : public FEConfigurationInterface
 {
   public:
-    D19cI2CInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cI2CInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cI2CInterface(RegManager* theRegManager);
     ~D19cI2CInterface();
 
   public:

@@ -22,6 +22,7 @@
 #include "HWInterface/Firmware.h"
 #include "HWInterface/MmcPipeInterface.h"
 #include "HWInterface/RegManager.h"
+#include "Utils/easylogging++.h"
 #include <fstream>
 
 using namespace std;

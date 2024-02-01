@@ -16,7 +16,6 @@ class ExceptionHandler
     static ExceptionHandler* fInstance;
     ExceptionHandler(){}; // Private constructor to prevent instantiation outside of the class
     ~ExceptionHandler();
-    void                   removeContainerExceptionQuery(std::vector<std::string>& theFunctionNameList);
     void                   initializeQueryFunctionNameContainer();
     void                   updateFWInformation(uint16_t boardId);
     DetectorDataContainer* fQueryFunctionNames{nullptr};

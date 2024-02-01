@@ -1,67 +1,45 @@
 #ifndef _L1ReadoutInterface_H__
 #define _L1ReadoutInterface_H__
 
-#include "HWInterface/RegManager.h"
-#include "Utils/Utilities.h"
-#include "Utils/easylogging++.h"
+#include <cstdint>
 #include <string>
+#include <vector>
 
-#include "HWInterface/FastCommandInterface.h"
-#include "HWInterface/TriggerInterface.h"
-
+namespace Ph2_HwDescription
+{
+class BeBoard;
+}
 namespace Ph2_HwInterface
 {
-class L1ReadoutInterface : public RegManager
+class RegManager;
+class FastCommandInterface;
+class TriggerInterface;
+class L1ReadoutInterface
 {
   public: // constructors
-    L1ReadoutInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    L1ReadoutInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
-    ~L1ReadoutInterface();
+    L1ReadoutInterface(RegManager* theRegManager);
+    virtual ~L1ReadoutInterface();
 
   protected:
-    FastCommandInterface* fFastCommandInterface;
-    TriggerInterface*     fTriggerInterface;
+    FastCommandInterface* fFastCommandInterface{nullptr};
+    TriggerInterface*     fTriggerInterface{nullptr};
     uint8_t               fHandshake;
     std::vector<uint32_t> fData;
-    uint32_t              fNEvents;
+    uint32_t              fNEvents{100};
     uint32_t              fNReadoutEvents;
     uint32_t              fMaxAttempts{10};
     uint32_t              fReadoutAttempt{0};
     uint32_t              fTimeout_us{5000000}; // time-out after 5s
+    RegManager*           fTheRegManager{nullptr};
 
   public: // virtual functions
-    virtual void FillData() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::ReadData is absent" << RESET; }
-    virtual bool WaitForReadout()
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::WaitForData is absent" << RESET;
-        return false;
-    }
-    virtual bool WaitForNTriggers()
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::WaitForNTriggers is absent" << RESET;
-        return false;
-    }
-    virtual bool ReadEvents(const Ph2_HwDescription::BeBoard* pBoard)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::ReadEvents is absent" << RESET;
-        return false;
-    }
-    virtual bool PollReadoutData(const Ph2_HwDescription::BeBoard* pBoard, bool pWait = false)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::ReadEvents is absent" << RESET;
-        return false;
-    }
-    virtual bool ResetReadout()
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::ResetReadout is absent" << RESET;
-        return false;
-    }
-
-    virtual bool CheckBuffers()
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::CheckBuffers is absent" << RESET;
-        return false;
-    }
+    virtual void FillData();
+    virtual bool WaitForReadout();
+    virtual bool WaitForNTriggers();
+    virtual bool ReadEvents(const Ph2_HwDescription::BeBoard* pBoard);
+    virtual bool PollReadoutData(const Ph2_HwDescription::BeBoard* pBoard, bool pWait = false);
+    virtual bool ResetReadout();
+    virtual bool CheckBuffers();
 
     std::vector<uint32_t> getData() { return fData; }
     void                  clearData() { fData.clear(); }

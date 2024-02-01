@@ -1,8 +1,9 @@
 #ifndef __REGISTER_HELPER_H__
 #define __REGISTER_HELPER_H__
 
-#include "map"
-#include "string"
+#include <cstdint>
+#include <map>
+#include <string>
 
 namespace Ph2_HwInterface
 {

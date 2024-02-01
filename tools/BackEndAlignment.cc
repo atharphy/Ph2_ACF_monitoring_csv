@@ -521,13 +521,12 @@ bool BackEndAlignment::Align()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         // read back register map before you've done anything
-        auto cBoardRegisterMap = theBoard->getBeBoardRegMap();
-        bool cWithCIC          = false;
-        bool cWithCBC          = false;
-        bool cWithSSA          = false;
-        bool cWithSSA2         = false;
-        bool cWithMPA          = false;
-        bool cWithMPA2         = false;
+        bool cWithCIC  = false;
+        bool cWithCBC  = false;
+        bool cWithSSA  = false;
+        bool cWithSSA2 = false;
+        bool cWithMPA  = false;
+        bool cWithMPA2 = false;
 
         auto cHybrid = cBoard->getFirstObject()->getFirstObject();
         cWithCIC     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;

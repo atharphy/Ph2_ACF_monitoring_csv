@@ -11,6 +11,7 @@
  */
 
 #include "HWInterface/D19cFWInterface.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Hybrid.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
@@ -34,7 +35,8 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, BeBoard* theBoard)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
     // can only link one type of trigger + FC interface to this type of FW
@@ -42,35 +44,35 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
-    : BeBoardFWInterface(puHalConfigFileName, pBoardId), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
         fSaveToFile = false;
@@ -82,35 +84,35 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
-    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(nullptr), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), fFileHandler(nullptr), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     LOG(INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
     std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
@@ -120,35 +122,35 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler)
-    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
         fSaveToFile = false;
@@ -160,27 +162,27 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
@@ -490,7 +492,7 @@ void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
     delete fL1ReadoutInterface;
-    fL1ReadoutInterface = new D19cPSCounterFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+    fL1ReadoutInterface = new D19cPSCounterFWInterface(this);
     static_cast<D19cPSCounterFWInterface*>(fL1ReadoutInterface)->LinkFEConfigurationInterface(fFEConfigurationInterface);
     LOG(INFO) << BOLDYELLOW << "Initialized D19cPSCounterFWInterface ..." << fL1ReadoutInterface << RESET;
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
@@ -500,7 +502,7 @@ void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
     delete fL1ReadoutInterface;
-    fL1ReadoutInterface = new D19cL1ReadoutInterface(this->getId(), this->getUri(), this->getAddressTable());
+    fL1ReadoutInterface = new D19cL1ReadoutInterface(this);
     LOG(INFO) << BOLDYELLOW << "Initialized D19cL1ReadoutInterface ..." << fL1ReadoutInterface << RESET;
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
     fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);
@@ -510,7 +512,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
     if(fLinkInterface == nullptr && pBoard->isOptical())
     {
         LOG(INFO) << BOLDBLUE << "Optical readout . initializing link control interface" << RESET;
-        fLinkInterface = new D19cLinkInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fLinkInterface = new D19cLinkInterface(this);
     }
     if(fFEConfigurationInterface == nullptr)
     {
@@ -518,7 +520,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         if(!pBoard->isOptical())
         {
             LOG(INFO) << BOLDYELLOW << "Electrical readout.. initialize I2C interface" << RESET;
-            fFEConfigurationInterface = new D19cI2CInterface(this->getId(), this->getUri(), this->getAddressTable());
+            fFEConfigurationInterface = new D19cI2CInterface(this);
             (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
             cConfiguration.fRetry       = 0;
             cConfiguration.fVerify      = 0;
@@ -527,7 +529,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         else
         {
             LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface for FE configuration" << RESET;
-            fFEConfigurationInterface   = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
+            fFEConfigurationInterface   = new D19cOpticalInterface(this);
             cConfiguration.fRetryIC     = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.ic_retry");
             cConfiguration.fMaxRetryIC  = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_ic_retry");
             cConfiguration.fRetryI2C    = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.i2c_retry");
@@ -566,10 +568,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     std::vector<std::pair<std::string, uint32_t>> cBoardRegs;
     for(auto const& it: cRegMap)
     {
-        cBoardRegs.push_back({it.first, it.second});
-        if(it.first == "fc7_daq_cnfg.dio5_block.dio5_en") cEnableDIO5 = (bool)it.second;
-        if(it.first == "fc7_daq_cnfg.optical_block.enable.l8") { cL8Enable = std::bitset<12>(it.second); }
-        if(it.first == "fc7_daq_cnfg.optical_block.enable.l12") { c12Enable = std::bitset<12>(it.second); }
+        cBoardRegs.push_back({it.first, it.second.fValue});
+        if(it.first == "fc7_daq_cnfg.dio5_block.dio5_en") cEnableDIO5 = (bool)it.second.fValue;
+        if(it.first == "fc7_daq_cnfg.optical_block.enable.l8") { cL8Enable = std::bitset<12>(it.second.fValue); }
+        if(it.first == "fc7_daq_cnfg.optical_block.enable.l12") { c12Enable = std::bitset<12>(it.second.fValue); }
         if(it.first == "fc7_daq_cnfg.readout_block.global.zero_suppression_enable") { cBoardRegs.push_back({it.first, pBoard->getEventType() == EventType::ZS}); }
     }
     // configure CDCE - if needed
@@ -577,8 +579,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     bool                          cSecondaryReference = false;
     for(auto const& it: cRegMap)
     {
-        if(it.first == "fc7_daq_cnfg.clock.ext_clk_en") cSecondaryReference = cSecondaryReference | (it.second == 0);
-        if(it.first == "fc7_daq_cnfg.ttc.ttc_enable") cSecondaryReference = cSecondaryReference | (it.second == 1);
+        if(it.first == "fc7_daq_cnfg.clock.ext_clk_en") cSecondaryReference = cSecondaryReference | (it.second.fValue == 0);
+        if(it.first == "fc7_daq_cnfg.ttc.ttc_enable") cSecondaryReference = cSecondaryReference | (it.second.fValue == 1);
     }
     LOG(INFO) << BOLDBLUE << "External clock " << ((cSecondaryReference) ? "Disabled" : "Enabled") << RESET;
     if(cSecondaryReference)
@@ -1012,7 +1014,7 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
         if(cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos)
         {
             // LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
-            cVecReg.push_back({it.first, it.second});
+            cVecReg.push_back({it.first, it.second.fValue});
         }
     }
     this->WriteStackReg(cVecReg);

@@ -8,13 +8,18 @@
 */
 
 #include "HWInterface/RD53FWInterface.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWInterface/RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), ddr3Offset(0), FWinfo(0) {}
+RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), ddr3Offset(0), FWinfo(0)
+{
+}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 {
@@ -111,27 +116,28 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     RD53FWInterface::DIO5Config cfgDIO5;
     LOG(INFO) << GREEN << "Initializing DIO5:" << RESET;
     for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
+        if((it.second.fPrmptCfg == true) &&
+           ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos)))
         {
-            LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second << std::dec << " (" << it.second << ")" << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
             if(it.first.find("HitOr_enable_l12") != std::string::npos)
-                RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
+                RD53FWInterface::localCfgFastCmd.enable_hitor = it.second.fValue;
             else if(it.first.find("ext_clk_en") != std::string::npos)
             {
-                cfgDIO5.enable     = cfgDIO5.enable | it.second;
+                cfgDIO5.enable     = cfgDIO5.enable | it.second.fValue;
                 cfgDIO5.ch_out_en  = cfgDIO5.ch_out_en & 0x0F;
-                cfgDIO5.ext_clk_en = it.second;
+                cfgDIO5.ext_clk_en = it.second.fValue;
             }
             else
             {
-                RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
-                if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::External)
+                RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second.fValue);
+                if(static_cast<RD53FWInterface::TriggerSource>(it.second.fValue) == TriggerSource::External)
                 {
                     LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
                     cfgDIO5.enable    = true;
                     cfgDIO5.ch_out_en = cfgDIO5.ch_out_en & 0x1D;
                 }
-                else if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
+                else if(static_cast<RD53FWInterface::TriggerSource>(it.second.fValue) == TriggerSource::TLU)
                 {
                     LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
                     cfgDIO5.enable             = true;
@@ -307,15 +313,16 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     LOG(INFO) << GREEN << "Initializing board's registers:" << RESET;
 
     for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
+    {
+        if((it.second.fPrmptCfg == true) && (it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
         {
-            LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second << std::dec << " (" << it.second << ")" << RESET;
-            cVecReg.push_back({it.first, it.second});
+            LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
+            cVecReg.push_back({it.first, it.second.fValue});
             if(it.first.find("gtx_rx_polarity") != std::string::npos) gtxRxPolarity = true;
             if(it.first.find("fast_cmd_reg_1") != std::string::npos) fastCmdReg1 = true;
             if(it.first.find("ext_tlu_reg2") != std::string::npos) extTluReg2 = true;
         }
-
+    }
     if(cVecReg.size() != 0)
     {
         RegManager::WriteStackReg(cVecReg);

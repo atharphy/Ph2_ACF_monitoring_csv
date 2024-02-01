@@ -1,6 +1,8 @@
 #ifndef __FILE_DEFINITIONS_H__
 #define __FILE_DEFINITIONS_H__
 
+#define OUTPUT_CONFIGURATION_FILE "Configuration.xml"
+
 // Nodes
 #define HW_DESCRIPTION_NODE_NAME "HwDescription"
 #define BEBOARD_NODE_NAME "BeBoard"

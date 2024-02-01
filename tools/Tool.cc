@@ -825,6 +825,30 @@ void Tool::dumpConfigFiles()
 
     for(auto theBoard: *fDetectorContainer)
     {
+        LOG(INFO) << BOLDYELLOW << "Reading all readable registers for BeBoard " << +theBoard->getId() << RESET;
+
+        const auto theBeBoardFW = this->fBeBoardFWMap[theBoard->getId()];
+        const auto hwInterface  = theBeBoardFW->getHardwareInterface();
+
+        auto theBoardFreeRegisterRegex = theBoard->getFreeRegisterRegex();
+
+        for(const auto& path: hwInterface->getNodes())
+        {
+            const auto& node = hwInterface->getNode(path);
+
+            if((node.getPermission() == uhal::defs::READWRITE) && (++node.begin() == node.end()))
+            {
+                bool isFreeRegister = false;
+                for(const auto& freeRegister: theBoardFreeRegisterRegex)
+                {
+                    isFreeRegister = std::regex_match(path, freeRegister.first);
+                    if(isFreeRegister) break;
+                }
+                if(isFreeRegister) continue;
+                fBeBoardInterface->ReadBoardReg(theBoard, path);
+            }
+        }
+
         for(auto theOpticalGroup: *theBoard)
         {
             auto theLpGBT = theOpticalGroup->flpGBT;
