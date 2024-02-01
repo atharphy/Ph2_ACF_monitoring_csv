@@ -300,7 +300,7 @@ void BeamTestCheck::CheckWithExternal(uint8_t pContinuousReadout)
     }
 
     if(fScanL1Latency) ScanL1Latency(pContinuousReadout);
-    if(fScanStubLatency) ScanStubLatency(pContinuousReadout);
+    if(fScanStubLatency) ScanStubLatencyTest(pContinuousReadout);
         /*// print out optimal L1 + stub latencies
         for(auto cBoard: *fDetectorContainer)
         {
