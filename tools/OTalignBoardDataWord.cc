@@ -8,6 +8,7 @@
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -34,7 +35,7 @@ void OTalignBoardDataWord::Initialise(void)
     // free the registers in case any
     size_t               numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
     std::vector<uint8_t> initialEmptyVector(numberOfLines, 0);
-    ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeBitSlipContainer, initialEmptyVector);
+    ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBitSlipContainer, initialEmptyVector);
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fAlignmentRetryContainer, initialEmptyVector);
 
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
@@ -78,65 +79,89 @@ void OTalignBoardDataWord::wordAlignBEdata()
 
     for(auto theBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
-
-        for(auto theOpticalGroup: *theBoard)
-        {
-            bool cAligned = this->wordAlignBEdata(theOpticalGroup);
-            if(!cAligned)
-            {
-                LOG(INFO) << BOLDRED << "Could not word align-BE data in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
-                          << " --- OpticalGroup will be disabled" << RESET;
-                ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
-                continue;
-            }
-        } // optical groups connected to this  board
-
+        stubAndL1WordAlignment(theBoard); 
         LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::wordAlignBEdata ... trying to readout L1 data.. " << RESET;
         ReadNEvents(theBoard, 10);
     }
 
 #ifdef __USE_ROOT__
-    fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBeBitSlipContainer);
+    fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBitSlipContainer);
     fDQMHistogramOTalignBoardDataWord.fillAlignmentRetryNumber(fAlignmentRetryContainer);
 #else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theBitSlipContainerSerialization("OTalignBoardDataWordBitSlip");
+        theBitSlipContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fBitSlipContainer);
+
+        ContainerSerialization theAlignmentRetryContainerSerialization("OTalignBoardDataWordAlignmentRetry");
+        theAlignmentRetryContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fAlignmentRetryContainer);
+    }
 #endif
 }
 
-bool OTalignBoardDataWord::wordAlignBEdata(const OpticalGroup* theOpticalGroup)
+void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard *theBoard)
 {
-    auto theBoardId = theOpticalGroup->getBeBoardId();
-    auto theBoard   = fDetectorContainer->getObject(theBoardId);
-    LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::wordAlignBEdata for an OG " << RESET;
+    LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::stubAndL1WordAlignment for an OG " << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
-    fBeBoardInterface->setBoard(theBoardId);
-    D19cDebugFWInterface*            cDebugInterface   = cInterface->getDebugInterface();
+    D19cDebugFWInterface*            theDebugInterface   = cInterface->getDebugInterface();
     D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
     theAlignerInterface->InitializeConfiguration();
     theAlignerInterface->InitializeAlignerObject();
-    LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::wordAlignBEdata after debug interface " << RESET;
-
-    // configure CICs to output alignment pattern on L1 lines
-    std::vector<uint8_t> cFeEnableRegs(0);
-    for(auto theHybrid: *theOpticalGroup)
-    {
-        auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-        // disable alignment output
-        fCicInterface->SelectOutput(cCic, true);
-        cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
-        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-    }
-    // stop triggers to make sure that there are no L1 packets from the CIC
     fBeBoardInterface->Stop(theBoard);
 
+    LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::stubAndL1WordAlignment after debug interface " << RESET;
+
+    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
+    for(auto theOpticalGroup: *theBoard)
+    {
+        bool cAligned = stubWordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
+        if(!cAligned)
+        {
+            LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
+                        << " --- OpticalGroup will be disabled" << RESET;
+            ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
+            continue;
+        }
+    } // optical groups connected to this  board
+
+    // Set board trigger configuration for L1 alignment
+    std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
+    cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
+
+    for(auto theOpticalGroup: *theBoard)
+    {
+        bool cAligned = L1WordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
+        if(!cAligned)
+        {
+            LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
+                        << " --- OpticalGroup will be disabled" << RESET;
+            ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
+            continue;
+        }
+    } // optical groups connected to this  board
+
+}
+
+bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
+{
     // align stub lines in the BE
     size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
     LOG(INFO) << BOLDMAGENTA << "OTalignBoardDataWord::wordAlignBEdata ... word alignment on " << +cNlines << "/6 lines stub from CIC.." << RESET;
     for(auto theHybrid: *theOpticalGroup)
     {
-        auto& theHybridBeBitSlip  = fBeBitSlipContainer.getObject(theBoardId)->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
-        auto& theHybridAlignmentRetry = fAlignmentRetryContainer.getObject(theBoardId)->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
+        auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+        fCicInterface->SelectOutput(cCic, true);
+        fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+        auto& theHybridBeBitSlip  = fBitSlipContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
+        auto& theHybridAlignmentRetry = fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
 
         for(size_t cLineId = 1; cLineId <= cNlines; cLineId++)
         {
@@ -162,65 +187,18 @@ bool OTalignBoardDataWord::wordAlignBEdata(const OpticalGroup* theOpticalGroup)
             }
         }
     }
-
-    for(auto theHybrid: *theOpticalGroup)
-    {
-        LOG(INFO) << BOLDMAGENTA << "Stub debug output - hybrid#" << +theHybrid->getId() << RESET;
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        for(size_t cIter = 0; cIter < 1; cIter++)
-        {
-            LOG(INFO) << BOLDYELLOW << "Debug capture Iteration#" << cIter << RESET;
-            cDebugInterface->StubDebug(true, cNlines);
-        }
-    }
-
-    // disable stub output
-    for(auto theHybrid: *theOpticalGroup)
-    {
-        auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-        // disable alignment output
-        fCicInterface->SelectOutput(cCic, false);
-    }
-    // align L1 data in the BE
-    LOG(INFO) << BOLDMAGENTA << "OTalignBoardDataWord::wordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
-    bool isHybridAligned = L1WordAlignment(theOpticalGroup);
-
-    LOG(INFO) << BOLDYELLOW << "Reached end of wordAlignBEData" << RESET;
-    return isHybridAligned;
+    return true;
 }
 
-bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup)
+bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
 {
-    auto theBoardId = theOpticalGroup->getBeBoardId();
-    auto theBoard   = fDetectorContainer->getObject(theBoardId);
-    fBeBoardInterface->setBoard(theBoardId);
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::L1WordAlignment " << RESET;
 
-    auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
-    D19cDebugFWInterface*            cDebugInterface   = cInterface->getDebugInterface();
-    theAlignerInterface->InitializeConfiguration();
-    theAlignerInterface->InitializeAlignerObject();
-
+    auto theBoard = fDetectorContainer->getObject(theOpticalGroup->getBeBoardId());
     bool cSuccess = true;
 
     // configure triggers
     // make sure you're only sending one trigger at a time
-    std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    cVecReg.clear();
-    std::vector<std::string> cFcmdRegs{"misc.trigger_multiplicity", "user_trigger_frequency", "trigger_source", "misc.backpressure_enable", "triggers_to_accept"};
-    std::vector<uint16_t>    cFcmdRegVals{0, 100, 3, 0, 0};
-    std::vector<uint8_t>     cFcmdRegOrigVals(0);
-    for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
-    {
-        std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
-        cVecReg.push_back({cRegName, cFcmdRegVals[cIndx]});
-    }
-    cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
-    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
-    fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
 
     LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
     fBeBoardInterface->ChipReSync(theBoard);
@@ -238,8 +216,8 @@ bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup)
             continue;
         }
 
-        auto& theHybridBeBitSlip  = fBeBitSlipContainer.getObject(theBoardId)->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
-        auto& theHybridAlignmentRetry = fAlignmentRetryContainer.getObject(theBoardId)->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
+        auto& theHybridBeBitSlip  = fBitSlipContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
+        auto& theHybridAlignmentRetry = fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
 
         int     cChipId = cCic->getId();
         uint8_t cLineId = 0;
@@ -266,17 +244,6 @@ bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup)
         cSuccess = cSuccess && tryLineAlignment(theAlignerInterface, cLineId, theAlignerObject, theLineConfiguration, theHybridBeBitSlip, theHybridAlignmentRetry);
     }
     fBeBoardInterface->Stop(theBoard);
-
-    for(auto theHybrid: *theOpticalGroup)
-    {
-        auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-        if(cCic == nullptr) continue;
-
-        // select lines for slvs debug
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        cDebugInterface->L1ADebug();
-    }
 
     return cSuccess;
 }

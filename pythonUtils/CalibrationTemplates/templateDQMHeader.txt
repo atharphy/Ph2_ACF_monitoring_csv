@@ -56,6 +56,6 @@ class DQMHistogramCLASS_NAME_TEMPLATE : public DQMHistogramBase
     void reset(void) override;
 
   private:
-    DetectorDataContainer fDetectorData;
+    DetectorContainer*    fDetectorContainer;
 };
 #endif
