@@ -299,7 +299,7 @@ std::stringstream BeBoard::getRegMapStream() const
 
 void BeBoard::dumpRegisters()
 {
-    for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second.fValue << std::endl;
+    for(const auto& reg: fRegMap) std::cout << reg.first << " " << reg.second.fValue << std::endl;
 }
 
 } // namespace Ph2_HwDescription

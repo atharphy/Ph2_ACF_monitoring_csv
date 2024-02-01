@@ -116,7 +116,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     RD53FWInterface::DIO5Config cfgDIO5;
     LOG(INFO) << GREEN << "Initializing DIO5:" << RESET;
     for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
+        if((it.second.fPrmptCfg == true) &&
+           ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos)))
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
             if(it.first.find("HitOr_enable_l12") != std::string::npos)
@@ -313,8 +314,7 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
 
     for(const auto& it: pBoard->getBeBoardRegMap())
     {
-        if(it.second.fPrmptCfg == false) continue;
-        if((it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
+        if((it.second.fPrmptCfg == true) && (it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
             cVecReg.push_back({it.first, it.second.fValue});

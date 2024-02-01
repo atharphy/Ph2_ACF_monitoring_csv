@@ -234,18 +234,18 @@ void lpGBTInterface::ConfigureRxAlignmentMode(Chip* pChip, const std::vector<uin
 {
     for(const auto& cGroup: pGroups)
     {
-        std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
-        auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
-        WriteChipReg(pChip, cRXCntrlReg, (cRegValue & 0xFC) | pTrackMode);
+        std::string cRXCntrReg = "EPRX" + std::to_string(cGroup) + "Control";
+        auto        cRegValue  = ReadChipReg(pChip, cRXCntrReg);
+        WriteChipReg(pChip, cRXCntrReg, (cRegValue & 0xFC) | pTrackMode);
     }
 }
 
 uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
 {
-    uint16_t    cChipRate   = lpGBTInterface::GetChipRate(pChip);
-    std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
-    auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
-    uint16_t    cValue      = (cRegValue & 0xC);
+    uint16_t    cChipRate  = lpGBTInterface::GetChipRate(pChip);
+    std::string cRXCntrReg = "EPRX" + std::to_string(pGroup) + "Control";
+    auto        cRegValue  = ReadChipReg(pChip, cRXCntrReg);
+    uint16_t    cValue     = (cRegValue & 0xC);
     return (cChipRate / 5.) * (int)cValue * (float)lpGBTconstants::ACCELERATOR_CLK / 1e6;
 }
 
@@ -266,10 +266,10 @@ void lpGBTInterface::ConfigureRxGroup(Chip* pChip, uint8_t pGroup, uint8_t pChan
     // #######################################################################
     // # Enable Rx Groups Channels and set Data Rate and Phase Tracking mode #
     // #######################################################################
-    std::string cRXCntrlReg    = "EPRX" + std::to_string(pGroup) + "Control";
-    uint8_t     cValueEnableRx = (ReadChipReg(pChip, cRXCntrlReg) >> 4);
+    std::string cRXCntrReg     = "EPRX" + std::to_string(pGroup) + "Control";
+    uint8_t     cValueEnableRx = (ReadChipReg(pChip, cRXCntrReg) >> 4);
     cValueEnableRx |= (1 << pChannel);
-    WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
+    WriteChipReg(pChip, cRXCntrReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
 }
 
 void lpGBTInterface::ConfigureRxChannel(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pEqual, uint8_t pTerm, uint8_t pAcBias, uint8_t pInvert, uint8_t pPhase)
@@ -306,15 +306,14 @@ void lpGBTInterface::ConfigureTxGroup(Chip* pChip, uint8_t pGroup, uint8_t pChan
 void lpGBTInterface::ConfigureTxChannel(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pDriveStr, uint8_t pPreEmphMode, uint8_t pPreEmphStr, uint8_t pPreEmphWidth, uint8_t pInvert)
 {
     // ############################################################################
-    // # Configure Tx Channel PreEmphasisStrenght, PreEmphasisMode, DriveStrength #
+    // # Configure Tx Channel PreEmphasisStrength, PreEmphasisMode, DriveStrength #
     // ############################################################################
-    std::string cTXChnCntrl = "EPTX" + std::to_string(pGroup) + std::to_string(pChannel) + "ChnCntr";
-    WriteChipReg(pChip, cTXChnCntrl, (pPreEmphStr << 5) | (pPreEmphMode << 3) | (pDriveStr << 0));
+    std::string cTXChnCntr = "EPTX" + std::to_string(pGroup) + std::to_string(pChannel) + "ChnCntr";
+    WriteChipReg(pChip, cTXChnCntr, (pPreEmphStr << 5) | (pPreEmphMode << 3) | (pDriveStr << 0));
 
     // ####################################################
     // # Configure Tx Channel PreEmphasisWidth, Inversion #
     // ####################################################
-    std::string cTXChnCntr;
     if(pChannel == 0 || pChannel == 1)
         cTXChnCntr = "EPTX" + std::to_string(pGroup) + "1_" + std::to_string(pGroup) + "0ChnCntr";
     else if(pChannel == 2 || pChannel == 3)
@@ -1253,8 +1252,8 @@ void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
 
 uint8_t lpGBTInterface::GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
 {
-    std::string cI2CCntrlReg = "I2CM" + std::to_string(pMaster) + "Ctrl";
-    return ReadChipReg(pChip, cI2CCntrlReg);
+    std::string cI2CCntrReg = "I2CM" + std::to_string(pMaster) + "Ctrl";
+    return ReadChipReg(pChip, cI2CCntrReg);
 }
 
 bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq)

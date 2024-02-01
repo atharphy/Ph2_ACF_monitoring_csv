@@ -38,9 +38,7 @@ void FileParser::parseHW(const std::string& pFilename, DetectorContainer* pDetec
     // # Iterate over the BeBoard Nodes #
     // ##################################
     for(pugi::xml_node cBeBoardNode = doc.child(HW_DESCRIPTION_NODE_NAME).child(BEBOARD_NODE_NAME); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
-    {
         if(static_cast<std::string>(cBeBoardNode.name()) == BEBOARD_NODE_NAME) parseBeBoard(cBeBoardNode, pDetectorContainer, os);
-    }
 
     for(i = 0; i < 80; i++) os << "*";
 
