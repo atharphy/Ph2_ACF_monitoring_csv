@@ -1,5 +1,6 @@
 #include "KIRA.h"
 
+#include "HWDescription/BeBoardRegItem.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/Occupancy.h"
@@ -77,7 +78,7 @@ void KIRA::PrepareForExternal(BeBoard* pBoard)
     // make sure I am accepting all triggers
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
     // trigger config
-    uint32_t cTriggerMult = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
+    uint32_t cTriggerMult = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"].fValue;
 
     uint8_t                                       cTriggerSource = 5;
     std::vector<std::string>                      cFcmdRegs{"trigger_source", "triggers_to_accept"};
