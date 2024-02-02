@@ -201,8 +201,8 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                                                  ->getObject(cChip->getId())
                                                  ->getSummary<std::vector<double>>()
                                                  .at(i) /
-                                             RD53Shared::PRECISION) *
-                                       RD53Shared::PRECISION;
+                                             RD53Shared::SUPERPRECISION) *
+                                       RD53Shared::SUPERPRECISION;
                         if((current >= 0) && (current < best))
                         {
                             regVal = dacListTAP[i];
