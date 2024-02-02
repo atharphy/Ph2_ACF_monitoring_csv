@@ -11,6 +11,7 @@
 #define MetadataHandlerIT_H
 
 #include "Utils/ContainerSerialization.h"
+#include "Utils/RD53Shared.h"
 #include "tools/MetadataHandler.h"
 
 #ifdef __USE_ROOT__

@@ -38,9 +38,7 @@ void FileParser::parseHW(const std::string& pFilename, DetectorContainer* pDetec
     // # Iterate over the BeBoard Nodes #
     // ##################################
     for(pugi::xml_node cBeBoardNode = doc.child(HW_DESCRIPTION_NODE_NAME).child(BEBOARD_NODE_NAME); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
-    {
         if(static_cast<std::string>(cBeBoardNode.name()) == BEBOARD_NODE_NAME) parseBeBoard(cBeBoardNode, pDetectorContainer, os);
-    }
 
     for(i = 0; i < 80; i++) os << "*";
 
@@ -1218,8 +1216,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
                         const auto frontEndType = cName.find(RD53A_NODE_NAME) != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
                         pBoard->setFrontEndType(frontEndType);
-                        parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
                         if(cNextName.empty() || cNextName != cName) parseGlobalRD53Settings(pHybridNode, cHybrid, os);
+                        parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
                     }
                     else if(cName.find(CBC_NODE_NAME) != std::string::npos)
                     {

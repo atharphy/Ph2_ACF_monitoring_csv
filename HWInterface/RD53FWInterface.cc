@@ -116,7 +116,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     RD53FWInterface::DIO5Config cfgDIO5;
     LOG(INFO) << GREEN << "Initializing DIO5:" << RESET;
     for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
+        if((it.second.fPrmptCfg == true) &&
+           ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos)))
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
             if(it.first.find("HitOr_enable_l12") != std::string::npos)
@@ -236,7 +237,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##################
     // # Reset Metadata #
     // ##################
-    RD53FWInterface::resetNCorruptedNEvents();
+    RD53FWInterface::resetNcorruptedNevents();
+    RD53FWInterface::resetNtrialsNevents();
 }
 
 void RD53FWInterface::PrintFWstatus()
@@ -312,8 +314,7 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
 
     for(const auto& it: pBoard->getBeBoardRegMap())
     {
-        if(it.second.fPrmptCfg == false) continue;
-        if((it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
+        if((it.second.fPrmptCfg == true) && (it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
             cVecReg.push_back({it.first, it.second.fValue});
@@ -449,13 +450,17 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 {
     LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;
 
-    isChipCommunicationOK = true;
+    isChipCommunicationOK = false;
 
     // ########################################
     // # Check communication with the chip(s) #
     // ########################################
     uint32_t chips_en = RD53FWInterface::GetBoardEnabledChips(pBoard, true);
-    if(chips_en == 0) throw Exception("[RD53FWInterface::CheckChipCommunication] No data lane is enabled: aborting");
+    if(chips_en == 0)
+    {
+        LOG(ERROR) << "\t--> No data lane is enabled: aborting" << RESET;
+        return isChipCommunicationOK;
+    }
     LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << ", i.e. "
               << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
 
@@ -482,12 +487,12 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
     if(nAttempts == RD53Shared::MAXATTEMPTS)
     {
-        isChipCommunicationOK = false;
-        LOG(ERROR) << BOLDRED << "\t--> Error, not all data lanes are active, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") " << RESET;
-        throw Exception("[RD53FWInterface::CheckChipCommunication] Some data lanes are enabled but inactive");
+        LOG(ERROR) << BOLDRED << "\t--> Error, some data lanes are enabled but inactive, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") " << RESET;
+        return isChipCommunicationOK;
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
+    isChipCommunicationOK = true;
     return isChipCommunicationOK;
 }
 
@@ -674,8 +679,9 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 
 void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
-    bool retry;
-    int  nAttempts = 0;
+    uint32_t status;
+    bool     retry;
+    int      nAttempts = 0;
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
 
@@ -691,11 +697,10 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
-    uint32_t status;
     do
     {
-        nAttempts++;
         retry = false;
+        nAttempts++;
         pData.clear();
 
         // ####################
@@ -721,12 +726,14 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
         if(RD53Event::EvtErrorHandler(status) == false)
         {
+            NtrialsNevents++;
             retry = true;
             continue;
         }
 
         if(RD53Event::decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
         {
+            NtrialsNevents++;
             LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
                        << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
@@ -739,7 +746,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     {
         LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
-        NCorruptedNEvents++;
+        NcorruptedNevents++;
     }
 
     // #################

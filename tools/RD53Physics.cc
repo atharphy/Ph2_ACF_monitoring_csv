@@ -123,6 +123,11 @@ void Physics::Stop()
 
 void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 {
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
+
     corruptedEventCounter = 0;
     histos                = nullptr;
 
