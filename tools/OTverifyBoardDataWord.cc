@@ -141,7 +141,7 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWI
 
 bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
 {
-    // create a mask that is
+    // create a mask that is 0xFF for 5G and 0xFFFF for 10G modules
     uint16_t mask = 0xFF;
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
 
@@ -278,30 +278,36 @@ bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWord
     uint64_t header     = 0x00000ffffffe;
     uint64_t headerMask = 0xffffffffffff;
 
-    auto mergeIntoLongInt = [&theWordVector](uint8_t numberOfBytesToSkip) {
+    // create a mask that is 0xFF for 5G and 0xFFFF for 10G modules
+    uint16_t mask = 0xFF;
+    if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
+
+    int maxWritePatternShift = sizeof(uint64_t) / numberOfBytesInSinglePacket -1;
+
+    auto mergeIntoLongInt = [&theWordVector, maxWritePatternShift, mask, numberOfBytesInSinglePacket](uint8_t numberOfBytesToSkip) {
         std::vector<uint64_t> longIntWordVector;
 
         uint64_t longIntWord    = 0;
-        int      writeBiteShift = 7;
+        int      writeSinglePatternShift = maxWritePatternShift;
         for(auto theWord: theWordVector)
         {
             uint64_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
-            for(uint8_t readByteShift = 0; readByteShift < 4; ++readByteShift)
+            for(uint8_t readSinglePatterShift = 0; readSinglePatterShift < (sizeof(uint32_t)/numberOfBytesInSinglePacket); ++readSinglePatterShift)
             {
                 if(numberOfBytesToSkip > 0)
                 {
                     --numberOfBytesToSkip;
                     continue;
                 }
-                longIntWord = longIntWord | (((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << (writeBiteShift * 8));
-                // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeBiteShift * 8) << " bits which is " << std::hex <<
-                // (((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << (writeBiteShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
-                --writeBiteShift;
-                if(writeBiteShift < 0)
+                longIntWord = longIntWord | (((tmpLongIntWord >> (readSinglePatterShift * 8 * numberOfBytesInSinglePacket)) & mask) << (writeSinglePatternShift * numberOfBytesInSinglePacket * 8));
+                // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is " << std::hex <<
+                // (((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << (writeSinglePatternShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
+                --writeSinglePatternShift;
+                if(writeSinglePatternShift < 0)
                 {
                     longIntWordVector.push_back(longIntWord);
                     longIntWord    = 0;
-                    writeBiteShift = 7;
+                    writeSinglePatternShift = maxWritePatternShift;
                 }
             }
         }

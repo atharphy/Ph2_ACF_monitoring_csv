@@ -207,11 +207,9 @@ std::string getPatternPrintout(const std::vector<T> theWordVector, uint8_t wordS
         abort();
     }
     std::stringstream thePattern;
-    // Create a mask with the first N bits set to 1 (0xFF)
-    uint32_t tmp = (1 << (wordSize*8)) - 1;
-
-    // Create the uint32_t with the first N bits set to 0xFF
-    uint32_t mask = tmp << (16 - (wordSize*8));
+    // create a mask that is 0xFF for 5G and 0xFFFF for 10G modules
+    uint16_t mask = 0xFF;
+    if(wordSize == 2) mask = 0xFFFF;
 
     thePattern << "Received pattern: " << std::hex;
 
@@ -220,6 +218,7 @@ std::string getPatternPrintout(const std::vector<T> theWordVector, uint8_t wordS
         for(uint8_t theByteShift = 0; theByteShift < sizeof(T); theByteShift+=wordSize)
         {
             uint32_t byteValue = ((theWord >> (theByteShift*8)) & mask);
+            // std::cout << std::hex << "full word " << theWord << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;
             if(byteValue <= 0xF) thePattern << "0";
             if(wordSize == 2)
             {
