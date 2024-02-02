@@ -46,7 +46,7 @@ std::vector<uint32_t> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPri
     fTotalNumberOfTriggers += fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
 
     LOG(DEBUG) << BOLDMAGENTA << "First header found after " << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
-    auto        cWords    = fTheRegManager->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+    auto cWords = fTheRegManager->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
     if(pPrint)
     {
         std::string cBuffer   = "";
