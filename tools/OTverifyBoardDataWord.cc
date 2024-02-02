@@ -106,6 +106,7 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWI
     bool isKickoff = true;
     for(auto theOpticalGroup: *theBoard)
     {
+        uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
         if(isKickoff && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
             LOG(INFO) << BOLDYELLOW << "Attention! ignoring failures on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
         size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
@@ -128,7 +129,7 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWI
                 {
                     if(isKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
                     { continue; } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
-                    if(isStubPatternMatched(lineOutputVector.second[lineIndex]))
+                    if(isStubPatternMatched(lineOutputVector.second[lineIndex], numberOfBytesInSinglePacket))
                         ++theHybridPatternMatchingEfficiency[lineIndex + 1];
                     else
                         LOG(ERROR) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
@@ -138,11 +139,15 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWI
     }
 }
 
-bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& theWordVector)
+bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
 {
+    // create a mask that is
+    uint16_t mask = 0xFF;
+    if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
+
     uint8_t flagCharacter          = 0xea;
     uint8_t idleCaracter           = 0xaa;
-    uint8_t numberOfIdleCharacters = 7;
+    uint8_t numberOfIdleCharacters = (numberOfBytesInSinglePacket == 1) ? 7 : 15;
 
     enum SearchPatternStatus
     {
@@ -151,70 +156,74 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
         Error
     } status = Idle;
 
-    uint8_t  numberOfBytesInOneWord            = sizeof(uint32_t);
-    uint16_t totalNumberOfBytes                = theWordVector.size() * numberOfBytesInOneWord;
-    uint16_t currentBytes                      = 0;
+    uint8_t  numberOfSinglePacketsInOneWord            = sizeof(uint32_t) / numberOfBytesInSinglePacket;
+    uint16_t totalNumberOfSinglePackets                = theWordVector.size() * numberOfSinglePacketsInOneWord;
+    uint16_t currentSinglePacketNumber                      = 0;
     uint8_t  numberOfConsecutiveIdleCharacters = 0;
     bool     firstFlagCharacterFound           = false;
-    while(currentBytes < totalNumberOfBytes)
+    while(currentSinglePacketNumber < totalNumberOfSinglePackets)
     {
-        uint8_t currentByte = ((theWordVector.at(currentBytes / numberOfBytesInOneWord)) >> (currentBytes % numberOfBytesInOneWord * 8)) & 0xFF;
-        ++currentBytes;
-        switch(status)
+        uint16_t currentSinglePacket = ((theWordVector.at(currentSinglePacketNumber / numberOfSinglePacketsInOneWord)) >> (currentSinglePacketNumber % numberOfSinglePacketsInOneWord * 8 * numberOfBytesInSinglePacket)) & mask;
+        ++currentSinglePacketNumber;
+        for(int byteShift=0; byteShift<numberOfBytesInSinglePacket; ++byteShift)
         {
-        case SearchPatternStatus::Idle: // I am in Idle, looking for flagCharacter
-        {
-            if(currentByte == idleCaracter)
+            uint8_t currentByte = (currentSinglePacket >> (8*byteShift)) & 0xFF;
+            switch(status)
             {
-                ++numberOfConsecutiveIdleCharacters;
-                if(numberOfConsecutiveIdleCharacters > numberOfIdleCharacters) // too many Idle characters!!!
-                { status = SearchPatternStatus::Error; }
-            }
-            else if(currentByte == flagCharacter)
+            case SearchPatternStatus::Idle: // I am in Idle, looking for flagCharacter
             {
-                if(firstFlagCharacterFound && numberOfConsecutiveIdleCharacters != numberOfIdleCharacters) // not enough idle characters!!!
-                { status = SearchPatternStatus::Error; }
-                else
+                if(currentByte == idleCaracter)
                 {
-                    firstFlagCharacterFound = true;
-                    status                  = SearchPatternStatus::FlagFound;
+                    ++numberOfConsecutiveIdleCharacters;
+                    if(numberOfConsecutiveIdleCharacters > numberOfIdleCharacters) // too many Idle characters!!!
+                    { status = SearchPatternStatus::Error; }
                 }
+                else if(currentByte == flagCharacter)
+                {
+                    if(firstFlagCharacterFound && numberOfConsecutiveIdleCharacters != numberOfIdleCharacters) // not enough idle characters!!!
+                    { status = SearchPatternStatus::Error; }
+                    else
+                    {
+                        firstFlagCharacterFound = true;
+                        status                  = SearchPatternStatus::FlagFound;
+                    }
+                }
+                else // unrecognized character!!!
+                {
+                    status = SearchPatternStatus::Error;
+                }
+
+                break;
             }
-            else // unrecognized character!!!
+
+            case SearchPatternStatus::FlagFound: // I found the flag, now I expect to fo back to Idle
             {
-                status = SearchPatternStatus::Error;
+                numberOfConsecutiveIdleCharacters = 0;
+                if(currentByte == idleCaracter)
+                {
+                    ++numberOfConsecutiveIdleCharacters;
+                    status = SearchPatternStatus::Idle;
+                }
+                else // no idle character found after flag!!!
+                {
+                    status = SearchPatternStatus::Error;
+                }
+                break;
             }
 
-            break;
-        }
-
-        case SearchPatternStatus::FlagFound: // I found the flag, now I expect to fo back to Idle
-        {
-            numberOfConsecutiveIdleCharacters = 0;
-            if(currentByte == idleCaracter)
+            case SearchPatternStatus::Error: // error case
             {
-                ++numberOfConsecutiveIdleCharacters;
-                status = SearchPatternStatus::Idle;
+                LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, expected pattern not found" << RESET;
+                LOG(ERROR) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket) << RESET;
+                return false;
             }
-            else // no idle character found after flag!!!
+
+            default: // this shold never happen
             {
-                status = SearchPatternStatus::Error;
+                LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, state machine went into default state, it should never happen" << RESET;
+                return false;
             }
-            break;
-        }
-
-        case SearchPatternStatus::Error: // error case
-        {
-            LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, expected pattern not found" << RESET;
-            LOG(ERROR) << BOLDRED << getPatternPrintout(theWordVector) << RESET;
-            return false;
-        }
-
-        default: // this shold never happen
-        {
-            LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, state machine went into default state, it should never happen" << RESET;
-            return false;
-        }
+            }
         }
     }
 
@@ -237,6 +246,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
 
     for(auto theOpticalGroup: *theBoard)
     {
+         uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
         for(auto theHybrid: *theOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
@@ -251,7 +261,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
             for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
             {
                 auto lineOutputVector = theDebugInterface->L1ADebug(1, false);
-                if(isL1HeaderFound(lineOutputVector))
+                if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket))
                     ++theHybridPatternMatchingEfficiency[0];
                 else
                 {
@@ -263,7 +273,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
     }
 }
 
-bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector)
+bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
 {
     uint64_t header     = 0x00000ffffffe;
     uint64_t headerMask = 0xffffffffffff;
@@ -310,7 +320,12 @@ bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWord
     }
 
     LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, expected pattern not found" << RESET;
-    LOG(ERROR) << BOLDRED << getPatternPrintout(theWordVector) << RESET;
+    LOG(ERROR) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket) << RESET;
 
     return false; // header not found
+}
+
+uint8_t OTverifyBoardDataWord::getNumberOfBytesInSinglePacket(OpticalGroup* cOpticalGroup) const
+{
+    return (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(cOpticalGroup->flpGBT) == 10) ? 2 : 1;
 }
