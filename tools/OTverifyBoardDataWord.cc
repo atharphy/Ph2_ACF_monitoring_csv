@@ -156,18 +156,19 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
         Error
     } status = Idle;
 
-    uint8_t  numberOfSinglePacketsInOneWord            = sizeof(uint32_t) / numberOfBytesInSinglePacket;
-    uint16_t totalNumberOfSinglePackets                = theWordVector.size() * numberOfSinglePacketsInOneWord;
-    uint16_t currentSinglePacketNumber                      = 0;
+    uint8_t  numberOfSinglePacketsInOneWord    = sizeof(uint32_t) / numberOfBytesInSinglePacket;
+    uint16_t totalNumberOfSinglePackets        = theWordVector.size() * numberOfSinglePacketsInOneWord;
+    uint16_t currentSinglePacketNumber         = 0;
     uint8_t  numberOfConsecutiveIdleCharacters = 0;
     bool     firstFlagCharacterFound           = false;
     while(currentSinglePacketNumber < totalNumberOfSinglePackets)
     {
-        uint16_t currentSinglePacket = ((theWordVector.at(currentSinglePacketNumber / numberOfSinglePacketsInOneWord)) >> (currentSinglePacketNumber % numberOfSinglePacketsInOneWord * 8 * numberOfBytesInSinglePacket)) & mask;
+        uint16_t currentSinglePacket =
+            ((theWordVector.at(currentSinglePacketNumber / numberOfSinglePacketsInOneWord)) >> (currentSinglePacketNumber % numberOfSinglePacketsInOneWord * 8 * numberOfBytesInSinglePacket)) & mask;
         ++currentSinglePacketNumber;
-        for(int byteShift=0; byteShift<numberOfBytesInSinglePacket; ++byteShift)
+        for(int byteShift = 0; byteShift < numberOfBytesInSinglePacket; ++byteShift)
         {
-            uint8_t currentByte = (currentSinglePacket >> (8*byteShift)) & 0xFF;
+            uint8_t currentByte = (currentSinglePacket >> (8 * byteShift)) & 0xFF;
             switch(status)
             {
             case SearchPatternStatus::Idle: // I am in Idle, looking for flagCharacter
@@ -246,7 +247,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
 
     for(auto theOpticalGroup: *theBoard)
     {
-         uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
+        uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
         for(auto theHybrid: *theOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
@@ -282,17 +283,17 @@ bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWord
     uint16_t mask = 0xFF;
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
 
-    int maxWritePatternShift = sizeof(uint64_t) / numberOfBytesInSinglePacket -1;
+    int maxWritePatternShift = sizeof(uint64_t) / numberOfBytesInSinglePacket - 1;
 
     auto mergeIntoLongInt = [&theWordVector, maxWritePatternShift, mask, numberOfBytesInSinglePacket](uint8_t numberOfBytesToSkip) {
         std::vector<uint64_t> longIntWordVector;
 
-        uint64_t longIntWord    = 0;
+        uint64_t longIntWord             = 0;
         int      writeSinglePatternShift = maxWritePatternShift;
         for(auto theWord: theWordVector)
         {
             uint64_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
-            for(uint8_t readSinglePatterShift = 0; readSinglePatterShift < (sizeof(uint32_t)/numberOfBytesInSinglePacket); ++readSinglePatterShift)
+            for(uint8_t readSinglePatterShift = 0; readSinglePatterShift < (sizeof(uint32_t) / numberOfBytesInSinglePacket); ++readSinglePatterShift)
             {
                 if(numberOfBytesToSkip > 0)
                 {
@@ -300,13 +301,14 @@ bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWord
                     continue;
                 }
                 longIntWord = longIntWord | (((tmpLongIntWord >> (readSinglePatterShift * 8 * numberOfBytesInSinglePacket)) & mask) << (writeSinglePatternShift * numberOfBytesInSinglePacket * 8));
-                // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is " << std::hex <<
+                // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is
+                // " << std::hex <<
                 // (((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << (writeSinglePatternShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
                 --writeSinglePatternShift;
                 if(writeSinglePatternShift < 0)
                 {
                     longIntWordVector.push_back(longIntWord);
-                    longIntWord    = 0;
+                    longIntWord             = 0;
                     writeSinglePatternShift = maxWritePatternShift;
                 }
             }

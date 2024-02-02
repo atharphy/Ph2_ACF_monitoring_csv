@@ -215,9 +215,9 @@ std::string getPatternPrintout(const std::vector<T> theWordVector, uint8_t wordS
 
     for(auto theWord: theWordVector)
     {
-        for(uint8_t theByteShift = 0; theByteShift < sizeof(T); theByteShift+=wordSize)
+        for(uint8_t theByteShift = 0; theByteShift < sizeof(T); theByteShift += wordSize)
         {
-            uint32_t byteValue = ((theWord >> (theByteShift*8)) & mask);
+            uint32_t byteValue = ((theWord >> (theByteShift * 8)) & mask);
             // std::cout << std::hex << "full word " << theWord << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;
             if(byteValue <= 0xF) thePattern << "0";
             if(wordSize == 2)
