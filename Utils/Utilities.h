@@ -199,17 +199,32 @@ time_t getTimeStamp();
 std::string getTimeStampString();
 
 template <typename T>
-std::string getPatternPrintout(const std::vector<T> theWordVector)
+std::string getPatternPrintout(const std::vector<T> theWordVector, uint8_t wordSize = 1)
 {
+    if(wordSize != 1 && wordSize != 2)
+    {
+        std::cerr << "getPatternPrintout wordSize can be only 1 or 2" << std::endl;
+        abort();
+    }
     std::stringstream thePattern;
+    // create a mask that is 0xFF for 5G and 0xFFFF for 10G modules
+    uint16_t mask = 0xFF;
+    if(wordSize == 2) mask = 0xFFFF;
 
     thePattern << "Received pattern: " << std::hex;
+
     for(auto theWord: theWordVector)
     {
-        for(uint8_t theByteShift = 0; theByteShift < sizeof(T); ++theByteShift)
+        for(uint8_t theByteShift = 0; theByteShift < sizeof(T); theByteShift += wordSize)
         {
-            uint8_t byteValue = ((theWord >> (theByteShift * 8)) & 0xFF);
-            if(byteValue < 16) thePattern << "0";
+            uint32_t byteValue = ((theWord >> (theByteShift * 8)) & mask);
+            // std::cout << std::hex << "full word " << theWord << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;
+            if(byteValue <= 0xF) thePattern << "0";
+            if(wordSize == 2)
+            {
+                if(byteValue <= 0xFF) thePattern << "0";
+                if(byteValue <= 0xFFF) thePattern << "0";
+            }
             thePattern << +byteValue;
         }
         thePattern << " ";
