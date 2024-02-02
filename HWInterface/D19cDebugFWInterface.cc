@@ -12,7 +12,7 @@ D19cDebugFWInterface::D19cDebugFWInterface(RegManager* theRegManager) : fTheRegM
 
 D19cDebugFWInterface::~D19cDebugFWInterface() {}
 
-std::pair<std::string, std::vector<uint32_t>> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
+std::vector<uint32_t> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
 {
     if(pPrint) LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
     // enable initial fast reset
@@ -47,24 +47,27 @@ std::pair<std::string, std::vector<uint32_t>> D19cDebugFWInterface::L1ADebug(uin
 
     LOG(DEBUG) << BOLDMAGENTA << "First header found after " << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
     auto        cWords    = fTheRegManager->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-    std::string cBuffer   = "";
-    size_t      cLineIndx = 0;
-    for(auto cWord: cWords)
+    if(pPrint)
     {
-        auto                     cString = std::bitset<32>(cWord).to_string();
-        std::vector<std::string> cOutputWords(0);
-        for(size_t cIndex = 0; cIndex < 4; cIndex++) { cOutputWords.push_back(cString.substr(cIndex * 8, 8)); }
-        std::string cOutput = "";
-        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+        std::string cBuffer   = "";
+        size_t      cLineIndx = 0;
+        for(auto cWord: cWords)
         {
-            cOutput += *cIt + " ";
-            cBuffer += *cIt;
+            auto                     cString = std::bitset<32>(cWord).to_string();
+            std::vector<std::string> cOutputWords(0);
+            for(size_t cIndex = 0; cIndex < 4; cIndex++) { cOutputWords.push_back(cString.substr(cIndex * 8, 8)); }
+            std::string cOutput = "";
+            for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+            {
+                cOutput += *cIt + " ";
+                cBuffer += *cIt;
+            }
+            LOG(INFO) << BOLDBLUE << "#" << +cLineIndx << ":" << cOutput << RESET;
+            cLineIndx++;
         }
-        if(pPrint) LOG(INFO) << BOLDBLUE << "#" << +cLineIndx << ":" << cOutput << RESET;
-        cLineIndx++;
     }
 
-    return std::make_pair(cBuffer, cWords);
+    return cWords;
 }
 std::pair<std::vector<std::string>, std::vector<std::vector<uint32_t>>> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
 {

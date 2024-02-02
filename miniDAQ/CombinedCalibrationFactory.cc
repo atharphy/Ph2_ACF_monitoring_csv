@@ -35,7 +35,6 @@
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/PSPhysics.h"
 #include "tools/Physics2S.h"
-#include "tools/StubBackEndAlignment.h"
 
 using namespace MessageUtils;
 

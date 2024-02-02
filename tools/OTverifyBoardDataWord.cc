@@ -245,7 +245,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
             for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
             {
                 auto lineOutputVector = theDebugInterface->L1ADebug(1, false);
-                if(isL1HeaderFound(lineOutputVector.second))
+                if(isL1HeaderFound(lineOutputVector))
                     ++theHybridPatternMatchingEfficiency[0];
                 else
                 {
