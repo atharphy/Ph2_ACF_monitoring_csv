@@ -229,6 +229,7 @@
     <Setting name="PedeNoiseUntrimmedLimit">999.</Setting>-->
 
     <Setting name="DoManualVrefTuning"      >  0</Setting>
+    <Setting name="OTverifyBoardDataWordNumberOfIterations">100</Setting>
 
 
 

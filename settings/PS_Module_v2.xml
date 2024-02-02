@@ -240,6 +240,7 @@
     <Setting name="PSOccupancyPulseAmplitude">200</Setting>
 
     <Setting name="DoManualVrefTuning"      >  0</Setting>
+    <Setting name="OTverifyBoardDataWordNumberOfIterations">100</Setting>
 
 </Settings>
 

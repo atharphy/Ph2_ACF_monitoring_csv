@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTalignBoardDataWord.h
-        \brief               DQM class for OTalignBoardDataWord
+        \file                DQMHistogramOTverifyBoardDataWord.h
+        \brief               DQM class for OTverifyBoardDataWord
         \author              Fabio Ravera
-        \date                19/01/24
+        \date                01/02/24
 */
 
-#ifndef DQMHistogramOTalignBoardDataWord_h_
-#define DQMHistogramOTalignBoardDataWord_h_
+#ifndef DQMHistogramOTverifyBoardDataWord_h_
+#define DQMHistogramOTverifyBoardDataWord_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTalignBoardDataWord
- * \brief Class for OTalignBoardDataWord monitoring histograms
+ * \class DQMHistogramOTverifyBoardDataWord
+ * \brief Class for OTverifyBoardDataWord monitoring histograms
  */
-class DQMHistogramOTalignBoardDataWord : public DQMHistogramBase
+class DQMHistogramOTverifyBoardDataWord : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTalignBoardDataWord();
+    DQMHistogramOTverifyBoardDataWord();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTalignBoardDataWord();
+    ~DQMHistogramOTverifyBoardDataWord();
 
     /*!
      * \brief Book histograms
@@ -55,12 +55,10 @@ class DQMHistogramOTalignBoardDataWord : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillBitSlipValues(DetectorDataContainer& theBitSlipContainer);
-    void fillAlignmentRetryNumber(DetectorDataContainer& theAlignmentRetryContainer);
+    void fillPatternMatchingEfficiency(DetectorDataContainer& thePatternMatchingEfficiencyContainer);
 
   private:
     DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fBitSlipHistogramContainer;
-    DetectorDataContainer fAlignmentRetryHistogramContainer;
+    DetectorDataContainer fMatchingEfficiencyHistogramContainer;
 };
 #endif

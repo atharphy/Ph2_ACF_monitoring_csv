@@ -1,6 +1,6 @@
 /*!
  *
- * \file ShortFinder.h
+ * \file AntennaTester.h
  * \brief Short Finder  class - converted into a tool based on T.Gadesk's algorithm (AntennaScan, TestChannels, and
  * SaveTestingResults in HybridTester.cc) \author Sarah SEIF EL NASR_STOREY \date 20 / 10 / 16
  *
