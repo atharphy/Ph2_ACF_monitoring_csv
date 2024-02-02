@@ -78,7 +78,7 @@ bool LinkTestOT::TestL1ALine(BeBoard* pBoard, bool pAlign, size_t pAttempts)
             std::vector<size_t> cIdleBits(0);
             for(size_t cAttempt = 0; cAttempt < pAttempts; cAttempt++)
             {
-                auto        cBuffer     = cDebugInterface->L1ADebug(1, false);
+                auto        cBuffer     = cDebugInterface->L1ADebug(1, false).first;
                 std::string cIdleBuffer = cBuffer;
                 // if buffer ends in 3 0s .. skip
                 if(cBuffer.substr(cBuffer.length() - 5, 5) == "00000") continue;

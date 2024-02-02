@@ -113,7 +113,7 @@ void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& 
             std::string              cReadLine;
             std::vector<std::string> cReadLineVector(0);
 
-            cReadLine = cDebugInterface->L1ADebug((uint8_t)1, pPrintScoped);
+            cReadLine = cDebugInterface->L1ADebug((uint8_t)1, pPrintScoped).first;
             cReadLineVector.push_back(cReadLine);
             cReadLines.push_back(cReadLineVector);
         }

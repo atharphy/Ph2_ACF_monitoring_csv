@@ -5,6 +5,7 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include <sstream>
+#include "Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -100,12 +101,12 @@ void OTverifyBoardDataWord::runIntegrityTest()
 
 void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
 {
+    LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest" << RESET;
     for(auto theOpticalGroup: *theBoard)
     {
         size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
         for(auto theHybrid: *theOpticalGroup)
         {
-            LOG(INFO) << BOLDMAGENTA << "Stub debug output - hybrid#" << +theHybrid->getId() << RESET;
             auto& theHybridPatternMatchingEfficiency =
                 fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
 
@@ -122,17 +123,18 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWI
                 for(size_t lineIndex = 0; lineIndex < lineOutputVector.second.size(); ++lineIndex)
                 {
                     if(isStubPatternMatched(lineOutputVector.second[lineIndex])) ++theHybridPatternMatchingEfficiency[lineIndex + 1];
+                    else LOG(ERROR) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET;
                 }
             }
         }
     }
 }
 
-bool OTverifyBoardDataWord::isStubPatternMatched(std::vector<uint32_t> theWordVector)
+bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& theWordVector)
 {
-    uint8_t flagCharacter          = 0xe;
-    uint8_t idleCaracter           = 0xa;
-    uint8_t numberOfIdleCharacters = 15;
+    uint8_t flagCharacter          = 0xea;
+    uint8_t idleCaracter           = 0xaa;
+    uint8_t numberOfIdleCharacters = 7;
 
     enum SearchPatternStatus
     {
@@ -141,26 +143,26 @@ bool OTverifyBoardDataWord::isStubPatternMatched(std::vector<uint32_t> theWordVe
         Error
     } status = Idle;
 
-    uint8_t  numberOf4bitCharactersInOneWord   = sizeof(uint32_t) * 2;
-    uint16_t totalNumberOf4bitCharacters       = theWordVector.size() * numberOf4bitCharactersInOneWord;
-    uint16_t current4BitCharacter              = 0;
+    uint8_t  numberOfBytesInOneWord   = sizeof(uint32_t);
+    uint16_t totalNumberOfBytes       = theWordVector.size() * numberOfBytesInOneWord;
+    uint16_t currentBytes              = 0;
     uint8_t  numberOfConsecutiveIdleCharacters = 0;
     bool     firstFlagCharacterFound           = false;
-    while(current4BitCharacter < totalNumberOf4bitCharacters)
+    while(currentBytes < totalNumberOfBytes)
     {
-        uint8_t current4BitWord = ((theWordVector[current4BitCharacter / numberOf4bitCharactersInOneWord]) >> (current4BitCharacter % numberOf4bitCharactersInOneWord * 4)) & 0xF;
-        ++current4BitCharacter;
+        uint8_t currentByte = ((theWordVector.at(currentBytes / numberOfBytesInOneWord)) >> (currentBytes % numberOfBytesInOneWord * 8)) & 0xFF;
+        ++currentBytes;
         switch(status)
         {
         case SearchPatternStatus::Idle: // I am in Idle, looking for flagCharacter
         {
-            if(current4BitWord == idleCaracter)
+            if(currentByte == idleCaracter)
             {
                 ++numberOfConsecutiveIdleCharacters;
                 if(numberOfConsecutiveIdleCharacters > numberOfIdleCharacters) // too many Idle characters!!!
                 { status = SearchPatternStatus::Error; }
             }
-            else if(current4BitWord == flagCharacter)
+            else if(currentByte == flagCharacter)
             {
                 if(firstFlagCharacterFound && numberOfConsecutiveIdleCharacters != numberOfIdleCharacters) // not enough idle characters!!!
                 { status = SearchPatternStatus::Error; }
@@ -181,7 +183,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(std::vector<uint32_t> theWordVe
         case SearchPatternStatus::FlagFound: // I found the flag, now I expect to fo back to Idle
         {
             numberOfConsecutiveIdleCharacters = 0;
-            if(current4BitWord == idleCaracter)
+            if(currentByte == idleCaracter)
             {
                 ++numberOfConsecutiveIdleCharacters;
                 status = SearchPatternStatus::Idle;
@@ -196,16 +198,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(std::vector<uint32_t> theWordVe
         case SearchPatternStatus::Error: // error case
         {
             LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, expected pattern not found" << RESET;
-            std::stringstream thePattern;
-
-            thePattern << "Received pattern: " << std::hex;
-            for(auto theWord: theWordVector)
-            {
-                for(uint8_t the4bitshift = 0; the4bitshift < numberOf4bitCharactersInOneWord; ++the4bitshift) { thePattern << +((theWord >> (the4bitshift * 4)) & 0xF); }
-            }
-            thePattern << std::dec;
-            LOG(ERROR) << BOLDRED << thePattern.str() << RESET;
-
+            LOG(ERROR) << BOLDRED << getPatternPrintout(theWordVector) << RESET;
             return false;
         }
 
@@ -222,6 +215,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(std::vector<uint32_t> theWordVe
 
 void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
 {
+    LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
     // Set board trigger configuration for L1 alignment
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
@@ -240,10 +234,75 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
             auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
             if(cCic == nullptr) continue;
 
+            auto& theHybridPatternMatchingEfficiency =
+                fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
+
             // select lines for slvs debug
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-            theDebugInterface->L1ADebug();
+            for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+            {
+                auto lineOutputVector = theDebugInterface->L1ADebug(1, false);
+                if(isL1HeaderFound(lineOutputVector.second)) ++theHybridPatternMatchingEfficiency[0];
+                else
+                {
+                    LOG(ERROR) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET;
+                    LOG(ERROR) << BOLDRED << "Total number of triggers = " << +theDebugInterface->fTotalNumberOfTriggers << RESET;
+                }
+            }
         }
     }
+}
+
+
+bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>&  theWordVector)
+{
+    uint64_t header     = 0x00000ffffffe;
+    uint64_t headerMask = 0xffffffffffff;
+
+    auto mergeIntoLongInt = [&theWordVector](uint8_t numberOfBytesToSkip)
+    {
+        std::vector<uint64_t> longIntWordVector;
+
+        uint64_t longIntWord = 0;
+        int      writeBiteShift = 7;
+        for(auto theWord: theWordVector)
+        {
+            uint64_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
+            for(uint8_t readByteShift = 0; readByteShift < 4; ++readByteShift)
+            {
+                if(numberOfBytesToSkip>0)
+                {
+                    --numberOfBytesToSkip;
+                    continue;
+                }
+                longIntWord = longIntWord | (((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << (writeBiteShift * 8));
+                // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeBiteShift * 8) << " bits which is " << std::hex << (((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << (writeBiteShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
+                --writeBiteShift;
+                if(writeBiteShift < 0)
+                {
+                    longIntWordVector.push_back(longIntWord);
+                    longIntWord = 0;
+                    writeBiteShift = 7;
+                }
+            }
+        }
+
+        return longIntWordVector;
+    };
+
+    for(uint8_t numberOfBytesToSkip=0; numberOfBytesToSkip<8; ++numberOfBytesToSkip)
+    {
+        std::vector<uint64_t> longIntWordVector = mergeIntoLongInt(numberOfBytesToSkip);
+        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] byteshift = " << +numberOfBytesToSkip << " pattern : " << getPatternPrintout(longIntWordVector) << std::hex << std::endl;
+        for(auto longIntWord : longIntWordVector)
+        {
+            if((longIntWord & headerMask) == header) return true;
+        }
+    }
+
+    LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, expected pattern not found" << RESET;
+    LOG(ERROR) << BOLDRED << getPatternPrintout(theWordVector) << RESET;
+
+    return false; // header not found
 }

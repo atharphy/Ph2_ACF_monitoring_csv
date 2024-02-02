@@ -198,4 +198,25 @@ time_t getTimeStamp();
 
 std::string getTimeStampString();
 
+template<typename T>
+std::string getPatternPrintout(const std::vector<T> theWordVector)
+{
+    std::stringstream thePattern;
+
+    thePattern << "Received pattern: " << std::hex;
+    for(auto theWord: theWordVector)
+    {
+        for(uint8_t theByteShift = 0; theByteShift < sizeof(T); ++theByteShift)
+        {
+            uint8_t byteValue = ((theWord >> (theByteShift * 8)) & 0xFF);
+            if(byteValue < 16) thePattern << "0";
+            thePattern << +byteValue;
+        }
+        thePattern << " ";
+    }
+    thePattern << std::dec;
+
+    return thePattern.str();
+}
+
 #endif

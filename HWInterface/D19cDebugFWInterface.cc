@@ -12,11 +12,9 @@ D19cDebugFWInterface::D19cDebugFWInterface(RegManager* theRegManager) : fTheRegM
 
 D19cDebugFWInterface::~D19cDebugFWInterface() {}
 
-std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
+std::pair<std::string, std::vector<uint32_t>> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
 {
-    LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
-    auto cInitFastReset = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
-    auto cInitBP        = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable");
+    if(pPrint) LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
     // enable initial fast reset
     fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
     // disable back-pressure
@@ -26,8 +24,13 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
     // load new trigger configuration
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] enable = " << +fTheRegManager->ReadReg("fc7_daq_cnfg.sync_block.enable") << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] is_bc0_enable = " << +fTheRegManager->ReadReg("fc7_daq_cnfg.sync_block.is_bc0_enable") << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] is_resync_enable = " << +fTheRegManager->ReadReg("fc7_daq_cnfg.sync_block.is_resync_enable") << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] delay = " << +fTheRegManager->ReadReg("fc7_daq_cnfg.sync_block.delay") << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] num_triggers = " << +fTheRegManager->ReadReg("fc7_daq_cnfg.sync_block.num_triggers") << std::endl;
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-    LOG(INFO) << BOLDBLUE << "Started triggers ...." << RESET;
+    if(pPrint) LOG(INFO) << BOLDBLUE << "Started triggers ...." << RESET;
     // wait until you've received at least one trigger
     auto cNTriggersRxd = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
     auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
@@ -37,9 +40,11 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
         cEndTime      = std::chrono::high_resolution_clock::now();
         cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cNTriggersRxd = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        LOG(INFO) << BOLDMAGENTA << "Trigger in counter is " << +cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;
+        if(pPrint) LOG(INFO) << BOLDMAGENTA << "Trigger in counter is " << +cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;
     } while(cNTriggersRxd < 10 && cDuration < pWait_ms * 1e3);
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+    fTotalNumberOfTriggers  += fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    
 
     LOG(DEBUG) << BOLDMAGENTA << "First header found after " << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
     auto        cWords    = fTheRegManager->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
@@ -59,11 +64,8 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
         if(pPrint) LOG(INFO) << BOLDBLUE << "#" << +cLineIndx << ":" << cOutput << RESET;
         cLineIndx++;
     }
-
-    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", cInitFastReset);
-    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", cInitBP);
-    fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
-    return cBuffer;
+    
+    return std::make_pair(cBuffer, cWords);
 }
 std::pair<std::vector<std::string>, std::vector<std::vector<uint32_t>>> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
 {
