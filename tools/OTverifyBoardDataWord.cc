@@ -4,8 +4,8 @@
 #include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
-#include <sstream>
 #include "Utils/Utilities.h"
+#include <sstream>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -122,8 +122,10 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWI
                 auto lineOutputVector = theDebugInterface->StubDebug(true, cNlines, false);
                 for(size_t lineIndex = 0; lineIndex < lineOutputVector.second.size(); ++lineIndex)
                 {
-                    if(isStubPatternMatched(lineOutputVector.second[lineIndex])) ++theHybridPatternMatchingEfficiency[lineIndex + 1];
-                    else LOG(ERROR) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET;
+                    if(isStubPatternMatched(lineOutputVector.second[lineIndex]))
+                        ++theHybridPatternMatchingEfficiency[lineIndex + 1];
+                    else
+                        LOG(ERROR) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET;
                 }
             }
         }
@@ -143,9 +145,9 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
         Error
     } status = Idle;
 
-    uint8_t  numberOfBytesInOneWord   = sizeof(uint32_t);
-    uint16_t totalNumberOfBytes       = theWordVector.size() * numberOfBytesInOneWord;
-    uint16_t currentBytes              = 0;
+    uint8_t  numberOfBytesInOneWord            = sizeof(uint32_t);
+    uint16_t totalNumberOfBytes                = theWordVector.size() * numberOfBytesInOneWord;
+    uint16_t currentBytes                      = 0;
     uint8_t  numberOfConsecutiveIdleCharacters = 0;
     bool     firstFlagCharacterFound           = false;
     while(currentBytes < totalNumberOfBytes)
@@ -243,7 +245,8 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
             for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
             {
                 auto lineOutputVector = theDebugInterface->L1ADebug(1, false);
-                if(isL1HeaderFound(lineOutputVector.second)) ++theHybridPatternMatchingEfficiency[0];
+                if(isL1HeaderFound(lineOutputVector.second))
+                    ++theHybridPatternMatchingEfficiency[0];
                 else
                 {
                     LOG(ERROR) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET;
@@ -254,35 +257,34 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
     }
 }
 
-
-bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>&  theWordVector)
+bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector)
 {
     uint64_t header     = 0x00000ffffffe;
     uint64_t headerMask = 0xffffffffffff;
 
-    auto mergeIntoLongInt = [&theWordVector](uint8_t numberOfBytesToSkip)
-    {
+    auto mergeIntoLongInt = [&theWordVector](uint8_t numberOfBytesToSkip) {
         std::vector<uint64_t> longIntWordVector;
 
-        uint64_t longIntWord = 0;
+        uint64_t longIntWord    = 0;
         int      writeBiteShift = 7;
         for(auto theWord: theWordVector)
         {
             uint64_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
             for(uint8_t readByteShift = 0; readByteShift < 4; ++readByteShift)
             {
-                if(numberOfBytesToSkip>0)
+                if(numberOfBytesToSkip > 0)
                 {
                     --numberOfBytesToSkip;
                     continue;
                 }
                 longIntWord = longIntWord | (((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << (writeBiteShift * 8));
-                // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeBiteShift * 8) << " bits which is " << std::hex << (((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << (writeBiteShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
+                // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeBiteShift * 8) << " bits which is " << std::hex <<
+                // (((tmpLongIntWord >> (readByteShift * 8)) & 0xFF) << (writeBiteShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
                 --writeBiteShift;
                 if(writeBiteShift < 0)
                 {
                     longIntWordVector.push_back(longIntWord);
-                    longIntWord = 0;
+                    longIntWord    = 0;
                     writeBiteShift = 7;
                 }
             }
@@ -291,11 +293,11 @@ bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>&  theWor
         return longIntWordVector;
     };
 
-    for(uint8_t numberOfBytesToSkip=0; numberOfBytesToSkip<8; ++numberOfBytesToSkip)
+    for(uint8_t numberOfBytesToSkip = 0; numberOfBytesToSkip < 8; ++numberOfBytesToSkip)
     {
         std::vector<uint64_t> longIntWordVector = mergeIntoLongInt(numberOfBytesToSkip);
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] byteshift = " << +numberOfBytesToSkip << " pattern : " << getPatternPrintout(longIntWordVector) << std::hex << std::endl;
-        for(auto longIntWord : longIntWordVector)
+        for(auto longIntWord: longIntWordVector)
         {
             if((longIntWord & headerMask) == header) return true;
         }

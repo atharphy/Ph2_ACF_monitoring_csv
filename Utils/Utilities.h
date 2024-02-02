@@ -198,7 +198,7 @@ time_t getTimeStamp();
 
 std::string getTimeStampString();
 
-template<typename T>
+template <typename T>
 std::string getPatternPrintout(const std::vector<T> theWordVector)
 {
     std::stringstream thePattern;

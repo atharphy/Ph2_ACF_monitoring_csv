@@ -50,7 +50,7 @@ class OTverifyBoardDataWord : public Tool
     void runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
     void runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
     bool isStubPatternMatched(const std::vector<uint32_t>& theWordVector);
-    bool isL1HeaderFound(const std::vector<uint32_t>&  theWordVector);
+    bool isL1HeaderFound(const std::vector<uint32_t>& theWordVector);
 
     DetectorDataContainer fPatternMatchingEfficiencyContainer;
     size_t                fNumberOfIterations{1000};
