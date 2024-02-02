@@ -104,9 +104,10 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWI
     LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest" << RESET;
 
     bool isKickoff = true;
-    if(isKickoff) LOG(INFO) << BOLDYELLOW << "Attention! ignoring failures on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
     for(auto theOpticalGroup: *theBoard)
     {
+        if(isKickoff && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
+            LOG(INFO) << BOLDYELLOW << "Attention! ignoring failures on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
         size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
         for(auto theHybrid: *theOpticalGroup)
         {
