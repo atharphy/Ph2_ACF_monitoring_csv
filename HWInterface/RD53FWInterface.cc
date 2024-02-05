@@ -171,7 +171,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 {
                     enableDataMerging = true;
                     slaveEn |= 1 << lane;
-                    primaries[lane] = static_cast<RD53*>(cChip)->laneConfig.master;
+                    primaries[lane] = static_cast<RD53*>(cChip)->laneConfig.masterLane;
                 }
 
                 // ##############################

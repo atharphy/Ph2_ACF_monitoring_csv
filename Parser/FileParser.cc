@@ -1904,8 +1904,8 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
     pugi::xml_node laneConfigNode = theChipNode.child("LaneConfig");
     if(laneConfigNode != nullptr)
     {
-        const bool    isPrimary = laneConfigNode.attribute("primary").as_bool(true);
-        const uint8_t master    = laneConfigNode.attribute("master").as_uint(0);
+        const bool    isPrimary  = laneConfigNode.attribute("isPrimary").as_bool(true);
+        const uint8_t masterLane = laneConfigNode.attribute("masterLane").as_uint(0);
 
         const std::string outputLanesConfig = laneConfigNode.attribute("outputLanes").as_string("0001");
         if(outputLanesConfig.size() != 4) throw std::runtime_error("The \"outputLanes\" attribute of LaneConfig should contain 4 characters ('0' up to '4').");
@@ -1919,9 +1919,9 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
         if(dualChannelInputConfig.size() != 4) throw std::runtime_error("The \"dualChannelInput\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
         auto dualChannelInput = parseString<bool, 4>(dualChannelInputConfig);
 
-        static_cast<RD53*>(theChip)->laneConfig = LaneConfig(isPrimary, master, outputLanesEnabled, singleChannelInputs, dualChannelInput);
+        static_cast<RD53*>(theChip)->laneConfig = LaneConfig(isPrimary, masterLane, outputLanesEnabled, singleChannelInputs, dualChannelInput);
 
-        os << BOLDBLUE << "|\t|\t|\t|----Lanes configuration --> primary: " << BOLDYELLOW << isPrimary << BOLDBLUE << " - master: " << BOLDYELLOW << +master << BOLDBLUE
+        os << BOLDBLUE << "|\t|\t|\t|----Lanes configuration --> is primary: " << BOLDYELLOW << isPrimary << BOLDBLUE << " - master lane: " << BOLDYELLOW << +masterLane << BOLDBLUE
            << " - output lanes: " << BOLDYELLOW << outputLanesConfig << BOLDBLUE << " - single channel inputs: " << BOLDYELLOW << singleChannelInputsConfig << BOLDBLUE
            << " - dual channel input: " << BOLDYELLOW << dualChannelInputConfig << RESET << std::endl;
     }

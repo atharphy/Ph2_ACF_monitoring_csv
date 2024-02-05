@@ -237,7 +237,7 @@ void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* 
         // #################################
 
         auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
-        fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.master);
+        fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.masterLane);
         if(static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == false)
         {
             RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
