@@ -123,44 +123,11 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     }
-    bool                 cAligned = true;
-    std::vector<uint8_t> cEportGroups;
-    std::vector<uint8_t> cEportChnls;
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        std::vector<uint8_t> cGroups;
-        std::vector<uint8_t> cChannels;
-        if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
-        {
-            if(cHybrid->getId() % 2 == 0)
-            {
-                cGroups   = {0, 4, 4, 5, 5, 6};
-                cChannels = {0, 0, 2, 0, 2, 0};
-            }
-            else
-            {
-                cGroups   = {0, 1, 1, 2, 2, 3};
-                cChannels = {2, 0, 2, 0, 2, 2};
-            }
-        }
-        else // PS
-        {
-            if(cHybrid->getId() % 2 == 0)
-            {
-                cGroups   = {4, 4, 5, 5, 6, 6, 0};
-                cChannels = {2, 0, 2, 0, 2, 0, 0};
-            }
-            else
-            {
-                cGroups   = {0, 1, 1, 2, 2, 3, 3};
-                cChannels = {2, 0, 2, 0, 2, 0, 2};
-            }
-        }
-        for(auto cGrp: cGroups) cEportGroups.push_back(cGrp);
-        for(auto cChnl: cChannels) cEportChnls.push_back(cChnl);
-    }
-    cAligned   = cAligned &&  flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls, 5);
-    
+
+    std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels = pOpticalGroup->getLpGBTrxGroupsAndChannels();
+    auto theOpticalGroupAlignmentResult = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, 5);
+    bool isAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, 1);
+
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx = 0;
     for(auto cHybrid: *pOpticalGroup)
@@ -174,7 +141,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         auto& cLinkSampling = fLpGBTSamplingDelay.getObject((*cBoardIter)->getId())->getObject(pOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<uint8_t>();
         cLinkSampling       = 0;
     }
-    return cAligned;
+    return isAligned;
 }
 void LinkAlignmentOT::CheckLpgbtOutputs(uint8_t pPattern)
 {

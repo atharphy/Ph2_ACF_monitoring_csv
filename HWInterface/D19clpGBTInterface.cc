@@ -343,7 +343,14 @@ void D19clpGBTInterface::Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip)
 void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
     std::vector<uint8_t> cOptimalTaps = {};
-    PhaseAlignRx(pChip, pGroups, pChannels, 5);
+    std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels;
+
+    for(size_t i=0; i<pGroups.size(); ++i)
+    {
+        groupsAndChannels[pGroups[i]].push_back(pChannels[i]);
+    }
+
+    PhaseAlignRx(pChip, groupsAndChannels, 5);
     // find mode
     for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { cOptimalTaps.push_back(GetPhaseTap(pChip, pGroups[cIndx], pChannels[cIndx])); }
     std::vector<uint8_t> cTapsHist(15, 0);
@@ -355,7 +362,7 @@ void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint
         for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cTapMode); }
 }
 
-bool D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, size_t pMaxAttempts)
+std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>> D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::map<uint8_t, std::vector<uint8_t>>& groupsAndChannels, size_t pMaxAttempts)
 {
     LOG(INFO) << BOLDBLUE << "Aligning lpGBT#" << +pChip->getId() << RESET;
     const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
@@ -365,97 +372,120 @@ bool D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 3; // 4 --> 320 MHz || 5 --> 640 MHz
     lpGBTInterface::ConfigurePhShifter(pChip, {0, 2}, cFreq, cDriveStr, cEnFTune, cDelay);
 
-    // // Set data source for channels 0,2 to PRBS
-    // lpGBTInterface::ConfigureRxSource(pChip, pGroups, lpGBTconstants::PATTERN_PRBS);
-    // // Turn ON PRBS for channels 0,2
-    // lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, true);
-    std::vector<uint8_t> cAligned(pGroups.size(), 0);
-    bool                 cSuccess = true;
-    std::vector<uint8_t> cOptimalTaps(0);
+    std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>> theAlignmentResults; // {Group : {channel : {successRate, bestPhaseHistogram}}}
 
-    for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++)
+    for(const auto& theGroupAndChannels : groupsAndChannels)
     {
-        uint8_t cGroup   = pGroups[cIndx];
-        uint8_t cChannel = pChannels[cIndx];
-
-        cFreq         = 2;
-        uint8_t cMode = 1; // Initial training mode
-        lpGBTInterface::ConfigureRxGroup(pChip, cGroup, cChannel, cFreq, cMode);
-        std::string cTrainRxReg;
-        if(cGroup == 0 || cGroup == 1)
-            cTrainRxReg = "EPRXTrain10";
-        else if(cGroup == 2 || cGroup == 3)
-            cTrainRxReg = "EPRXTrain32";
-        else if(cGroup == 4 || cGroup == 5)
-            cTrainRxReg = "EPRXTrain54";
-        else if(cGroup == 6)
-            cTrainRxReg = "EPRXTrainEc6";
-
-        std::unordered_map<uint8_t, int> theFoundPhases;
-        LOG(DEBUG) << BOLDYELLOW << "Group#" << +cGroup << " Channel#" << +cChannel << "...checking phase aligner" << RESET;
-        for(size_t cAttempt = 0; cAttempt < pMaxAttempts; cAttempt++)
+        uint8_t cGroup   = theGroupAndChannels.first;
+        for(const auto cChannel : theGroupAndChannels.second)
         {
-            uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
-            if(cChipVersion == 0) { ResetRxDll(pChip, {cGroup}); }
-            // Enable training
-            uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
+            float alignmentSuccessRate = 0.;
+            std::array<float, 16> bestPhaseHistogram;
+            for(auto& value : bestPhaseHistogram) value = 0;
 
-            // Assumption: write is stable enough that it sohuld never fail in normal condition
-            // If the fail occurs it means that the Chip has a major issue and this check avoids to be stuck in this loop for a very long time
-            bool writeSucceded = WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
-            if(!writeSucceded) return false;
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
-            WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            // Check for lock
-            std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
-            uint8_t     cLockShift   = cChannel + 4;
-            auto        cLock        = 0;
-            uint8_t     cCurrPhase   = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            bool        cContinue    = (cLock == 0);
-            uint8_t     cMaxIters    = 10;
-            uint8_t     cIter        = 0;
-            do
+            cFreq         = 2;
+            uint8_t cMode = 1; // Initial training mode
+            lpGBTInterface::ConfigureRxGroup(pChip, cGroup, cChannel, cFreq, cMode);
+            std::string cTrainRxReg;
+            if(cGroup == 0 || cGroup == 1)
+                cTrainRxReg = "EPRXTrain10";
+            else if(cGroup == 2 || cGroup == 3)
+                cTrainRxReg = "EPRXTrain32";
+            else if(cGroup == 4 || cGroup == 5)
+                cTrainRxReg = "EPRXTrain54";
+            else if(cGroup == 6)
+                cTrainRxReg = "EPRXTrainEc6";
+
+            LOG(DEBUG) << BOLDYELLOW << "Group#" << +cGroup << " Channel#" << +cChannel << "...checking phase aligner" << RESET;
+            for(size_t cAttempt = 0; cAttempt < pMaxAttempts; cAttempt++)
             {
+                uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
+                if(cChipVersion == 0) { ResetRxDll(pChip, {cGroup}); }
+                // Enable training
+                uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
+
+                WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
-                cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
-                cContinue = cLock == 0;
-                cIter++;
-            } while(cContinue && cIter < cMaxIters);
-            if(cIter>1) LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Number of iterations greater than one " << +cIter << RESET;
-            if(cLock) cAligned[cIndx] += 1;
-            WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
-            cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
-            theFoundPhases[cCurrPhase]++;
-        }
-
-        cSuccess = cSuccess && (cAligned[cIndx] > pMaxAttempts*0.95); //accepting a 5% failure
-
-        // find phase with highest entries
-        uint8_t bestPhase = 15;
-        int highestCount = 0;
-        for(const auto& thePhaseAndEntry : theFoundPhases)
-        {
-            if(thePhaseAndEntry.second > highestCount)
-            {
-                highestCount = thePhaseAndEntry.second;
-                bestPhase = thePhaseAndEntry.first;
+                WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
+                // Check for lock
+                std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
+                uint8_t     cLockShift   = cChannel + 4;
+                auto        cLock        = 0;
+                uint8_t     cCurrPhase   = 255;
+                bool        cContinue    = true;
+                uint8_t     cMaxIters    = 10;
+                uint8_t     cIter        = 0;
+                do
+                {
+                    std::this_thread::sleep_for(std::chrono::microseconds(10));
+                    cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
+                    cContinue = cLock == 0;
+                    cIter++;
+                } while(cContinue && cIter < cMaxIters);
+                if(cLock) alignmentSuccessRate += 1;
+                WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
+                std::this_thread::sleep_for(std::chrono::microseconds(10));
+                cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+                LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
+                bestPhaseHistogram[cCurrPhase]++;
             }
-        }
 
-        cSuccess = cSuccess && (bestPhase != 15);
-        LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +bestPhase << " out of " << theFoundPhases.size() << " possibilities" << RESET;
-        cOptimalTaps.push_back(bestPhase);
-        SetPhaseTap(pChip, cGroup, cChannel, bestPhase);
-        ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
+            // find phase with highest entries
+            uint8_t bestPhase = 15;
+            int highestCount = 0;
+            int numberOfPossiblePhases = 0;
+            for(size_t phaseValue = 0; phaseValue < bestPhaseHistogram.size(); ++phaseValue)
+            {
+                if(bestPhaseHistogram[phaseValue] > highestCount)
+                {
+                    highestCount = bestPhaseHistogram[phaseValue];
+                    bestPhase = phaseValue;
+                }
+                if(bestPhaseHistogram[phaseValue]>0) ++numberOfPossiblePhases;
+            }
+
+            LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +bestPhase << " out of " << numberOfPossiblePhases << " possibilities" << RESET;
+            SetPhaseTap(pChip, cGroup, cChannel, bestPhase);
+            ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
+
+            // Normalize over total attempts
+            alignmentSuccessRate/=pMaxAttempts;
+            for(auto& phaseOccurrence : bestPhaseHistogram) phaseOccurrence/=pMaxAttempts;
+
+            theAlignmentResults[cGroup][cChannel] = std::make_tuple(alignmentSuccessRate, bestPhase, bestPhaseHistogram);
+
+        }
     }
 
     uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
-    for(const auto& group: pGroups)
-        for(const auto& channel: pChannels) lpGBTInterface::ConfigureRxGroup(pChip, group, channel, 2, cMode);
+    for(const auto& theGroupAndChannels: groupsAndChannels)
+        for(const auto& channel: theGroupAndChannels.second) lpGBTInterface::ConfigureRxGroup(pChip, theGroupAndChannels.first, channel, 2, cMode);
 
-    return cSuccess;
+    return theAlignmentResults;
+}
+
+bool D19clpGBTInterface::didAlignmentSucceded(std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>> theOpticalGroupAlignmentResult, float minAlignmentSuccessRate)
+{
+    bool isAligned = true;
+
+    for(const auto& theGoupAlignmenResult : theOpticalGroupAlignmentResult)
+    {
+        for(const auto& theChannelAlignmentResult : theGoupAlignmenResult.second)
+        {
+            float alignmentSuccessRate = std::get<0>(theChannelAlignmentResult.second);
+            uint8_t bestPhaseFound = std::get<1>(theChannelAlignmentResult.second);
+            if(alignmentSuccessRate < minAlignmentSuccessRate || bestPhaseFound == 15)
+            {
+                isAligned = false;
+                std::stringstream errorMessage;
+                errorMessage << "OTalignLpGBTinputs::AlignLpGBTInputs - Error in aligning LpGBT Group " << +theGoupAlignmenResult.first << " Channel " << +theChannelAlignmentResult.first;
+                if(alignmentSuccessRate < minAlignmentSuccessRate) errorMessage << " - alignmen success rate = " << alignmentSuccessRate << " less then minimum requited (" << minAlignmentSuccessRate << ")";
+                if(bestPhaseFound == 15) errorMessage << " best phase = 15 (error flag)";
+                LOG(ERROR) << BOLDRED << errorMessage.str() << RESET;
+            }
+        }
+    }
+    return isAligned;
 }
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)

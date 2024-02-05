@@ -59,7 +59,6 @@ class lpGBTInterface : public ChipInterface
     // #####################################
     // # Phase alignment virtual functions #
     // #####################################
-    virtual bool PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, size_t pMaxAttempts) = 0;
     virtual void
     PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface) = 0;
 

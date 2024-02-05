@@ -1,6 +1,7 @@
 #include "tools/OTalignLpGBTinputs.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
+#include "Utils/SerializableTuple.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -20,7 +21,8 @@ void OTalignLpGBTinputs::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state");
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.stub_counter_block.general.shutter_close"); // TODO: not sure if needed
 
-    fNumberOfAlignmentIterations = findValueInSettings<double>("OTalignLpGBTinputsNumberOfAlignmentIterations", 1000);
+    fNumberOfAlignmentIterations = findValueInSettings<double>("OTalignLpGBTinputsNumberOfAlignmentIterations", 100);
+    fMinAlignmentSuccessRate = findValueInSettings<double>("OTalignLpGBTinputsMinAlignmnetSuccessRate", 0.99);
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -39,10 +41,14 @@ void OTalignLpGBTinputs::ConfigureCalibration() {}
 
 void OTalignLpGBTinputs::AlignLpGBTInputs()
 {
+
+    DetectorDataContainer theAlignmentResultContainer;
+    ContainerFactory::copyAndInitOpticalGroup<std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>>>(*fDetectorContainer, theAlignmentResultContainer);
     for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
         {
+            auto& theOpticalGroupAlignmentResult = theAlignmentResultContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getSummary<std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>>>();
             LOG(INFO) << BOLDYELLOW << "OTalignLpGBTinputs::AlignLpGBTInputs ..." << RESET;
             auto cBoardId   = theOpticalGroup->getBeBoardId();
             auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
@@ -63,42 +69,10 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
                 cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
                 fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
             }
-            std::vector<uint8_t> cEportGroups;
-            std::vector<uint8_t> cEportChnls;
-            for(auto cHybrid: *theOpticalGroup)
-            {
-                std::vector<uint8_t> cGroups;
-                std::vector<uint8_t> cChannels;
-                if(theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
-                {
-                    if(cHybrid->getId() % 2 == 0)
-                    {
-                        cGroups   = {0, 4, 4, 5, 5, 6};
-                        cChannels = {0, 0, 2, 0, 2, 0};
-                    }
-                    else
-                    {
-                        cGroups   = {0, 1, 1, 2, 2, 3};
-                        cChannels = {2, 0, 2, 0, 2, 2};
-                    }
-                }
-                else // PS
-                {
-                    if(cHybrid->getId() % 2 == 0)
-                    {
-                        cGroups   = {4, 4, 5, 5, 6, 6, 0};
-                        cChannels = {2, 0, 2, 0, 2, 0, 0};
-                    }
-                    else
-                    {
-                        cGroups   = {0, 1, 1, 2, 2, 3, 3};
-                        cChannels = {2, 0, 2, 0, 2, 0, 2};
-                    }
-                }
-                for(auto cGrp: cGroups) cEportGroups.push_back(cGrp);
-                for(auto cChnl: cChannels) cEportChnls.push_back(cChnl);
-            }
-            auto isAligned = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls, fNumberOfAlignmentIterations);
+            std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels = theOpticalGroup->getLpGBTrxGroupsAndChannels();
+            theOpticalGroupAlignmentResult = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, fNumberOfAlignmentIterations);
+            bool isAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, fMinAlignmentSuccessRate);
+
             if(!isAligned)
             {
                 LOG(INFO) << BOLDRED << "FAILED to align LpGBT inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " --- OpticalGroup will be disabled"
@@ -108,6 +82,16 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
             }
         }
     }
+
+#ifdef __USE_ROOT__
+    fDQMHistogramOTalignLpGBTinputs.fillPhaseAlignmentResults(theAlignmentResultContainer);
+#else
+    // if(fDQMStreamerEnabled)
+    // {
+    //     ContainerSerialization theAlignmentResultsContainerSerialization("OTalignLpGBTinputsAlignmentResults");
+    //     theAlignmentResultsContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theAlignmentResultContainer);
+    // }
+#endif
 }
 
 void OTalignLpGBTinputs::Running()

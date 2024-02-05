@@ -37,7 +37,8 @@ class OTalignLpGBTinputs : public Tool
 
   private:
     void AlignLpGBTInputs();
-    size_t fNumberOfAlignmentIterations {1000};
+    size_t fNumberOfAlignmentIterations {100};
+    float  fMinAlignmentSuccessRate {0.99};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
