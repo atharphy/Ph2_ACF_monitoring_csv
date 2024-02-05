@@ -430,7 +430,7 @@ bool D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& p
             theFoundPhases[cCurrPhase]++;
         }
 
-        cSuccess = cSuccess && (cAligned[cIndx] > pMaxAttempts*0.95); //accepting a 95% failure
+        cSuccess = cSuccess && (cAligned[cIndx] > pMaxAttempts*0.95); //accepting a 5% failure
 
         // find phase with highest entries
         uint8_t bestPhase = 15;
