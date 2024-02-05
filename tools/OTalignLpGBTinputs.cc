@@ -20,6 +20,8 @@ void OTalignLpGBTinputs::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state");
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.stub_counter_block.general.shutter_close"); // TODO: not sure if needed
 
+    fNumberOfAlignmentIterations = findValueInSettings<double>("OTalignLpGBTinputsNumberOfAlignmentIterations", 1000);
+
     for(const auto cBoard: *fDetectorContainer)
     {
         // force trigger source to be internal triggers
@@ -96,15 +98,14 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
                 for(auto cGrp: cGroups) cEportGroups.push_back(cGrp);
                 for(auto cChnl: cChannels) cEportChnls.push_back(cChnl);
             }
-            auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
-            if(cMode == 15)
+            auto isAligned = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls, fNumberOfAlignmentIterations);
+            if(!isAligned)
             {
                 LOG(INFO) << BOLDRED << "FAILED to align LpGBT inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " --- OpticalGroup will be disabled"
                           << RESET;
                 ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
                 continue;
             }
-            for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); }
         }
     }
 }

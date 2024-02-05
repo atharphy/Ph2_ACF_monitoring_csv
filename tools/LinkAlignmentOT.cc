@@ -159,11 +159,8 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         for(auto cGrp: cGroups) cEportGroups.push_back(cGrp);
         for(auto cChnl: cChannels) cEportChnls.push_back(cChnl);
     }
-    auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
-    cAligned   = cAligned && (cMode != 15);
-    // cMode      = ( cMode > 8 ) ? 5 : cMode;
-    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); }
-
+    cAligned   = cAligned &&  flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls, 5);
+    
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx = 0;
     for(auto cHybrid: *pOpticalGroup)
@@ -175,7 +172,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         cIndx++;
 
         auto& cLinkSampling = fLpGBTSamplingDelay.getObject((*cBoardIter)->getId())->getObject(pOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<uint8_t>();
-        cLinkSampling       = cMode;
+        cLinkSampling       = 0;
     }
     return cAligned;
 }

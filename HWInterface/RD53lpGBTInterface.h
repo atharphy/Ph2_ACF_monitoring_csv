@@ -24,7 +24,7 @@ class RD53lpGBTInterface : public lpGBTInterface
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode);
 
     bool    ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
-    uint8_t PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels) override { return 0; };
+    bool PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, size_t pMaxAttempts) override { return false; };
     void
     PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface) override;
 
