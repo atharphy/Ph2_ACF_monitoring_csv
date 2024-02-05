@@ -43,12 +43,12 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
 {
 
     DetectorDataContainer theAlignmentResultContainer;
-    ContainerFactory::copyAndInitOpticalGroup<std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>>>(*fDetectorContainer, theAlignmentResultContainer);
+    ContainerFactory::copyAndInitOpticalGroup<std::map<uint8_t, std::map<uint8_t, SerializableTuple<float, uint8_t, std::array<float, 16>>>>>(*fDetectorContainer, theAlignmentResultContainer);
     for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            auto& theOpticalGroupAlignmentResult = theAlignmentResultContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getSummary<std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>>>();
+            auto& theOpticalGroupAlignmentResult = theAlignmentResultContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getSummary<std::map<uint8_t, std::map<uint8_t, SerializableTuple<float, uint8_t, std::array<float, 16>>>>>();
             LOG(INFO) << BOLDYELLOW << "OTalignLpGBTinputs::AlignLpGBTInputs ..." << RESET;
             auto cBoardId   = theOpticalGroup->getBeBoardId();
             auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });

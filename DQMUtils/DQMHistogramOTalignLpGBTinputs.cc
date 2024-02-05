@@ -3,6 +3,7 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/SerializableTuple.h"
 
 #include "TFile.h"
 #include "TH1I.h"
@@ -78,7 +79,7 @@ void DQMHistogramOTalignLpGBTinputs::fillPhaseAlignmentResults(DetectorDataConta
         for(auto opticalGroup: *board)
         {
             if(!opticalGroup->hasSummary()) continue;
-            auto theHybridRetryNumberVector = opticalGroup->getSummary<std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>>>();
+            auto theHybridRetryNumberVector = opticalGroup->getSummary<std::map<uint8_t, std::map<uint8_t, SerializableTuple<float, uint8_t, std::array<float, 16>>>>>();
 
             TH1F* hybridAlignmentSuccessHistogram =
                 fAlignmentSuccessHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
@@ -91,9 +92,9 @@ void DQMHistogramOTalignLpGBTinputs::fillPhaseAlignmentResults(DetectorDataConta
             {
                 for(const auto& theChannelResult : theGroupResult.second)
                 {
-                    float alignmentSuccessRate = std::get<0>(theChannelResult.second);
-                    uint8_t bestPhaseValue = std::get<1>(theChannelResult.second);
-                    std::array<float, 16> foundPhaseHistogram = std::get<2>(theChannelResult.second);
+                    float alignmentSuccessRate = std::get<0>(theChannelResult.second.fMyTuple);
+                    uint8_t bestPhaseValue = std::get<1>(theChannelResult.second.fMyTuple);
+                    std::array<float, 16> foundPhaseHistogram = std::get<2>(theChannelResult.second.fMyTuple);
                     int currentBit = fGroupAndChannelToBinNumber[theGroupResult.first][theChannelResult.first];
 
                     hybridAlignmentSuccessHistogram->SetBinContent(currentBit, alignmentSuccessRate);
@@ -128,7 +129,7 @@ bool DQMHistogramOTalignLpGBTinputs::fill(std::string& inputStream)
     // {
     //     std::cout << "Matched OTalignLpGBTinputs AlignmentResults!!!!\n";
     //     DetectorDataContainer theDetectorData =
-    //         theAlignmentResultsContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>>>(fDetectorContainer);
+    //         theAlignmentResultsContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::map<uint8_t, std::map<uint8_t,SerializableTuple<float, uint8_t, std::array<float, 16>>>>>(fDetectorContainer);
     //     fillPhaseAlignmentResults(theDetectorData);
     //     return true;
     // }

@@ -15,6 +15,7 @@
 #include <iostream>
 #include <thread>
 #include <unordered_map>
+#include "Utils/SerializableTuple.h"
 
 using namespace Ph2_HwDescription;
 
@@ -362,7 +363,7 @@ void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint
         for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cTapMode); }
 }
 
-std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>> D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::map<uint8_t, std::vector<uint8_t>>& groupsAndChannels, size_t pMaxAttempts)
+std::map<uint8_t, std::map<uint8_t, SerializableTuple<float, uint8_t, std::array<float, 16>>>> D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::map<uint8_t, std::vector<uint8_t>>& groupsAndChannels, size_t pMaxAttempts)
 {
     LOG(INFO) << BOLDBLUE << "Aligning lpGBT#" << +pChip->getId() << RESET;
     const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
@@ -372,7 +373,7 @@ std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float,
     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 3; // 4 --> 320 MHz || 5 --> 640 MHz
     lpGBTInterface::ConfigurePhShifter(pChip, {0, 2}, cFreq, cDriveStr, cEnFTune, cDelay);
 
-    std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>> theAlignmentResults; // {Group : {channel : {successRate, bestPhaseHistogram}}}
+    std::map<uint8_t, std::map<uint8_t, SerializableTuple<float, uint8_t, std::array<float, 16>>>> theAlignmentResults; // {Group : {channel : {successRate, bestPhaseHistogram}}}
 
     for(const auto& theGroupAndChannels : groupsAndChannels)
     {
@@ -452,7 +453,8 @@ std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float,
             alignmentSuccessRate/=pMaxAttempts;
             for(auto& phaseOccurrence : bestPhaseHistogram) phaseOccurrence/=pMaxAttempts;
 
-            theAlignmentResults[cGroup][cChannel] = std::make_tuple(alignmentSuccessRate, bestPhase, bestPhaseHistogram);
+            SerializableTuple<float, uint8_t, std::array<float, 16>> alignmentResults(alignmentSuccessRate, bestPhase, bestPhaseHistogram);
+            theAlignmentResults[cGroup][cChannel] = std::move(alignmentResults);
 
         }
     }
@@ -464,7 +466,7 @@ std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float,
     return theAlignmentResults;
 }
 
-bool D19clpGBTInterface::didAlignmentSucceded(std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, std::array<float, 16>>>> theOpticalGroupAlignmentResult, float minAlignmentSuccessRate)
+bool D19clpGBTInterface::didAlignmentSucceded(std::map<uint8_t, std::map<uint8_t, SerializableTuple<float, uint8_t, std::array<float, 16>>>> theOpticalGroupAlignmentResult, float minAlignmentSuccessRate)
 {
     bool isAligned = true;
 
@@ -472,8 +474,8 @@ bool D19clpGBTInterface::didAlignmentSucceded(std::map<uint8_t, std::map<uint8_t
     {
         for(const auto& theChannelAlignmentResult : theGoupAlignmenResult.second)
         {
-            float alignmentSuccessRate = std::get<0>(theChannelAlignmentResult.second);
-            uint8_t bestPhaseFound = std::get<1>(theChannelAlignmentResult.second);
+            float alignmentSuccessRate = std::get<0>(theChannelAlignmentResult.second.fMyTuple);
+            uint8_t bestPhaseFound = std::get<1>(theChannelAlignmentResult.second.fMyTuple);
             if(alignmentSuccessRate < minAlignmentSuccessRate || bestPhaseFound == 15)
             {
                 isAligned = false;
