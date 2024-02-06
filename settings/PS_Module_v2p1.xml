@@ -233,7 +233,9 @@
 
     <Setting name="DoManualVrefTuning"      >  0</Setting>
     <Setting name="OTverifyBoardDataWordNumberOfIterations">100</Setting>
-
+    <Setting name="OTalignLpGBTinputsNumberOfAlignmentIterations">100</Setting>
+    <Setting name="OTalignLpGBTinputsMinAlignmnetSuccessRate">0.99</Setting>
+    
 </Settings>
 
 

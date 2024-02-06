@@ -1,7 +1,8 @@
 #include "tools/OTalignLpGBTinputs.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
-#include "Utils/SerializableTuple.h"
+#include "Utils/LpGBTalignmentResult.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -43,12 +44,12 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
 {
 
     DetectorDataContainer theAlignmentResultContainer;
-    ContainerFactory::copyAndInitOpticalGroup<std::map<uint8_t, std::map<uint8_t, SerializableTuple<float, uint8_t, std::array<float, 16>>>>>(*fDetectorContainer, theAlignmentResultContainer);
+    ContainerFactory::copyAndInitOpticalGroup<LpGBTalignmentResult>(*fDetectorContainer, theAlignmentResultContainer);
     for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            auto& theOpticalGroupAlignmentResult = theAlignmentResultContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getSummary<std::map<uint8_t, std::map<uint8_t, SerializableTuple<float, uint8_t, std::array<float, 16>>>>>();
+            auto& theOpticalGroupAlignmentResult = theAlignmentResultContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getSummary<LpGBTalignmentResult>();
             LOG(INFO) << BOLDYELLOW << "OTalignLpGBTinputs::AlignLpGBTInputs ..." << RESET;
             auto cBoardId   = theOpticalGroup->getBeBoardId();
             auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
@@ -86,11 +87,11 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
 #ifdef __USE_ROOT__
     fDQMHistogramOTalignLpGBTinputs.fillPhaseAlignmentResults(theAlignmentResultContainer);
 #else
-    // if(fDQMStreamerEnabled)
-    // {
-    //     ContainerSerialization theAlignmentResultsContainerSerialization("OTalignLpGBTinputsAlignmentResults");
-    //     theAlignmentResultsContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theAlignmentResultContainer);
-    // }
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theAlignmentResultsContainerSerialization("OTalignLpGBTinputsAlignmentResults");
+        theAlignmentResultsContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theAlignmentResultContainer);
+    }
 #endif
 }
 

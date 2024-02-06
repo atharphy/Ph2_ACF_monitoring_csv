@@ -6,7 +6,7 @@
 #include "HWInterface/ExceptionHandler.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/SerializableTuple.h"
+#include "Utils/LpGBTalignmentResult.h"
 
 //#include "boost/format.hpp"
 
