@@ -28,6 +28,8 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/RD53VoltageTuning.h"
 
+#include <regex>
+
 #ifdef __EUDAQ__
 #include "TROOT.h"
 #include "tools/RD53eudaqProducer.h"
@@ -90,6 +92,20 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
 
 int main(int argc, char** argv)
 {
+    // #############
+    // # Intro tag #
+    // #############
+    std::cout << "          ____  _     ____         _    ____ _____" << std::endl;
+    std::cout << "         |  _ \\| |__ |___ \\       / \\  / ___|  ___|" << std::endl;
+    std::cout << "         | |_) | '_ \\  __) |____ / _ \\| |   | |_" << std::endl;
+    std::cout << "         |  __/| | | |/ __/_____/ ___ \\ |___|  _|" << std::endl;
+    std::cout << "         |_|   |_| |_|_____|   /_/   \\_\\____|_|\n" << std::endl;
+    std::cout << "  ____ __  __ ____ ___ _____          _       _ ____    _    ___" << std::endl;
+    std::cout << " / ___|  \\/  / ___|_ _|_   _| __ ___ (_)_ __ (_)  _ \\  / \\  / _ \\" << std::endl;
+    std::cout << "| |   | |\\/| \\___ \\| |  | || '_ ` _ \\| | '_ \\| | | | |/ _ \\| | | |" << std::endl;
+    std::cout << "| |___| |  | |___) | |  | || | | | | | | | | | | |_| / ___ \\ |_| |" << std::endl;
+    std::cout << " \\____|_|  |_|____/___| |_||_| |_| |_|_|_| |_|_|____/_/   \\_\\__\\_\\\n" << std::endl;
+
     // #############################
     // # Initialize command parser #
     // #############################
