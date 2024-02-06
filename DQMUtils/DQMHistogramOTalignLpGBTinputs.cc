@@ -6,8 +6,8 @@
 #include "Utils/LpGBTalignmentResult.h"
 
 #include "TFile.h"
-#include "TH1I.h"
 #include "TH1F.h"
+#include "TH1I.h"
 #include "TH2F.h"
 
 //========================================================================================================================
@@ -30,23 +30,19 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
     const auto theGroupsAndChannels = theDetectorStructure.getFirstObject()->getFirstObject()->getLpGBTrxGroupsAndChannels();
 
     int numberOfBins = 0;
-    for(const auto& groupAndChannels : theGroupsAndChannels)
+    for(const auto& groupAndChannels: theGroupsAndChannels)
     {
-        for(const auto channel : groupAndChannels.second)
+        for(const auto channel: groupAndChannels.second)
         {
             fGroupAndChannelToBinNumber[groupAndChannels.first][channel] = numberOfBins + 1;
             ++numberOfBins;
         }
     }
 
-    auto setBinLabels = [this](TAxis* theHistogram)
-    {
-        for(const auto& group : this->fGroupAndChannelToBinNumber)
+    auto setBinLabels = [this](TAxis* theHistogram) {
+        for(const auto& group: this->fGroupAndChannelToBinNumber)
         {
-            for(const auto& channelAndBin : group.second)
-            {
-                theHistogram->SetBinLabel(channelAndBin.second, Form("%d_%d", group.first, channelAndBin.first));
-            }
+            for(const auto& channelAndBin: group.second) { theHistogram->SetBinLabel(channelAndBin.second, Form("%d_%d", group.first, channelAndBin.first)); }
         }
     };
 
@@ -67,7 +63,6 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
     setBinLabels(foundPhasesDistributionHistogram.fTheHistogram->GetXaxis());
     foundPhasesDistributionHistogram.fTheHistogram->GetYaxis()->SetTitle("phase");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fFoundPhasesDistributionHistogramContainer, foundPhasesDistributionHistogram);
-
 }
 
 //========================================================================================================================
@@ -79,28 +74,27 @@ void DQMHistogramOTalignLpGBTinputs::fillPhaseAlignmentResults(DetectorDataConta
         for(auto opticalGroup: *board)
         {
             if(!opticalGroup->hasSummary()) continue;
-            
+
             auto theHybridRetryNumberVector = opticalGroup->getSummary<LpGBTalignmentResult>();
 
-            TH1F* hybridAlignmentSuccessHistogram =
-                fAlignmentSuccessHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-            TH1I* hybridBestPhaseHistogramHistogram =
-                fBestPhaseHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
+            TH1F* hybridAlignmentSuccessHistogram   = fAlignmentSuccessHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            TH1I* hybridBestPhaseHistogramHistogram = fBestPhaseHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
             TH2F* hybridFoundPhasesDistributionHistogram =
                 fFoundPhasesDistributionHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
-            for(const auto& theGroupResult : theHybridRetryNumberVector.fResultContainer)
+            for(const auto& theGroupResult: theHybridRetryNumberVector.fResultContainer)
             {
-                for(const auto& theChannelResult : theGroupResult.second)
+                for(const auto& theChannelResult: theGroupResult.second)
                 {
-                    float alignmentSuccessRate = std::get<0>(theChannelResult.second);
-                    uint8_t bestPhaseValue = std::get<1>(theChannelResult.second);
-                    GenericDataArray<16, float> foundPhaseHistogram = std::get<2>(theChannelResult.second);
-                    int currentBit = fGroupAndChannelToBinNumber[theGroupResult.first][theChannelResult.first];
+                    float                       alignmentSuccessRate = std::get<0>(theChannelResult.second);
+                    uint8_t                     bestPhaseValue       = std::get<1>(theChannelResult.second);
+                    GenericDataArray<16, float> foundPhaseHistogram  = std::get<2>(theChannelResult.second);
+                    int                         currentBit           = fGroupAndChannelToBinNumber[theGroupResult.first][theChannelResult.first];
 
                     hybridAlignmentSuccessHistogram->SetBinContent(currentBit, alignmentSuccessRate);
                     hybridBestPhaseHistogramHistogram->SetBinContent(currentBit, bestPhaseValue);
-                    for(size_t phaseValue=0; phaseValue<foundPhaseHistogram.size(); ++phaseValue) hybridFoundPhasesDistributionHistogram->SetBinContent(currentBit, phaseValue+1, foundPhaseHistogram[phaseValue]);
+                    for(size_t phaseValue = 0; phaseValue < foundPhaseHistogram.size(); ++phaseValue)
+                        hybridFoundPhasesDistributionHistogram->SetBinContent(currentBit, phaseValue + 1, foundPhaseHistogram[phaseValue]);
                 }
             }
         }
@@ -134,7 +128,7 @@ bool DQMHistogramOTalignLpGBTinputs::fill(std::string& inputStream)
         fillPhaseAlignmentResults(theDetectorData);
         return true;
     }
-    
+
     return false;
     // SoC utilities only - END
 }

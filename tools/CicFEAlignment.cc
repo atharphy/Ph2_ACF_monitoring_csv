@@ -6,8 +6,8 @@
 #include "HWInterface/TriggerInterface.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/Occupancy.h"
 #include "Utils/LpGBTalignmentResult.h"
+#include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -465,9 +465,9 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     }
 
-    std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels = pOpticalGroup->getLpGBTrxGroupsAndChannels();
-    auto theOpticalGroupAlignmentResult = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, 5);
-    bool isAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, 1);
+    std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels              = pOpticalGroup->getLpGBTrxGroupsAndChannels();
+    auto                                    theOpticalGroupAlignmentResult = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, 5);
+    bool                                    isAligned                      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, 1);
 
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx = 0;

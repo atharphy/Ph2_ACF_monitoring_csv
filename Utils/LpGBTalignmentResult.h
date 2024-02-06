@@ -1,28 +1,22 @@
 #ifndef __LPGBT_ALIGNMENT_RESULT__
 #define __LPGBT_ALIGNMENT_RESULT__
 
+#include "Utils/GenericDataArray.h"
 #include <map>
 #include <tuple>
-#include "Utils/GenericDataArray.h"
 
 struct LpGBTalignmentResult
 {
-    LpGBTalignmentResult() {};
+    LpGBTalignmentResult(){};
 
     void setGroupAndChannelResult(const uint8_t groupNumber, const uint8_t channelNumber, const float alignmentEfficiency, const uint8_t bestPhase, const GenericDataArray<16, float>& phaseHistogram)
     {
         fResultContainer[groupNumber][channelNumber] = std::make_tuple(alignmentEfficiency, bestPhase, phaseHistogram);
     }
 
-    float getGroupAndChannelAlignmentEfficiency(const uint8_t groupNumber, const uint8_t channelNumber) const
-    {
-        return std::get<0>(fResultContainer.at(groupNumber).at(channelNumber));
-    }
+    float getGroupAndChannelAlignmentEfficiency(const uint8_t groupNumber, const uint8_t channelNumber) const { return std::get<0>(fResultContainer.at(groupNumber).at(channelNumber)); }
 
-    uint8_t getGroupAndChannelBestPhase(const uint8_t groupNumber, const uint8_t channelNumber) const
-    {
-        return std::get<1>(fResultContainer.at(groupNumber).at(channelNumber));
-    }
+    uint8_t getGroupAndChannelBestPhase(const uint8_t groupNumber, const uint8_t channelNumber) const { return std::get<1>(fResultContainer.at(groupNumber).at(channelNumber)); }
 
     GenericDataArray<16, float> getGroupAndChannelPhaseHystogram(const uint8_t groupNumber, const uint8_t channelNumber) const
     {
@@ -37,8 +31,6 @@ struct LpGBTalignmentResult
     {
         theArchive& fResultContainer;
     }
-
 };
-
 
 #endif

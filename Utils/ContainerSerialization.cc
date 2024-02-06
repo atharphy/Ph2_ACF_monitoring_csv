@@ -3,11 +3,11 @@
 #include "Utils/GainFit.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/GenericDataVector.h"
+#include "Utils/LpGBTalignmentResult.h"
 #include "Utils/Occupancy.h"
 #include "Utils/OccupancyAndPh.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/ValueAndTime.h"
-#include "Utils/LpGBTalignmentResult.h"
 
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((ChannelDataContainer<uint8_t>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((ChannelDataContainer<uint32_t>)))

@@ -9,11 +9,11 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/DataContainer.h"
 #include "Utils/RD53Shared.h"
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/utility/identity_type.hpp>
 #include "Utils/serialize_tuple.h"
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/utility/identity_type.hpp>
 #include <map>
 
 class Occupancy;

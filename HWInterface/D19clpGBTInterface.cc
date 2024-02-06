@@ -9,13 +9,13 @@
 
 #include "HWInterface/D19clpGBTInterface.h"
 #include "HWDescription/lpGBT.h"
+#include "Utils/LpGBTalignmentResult.h"
 #include <chrono>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <thread>
 #include <unordered_map>
-#include "Utils/LpGBTalignmentResult.h"
 
 using namespace Ph2_HwDescription;
 
@@ -343,13 +343,10 @@ void D19clpGBTInterface::Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip)
 
 void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
-    std::vector<uint8_t> cOptimalTaps = {};
+    std::vector<uint8_t>                    cOptimalTaps = {};
     std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels;
 
-    for(size_t i=0; i<pGroups.size(); ++i)
-    {
-        groupsAndChannels[pGroups[i]].push_back(pChannels[i]);
-    }
+    for(size_t i = 0; i < pGroups.size(); ++i) { groupsAndChannels[pGroups[i]].push_back(pChannels[i]); }
 
     PhaseAlignRx(pChip, groupsAndChannels, 5);
     // find mode
@@ -375,15 +372,15 @@ LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* p
 
     LpGBTalignmentResult theAlignmentResults; // {Group : {channel : {successRate, bestPhaseHistogram}}}
 
-    for(const auto& theGroupAndChannels : groupsAndChannels)
+    for(const auto& theGroupAndChannels: groupsAndChannels)
     {
-        uint8_t cGroup   = theGroupAndChannels.first;
-        for(const auto cChannel : theGroupAndChannels.second)
+        uint8_t cGroup = theGroupAndChannels.first;
+        for(const auto cChannel: theGroupAndChannels.second)
         {
-            float alignmentSuccessRate = 0.;
+            float                       alignmentSuccessRate = 0.;
             GenericDataArray<16, float> bestPhaseHistogram;
             std::fill(bestPhaseHistogram.begin(), bestPhaseHistogram.end(), 0);
-            for(auto& value : bestPhaseHistogram) value = 0;
+            for(auto& value: bestPhaseHistogram) value = 0;
 
             cFreq         = 2;
             uint8_t cMode = 1; // Initial training mode
@@ -433,29 +430,29 @@ LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* p
             }
 
             // find phase with highest entries
-            uint8_t bestPhase = 15;
-            int highestCount = 0;
-            int numberOfPossiblePhases = 0;
+            uint8_t bestPhase              = 15;
+            int     highestCount           = 0;
+            int     numberOfPossiblePhases = 0;
             for(size_t phaseValue = 0; phaseValue < bestPhaseHistogram.size(); ++phaseValue)
             {
                 if(bestPhaseHistogram[phaseValue] > highestCount)
                 {
                     highestCount = bestPhaseHistogram[phaseValue];
-                    bestPhase = phaseValue;
+                    bestPhase    = phaseValue;
                 }
-                if(bestPhaseHistogram[phaseValue]>0) ++numberOfPossiblePhases;
+                if(bestPhaseHistogram[phaseValue] > 0) ++numberOfPossiblePhases;
             }
 
-            LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +bestPhase << " out of " << numberOfPossiblePhases << " possibilities" << RESET;
+            LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +bestPhase << " out of " << numberOfPossiblePhases
+                      << " possibilities" << RESET;
             SetPhaseTap(pChip, cGroup, cChannel, bestPhase);
             ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
 
             // Normalize over total attempts
-            alignmentSuccessRate/=pMaxAttempts;
-            for(auto& phaseOccurrence : bestPhaseHistogram) phaseOccurrence/=pMaxAttempts;
+            alignmentSuccessRate /= pMaxAttempts;
+            for(auto& phaseOccurrence: bestPhaseHistogram) phaseOccurrence /= pMaxAttempts;
 
             theAlignmentResults.setGroupAndChannelResult(cGroup, cChannel, alignmentSuccessRate, bestPhase, bestPhaseHistogram);
-
         }
     }
 
@@ -470,18 +467,19 @@ bool D19clpGBTInterface::didAlignmentSucceded(LpGBTalignmentResult& theOpticalGr
 {
     bool isAligned = true;
 
-    for(const auto& theGoupAlignmenResult : theOpticalGroupAlignmentResult.fResultContainer)
+    for(const auto& theGoupAlignmenResult: theOpticalGroupAlignmentResult.fResultContainer)
     {
-        for(const auto& theChannelAlignmentResult : theGoupAlignmenResult.second)
+        for(const auto& theChannelAlignmentResult: theGoupAlignmenResult.second)
         {
-            float alignmentSuccessRate = std::get<0>(theChannelAlignmentResult.second);
-            uint8_t bestPhaseFound = std::get<1>(theChannelAlignmentResult.second);
+            float   alignmentSuccessRate = std::get<0>(theChannelAlignmentResult.second);
+            uint8_t bestPhaseFound       = std::get<1>(theChannelAlignmentResult.second);
             if(alignmentSuccessRate < minAlignmentSuccessRate || bestPhaseFound == 15)
             {
                 isAligned = false;
                 std::stringstream errorMessage;
                 errorMessage << "OTalignLpGBTinputs::AlignLpGBTInputs - Error in aligning LpGBT Group " << +theGoupAlignmenResult.first << " Channel " << +theChannelAlignmentResult.first;
-                if(alignmentSuccessRate < minAlignmentSuccessRate) errorMessage << " - alignmen success rate = " << alignmentSuccessRate << " less then minimum requited (" << minAlignmentSuccessRate << ")";
+                if(alignmentSuccessRate < minAlignmentSuccessRate)
+                    errorMessage << " - alignmen success rate = " << alignmentSuccessRate << " less then minimum requited (" << minAlignmentSuccessRate << ")";
                 if(bestPhaseFound == 15) errorMessage << " best phase = 15 (error flag)";
                 LOG(ERROR) << BOLDRED << errorMessage.str() << RESET;
             }

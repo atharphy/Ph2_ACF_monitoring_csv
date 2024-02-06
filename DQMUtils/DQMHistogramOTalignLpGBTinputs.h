@@ -58,10 +58,10 @@ class DQMHistogramOTalignLpGBTinputs : public DQMHistogramBase
     void fillPhaseAlignmentResults(DetectorDataContainer& thePhaseAlignmentResultContainer);
 
   private:
-    DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fBestPhaseHistogramContainer;
-    DetectorDataContainer fAlignmentSuccessHistogramContainer;
-    DetectorDataContainer fFoundPhasesDistributionHistogramContainer;
+    DetectorContainer*                        fDetectorContainer;
+    DetectorDataContainer                     fBestPhaseHistogramContainer;
+    DetectorDataContainer                     fAlignmentSuccessHistogramContainer;
+    DetectorDataContainer                     fFoundPhasesDistributionHistogramContainer;
     std::map<uint8_t, std::map<uint8_t, int>> fGroupAndChannelToBinNumber;
 };
 #endif

@@ -18,7 +18,6 @@ OpticalGroup::OpticalGroup(const FrontEndDescription& pFeDesc, uint8_t pOpticalG
 
 OpticalGroup::OpticalGroup(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId) : FrontEndDescription(pBeBoardId, pFMCId, pOpticalGroupId, 0), OpticalGroupContainer(pOpticalGroupId) {}
 
-
 std::map<uint8_t, std::vector<uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannels() const
 {
     std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels;
@@ -32,7 +31,6 @@ std::map<uint8_t, std::vector<uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannel
     {
         groupsAndChannels[3] = {2};
         groupsAndChannels[6] = {0};
-
     }
     else
     {
@@ -41,6 +39,5 @@ std::map<uint8_t, std::vector<uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannel
     }
     return groupsAndChannels;
 }
-
 
 } // namespace Ph2_HwDescription
