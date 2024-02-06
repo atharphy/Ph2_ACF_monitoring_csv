@@ -55,7 +55,7 @@ std::stringstream FileDumper::dumpConfigurationFiles(DetectorContainer*         
 
     LOG(INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fOutputDirectory << RESET;
 
-    if(doc.save_file(outputFileName.c_str())) { LOG(INFO) << BOLDYELLOW << "New configuration file saved: " << outputFileName << std::endl; }
+    if(doc.save_file(outputFileName.c_str())) { LOG(INFO) << BOLDYELLOW << "New configuration file saved: " << outputFileName << RESET; }
     else
     {
         LOG(ERROR) << BOLDRED << "Error saving the new configuration file." << RESET;

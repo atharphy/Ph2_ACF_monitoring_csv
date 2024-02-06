@@ -6,6 +6,7 @@
 #include "HWInterface/TriggerInterface.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/LpGBTalignmentResult.h"
 #include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
@@ -463,40 +464,11 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
         cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     }
-    bool cAligned = true;
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        std::vector<uint8_t> cGroups;
-        std::vector<uint8_t> cChannels;
-        if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
-        {
-            if(cHybrid->getId() % 2 == 0)
-            {
-                cGroups   = {0, 4, 4, 5, 5, 6};
-                cChannels = {0, 0, 2, 0, 2, 0};
-            }
-            else
-            {
-                cGroups   = {0, 1, 1, 2, 2, 3};
-                cChannels = {2, 0, 2, 0, 2, 2};
-            }
-        }
-        else
-        {
-            if(cHybrid->getId() % 2 == 0)
-            {
-                cGroups   = {4, 4, 5, 5, 6, 6, 0};
-                cChannels = {2, 0, 2, 0, 2, 0, 0};
-            }
-            else
-            {
-                cGroups   = {0, 1, 1, 2, 2, 3, 3};
-                cChannels = {2, 0, 2, 0, 2, 0, 2};
-            }
-        }
-        auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cGroups, cChannels);
-        cAligned   = cAligned && (cMode != 15);
-    }
+
+    std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels              = pOpticalGroup->getLpGBTrxGroupsAndChannels();
+    auto                                    theOpticalGroupAlignmentResult = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, 5);
+    bool                                    isAligned                      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, 1);
+
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx = 0;
     for(auto cHybrid: *pOpticalGroup)
@@ -507,7 +479,7 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
     }
-    return cAligned;
+    return isAligned;
 }
 
 bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)

@@ -11,7 +11,6 @@
 #define GenericDataVector_H
 
 #include "OccupancyAndPh.h"
-#include <boost/serialization/vector.hpp>
 
 class GenericDataVector : public OccupancyAndPh
 {

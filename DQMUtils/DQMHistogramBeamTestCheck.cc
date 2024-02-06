@@ -586,7 +586,7 @@ void DQMHistogramBeamTestCheck::fillClusterOccupancyPlots(DetectorDataContainer&
                                                 ->getSummary<HistContainer<TH2F>>()
                                                 .fTheHistogram;
                     auto& cChipClstrs = cHybrdClstrs->getObject(chip->getId());
-                    auto  cSize       = cChipClstrs->getSummary<GenericDataArray<VECSIZE, float>>().getSize();
+                    auto  cSize       = cChipClstrs->getSummary<GenericDataArray<VECSIZE, float>>().size();
                     for(size_t cIndx = 0; cIndx < cSize; cIndx++)
                     {
                         auto cClusterOccupancy = cChipClstrs->getSummary<GenericDataArray<VECSIZE, float>>()[cIndx];

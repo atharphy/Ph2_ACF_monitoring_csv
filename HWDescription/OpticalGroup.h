@@ -66,6 +66,8 @@ class OpticalGroup
 
     std::map<std::string, std::pair<std::string, std::string>> fNTCMap;
 
+    std::map<uint8_t, std::vector<uint8_t>> getLpGBTrxGroupsAndChannels() const;
+
   protected:
   private:
 };

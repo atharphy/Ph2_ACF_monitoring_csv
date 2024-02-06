@@ -12,6 +12,8 @@
 
 #include "HWInterface/lpGBTInterface.h"
 
+class LpGBTalignmentResult;
+
 namespace Ph2_HwInterface
 {
 class D19clpGBTInterface : public lpGBTInterface
@@ -43,16 +45,18 @@ class D19clpGBTInterface : public lpGBTInterface
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     void AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip);
     // configure 2S-SEH
-    void        Configure2SSEH(Ph2_HwDescription::Chip* pChip);
-    void        Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip);
-    std::string getVariableValue(std::string variable, std::string buffer);
-    void        ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
-    void        InitialPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
-    void        PhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
-                             const Ph2_HwDescription::BeBoard*      pBoard,
-                             const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
-                             ReadoutChipInterface*                  pReadoutChipInterface) override{};
-    uint8_t     PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels) override;
+    void                 Configure2SSEH(Ph2_HwDescription::Chip* pChip);
+    void                 Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip);
+    std::string          getVariableValue(std::string variable, std::string buffer);
+    void                 ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void                 InitialPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void                 PhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
+                                      const Ph2_HwDescription::BeBoard*      pBoard,
+                                      const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
+                                      ReadoutChipInterface*                  pReadoutChipInterface) override{};
+    LpGBTalignmentResult PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::map<uint8_t, std::vector<uint8_t>>& groupsAndChannels, size_t pMaxAttempts);
+
+    bool didAlignmentSucceded(LpGBTalignmentResult& theOpticalGroupAlignmentResult, float minAlignmentSuccessRate);
     // 0 [RHS], 1 [LHS]
     // active reset functions
     void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)

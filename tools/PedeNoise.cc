@@ -1027,8 +1027,6 @@ void PedeNoise::Stop()
     LOG(INFO) << "Stopping noise measurement";
     writeObjects();
     dumpConfigFiles();
-    SaveResults();
-    WriteRootFile();
     closeFileHandler();
     clearDataMembers();
     LOG(INFO) << "Noise measurement stopped.";

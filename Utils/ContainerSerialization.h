@@ -9,9 +9,12 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/DataContainer.h"
 #include "Utils/RD53Shared.h"
+#include "Utils/serialize_tuple.h"
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/map.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/utility/identity_type.hpp>
+#include <map>
 
 class Occupancy;
 class OccupancyAndPh;
@@ -25,6 +28,7 @@ class GainFit;
 class GenericDataVector;
 template <typename T>
 class ValueAndTime;
+class LpGBTalignmentResult;
 
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<uint8_t>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<uint32_t>)))
@@ -67,6 +71,7 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<double>, EmptyCo
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<float>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<uint16_t>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<uint8_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<LpGBTalignmentResult, EmptyContainer>)))
 
 #include "Utils/Occupancy.h"
 #include <arpa/inet.h>
