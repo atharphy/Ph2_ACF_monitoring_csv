@@ -35,6 +35,7 @@ class CalibBase : public Tool
     void    saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector, const std::vector<uint16_t>& dacList, size_t offset, size_t nEvents, const std::string& name);
     uint8_t assignGroupType(RD53Shared::INJtype injType) const;
     void    prepareChipQueryForEnDis(const std::string& queryName);
+    void    ResetBoardsReadBkFIFO();
 
     virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1);
     virtual void   run()                      = 0;

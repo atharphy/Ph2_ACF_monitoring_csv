@@ -134,17 +134,20 @@ void DataReadbackOptimization::run()
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
     DataReadbackOptimization::scanDac("DAC_CML_BIAS_0", dacListTAP0, &theTAP0scanContainer);
+    CalibBase::ResetBoardsReadBkFIFO();
     DataReadbackOptimization::analyze("DAC_CML_BIAS_0", dacListTAP0, theTAP0scanContainer, theTAP0Container);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x1);
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", invTAP1);
     DataReadbackOptimization::scanDac("DAC_CML_BIAS_1", dacListTAP1, &theTAP1scanContainer);
+    CalibBase::ResetBoardsReadBkFIFO();
     DataReadbackOptimization::analyze("DAC_CML_BIAS_1", dacListTAP1, theTAP1scanContainer, theTAP1Container);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x3);
     for(const auto cBoard: *fDetectorContainer)
         static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", bits::pack<1, 1>(invTAP2, invTAP1));
     DataReadbackOptimization::scanDac("DAC_CML_BIAS_2", dacListTAP2, &theTAP2scanContainer);
+    CalibBase::ResetBoardsReadBkFIFO();
     DataReadbackOptimization::analyze("DAC_CML_BIAS_2", dacListTAP2, theTAP2scanContainer, theTAP2Container);
 
     // ################

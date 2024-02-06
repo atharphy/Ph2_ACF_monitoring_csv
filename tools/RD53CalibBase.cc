@@ -195,6 +195,11 @@ void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
     fDetectorContainer->setEnabledAll(true);
 }
 
+void CalibBase::ResetBoardsReadBkFIFO()
+{
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetReadBkFIFO();
+}
+
 void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
 {
     theCurrentRun = currentRun;
