@@ -209,3 +209,46 @@ void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
         static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->resetNtrialsNevents();
     }
 }
+
+// bool CalibBase::openRootFileFolder(TFile* theOutputFile, std::string& folderName)
+// {
+//     if(theOutputFile->GetDirectory(folderName.data()) != nullptr)
+//     {
+//         theOutputFile->cd(folderName.data());
+//         return true;
+//     }
+
+//     return false;
+// }
+
+// void CalibBase::splitHistoFile2Hybrids(TFile* theOutputFile, const DetectorContainer& detContainer)
+// {
+//     std::string detectorFolder = "Detector";
+//     openRootFileFolder(theOutputFile, detectorFolder);
+
+//     for(const auto cBoard: *detContainer)
+//     {
+//         std::string boardFolder     = "/Board_" + std::to_string(board->getId());
+//         std::string fullBoardFolder = detectorFolder + boardFolder;
+//         openRootFileFolder(theOutputFile, fullBoardFolder);
+
+//         for(const auto cOpticalGroup: *cBoard))
+//         {
+//             std::string opticalGroupFolder     = "/OpticalGroup_" + std::to_string(opticalGroup->getId());
+//             std::string fullOpticalGroupFolder = detectorFolder + boardFolder + opticalGroupFolder;
+//             openRootFileFolder(theOutputFile, fullOpticalGroupFolder);
+
+//             for(const auto cHybrid: *cOpticalGroup)
+//             {
+//                 std::string hybridFolder     = "/Hybrid_" + std::to_string(hybrid->getId());
+//                 std::string fullHybridFolder = detectorFolder + boardFolder + opticalGroupFolder + hybridFolder;
+//                 openRootFileFolder(theOutputFile, fullHybridFolder);
+
+//                 // Copy file n hybrid times
+//                 // Remove n-1 hybrid sub-directories
+
+//                 for(const auto cChip: *cHybrid) {}
+//             }
+//         }
+//     }
+// }

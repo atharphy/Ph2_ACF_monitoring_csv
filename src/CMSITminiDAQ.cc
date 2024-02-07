@@ -28,8 +28,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/RD53VoltageTuning.h"
 
-#include <regex>
-
 #ifdef __EUDAQ__
 #include "TROOT.h"
 #include "tools/RD53eudaqProducer.h"
