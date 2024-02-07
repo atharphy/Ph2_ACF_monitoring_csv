@@ -1,27 +1,27 @@
 /*!
  *
- * \file CLASS_NAME_TEMPLATE.h
- * \brief CLASS_NAME_TEMPLATE class
- * \author CLASS_AUTOR
- * \date TODAY_DATE
+ * \file OTCICwordAlignment.h
+ * \brief OTCICwordAlignment class
+ * \author Fabio Ravera
+ * \date 07/02/24
  *
  */
 
-#ifndef CLASS_NAME_TEMPLATE_h__
-#define CLASS_NAME_TEMPLATE_h__
+#ifndef OTCICwordAlignment_h__
+#define OTCICwordAlignment_h__
 
 #include "Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
-#include "DQMUtils/DQMHistogramCLASS_NAME_TEMPLATE.h"
+#include "DQMUtils/DQMHistogramOTCICwordAlignment.h"
 #endif
 
-class CLASS_NAME_TEMPLATE : public Tool
+class OTCICwordAlignment : public Tool
 {
   public:
-    CLASS_NAME_TEMPLATE();
-    ~CLASS_NAME_TEMPLATE();
+    OTCICwordAlignment();
+    ~OTCICwordAlignment();
 
     void Initialise(void);
 
@@ -36,10 +36,11 @@ class CLASS_NAME_TEMPLATE : public Tool
     static std::string fCalibrationDescription;
     
   private:
+  void WordAlignment(uint32_t pWait_us = 10);
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
-    DQMHistogramCLASS_NAME_TEMPLATE fDQMHistogramCLASS_NAME_TEMPLATE;
+    DQMHistogramOTCICwordAlignment fDQMHistogramOTCICwordAlignment;
 #endif
 };
 

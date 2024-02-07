@@ -624,11 +624,7 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
 }
 bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
 {
-    bool cSuccess = SetAutomaticPhaseAlignment(pChip, false);
-    if(!cSuccess) return cSuccess;
-    // not working  - DO NOT USE
-    // cSuccess = this->SetOptimalTaps(pChip);
-    return cSuccess;
+    return SetAutomaticPhaseAlignment(pChip, false);
 }
 
 bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)

@@ -1,27 +1,27 @@
 /*!
  *
- * \file CLASS_NAME_TEMPLATE.h
- * \brief CLASS_NAME_TEMPLATE class
- * \author CLASS_AUTOR
- * \date TODAY_DATE
+ * \file OTCICphaseAlignment.h
+ * \brief OTCICphaseAlignment class
+ * \author Fabio Ravera
+ * \date 07/02/24
  *
  */
 
-#ifndef CLASS_NAME_TEMPLATE_h__
-#define CLASS_NAME_TEMPLATE_h__
+#ifndef OTCICphaseAlignment_h__
+#define OTCICphaseAlignment_h__
 
 #include "Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
-#include "DQMUtils/DQMHistogramCLASS_NAME_TEMPLATE.h"
+#include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
 #endif
 
-class CLASS_NAME_TEMPLATE : public Tool
+class OTCICphaseAlignment : public Tool
 {
   public:
-    CLASS_NAME_TEMPLATE();
-    ~CLASS_NAME_TEMPLATE();
+    OTCICphaseAlignment();
+    ~OTCICphaseAlignment();
 
     void Initialise(void);
 
@@ -36,10 +36,12 @@ class CLASS_NAME_TEMPLATE : public Tool
     static std::string fCalibrationDescription;
     
   private:
+  void phaseAlignment(uint16_t pWait_us = 10, uint32_t pNTriggers = 500);
+  void SetStaticPhaseAlignment();
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
-    DQMHistogramCLASS_NAME_TEMPLATE fDQMHistogramCLASS_NAME_TEMPLATE;
+    DQMHistogramOTCICphaseAlignment fDQMHistogramOTCICphaseAlignment;
 #endif
 };
 
