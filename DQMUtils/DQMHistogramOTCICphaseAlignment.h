@@ -55,7 +55,10 @@ class DQMHistogramOTCICphaseAlignment : public DQMHistogramBase
      */
     void reset(void) override;
 
+    void fillBestPhasePhaseResults(DetectorDataContainer& thePhaseAlignmentResultContainer);
+
   private:
-    DetectorContainer* fDetectorContainer;
+    DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fBestPhaseHistogramContainer;
 };
 #endif

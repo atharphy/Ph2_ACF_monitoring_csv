@@ -1,8 +1,8 @@
 #include "tools/OTalignLpGBTinputs.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
-#include "Utils/ContainerSerialization.h"
 #include "Utils/LpGBTalignmentResult.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -23,7 +23,7 @@ void OTalignLpGBTinputs::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.stub_counter_block.general.shutter_close"); // TODO: not sure if needed
 
     fNumberOfAlignmentIterations = findValueInSettings<double>("OTalignLpGBTinputsNumberOfAlignmentIterations", 100);
-    fMinAlignmentSuccessRate     = findValueInSettings<double>("OTalignLpGBTinputsMinAlignmnetSuccessRate", 0.99);
+    fMinAlignmentSuccessRate = findValueInSettings<double>("OTalignLpGBTinputsMinAlignmnetSuccessRate", 0.99);
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -70,7 +70,7 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
                 fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
             }
             std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels = theOpticalGroup->getLpGBTrxGroupsAndChannels();
-            theOpticalGroupAlignmentResult                            = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, fNumberOfAlignmentIterations);
+            theOpticalGroupAlignmentResult = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, fNumberOfAlignmentIterations);
             bool isAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, fMinAlignmentSuccessRate);
 
             if(!isAligned)

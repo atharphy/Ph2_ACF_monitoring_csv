@@ -4,6 +4,7 @@
 #include "HWInterface/TriggerInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/GenericDataArray.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -56,15 +57,25 @@ void OTCICphaseAlignment::Resume() {}
 
 void OTCICphaseAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTCICphaseAlignment::phaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
+void OTCICphaseAlignment::phaseAlignment()
 {
+    uint32_t pNTriggers = 500;
     bool cDebug   = false;
-    bool cAligned = true;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for CBCs .... " << RESET;
+    DetectorDataContainer theBestPhaseContainer;
+    ContainerFactory::copyAndInitHybrid<GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, int>>(*fDetectorContainer, theBestPhaseContainer);
 
     for(auto cBoard: *fDetectorContainer)
     {
-        bool cWithCBC = false;
+        bool cWithCBC = (cBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S);
+        if(cWithCBC)
+        {
+            std::vector<std::pair<std::string, uint32_t>> cRegVec;
+            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+            cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNTriggers});
+            cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+            fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+        }
         // generate alignment pattern on all stub lines
         LOG(INFO) << BOLDBLUE << "Generating Patterns needed for phase alignment of CIC inputs." << RESET;
         fBeBoardInterface->setBoard(cBoard->getId());
@@ -78,7 +89,6 @@ void OTCICphaseAlignment::phaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
                 // configure Chips to produce phase alignment patterns
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3) cWithCBC = true;
                     fReadoutChipInterface->producePhaseAlignmentPattern(cChip, 10);
                 }
             }
@@ -87,34 +97,7 @@ void OTCICphaseAlignment::phaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         if(cWithCBC)
         {
             LOG(INFO) << BOLDBLUE << "Sending triggers to FEs to align L1 output from CBCs.." << RESET;
-            uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-            // if external or async triggers are used then revert to internal here
-            bool                                          cReconfigureTrigger = (cTriggerSrc == 4 || cTriggerSrc || 5 || cTriggerSrc == 10);
-            std::vector<std::pair<std::string, uint32_t>> cRegVec;
-            if(cReconfigureTrigger)
-            {
-                uint16_t cSrc = 3;
-                if(cTriggerSrc != cSrc)
-                {
-                    LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source is set to " << +cSrc << RESET;
-                    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cSrc});
-                }
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNTriggers});
-                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-                fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
-            }
-            auto cTriggerInterface = cInterface->getTriggerInterface();
-            cTriggerInterface->SendNTriggers(pNTriggers);
-
-            // set trigger source back
-            if(cReconfigureTrigger)
-            {
-                LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source back to " << +cTriggerSrc << RESET;
-                std::vector<std::pair<std::string, uint32_t>> cRegVec;
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
-                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-                fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
-            }
+            cInterface->getTriggerInterface()->SendNTriggers(pNTriggers);
         } // in the CBC case you need to send triggers to get alignment data on L1 line
         // check alignment
         for(auto cOpticalGroup: *cBoard)
@@ -125,15 +108,36 @@ void OTCICphaseAlignment::phaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
                 auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 bool  cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
                 // if locked .. switch to automatic phase aligner mode with best values
-                if(cLocked)
-                { LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET; }
-                else
-                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() << BOLDRED << " FAILED to LOCK " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
-                cAligned = cAligned && cLocked;
+                if(cLocked) LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
+                else LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() << BOLDRED << " FAILED to LOCK " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
+                
+                fCicInterface->GetOptimalTaps(cCic);
+                auto& cPhaseAlignmentVals = theBestPhaseContainer.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getSummary<GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, int>>();
+                for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
+                {
+                    auto cPhaseTapsThisFE = fCicInterface->GetOptimalTaps(cCic, chipId);
+                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
+                    {
+                        cPhaseAlignmentVals(chipId, cLineId) = cPhaseTapsThisFE[cLineId];
+                    }
+                }
+                fCicInterface->SetStaticPhaseAlignment(cCic);
             } // CICs
         }     // OG
     }
-    if(cAligned) this->SetStaticPhaseAlignment();
+
+    #ifdef __USE_ROOT__
+    fDQMHistogramOTCICphaseAlignment.fillBestPhasePhaseResults(theBestPhaseContainer);
+    #else
+        if(fDQMStreamerEnabled)
+        {
+            ContainerSerialization theBestPhaseContainerSerialization("OTCICphaseAlignmentBestPhase");
+            theBestPhaseContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBestPhaseContainer);
+        }
+    #endif
 
     // check
     for(auto cBoard: *fDetectorContainer)
@@ -158,48 +162,4 @@ void OTCICphaseAlignment::phaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
             }
         }
     }
-}
-
-void OTCICphaseAlignment::SetStaticPhaseAlignment()
-{
-    LOG(INFO) << BOLDBLUE << "Setting CIC phase to static mode.." << RESET;
-
-    DetectorDataContainer thePhaseValueContainer;
-    std::vector<uint8_t>  initialPhaseVector(6, 0);
-    std::string           theQueryFunction = "skipSSAQuery";
-    auto                  theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
-        if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
-        return true;
-    };
-    fDetectorContainer->addReadoutChipQueryFunction(theSkipSSAquery, theQueryFunction);
-    ContainerFactory::copyAndInitChip<std::vector<uint8_t>>(*fDetectorContainer, thePhaseValueContainer, initialPhaseVector);
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                fCicInterface->GetOptimalTaps(cCic);
-                for(auto cChip: *cHybrid)
-                {
-                    auto& cPhaseAlignmentVals = thePhaseValueContainer.getObject(cBoard->getId())
-                                                    ->getObject(cOpticalGroup->getId())
-                                                    ->getObject(cHybrid->getId())
-                                                    ->getObject(cChip->getId())
-                                                    ->getSummary<std::vector<uint8_t>>();
-                    auto              cPhaseTapsThisFE = fCicInterface->GetOptimalTaps(cCic, cChip->getId() % 8);
-                    std::stringstream cOutput;
-                    for(uint8_t cLineId = 0; cLineId < 6; cLineId++)
-                    {
-                        cPhaseAlignmentVals[cLineId] = cPhaseTapsThisFE[cLineId];
-                        cOutput << +cPhaseAlignmentVals[cLineId] << " ";
-                    }
-                    LOG(INFO) << BOLDBLUE << "Optimal tap found on CIC#" << +cChip->getHybridId() << " FE" << +cChip->getId() << " : " << cOutput.str() << RESET;
-                }
-                fCicInterface->SetStaticPhaseAlignment(cCic);
-            }
-        }
-    }
-    fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
 }

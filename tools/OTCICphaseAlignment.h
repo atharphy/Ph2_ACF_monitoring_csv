@@ -36,8 +36,7 @@ class OTCICphaseAlignment : public Tool
     static std::string fCalibrationDescription;
 
   private:
-    void phaseAlignment(uint16_t pWait_us = 10, uint32_t pNTriggers = 500);
-    void SetStaticPhaseAlignment();
+    void phaseAlignment();
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
