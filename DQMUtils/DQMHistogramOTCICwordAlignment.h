@@ -56,6 +56,6 @@ class DQMHistogramOTCICwordAlignment : public DQMHistogramBase
     void reset(void) override;
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 };
 #endif

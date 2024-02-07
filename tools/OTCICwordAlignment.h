@@ -34,10 +34,10 @@ class OTCICwordAlignment : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
-  void WordAlignment(uint32_t pWait_us = 10);
-    
+    void WordAlignment(uint32_t pWait_us = 10);
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTCICwordAlignment fDQMHistogramOTCICwordAlignment;

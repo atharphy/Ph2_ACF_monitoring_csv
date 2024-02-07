@@ -1,7 +1,7 @@
 #include "tools/OTCICwordAlignment.h"
+#include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
-#include "HWInterface/ExceptionHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -24,10 +24,7 @@ void OTCICwordAlignment::Initialise(void)
 #endif
 }
 
-void OTCICwordAlignment::ConfigureCalibration()
-{
-
-}
+void OTCICwordAlignment::ConfigureCalibration() {}
 
 void OTCICwordAlignment::Running()
 {
@@ -41,40 +38,28 @@ void OTCICwordAlignment::Running()
 void OTCICwordAlignment::Stop(void)
 {
     LOG(INFO) << "Stopping OTCICwordAlignment measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTCICwordAlignment.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTCICwordAlignment.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTCICwordAlignment stopped.";
 }
 
-void OTCICwordAlignment::Pause()
-{
+void OTCICwordAlignment::Pause() {}
 
-}
+void OTCICwordAlignment::Resume() {}
 
-
-void OTCICwordAlignment::Resume()
-{
-
-}
-
-
-void OTCICwordAlignment::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTCICwordAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
 {
     LOG(INFO) << BOLDBLUE << "Starting CIC automated word alignment procedure .... " << RESET;
     DetectorDataContainer fWordAlignmentValues;
-    std::vector<uint8_t> initialWordVector(5, 0);
-    std::string theQueryFunction = "skipSSAQuery";
-    auto theSkipSSAquery = [](const ChipContainer *theReadoutChip)
-    {
+    std::vector<uint8_t>  initialWordVector(5, 0);
+    std::string           theQueryFunction = "skipSSAQuery";
+    auto                  theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
         return true;
     };
@@ -101,7 +86,7 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
             size_t cIndx = 0;
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto& cCic                     = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                auto&                             cCic                 = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                 std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->GetWordAlignmentValues(cCic);
                 // check status
                 if(cWordAligned[cIndx])
@@ -112,15 +97,19 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
                 else
                 {
                     LOG(INFO) << BOLDRED << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
-                    LOG(INFO) << BOLDRED << "FAILED CIC word alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id" << +theHybrid->getId() << " --- Hybrid will be disabled"
-                          << RESET;
+                    LOG(INFO) << BOLDRED << "FAILED CIC word alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id"
+                              << +theHybrid->getId() << " --- Hybrid will be disabled" << RESET;
                     ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId());
                     continue;
                 }
 
                 for(auto cChip: *theHybrid)
                 {
-                    auto& cWordAlignmentVals     = fWordAlignmentValues.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<uint8_t>>();
+                    auto& cWordAlignmentVals = fWordAlignmentValues.getObject(theBoard->getId())
+                                                   ->getObject(theOpticalGroup->getId())
+                                                   ->getObject(theHybrid->getId())
+                                                   ->getObject(cChip->getId())
+                                                   ->getSummary<std::vector<uint8_t>>();
 
                     std::stringstream cOutput;
                     for(size_t cLine = 0; cLine < 5; cLine++)

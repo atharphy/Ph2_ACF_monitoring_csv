@@ -1,9 +1,9 @@
 #include "tools/OTCICphaseAlignment.h"
-#include "System/RegisterHelper.h"
-#include "Utils/ContainerSerialization.h"
+#include "HWInterface/D19cDebugFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/TriggerInterface.h"
-#include "HWInterface/D19cDebugFWInterface.h"
+#include "System/RegisterHelper.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -27,10 +27,7 @@ void OTCICphaseAlignment::Initialise(void)
 #endif
 }
 
-void OTCICphaseAlignment::ConfigureCalibration()
-{
-
-}
+void OTCICphaseAlignment::ConfigureCalibration() {}
 
 void OTCICphaseAlignment::Running()
 {
@@ -44,31 +41,20 @@ void OTCICphaseAlignment::Running()
 void OTCICphaseAlignment::Stop(void)
 {
     LOG(INFO) << "Stopping OTCICphaseAlignment measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTCICphaseAlignment.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTCICphaseAlignment.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTCICphaseAlignment stopped.";
 }
 
-void OTCICphaseAlignment::Pause()
-{
+void OTCICphaseAlignment::Pause() {}
 
-}
+void OTCICphaseAlignment::Resume() {}
 
-
-void OTCICphaseAlignment::Resume()
-{
-
-}
-
-
-void OTCICphaseAlignment::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTCICphaseAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTCICphaseAlignment::phaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
 {
@@ -179,10 +165,9 @@ void OTCICphaseAlignment::SetStaticPhaseAlignment()
     LOG(INFO) << BOLDBLUE << "Setting CIC phase to static mode.." << RESET;
 
     DetectorDataContainer thePhaseValueContainer;
-    std::vector<uint8_t> initialPhaseVector(6, 0);
-    std::string theQueryFunction = "skipSSAQuery";
-    auto theSkipSSAquery = [](const ChipContainer *theReadoutChip)
-    {
+    std::vector<uint8_t>  initialPhaseVector(6, 0);
+    std::string           theQueryFunction = "skipSSAQuery";
+    auto                  theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
         return true;
     };
@@ -198,7 +183,11 @@ void OTCICphaseAlignment::SetStaticPhaseAlignment()
                 fCicInterface->GetOptimalTaps(cCic);
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cPhaseAlignmentVals     = thePhaseValueContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<uint8_t>>();
+                    auto& cPhaseAlignmentVals = thePhaseValueContainer.getObject(cBoard->getId())
+                                                    ->getObject(cOpticalGroup->getId())
+                                                    ->getObject(cHybrid->getId())
+                                                    ->getObject(cChip->getId())
+                                                    ->getSummary<std::vector<uint8_t>>();
                     auto              cPhaseTapsThisFE = fCicInterface->GetOptimalTaps(cCic, cChip->getId() % 8);
                     std::stringstream cOutput;
                     for(uint8_t cLineId = 0; cLineId < 6; cLineId++)

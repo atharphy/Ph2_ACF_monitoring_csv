@@ -82,11 +82,6 @@ void RegisterHelper::restoreSnapshot()
     for(auto theBoard: *fDetectorContainer)
     {
         const auto modifiedBoardRegisters = theBoard->getSnapshot();
-        for(auto registerNameAndValue: modifiedBoardRegisters)
-        {
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Setting back board register " << registerNameAndValue.first << " to 0x" << std::hex << +registerNameAndValue.second << std::dec
-                      << std::endl;
-        }
         fBeBoardInterface->WriteBoardMultReg(theBoard, modifiedBoardRegisters);
         for(auto theOpticalGroup: *theBoard)
         {
@@ -94,11 +89,6 @@ void RegisterHelper::restoreSnapshot()
             if(theLpGBT != nullptr)
             {
                 const auto modifiedLpGBTRegisters = theLpGBT->getSnapshot();
-                for(auto registerNameAndValue: modifiedLpGBTRegisters)
-                {
-                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Setting back LpGBT register " << registerNameAndValue.first << " to 0x" << std::hex << +registerNameAndValue.second << std::dec
-                            << std::endl;
-                }
                 flpGBTInterface->WriteChipMultReg(theLpGBT, modifiedLpGBTRegisters);
             }
             for(auto theHybrid: *theOpticalGroup)
@@ -110,22 +100,12 @@ void RegisterHelper::restoreSnapshot()
                     {
                         const auto modifiedCicRegisters = theCic->getSnapshot();
                         fCicInterface->WriteChipMultReg(theCic, modifiedCicRegisters);
-                        for(auto registerNameAndValue: modifiedCicRegisters)
-                        {
-                            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Setting back CIC register " << registerNameAndValue.first << " to 0x" << std::hex << +registerNameAndValue.second << std::dec
-                                    << std::endl;
-                        }
                     }
                 }
                 for(auto theChip: *theHybrid)
                 {
                     const auto modifiedChipRegisters = theChip->getSnapshot();
                     fReadoutChipInterface->WriteChipMultReg(theChip, modifiedChipRegisters);
-                    for(auto registerNameAndValue: modifiedChipRegisters)
-                    {
-                        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Setting back Chip register " << registerNameAndValue.first << " to 0x" << std::hex << +registerNameAndValue.second << std::dec
-                                << std::endl;
-                    }
                 }
             }
         }

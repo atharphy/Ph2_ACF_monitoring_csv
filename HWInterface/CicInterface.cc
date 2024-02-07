@@ -622,10 +622,7 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
     }
     return cSuccess;
 }
-bool CicInterface::SetStaticPhaseAlignment(Chip* pChip)
-{
-    return SetAutomaticPhaseAlignment(pChip, false);
-}
+bool CicInterface::SetStaticPhaseAlignment(Chip* pChip) { return SetAutomaticPhaseAlignment(pChip, false); }
 
 bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
 {
