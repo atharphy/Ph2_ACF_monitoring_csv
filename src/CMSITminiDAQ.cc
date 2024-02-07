@@ -51,14 +51,14 @@ using namespace Ph2_HwInterface;
 
 void introBanner()
 {
-    // #############
-    // # Intro tag #
-    // #############
-    LOG(INFO) << BOLDGREEN << "          ____  _     ____         _    ____ _____" << RESET;
-    LOG(INFO) << BOLDGREEN << "         |  _ \\| |__ |___ \\       / \\  / ___|  ___|" << RESET;
-    LOG(INFO) << BOLDGREEN << "         | |_) | '_ \\  __) |____ / _ \\| |   | |_" << RESET;
-    LOG(INFO) << BOLDGREEN << "         |  __/| | | |/ __/_____/ ___ \\ |___|  _|" << RESET;
-    LOG(INFO) << BOLDGREEN << "         |_|   |_| |_|_____|   /_/   \\_\\____|_|\n" << RESET;
+    // #######################
+    // # Introductory banner #
+    // #######################
+    LOG(INFO) << BOLDGREEN << "       ____  _     ____         _    ____ _____" << RESET;
+    LOG(INFO) << BOLDGREEN << "      |  _ \\| |__ |___ \\       / \\  / ___|  ___|" << RESET;
+    LOG(INFO) << BOLDGREEN << "      | |_) | '_ \\  __) |____ / _ \\| |   | |_" << RESET;
+    LOG(INFO) << BOLDGREEN << "      |  __/| | | |/ __/_____/ ___ \\ |___|  _|" << RESET;
+    LOG(INFO) << BOLDGREEN << "      |_|   |_| |_|_____|   /_/   \\_\\____|_|\n" << RESET;
     LOG(INFO) << BOLDGREEN << "  ____ __  __ ____ ___ _____          _       _ ____    _    ___" << RESET;
     LOG(INFO) << BOLDGREEN << " / ___|  \\/  / ___|_ _|_   _| __ ___ (_)_ __ (_)  _ \\  / \\  / _ \\" << RESET;
     LOG(INFO) << BOLDGREEN << "| |   | |\\/| \\___ \\| |  | || '_ ` _ \\| | '_ \\| | | | |/ _ \\| | | |" << RESET;
