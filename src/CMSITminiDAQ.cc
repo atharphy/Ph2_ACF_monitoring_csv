@@ -49,6 +49,23 @@ using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+void introBanner()
+{
+    // #############
+    // # Intro tag #
+    // #############
+    LOG(INFO) << BOLDGREEN << "          ____  _     ____         _    ____ _____" << RESET;
+    LOG(INFO) << BOLDGREEN << "         |  _ \\| |__ |___ \\       / \\  / ___|  ___|" << RESET;
+    LOG(INFO) << BOLDGREEN << "         | |_) | '_ \\  __) |____ / _ \\| |   | |_" << RESET;
+    LOG(INFO) << BOLDGREEN << "         |  __/| | | |/ __/_____/ ___ \\ |___|  _|" << RESET;
+    LOG(INFO) << BOLDGREEN << "         |_|   |_| |_|_____|   /_/   \\_\\____|_|\n" << RESET;
+    LOG(INFO) << BOLDGREEN << "  ____ __  __ ____ ___ _____          _       _ ____    _    ___" << RESET;
+    LOG(INFO) << BOLDGREEN << " / ___|  \\/  / ___|_ _|_   _| __ ___ (_)_ __ (_)  _ \\  / \\  / _ \\" << RESET;
+    LOG(INFO) << BOLDGREEN << "| |   | |\\/| \\___ \\| |  | || '_ ` _ \\| | '_ \\| | | | |/ _ \\| | | |" << RESET;
+    LOG(INFO) << BOLDGREEN << "| |___| |  | |___) | |  | || | | | | | | | | | | |_| / ___ \\ |_| |" << RESET;
+    LOG(INFO) << BOLDGREEN << " \\____|_|  |_|____/___| |_||_| |_| |_|_|_| |_|_|____/_/   \\_\\__\\_\\\n" << RESET;
+}
+
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
     size_t                errors = 0;
@@ -92,20 +109,6 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
 
 int main(int argc, char** argv)
 {
-    // #############
-    // # Intro tag #
-    // #############
-    std::cout << "          ____  _     ____         _    ____ _____" << std::endl;
-    std::cout << "         |  _ \\| |__ |___ \\       / \\  / ___|  ___|" << std::endl;
-    std::cout << "         | |_) | '_ \\  __) |____ / _ \\| |   | |_" << std::endl;
-    std::cout << "         |  __/| | | |/ __/_____/ ___ \\ |___|  _|" << std::endl;
-    std::cout << "         |_|   |_| |_|_____|   /_/   \\_\\____|_|\n" << std::endl;
-    std::cout << "  ____ __  __ ____ ___ _____          _       _ ____    _    ___" << std::endl;
-    std::cout << " / ___|  \\/  / ___|_ _|_   _| __ ___ (_)_ __ (_)  _ \\  / \\  / _ \\" << std::endl;
-    std::cout << "| |   | |\\/| \\___ \\| |  | || '_ ` _ \\| | '_ \\| | | | |/ _ \\| | | |" << std::endl;
-    std::cout << "| |___| |  | |___) | |  | || | | | | | | | | | | |_| / ___ \\ |_| |" << std::endl;
-    std::cout << " \\____|_|  |_|____/___| |_||_| |_| |_|_|_| |_|_|____/_/   \\_\\__\\_\\\n" << std::endl;
-
     // #############################
     // # Initialize command parser #
     // #############################
@@ -201,6 +204,7 @@ int main(int argc, char** argv)
     conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
     el::Loggers::reconfigureAllLoggers(conf);
 
+    introBanner();
     SystemController mySysCntr;
 
     // ##################################
@@ -252,7 +256,7 @@ int main(int argc, char** argv)
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
 
-    std::cout << std::endl;
+    LOG(INFO) << RESET;
 
     // ###################
     // # Run Calibration #
