@@ -93,7 +93,7 @@ class lpGBT : public Chip
 
   private:
     bool                         phaseRxAligned; // @TMP@
-    uint16_t                     fRxDataRate, fTxDataRate, fChipAddress;
+    uint16_t                     fRxDataRate, fTxDataRate;
     uint8_t                      fVersion, fRxHSLPolarity, fTxHSLPolarity;
     std::vector<uint8_t>         fRxGroups;
     std::vector<eportProperties> fRxProperties, fTxProperties;

@@ -13,7 +13,6 @@ namespace Ph2_HwDescription
 {
 lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName) : Chip(pBeId, FMCId, pOpticalGroupId, 0, pChipId)
 {
-    fChipAddress   = 0x70 + pChipId;
     configFileName = fileName;
     phaseRxAligned = false; // @TMP@
     setFrontEndType(FrontEndType::LpGBT);
