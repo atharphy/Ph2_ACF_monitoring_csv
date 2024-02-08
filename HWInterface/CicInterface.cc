@@ -763,62 +763,7 @@ bool CicInterface::SetPhaseTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortCh
     return fBoardFW->SingleRegisterWrite(pChip, cRegItem, cVerifloop);
 }
 
-uint8_t CicInterface::GetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel)
-{
-    uint8_t cBitOffset = (pPhyPort % 2) * 4;
-    std::stringstream phaseRegisterName;
-    phaseRegisterName << "scPhaseSelectB" << +pPhyPortChannel << "o" << +(pPhyPort/2);
-    auto cRegValue = ReadChipReg(pChip, phaseRegisterName.str());
-    uint8_t cPhaseTap = (cRegValue >> cBitOffset) & 0xF;
-    LOG(DEBUG) << BOLDBLUE << "Reading optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Optimal tap " << +cPhaseTap << RESET;
-    return cPhaseTap;
-}
-
-std::vector<uint8_t> CicInterface::GetOptimalTaps(Chip* pChip, uint8_t pFeId)
-{
-    std::vector<uint8_t> cFeMapping  = getMapping(pChip);
-    std::vector<uint8_t> cPhaseTaps(6, 15);
-
-    // read back phase alignment on stub lines - 6 stub lines
-    size_t cPortCounter       = 0;
-    size_t cInputCounter      = 0;
-    size_t cFeCounter         = 0;
-    size_t cInputLineCounter  = 0;
-    size_t cCounter           = 0;
-    size_t cNStubLines        = 5;
-    size_t cL1Line            = 5;
-    bool   cLastStubLineFound = false;
-    for(int cIndex = 0; cIndex < 6; cIndex++)
-    {
-        // 1 bit per line
-        for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
-        {
-            cInputCounter      = (cBitIndex & 0x3);
-            cInputLineCounter  = (cIndex < 5) ? (cCounter % cNStubLines) : cL1Line;
-            cLastStubLineFound = cLastStubLineFound || (cFeCounter == 7 && cInputLineCounter == 4);
-            cFeCounter         = (cLastStubLineFound) ? cBitIndex : cFeCounter;
-            auto cPhaseTap     = this->GetOptimalTap(pChip, cPortCounter, cInputCounter);
-            // get CIC FEId
-            uint8_t cChipId_forCic        = cFeMapping[pFeId];
-            cPhaseTaps[cInputLineCounter] = (cFeCounter == cChipId_forCic) ? cPhaseTap : cPhaseTaps[cInputLineCounter];
-            if(cPortCounter < 10 && cFeCounter == cChipId_forCic)
-            {
-                LOG(INFO) << BOLDGREEN << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cChipId_forCic << " StubLine#" << +cInputLineCounter
-                           << " phase tap value is " << +cPhaseTap << " -- " << +cPhaseTaps[cInputLineCounter] << RESET;
-            }
-            else if(cFeCounter == cChipId_forCic)
-                LOG(INFO) << BOLDYELLOW << "\t.. PhyPort#" << +cPortCounter << " input#" << (+cInputCounter) << " FE#" << +cChipId_forCic << " L1 Line -- phase tap value is " << +cPhaseTap << " -- "
-                           << +cPhaseTaps[cInputLineCounter] << RESET;
-
-            cPortCounter += (cBitIndex == 3) || (cBitIndex == 7);
-            cFeCounter = (!cLastStubLineFound) ? (cFeCounter + (((1 + cCounter) % cNStubLines == 0) ? 1 : 0)) : cBitIndex;
-            cCounter++;
-        }
-    } // each register stores information from 4 phyport inputs
-    return cPhaseTaps;
-}
-
-GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, int> CicInterface::getAllOptimalTaps(Chip* pChip)
+GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t> CicInterface::getAllOptimalTaps(Chip* pChip)
 {
 
     std::vector<std::string> phaseRegisterVector;
@@ -844,28 +789,98 @@ GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, int> Cic
         return (phaseRegisterMap.at(phaseRegisterName.str()) >> (channel%2 * 4)) & 0xF;
     };
 
-    GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, int> theOptimalPhase2DArray;
+    GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t> theOptimalPhase2DArray;
     std::vector<uint8_t> cicFrontEndMapping  = getMapping(pChip);
     for(uint8_t frontEnd=0; frontEnd<NUMBER_OF_CIC_PORTS; ++frontEnd) //using the same Id of the chip
     {
-        uint8_t chipIdForCic = cicFrontEndMapping[frontEnd];
         // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
-        uint8_t phyPortForL1 = 10 + chipIdForCic/4;
-        uint8_t phyChannelForL1 = chipIdForCic%4;
-        theOptimalPhase2DArray(frontEnd, 0) = getPhaseValue(phyPortForL1, phyChannelForL1);
+        auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
+        theOptimalPhase2DArray(frontEnd, 0) = getPhaseValue(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second);
 
         // Stub lines are on pyPort 0 to 9
         for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS-1; ++line)
         {
-            uint8_t phyPortFoStub = (chipIdForCic*5 + line)/4;
-            uint8_t phyChannelFoStub = (chipIdForCic*5 + line)%4;            
-            theOptimalPhase2DArray(frontEnd, line+1) = getPhaseValue(phyPortFoStub, phyChannelFoStub);
+            auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
+            theOptimalPhase2DArray(frontEnd, line+1) = getPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second);
         }
     }
 
     return theOptimalPhase2DArray;
 }
 
+GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float> CicInterface::getAllLockedEfficiencies(Chip* pChip, size_t numberOfIterations)
+{
+
+    GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float> theLockedEfficiency2DArray;
+
+    for(size_t iteration=0; iteration<numberOfIterations; ++iteration)
+    {
+        std::vector<std::string> isLockedRegisterVector;
+        for(size_t phyPortPair = 0; phyPortPair<6; ++phyPortPair)
+        {
+            std::stringstream isLockedRegisterName;
+            isLockedRegisterName << "scChannelLocked" << +phyPortPair;
+            isLockedRegisterVector.push_back(isLockedRegisterName.str());
+        }
+        auto isLockedRegisterValueVector = ReadChipMultReg(pChip, isLockedRegisterVector);
+
+        //convert int a map for easier access
+        std::unordered_map<std::string, uint8_t> isLockedRegisterMap;
+        for(const auto& registerNameAndValue : isLockedRegisterValueVector) isLockedRegisterMap[registerNameAndValue.first] = registerNameAndValue.second;
+
+
+        auto isLocked = [&isLockedRegisterMap](uint8_t phyPort, uint8_t channel)
+        {
+            std::stringstream isLockedRegisterName;
+            isLockedRegisterName << "scChannelLocked" << +phyPort/2;
+            bool isLocked = (isLockedRegisterMap.at(isLockedRegisterName.str()) >> (phyPort%2 * 4 + channel)) & 0x1;
+            return isLocked;
+        };
+
+        std::vector<uint8_t> cicFrontEndMapping  = getMapping(pChip);
+
+        for(uint8_t frontEnd=0; frontEnd<NUMBER_OF_CIC_PORTS; ++frontEnd) //using the same Id of the chip
+        {
+            // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
+            auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
+            if(isLocked(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second)) theLockedEfficiency2DArray(frontEnd, 0)++;
+
+            // Stub lines are on pyPort 0 to 9
+            for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS-1; ++line)
+            {
+                auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
+                if(isLocked(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second))  theLockedEfficiency2DArray(frontEnd, line+1)++;
+            }
+        }
+    }
+
+    for(uint8_t frontEnd=0; frontEnd<NUMBER_OF_CIC_PORTS; ++frontEnd)
+    {
+        for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
+        {
+            theLockedEfficiency2DArray(frontEnd, line)/=numberOfIterations;
+        }
+    }
+
+    return theLockedEfficiency2DArray;
+}
+
+
+std::pair<uint8_t, uint8_t> CicInterface::fromChipL1ToPhyPortAndChannel(Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId)
+{
+    uint8_t chipIdForCic = chipToCICMapping[frontEndId];
+    uint8_t phyPortForL1 = 10 + chipIdForCic/4;
+    uint8_t phyChannelForL1 = chipIdForCic%4;
+    return std::make_pair(phyPortForL1, phyChannelForL1);
+}
+
+std::pair<uint8_t, uint8_t> CicInterface::fromChipStubToPhyPortAndChannel(Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine)
+{
+    uint8_t chipIdForCic = chipToCICMapping[frontEndId];
+    uint8_t phyPortFoStub = (chipIdForCic*5 + stubLine)/4;
+    uint8_t phyChannelFoStub = (chipIdForCic*5 + stubLine)%4;            
+    return std::make_pair(phyPortFoStub, phyChannelFoStub);
+}
 
 bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
 {

@@ -23,7 +23,7 @@ void OTalignLpGBTinputs::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.stub_counter_block.general.shutter_close"); // TODO: not sure if needed
 
     fNumberOfAlignmentIterations = findValueInSettings<double>("OTalignLpGBTinputsNumberOfAlignmentIterations", 100);
-    fMinAlignmentSuccessRate = findValueInSettings<double>("OTalignLpGBTinputsMinAlignmnetSuccessRate", 0.99);
+    fMinAlignmentSuccessRate = findValueInSettings<double>("OTalignLpGBTinputsMinAlignmentSuccessRate", 0.99);
 
     for(const auto cBoard: *fDetectorContainer)
     {

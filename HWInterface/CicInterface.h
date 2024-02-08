@@ -74,9 +74,10 @@ class CicInterface : public ChipInterface
     uint32_t                          ReadChipFuseID(Ph2_HwDescription::Chip* pCic);
     bool                              SetFePhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId, int pPhaseTap);
     bool                              SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
-    uint8_t                           GetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, uint8_t pInput);
-    std::vector<uint8_t>              GetOptimalTaps(Ph2_HwDescription::Chip* pChip, uint8_t pFEId);
-    GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, int> getAllOptimalTaps(Ph2_HwDescription::Chip* pChip);
+    std::pair<uint8_t, uint8_t>       fromChipL1ToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId);
+    std::pair<uint8_t, uint8_t>       fromChipStubToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine);
+    GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t> getAllOptimalTaps(Ph2_HwDescription::Chip* pChip);
+    GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float> getAllLockedEfficiencies(Ph2_HwDescription::Chip* pChip, size_t numberOfIterations);
     bool                              SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
     bool                              PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
     bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);

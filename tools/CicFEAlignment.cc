@@ -386,30 +386,11 @@ void CicFEAlignment::SetStaticPhaseAlignment()
     LOG(INFO) << BOLDBLUE << "Setting CIC phase to static mode.." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.getObject(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->getObject(cOpticalGroup->getId());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->getObject(cHybrid->getId());
-
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                for(auto cChip: *cHybrid)
-                {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
-                    auto& cPhaseAlignmentThisChip = cPhaseAlignmentThisHybrid->getObject(cChip->getId());
-                    auto& cPhaseAlignmentVals     = cPhaseAlignmentThisChip->getSummary<AlignmentValues>();
-
-                    auto              cPhaseTapsThisFE = fCicInterface->GetOptimalTaps(cCic, cChip->getId() % 8);
-                    std::stringstream cOutput;
-                    for(uint8_t cLineId = 0; cLineId < 6; cLineId++)
-                    {
-                        cPhaseAlignmentVals[cLineId] = cPhaseTapsThisFE[cLineId];
-                        cOutput << +cPhaseAlignmentVals[cLineId] << " ";
-                    }
-                    LOG(INFO) << BOLDBLUE << "Optimal tap found on CIC#" << +cChip->getHybridId() << " FE" << +cChip->getId() << " : " << cOutput.str() << RESET;
-                }
                 fCicInterface->SetStaticPhaseAlignment(cCic);
             }
         }
