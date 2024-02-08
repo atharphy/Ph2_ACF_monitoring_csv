@@ -79,7 +79,7 @@ class ThrEqualization : public PixelAlive
     size_t stopValue;
     size_t startTDACGainValue;
     size_t stopTDACGainValue;
-    size_t TDACGainNSteps;
+    float  TDACGainNSteps;
     size_t doNSteps;
     bool   doUpdateChip;
     bool   doDisplay;

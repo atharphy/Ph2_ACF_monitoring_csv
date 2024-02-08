@@ -57,7 +57,7 @@ void ThrEqualization::ConfigureCalibration()
     // # Initialize dac scan values #
     // ##############################
     const float step = (TDACGainNSteps != 0 ? (stopTDACGainValue - startTDACGainValue) / TDACGainNSteps : 0);
-    for(auto i = 0u; i <= TDACGainNSteps; i++) dacList.push_back(startTDACGainValue + step * i);
+    for(auto i = 0u; i < TDACGainNSteps; i++) dacList.push_back(startTDACGainValue + step * i);
 
     // #######################
     // # Initialize progress #
@@ -151,7 +151,7 @@ void ThrEqualization::run()
         // # Scan DAC and run threshold equalization #
         // ###########################################
         ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theContainer);
-        CalibBase::fillVectorContainer<float>(theContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+        CalibBase::fillVectorContainer<float>(theContainer, dacList.size(), 0);
         ThrEqualization::scanDac(frontEnd->TDACGainReg, dacList, &theContainer);
 
         // #######################################

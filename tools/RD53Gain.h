@@ -83,7 +83,7 @@ class Gain : public CalibBase
     size_t startValue;
     size_t stopValue;
     float  targetCharge;
-    size_t nSteps;
+    float  nSteps;
     size_t offset;
     size_t nHITxCol;
     size_t doOnlyNGroups;

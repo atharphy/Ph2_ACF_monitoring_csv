@@ -206,7 +206,6 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                                                  .at(i) /
                                              RD53Shared::SUPERPRECISION) *
                                        RD53Shared::SUPERPRECISION;
-
                         if((current >= 0) && (current < best))
                         {
                             regVal = dacListTAP[i];
