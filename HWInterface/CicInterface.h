@@ -84,7 +84,7 @@ class CicInterface : public ChipInterface
     bool                              SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);
     bool                              SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pValue = 5);
     bool                              CheckPhaseAlignerLock(Ph2_HwDescription::Chip* pChip, uint8_t pCheckValue = 0xFF);
-    bool                              ResetPhaseAligner(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 100);
+    bool                              ResetPhaseAligner(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 1);
     bool                              ResetDLL(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 100);
     bool                              CheckDLL(Ph2_HwDescription::Chip* pChip);
     bool                              CheckFastCommandLock(Ph2_HwDescription::Chip* pChip);
