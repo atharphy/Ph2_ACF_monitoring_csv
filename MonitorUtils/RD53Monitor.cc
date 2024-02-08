@@ -35,6 +35,7 @@ void RD53Monitor::runMonitor()
 
         for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53"))
             if(registerName.second) runRD53RegisterMonitor(registerName.first);
+
         for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
             if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
     }
