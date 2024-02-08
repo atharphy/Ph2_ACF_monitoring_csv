@@ -284,8 +284,6 @@
     <Setting name="byTime">                1 </Setting>
     <Setting name="framesORtime">         10 </Setting>
 
-    <Setting name="TargetBER">          1e-5 </Setting>
-
     <Setting name="RegNameDAC1">   VCAL_HIGH </Setting>
     <Setting name="StartValueDAC1">      250 </Setting>
     <Setting name="StopValueDAC1">       600 </Setting>

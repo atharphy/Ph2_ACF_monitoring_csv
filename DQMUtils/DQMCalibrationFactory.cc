@@ -12,7 +12,6 @@
 #include "DQMUtils/Physics2SHistograms.h"
 #include "DQMUtils/RD53ClockDelayHistograms.h"
 #include "DQMUtils/RD53DataReadbackOptimizationHistograms.h"
-#include "DQMUtils/RD53DataTransmissionTestGraphs.h"
 #include "DQMUtils/RD53GainHistograms.h"
 #include "DQMUtils/RD53GainOptimizationHistograms.h"
 #include "DQMUtils/RD53GenericDacDacScanHistograms.h"
@@ -60,7 +59,6 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataIT, InjectionDelayHistograms>("injdelay");
     Register<DQMMetadataIT, ClockDelayHistograms>("clockdelay");
     Register<DQMMetadataIT, DataReadbackOptimizationHistograms>("datarbopt");
-    Register<DQMMetadataIT, DataTransmissionTestGraphs>("datatrtest");
     Register<DQMMetadataIT, GenericDacDacScanHistograms>("genericdacdac");
     Register<DQMMetadataIT, VoltageTuningHistograms>("voltagetuning");
     Register<DQMMetadataIT, PhysicsHistograms>("physics");

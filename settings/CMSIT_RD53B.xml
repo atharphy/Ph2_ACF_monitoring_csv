@@ -276,8 +276,6 @@
     <Setting name="byTime">                1 </Setting>
     <Setting name="framesORtime">         10 </Setting>
 
-    <Setting name="TargetBER">          1e-5 </Setting>
-
     <Setting name="RegNameDAC1"> user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse </Setting>
     <Setting name="StartValueDAC1">       28 </Setting>
     <Setting name="StopValueDAC1">        50 </Setting>

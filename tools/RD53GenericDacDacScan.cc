@@ -128,7 +128,7 @@ void GenericDacDacScan::run()
 {
     CalibBase::showErrorReport = false;
     ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
-    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    CalibBase::fillVectorContainer<float>(theOccContainer, dac1List.size() * dac2List.size(), 0);
     GenericDacDacScan::scanDacDac(regNameDAC1, regNameDAC2, dac1List, dac2List, &theOccContainer);
     CalibBase::showErrorReport = true;
 
