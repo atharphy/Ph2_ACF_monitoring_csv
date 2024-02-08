@@ -133,19 +133,12 @@ void OTCICphaseAlignment::phaseAlignment()
                 }
                 std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
-                fCicInterface->GetOptimalTaps(cCic);
                 auto& cPhaseAlignmentVals = theBestPhaseContainer.getObject(theBoard->getId())
                                                 ->getObject(theOpticalGroup->getId())
                                                 ->getObject(theHybrid->getId())
                                                 ->getSummary<GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, int>>();
-                for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
-                {
-                    auto cPhaseTapsThisFE = fCicInterface->GetOptimalTaps(cCic, chipId);
-                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
-                    {
-                        cPhaseAlignmentVals(chipId, cLineId) = cPhaseTapsThisFE[cLineId];
-                    }
-                }
+
+                cPhaseAlignmentVals = fCicInterface->getAllOptimalTaps(cCic);
                 fCicInterface->SetStaticPhaseAlignment(cCic);
             } // CICs
         }     // OG

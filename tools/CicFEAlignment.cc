@@ -395,7 +395,6 @@ void CicFEAlignment::SetStaticPhaseAlignment()
                 auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->getObject(cHybrid->getId());
 
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                fCicInterface->GetOptimalTaps(cCic);
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
