@@ -1943,9 +1943,10 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 
             if(static_cast<std::string>(attr.value()).empty() == false)
             {
+                theChip->getRegItem(regname).fValue = convertAnyInt(attr.value());
                 theChip->getRegItem(regname).fDefValue = convertAnyInt(attr.value());
 
-                os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << theChip->getRegItem(regname).fDefValue << std::dec << " ("
+                os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << theChip->getRegItem(regname).fValue << std::dec << " ("
                    << theChip->getRegItem(regname).fDefValue << ")" << RESET << std::endl;
             }
             else
