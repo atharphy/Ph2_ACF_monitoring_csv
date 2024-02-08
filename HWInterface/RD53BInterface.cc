@@ -812,8 +812,21 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     const float       e              = 1.6021766208e-19;
     const float       R              = 15;   // By circuit design
     const uint8_t     sensorDEM      = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
-    const float       idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
     const std::string regName        = (type == "CENTER" ? "MON_SENS_ACB" : "MON_SENS_SLDO");
+
+    float idealityFactor;
+    if (type == "ANA")
+    {
+        idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_ANA").fValue / 1e3;
+    }
+    else if (type == "DIG")
+    {
+        idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_DIG").fValue / 1e3;
+    }
+    else
+    {
+        idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
+    }
 
     uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
     float    valueLow  = 0;
