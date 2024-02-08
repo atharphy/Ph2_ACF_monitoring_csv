@@ -853,7 +853,7 @@ GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, int> Cic
         uint8_t phyPortForL1 = 10 + chipIdForCic/4;
         uint8_t phyChannelForL1 = chipIdForCic%4;
         theOptimalPhase2DArray(frontEnd, 0) = getPhaseValue(phyPortForL1, phyChannelForL1);
-        
+
         // Stub lines are on pyPort 0 to 9
         for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS-1; ++line)
         {

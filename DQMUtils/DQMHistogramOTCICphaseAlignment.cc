@@ -33,9 +33,19 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
         idOffset = 8;
     }
 
+    auto setBinLabels = [](TAxis* theHistogramAxis) {
+
+        theHistogramAxis->SetBinLabel(1, "L1");
+        for(int port=1; port<NUMBER_OF_LINES_PER_CIC_PORTS; ++port)
+        {
+            theHistogramAxis->SetBinLabel(port+1, Form("Stub%d",port-1));
+        }
+    };
+
     HistContainer<TH2I> bestPhaseHistogram("BestCICinputPhases", "Best CIC Input Phases", NUMBER_OF_CIC_PORTS, idOffset - 0.5, idOffset + NUMBER_OF_CIC_PORTS - 0.5, NUMBER_OF_LINES_PER_CIC_PORTS, -0.5, NUMBER_OF_LINES_PER_CIC_PORTS - 0.5);
     bestPhaseHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
-    bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Line number");
+    bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
+    setBinLabels(bestPhaseHistogram.fTheHistogram->GetYaxis());
     bestPhaseHistogram.fTheHistogram->SetMinimum(0);
     bestPhaseHistogram.fTheHistogram->SetMaximum(15);
     bestPhaseHistogram.fTheHistogram->SetStats(false);
