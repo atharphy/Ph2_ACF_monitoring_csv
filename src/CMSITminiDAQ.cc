@@ -541,6 +541,20 @@ int main(int argc, char** argv)
         gs.analyze();
         gs.draw();
     }
+    else if(whichCalib == "monitoring")
+    {
+        LOG(INFO) << BOLDMAGENTA << "@@@ Performing monitoring @@@" << RESET;
+        Tool mon;
+        mon.Inherit(&mySysCntr);
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(runNumber);
+        mon.Start(theStartInfo);
+        do
+        {
+            LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop the run ..." << RESET;
+        } while(std::cin.get() != '\n');
+        mon.Stop();
+    }
     else if(whichCalib == "physics")
     {
         // ###############
