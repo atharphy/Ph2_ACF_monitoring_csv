@@ -752,7 +752,9 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t sampleNtimes = pChip->getRegItem("SAMPLE_N_TIMES").fValue;
     const uint16_t GlbPulseVal  = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
-    RD53Interface::WriteChipReg(pChip, "MonitorConfig", data, false); // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 1 << 12 | data, false); // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
+    /* the conversion is bad if too soon after changing the mux setting */
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // ########################################################
     // # Sample data multiple times for better value estimate #
@@ -761,9 +763,11 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     uint16_t counter = 0;
     for(auto i = 0u; i < sampleNtimes; i++)
     {
-        RD53Interface::WriteChipReg(pChip, "MonitorConfig", data | 1 << 13, false); // Enable monitoring
-        RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);                       // Trigger Monitor Data to start conversion
-        RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);              // Stop monitoring
+        /* sending a long pulse breaks readout */
+        /* is routing later changed to reset Aurora with pulse still going? */
+        /* minimal pulse width _seems_ to be fine */
+        RD53BInterface::SendGlobalPulse(pChip, 1 << 6, 1); // Reset ADC
+        RD53BInterface::SendGlobalPulse(pChip, 0x1000, 1); // Trigger Monitor Data to start conversion
         uint32_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
         if(val != 0)
         {
@@ -773,7 +777,8 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     }
     avgVal /= (counter != 0 ? counter : 1);
 
-    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0x04); // Restore value in Global Pulse Route
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);      // Stop monitoring
+    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", GlbPulseVal); // Restore value in Global Pulse Route
 
     return avgVal;
 }
