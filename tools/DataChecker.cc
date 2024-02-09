@@ -3949,7 +3949,7 @@ void DataChecker::PSNominal()
                     // then the L1 line
                     // size_t cPhyPortL1                    = (cChip->getId() > 3) ? 11 : 10;
                     // size_t cPhyPortChnlL1                = (cChip->getId() % 4);
-                    auto&  fTapsOrigChip                 = fTapsOrigHybrid->getObject(cChip->getId());
+                    auto& fTapsOrigChip = fTapsOrigHybrid->getObject(cChip->getId());
                     // auto   cOptimalTaps                  = fCicInterface->GetOptimalTaps(cCic);
                     // fTapsOrigChip->getSummary<uint8_t>() = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
                     sprintf(cBuffer, "%.2d ", fTapsOrigChip->getSummary<uint8_t>());
@@ -4010,10 +4010,10 @@ void DataChecker::PSNominal()
                         // then the L1 line
                         // size_t cPhyPortL1     = (cChip->getId() > 3) ? 11 : 10;
                         // size_t cPhyPortChnlL1 = (cChip->getId() % 4);
-                        auto&  fTapsChip      = fTapsHybrid->getObject(cChip->getId());
-                        auto&  fTapsOrigChip  = fTapsOrigHybrid->getObject(cChip->getId());
-                        int    cPhase         = fTapsOrigChip->getSummary<uint8_t>();
-                        int    cPhaseMod      = cPhase + cOffset;
+                        auto& fTapsChip     = fTapsHybrid->getObject(cChip->getId());
+                        auto& fTapsOrigChip = fTapsOrigHybrid->getObject(cChip->getId());
+                        int   cPhase        = fTapsOrigChip->getSummary<uint8_t>();
+                        int   cPhaseMod     = cPhase + cOffset;
                         // fCicInterface->SetOptimalTap(cCic, cPhyPortL1, cPhyPortChnlL1, cOffset); Way too dangerous, it relyies on the order of function calls of the CICInterface
                         cPhaseMod                        = (cPhaseMod < 0 || cPhaseMod > 0xF) ? cPhase : cPhaseMod;
                         fTapsChip->getSummary<uint8_t>() = cPhaseMod;

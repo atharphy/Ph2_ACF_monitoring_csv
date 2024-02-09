@@ -12,12 +12,13 @@
 
 #include "Utils/ConsoleColor.h"
 #include "Utils/easylogging++.h"
-#include <iostream>
 #include <array>
-
+#include <iostream>
 
 template <typename T, size_t N, size_t... S>
-class GenericDataArray : public GenericDataArray<GenericDataArray<T, S...>, N> {};
+class GenericDataArray : public GenericDataArray<GenericDataArray<T, S...>, N>
+{
+};
 
 template <typename T, size_t N>
 class GenericDataArray<T, N> : public std::array<T, N>
@@ -33,9 +34,8 @@ class GenericDataArray<T, N> : public std::array<T, N>
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        for(size_t i = 0; i < N; ++i) theArchive& (*this)[i];
+        for(size_t i = 0; i < N; ++i) theArchive&(*this)[i];
     }
 };
-
 
 #endif

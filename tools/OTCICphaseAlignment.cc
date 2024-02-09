@@ -25,7 +25,7 @@ void OTCICphaseAlignment::Initialise(void)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "^scPhaseSelectB[0-3]i[0-5]$");
 
     fNumberOfLockCheckIterations = findValueInSettings<double>("OTCICphaseAlignmentNumberOfLockCheckIterations", 100);
-    fMinLockingSuccessRate = findValueInSettings<double>("OTCICphaseAlignmentMinLockingSuccessRate", 1.);
+    fMinLockingSuccessRate       = findValueInSettings<double>("OTCICphaseAlignmentMinLockingSuccessRate", 1.);
 
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -65,7 +65,7 @@ void OTCICphaseAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 void OTCICphaseAlignment::phaseAlignment()
 {
     uint32_t pNTriggers = 500;
-    bool cDebug   = false;
+    bool     cDebug     = false;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for CBCs .... " << RESET;
     DetectorDataContainer theBestPhaseContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>(*fDetectorContainer, theBestPhaseContainer);
@@ -114,27 +114,29 @@ void OTCICphaseAlignment::phaseAlignment()
             for(auto theHybrid: *theOpticalGroup)
             {
                 // enable automatic phase aligner
-                auto& cCic    = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-                
+                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
                 auto& cLockingEfficiency = theLockingEfficiencyContainer.getObject(theBoard->getId())
-                                                ->getObject(theOpticalGroup->getId())
-                                                ->getObject(theHybrid->getId())
-                                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
+                                               ->getObject(theOpticalGroup->getId())
+                                               ->getObject(theHybrid->getId())
+                                               ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
 
                 cLockingEfficiency = fCicInterface->getAllLockedEfficiencies(cCic, fNumberOfLockCheckIterations);
-                bool  cLocked = true;
+                bool cLocked       = true;
                 for(auto theChip: *theHybrid)
                 {
-                    for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
+                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
-                        if(cLockingEfficiency[theChip->getId()%8][line] < fMinLockingSuccessRate)
+                        if(cLockingEfficiency[theChip->getId() % 8][line] < fMinLockingSuccessRate)
                         {
                             std::stringstream errorMessage;
                             errorMessage << "OTCICphaseAlignment::phaseAlignment - Error in aligning CIC on ";
-                            if(line == 0) errorMessage << "L1 line";
-                            else errorMessage << "Stub line " << +(line-1);
-                            errorMessage << " - locking efficiency = " << cLockingEfficiency[theChip->getId()%8][line] << " less then minimum requited (" << fMinLockingSuccessRate << ")";
+                            if(line == 0)
+                                errorMessage << "L1 line";
+                            else
+                                errorMessage << "Stub line " << +(line - 1);
+                            errorMessage << " - locking efficiency = " << cLockingEfficiency[theChip->getId() % 8][line] << " less then minimum requited (" << fMinLockingSuccessRate << ")";
                             errorMessage << " - Chip  " << +theChip->getId() << " Hybrid " << +theHybrid->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " BeBoard " << +theBoard->getId();
                             LOG(ERROR) << BOLDRED << errorMessage.str() << RESET;
                             cLocked = false;
@@ -143,18 +145,20 @@ void OTCICphaseAlignment::phaseAlignment()
                 }
                 std::stringstream message;
                 message << BOLDBLUE << "Phase aligner on CIC" << +theHybrid->getId();
-                if(cLocked) message << BOLDGREEN << " LOCKED ";
-                else message << BOLDRED << " FAILED to LOCK ";
+                if(cLocked)
+                    message << BOLDGREEN << " LOCKED ";
+                else
+                    message << BOLDRED << " FAILED to LOCK ";
                 message << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
                 LOG(INFO) << message.str();
                 if(!cLocked)
                 {
-                    LOG(INFO) << BOLDRED << "FAILED to lock CIC inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id" << +theHybrid->getId() << " --- OpticalGroup will be disabled"
-                            << RESET;
+                    LOG(INFO) << BOLDRED << "FAILED to lock CIC inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id" << +theHybrid->getId()
+                              << " --- OpticalGroup will be disabled" << RESET;
                     ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
                     continue;
                 }
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
                 auto& cPhaseAlignmentVals = theBestPhaseContainer.getObject(theBoard->getId())
                                                 ->getObject(theOpticalGroup->getId())
@@ -167,19 +171,19 @@ void OTCICphaseAlignment::phaseAlignment()
         }     // OG
     }
 
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     fDQMHistogramOTCICphaseAlignment.fillBestPhaseResults(theBestPhaseContainer);
     fDQMHistogramOTCICphaseAlignment.fillLockingEfficiencyResults(theLockingEfficiencyContainer);
-    #else
-        if(fDQMStreamerEnabled)
-        {
-            ContainerSerialization theBestPhaseContainerSerialization("OTCICphaseAlignmentBestPhase");
-            theBestPhaseContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBestPhaseContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theBestPhaseContainerSerialization("OTCICphaseAlignmentBestPhase");
+        theBestPhaseContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBestPhaseContainer);
 
-            ContainerSerialization theLockingEfficiencyContainerSerialization("OTCICphaseAlignmentLockingEfficiency");
-            theLockingEfficiencyContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theLockingEfficiencyContainer);
-        }
-    #endif
+        ContainerSerialization theLockingEfficiencyContainerSerialization("OTCICphaseAlignmentLockingEfficiency");
+        theLockingEfficiencyContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theLockingEfficiencyContainer);
+    }
+#endif
 
     // check
     for(auto theBoard: *fDetectorContainer)

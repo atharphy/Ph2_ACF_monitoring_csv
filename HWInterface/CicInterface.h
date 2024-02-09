@@ -71,25 +71,25 @@ class CicInterface : public ChipInterface
 
     uint8_t ReadFCMDEdge(Ph2_HwDescription::Chip* pChip);
 
-    uint32_t                          ReadChipFuseID(Ph2_HwDescription::Chip* pCic);
-    bool                              SetFePhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId, int pPhaseTap);
-    bool                              SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
-    std::pair<uint8_t, uint8_t>       fromChipL1ToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId);
-    std::pair<uint8_t, uint8_t>       fromChipStubToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine);
+    uint32_t                    ReadChipFuseID(Ph2_HwDescription::Chip* pCic);
+    bool                        SetFePhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId, int pPhaseTap);
+    bool                        SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
+    std::pair<uint8_t, uint8_t> fromChipL1ToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId);
+    std::pair<uint8_t, uint8_t> fromChipStubToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine);
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllOptimalTaps(Ph2_HwDescription::Chip* pChip);
-    GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllLockedEfficiencies(Ph2_HwDescription::Chip* pChip, size_t numberOfIterations);
-    bool                              SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
-    bool                              PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
-    bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);
-    bool                              SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);
-    bool                              SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pValue = 5);
-    bool                              CheckPhaseAlignerLock(Ph2_HwDescription::Chip* pChip, uint8_t pCheckValue = 0xFF);
-    bool                              ResetPhaseAligner(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 1);
-    bool                              ResetDLL(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 100);
-    bool                              CheckDLL(Ph2_HwDescription::Chip* pChip);
-    bool                              CheckFastCommandLock(Ph2_HwDescription::Chip* pChip);
-    bool                              ConfigureAlignmentPatterns(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
-    bool                              AutomatedWordAlignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, int pWait_ms = 1000);
+    GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>   getAllLockedEfficiencies(Ph2_HwDescription::Chip* pChip, size_t numberOfIterations);
+    bool                                                                          SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
+    bool                                                                          PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
+    bool                                                                          SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);
+    bool                                                                          SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);
+    bool                                                                          SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pValue = 5);
+    bool                                                                          CheckPhaseAlignerLock(Ph2_HwDescription::Chip* pChip, uint8_t pCheckValue = 0xFF);
+    bool                                                                          ResetPhaseAligner(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 1);
+    bool                                                                          ResetDLL(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 100);
+    bool                                                                          CheckDLL(Ph2_HwDescription::Chip* pChip);
+    bool                                                                          CheckFastCommandLock(Ph2_HwDescription::Chip* pChip);
+    bool                                                                          ConfigureAlignmentPatterns(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
+    bool                                                                          AutomatedWordAlignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, int pWait_ms = 1000);
     bool                              ConfigureBx0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pPatterns, uint8_t pFEId = 0, uint8_t pLineId = 0);
     std::pair<bool, uint8_t>          CheckBx0Alignment(Ph2_HwDescription::Chip* pChip); // success , delay
     bool                              CheckReSync(Ph2_HwDescription::Chip* pChip);
@@ -140,8 +140,8 @@ class CicInterface : public ChipInterface
     void setRetryI2C(bool pRetry) { fRetryI2C = pRetry; }
     void setMaxI2CAttempts(uint8_t pMaxAttempts) { fMaxI2CAttempts = pMaxAttempts; }
     // return information on phase aligners
-    std::vector<uint8_t>        getI2CStatus() { return fI2CStatus; }
-    void                        setWithlpGBT(uint8_t pIsWithLpGBT) {}
+    std::vector<uint8_t> getI2CStatus() { return fI2CStatus; }
+    void                 setWithlpGBT(uint8_t pIsWithLpGBT) {}
 
   private:
     bool    fRetryI2C       = true;
@@ -166,23 +166,26 @@ class CicInterface : public ChipInterface
     std::vector<uint8_t> getMapping(Ph2_HwDescription::Chip* pChip)
     {
         bool c2S = ((pChip->getReg("FE_CONFIG") & 0x01) == 0);
-        if(c2S) return fFeMapping2S;
+        if(c2S)
+            return fFeMapping2S;
         else // a bit too many else, but easier to read
         {
-            if(pChip->getHybridId() % 2 == 0) return fFeMappingPSR;
-            else return fFeMappingPSL;
+            if(pChip->getHybridId() % 2 == 0)
+                return fFeMappingPSR;
+            else
+                return fFeMappingPSL;
         }
     }
 
   protected:
-    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};    // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};   // Index hybrid FE Id , Value CIC FE Id
-    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2};   // Index hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
 
-    void                         UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
-    bool                         ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
-    std::map<uint8_t, uint8_t>   fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
-    uint8_t                      fMaxDriveStrength = 5;
+    void                       UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
+    bool                       ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
+    std::map<uint8_t, uint8_t> fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
+    uint8_t                    fMaxDriveStrength = 5;
     // 4 channels per phyPort ... 12 phyPorts per CIC
     std::vector<std::vector<uint8_t>> fWordAlignmentVals;
 
