@@ -69,13 +69,13 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const char* registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
-    bool               doWriteClkDataDelay        = false;
+    static const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+    bool                               doWriteClkDataDelay      = false;
 
-    for(auto i = 0u; i < ArraySize(registerClkDataDelayList); i++)
+    for(auto i = 0u; i < registerClkDataDelayList.size(); i++)
     {
-        auto cRegItem = pRD53RegMap.find(registerClkDataDelayList[i]);
-        if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
+        auto cRegItem = pRD53RegMap.find(*std::next(registerClkDataDelayList.begin(), i));
+        if((cRegItem->second.fPrmptCfg == true) && (cRegItem != pRD53RegMap.end()))
         {
             doWriteClkDataDelay = true;
 
@@ -98,8 +98,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {
-        "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+    static const std::set<std::string> registerBlackList = {"RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
     static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
                                                             "DAC_PREAMP_R_LIN",
                                                             "DAC_PREAMP_TL_LIN",
@@ -118,9 +117,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
-            (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
+            (registerClkDataDelayList.find(cRegItem.first) == registerClkDataDelayList.end()) && (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
            (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
+        else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
+            pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
 
     // ###################################
     // # Programmig pixel cell registers #

@@ -290,7 +290,7 @@ std::stringstream RD53::getRegMapStream()
         theStream.seekp(-(v.first.size() < Nspaces ? v.first.size() : Nspaces - 2), std::ios_base::cur);
         theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress);
         for(auto j = 0u; j < 10 - (v.first.size() < Nspaces ? 0 : v.first.size() - Nspaces + 2); j++) theStream << " ";
-        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue); // Make fValue as fDefValue
+        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue); // Copy fValue in fDefValue
         for(auto j = 0u; j < 18; j++) theStream << " ";
         theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue);
         for(auto j = 0u; j < 29; j++) theStream << " ";
