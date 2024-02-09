@@ -79,8 +79,8 @@ void GenericDacDacScan::sendData()
         ContainerSerialization theOccupancySerialization("GenericDacDacScanOccupancy");
         theOccupancySerialization.streamByChipContainer(fDQMStreamer, theOccContainer);
 
-        ContainerSerialization theDACDACSerialization("GenericDacDacScanDACDAC");
-        theDACDACSerialization.streamByChipContainer(fDQMStreamer, theGenericDacDacScanContainer);
+        ContainerSerialization theDACDACSerialization("GenericDacDacDACDAC");
+        theDACDACSerialization.streamByChipContainer(fDQMStreamer, theGenericDacDacContainer);
     }
 }
 
@@ -157,7 +157,7 @@ void GenericDacDacScan::draw(bool saveData)
 
 void GenericDacDacScan::analyze()
 {
-    ContainerFactory::copyAndInitChip<std::pair<uint16_t, uint16_t>>(*fDetectorContainer, theGenericDacDacScanContainer);
+    ContainerFactory::copyAndInitChip<std::pair<uint16_t, uint16_t>>(*fDetectorContainer, theGenericDacDacContainer);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -198,7 +198,7 @@ void GenericDacDacScan::analyze()
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theGenericDacDacScanContainer.getObject(cBoard->getId())
+                    theGenericDacDacContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
                         ->getObject(cHybrid->getId())
                         ->getObject(cChip->getId())
@@ -210,7 +210,7 @@ void GenericDacDacScan::fillHisto()
 {
 #ifdef __USE_ROOT__
     histos->fillOccupancy(theOccContainer);
-    histos->fillGenericDacDacScan(theGenericDacDacScanContainer);
+    histos->fillGenericDacDac(theGenericDacDacContainer);
 #endif
 }
 
