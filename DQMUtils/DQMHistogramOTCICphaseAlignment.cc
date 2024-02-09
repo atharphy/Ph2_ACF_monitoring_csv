@@ -74,7 +74,7 @@ void DQMHistogramOTCICphaseAlignment::fillBestPhaseResults(DetectorDataContainer
             {
                 if(!hybrid->hasSummary()) continue;
 
-                auto theBestPhaseVector = hybrid->getSummary<GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t>>();
+                auto theBestPhaseVector = hybrid->getSummary<GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
 
                 TH2I* bestPhaseHistogram   = fBestPhaseHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
                 
@@ -82,7 +82,7 @@ void DQMHistogramOTCICphaseAlignment::fillBestPhaseResults(DetectorDataContainer
                 {
                     for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
                     {
-                        bestPhaseHistogram->SetBinContent(chipId+1, cLineId+1, theBestPhaseVector(chipId, cLineId));
+                        bestPhaseHistogram->SetBinContent(chipId+1, cLineId+1, theBestPhaseVector[chipId][cLineId]);
                     }
                 }
             }
@@ -101,7 +101,7 @@ void DQMHistogramOTCICphaseAlignment::fillLockingEfficiencyResults(DetectorDataC
             {
                 if(!hybrid->hasSummary()) continue;
 
-                auto theLockingEfficiencyVector = hybrid->getSummary<GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float>>();
+                auto theLockingEfficiencyVector = hybrid->getSummary<GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
 
                 TH2F* lockingEfficiencyHistogram   = fLockingEfficiencyHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 
@@ -109,7 +109,7 @@ void DQMHistogramOTCICphaseAlignment::fillLockingEfficiencyResults(DetectorDataC
                 {
                     for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
                     {
-                        lockingEfficiencyHistogram->SetBinContent(chipId+1, cLineId+1, theLockingEfficiencyVector(chipId, cLineId));
+                        lockingEfficiencyHistogram->SetBinContent(chipId+1, cLineId+1, theLockingEfficiencyVector[chipId][cLineId]);
                     }
                 }
             }
@@ -141,7 +141,7 @@ bool DQMHistogramOTCICphaseAlignment::fill(std::string& inputStream)
     {
         std::cout << "Matched OTCICphaseAlignment BestPhase!!!!\n";
         DetectorDataContainer theDetectorData =
-            theBestPhaseContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t>, EmptyContainer>(fDetectorContainer);
+            theBestPhaseContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>, EmptyContainer>(fDetectorContainer);
         fillBestPhaseResults(theDetectorData);
         return true;
     }
@@ -149,7 +149,7 @@ bool DQMHistogramOTCICphaseAlignment::fill(std::string& inputStream)
     {
         std::cout << "Matched OTCICphaseAlignment LockingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
-            theLockingEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float>, EmptyContainer>(fDetectorContainer);
+            theLockingEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>, EmptyContainer>(fDetectorContainer);
         fillLockingEfficiencyResults(theDetectorData);
         return true;
     }

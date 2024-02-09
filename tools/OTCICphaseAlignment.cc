@@ -68,10 +68,10 @@ void OTCICphaseAlignment::phaseAlignment()
     bool cDebug   = false;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for CBCs .... " << RESET;
     DetectorDataContainer theBestPhaseContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t>>(*fDetectorContainer, theBestPhaseContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>(*fDetectorContainer, theBestPhaseContainer);
 
     DetectorDataContainer theLockingEfficiencyContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float>>(*fDetectorContainer, theLockingEfficiencyContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>(*fDetectorContainer, theLockingEfficiencyContainer);
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -120,7 +120,7 @@ void OTCICphaseAlignment::phaseAlignment()
                 auto& cLockingEfficiency = theLockingEfficiencyContainer.getObject(theBoard->getId())
                                                 ->getObject(theOpticalGroup->getId())
                                                 ->getObject(theHybrid->getId())
-                                                ->getSummary<GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float>>();
+                                                ->getSummary<GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
 
                 cLockingEfficiency = fCicInterface->getAllLockedEfficiencies(cCic, fNumberOfLockCheckIterations);
                 bool  cLocked = true;
@@ -128,13 +128,13 @@ void OTCICphaseAlignment::phaseAlignment()
                 {
                     for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
-                        if(cLockingEfficiency(theChip->getId()%8, line) < fMinLockingSuccessRate)
+                        if(cLockingEfficiency[theChip->getId()%8][line] < fMinLockingSuccessRate)
                         {
                             std::stringstream errorMessage;
                             errorMessage << "OTCICphaseAlignment::phaseAlignment - Error in aligning CIC on ";
                             if(line == 0) errorMessage << "L1 line";
                             else errorMessage << "Stub line " << +(line-1);
-                            errorMessage << " - locking efficiency = " << cLockingEfficiency(theChip->getId(), line) << " less then minimum requited (" << fMinLockingSuccessRate << ")";
+                            errorMessage << " - locking efficiency = " << cLockingEfficiency[theChip->getId()%8][line] << " less then minimum requited (" << fMinLockingSuccessRate << ")";
                             errorMessage << " - Chip  " << +theChip->getId() << " Hybrid " << +theHybrid->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " BeBoard " << +theBoard->getId();
                             LOG(ERROR) << BOLDRED << errorMessage.str() << RESET;
                             cLocked = false;
@@ -159,7 +159,7 @@ void OTCICphaseAlignment::phaseAlignment()
                 auto& cPhaseAlignmentVals = theBestPhaseContainer.getObject(theBoard->getId())
                                                 ->getObject(theOpticalGroup->getId())
                                                 ->getObject(theHybrid->getId())
-                                                ->getSummary<GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t>>();
+                                                ->getSummary<GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
 
                 cPhaseAlignmentVals = fCicInterface->getAllOptimalTaps(cCic);
                 fCicInterface->SetStaticPhaseAlignment(cCic);

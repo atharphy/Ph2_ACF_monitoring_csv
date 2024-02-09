@@ -107,7 +107,7 @@ void LatencyScan::MeasureTriggerTDC()
     LOG(INFO) << "Measuring Trigger TDC ... ";
 
     DetectorDataContainer theTriggerTDCContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<TDCBINS, uint16_t>>(*fDetectorContainer, theTriggerTDCContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint16_t, TDCBINS>>(*fDetectorContainer, theTriggerTDCContainer);
 
     for(auto board: theTriggerTDCContainer)
     {
@@ -146,7 +146,7 @@ void LatencyScan::MeasureTriggerTDC()
         for(uint32_t v = 0; v < fTDCBins; v++)
         {
             LOG(INFO) << "filling " << v << " with " << values[v];
-            board->getFirstObject()->getFirstObject()->getSummary<GenericDataArray<TDCBINS, uint16_t>>()[v] = values[v];
+            board->getFirstObject()->getFirstObject()->getSummary<GenericDataArray<uint16_t, TDCBINS>>()[v] = values[v];
         }
     }
 
@@ -190,9 +190,9 @@ void LatencyScan::ScanLatency()
     // latency per hybrid
     DetectorDataContainer theLatencyContainer;
     DetectorDataContainer theLatencyContainerS0, theLatencyContainerS1;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainer);
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainerS0);
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theLatencyContainerS1);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint16_t, VECSIZE>>(*fDetectorContainer, theLatencyContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint16_t, VECSIZE>>(*fDetectorContainer, theLatencyContainerS0);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint16_t, VECSIZE>>(*fDetectorContainer, theLatencyContainerS1);
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -201,9 +201,9 @@ void LatencyScan::ScanLatency()
             {
                 for(uint16_t cIndx = 0; cIndx < fLatencyRange; cIndx++)
                 {
-                    theLatencyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx]   = 0;
-                    theLatencyContainerS0.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
-                    theLatencyContainerS1.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
+                    theLatencyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cIndx]   = 0;
+                    theLatencyContainerS0.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cIndx] = 0;
+                    theLatencyContainerS1.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cIndx] = 0;
                 }
             } // hybrid
         }     // optical group
@@ -261,7 +261,7 @@ void LatencyScan::ScanLatency()
 
                 // prepare container to hold hit information per chip
                 DetectorDataContainer cHitContainer;
-                ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, cHitContainer);
+                ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t, VECSIZE>>(*fDetectorContainer, cHitContainer);
                 // zero stub container
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -275,7 +275,7 @@ void LatencyScan::ScanLatency()
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
                                     ->getObject(cChip->getId())
-                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
+                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cIndx] = 0;
                             }
                         } // chip
                     }     // hybrid
@@ -323,7 +323,7 @@ void LatencyScan::ScanLatency()
                                             ->getObject(cOpticalGroup->getId())
                                             ->getObject(cHybrid->getId())
                                             ->getObject(cChip->getId())
-                                            ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                            ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                         auto& cOccChip = cOccHybrid->getObject(cChip->getId());
                                         cOccChip->getChannel<Occupancy>(cHit).fOccupancy++;
                                     }
@@ -349,7 +349,7 @@ void LatencyScan::ScanLatency()
                                                 ->getObject(cOpticalGroup->getId())
                                                 ->getObject(cHybrid->getId())
                                                 ->getObject(cChip->getId())
-                                                ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                                ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                             // auto& cOccChip = cOccHybrid->getObject(cChip->getId());
                                             // cOccChip->getChannel<Occupancy>(cPclstr.fAddress + cPclstr.fZpos*120 + cId).fOccupancy++;
                                         }
@@ -364,7 +364,7 @@ void LatencyScan::ScanLatency()
                                                 ->getObject(cOpticalGroup->getId())
                                                 ->getObject(cHybrid->getId())
                                                 ->getObject(cChip->getId())
-                                                ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                                ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                             // auto& cOccChip = cOccHybrid->getObject(cChip->getId()-cNMPAs);
                                             // cOccChip->getChannel<Occupancy>(cSclstr.fAddress + cId).fOccupancy++;
                                         }
@@ -373,16 +373,16 @@ void LatencyScan::ScanLatency()
                                 theLatencyContainerS0.getObject(cBoard->getId())
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
-                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] = cTotalHitsS0;
+                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cLat + cTriggerId - fStartLatency] = cTotalHitsS0;
 
                                 theLatencyContainerS1.getObject(cBoard->getId())
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
-                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] = cTotalHitsS1;
+                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cLat + cTriggerId - fStartLatency] = cTotalHitsS1;
                                 theLatencyContainer.getObject(cBoard->getId())
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
-                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat + cTriggerId - fStartLatency] = (cTotalHitsS0 + cTotalHitsS1);
+                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cLat + cTriggerId - fStartLatency] = (cTotalHitsS0 + cTotalHitsS1);
                             } // chip vector
                         }     // hybrid vector
                     }         // optical group vector
@@ -438,7 +438,7 @@ void LatencyScan::ScanLatency()
 void LatencyScan::StubLatencyScan()
 {
     DetectorDataContainer theStubContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, theStubContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint16_t, VECSIZE>>(*fDetectorContainer, theStubContainer);
 
     // means that at some point the stub latency was scanned and the correct value was identified
     uint16_t cLowerLimit = fStartLatency;
@@ -482,7 +482,7 @@ void LatencyScan::StubLatencyScan()
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(uint16_t cIndx = 0; cIndx < fLatencyRange; cIndx++)
-                { theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0; }
+                { theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cIndx] = 0; }
             } // hybrid
         }     //
     }
@@ -623,8 +623,8 @@ void LatencyScan::StubLatencyScan()
 
                             } // chip
                             // LOG (INFO) << BOLDMAGENTA << "\t\t.. Event#" << +cEventCount << " found " << +cNStubsThisCIC << " in CIC#" << +cHybrid->getId() << RESET;
-                            // theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE,
-                            // uint16_t>>()[cLat+cTriggerId - fStartLatency] += cNStubs;
+                            // theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>
+                            // >()[cLat+cTriggerId - fStartLatency] += cNStubs;
                         } // hybrid
                     }     //
                     cEventIter += (1 + cTriggerMult);
@@ -649,7 +649,7 @@ void LatencyScan::StubLatencyScan()
     //         {
     //             for(auto cHybrid: *cOpticalGroup)
     //             {
-    //                 theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat -
+    //                 theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cLat -
     //                 fStartLatency] = 0;
     //             } // hybrid
     //         }     //
@@ -748,7 +748,7 @@ void LatencyScan::StubLatencyScan()
     //                             cNStubs += cStubs.size();
     //                         }
     //                     } // chip
-    //                     theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat -
+    //                     theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cLat -
     //                     fStartLatency] +=
     //                         cNStubs;
     //                     // if(cEventCount % cDebugOut == 0)
@@ -756,7 +756,7 @@ void LatencyScan::StubLatencyScan()
     //                     //               << theStubContainer.getObject(cBoard->getId())
     //                     //                      ->getObject(cOpticalGroup->getId())
     //                     //                      ->getObject(cHybrid->getId())
-    //                     //                      ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat - fStartLatency]
+    //                     //                      ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cLat - fStartLatency]
     //                     //               << " stubs on hybrid" << +cHybrid->getId()
     //                     //               << " that match hit information in the readout.." << RESET;
     //                 } // hybrids
@@ -767,18 +767,18 @@ void LatencyScan::StubLatencyScan()
     //             for(auto cHybrid: *cOpticalGroup)
     //             {
     //                 float cMatchingFraction =
-    //                 (float)theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLat
+    //                 (float)theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cLat
     //                 - fStartLatency]; cMatchingFraction/= cEvents.size(); if( cMatchingFraction < 0.5 )
     //                     LOG(INFO)
     //                         << BOLDRED << "Hybrid#" << +cHybrid->getId() << " found "
-    //                         << theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE,
-    //                         uint16_t>>()[cLat - fStartLatency]
+    //                         << theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE
+    //                         >>()[cLat - fStartLatency]
     //                         << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
     //                 else
     //                     LOG(INFO)
     //                         << BOLDGREEN << "Hybrid#" << +cHybrid->getId() << " found "
-    //                         << theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<VECSIZE,
-    //                         uint16_t>>()[cLat - fStartLatency]
+    //                         << theStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE
+    //                         >>()[cLat - fStartLatency]
     //                         << " matched stubs in " << +cEvents.size() << " readout events." << RESET;
 
     //             } // hybrid
@@ -802,7 +802,7 @@ void LatencyScan::ScanLatency2D()
 {
     DetectorDataContainer theLatencyContainer;
     // 2D array -- hit latency vs stub latency
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>(*fDetectorContainer, theLatencyContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<GenericDataArray<uint16_t, VECSIZE>, VECSIZE>>(*fDetectorContainer, theLatencyContainer);
 
     LatencyVisitor cVisitor(fReadoutChipInterface, 0);
     int            cNSteps = 0;
@@ -868,7 +868,7 @@ void LatencyScan::ScanLatency2D()
                             theLatencyContainer.getObject(pBoard->getId())
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
-                                ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)] += cNEvents_wBoth;
+                                ->getSummary<GenericDataArray<GenericDataArray<uint16_t, VECSIZE>, VECSIZE>>()[cStubLatency][(cLatency - fStartLatency)] += cNEvents_wBoth;
                         }
                     }
 
@@ -908,7 +908,7 @@ void LatencyScan::ScanLatency2D()
                         uint16_t val = theLatencyContainer.getObject(pBoard->getId())
                                            ->getObject(cOpticalGroup->getId())
                                            ->getObject(cHybrid->getId())
-                                           ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)];
+                                           ->getSummary<GenericDataArray<GenericDataArray<uint16_t, VECSIZE>, VECSIZE>>()[cStubLatency][(cLatency - fStartLatency)];
 
                         if(val >= cMaxNEvents_wBoth)
                         {

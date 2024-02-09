@@ -15,7 +15,7 @@
 #include <iostream>
 #include <array>
 
-template <size_t N, typename T = float>
+template <typename T, size_t N>
 class GenericDataArray : public std::array<T, N>
 {
   public:
@@ -33,69 +33,7 @@ class GenericDataArray : public std::array<T, N>
     }
 };
 
-// 2D generic array, accessed with () instead of [] to make overloading easier
-template <size_t size_0, size_t size_1, typename T = float>
-class GenericDataArray_2D
-{
-  public:
-    GenericDataArray_2D()
-    {
-        for(size_t i = 0; i < size_0; ++i)
-        {
-            for(size_t j = 0; j < size_1; ++j) { data[i][j] = T(); }
-        }
-    }
-
-    GenericDataArray_2D(const GenericDataArray_2D& theGenericDataArray_2D)
-    {
-        for(size_t i = 0; i < size_0; ++i)
-        {
-            for(size_t j = 0; j < size_1; ++j) { data[i][j] = theGenericDataArray_2D.data[i][j]; }
-        }
-    }
-
-    GenericDataArray_2D(GenericDataArray_2D&& theGenericDataArray_2D)
-    {
-        for(size_t i = 0; i < size_0; ++i)
-        {
-            for(size_t j = 0; j < size_1; ++j) { data[i][j] = theGenericDataArray_2D.data[i][j]; }
-        }
-    }
-    GenericDataArray_2D& operator=(const GenericDataArray_2D& theGenericDataArray_2D)
-    {
-        for(size_t i = 0; i < size_0; ++i)
-        {
-            for(size_t j = 0; j < size_1; ++j) { data[i][j] = theGenericDataArray_2D.data[i][j]; }
-        }
-        return *this;
-    }
-    GenericDataArray_2D& operator=(GenericDataArray_2D&& theGenericDataArray_2D)
-    {
-        for(size_t i = 0; i < size_0; ++i)
-        {
-            for(size_t j = 0; j < size_1; ++j) { data[i][j] = theGenericDataArray_2D.data[i][j]; }
-        }
-        return *this;
-    }
-
-
-    ~GenericDataArray_2D() {}
-
-    size_t getSize_0() { return size_0; }
-    size_t getSize_1() { return size_1; }
-    T&     operator()(size_t position_0, size_t position_1) { return data[position_0][position_1]; }
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive& theArchive, const unsigned int version)
-    {
-        for(size_t i = 0; i < size_0; ++i)
-        {
-            for(size_t j = 0; j < size_1; ++j) theArchive& data[i][j];
-        }
-    }
-
-    T data[size_0][size_1];
-};
+template <typename T, size_t N, size_t M>
+class GenericDataArray_2D : public GenericDataArray<GenericDataArray<T, M>, N> {};
 
 #endif

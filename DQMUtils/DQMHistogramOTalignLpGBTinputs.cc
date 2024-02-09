@@ -88,7 +88,7 @@ void DQMHistogramOTalignLpGBTinputs::fillPhaseAlignmentResults(DetectorDataConta
                 {
                     float                       alignmentSuccessRate = std::get<0>(theChannelResult.second);
                     uint8_t                     bestPhaseValue       = std::get<1>(theChannelResult.second);
-                    GenericDataArray<16, float> foundPhaseHistogram  = std::get<2>(theChannelResult.second);
+                    GenericDataArray<float, 16> foundPhaseHistogram  = std::get<2>(theChannelResult.second);
                     int                         currentBit           = fGroupAndChannelToBinNumber[theGroupResult.first][theChannelResult.first];
 
                     hybridAlignmentSuccessHistogram->SetBinContent(currentBit, alignmentSuccessRate);

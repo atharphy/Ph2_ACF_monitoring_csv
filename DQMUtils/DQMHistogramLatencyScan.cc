@@ -95,14 +95,14 @@ bool DQMHistogramLatencyScan::fill(std::string& inputStream)
     if(theDataSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched LatencyScan Data!!!!!\n";
-        DetectorDataContainer fDetectorData = theDataSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theDataSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, VECSIZE>>(fDetectorContainer);
         fillLatencyPlots(fDetectorData);
         return true;
     }
     if(theStubSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched LatencyScan Stub!!!!!\n";
-        DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, VECSIZE>>(fDetectorContainer);
         fillStubLatencyPlots(fDetectorData);
         return true;
     }
@@ -110,14 +110,14 @@ bool DQMHistogramLatencyScan::fill(std::string& inputStream)
     {
         std::cout << "Matched LatencyScan 2D!!!!!\n";
         DetectorDataContainer fDetectorData =
-            the2DSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>(fDetectorContainer);
+            the2DSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<GenericDataArray<uint16_t, VECSIZE>, VECSIZE>>(fDetectorContainer);
         fill2DLatencyPlots(fDetectorData);
         return true;
     }
     if(theTriggerTDCSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched LatencyScan TriggerTDC!!!!!\n";
-        DetectorDataContainer fDetectorData = theTriggerTDCSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theTriggerTDCSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, TDCBINS>>(fDetectorContainer);
         fillTriggerTDCPlots(fDetectorData);
         return true;
     }
@@ -278,7 +278,7 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                                               ->getObject(opticalGroup->getId())
                                               ->getObject(hybrid->getId())
                                               ->getObject(chip->getId())
-                                              ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
+                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDC];
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid"
                                    << +hybrid->getId() << " Chip" << +chip->getId() << " - have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);
@@ -319,7 +319,7 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
                 {
                     if(cFillS0)
                     {
-                        uint32_t hits  = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                        uint32_t hits  = hybrid->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[i];
                         float    error = 0;
                         if(hits > 0) error = sqrt(float(hits));
                         hybridLatencyHistogramS0->SetBinContent(i, hits);
@@ -327,7 +327,7 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
                     }
                     if(cFillS1)
                     {
-                        uint32_t hits  = cHybridHitsS1->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                        uint32_t hits  = cHybridHitsS1->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[i];
                         float    error = 0;
                         if(hits > 0) error = sqrt(float(hits));
                         hybridLatencyHistogramS1->SetBinContent(i, hits);
@@ -353,7 +353,7 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
                 {
                     if(cFill)
                     {
-                        uint32_t hits  = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                        uint32_t hits  = hybrid->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[i];
                         float    error = 0;
                         if(hits > 0) error = sqrt(float(hits));
                         hybridLatencyHistogram->SetBinContent(i, hits);
@@ -377,7 +377,7 @@ void DQMHistogramLatencyScan::fillStubLatencyPlots(DetectorDataContainer& theStu
 
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
-                    uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                    uint32_t hits = hybrid->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[i];
 
                     float error = 0;
                     if(hits > 0) error = sqrt(float(hits));
@@ -404,7 +404,7 @@ void DQMHistogramLatencyScan::fill2DLatencyPlots(DetectorDataContainer& the2DLat
                 {
                     for(uint8_t cStubLatency = 0; cStubLatency < i + fStartLatency; cStubLatency++)
                     {
-                        uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][i];
+                        uint32_t hits = hybrid->getSummary<GenericDataArray<GenericDataArray<uint16_t, VECSIZE>, VECSIZE>>()[cStubLatency][i];
 
                         hybridLatencyHistogram->SetBinContent(cStubLatency, i, hits);
                     }
@@ -419,7 +419,7 @@ void DQMHistogramLatencyScan::fillTriggerTDCPlots(DetectorDataContainer& theTrig
     {
         for(uint32_t tdcValue = 0; tdcValue < TDCBINS; ++tdcValue)
         {
-            auto  sum                      = board->getFirstObject()->getFirstObject()->getSummary<GenericDataArray<TDCBINS, uint16_t>>();
+            auto  sum                      = board->getFirstObject()->getFirstObject()->getSummary<GenericDataArray<uint16_t, TDCBINS>>();
             TH1F* boardTriggerTDCHistogram = fTriggerTDCHistograms.getObject(board->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             boardTriggerTDCHistogram->SetBinContent(tdcValue + 1, sum[tdcValue]);
         }

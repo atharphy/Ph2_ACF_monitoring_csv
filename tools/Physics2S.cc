@@ -217,8 +217,8 @@ void Physics2S::display()
 //                     if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
 
 // 					auto data2S = cChip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
-//                     data2S.fClusters    = fromVectorToGenericDataArray<NCHANNELS, Cluster>(static_cast<D19cCic2Event*>(event)->getClusters(cHybrid->getId(), cChip->getId()));
-//                     data2S.fStubs       = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_2S, Stub>(static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId()));
+//                     data2S.fClusters    = fromVectorToGenericDataArray<Cluster, NCHANNELS>(static_cast<D19cCic2Event*>(event)->getClusters(cHybrid->getId(), cChip->getId()));
+//                     data2S.fStubs       = fromVectorToGenericDataArray<Stub, MAX_NUMBER_OF_STUB_CLUSTERS_2S>(static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId()));
 // 				}
 // 			}
 // 		}

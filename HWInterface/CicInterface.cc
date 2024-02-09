@@ -763,7 +763,7 @@ bool CicInterface::SetPhaseTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortCh
     return fBoardFW->SingleRegisterWrite(pChip, cRegItem, cVerifloop);
 }
 
-GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t> CicInterface::getAllOptimalTaps(Chip* pChip)
+GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicInterface::getAllOptimalTaps(Chip* pChip)
 {
 
     std::vector<std::string> phaseRegisterVector;
@@ -789,29 +789,29 @@ GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t>
         return (phaseRegisterMap.at(phaseRegisterName.str()) >> (phyPort%2 * 4)) & 0xF;
     };
 
-    GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t> theOptimalPhase2DArray;
+    GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> theOptimalPhase2DArray;
     std::vector<uint8_t> cicFrontEndMapping  = getMapping(pChip);
     for(uint8_t frontEnd=0; frontEnd<NUMBER_OF_CIC_PORTS; ++frontEnd) //using the same Id of the chip
     {
         // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
         auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
-        theOptimalPhase2DArray(frontEnd, 0) = getPhaseValue(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second);
+        theOptimalPhase2DArray[frontEnd][0] = getPhaseValue(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second);
 
         // Stub lines are on pyPort 0 to 9
         for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS-1; ++line)
         {
             auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
-            theOptimalPhase2DArray(frontEnd, line+1) = getPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second);
+            theOptimalPhase2DArray[frontEnd][line+1] = getPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second);
         }
     }
 
     return theOptimalPhase2DArray;
 }
 
-GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float> CicInterface::getAllLockedEfficiencies(Chip* pChip, size_t numberOfIterations)
+GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicInterface::getAllLockedEfficiencies(Chip* pChip, size_t numberOfIterations)
 {
 
-    GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float> theLockedEfficiency2DArray;
+    GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> theLockedEfficiency2DArray;
 
     for(size_t iteration=0; iteration<numberOfIterations; ++iteration)
     {
@@ -843,13 +843,13 @@ GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float> C
         {
             // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
             auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
-            if(isLocked(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second)) theLockedEfficiency2DArray(frontEnd, 0)++;
+            if(isLocked(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second)) theLockedEfficiency2DArray[frontEnd][0]++;
 
             // Stub lines are on pyPort 0 to 9
             for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS-1; ++line)
             {
                 auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
-                if(isLocked(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second))  theLockedEfficiency2DArray(frontEnd, line+1)++;
+                if(isLocked(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second))  theLockedEfficiency2DArray[frontEnd][line+1]++;
             }
         }
     }
@@ -858,7 +858,7 @@ GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, float> C
     {
         for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
         {
-            theLockedEfficiency2DArray(frontEnd, line)/=numberOfIterations;
+            theLockedEfficiency2DArray[frontEnd][line]/=numberOfIterations;
         }
     }
 

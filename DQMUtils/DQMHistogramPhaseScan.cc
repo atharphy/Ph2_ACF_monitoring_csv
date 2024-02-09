@@ -57,7 +57,7 @@ void DQMHistogramPhaseScan::book(TFile* theOutputFile, DetectorContainer& theDet
 //========================================================================================================================
 bool DQMHistogramPhaseScan::fill(std::string& inputStream)
 {
-    // HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>> thePhaseStream("PhaseScan");
+    // HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, VECSIZE>> thePhaseStream("PhaseScan");
 
     // if(thePhaseStream.attachBuffer(&dataBuffer))
     // {
@@ -130,7 +130,7 @@ void DQMHistogramPhaseScan::fillPhasePlots(uint16_t pLatency, uint16_t pPhase, D
 
                     for(uint32_t i = 0; i < TDCBINS; i++)
                     {
-                        uint32_t hits = chip->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                        uint32_t hits = chip->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[i];
 
                         auto theTDCbin  = cTDCVsPhase->FindBin(float(i), float(pPhase));
                         auto thecontent = cTDCVsPhase->GetBinContent(theTDCbin);
