@@ -72,7 +72,7 @@ class SCurve : public CalibBase
     size_t nEvents;
     size_t startValue;
     size_t stopValue;
-    size_t nSteps;
+    float  nSteps;
     size_t offset;
     size_t nHITxCol;
     size_t doOnlyNGroups;

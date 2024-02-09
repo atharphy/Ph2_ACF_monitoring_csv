@@ -10,7 +10,7 @@
 #ifndef RD53DataTransmissionTestGraphs_H
 #define RD53DataTransmissionTestGraphs_H
 
-#include "DQMHistogramBase.h"
+#include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/RD53Shared.h"
 

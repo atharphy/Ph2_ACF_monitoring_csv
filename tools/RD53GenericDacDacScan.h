@@ -53,7 +53,7 @@ class GenericDacDacScan : public PixelAlive
     std::vector<uint16_t> dac1List;
     std::vector<uint16_t> dac2List;
     DetectorDataContainer theOccContainer;
-    DetectorDataContainer theGenericDacDacScanContainer;
+    DetectorDataContainer theGenericDacDacContainer;
 
   protected:
     std::string regNameDAC1;

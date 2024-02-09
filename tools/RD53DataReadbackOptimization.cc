@@ -126,11 +126,11 @@ void DataReadbackOptimization::localConfigure(const std::string& histoFileName, 
 void DataReadbackOptimization::run()
 {
     ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP0scanContainer);
-    CalibBase::fillVectorContainer<uint16_t>(theTAP0scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    CalibBase::fillVectorContainer<double>(theTAP0scanContainer, dacListTAP0.size(), 0);
     ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP1scanContainer);
-    CalibBase::fillVectorContainer<uint16_t>(theTAP1scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    CalibBase::fillVectorContainer<double>(theTAP1scanContainer, dacListTAP1.size(), 0);
     ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP2scanContainer);
-    CalibBase::fillVectorContainer<uint16_t>(theTAP2scanContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    CalibBase::fillVectorContainer<double>(theTAP2scanContainer, dacListTAP2.size(), 0);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
     DataReadbackOptimization::scanDac("DAC_CML_BIAS_0", dacListTAP0, &theTAP0scanContainer);
@@ -182,7 +182,7 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto best   = *std::max_element(theTAPscanContainer.getObject(cBoard->getId())
+                    auto best = *std::max_element(theTAPscanContainer.getObject(cBoard->getId())
                                                       ->getObject(cOpticalGroup->getId())
                                                       ->getObject(cHybrid->getId())
                                                       ->getObject(cChip->getId())
@@ -194,8 +194,8 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                                                       ->getObject(cChip->getId())
                                                       ->getSummary<std::vector<double>>()
                                                       .end());
-                    int  regVal = 0;
 
+                    int regVal = dacListTAP.at(0);
                     for(auto i = 1u; i < dacListTAP.size(); i++)
                     {
                         auto current = round(theTAPscanContainer.getObject(cBoard->getId())
@@ -219,7 +219,7 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                     // ##################################################
                     // # Fill TAP container and download new DAC values #
                     // ##################################################
-                    theTAPContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = regVal;
+                    theTAPContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regVal);
                 }
 }

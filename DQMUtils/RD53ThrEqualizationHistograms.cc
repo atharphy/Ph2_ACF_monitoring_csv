@@ -26,7 +26,6 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
     // #######################
     startValue            = this->findValueInSettings<double>(settingsMap, "TDACGainStart");
     stopValue             = this->findValueInSettings<double>(settingsMap, "TDACGainStop");
-    TDACGainNSteps        = this->findValueInSettings<double>(settingsMap, "TDACGainNSteps");
     nEvents               = this->findValueInSettings<double>(settingsMap, "nEvents");
     const size_t colStart = this->findValueInSettings<double>(settingsMap, "COLstart");
     const size_t colStop  = this->findValueInSettings<double>(settingsMap, "COLstop");
@@ -154,9 +153,9 @@ void ThrEqualizationHistograms::fillOccupancyScan(const DetectorDataContainer& O
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                    const size_t TDACGainNSteps = cChip->getSummary<std::vector<float>>().size();
-                    const float  step           = (TDACGainNSteps != 0 ? (stopValue - startValue) / TDACGainNSteps : 0);
-                    for(auto i = 0u; i <= TDACGainNSteps; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<std::vector<float>>().at(i));
+                    const float TDACGainNSteps = cChip->getSummary<std::vector<float>>().size();
+                    const float step           = (TDACGainNSteps != 0 ? (stopValue - startValue) / TDACGainNSteps : 0);
+                    for(auto i = 0u; i < TDACGainNSteps; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<std::vector<float>>().at(i));
                 }
 }
 
