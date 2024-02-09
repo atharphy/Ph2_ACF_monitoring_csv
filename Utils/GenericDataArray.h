@@ -15,8 +15,12 @@
 #include <iostream>
 #include <array>
 
+
+template <typename T, size_t N, size_t... S>
+class GenericDataArray : public GenericDataArray<GenericDataArray<T, S...>, N> {};
+
 template <typename T, size_t N>
-class GenericDataArray : public std::array<T, N>
+class GenericDataArray<T, N> : public std::array<T, N>
 {
   public:
     GenericDataArray()
@@ -33,7 +37,5 @@ class GenericDataArray : public std::array<T, N>
     }
 };
 
-template <typename T, size_t N, size_t M>
-class GenericDataArray_2D : public GenericDataArray<GenericDataArray<T, M>, N> {};
 
 #endif

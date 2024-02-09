@@ -11,8 +11,8 @@
 #include "HWInterface/ChipInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
 
-template <typename T, size_t size_0, size_t size_1>
-class GenericDataArray_2D;
+template <typename T, size_t N, size_t... S>
+class GenericDataArray;
 
 /*!
  * \namespace Ph2_HwInterface
@@ -76,8 +76,8 @@ class CicInterface : public ChipInterface
     bool                              SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
     std::pair<uint8_t, uint8_t>       fromChipL1ToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId);
     std::pair<uint8_t, uint8_t>       fromChipStubToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine);
-    GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllOptimalTaps(Ph2_HwDescription::Chip* pChip);
-    GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllLockedEfficiencies(Ph2_HwDescription::Chip* pChip, size_t numberOfIterations);
+    GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllOptimalTaps(Ph2_HwDescription::Chip* pChip);
+    GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllLockedEfficiencies(Ph2_HwDescription::Chip* pChip, size_t numberOfIterations);
     bool                              SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
     bool                              PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
     bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);

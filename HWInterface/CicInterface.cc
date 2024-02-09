@@ -763,7 +763,7 @@ bool CicInterface::SetPhaseTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortCh
     return fBoardFW->SingleRegisterWrite(pChip, cRegItem, cVerifloop);
 }
 
-GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicInterface::getAllOptimalTaps(Chip* pChip)
+GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicInterface::getAllOptimalTaps(Chip* pChip)
 {
 
     std::vector<std::string> phaseRegisterVector;
@@ -789,7 +789,7 @@ GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>
         return (phaseRegisterMap.at(phaseRegisterName.str()) >> (phyPort%2 * 4)) & 0xF;
     };
 
-    GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> theOptimalPhase2DArray;
+    GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> theOptimalPhase2DArray;
     std::vector<uint8_t> cicFrontEndMapping  = getMapping(pChip);
     for(uint8_t frontEnd=0; frontEnd<NUMBER_OF_CIC_PORTS; ++frontEnd) //using the same Id of the chip
     {
@@ -808,10 +808,10 @@ GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>
     return theOptimalPhase2DArray;
 }
 
-GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicInterface::getAllLockedEfficiencies(Chip* pChip, size_t numberOfIterations)
+GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicInterface::getAllLockedEfficiencies(Chip* pChip, size_t numberOfIterations)
 {
 
-    GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> theLockedEfficiency2DArray;
+    GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> theLockedEfficiency2DArray;
 
     for(size_t iteration=0; iteration<numberOfIterations; ++iteration)
     {

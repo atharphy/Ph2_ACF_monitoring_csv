@@ -20,10 +20,8 @@ class Occupancy;
 class OccupancyAndPh;
 class ThresholdAndNoise;
 class EmptyContainer;
-template <typename T, size_t size>
+template <typename T, size_t N, size_t... S>
 class GenericDataArray;
-template <typename T, size_t size1, size_t size2>
-class GenericDataArray_2D;
 class GainFit;
 class GenericDataVector;
 template <typename T>
@@ -66,7 +64,7 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<GenericData
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, NCHANNELS + 1>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1>, GenericDataArray<uint32_t, NCHANNELS + 1>>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT + 1>, GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1>>)))
-BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<double>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<float>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<uint16_t>, EmptyContainer>)))

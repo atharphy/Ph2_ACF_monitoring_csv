@@ -68,10 +68,10 @@ void OTCICphaseAlignment::phaseAlignment()
     bool cDebug   = false;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for CBCs .... " << RESET;
     DetectorDataContainer theBestPhaseContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>(*fDetectorContainer, theBestPhaseContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>(*fDetectorContainer, theBestPhaseContainer);
 
     DetectorDataContainer theLockingEfficiencyContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>(*fDetectorContainer, theLockingEfficiencyContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>(*fDetectorContainer, theLockingEfficiencyContainer);
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -120,7 +120,7 @@ void OTCICphaseAlignment::phaseAlignment()
                 auto& cLockingEfficiency = theLockingEfficiencyContainer.getObject(theBoard->getId())
                                                 ->getObject(theOpticalGroup->getId())
                                                 ->getObject(theHybrid->getId())
-                                                ->getSummary<GenericDataArray_2D<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
+                                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
 
                 cLockingEfficiency = fCicInterface->getAllLockedEfficiencies(cCic, fNumberOfLockCheckIterations);
                 bool  cLocked = true;
@@ -159,7 +159,7 @@ void OTCICphaseAlignment::phaseAlignment()
                 auto& cPhaseAlignmentVals = theBestPhaseContainer.getObject(theBoard->getId())
                                                 ->getObject(theOpticalGroup->getId())
                                                 ->getObject(theHybrid->getId())
-                                                ->getSummary<GenericDataArray_2D<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
+                                                ->getSummary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
 
                 cPhaseAlignmentVals = fCicInterface->getAllOptimalTaps(cCic);
                 fCicInterface->SetStaticPhaseAlignment(cCic);

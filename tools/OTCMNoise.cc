@@ -65,7 +65,7 @@ void OTCMNoise::TakeData()
                                            EmptyContainer>(*fDetectorContainer, theHitContainer);
     // 2D arrays for module-level and hybrid-level correlation
     if(f2DHistograms)
-        ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>, EmptyContainer, EmptyContainer>(
+        ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>, EmptyContainer, EmptyContainer>(
             *fDetectorContainer, the2DHitContainer);
 
     for(auto cBoard: theHitContainer)
@@ -125,7 +125,7 @@ void OTCMNoise::TakeData()
                         {
                             the2DHitContainer.getObject(cBoard->getId())
                                 ->getObject(cOpticalGroup->getId())
-                                ->getSummary<GenericDataArray_2D<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[hit_channels[iCh1]][hit_channels[iCh2]] += 1;
+                                ->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[hit_channels[iCh1]][hit_channels[iCh2]] += 1;
                         }
                     }
                 }
