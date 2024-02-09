@@ -786,7 +786,7 @@ GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t>
     {
         std::stringstream phaseRegisterName;
         phaseRegisterName << "scPhaseSelectB" << +channel << "o" << +phyPort/2;
-        return (phaseRegisterMap.at(phaseRegisterName.str()) >> (channel%2 * 4)) & 0xF;
+        return (phaseRegisterMap.at(phaseRegisterName.str()) >> (phyPort%2 * 4)) & 0xF;
     };
 
     GenericDataArray_2D<NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, uint8_t> theOptimalPhase2DArray;

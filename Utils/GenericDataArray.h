@@ -104,6 +104,40 @@ class GenericDataArray_2D
             for(size_t j = 0; j < size_1; ++j) { data[i][j] = T(); }
         }
     }
+
+    GenericDataArray_2D(const GenericDataArray_2D& theGenericDataArray_2D)
+    {
+        for(size_t i = 0; i < size_0; ++i)
+        {
+            for(size_t j = 0; j < size_1; ++j) { data[i][j] = theGenericDataArray_2D.data[i][j]; }
+        }
+    }
+
+    GenericDataArray_2D(GenericDataArray_2D&& theGenericDataArray_2D)
+    {
+        for(size_t i = 0; i < size_0; ++i)
+        {
+            for(size_t j = 0; j < size_1; ++j) { data[i][j] = theGenericDataArray_2D.data[i][j]; }
+        }
+    }
+    GenericDataArray_2D& operator=(const GenericDataArray_2D& theGenericDataArray_2D)
+    {
+        for(size_t i = 0; i < size_0; ++i)
+        {
+            for(size_t j = 0; j < size_1; ++j) { data[i][j] = theGenericDataArray_2D.data[i][j]; }
+        }
+        return *this;
+    }
+    GenericDataArray_2D& operator=(GenericDataArray_2D&& theGenericDataArray_2D)
+    {
+        for(size_t i = 0; i < size_0; ++i)
+        {
+            for(size_t j = 0; j < size_1; ++j) { data[i][j] = theGenericDataArray_2D.data[i][j]; }
+        }
+        return *this;
+    }
+
+
     ~GenericDataArray_2D() {}
 
     size_t getSize_0() { return size_0; }

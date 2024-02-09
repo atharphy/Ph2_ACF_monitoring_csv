@@ -128,7 +128,7 @@ void OTCICphaseAlignment::phaseAlignment()
                 {
                     for(uint8_t line=0; line<NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
-                        if(cLockingEfficiency(theChip->getId(), line) < fMinLockingSuccessRate)
+                        if(cLockingEfficiency(theChip->getId()%8, line) < fMinLockingSuccessRate)
                         {
                             std::stringstream errorMessage;
                             errorMessage << "OTCICphaseAlignment::phaseAlignment - Error in aligning CIC on ";
