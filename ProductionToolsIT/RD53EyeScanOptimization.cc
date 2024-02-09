@@ -174,7 +174,7 @@ void EyeScanOptimization::scanDac(const std::string& regName, const std::vector<
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i] =
+                        cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>()[i] =
                             EyeDiag::theEyeDiagContainer.getObject(cBoard->getId())
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
@@ -218,8 +218,7 @@ void EyeScanOptimization::scanDac3D(const std::string&           regName1,
                     for(const auto cOpticalGroup: *cBoard)
                         for(const auto cHybrid: *cOpticalGroup)
                             for(const auto cChip: *cHybrid)
-                                cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>()
-                                    .data[i + j * dacList1.size() + k * dacList1.size() * dacList2.size()] = EyeDiag::theEyeDiagContainer.getObject(cBoard->getId())
+                                cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>()[i + j * dacList1.size() + k * dacList1.size() * dacList2.size()] = EyeDiag::theEyeDiagContainer.getObject(cBoard->getId())
                                                                                                                  ->getObject(cOpticalGroup->getId())
                                                                                                                  ->getObject(cHybrid->getId())
                                                                                                                  ->getObject(cChip->getId())

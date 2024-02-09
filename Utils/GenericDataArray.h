@@ -13,83 +13,24 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/easylogging++.h"
 #include <iostream>
-#include <vector>
+#include <array>
 
 template <size_t N, typename T = float>
-class GenericDataArray
+class GenericDataArray : public std::array<T, N>
 {
   public:
     GenericDataArray()
     {
-        for(size_t i = 0; i < N; ++i) data[i] = T();
+        for(size_t i = 0; i < N; ++i) (*this)[i] = T();
     }
-    GenericDataArray(const GenericDataArray& theGenericDataArray)
-    {
-        for(size_t i = 0; i < N; ++i) data[i] = theGenericDataArray.data[i];
-    }
-    GenericDataArray(GenericDataArray&& theGenericDataArray) { std::copy(theGenericDataArray.begin(), theGenericDataArray.end(), begin()); }
-    GenericDataArray& operator=(const GenericDataArray& theGenericDataArray)
-    {
-        for(size_t i = 0; i < N; ++i) data[i] = theGenericDataArray.data[i];
-        return *this;
-    }
-    GenericDataArray& operator=(GenericDataArray&& theGenericDataArray)
-    {
-        std::copy(theGenericDataArray.begin(), theGenericDataArray.end(), begin());
-        return *this;
-    }
-
     ~GenericDataArray() {}
-
-    size_t size() { return N; }
-    T&     operator[](size_t position) { return data[position]; }
-
-    T data[N];
 
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        for(size_t i = 0; i < N; ++i) theArchive& data[i];
+        for(size_t i = 0; i < N; ++i) theArchive& (*this)[i];
     }
-
-    struct Iterator
-    {
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type   = std::ptrdiff_t;
-        using value_type        = T;
-        using pointer           = T*; // or also value_type*
-        using reference         = T&; // or also value_type&
-
-        Iterator(pointer ptr) : m_ptr(ptr) {}
-
-        reference operator*() const { return *m_ptr; }
-        pointer   operator->() { return m_ptr; }
-
-        // Prefix increment
-        Iterator& operator++()
-        {
-            m_ptr++;
-            return *this;
-        }
-
-        // Postfix increment
-        Iterator operator++(int)
-        {
-            Iterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        friend bool operator==(const Iterator& a, const Iterator& b) { return a.m_ptr == b.m_ptr; };
-        friend bool operator!=(const Iterator& a, const Iterator& b) { return a.m_ptr != b.m_ptr; };
-
-      private:
-        pointer m_ptr;
-    };
-
-    Iterator begin() { return Iterator(&data[0]); }
-    Iterator end() { return Iterator(&data[N]); }
 };
 
 // 2D generic array, accessed with () instead of [] to make overloading easier
