@@ -770,7 +770,7 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
 
 void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
-    LOG(INFO) << BOLDMAGENTA << "Producing phase alignment pattern on CBC#" << +pChip->getId() << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Producing phase alignment pattern on CBC#" << +pChip->getId() << RESET;
     // mask for L1A alignment
     auto cChannelMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
     cChannelMask->disableAllChannels();

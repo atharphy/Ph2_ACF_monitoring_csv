@@ -38,7 +38,7 @@ class OTCICphaseAlignment : public Tool
   private:
     void phaseAlignment();
 
-    size_t fNumberOfLockCheckIterations{100};
+    size_t fNumberOfAlignmentIterations{100};
     float  fMinLockingSuccessRate{1.};
 
 #ifdef __USE_ROOT__

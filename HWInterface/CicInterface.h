@@ -77,7 +77,7 @@ class CicInterface : public ChipInterface
     std::pair<uint8_t, uint8_t> fromChipL1ToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId);
     std::pair<uint8_t, uint8_t> fromChipStubToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine);
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllOptimalTaps(Ph2_HwDescription::Chip* pChip);
-    GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>   getAllLockedEfficiencies(Ph2_HwDescription::Chip* pChip, size_t numberOfIterations);
+    GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>    getLineLocked(Ph2_HwDescription::Chip* pChip);
     bool                                                                          SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
     bool                                                                          PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
     bool                                                                          SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);

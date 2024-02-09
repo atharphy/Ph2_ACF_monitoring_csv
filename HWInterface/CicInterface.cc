@@ -806,55 +806,49 @@ GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> Ci
     return theOptimalPhase2DArray;
 }
 
-GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicInterface::getAllLockedEfficiencies(Chip* pChip, size_t numberOfIterations)
+GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicInterface::getLineLocked(Chip* pChip)
 {
-    GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> theLockedEfficiency2DArray;
+    GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> theIsLocked2DArray;
 
-    for(size_t iteration = 0; iteration < numberOfIterations; ++iteration)
+    std::vector<std::string> isLockedRegisterVector;
+    for(size_t phyPortPair = 0; phyPortPair < 6; ++phyPortPair)
     {
-        std::vector<std::string> isLockedRegisterVector;
-        for(size_t phyPortPair = 0; phyPortPair < 6; ++phyPortPair)
+        std::stringstream isLockedRegisterName;
+        isLockedRegisterName << "scChannelLocked" << +phyPortPair;
+        isLockedRegisterVector.push_back(isLockedRegisterName.str());
+    }
+    auto isLockedRegisterValueVector = ReadChipMultReg(pChip, isLockedRegisterVector);
+
+    // convert int a map for easier access
+    std::unordered_map<std::string, uint8_t> isLockedRegisterMap;
+    for(const auto& registerNameAndValue: isLockedRegisterValueVector) isLockedRegisterMap[registerNameAndValue.first] = registerNameAndValue.second;
+
+    auto isLocked = [&isLockedRegisterMap](uint8_t phyPort, uint8_t channel) {
+        std::stringstream isLockedRegisterName;
+        isLockedRegisterName << "scChannelLocked" << +phyPort / 2;
+        bool isLocked = (isLockedRegisterMap.at(isLockedRegisterName.str()) >> (phyPort % 2 * 4 + channel)) & 0x1;
+        return isLocked;
+    };
+
+    std::vector<uint8_t> cicFrontEndMapping = getMapping(pChip);
+
+    for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd) // using the same Id of the chip
+    {
+        // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
+        auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
+        if(isLocked(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second)) theIsLocked2DArray[frontEnd][0] = true;
+        else theIsLocked2DArray[frontEnd][0] = false;
+
+        // Stub lines are on pyPort 0 to 9
+        for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line)
         {
-            std::stringstream isLockedRegisterName;
-            isLockedRegisterName << "scChannelLocked" << +phyPortPair;
-            isLockedRegisterVector.push_back(isLockedRegisterName.str());
-        }
-        auto isLockedRegisterValueVector = ReadChipMultReg(pChip, isLockedRegisterVector);
-
-        // convert int a map for easier access
-        std::unordered_map<std::string, uint8_t> isLockedRegisterMap;
-        for(const auto& registerNameAndValue: isLockedRegisterValueVector) isLockedRegisterMap[registerNameAndValue.first] = registerNameAndValue.second;
-
-        auto isLocked = [&isLockedRegisterMap](uint8_t phyPort, uint8_t channel) {
-            std::stringstream isLockedRegisterName;
-            isLockedRegisterName << "scChannelLocked" << +phyPort / 2;
-            bool isLocked = (isLockedRegisterMap.at(isLockedRegisterName.str()) >> (phyPort % 2 * 4 + channel)) & 0x1;
-            return isLocked;
-        };
-
-        std::vector<uint8_t> cicFrontEndMapping = getMapping(pChip);
-
-        for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd) // using the same Id of the chip
-        {
-            // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
-            auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
-            if(isLocked(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second)) theLockedEfficiency2DArray[frontEnd][0]++;
-
-            // Stub lines are on pyPort 0 to 9
-            for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line)
-            {
-                auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
-                if(isLocked(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second)) theLockedEfficiency2DArray[frontEnd][line + 1]++;
-            }
+            auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
+            if(isLocked(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second)) theIsLocked2DArray[frontEnd][line + 1] = true;
+            else theIsLocked2DArray[frontEnd][line + 1] = false;
         }
     }
 
-    for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
-    {
-        for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line) { theLockedEfficiency2DArray[frontEnd][line] /= numberOfIterations; }
-    }
-
-    return theLockedEfficiency2DArray;
+    return theIsLocked2DArray;
 }
 
 std::pair<uint8_t, uint8_t> CicInterface::fromChipL1ToPhyPortAndChannel(Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId)

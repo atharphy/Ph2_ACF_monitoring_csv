@@ -26,18 +26,63 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
+    bool isPS = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
+
     std::string xAxisTitle = "CBC Id";
     int         idOffset   = 0;
-    if(theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS)
+    if(isPS)
     {
         xAxisTitle = "MPA Id";
         idOffset   = 8;
     }
 
-    auto setBinLabels = [](TAxis* theHistogramAxis) {
+    auto setLineBinLabels = [](TAxis* theHistogramAxis) {
         theHistogramAxis->SetBinLabel(1, "L1");
-        for(int port = 1; port < NUMBER_OF_LINES_PER_CIC_PORTS; ++port) { theHistogramAxis->SetBinLabel(port + 1, Form("Stub%d", port - 1)); }
+        for(int line = 1; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line) { theHistogramAxis->SetBinLabel(line + 1, Form("Stub%d", line - 1)); }
     };
+
+    auto setPhaseHistogramBinLabels = [isPS](TAxis* theHistogramAxis) {
+        for(int port = 0; port < NUMBER_OF_CIC_PORTS; ++port)
+        {
+            for(int line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line) 
+            {
+                std::string binLabel;
+                if(isPS)
+                {
+                    binLabel = Form("MPA%d", port + 8);
+                }
+                else
+                {
+                    binLabel = Form("CBC%d", port);
+                }
+                if(line == 0)
+                {
+                    binLabel += "_L1";
+                }
+                else
+                {
+                    binLabel += Form("_Stub%d", line - 1);
+                }
+                theHistogramAxis->SetBinLabel(port*NUMBER_OF_LINES_PER_CIC_PORTS + line + 1, binLabel.c_str());
+            }
+        }
+    };
+
+    HistContainer<TH2F> phaseHistogram("CICinputPhaseHistogram",
+                                           "CIC Input Phase Histogram",
+                                           NUMBER_OF_CIC_PORTS*NUMBER_OF_LINES_PER_CIC_PORTS,
+                                           - 0.5,
+                                           NUMBER_OF_CIC_PORTS*NUMBER_OF_LINES_PER_CIC_PORTS - 0.5,
+                                           16,
+                                           -0.5,
+                                           16 - 0.5);
+    phaseHistogram.fTheHistogram->GetXaxis()->SetTitle("chipId_line");
+    setPhaseHistogramBinLabels(phaseHistogram.fTheHistogram->GetXaxis());
+    phaseHistogram.fTheHistogram->GetYaxis()->SetTitle("phase");
+    phaseHistogram.fTheHistogram->SetMinimum(0);
+    phaseHistogram.fTheHistogram->SetMaximum(1);
+    phaseHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseHistogramContainer, phaseHistogram);
 
     HistContainer<TH2I> bestPhaseHistogram("BestCICinputPhases",
                                            "Best CIC For Input Phases",
@@ -49,7 +94,7 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
                                            NUMBER_OF_LINES_PER_CIC_PORTS - 0.5);
     bestPhaseHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
     bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
-    setBinLabels(bestPhaseHistogram.fTheHistogram->GetYaxis());
+    setLineBinLabels(bestPhaseHistogram.fTheHistogram->GetYaxis());
     bestPhaseHistogram.fTheHistogram->SetMinimum(0);
     bestPhaseHistogram.fTheHistogram->SetMaximum(15);
     bestPhaseHistogram.fTheHistogram->SetStats(false);
@@ -65,11 +110,42 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
                                                    NUMBER_OF_LINES_PER_CIC_PORTS - 0.5);
     lockingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
     lockingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
-    setBinLabels(lockingEfficiencyHistogram.fTheHistogram->GetYaxis());
+    setLineBinLabels(lockingEfficiencyHistogram.fTheHistogram->GetYaxis());
     lockingEfficiencyHistogram.fTheHistogram->SetMinimum(0);
     lockingEfficiencyHistogram.fTheHistogram->SetMaximum(1);
     lockingEfficiencyHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLockingEfficiencyHistogramContainer, lockingEfficiencyHistogram);
+}
+
+//========================================================================================================================
+void DQMHistogramOTCICphaseAlignment::fillPhaseHistogramResults(DetectorDataContainer& thePhaseHistogramResultContainer)
+{
+    for(auto board: thePhaseHistogramResultContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                if(!hybrid->hasSummary()) continue;
+
+                auto thePhaseHistogramVector = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>();
+
+                TH2F* bestPhaseHistogram =
+                    fPhaseHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+
+                for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
+                {
+                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
+                    {
+                        for(size_t phase = 0; phase < 16; phase++)
+                        {
+                            bestPhaseHistogram->SetBinContent(chipId*NUMBER_OF_LINES_PER_CIC_PORTS + cLineId + 1, phase, thePhaseHistogramVector[chipId][cLineId][phase]);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 //========================================================================================================================
@@ -140,9 +216,19 @@ void DQMHistogramOTCICphaseAlignment::reset(void)
 bool DQMHistogramOTCICphaseAlignment::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
+    ContainerSerialization thePhaseHistogramContainerSerialization("OTCICphaseAlignmentPhaseHistogram");
     ContainerSerialization theBestPhaseContainerSerialization("OTCICphaseAlignmentBestPhase");
     ContainerSerialization theLockingEfficiencyContainerSerialization("OTCICphaseAlignmentLockingEfficiency");
 
+    if(thePhaseHistogramContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTCICphaseAlignment PhaseHistogram!!!!\n";
+        DetectorDataContainer theDetectorData =
+            thePhaseHistogramContainerSerialization
+                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>, EmptyContainer>(fDetectorContainer);
+        fillPhaseHistogramResults(theDetectorData);
+        return true;
+    }
     if(theBestPhaseContainerSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTCICphaseAlignment BestPhase!!!!\n";

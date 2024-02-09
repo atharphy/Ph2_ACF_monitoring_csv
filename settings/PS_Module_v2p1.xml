@@ -236,7 +236,7 @@
     <Setting name="OTalignLpGBTinputsNumberOfAlignmentIterations">100</Setting>
     <Setting name="OTalignLpGBTinputsMinAlignmentSuccessRate">0.99</Setting>
 
-    <Setting name="OTCICphaseAlignmentNumberOfLockCheckIterations">100</Setting>
+    <Setting name="OTCICphaseAlignmentNumberOfAlignmentIterations">100</Setting>
     <Setting name="OTCICphaseAlignmentMinLockingSuccessRate">1.</Setting>
     
 </Settings>
