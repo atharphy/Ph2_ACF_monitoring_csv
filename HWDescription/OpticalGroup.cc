@@ -40,4 +40,55 @@ std::map<uint8_t, std::vector<uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannel
     return groupsAndChannels;
 }
 
+std::map< std::pair<uint8_t,uint8_t>, uint8_t> OpticalGroup::getLpGBTrxGroupsAndChannelsPerHybrid() const
+{
+
+    std::map< std::pair<uint8_t,uint8_t>, uint8_t> hybridsAndGroupsAndChannels;
+    
+    if(getFrontEndType() == FrontEndType::OuterTracker2S)
+    {
+        // Right CIC 
+        hybridsAndGroupsAndChannels[std::make_pair(0,0)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(4,0)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(4,2)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(5,0)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(5,2)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(6,0)] = 0;
+        // Left CIC 
+        hybridsAndGroupsAndChannels[std::make_pair(0,2)] = 1;
+        hybridsAndGroupsAndChannels[std::make_pair(1,0)] = 1;
+        hybridsAndGroupsAndChannels[std::make_pair(1,2)] = 1;
+        hybridsAndGroupsAndChannels[std::make_pair(2,0)] = 1;
+        hybridsAndGroupsAndChannels[std::make_pair(2,2)] = 1;
+        hybridsAndGroupsAndChannels[std::make_pair(3,2)] = 1;
+
+
+    }
+    else
+    {
+        // Right CIC 
+        hybridsAndGroupsAndChannels[std::make_pair(0,0)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(4,0)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(4,2)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(5,0)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(5,2)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(6,0)] = 0;
+        hybridsAndGroupsAndChannels[std::make_pair(6,2)] = 0;
+
+        // Left CIC 
+        hybridsAndGroupsAndChannels[std::make_pair(0,2)] =1;
+        hybridsAndGroupsAndChannels[std::make_pair(1,0)] =1;
+        hybridsAndGroupsAndChannels[std::make_pair(1,2)] =1;
+        hybridsAndGroupsAndChannels[std::make_pair(2,0)] =1;
+        hybridsAndGroupsAndChannels[std::make_pair(2,2)] =1;
+        hybridsAndGroupsAndChannels[std::make_pair(3,0)] =1;
+        hybridsAndGroupsAndChannels[std::make_pair(3,2)] =1;
+
+
+    }
+    return hybridsAndGroupsAndChannels;
+}
+
+
+
 } // namespace Ph2_HwDescription

@@ -28,6 +28,7 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
 
     fGroupAndChannelToBinNumber.clear();
     const auto theGroupsAndChannels = theDetectorStructure.getFirstObject()->getFirstObject()->getLpGBTrxGroupsAndChannels();
+    const auto theHybridGroupsAndChannels = theDetectorStructure.getFirstObject()->getFirstObject()->getLpGBTrxGroupsAndChannelsPerHybrid();
 
     int numberOfBins = 0;
     for(const auto& groupAndChannels: theGroupsAndChannels)
@@ -39,28 +40,32 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         }
     }
 
-    auto setBinLabels = [this](TAxis* theHistogram) {
+    auto setBinLabels = [this](TAxis* theHistogram, auto theHybridGroupsAndChannels) 
+    {
         for(const auto& group: this->fGroupAndChannelToBinNumber)
         {
-            for(const auto& channelAndBin: group.second) { theHistogram->SetBinLabel(channelAndBin.second, Form("%d_%d", group.first, channelAndBin.first)); }
+            for(const auto& channelAndBin: group.second)
+            { 
+                theHistogram->SetBinLabel(channelAndBin.second, Form("H(%d)_%d_%d", theHybridGroupsAndChannels[std::make_pair(group.first, channelAndBin.first)], group.first, channelAndBin.first));
+            }
         }
     };
 
     HistContainer<TH1F> alignmentSuccessHistogram("LpGBTinputAlignmentSuccess", "LpGBT input best phase", numberOfBins, -0.5, numberOfBins - 0.5);
     alignmentSuccessHistogram.fTheHistogram->GetXaxis()->SetTitle("group_channel");
-    setBinLabels(alignmentSuccessHistogram.fTheHistogram->GetXaxis());
+    setBinLabels(alignmentSuccessHistogram.fTheHistogram->GetXaxis(), theHybridGroupsAndChannels);
     alignmentSuccessHistogram.fTheHistogram->GetYaxis()->SetTitle("alignment efficiency");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fAlignmentSuccessHistogramContainer, alignmentSuccessHistogram);
 
     HistContainer<TH1I> bestPhaseHistogram("LpGBTinputBestPhase", "LpGBT input best phase", numberOfBins, -0.5, numberOfBins - 0.5);
     bestPhaseHistogram.fTheHistogram->GetXaxis()->SetTitle("group_channel");
-    setBinLabels(bestPhaseHistogram.fTheHistogram->GetXaxis());
+    setBinLabels(bestPhaseHistogram.fTheHistogram->GetXaxis(), theHybridGroupsAndChannels);
     bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("best phase value");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBestPhaseHistogramContainer, bestPhaseHistogram);
 
     HistContainer<TH2F> foundPhasesDistributionHistogram("LpGBTinputFoundPhasesDistribution", "LpGBT input found phases distribution", numberOfBins, -0.5, numberOfBins - 0.5, 16, -0.5, 15.5);
     foundPhasesDistributionHistogram.fTheHistogram->GetXaxis()->SetTitle("group_channel");
-    setBinLabels(foundPhasesDistributionHistogram.fTheHistogram->GetXaxis());
+    setBinLabels(foundPhasesDistributionHistogram.fTheHistogram->GetXaxis(), theHybridGroupsAndChannels);
     foundPhasesDistributionHistogram.fTheHistogram->GetYaxis()->SetTitle("phase");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fFoundPhasesDistributionHistogramContainer, foundPhasesDistributionHistogram);
 }
