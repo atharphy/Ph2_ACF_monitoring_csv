@@ -12,6 +12,22 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+void CalibBase::ConfigureCalibration()
+{
+    // #######################
+    // # Retrieve parameters #
+    // #######################
+    splitByHybrid = this->findValueInSettings<double>("DoSplitByHybrid", false);
+    rowStart      = this->findValueInSettings<double>("ROWstart");
+    rowStop       = this->findValueInSettings<double>("ROWstop");
+    colStart      = this->findValueInSettings<double>("COLstart");
+    colStop       = this->findValueInSettings<double>("COLstop");
+    nEvents       = this->findValueInSettings<double>("nEvents", 1);
+    nEvtsBurst    = this->findValueInSettings<double>("nEvtsBurst", 1) < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
+    nTRIGxEvent   = this->findValueInSettings<double>("nTRIGxEvent");
+    dataOutputDir = this->findValueInSettings<std::string>("DataOutputDir", "");
+}
+
 void CalibBase::chipErrorReport() const
 {
     if(showErrorReport == true)
@@ -210,45 +226,157 @@ void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
     }
 }
 
-// bool CalibBase::openRootFileFolder(TFile* theOutputFile, std::string& folderName)
-// {
-//     if(theOutputFile->GetDirectory(folderName.data()) != nullptr)
-//     {
-//         theOutputFile->cd(folderName.data());
-//         return true;
-//     }
+// ###############################
+// # Split output file by Hybrid #
+// ###############################
 
-//     return false;
-// }
+// https://root.cern/doc/master/copyFiles_8C.html
+#ifdef __USE_ROOT__
+bool CalibBase::splitHistoFileByHybrid(TFile* theInputFile)
+{
+    LOG(INFO) << GREEN << "Splitting ROOT file by Hybrid" << RESET;
 
-// void CalibBase::splitHistoFile2Hybrids(TFile* theOutputFile, const DetectorContainer& detContainer)
-// {
-//     std::string detectorFolder = "Detector";
-//     openRootFileFolder(theOutputFile, detectorFolder);
+    const std::string detectorFolder = "Detector";
+    if(CalibBase::openRootFileFolder(theInputFile, detectorFolder) == false) return false;
 
-//     for(const auto cBoard: *detContainer)
-//     {
-//         std::string boardFolder     = "/Board_" + std::to_string(board->getId());
-//         std::string fullBoardFolder = detectorFolder + boardFolder;
-//         openRootFileFolder(theOutputFile, fullBoardFolder);
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        const std::string boardFolder     = "Board_" + std::to_string(cBoard->getId());
+        const std::string fullBoardFolder = detectorFolder + "/" + boardFolder;
+        if(CalibBase::openRootFileFolder(theInputFile, fullBoardFolder) == false) return false;
 
-//         for(const auto cOpticalGroup: *cBoard))
-//         {
-//             std::string opticalGroupFolder     = "/OpticalGroup_" + std::to_string(opticalGroup->getId());
-//             std::string fullOpticalGroupFolder = detectorFolder + boardFolder + opticalGroupFolder;
-//             openRootFileFolder(theOutputFile, fullOpticalGroupFolder);
+        for(const auto cOpticalGroup: *cBoard)
+        {
+            const std::string opticalGroupFolder     = "OpticalGroup_" + std::to_string(cOpticalGroup->getId());
+            const std::string fullOpticalGroupFolder = fullBoardFolder + "/" + opticalGroupFolder;
+            if(CalibBase::openRootFileFolder(theInputFile, fullOpticalGroupFolder) == false) return false;
 
-//             for(const auto cHybrid: *cOpticalGroup)
-//             {
-//                 std::string hybridFolder     = "/Hybrid_" + std::to_string(hybrid->getId());
-//                 std::string fullHybridFolder = detectorFolder + boardFolder + opticalGroupFolder + hybridFolder;
-//                 openRootFileFolder(theOutputFile, fullHybridFolder);
+            for(const auto cHybrid: *cOpticalGroup)
+            {
+                const std::string hybridFolder     = "Hybrid_" + std::to_string(cHybrid->getId());
+                const std::string fullHybridFolder = fullOpticalGroupFolder + "/" + hybridFolder;
+                if(CalibBase::openRootFileFolder(theInputFile, fullHybridFolder) == false) return false;
 
-//                 // Copy file n hybrid times
-//                 // Remove n-1 hybrid sub-directories
+                // ##########################
+                // # Create new output file #
+                // ##########################
+                std::string theOutputFileName = theInputFile->GetName();
+                theOutputFileName.replace(theOutputFileName.find(".root"), 5, "_Hybrid_" + std::to_string(cHybrid->getId()) + ".root");
+                TFile* theOutputFile = TFile::Open(theOutputFileName.c_str(), "RECREATE");
 
-//                 for(const auto cChip: *cHybrid) {}
-//             }
-//         }
-//     }
-// }
+                // ################
+                // # Copy content #
+                // ################
+                if(theOutputFile && (theOutputFile->IsZombie() == false)) CalibBase::copyDirectories(theInputFile, theOutputFile, hybridFolder);
+
+                // #####################
+                // # Close output file #
+                // #####################
+                theOutputFile->Close();
+                delete theOutputFile;
+            }
+        }
+    }
+
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+    return true;
+}
+
+void CalibBase::copyDirectories(TFile* theInputFile, TFile* theOutputFile, const std::string& hybridName)
+{
+    const std::string detectorFolder = "Detector";
+    CalibBase::copyContent(theInputFile, theOutputFile, detectorFolder);
+
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        const std::string boardFolder     = "Board_" + std::to_string(cBoard->getId());
+        const std::string fullBoardFolder = detectorFolder + "/" + boardFolder;
+        CalibBase::copyContent(theInputFile, theOutputFile, fullBoardFolder);
+
+        for(const auto cOpticalGroup: *cBoard)
+        {
+            const std::string opticalGroupFolder     = "OpticalGroup_" + std::to_string(cOpticalGroup->getId());
+            const std::string fullOpticalGroupFolder = fullBoardFolder + "/" + opticalGroupFolder;
+            CalibBase::copyContent(theInputFile, theOutputFile, fullOpticalGroupFolder);
+
+            for(const auto cHybrid: *cOpticalGroup)
+            {
+                const std::string hybridFolder = "Hybrid_" + std::to_string(cHybrid->getId());
+
+                if(hybridFolder != hybridName) continue;
+
+                const std::string fullHybridFolder = fullOpticalGroupFolder + "/" + hybridFolder;
+                CalibBase::copyContent(theInputFile, theOutputFile, fullHybridFolder);
+
+                for(const auto cChip: *cHybrid)
+                {
+                    const std::string chipFolder     = "Chip_" + std::to_string(cChip->getId());
+                    const std::string fullChipFolder = fullHybridFolder + "/" + chipFolder;
+                    CalibBase::copyContent(theInputFile, theOutputFile, fullChipFolder);
+
+                    const std::string channelFolder     = "Channel";
+                    const std::string fullChannelFolder = fullChipFolder + "/" + channelFolder;
+                    CalibBase::copyContent(theInputFile, theOutputFile, fullChannelFolder);
+                }
+            }
+        }
+    }
+}
+
+void CalibBase::copyContent(TFile* theInputFile, TFile* theOutputFile, const std::string& dirName)
+{
+    std::cout << "AAAAAAAA DENTRO " << std::endl;
+    theInputFile->cd(dirName.c_str());
+    TDirectory* inputDir = gDirectory;
+
+    theOutputFile->mkdir(dirName.c_str());
+    theOutputFile->cd(dirName.c_str());
+    TDirectory* outputDir = gDirectory;
+    outputDir->cd();
+    std::cout << "AAAAAAAA dirName: " << dirName << " GetName: " << outputDir->GetName() << std::endl;
+
+    TKey* key;
+    TIter nextkey(inputDir->GetListOfKeys());
+
+    while((key = (TKey*)nextkey()))
+    {
+        const char* className = key->GetClassName();
+        TClass*     theClass  = gROOT->GetClass(className);
+
+        if(!theClass || (theClass->InheritsFrom(TDirectory::Class()))) continue;
+
+        if(theClass->InheritsFrom(TTree::Class()))
+        {
+            TTree* T = (TTree*)inputDir->Get(key->GetName());
+            if(!outputDir->FindObject(key->GetName()))
+            {
+                outputDir->cd();
+                TTree* newT = T->CloneTree(-1, "fast");
+                newT->Write();
+            }
+        }
+        else
+        {
+            inputDir->cd();
+            TObject* obj = key->ReadObj();
+            outputDir->cd();
+            obj->Write();
+            delete obj;
+        }
+    }
+
+    outputDir->SaveSelf(kTRUE);
+    std::cout << "AAAAAAAA FINE " << std::endl;
+}
+
+bool CalibBase::openRootFileFolder(TFile* theInputFile, const std::string& folderName)
+{
+    if(theInputFile->GetDirectory(folderName.data()) != nullptr)
+    {
+        theInputFile->cd(folderName.data());
+        return true;
+    }
+
+    return false;
+}
+#endif
