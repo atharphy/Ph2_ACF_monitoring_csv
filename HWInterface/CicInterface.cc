@@ -589,7 +589,7 @@ bool CicInterface::SetStaticPhaseAlignment(Chip* pChip) { return SetAutomaticPha
 
 bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
 {
-    UpdateExternalWordAlignmentValues(pChip);
+    auto theWordAlignmentValues = retrieveExternalWordAlignmentValues(pChip);
     size_t  cCounter = 0;
     uint8_t cValue   = 0x00;
     int     cIndx    = 0;
@@ -598,7 +598,7 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
     {
         for(size_t cLine = 0; cLine < 5; cLine++)
         {
-            auto cAlVal = (fWordAlignmentVals[cFeId][cLine] & 0xF);
+            auto cAlVal = (theWordAlignmentValues[cFeId][cLine] & 0xF);
             cValue      = cValue | (cAlVal << (cCounter % 2) * 4);
             if((1 + cCounter) % 2 == 0)
             {
@@ -612,35 +612,28 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
     }
     return cSuccess;
 }
-bool CicInterface::SetStaticWordAlignment(Chip* pChip, uint8_t pValue)
+bool CicInterface::SetStaticWordAlignment(Chip* pChip)
 {
-    if(pValue == 0)
-        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getHybridId() << " to use external values" << RESET;
-    else
-        LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getHybridId() << " to use internal values" << RESET;
+    LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getHybridId() << " to use internal values" << RESET;
+    if(!this->ConfigureExternalWordAlignment(pChip)) return false;
 
-    if(pValue == 1)
-        if(!this->ConfigureExternalWordAlignment(pChip)) return false;
+    std::string cRegName  = "MISC_CTRL";
+    uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
+    uint8_t     cValue    = ((cRegValue & 0x1D) | (0x1 << 1));
 
-    std::string cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "USE_EXT_WA_DELAY" : "MISC_CTRL";
-    uint16_t    cRegValue  = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cToggleOn  = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : ((cRegValue & 0x1D) | (0x1 << 1));
-    uint16_t    cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : ((cRegValue & 0x1D) | (0x0 << 1));
-
-    uint8_t cValue   = (pValue == 0) ? cToggleOff : cToggleOn;
     bool    cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
     return cSuccess;
 }
 
-void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
+std::vector<std::vector<uint8_t>> CicInterface::retrieveExternalWordAlignmentValues(Chip* pChip)
 {
     setBoard(pChip->getBeBoardId());
+    std::vector<std::vector<uint8_t>> theWordAlignmentValues;
     // 5 lines per FE ... 8 FEs per CIC
-    fWordAlignmentVals.clear();
     for(size_t cIndx = 0; cIndx < 8; cIndx++)
     {
         std::vector<uint8_t> cTmp(5, 0);
-        fWordAlignmentVals.push_back(cTmp);
+        theWordAlignmentValues.push_back(cTmp);
     }
     uint8_t     cLineCounter = 0;
     uint8_t     cFECounter   = 0;
@@ -656,7 +649,7 @@ void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
         for(uint8_t cNibble = 0; cNibble < 2; cNibble += 1)
         {
             uint8_t cWordAlignment                       = (cRegValue & (0xF << cNibble * 4)) >> 4 * cNibble;
-            fWordAlignmentVals[cFECounter][cLineCounter] = cWordAlignment;
+            theWordAlignmentValues[cFECounter][cLineCounter] = cWordAlignment;
             LOG(DEBUG) << BOLDBLUE << "Word alignment for FE" << +cFECounter << " Line" << +cLineCounter << " value found to be " << +cWordAlignment << RESET;
             cLineCounter += 1;
             if(cLineCounter > 4)
@@ -666,6 +659,8 @@ void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
             }
         }
     }
+
+    return theWordAlignmentValues;
 }
 std::pair<uint8_t, uint8_t> CicInterface::GetPhyPortConfig(Chip* pChip, uint8_t pFeId, uint8_t pLineId)
 {

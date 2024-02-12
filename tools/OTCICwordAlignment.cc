@@ -89,7 +89,7 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
                 // check status
                 if(cWordAligned[cIndx])
                 {
-                    fCicInterface->SetStaticWordAlignment(cCic, 1);
+                    fCicInterface->SetStaticWordAlignment(cCic);
                     LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
                 }
                 else

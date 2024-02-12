@@ -83,7 +83,7 @@ class CicInterface : public ChipInterface
     bool                              PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
     bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);
     bool                              SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);
-    bool                              SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pValue = 5);
+    bool                              SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip);
     bool                              CheckPhaseAlignerLock(Ph2_HwDescription::Chip* pChip, uint8_t pCheckValue = 0xFF);
     bool                              ResetPhaseAligner(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 1);
     bool                              ResetDLL(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 100);
@@ -182,12 +182,11 @@ class CicInterface : public ChipInterface
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index hybrid FE Id , Value CIC FE Id
     std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
 
-    void                       UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
+    std::vector<std::vector<uint8_t>> retrieveExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool                       ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
     std::map<uint8_t, uint8_t> fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
     uint8_t                    fMaxDriveStrength = 5;
     // 4 channels per phyPort ... 12 phyPorts per CIC
-    std::vector<std::vector<uint8_t>> fWordAlignmentVals;
 
     // register map
 };

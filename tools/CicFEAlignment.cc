@@ -597,7 +597,7 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
                 if(cCic == NULL) continue;
 
                 cAligned                                               = cAligned && cWordAligned[cIndx];
-                fCicInterface->SetStaticWordAlignment(cCic, 1);
+                fCicInterface->SetStaticWordAlignment(cCic);
                 // check status
                 if(cWordAligned[cIndx])
                 {
