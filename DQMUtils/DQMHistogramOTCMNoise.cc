@@ -113,9 +113,9 @@ bool DQMHistogramOTCMNoise::fill(std::string& inputStream)
     {
         std::cout << "Matched OTCMNoise HitStream!!!!!\n";
         DetectorDataContainer fDetectorData = theHitSerialization.deserializeOpticalGroupContainer<EmptyContainer,
-                                                                                                   GenericDataArray<NCHANNELS + 1, uint32_t>,
-                                                                                                   GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>,
-                                                                                                   GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>(fDetectorContainer);
+                                                                                                   GenericDataArray<uint32_t, NCHANNELS + 1>,
+                                                                                                   GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1>,
+                                                                                                   GenericDataArray<uint32_t, TOTAL_CHANNELS_OT + 1>>(fDetectorContainer);
         fillHitPlots(fDetectorData);
         return true;
     }
@@ -123,8 +123,7 @@ bool DQMHistogramOTCMNoise::fill(std::string& inputStream)
     {
         std::cout << "Matched OTCMNoise 2DHitStream!!!!!\n";
         DetectorDataContainer fDetectorData =
-            theHitSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>(
-                fDetectorContainer);
+            theHitSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>(fDetectorContainer);
         fill2DHitPlots(fDetectorData);
         return true;
     }
@@ -154,30 +153,30 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
             {
                 for(size_t iCh2 = 0; iCh2 < TOTAL_CHANNELS_OT; iCh2++)
                 {
-                    moduleHitHistogram->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
+                    moduleHitHistogram->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
 
                     // to fill chip-level, need to sum up each bin
                     auto bin_x     = moduleHitHistogram_chip->GetXaxis()->FindBin(iCh1);
                     auto bin_y     = moduleHitHistogram_chip->GetYaxis()->FindBin(iCh2);
                     auto prev_hits = moduleHitHistogram_chip->GetBinContent(bin_x, bin_y);
-                    moduleHitHistogram_chip->SetBinContent(bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
+                    moduleHitHistogram_chip->SetBinContent(bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
 
                     // Even/odd
                     if(iCh1 % 2 == 0 && iCh2 % 2 == 0)
                     {
-                        moduleHitHistogramEven->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
+                        moduleHitHistogramEven->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
 
                         auto prev_hits_even = moduleHitHistogramEven_chip->GetBinContent(bin_x, bin_y);
                         moduleHitHistogramEven_chip->SetBinContent(
-                            bin_x, bin_y, prev_hits_even + opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
+                            bin_x, bin_y, prev_hits_even + opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
                     }
                     else if(iCh1 % 2 == 1 && iCh2 % 2 == 1)
                     {
-                        moduleHitHistogramOdd->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
+                        moduleHitHistogramOdd->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
 
                         auto prev_hits_odd = moduleHitHistogramOdd_chip->GetBinContent(bin_x, bin_y);
                         moduleHitHistogramOdd_chip->SetBinContent(
-                            bin_x, bin_y, prev_hits_odd + opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
+                            bin_x, bin_y, prev_hits_odd + opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
                     }
                 }
             }
@@ -200,9 +199,8 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
                             auto bin_x     = hybridHitHistogram_chip->GetXaxis()->FindBin(iCh1);
                             auto bin_y     = hybridHitHistogram_chip->GetYaxis()->FindBin(iCh2);
                             auto prev_hits = hybridHitHistogram_chip->GetBinContent(bin_x, bin_y);
-                            hybridHitHistogram->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
-                            hybridHitHistogram_chip->SetBinContent(
-                                bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
+                            hybridHitHistogram->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
+                            hybridHitHistogram_chip->SetBinContent(bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
                         }
                         // on hybrid 1
                         else if(iCh1 >= hybridOffset && iCh2 >= hybridOffset && hybrid->getId() == 1)
@@ -212,9 +210,8 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
                             auto prev_hits = hybridHitHistogram_chip->GetBinContent(bin_x, bin_y);
 
                             hybridHitHistogram->SetBinContent(
-                                iCh1 - hybridOffset, iCh2 - hybridOffset, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
-                            hybridHitHistogram_chip->SetBinContent(
-                                bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
+                                iCh1 - hybridOffset, iCh2 - hybridOffset, opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
+                            hybridHitHistogram_chip->SetBinContent(bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
                         }
                     }
                 }
@@ -237,7 +234,7 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
                         for(size_t iCh2 = chipChannelBoundaries[iChan_low]; iCh2 <= chipChannelBoundaries[iChan_high]; iCh2++)
                         {
                             chipHitHistogram->SetBinContent(
-                                iCh1 - chipOffset, iCh2 - chipOffset, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2));
+                                iCh1 - chipOffset, iCh2 - chipOffset, opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[iCh1][iCh2]);
                         }
                     }
                 }
@@ -267,7 +264,7 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
                                                   .fTheHistogram;
 
                     // fill the histogram from the vector
-                    for(uint16_t iChan = 0; iChan < NCHANNELS + 1; iChan++) { cChipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<NCHANNELS + 1, uint32_t>>()[iChan]); }
+                    for(uint16_t iChan = 0; iChan < NCHANNELS + 1; iChan++) { cChipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<uint32_t, NCHANNELS + 1>>()[iChan]); }
                     // do fitting
                     TF1* cChipFit = new TF1("chipFit", hitProbabilityFunction, 0, NCHANNELS + 1, 4);
                     fitCMNoise(cChipHitHistogram, cChipFit, NCHANNELS + 1);
@@ -277,7 +274,7 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
                 TH1F* cHybridHitHistogram =
                     fHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint16_t iChan = 0; iChan < HYBRID_CHANNELS_OT + 1; iChan++)
-                { cHybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>>()[iChan]); }
+                { cHybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1>>()[iChan]); }
 
                 /* unfortuantely this requires computing a binomial coefficient, which overflows a double in this range
                 TF1* cHybridFit = new TF1("hybridFit", hitProbabilityFunction, 0, 2032, 4);
@@ -292,12 +289,12 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
 
             for(uint16_t iChan = 0; iChan < (NCHANNELS + 1) * NCHIPS_OT * 2; iChan++)
             {
-                cModuleHitHistogram->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
+                cModuleHitHistogram->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT>>()[iChan]);
 
                 if(iChan % 2 == 0)
-                    cModuleHitHistogramEven->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
+                    cModuleHitHistogramEven->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT>>()[iChan]);
                 else
-                    cModuleHitHistogramOdd->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
+                    cModuleHitHistogramOdd->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT>>()[iChan]);
             }
             /* unfortuantely this requires computing a binomial coefficient, which overflows a double in this range
             TF1* cModuleFit = new TF1("hybridFit", hitProbabilityFunction, 0, TOTAL_CHANNELS_OT+1, 4);

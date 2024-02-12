@@ -9,7 +9,7 @@ struct LpGBTalignmentResult
 {
     LpGBTalignmentResult(){};
 
-    void setGroupAndChannelResult(const uint8_t groupNumber, const uint8_t channelNumber, const float alignmentEfficiency, const uint8_t bestPhase, const GenericDataArray<16, float>& phaseHistogram)
+    void setGroupAndChannelResult(const uint8_t groupNumber, const uint8_t channelNumber, const float alignmentEfficiency, const uint8_t bestPhase, const GenericDataArray<float, 16>& phaseHistogram)
     {
         fResultContainer[groupNumber][channelNumber] = std::make_tuple(alignmentEfficiency, bestPhase, phaseHistogram);
     }
@@ -18,12 +18,12 @@ struct LpGBTalignmentResult
 
     uint8_t getGroupAndChannelBestPhase(const uint8_t groupNumber, const uint8_t channelNumber) const { return std::get<1>(fResultContainer.at(groupNumber).at(channelNumber)); }
 
-    GenericDataArray<16, float> getGroupAndChannelPhaseHystogram(const uint8_t groupNumber, const uint8_t channelNumber) const
+    GenericDataArray<float, 16> getGroupAndChannelPhaseHystogram(const uint8_t groupNumber, const uint8_t channelNumber) const
     {
         return std::get<2>(fResultContainer.at(groupNumber).at(channelNumber));
     }
 
-    std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, GenericDataArray<16, float>>>> fResultContainer;
+    std::map<uint8_t, std::map<uint8_t, std::tuple<float, uint8_t, GenericDataArray<float, 16>>>> fResultContainer;
 
     friend class boost::serialization::access;
     template <class Archive>

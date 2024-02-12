@@ -3928,8 +3928,7 @@ void DataChecker::PSNominal()
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& fTapsOrigHybrid = fTapsOrigOG->getObject(cHybrid->getId());
-                auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                // auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                // auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 // size_t cPhyPort=0;
                 // size_t cPhyPortChnl=0;
                 // size_t cCounter=0;
@@ -3948,11 +3947,11 @@ void DataChecker::PSNominal()
                     //     cCounter++;
                     // }
                     // then the L1 line
-                    size_t cPhyPortL1                    = (cChip->getId() > 3) ? 11 : 10;
-                    size_t cPhyPortChnlL1                = (cChip->getId() % 4);
-                    auto&  fTapsOrigChip                 = fTapsOrigHybrid->getObject(cChip->getId());
-                    auto   cOptimalTaps                  = fCicInterface->GetOptimalTaps(cCic);
-                    fTapsOrigChip->getSummary<uint8_t>() = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
+                    // size_t cPhyPortL1                    = (cChip->getId() > 3) ? 11 : 10;
+                    // size_t cPhyPortChnlL1                = (cChip->getId() % 4);
+                    auto& fTapsOrigChip = fTapsOrigHybrid->getObject(cChip->getId());
+                    // auto   cOptimalTaps                  = fCicInterface->GetOptimalTaps(cCic);
+                    // fTapsOrigChip->getSummary<uint8_t>() = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
                     sprintf(cBuffer, "%.2d ", fTapsOrigChip->getSummary<uint8_t>());
                     cOutput += cBuffer;
                     LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
@@ -3990,7 +3989,7 @@ void DataChecker::PSNominal()
                 {
                     auto& fTapsHybrid     = fTapsOG->getObject(cHybrid->getId());
                     auto& fTapsOrigHybrid = fTapsOrigOG->getObject(cHybrid->getId());
-                    auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    // auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     // auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
                     // size_t cPhyPort=0;
                     // size_t cPhyPortChnl=0;
@@ -4009,13 +4008,13 @@ void DataChecker::PSNominal()
                         //     cCounter++;
                         // }
                         // then the L1 line
-                        size_t cPhyPortL1     = (cChip->getId() > 3) ? 11 : 10;
-                        size_t cPhyPortChnlL1 = (cChip->getId() % 4);
-                        auto&  fTapsChip      = fTapsHybrid->getObject(cChip->getId());
-                        auto&  fTapsOrigChip  = fTapsOrigHybrid->getObject(cChip->getId());
-                        int    cPhase         = fTapsOrigChip->getSummary<uint8_t>();
-                        int    cPhaseMod      = cPhase + cOffset;
-                        fCicInterface->SetOptimalTap(cCic, cPhyPortL1, cPhyPortChnlL1, cOffset);
+                        // size_t cPhyPortL1     = (cChip->getId() > 3) ? 11 : 10;
+                        // size_t cPhyPortChnlL1 = (cChip->getId() % 4);
+                        auto& fTapsChip     = fTapsHybrid->getObject(cChip->getId());
+                        auto& fTapsOrigChip = fTapsOrigHybrid->getObject(cChip->getId());
+                        int   cPhase        = fTapsOrigChip->getSummary<uint8_t>();
+                        int   cPhaseMod     = cPhase + cOffset;
+                        // fCicInterface->SetOptimalTap(cCic, cPhyPortL1, cPhyPortChnlL1, cOffset); Way too dangerous, it relyies on the order of function calls of the CICInterface
                         cPhaseMod                        = (cPhaseMod < 0 || cPhaseMod > 0xF) ? cPhase : cPhaseMod;
                         fTapsChip->getSummary<uint8_t>() = cPhaseMod;
                     }
@@ -4720,19 +4719,19 @@ void DataChecker::Eye_CIC()
     for(int cOffset = -1; cOffset < +1; cOffset++)
     {
         // set offsets on CICs
-        bool cValidOffset = true;
-        for(auto cBoard: *fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    auto& cCic   = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    cValidOffset = cValidOffset && fCicInterface->SetOptimalTaps(cCic, cOffset);
-                } // hybrid
-            }     // optical group
-        }         // board
-        if(!cValidOffset) continue;
+        // bool cValidOffset = true;
+        // for(auto cBoard: *fDetectorContainer)
+        // {
+        //     for(auto cOpticalGroup: *cBoard)
+        //     {
+        //         for(auto cHybrid: *cOpticalGroup)
+        //         {
+        //             auto& cCic   = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        //             cValidOffset = cValidOffset && fCicInterface->SetOptimalTaps(cCic, cOffset); It does not work with more then one CIC!!!
+        //         } // hybrid
+        //     }     // optical group
+        // }         // board
+        // if(!cValidOffset) continue;
 
         LOG(INFO) << BOLDBLUE << "Offset of " << +cOffset << " from optimal tap on CIC inputs.." << RESET;
         for(auto cBoard: *fDetectorContainer)

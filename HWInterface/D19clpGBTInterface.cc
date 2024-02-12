@@ -378,7 +378,7 @@ LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* p
         for(const auto cChannel: theGroupAndChannels.second)
         {
             float                       alignmentSuccessRate = 0.;
-            GenericDataArray<16, float> bestPhaseHistogram;
+            GenericDataArray<float, 16> bestPhaseHistogram;
             std::fill(bestPhaseHistogram.begin(), bestPhaseHistogram.end(), 0);
             for(auto& value: bestPhaseHistogram) value = 0;
 

@@ -50,7 +50,11 @@ class CbcInterface : public ReadoutChipInterface
     bool ConfigurePage(Ph2_HwDescription::Chip* pCbc, uint8_t pPage, bool pVerify = true);
     bool ConfigureChip(Ph2_HwDescription::Chip* pCbc, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
-    void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    void produceL1phaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip);
+    void produceStubLine0PhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip);
+    void produceStubLines1To4PhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip);
+
+    void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 1) override;
     void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
 
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify = true) override;

@@ -58,14 +58,14 @@ void OTCMNoise::TakeData()
     // channel, chip, hybrid, optical group, board, detector
     // can have 0 or 255 hits, need NCHANNELS+1 (inclusive)
     ContainerFactory::copyAndInitStructure<EmptyContainer,
-                                           GenericDataArray<(NCHANNELS + 1), uint32_t>,
-                                           GenericDataArray<(HYBRID_CHANNELS_OT + 1), uint32_t>,
-                                           GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>,
+                                           GenericDataArray<uint32_t, NCHANNELS + 1>,
+                                           GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1>,
+                                           GenericDataArray<uint32_t, TOTAL_CHANNELS_OT + 1>,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, theHitContainer);
     // 2D arrays for module-level and hybrid-level correlation
     if(f2DHistograms)
-        ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>, EmptyContainer, EmptyContainer>(
+        ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>, EmptyContainer, EmptyContainer>(
             *fDetectorContainer, the2DHitContainer);
 
     for(auto cBoard: theHitContainer)
@@ -96,7 +96,7 @@ void OTCMNoise::TakeData()
                     {
                         uint32_t cEventHits = cEvent->GetNHits(cHybrid->getId(), cChip->getId());
                         // basically filling the histogram, then we will set bin content later
-                        cChip->getSummary<GenericDataArray<(NCHANNELS + 1), uint32_t>>()[cEventHits] += 1;
+                        cChip->getSummary<GenericDataArray<uint32_t, NCHANNELS + 1>>()[cEventHits] += 1;
                         cHybridHits += cEventHits;
 
                         // for 2d correlation, save channels with hits per chip
@@ -112,9 +112,9 @@ void OTCMNoise::TakeData()
 
                     // save per hybrid
                     cModuleHits += cHybridHits;
-                    cHybrid->getSummary<GenericDataArray<(HYBRID_CHANNELS_OT + 1), uint32_t>>()[cHybridHits] += 1;
+                    cHybrid->getSummary<GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1>>()[cHybridHits] += 1;
                 }
-                cOpticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>()[cModuleHits] += 1;
+                cOpticalGroup->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT + 1>>()[cModuleHits] += 1;
 
                 if(f2DHistograms)
                 {
@@ -125,7 +125,7 @@ void OTCMNoise::TakeData()
                         {
                             the2DHitContainer.getObject(cBoard->getId())
                                 ->getObject(cOpticalGroup->getId())
-                                ->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(hit_channels[iCh1], hit_channels[iCh2]) += 1;
+                                ->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[hit_channels[iCh1]][hit_channels[iCh2]] += 1;
                         }
                     }
                 }

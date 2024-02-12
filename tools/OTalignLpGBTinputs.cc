@@ -23,7 +23,7 @@ void OTalignLpGBTinputs::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.stub_counter_block.general.shutter_close"); // TODO: not sure if needed
 
     fNumberOfAlignmentIterations = findValueInSettings<double>("OTalignLpGBTinputsNumberOfAlignmentIterations", 100);
-    fMinAlignmentSuccessRate     = findValueInSettings<double>("OTalignLpGBTinputsMinAlignmnetSuccessRate", 0.99);
+    fMinAlignmentSuccessRate     = findValueInSettings<double>("OTalignLpGBTinputsMinAlignmentSuccessRate", 0.99);
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -73,6 +73,11 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
             theOpticalGroupAlignmentResult                            = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, fNumberOfAlignmentIterations);
             bool isAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, fMinAlignmentSuccessRate, theOpticalGroup);
 
+            if(theOpticalGroup->size() != 2)
+            {
+                LOG(WARNING) << BOLDYELLOW << "Warning: Less than 2 hybrids enabled, assuming this is a debugging and LpGBT alignment failures will be ignored" << RESET;
+                isAligned = true;
+            }
             if(!isAligned)
             {
                 LOG(INFO) << BOLDRED << "FAILED to align LpGBT inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " --- OpticalGroup will be disabled"
