@@ -46,7 +46,8 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         {
             for(const auto& channelAndBin: group.second)
             { 
-                theHistogram->SetBinLabel(channelAndBin.second, Form("H(%d)_%d_%d", theHybridGroupsAndChannels[std::make_pair(group.first, channelAndBin.first)], group.first, channelAndBin.first));
+                TString theHybridSide(theHybridGroupsAndChannels[std::make_pair(group.first, channelAndBin.first)]);
+                theHistogram->SetBinLabel(channelAndBin.second, Form("FEH("+theHybridSide+")_%d_%d", group.first, channelAndBin.first));
             }
         }
     };
