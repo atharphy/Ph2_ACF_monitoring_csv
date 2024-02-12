@@ -17,6 +17,11 @@
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
 #endif
 
+namespace Ph2_HwDescription
+{
+    class BeBoard;
+}
+
 class OTCICphaseAlignment : public Tool
 {
   public:
@@ -37,6 +42,8 @@ class OTCICphaseAlignment : public Tool
 
   private:
     void phaseAlignment();
+    void AlignAllCICinputsPS(Ph2_HwDescription::BeBoard* theBoard, BoardDataContainer* thePhaseHistogramBoardDataContainer, BoardDataContainer* theLockingEfficiencyBoardDataContainer, BoardDataContainer* theBestPhaseBoardDataContainer);
+    void AlignAllCICinputs2S(Ph2_HwDescription::BeBoard* theBoard, BoardDataContainer* thePhaseHistogramBoardDataContainer, BoardDataContainer* theLockingEfficiencyBoardDataContainer, BoardDataContainer* theBestPhaseBoardDataContainer);
 
     size_t fNumberOfAlignmentIterations{100};
     float  fMinLockingSuccessRate{1.};
