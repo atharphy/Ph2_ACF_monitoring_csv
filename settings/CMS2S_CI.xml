@@ -115,7 +115,10 @@
     <Setting name="DoManualVrefTuning"      >  0</Setting>
     <Setting name="OTverifyBoardDataWordNumberOfIterations">100</Setting>
     <Setting name="OTalignLpGBTinputsNumberOfAlignmentIterations">100</Setting>
-    <Setting name="OTalignLpGBTinputsMinAlignmnetSuccessRate">0.99</Setting>
+    <Setting name="OTalignLpGBTinputsMinAlignmentSuccessRate">0.99</Setting>
+
+    <Setting name="OTCICphaseAlignmentNumberOfAlignmentIterations">100</Setting>
+    <Setting name="OTCICphaseAlignmentMinLockingSuccessRate">0.95</Setting>
 
 </Settings>
 

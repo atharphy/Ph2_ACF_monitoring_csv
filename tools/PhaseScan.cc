@@ -104,7 +104,7 @@ void PhaseScan::ScanPhase()
                 for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
                 {
                     DetectorDataContainer cHitContainer;
-                    ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, cHitContainer);
+                    ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t, VECSIZE>>(*fDetectorContainer, cHitContainer);
 
                     // std::cout<<"cTriggerId "<<+cTriggerId<<std::endl;
                     auto cEventIter = cEvents.begin() + cTriggerId;
@@ -132,7 +132,7 @@ void PhaseScan::ScanPhase()
                                                     ->getObject(cOpticalGroup->getId())
                                                     ->getObject(cHybrid->getId())
                                                     ->getObject(cChip->getId())
-                                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                                 NPclus += 1;
                                             }
                                         }
@@ -147,7 +147,7 @@ void PhaseScan::ScanPhase()
                                                     ->getObject(cOpticalGroup->getId())
                                                     ->getObject(cHybrid->getId())
                                                     ->getObject(cChip->getId())
-                                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                                 NSclus += 1;
                                             }
                                         }

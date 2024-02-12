@@ -99,6 +99,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTalignBoardDataWord,
              DQMHistogramOTverifyBoardDataWord,
              DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("calibrationandpedenoise");
     Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
