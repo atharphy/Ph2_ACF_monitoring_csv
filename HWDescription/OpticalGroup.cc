@@ -48,41 +48,41 @@ std::map< std::pair<uint8_t,uint8_t>, std::string> OpticalGroup::getLpGBTrxGroup
     if(getFrontEndType() == FrontEndType::OuterTracker2S)
     {
         // Right CIC 
-        hybridsAndGroupsAndChannels[std::make_pair(0,0)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(4,0)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(4,2)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(5,0)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(5,2)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(6,0)] = "R";
+        hybridsAndGroupsAndChannels[std::make_pair(0,0)] = "FEHR_L1";
+        hybridsAndGroupsAndChannels[std::make_pair(4,0)] = "FEHR_Stub0";
+        hybridsAndGroupsAndChannels[std::make_pair(4,2)] = "FEHR_Stub1";
+        hybridsAndGroupsAndChannels[std::make_pair(5,0)] = "FEHR_Stub2";
+        hybridsAndGroupsAndChannels[std::make_pair(5,2)] = "FEHR_Stub3";
+        hybridsAndGroupsAndChannels[std::make_pair(6,0)] = "FEHR_Stub4";
         // Left CIC 
-        hybridsAndGroupsAndChannels[std::make_pair(0,2)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(1,0)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(1,2)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(2,0)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(2,2)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(3,2)] = "L";
+        hybridsAndGroupsAndChannels[std::make_pair(0,2)] = "FEHL_Stub0";
+        hybridsAndGroupsAndChannels[std::make_pair(1,0)] = "FEHL_Stub1";
+        hybridsAndGroupsAndChannels[std::make_pair(1,2)] = "FEHL_Stub2";
+        hybridsAndGroupsAndChannels[std::make_pair(2,0)] = "FEHL_Stub3";
+        hybridsAndGroupsAndChannels[std::make_pair(2,2)] = "FEHL_Stub4";
+        hybridsAndGroupsAndChannels[std::make_pair(3,2)] = "FEHL_L1";
 
 
     }
     else
     {
         // Right CIC 
-        hybridsAndGroupsAndChannels[std::make_pair(0,0)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(4,0)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(4,2)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(5,0)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(5,2)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(6,0)] = "R";
-        hybridsAndGroupsAndChannels[std::make_pair(6,2)] = "R";
+        hybridsAndGroupsAndChannels[std::make_pair(0,0)] = "FEHR_Stub0";
+        hybridsAndGroupsAndChannels[std::make_pair(4,0)] = "FEHR_Stub5";
+        hybridsAndGroupsAndChannels[std::make_pair(4,2)] = "FEHR_L1";
+        hybridsAndGroupsAndChannels[std::make_pair(5,0)] = "FEHR_Stub4";
+        hybridsAndGroupsAndChannels[std::make_pair(5,2)] = "FEHR_Stub3";
+        hybridsAndGroupsAndChannels[std::make_pair(6,0)] = "FEHR_Stub2";
+        hybridsAndGroupsAndChannels[std::make_pair(6,2)] = "FEHR_Stub1";
 
         // Left CIC 
-        hybridsAndGroupsAndChannels[std::make_pair(0,2)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(1,0)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(1,2)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(2,0)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(2,2)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(3,0)] = "L";
-        hybridsAndGroupsAndChannels[std::make_pair(3,2)] = "L";
+        hybridsAndGroupsAndChannels[std::make_pair(0,2)] = "FEHL_Stub5";
+        hybridsAndGroupsAndChannels[std::make_pair(1,0)] = "FEHL_L1";
+        hybridsAndGroupsAndChannels[std::make_pair(1,2)] = "FEHL_Stub4";
+        hybridsAndGroupsAndChannels[std::make_pair(2,0)] = "FEHL_Stub3";
+        hybridsAndGroupsAndChannels[std::make_pair(2,2)] = "FEHL_Stub2";
+        hybridsAndGroupsAndChannels[std::make_pair(3,0)] = "FEHL_Stub1";
+        hybridsAndGroupsAndChannels[std::make_pair(3,2)] = "FEHL_Stub0";
 
 
     }
