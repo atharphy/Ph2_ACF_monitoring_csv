@@ -9,6 +9,7 @@
 
 #include "HWInterface/D19clpGBTInterface.h"
 #include "HWDescription/lpGBT.h"
+#include "HWDescription/OpticalGroup.h"
 #include "Utils/LpGBTalignmentResult.h"
 #include <chrono>
 #include <cstring>
@@ -463,17 +464,32 @@ LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* p
     return theAlignmentResults;
 }
 
-bool D19clpGBTInterface::didAlignmentSucceded(LpGBTalignmentResult& theOpticalGroupAlignmentResult, float minAlignmentSuccessRate)
+bool D19clpGBTInterface::didAlignmentSucceded(LpGBTalignmentResult& theOpticalGroupAlignmentResult, float minAlignmentSuccessRate, const Ph2_HwDescription::OpticalGroup *theOpticalGroup)
 {
     bool isAligned = true;
+    auto theGroupsAndChannelsPerHybrid = theOpticalGroup->getLpGBTrxGroupsAndChannelsPerHybrid();
 
     for(const auto& theGoupAlignmenResult: theOpticalGroupAlignmentResult.fResultContainer)
     {
         for(const auto& theChannelAlignmentResult: theGoupAlignmenResult.second)
         {
+            bool skipGroupAndChannel = false;
+            // Check if the group and channel belong to a disabled hybrid
+            for(auto cHybrid: *theOpticalGroup)
+            { 
+                auto theHybridId     = cHybrid->getId();
+                std::string sideToMatch = (theHybridId%2 == 0)? "R" : "L";
+                std::string theSide = theGroupsAndChannelsPerHybrid[std::make_pair(theGoupAlignmenResult.first,theChannelAlignmentResult.first)];
+                std::size_t found = theSide.find("FEH"+sideToMatch);
+                if(found == std::string::npos && theOpticalGroup->size() !=2)
+                {
+                    skipGroupAndChannel = true;
+                }
+            }
+
             float   alignmentSuccessRate = std::get<0>(theChannelAlignmentResult.second);
             uint8_t bestPhaseFound       = std::get<1>(theChannelAlignmentResult.second);
-            if(alignmentSuccessRate < minAlignmentSuccessRate || bestPhaseFound == 15)
+            if((alignmentSuccessRate < minAlignmentSuccessRate || bestPhaseFound == 15) && !skipGroupAndChannel)
             {
                 isAligned = false;
                 std::stringstream errorMessage;

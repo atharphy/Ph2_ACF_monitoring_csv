@@ -64,20 +64,15 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
             for(auto cHybrid: *theOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                // disable alignment output
+                // enable alignment output
                 fCicInterface->SelectOutput(cCic, true);
                 cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
                 fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
             }
             std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels = theOpticalGroup->getLpGBTrxGroupsAndChannels();
             theOpticalGroupAlignmentResult                            = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, fNumberOfAlignmentIterations);
-            bool isAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, fMinAlignmentSuccessRate);
+            bool isAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, fMinAlignmentSuccessRate, theOpticalGroup);
 
-            if(theOpticalGroup->size() != 2)
-            {
-                LOG(WARNING) << BOLDYELLOW << "Warning: Less than 2 hybrids enabled, assuming this is a debugging and LpGBT alignment failures will be ignored" << RESET;
-                isAligned = true;
-            }
             if(!isAligned)
             {
                 LOG(INFO) << BOLDRED << "FAILED to align LpGBT inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " --- OpticalGroup will be disabled"

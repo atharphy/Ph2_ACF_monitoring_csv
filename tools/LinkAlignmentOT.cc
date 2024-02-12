@@ -127,7 +127,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
 
     std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels              = pOpticalGroup->getLpGBTrxGroupsAndChannels();
     auto                                    theOpticalGroupAlignmentResult = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, 5);
-    bool                                    isAligned                      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, 1);
+    bool                                    isAligned                      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, 1, pOpticalGroup);
 
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx = 0;
