@@ -327,7 +327,7 @@ bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWord
         }
     }
 
-    LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, expected pattern not found" << RESET;
+    LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isL1HeaderFound - Error, expected pattern not found" << RESET;
     LOG(ERROR) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket) << RESET;
 
     return false; // header not found
