@@ -90,7 +90,7 @@ class CicInterface : public ChipInterface
     bool                              CheckDLL(Ph2_HwDescription::Chip* pChip);
     bool                              CheckFastCommandLock(Ph2_HwDescription::Chip* pChip);
     bool                              ConfigureAlignmentPatterns(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
-    bool                              AutomatedWordAlignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, int pWait_ms = 1000);
+    bool                              AutomatedWordAlignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
     bool                              ConfigureBx0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pPatterns, uint8_t pFEId = 0, uint8_t pLineId = 0);
     std::pair<bool, uint8_t>          CheckBx0Alignment(Ph2_HwDescription::Chip* pChip); // success , delay
     bool                              CheckReSync(Ph2_HwDescription::Chip* pChip);
@@ -98,7 +98,6 @@ class CicInterface : public ChipInterface
     bool                              CheckSoftReset(Ph2_HwDescription::Chip* pChip);
     bool                              StartUp(Ph2_HwDescription::Chip* pChip);
     bool                              ManualBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pBx0delay = 8);
-    std::vector<std::vector<uint8_t>> GetWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool                              SelectMode(Ph2_HwDescription::Chip* pChip, uint8_t pMode = 0);
     bool                              SelectOutput(Ph2_HwDescription::Chip* pChip, bool pFixedPattern = true);
     bool                              EnableFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFEs = {0, 1, 2, 3, 4, 5, 6, 7}, bool pEnable = true);

@@ -78,7 +78,7 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
                 // configure word alignment pattern on CBCs
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getWordAlignmentPatterns();
                 for(auto cChip: *theHybrid) { fReadoutChipInterface->produceWordAlignmentPattern(cChip); }
-                bool cSuccessAlign = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_us * 1000);
+                bool cSuccessAlign = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns);
                 cWordAligned.push_back(cSuccessAlign ? 1 : 0);
             } // hybrid - configure word alignment patterns
 
@@ -86,7 +86,6 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto&                             cCic                 = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->GetWordAlignmentValues(cCic);
                 // check status
                 if(cWordAligned[cIndx])
                 {
@@ -100,23 +99,6 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
                               << +theHybrid->getId() << " --- Hybrid will be disabled" << RESET;
                     ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId());
                     continue;
-                }
-
-                for(auto cChip: *theHybrid)
-                {
-                    auto& cWordAlignmentVals = fWordAlignmentValues.getObject(theBoard->getId())
-                                                   ->getObject(theOpticalGroup->getId())
-                                                   ->getObject(theHybrid->getId())
-                                                   ->getObject(cChip->getId())
-                                                   ->getSummary<std::vector<uint8_t>>();
-
-                    std::stringstream cOutput;
-                    for(size_t cLine = 0; cLine < 5; cLine++)
-                    {
-                        cWordAlignmentVals[cLine] = cWordAlignmentValues[cChip->getId() % 8][cLine];
-                        cOutput << +cWordAlignmentVals[cLine] << " ";
-                    }
-                    LOG(INFO) << BOLDBLUE << "Word alignment values for FE#" << +cChip->getId() << " : " << cOutput.str() << RESET;
                 }
                 cIndx++;
             }

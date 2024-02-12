@@ -378,7 +378,7 @@ std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip)
 }
 // run automated word alignment
 // assumes FEs have been configured to output alignment pattern
-bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, int pWait_ms)
+bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns)
 {
     setBoard(pChip->getBeBoardId());
     LOG(DEBUG) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getHybridId() << RESET;
@@ -631,11 +631,7 @@ bool CicInterface::SetStaticWordAlignment(Chip* pChip, uint8_t pValue)
     bool    cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
     return cSuccess;
 }
-std::vector<std::vector<uint8_t>> CicInterface::GetWordAlignmentValues(Chip* pChip)
-{
-    // UpdateExternalWordAlignmentValues(pChip);
-    return fWordAlignmentVals;
-}
+
 void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
 {
     setBoard(pChip->getBeBoardId());
