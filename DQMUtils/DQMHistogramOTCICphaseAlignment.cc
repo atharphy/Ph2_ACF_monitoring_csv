@@ -217,8 +217,7 @@ bool DQMHistogramOTCICphaseAlignment::fill(std::string& inputStream)
         std::cout << "Matched OTCICphaseAlignment PhaseHistogram!!!!\n";
         DetectorDataContainer theDetectorData =
             thePhaseHistogramContainerSerialization
-                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>, EmptyContainer>(
-                    fDetectorContainer);
+                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>, EmptyContainer>(fDetectorContainer);
         fillPhaseHistogramResults(theDetectorData);
         return true;
     }
