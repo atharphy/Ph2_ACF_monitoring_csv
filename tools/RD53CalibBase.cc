@@ -230,7 +230,6 @@ void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
 // # Split output file by Hybrid #
 // ###############################
 
-// https://root.cern/doc/master/copyFiles_8C.html
 #ifdef __USE_ROOT__
 bool CalibBase::splitHistoFileByHybrid(TFile* theInputFile)
 {
@@ -325,15 +324,19 @@ void CalibBase::copyDirectories(TFile* theInputFile, TFile* theOutputFile, const
 
 void CalibBase::copyContent(TFile* theInputFile, TFile* theOutputFile, const std::string& dirName)
 {
-    std::cout << "AAAAAAAA DENTRO " << std::endl;
+    // ############################
+    // # Set input file directory #
+    // ############################
     theInputFile->cd(dirName.c_str());
     TDirectory* inputDir = gDirectory;
 
+    // #############################
+    // # Set output file directory #
+    // #############################
     theOutputFile->mkdir(dirName.c_str());
     theOutputFile->cd(dirName.c_str());
     TDirectory* outputDir = gDirectory;
     outputDir->cd();
-    std::cout << "AAAAAAAA dirName: " << dirName << " GetName: " << outputDir->GetName() << std::endl;
 
     TKey* key;
     TIter nextkey(inputDir->GetListOfKeys());
@@ -347,26 +350,26 @@ void CalibBase::copyContent(TFile* theInputFile, TFile* theOutputFile, const std
 
         if(theClass->InheritsFrom(TTree::Class()))
         {
-            TTree* T = (TTree*)inputDir->Get(key->GetName());
             if(!outputDir->FindObject(key->GetName()))
             {
+                TTree* T = (TTree*)inputDir->Get(key->GetName());
                 outputDir->cd();
                 TTree* newT = T->CloneTree(-1, "fast");
                 newT->Write();
+                delete newT;
             }
         }
         else
         {
             inputDir->cd();
-            TObject* obj = key->ReadObj();
+            TObject* newO = key->ReadObj();
             outputDir->cd();
-            obj->Write();
-            delete obj;
+            newO->Write();
+            delete newO;
         }
     }
 
     outputDir->SaveSelf(kTRUE);
-    std::cout << "AAAAAAAA FINE " << std::endl;
 }
 
 bool CalibBase::openRootFileFolder(TFile* theInputFile, const std::string& folderName)
