@@ -73,11 +73,6 @@ void OTalignLpGBTinputs::AlignLpGBTInputs()
             theOpticalGroupAlignmentResult                            = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, fNumberOfAlignmentIterations);
             bool isAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, fMinAlignmentSuccessRate, theOpticalGroup);
 
-            if(theOpticalGroup->size() != 2)
-            {
-                LOG(WARNING) << BOLDYELLOW << "Warning: Less than 2 hybrids enabled, assuming this is a debugging and LpGBT alignment failures will be ignored" << RESET;
-                isAligned = true;
-            }
             if(!isAligned)
             {
                 LOG(INFO) << BOLDRED << "FAILED to align LpGBT inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " --- OpticalGroup will be disabled"
