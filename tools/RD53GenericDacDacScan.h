@@ -27,7 +27,6 @@ class GenericDacDacScan : public PixelAlive
     ~GenericDacDacScan()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -56,6 +55,9 @@ class GenericDacDacScan : public PixelAlive
     DetectorDataContainer theGenericDacDacContainer;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     std::string regNameDAC1;
     size_t      startValueDAC1;
     size_t      stopValueDAC1;

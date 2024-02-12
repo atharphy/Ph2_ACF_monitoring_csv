@@ -33,7 +33,6 @@ class ThrEqualization : public PixelAlive
     ~ThrEqualization()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -74,6 +73,9 @@ class ThrEqualization : public PixelAlive
     DetectorDataContainer                  theTDACContainer;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     int    resetTDAC;
     size_t startValue;
     size_t stopValue;

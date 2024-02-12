@@ -35,7 +35,6 @@ class Gain : public CalibBase
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
         if(doSaveData == true) this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -72,27 +71,23 @@ class Gain : public CalibBase
     ContainerRecycleBin<OccupancyAndPh>    theRecyclingBin;
 
   protected:
-    RD53Shared::INJtype                      injType;
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
+    RD53Shared::INJtype injType;
+    size_t              startValue;
+    size_t              stopValue;
+    float               targetCharge;
+    float               nSteps;
+    size_t              offset;
+    size_t              nHITxCol;
+    size_t              doOnlyNGroups;
+    bool                doDisplay;
+    bool                doUpdateChip;
+    bool                saveBinaryData;
+
+    bool                                     doSaveData;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t nEvents;
-    size_t startValue;
-    size_t stopValue;
-    float  targetCharge;
-    float  nSteps;
-    size_t offset;
-    size_t nHITxCol;
-    size_t doOnlyNGroups;
-    bool   doDisplay;
-    bool   doUpdateChip;
-    bool   saveBinaryData;
-
-    bool doSaveData;
-
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };
 
