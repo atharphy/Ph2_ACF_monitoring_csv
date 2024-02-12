@@ -139,7 +139,7 @@ void DQMHistogramOTCICphaseAlignment::fillPhaseHistogramResults(DetectorDataCont
                     {
                         for(size_t phase = 0; phase < 16; phase++)
                         {
-                            bestPhaseHistogram->SetBinContent(chipId*NUMBER_OF_LINES_PER_CIC_PORTS + cLineId + 1, phase, thePhaseHistogramVector[chipId][cLineId][phase]);
+                            bestPhaseHistogram->SetBinContent(chipId*NUMBER_OF_LINES_PER_CIC_PORTS + cLineId + 1, phase + 1, thePhaseHistogramVector[chipId][cLineId][phase]);
                         }
                     }
                 }

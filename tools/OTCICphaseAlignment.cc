@@ -99,14 +99,46 @@ void OTCICphaseAlignment::phaseAlignment()
         if(isPSmodule) AlignAllCICinputsPS(theBoard, thePhaseHistogramBoardDataContainer, theLockingEfficiencyBoardDataContainer, theBestPhaseBoardDataContainer);
         else           AlignAllCICinputs2S(theBoard, thePhaseHistogramBoardDataContainer, theLockingEfficiencyBoardDataContainer, theBestPhaseBoardDataContainer);
         
+        //normalize efficiency histogram
+        for(auto opticalGroup : *theLockingEfficiencyBoardDataContainer)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                auto& theLockingEfficiency = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
+                for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
+                {
+                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
+                    {
+                        theLockingEfficiency[frontEnd][line]/=fNumberOfAlignmentIterations;
+                    }
+                }
+            }
+        }
+
+        //normalize phase histogram
+        for(auto opticalGroup : *thePhaseHistogramBoardDataContainer)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                auto& thePhaseHistogram = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>();
+                for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
+                {
+                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
+                    {
+                        for(uint8_t phase = 0; phase < 16; ++phase)
+                        thePhaseHistogram[frontEnd][line][phase]/=fNumberOfAlignmentIterations;
+                    }
+                }
+            }
+        }
+
         // check alignment
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
                 // enable automatic phase aligner
-                const auto& theLockingEfficiency = theLockingEfficiencyContainer.getObject(theBoard->getId())
-                            ->getObject(theOpticalGroup->getId())
+                const auto& theLockingEfficiency = theLockingEfficiencyBoardDataContainer->getObject(theOpticalGroup->getId())
                             ->getObject(theHybrid->getId())
                             ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
                 bool cLocked       = true;
@@ -114,7 +146,7 @@ void OTCICphaseAlignment::phaseAlignment()
                 {
                     for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
-                        if(theLockingEfficiency[theChip->getId() % 8][line] < fMinLockingSuccessRate * fNumberOfAlignmentIterations)
+                        if(theLockingEfficiency[theChip->getId() % 8][line] < fMinLockingSuccessRate)
                         {
                             std::stringstream errorMessage;
                             errorMessage << "OTCICphaseAlignment::phaseAlignment - Error in aligning CIC on ";
@@ -122,7 +154,7 @@ void OTCICphaseAlignment::phaseAlignment()
                                 errorMessage << "L1 line";
                             else
                                 errorMessage << "Stub line " << +(line - 1);
-                            errorMessage << " - locking efficiency = " << theLockingEfficiency[theChip->getId() % 8][line]/fNumberOfAlignmentIterations << " less then minimum requited (" << fMinLockingSuccessRate << ")";
+                            errorMessage << " - locking efficiency = " << theLockingEfficiency[theChip->getId() % 8][line] << " less then minimum requited (" << fMinLockingSuccessRate << ")";
                             errorMessage << " - Chip  " << +theChip->getId() << " Hybrid " << +theHybrid->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " BeBoard " << +theBoard->getId();
                             LOG(ERROR) << BOLDRED << errorMessage.str() << RESET;
                             cLocked = false;
@@ -144,51 +176,44 @@ void OTCICphaseAlignment::phaseAlignment()
                     ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
                     continue;
                 }
-                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                fCicInterface->SetStaticPhaseAlignment(cCic);
             } // CICs
         }     // OG
-    }
 
-    //normalize efficiency histogram
-    for(auto board : theLockingEfficiencyContainer)
-    {
-        for(auto opticalGroup : *board)
+        // Find and set best phases
+        for(auto theOpticalGroup: *theBoard)
         {
-            for(auto hybrid: *opticalGroup)
+            for(auto theHybrid: *theOpticalGroup)
             {
-                auto& theLockingEfficiency = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
+                auto& thePhaseHistogram = thePhaseHistogramContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())
+                                            ->getObject(theHybrid->getId())
+                                            ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>();
+                auto& theBestPhase = theBestPhaseContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())
+                                            ->getObject(theHybrid->getId())
+                                            ->getSummary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
                 for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
                 {
                     for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
-                        theLockingEfficiency[frontEnd][line]/=fNumberOfAlignmentIterations;
-                    }
-                }
-            }
-        }
-    }
-
-    //normalize phase histogram
-    for(auto board : thePhaseHistogramContainer)
-    {
-        for(auto opticalGroup : *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                auto& thePhaseHistogram = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>();
-                for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
-                {
-                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
-                    {
+                        float bestPhaseEfficiency = 0;
+                        uint8_t bestPhase = 15;
                         for(uint8_t phase = 0; phase < 16; ++phase)
-                        thePhaseHistogram[frontEnd][line][phase]/=fNumberOfAlignmentIterations;
+                        {
+                            auto theCurrentEfficiency = thePhaseHistogram[frontEnd][line][phase];
+                            if(theCurrentEfficiency > bestPhaseEfficiency)
+                            {
+                                bestPhase = phase;
+                                bestPhaseEfficiency = theCurrentEfficiency;
+                            }
+                        }
+                        theBestPhase[frontEnd][line] = bestPhase;
                     }
                 }
+                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                fCicInterface->SetStaticPhaseAlignment(cCic);
+                fCicInterface->writeAllTaps(cCic, theBestPhase);
             }
         }
     }
-
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTCICphaseAlignment.fillPhaseHistogramResults(thePhaseHistogramContainer);
