@@ -9,6 +9,7 @@
 
 #include "HWInterface/D19clpGBTInterface.h"
 #include "HWDescription/lpGBT.h"
+#include "HWDescription/OpticalGroup.h"
 #include "Utils/LpGBTalignmentResult.h"
 #include <chrono>
 #include <cstring>
