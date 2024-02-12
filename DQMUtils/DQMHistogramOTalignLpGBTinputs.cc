@@ -27,7 +27,7 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
     // SoC utilities only - END
 
     fGroupAndChannelToBinNumber.clear();
-    const auto theGroupsAndChannels = theDetectorStructure.getFirstObject()->getFirstObject()->getLpGBTrxGroupsAndChannels();
+    const auto theGroupsAndChannels       = theDetectorStructure.getFirstObject()->getFirstObject()->getLpGBTrxGroupsAndChannels();
     const auto theHybridGroupsAndChannels = theDetectorStructure.getFirstObject()->getFirstObject()->getLpGBTrxGroupsAndChannelsPerHybrid();
 
     int numberOfBins = 0;
@@ -40,12 +40,11 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         }
     }
 
-    auto setBinLabels = [this](TAxis* theHistogram, auto theHybridGroupsAndChannels) 
-    {
+    auto setBinLabels = [this](TAxis* theHistogram, auto theHybridGroupsAndChannels) {
         for(const auto& group: this->fGroupAndChannelToBinNumber)
         {
             for(const auto& channelAndBin: group.second)
-            { 
+            {
                 TString theHybridSide(theHybridGroupsAndChannels[std::make_pair(group.first, channelAndBin.first)]);
                 theHistogram->SetBinLabel(channelAndBin.second, theHybridSide);
             }

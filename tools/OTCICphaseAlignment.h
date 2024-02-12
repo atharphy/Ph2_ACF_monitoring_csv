@@ -13,13 +13,13 @@
 #include "Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
-// Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
+// Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
 #endif
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
+class BeBoard;
 }
 
 class OTCICphaseAlignment : public Tool
@@ -42,8 +42,14 @@ class OTCICphaseAlignment : public Tool
 
   private:
     void phaseAlignment();
-    void AlignAllCICinputsPS(Ph2_HwDescription::BeBoard* theBoard, BoardDataContainer* thePhaseHistogramBoardDataContainer, BoardDataContainer* theLockingEfficiencyBoardDataContainer, BoardDataContainer* theBestPhaseBoardDataContainer);
-    void AlignAllCICinputs2S(Ph2_HwDescription::BeBoard* theBoard, BoardDataContainer* thePhaseHistogramBoardDataContainer, BoardDataContainer* theLockingEfficiencyBoardDataContainer, BoardDataContainer* theBestPhaseBoardDataContainer);
+    void AlignAllCICinputsPS(Ph2_HwDescription::BeBoard* theBoard,
+                             BoardDataContainer*         thePhaseHistogramBoardDataContainer,
+                             BoardDataContainer*         theLockingEfficiencyBoardDataContainer,
+                             BoardDataContainer*         theBestPhaseBoardDataContainer);
+    void AlignAllCICinputs2S(Ph2_HwDescription::BeBoard* theBoard,
+                             BoardDataContainer*         thePhaseHistogramBoardDataContainer,
+                             BoardDataContainer*         theLockingEfficiencyBoardDataContainer,
+                             BoardDataContainer*         theBestPhaseBoardDataContainer);
 
     size_t fNumberOfAlignmentIterations{100};
     float  fMinLockingSuccessRate{1.};

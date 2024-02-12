@@ -836,15 +836,19 @@ GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicIn
     {
         // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
         auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
-        if(isLocked(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second)) theIsLocked2DArray[frontEnd][0] = true;
-        else theIsLocked2DArray[frontEnd][0] = false;
+        if(isLocked(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second))
+            theIsLocked2DArray[frontEnd][0] = true;
+        else
+            theIsLocked2DArray[frontEnd][0] = false;
 
         // Stub lines are on pyPort 0 to 9
         for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line)
         {
             auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
-            if(isLocked(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second)) theIsLocked2DArray[frontEnd][line + 1] = true;
-            else theIsLocked2DArray[frontEnd][line + 1] = false;
+            if(isLocked(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second))
+                theIsLocked2DArray[frontEnd][line + 1] = true;
+            else
+                theIsLocked2DArray[frontEnd][line + 1] = false;
         }
     }
 
@@ -854,11 +858,11 @@ GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicIn
 bool CicInterface::writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> cicInputTaps)
 {
     std::unordered_map<std::string, uint8_t> phaseRegisterMap;
-    auto setPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel, uint8_t phase) {
+    auto                                     setPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel, uint8_t phase) {
         std::stringstream phaseRegisterName;
         phaseRegisterName << "scPhaseSelectB" << +channel << "i" << +phyPort / 2;
         auto& theCurrentRegisterValue = phaseRegisterMap[phaseRegisterName.str()];
-        theCurrentRegisterValue = (theCurrentRegisterValue & (0xF <<  ((phyPort+1) % 2 * 4))) | ((phase & 0xF) << (phyPort % 2 * 4));
+        theCurrentRegisterValue       = (theCurrentRegisterValue & (0xF << ((phyPort + 1) % 2 * 4))) | ((phase & 0xF) << (phyPort % 2 * 4));
     };
 
     std::vector<uint8_t> cicFrontEndMapping = getMapping(pChip);
@@ -869,19 +873,15 @@ bool CicInterface::writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray
         for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line)
         {
             auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
-            setPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second, cicInputTaps[frontEnd][line+1]);
+            setPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second, cicInputTaps[frontEnd][line + 1]);
         }
     }
 
     std::vector<std::pair<std::string, uint16_t>> phaseRegisterVector;
-    for(auto theRegister: phaseRegisterMap)
-    {
-        phaseRegisterVector.push_back(theRegister);
-    }
+    for(auto theRegister: phaseRegisterMap) { phaseRegisterVector.push_back(theRegister); }
 
     return WriteChipMultReg(pChip, phaseRegisterVector);
 }
-
 
 std::pair<uint8_t, uint8_t> CicInterface::fromChipL1ToPhyPortAndChannel(Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId)
 {
