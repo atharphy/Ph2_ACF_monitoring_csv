@@ -392,12 +392,11 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         return false;
     }
 
-    std::string cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "USE_EXT_WA_DELAY" : "MISC_CTRL";
+    std::string cRegName   = "MISC_CTRL";
     uint16_t    cRegValue  = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : ((cRegValue & 0x1D) | (0x1 << 1));
-    uint16_t    cToggleOn  = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : ((cRegValue & 0x1D) | (0x0 << 1));
+    uint16_t    useInternalWordDelay  = (cRegValue & 0x1D) | (0x0 << 1); // required for automatic alignment
 
-    cSuccess = this->WriteChipReg(pChip, cRegName, cToggleOn);
+    cSuccess = this->WriteChipReg(pChip, cRegName, useInternalWordDelay);
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot disable external word alignment value on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
@@ -406,11 +405,9 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         return false;
     }
 
-    cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "AUTO_WA_REQUEST" : "MISC_CTRL";
     cRegValue  = this->ReadChipReg(pChip, cRegName);
-    cToggleOn  = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : ((cRegValue & 0x1D) | (0x1 << 0));
-    cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : ((cRegValue & 0x1D) | (0x0 << 0));
-    cSuccess   = this->WriteChipReg(pChip, cRegName, cToggleOn);
+    uint16_t startAutoWordAlignment  = (cRegValue & 0x1E) | 0x1;
+    cSuccess   = this->WriteChipReg(pChip, cRegName, startAutoWordAlignment);
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot send external word alignment request to CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
@@ -420,30 +417,26 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
     }
     LOG(DEBUG) << BOLDBLUE << "Running automated word alignment .... " << RESET;
     // check if word alingment is done
-    bool    cDone          = false;
-    uint8_t cMaxIterations = (pWait_ms / 100);
-    uint8_t cIteration     = 0;
-    bool    cStop          = false;
-    do
+    uint8_t maxNumberOfIterations = 100;
+    uint8_t currentIterationNumber = 0;
+    bool    alignmentCompleted = false;
+
+    while(currentIterationNumber < maxNumberOfIterations)
     {
-        // check status
-        ChipRegItem cRegItem;
-        cRegItem.fPage      = 0x00;
-        cRegItem.fAddress   = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x83 : 0xA6;
-        cRegItem.fStatusReg = 0x01;
-        auto cRegValue      = fBoardFW->SingleRegisterRead(pChip, cRegItem);
-        cDone               = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cRegValue == 1) : ((cRegValue & 0x01) == 1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        if(cIteration % 10 == 0) LOG(DEBUG) << BOLDBLUE << "\t....Iteration " << +cIteration << " ... : " << cDone << RESET;
-        // stop either if done or if the maximum number of iterations
-        // has been exceeded
-        cStop = cDone || (cIteration > cMaxIterations);
-        cIteration += 1;
-    } while(!cStop);
-    if(!cDone) { return cDone; }
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        auto cRegValue = ReadChipReg(pChip, "timingStatusBits"); 
+        if((cRegValue & 0x01) == 1)
+        {
+            alignmentCompleted = true;
+            break;
+        }
+        ++currentIterationNumber;
+    }
+    if(!alignmentCompleted) return false;
 
     LOG(DEBUG) << BOLDBLUE << "Requesting CIC to stop automated word alignment..." << RESET;
-    cSuccess = this->WriteChipReg(pChip, cRegName, cToggleOff);
+    uint16_t stopAutoWordAlignment = (cRegValue & 0x1E) | 0x0;
+    cSuccess = this->WriteChipReg(pChip, cRegName, stopAutoWordAlignment);
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Cannot disable automated Word alignment request on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
@@ -452,7 +445,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         return false;
     }
 
-    if(cSuccess) { ConfigureExternalWordAlignment(pChip); }
+    cSuccess = ConfigureExternalWordAlignment(pChip);
 
     return cSuccess;
 }
@@ -609,11 +602,7 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
             cValue      = cValue | (cAlVal << (cCounter % 2) * 4);
             if((1 + cCounter) % 2 == 0)
             {
-                // char cBuffer[14];
-                // sprintf(cBuffer, "EXT_WA_DELAY%.2d", cIndx);
-                // std::string cRegName(cBuffer, sizeof(cBuffer));
                 std::string cRegName = "EXT_WA_DELAY" + (boost::format("%|02|") % cIndx).str();
-                // LOG(INFO) << BOLDBLUE << "\t..Setting static word alignment in register " << cRegName << " to " << +cValue << RESET;
                 cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
                 cValue   = 0x00;
                 cIndx++;

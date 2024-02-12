@@ -74,7 +74,6 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                if(cCic == NULL) continue;
 
                 // configure word alignment pattern on CBCs
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getWordAlignmentPatterns();
