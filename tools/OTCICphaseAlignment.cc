@@ -6,6 +6,7 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
+#include "HWInterface/CbcInterface.h"
 #include <sstream>
 
 using namespace Ph2_HwDescription;
@@ -65,7 +66,7 @@ void OTCICphaseAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 void OTCICphaseAlignment::phaseAlignment()
 {
     bool     cDebug     = false;
-    LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure for CBCs .... " << RESET;
+    LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure" << RESET;
     DetectorDataContainer thePhaseHistogramContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>(*fDetectorContainer, thePhaseHistogramContainer);
     
@@ -255,6 +256,7 @@ void OTCICphaseAlignment::AlignAllCICinputsPS(BeBoard* theBoard, BoardDataContai
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                 fCicInterface->ResetPhaseAligner(cCic);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 auto& thePhaseHistogram = thePhaseHistogramBoardDataContainer->getObject(theOpticalGroup->getId())
                                                 ->getObject(theHybrid->getId())
                                                 ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>();
@@ -279,6 +281,9 @@ void OTCICphaseAlignment::AlignAllCICinputsPS(BeBoard* theBoard, BoardDataContai
 
 void OTCICphaseAlignment::AlignAllCICinputs2S(BeBoard* theBoard, BoardDataContainer* thePhaseHistogramBoardDataContainer, BoardDataContainer* theLockingEfficiencyBoardDataContainer, BoardDataContainer* theBestPhaseBoardDataContainer)
 {
+    // Align L1 line
+    LOG(INFO) << BOLDYELLOW << "Aligning CIC phases on CBC L1 lines" << RESET;
+
     uint32_t pNTriggers = 500;
 
     fBeBoardInterface->setBoard(theBoard->getId());
@@ -290,21 +295,28 @@ void OTCICphaseAlignment::AlignAllCICinputs2S(BeBoard* theBoard, BoardDataContai
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(theBoard, cRegVec);
 
+    for(auto theOpticalGroup: *theBoard)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            for(auto theReadoutChip: *theHybrid)
+            {
+                static_cast<CbcInterface*>(fReadoutChipInterface)->produceL1phaseAlignmentPattern(theReadoutChip);
+            }
+        }
+    }
+
     for(size_t iterationNumber = 0; iterationNumber<fNumberOfAlignmentIterations; ++iterationNumber)
     {
-        LOG(INFO) << BOLDMAGENTA << "OTCICphaseAlignment::phaseAlignment - alignment iteration " << iterationNumber+1 << " of " << fNumberOfAlignmentIterations << RESET;
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                 fCicInterface->ResetPhaseAligner(cCic);
-                for(auto cChip: *theHybrid)
-                {
-                    fReadoutChipInterface->producePhaseAlignmentPattern(cChip);
-                }
             }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
         cInterface->getTriggerInterface()->SendNTriggers(pNTriggers);
 
@@ -323,7 +335,85 @@ void OTCICphaseAlignment::AlignAllCICinputs2S(BeBoard* theBoard, BoardDataContai
                 auto optimalPhases = fCicInterface->getAllOptimalTaps(cCic);
                 for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
                 {
-                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
+                    if(lockingSuccess[frontEnd][0]) theLockingEfficiency[frontEnd][0]++;
+                    thePhaseHistogram[frontEnd][0][optimalPhases[frontEnd][0]]++;
+                }
+            }
+        }
+    }
+
+    // Align Stub line 0
+    LOG(INFO) << BOLDYELLOW << "Aligning CIC phases on CBC Stub 0 lines" << RESET;
+    for(auto theOpticalGroup: *theBoard)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            for(auto theReadoutChip: *theHybrid)
+            {
+                static_cast<CbcInterface*>(fReadoutChipInterface)->produceStubLine0PhaseAlignmentPattern(theReadoutChip);
+            }
+        }
+    }
+
+    for(size_t iterationNumber = 0; iterationNumber<fNumberOfAlignmentIterations; ++iterationNumber)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                fCicInterface->ResetPhaseAligner(cCic);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                auto& thePhaseHistogram = thePhaseHistogramBoardDataContainer->getObject(theOpticalGroup->getId())
+                                            ->getObject(theHybrid->getId())
+                                            ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>();
+                auto& theLockingEfficiency = theLockingEfficiencyBoardDataContainer->getObject(theOpticalGroup->getId())
+                                            ->getObject(theHybrid->getId())
+                                            ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
+                auto lockingSuccess = fCicInterface->getLineLocked(cCic);
+                auto optimalPhases = fCicInterface->getAllOptimalTaps(cCic);
+                for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
+                {
+                    if(lockingSuccess[frontEnd][1]) theLockingEfficiency[frontEnd][1]++;
+                    thePhaseHistogram[frontEnd][1][optimalPhases[frontEnd][1]]++;
+                }
+            }
+        }
+    }
+
+    // Align Stub line 1-2-3-4
+    LOG(INFO) << BOLDYELLOW << "Aligning CIC phases on CBC Stub 1, 2, 3 and 4 lines" << RESET;
+    for(auto theOpticalGroup: *theBoard)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            for(auto theReadoutChip: *theHybrid)
+            {
+                static_cast<CbcInterface*>(fReadoutChipInterface)->produceStubLines1To4PhaseAlignmentPattern(theReadoutChip);
+            }
+        }
+    }
+
+    for(size_t iterationNumber = 0; iterationNumber<fNumberOfAlignmentIterations; ++iterationNumber)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                fCicInterface->ResetPhaseAligner(cCic);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                auto& thePhaseHistogram = thePhaseHistogramBoardDataContainer->getObject(theOpticalGroup->getId())
+                                            ->getObject(theHybrid->getId())
+                                            ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>();
+                auto& theLockingEfficiency = theLockingEfficiencyBoardDataContainer->getObject(theOpticalGroup->getId())
+                                            ->getObject(theHybrid->getId())
+                                            ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
+                auto lockingSuccess = fCicInterface->getLineLocked(cCic);
+                auto optimalPhases = fCicInterface->getAllOptimalTaps(cCic);
+                for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
+                {
+                    for(uint8_t line = 2; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
                         if(lockingSuccess[frontEnd][line]) theLockingEfficiency[frontEnd][line]++;
                         thePhaseHistogram[frontEnd][line][optimalPhases[frontEnd][line]]++;
