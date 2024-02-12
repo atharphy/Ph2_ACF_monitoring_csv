@@ -65,7 +65,6 @@ void OTCICphaseAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTCICphaseAlignment::phaseAlignment()
 {
-    bool cDebug = false;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure" << RESET;
     DetectorDataContainer thePhaseHistogramContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>(*fDetectorContainer, thePhaseHistogramContainer);
@@ -232,30 +231,6 @@ void OTCICphaseAlignment::phaseAlignment()
         theLockingEfficiencyContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theLockingEfficiencyContainer);
     }
 #endif
-
-    // check
-    for(auto theBoard: *fDetectorContainer)
-    {
-        if(!cDebug) continue;
-
-        fBeBoardInterface->setBoard(theBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
-        D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
-        for(auto theOpticalGroup: *theBoard)
-        {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                for(uint8_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
-                {
-                    fCicInterface->SelectMux(cCic, cPhyPort);
-                    cDebugInterface->StubDebug(true, 4);
-                }
-                fCicInterface->ControlMux(cCic, 0);
-            }
-        }
-    }
 }
 
 void OTCICphaseAlignment::AlignAllCICinputsPS(BeBoard*            theBoard,
