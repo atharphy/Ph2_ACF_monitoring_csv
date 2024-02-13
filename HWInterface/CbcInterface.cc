@@ -798,7 +798,7 @@ void CbcInterface::produceStubLine0PhaseAlignmentPattern(ReadoutChip* pChip)
     // Also lines 1 and 2 are injected automatically
     LOG(DEBUG) << BOLDBLUE << "Injecting on stub line 0 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
     std::vector<uint8_t> cSeeds_ph1{0x55, 0xAA};
-    std::vector<int>     cBends_ph1(cSeeds_ph1.size(), 14);
+    std::vector<int>     cBends_ph1(cSeeds_ph1.size(), -14);
     injectStubs(pChip, cSeeds_ph1, cBends_ph1);
 }
 
@@ -810,20 +810,13 @@ void CbcInterface::produceStubLines1To4PhaseAlignmentPattern(ReadoutChip* pChip)
     WriteChipReg(pChip, "PtCut", 14);
     // if I set this it doesn't work..   so no cluster cut
     WriteChipReg(pChip, "ClusterCut", 4);
-    selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
+    selectLogicMode(pChip, "Sampled", true, true);
 
-    uint8_t              cBendCode_phAlign = 0xa;
-    std::vector<uint8_t> cBendLUT          = readLUT(static_cast<ReadoutChip*>(pChip));
-    auto                 cIterator         = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
-    if(cIterator != cBendLUT.end())
-    {
-        int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
-        double cBend_strips = -7. + 0.5 * cPosition;
-        LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
-        std::vector<uint8_t> cSeeds_ph3{0x2A, 0x55, 0xAA};
-        std::vector<int>     cBends_ph3(cSeeds_ph3.size(), static_cast<int>(cBend_strips * 2));
-        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph3, cBends_ph3);
-    }
+    WriteChipReg(pChip, "Bend0", 0x0A); //forcing Bend0 to ouput the needed bend code for running the alignment
+    LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+    std::vector<uint8_t> cSeeds_ph3{0x2A, 0x55, 0xAA};
+    std::vector<int>     cBends_ph3(cSeeds_ph3.size(), -14);
+    injectStubs(pChip, cSeeds_ph3, cBends_ph3);
 }
 
 void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
@@ -870,6 +863,11 @@ void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
         std::vector<int>     cBends_ph3(cSeeds_ph3.size(), static_cast<int>(cBend_strips * 2));
         injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph3, cBends_ph3);
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
+    }
+    else
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Bend code not available in the lookup table, aborting" << RESET;
+        abort();
     }
     this->maskChannelGroup(static_cast<ReadoutChip*>(pChip), cChannelMask);
 }
