@@ -142,6 +142,8 @@ class CicInterface : public ChipInterface
     // return information on phase aligners
     std::vector<uint8_t> getI2CStatus() { return fI2CStatus; }
     void                 setWithlpGBT(uint8_t pIsWithLpGBT) {}
+    GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS-1> retrieveExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
+    bool                       ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip, const GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS-1>& theWordAlignmentValues);
 
   private:
     bool    fRetryI2C       = true;
@@ -182,8 +184,6 @@ class CicInterface : public ChipInterface
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index hybrid FE Id , Value CIC FE Id
     std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
 
-    std::vector<std::vector<uint8_t>> retrieveExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
-    bool                       ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
     std::map<uint8_t, uint8_t> fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
     uint8_t                    fMaxDriveStrength = 5;
     // 4 channels per phyPort ... 12 phyPorts per CIC

@@ -445,8 +445,6 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
         return false;
     }
 
-    cSuccess = ConfigureExternalWordAlignment(pChip);
-
     return cSuccess;
 }
 bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
@@ -587,9 +585,8 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
 }
 bool CicInterface::SetStaticPhaseAlignment(Chip* pChip) { return SetAutomaticPhaseAlignment(pChip, false); }
 
-bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
+bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip, const GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS-1>& theWordAlignmentValues)
 {
-    auto theWordAlignmentValues = retrieveExternalWordAlignmentValues(pChip);
     size_t  cCounter = 0;
     uint8_t cValue   = 0x00;
     int     cIndx    = 0;
@@ -614,9 +611,6 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip)
 }
 bool CicInterface::SetStaticWordAlignment(Chip* pChip)
 {
-    LOG(INFO) << BOLDBLUE << "Configuring word alignment in CIC#" << +pChip->getHybridId() << " to use internal values" << RESET;
-    if(!this->ConfigureExternalWordAlignment(pChip)) return false;
-
     std::string cRegName  = "MISC_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
     uint8_t     cValue    = ((cRegValue & 0x1D) | (0x1 << 1));
@@ -625,26 +619,17 @@ bool CicInterface::SetStaticWordAlignment(Chip* pChip)
     return cSuccess;
 }
 
-std::vector<std::vector<uint8_t>> CicInterface::retrieveExternalWordAlignmentValues(Chip* pChip)
+GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS-1> CicInterface::retrieveExternalWordAlignmentValues(Chip* pChip)
 {
-    setBoard(pChip->getBeBoardId());
-    std::vector<std::vector<uint8_t>> theWordAlignmentValues;
-    // 5 lines per FE ... 8 FEs per CIC
-    for(size_t cIndx = 0; cIndx < 8; cIndx++)
-    {
-        std::vector<uint8_t> cTmp(5, 0);
-        theWordAlignmentValues.push_back(cTmp);
-    }
+    GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS-1> theWordAlignmentValues;
+
     uint8_t     cLineCounter = 0;
     uint8_t     cFECounter   = 0;
-    ChipRegItem cRegItem;
-    uint16_t    cBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x85 : 0xA8;
     for(uint8_t cIndex = 0; cIndex < 20; cIndex += 1)
     {
-        cRegItem.fPage      = 0x00;
-        cRegItem.fAddress   = cBaseAddress + cIndex;
-        cRegItem.fStatusReg = 0x01;
-        auto cRegValue      = fBoardFW->SingleRegisterRead(pChip, cRegItem);
+        std::string cRegName = "WA_DELAY" + (boost::format("%|02|") % int(cIndex)).str();
+        auto cRegValue = ReadChipReg(pChip, cRegName);
+
         LOG(DEBUG) << BOLDBLUE << "Word alignment value found to be " << std::bitset<8>(cRegValue) << RESET;
         for(uint8_t cNibble = 0; cNibble < 2; cNibble += 1)
         {

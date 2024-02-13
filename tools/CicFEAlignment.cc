@@ -586,6 +586,8 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getWordAlignmentPatterns();
                 for(auto cChip: *cHybrid) { fReadoutChipInterface->produceWordAlignmentPattern(cChip); }
                 bool cSuccessAlign = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns);
+                auto theWordAlignmentValues = fCicInterface->retrieveExternalWordAlignmentValues(cCic);
+                cSuccessAlign = cSuccessAlign && fCicInterface->ConfigureExternalWordAlignment(cCic, theWordAlignmentValues);
                 cWordAligned.push_back(cSuccessAlign ? 1 : 0);
             } // hybrid - configure word alignment patterns
 
