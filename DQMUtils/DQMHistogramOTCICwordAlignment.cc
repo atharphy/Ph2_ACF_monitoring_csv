@@ -5,9 +5,9 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 
+#include "TAxis.h"
 #include "TFile.h"
 #include "TH2I.h"
-#include "TAxis.h"
 
 //========================================================================================================================
 DQMHistogramOTCICwordAlignment::DQMHistogramOTCICwordAlignment() {}
@@ -25,7 +25,6 @@ void DQMHistogramOTCICwordAlignment::book(TFile* theOutputFile, DetectorContaine
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-
     bool isPS = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
 
     std::string xAxisTitle = "CBC Id";
@@ -37,18 +36,17 @@ void DQMHistogramOTCICwordAlignment::book(TFile* theOutputFile, DetectorContaine
     }
 
     auto setLineBinLabels = [](TAxis* theHistogramAxis) {
-        for(int line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS-1; ++line) { theHistogramAxis->SetBinLabel(line+1, Form("Stub%d", line)); }
+        for(int line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line) { theHistogramAxis->SetBinLabel(line + 1, Form("Stub%d", line)); }
     };
 
-
     HistContainer<TH2I> wordAlignmentDelayHistogram("CICwordAlignmentDelay",
-                                           "CIC Word Alignment Delay",
-                                           NUMBER_OF_CIC_PORTS,
-                                           idOffset - 0.5,
-                                           idOffset + NUMBER_OF_CIC_PORTS - 0.5,
-                                           NUMBER_OF_LINES_PER_CIC_PORTS -1,
-                                           -0.5,
-                                           NUMBER_OF_LINES_PER_CIC_PORTS -1 - 0.5);
+                                                    "CIC Word Alignment Delay",
+                                                    NUMBER_OF_CIC_PORTS,
+                                                    idOffset - 0.5,
+                                                    idOffset + NUMBER_OF_CIC_PORTS - 0.5,
+                                                    NUMBER_OF_LINES_PER_CIC_PORTS - 1,
+                                                    -0.5,
+                                                    NUMBER_OF_LINES_PER_CIC_PORTS - 1 - 0.5);
     wordAlignmentDelayHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
     wordAlignmentDelayHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     setLineBinLabels(wordAlignmentDelayHistogram.fTheHistogram->GetYaxis());
@@ -57,7 +55,7 @@ void DQMHistogramOTCICwordAlignment::book(TFile* theOutputFile, DetectorContaine
     wordAlignmentDelayHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fWordAlignmentDelayHistogramContainer, wordAlignmentDelayHistogram);
 
-    //Initialize to -1 to avoid confusing no entry and entry=0;
+    // Initialize to -1 to avoid confusing no entry and entry=0;
     for(auto board: fWordAlignmentDelayHistogramContainer)
     {
         for(auto opticalGroup: *board)
@@ -84,20 +82,20 @@ void DQMHistogramOTCICwordAlignment::fillWordAlignmentDelay(DetectorDataContaine
             {
                 if(!hybrid->hasSummary()) continue;
 
-                auto theWordAlignmentDelayVector = hybrid->getSummary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS-1>>();
+                auto theWordAlignmentDelayVector = hybrid->getSummary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>>();
 
                 TH2I* wordAlignmentDelaPhaseHistogram =
                     fWordAlignmentDelayHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
 
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++) { wordAlignmentDelaPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, theWordAlignmentDelayVector[chipId][cLineId]); }
+                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
+                    { wordAlignmentDelaPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, theWordAlignmentDelayVector[chipId][cLineId]); }
                 }
             }
         }
     }
 }
-
 
 //========================================================================================================================
 void DQMHistogramOTCICwordAlignment::process()
@@ -123,7 +121,8 @@ bool DQMHistogramOTCICwordAlignment::fill(std::string& inputStream)
         std::cout << "Matched OTCICwordAlignment WordAlignmentDelay!!!!\n";
         DetectorDataContainer theDetectorData =
             theWordAlignmentDelayContainerSerialization
-                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS-1>, EmptyContainer>(fDetectorContainer);
+                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>, EmptyContainer>(
+                    fDetectorContainer);
         fillWordAlignmentDelay(theDetectorData);
         return true;
     }

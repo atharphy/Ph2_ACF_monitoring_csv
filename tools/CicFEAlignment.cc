@@ -585,9 +585,9 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
                 // configure word alignment pattern on CBCs
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getWordAlignmentPatterns();
                 for(auto cChip: *cHybrid) { fReadoutChipInterface->produceWordAlignmentPattern(cChip); }
-                bool cSuccessAlign = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns);
+                bool cSuccessAlign          = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns);
                 auto theWordAlignmentValues = fCicInterface->retrieveExternalWordAlignmentValues(cCic);
-                cSuccessAlign = cSuccessAlign && fCicInterface->ConfigureExternalWordAlignment(cCic, theWordAlignmentValues);
+                cSuccessAlign               = cSuccessAlign && fCicInterface->ConfigureExternalWordAlignment(cCic, theWordAlignmentValues);
                 cWordAligned.push_back(cSuccessAlign ? 1 : 0);
             } // hybrid - configure word alignment patterns
 
@@ -595,16 +595,13 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
             size_t cIndx = 0;
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
-                cAligned                                               = cAligned && cWordAligned[cIndx];
+                cAligned = cAligned && cWordAligned[cIndx];
                 fCicInterface->SetStaticWordAlignment(cCic);
                 // check status
-                if(cWordAligned[cIndx])
-                {
-                    LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
-                }
+                if(cWordAligned[cIndx]) { LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;

@@ -58,7 +58,7 @@ class DQMHistogramOTCICwordAlignment : public DQMHistogramBase
     void fillWordAlignmentDelay(DetectorDataContainer& theWordAlignmentDelayContainer);
 
   private:
-    DetectorContainer* fDetectorContainer;
+    DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fWordAlignmentDelayHistogramContainer;
 };
 #endif

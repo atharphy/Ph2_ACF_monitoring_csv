@@ -57,15 +57,15 @@ void OTCICwordAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
 {
     LOG(INFO) << BOLDBLUE << "Starting CIC automated word alignment procedure .... " << RESET;
-    std::string           theQueryFunction = "skipSSAQuery";
-    auto                  theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
+    std::string theQueryFunction = "skipSSAQuery";
+    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
         return true;
     };
     fDetectorContainer->addReadoutChipQueryFunction(theSkipSSAquery, theQueryFunction);
 
     DetectorDataContainer theWordAlignmentDelayContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS-1>>(*fDetectorContainer, theWordAlignmentDelayContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>>(*fDetectorContainer, theWordAlignmentDelayContainer);
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -78,14 +78,14 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
                 // configure word alignment pattern on CBCs
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getWordAlignmentPatterns();
                 for(auto cChip: *theHybrid) { fReadoutChipInterface->produceWordAlignmentPattern(cChip); }
-                bool cSuccessAlign = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns);
-                auto& theWordAlignmentValues = theWordAlignmentDelayContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS-1>>();
+                bool  cSuccessAlign          = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns);
+                auto& theWordAlignmentValues = theWordAlignmentDelayContainer.getObject(theBoard->getId())
+                                                   ->getObject(theOpticalGroup->getId())
+                                                   ->getObject(theHybrid->getId())
+                                                   ->getSummary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>>();
                 theWordAlignmentValues = fCicInterface->retrieveExternalWordAlignmentValues(cCic);
-                cSuccessAlign = cSuccessAlign && fCicInterface->ConfigureExternalWordAlignment(cCic, theWordAlignmentValues);
-                if(cSuccessAlign)
-                {
-                    LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
-                }
+                cSuccessAlign          = cSuccessAlign && fCicInterface->ConfigureExternalWordAlignment(cCic, theWordAlignmentValues);
+                if(cSuccessAlign) { LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
@@ -108,7 +108,6 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
         theWordAlignmentDelayContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theWordAlignmentDelayContainer);
     }
 #endif
-
 
     fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
 }

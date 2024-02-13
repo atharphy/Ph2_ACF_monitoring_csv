@@ -66,13 +66,12 @@ void OTCICphaseAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 void OTCICphaseAlignment::phaseAlignment()
 {
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure" << RESET;
-    std::string           theQueryFunction = "skipSSAQuery";
-    auto                  theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
+    std::string theQueryFunction = "skipSSAQuery";
+    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
         return true;
     };
     fDetectorContainer->addReadoutChipQueryFunction(theSkipSSAquery, theQueryFunction);
-
 
     DetectorDataContainer thePhaseHistogramContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>(*fDetectorContainer, thePhaseHistogramContainer);
@@ -253,10 +252,7 @@ void OTCICphaseAlignment::AlignAllCICinputsPS(BeBoard*            theBoard,
     {
         for(auto theHybrid: *theOpticalGroup)
         {
-            for(auto theReadoutChip: *theHybrid)
-            {
-                fReadoutChipInterface->producePhaseAlignmentPattern(theReadoutChip);
-            }
+            for(auto theReadoutChip: *theHybrid) { fReadoutChipInterface->producePhaseAlignmentPattern(theReadoutChip); }
         }
     }
 
