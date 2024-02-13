@@ -352,6 +352,7 @@ void CalibBase::copyContent(TFile* theInputFile, TFile* theOutputFile, const std
         {
             if(!outputDir->FindObject(key->GetName()))
             {
+                inputDir->cd();
                 TTree* T = (TTree*)inputDir->Get(key->GetName());
                 outputDir->cd();
                 TTree* newT = T->CloneTree(-1, "fast");
@@ -364,7 +365,7 @@ void CalibBase::copyContent(TFile* theInputFile, TFile* theOutputFile, const std
             inputDir->cd();
             TObject* newO = key->ReadObj();
             outputDir->cd();
-            newO->Write();
+            newO->Write(key->GetName(), TObject::kOverwrite);
             delete newO;
         }
     }

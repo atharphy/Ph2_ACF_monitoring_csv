@@ -753,7 +753,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t sampleNtimes = pChip->getRegItem("SAMPLE_N_TIMES").fValue;
     const uint16_t GlbPulseVal  = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
-    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 1 << 12 | data, false); // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 1 << 12 | data, false);    // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP)); // The conversion is bad if we changing the mux setting too soon after
 
     // ########################################################
@@ -803,21 +803,18 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     // #####################
     // # Natural constants #
     // #####################
-    const float       T0C            = 273.15;         // [Kelvin]
-    const float       T25C           = 298.15;         // [Kelvin]
-    const float       R25C           = 10;             // [kOhm]
-    const float       kb             = 1.38064852e-23; // [J/K]
-    const float       e              = 1.6021766208e-19;
-    const float       R              = 15;   // By circuit design
-    const uint8_t     sensorDEM      = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
-    const std::string regName        = (type == "CENTER" ? "MON_SENS_ACB" : "MON_SENS_SLDO");
+    const float       T0C       = 273.15;         // [Kelvin]
+    const float       T25C      = 298.15;         // [Kelvin]
+    const float       R25C      = 10;             // [kOhm]
+    const float       kb        = 1.38064852e-23; // [J/K]
+    const float       e         = 1.6021766208e-19;
+    const float       R         = 15;   // By circuit design
+    const uint8_t     sensorDEM = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
+    const std::string regName   = (type == "CENTER" ? "MON_SENS_ACB" : "MON_SENS_SLDO");
 
     float idealityFactor;
-    if (type == "ANA")
-    {
-        idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_ANA").fValue / 1e3;
-    }
-    else if (type == "DIG")
+    if(type == "ANA") { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_ANA").fValue / 1e3; }
+    else if(type == "DIG")
     {
         idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_DIG").fValue / 1e3;
     }

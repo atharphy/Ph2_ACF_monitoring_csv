@@ -285,13 +285,12 @@
       <node id="lane_up"               mask="0x0FFFFF00"      permission="r"       description="" />
     </node>
 
-    <node id="aurora_rx_channel_up" address="0x00000007"      permission="r"> </node>
-    <node id="aurora_rx_gt_locked"  address="0x00000008"      permission="r"> </node>
-
-    <node id="aurora_error_counter" address="0x00000009"      permission="r">
-      <node id="hard"                  mask="0x0000ffff"      permission="r"       description="Hard error counter." />
-      <node id="soft"                  mask="0xffff0000"      permission="r"       description="Soft error counter." />
-    </node>
+<!-- Requires new FW
+    <node id="aurora_rx_lane_up"    address="0x00000007"      permission="r"       description=""> </node>
+    <node id="aurora_rx_channel_up" address="0x00000008"      permission="r"       description=""> </node>
+    <node id="aurora_rx_gt_locked"  address="0x00000009"      permission="r"       description=""> </node>
+-->
+    <node id="aurora_rx_channel_up" address="0x00000007"      permission="r"       description=""> </node>
 
     <!-- Readout -->
     <node id="words_to_read"        address="0x0000000A"      permission="r"       description="Nb of words to read in the DDR3 memory"> </node>
