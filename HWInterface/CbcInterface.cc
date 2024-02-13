@@ -792,22 +792,14 @@ void CbcInterface::produceStubLine0PhaseAlignmentPattern(ReadoutChip* pChip)
     WriteChipReg(pChip, "PtCut", 14);
     // if I set this it doesn't work..   so no cluster cut
     WriteChipReg(pChip, "ClusterCut", 4);
-    selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
+    selectLogicMode(pChip, "Sampled", true, true);
 
-    uint8_t              cBendCode_phAlign = 0xa;
-    std::vector<uint8_t> cBendLUT          = readLUT(static_cast<ReadoutChip*>(pChip));
-    auto                 cIterator         = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
-    if(cIterator != cBendLUT.end())
-    {
-        int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
-        double cBend_strips = -7. + 0.5 * cPosition;
-
-        // Also lines 1 and 2 are injected automatically
-        LOG(DEBUG) << BOLDBLUE << "Injecting on stub line 0 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
-        std::vector<uint8_t> cSeeds_ph1{0x55, 0xAA};
-        std::vector<int>     cBends_ph1(cSeeds_ph1.size(), static_cast<int>(cBend_strips * 2));
-        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph1, cBends_ph1);
-    }
+    WriteChipReg(pChip, "Bend0", 0x0A); //forcing Bend0 to ouput the needed bend code for running the alignment
+    // Also lines 1 and 2 are injected automatically
+    LOG(DEBUG) << BOLDBLUE << "Injecting on stub line 0 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+    std::vector<uint8_t> cSeeds_ph1{0x55, 0xAA};
+    std::vector<int>     cBends_ph1(cSeeds_ph1.size(), 14);
+    injectStubs(pChip, cSeeds_ph1, cBends_ph1);
 }
 
 void CbcInterface::produceStubLines1To4PhaseAlignmentPattern(ReadoutChip* pChip)

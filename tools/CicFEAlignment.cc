@@ -144,6 +144,11 @@ void CicFEAlignment::SetStubWindowOffsets(uint8_t pBendCode, int pBend)
                         LOG(DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>(pBendCode) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips [offset code "
                                    << std::bitset<4>(cOffsetCode) << "]." << RESET;
                     }
+                    else
+                    {
+                        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Bend code not available in the lookup table, aborting" << RESET;
+                        abort();
+                    }
                 }
             }
         }
@@ -235,6 +240,11 @@ uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine)
                             double           cBend_strips = -7. + 0.5 * cPosition;
                             std::vector<int> cBends(cStubs.size(), static_cast<int>(cBend_strips * 2));
                             cInterface->injectStubs(static_cast<ReadoutChip*>(cChip), cStubs, cBends);
+                        }
+                        else
+                        {
+                            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Bend code not available in the lookup table, aborting" << RESET;
+                            abort();
                         }
                     }
                 } // chip
