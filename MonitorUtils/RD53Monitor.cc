@@ -13,6 +13,14 @@
 #include "Utils/ValueAndTime.h"
 #include <array>
 
+// ***************************************************************************
+// Include the library for Measure Temperature & MeasurePowerSupplyVoltage
+#include "HWInterface/lpGBTInterface.h"
+#include "HWInterface/RD53lpGBTInterface.h"
+#include "HWInterface/RD53Interface.h"
+#include "HWDescription/lpGBT.h"
+// ***************************************************************************
+
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
@@ -97,10 +105,32 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
 
                 if(fTheSystemController->flpGBTInterface->fADCInputMap.find(registerName) != fTheSystemController->flpGBTInterface->fADCInputMap.end())
                 {
-                    if(registerName.find("TEMP") != std::string::npos)
-                        registerValue = fTheSystemController->flpGBTInterface->GetInternalTemperature(cOpticalGroup->flpGBT);
+                    // ********************************************************************************************************************************************
+                    auto *lpGBTInterface = fTheSystemController->flpGBTInterface;
+                    
+                    if(registerName.find("TEMP") != std::string::npos){
+                        registerValue = lpGBTInterface->MeasureTemperature((cOpticalGroup->flpGBT));
+                    }
+                    else if(registerName.find("VDDTX") != std::string::npos){
+                    	const std::string& pPowerSupply = "VDDTX";
+                    	registerValue = lpGBTInterface->MeasurePowerSupplyVoltage((cOpticalGroup->flpGBT), pPowerSupply);
+                    }
+                    else if(registerName.find("VDDRX") != std::string::npos){
+                    	const std::string& pPowerSupply = "VDDRX";
+                    	registerValue = lpGBTInterface->MeasurePowerSupplyVoltage((cOpticalGroup->flpGBT), pPowerSupply);
+                    }
+                    else if(registerName.find("VDD") != std::string::npos){
+                    	const std::string& pPowerSupply = "VDD";
+                    	registerValue = lpGBTInterface->MeasurePowerSupplyVoltage((cOpticalGroup->flpGBT), pPowerSupply);
+                    }
+                    else if(registerName.find("VDDA") != std::string::npos){
+                    	const std::string& pPowerSupply = "VDDA";
+                    	registerValue = lpGBTInterface->MeasurePowerSupplyVoltage((cOpticalGroup->flpGBT), pPowerSupply);
+                    }
                     else
-                        registerValue = fTheSystemController->flpGBTInterface->ReadADC(cOpticalGroup->flpGBT, registerName);
+                        registerValue = lpGBTInterface->ReadADC(cOpticalGroup->flpGBT, registerName);
+                        
+                 // ************************************************************************************************************************************************
                 }
                 else
                     registerValue = fTheSystemController->flpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
