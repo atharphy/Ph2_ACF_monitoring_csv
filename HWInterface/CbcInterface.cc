@@ -794,7 +794,7 @@ void CbcInterface::produceStubLine0PhaseAlignmentPattern(ReadoutChip* pChip)
     selectLogicMode(pChip, "Sampled", true, true);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-    theRegisterVector.push_back({"Bend7", 0x0A}); //forcing Bend7 to ouput the needed bend code for running the alignment
+    theRegisterVector.push_back({"Bend7", 0x0A});              // forcing Bend7 to ouput the needed bend code for running the alignment
     theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
     WriteChipMultReg(pChip, theRegisterVector);
@@ -816,7 +816,7 @@ void CbcInterface::produceStubLines1To4PhaseAlignmentPattern(ReadoutChip* pChip)
     selectLogicMode(pChip, "Sampled", true, true);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-    theRegisterVector.push_back({"Bend7", 0x0A}); //forcing Bend7 to ouput the needed bend code for running the alignment
+    theRegisterVector.push_back({"Bend7", 0x0A});              // forcing Bend7 to ouput the needed bend code for running the alignment
     theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
     WriteChipMultReg(pChip, theRegisterVector);
@@ -891,15 +891,15 @@ void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
     selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-    theRegisterVector.push_back({"Bend7", fWordAlignmentPatterns[3] & 0x0F}); // Set bend 0 to output of stub 1 required pattern
+    theRegisterVector.push_back({"Bend7", fWordAlignmentPatterns[3] & 0x0F});        // Set bend 0 to output of stub 1 required pattern
     theRegisterVector.push_back({"Bend8", (fWordAlignmentPatterns[3] & 0xF0) >> 4}); // Set bend 2 to output of stub 1 required pattern
-    theRegisterVector.push_back({"Bend9", fWordAlignmentPatterns[4] & 0x0F}); // Set bend 4 to output of stub 1 required pattern
-    theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
-    theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
+    theRegisterVector.push_back({"Bend9", fWordAlignmentPatterns[4] & 0x0F});        // Set bend 4 to output of stub 1 required pattern
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});                       // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});                       // set stub window offset to 0
 
     WriteChipMultReg(pChip, theRegisterVector);
     std::vector<uint8_t> cStubs{fWordAlignmentPatterns[0], fWordAlignmentPatterns[1], fWordAlignmentPatterns[2]};
-    std::vector<int> cBends{0, 2, 4};
+    std::vector<int>     cBends{0, 2, 4};
 
     injectStubs(static_cast<ReadoutChip*>(pChip), cStubs, cBends);
 }
