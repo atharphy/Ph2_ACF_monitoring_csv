@@ -78,40 +78,39 @@ class CicInterface : public ChipInterface
     std::pair<uint8_t, uint8_t> fromChipStubToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine);
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllOptimalTaps(Ph2_HwDescription::Chip* pChip);
     GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>    getLineLocked(Ph2_HwDescription::Chip* pChip);
-    bool                              writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> cicInputTaps);
-    bool                              SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
-    bool                              PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
-    bool                              SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);
-    bool                              SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);
-    bool                              SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip, uint8_t pValue = 5);
-    bool                              CheckPhaseAlignerLock(Ph2_HwDescription::Chip* pChip, uint8_t pCheckValue = 0xFF);
-    bool                              ResetPhaseAligner(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 1);
-    bool                              ResetDLL(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 100);
-    bool                              CheckDLL(Ph2_HwDescription::Chip* pChip);
-    bool                              CheckFastCommandLock(Ph2_HwDescription::Chip* pChip);
-    bool                              ConfigureAlignmentPatterns(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
-    bool                              AutomatedWordAlignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, int pWait_ms = 1000);
-    bool                              ConfigureBx0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pPatterns, uint8_t pFEId = 0, uint8_t pLineId = 0);
-    std::pair<bool, uint8_t>          CheckBx0Alignment(Ph2_HwDescription::Chip* pChip); // success , delay
-    bool                              CheckReSync(Ph2_HwDescription::Chip* pChip);
-    bool                              SoftReset(Ph2_HwDescription::Chip* pChip, uint32_t cWait_ms = 100);
-    bool                              CheckSoftReset(Ph2_HwDescription::Chip* pChip);
-    bool                              StartUp(Ph2_HwDescription::Chip* pChip);
-    bool                              ManualBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pBx0delay = 8);
-    std::vector<std::vector<uint8_t>> GetWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
-    bool                              SelectMode(Ph2_HwDescription::Chip* pChip, uint8_t pMode = 0);
-    bool                              SelectOutput(Ph2_HwDescription::Chip* pChip, bool pFixedPattern = true);
-    bool                              EnableFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFEs = {0, 1, 2, 3, 4, 5, 6, 7}, bool pEnable = true);
-    bool                              configureEnabledFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFeIds);
-    bool                              AutoBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
-    bool                              SelectMux(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort);
-    bool                              ControlMux(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
-    bool                              ConfigureStubOutput(Ph2_HwDescription::Chip* pChip, uint8_t pLineSel = 0);
-    bool                              ConfigureTermination(Ph2_HwDescription::Chip* pChip, uint8_t pClkTerm = 1, uint8_t pRxTerm = 1);
-    bool                              ConfigureDriveStrength(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 3);
-    bool                              ConfigureFCMDEdge(Ph2_HwDescription::Chip* pChip, uint8_t pUseNegEdge = 1);
-    bool                              GetResyncRequest(Ph2_HwDescription::Chip* pChip);
-    std::pair<uint8_t, uint8_t>       GetPhyPortConfig(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId);
+    bool                        writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> cicInputTaps);
+    bool                        SetSparsification(Ph2_HwDescription::Chip* pChip, uint8_t pState = 0);
+    bool                        PhaseAlignerPorts(Ph2_HwDescription::Chip* pChip, uint8_t pState);
+    bool                        SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);
+    bool                        SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);
+    bool                        SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip);
+    bool                        CheckPhaseAlignerLock(Ph2_HwDescription::Chip* pChip, uint8_t pCheckValue = 0xFF);
+    bool                        ResetPhaseAligner(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 1);
+    bool                        ResetDLL(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 100);
+    bool                        CheckDLL(Ph2_HwDescription::Chip* pChip);
+    bool                        CheckFastCommandLock(Ph2_HwDescription::Chip* pChip);
+    bool                        ConfigureAlignmentPatterns(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
+    bool                        AutomatedWordAlignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
+    bool                        ConfigureBx0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pPatterns, uint8_t pFEId = 0, uint8_t pLineId = 0);
+    std::pair<bool, uint8_t>    CheckBx0Alignment(Ph2_HwDescription::Chip* pChip); // success , delay
+    bool                        CheckReSync(Ph2_HwDescription::Chip* pChip);
+    bool                        SoftReset(Ph2_HwDescription::Chip* pChip, uint32_t cWait_ms = 100);
+    bool                        CheckSoftReset(Ph2_HwDescription::Chip* pChip);
+    bool                        StartUp(Ph2_HwDescription::Chip* pChip);
+    bool                        ManualBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pBx0delay = 8);
+    bool                        SelectMode(Ph2_HwDescription::Chip* pChip, uint8_t pMode = 0);
+    bool                        SelectOutput(Ph2_HwDescription::Chip* pChip, bool pFixedPattern = true);
+    bool                        EnableFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFEs = {0, 1, 2, 3, 4, 5, 6, 7}, bool pEnable = true);
+    bool                        configureEnabledFEs(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pFeIds);
+    bool                        AutoBx0Alignment(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
+    bool                        SelectMux(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort);
+    bool                        ControlMux(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
+    bool                        ConfigureStubOutput(Ph2_HwDescription::Chip* pChip, uint8_t pLineSel = 0);
+    bool                        ConfigureTermination(Ph2_HwDescription::Chip* pChip, uint8_t pClkTerm = 1, uint8_t pRxTerm = 1);
+    bool                        ConfigureDriveStrength(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 3);
+    bool                        ConfigureFCMDEdge(Ph2_HwDescription::Chip* pChip, uint8_t pUseNegEdge = 1);
+    bool                        GetResyncRequest(Ph2_HwDescription::Chip* pChip);
+    std::pair<uint8_t, uint8_t> GetPhyPortConfig(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId);
     // TO-DO.. clean-up
     bool                          runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
     std::pair<uint16_t, uint16_t> getRetrySummary() { return std::make_pair(fReW, fReWR); }
@@ -141,8 +140,10 @@ class CicInterface : public ChipInterface
     void setRetryI2C(bool pRetry) { fRetryI2C = pRetry; }
     void setMaxI2CAttempts(uint8_t pMaxAttempts) { fMaxI2CAttempts = pMaxAttempts; }
     // return information on phase aligners
-    std::vector<uint8_t> getI2CStatus() { return fI2CStatus; }
-    void                 setWithlpGBT(uint8_t pIsWithLpGBT) {}
+    std::vector<uint8_t>                                                              getI2CStatus() { return fI2CStatus; }
+    void                                                                              setWithlpGBT(uint8_t pIsWithLpGBT) {}
+    GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1> retrieveExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
+    bool ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip, const GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>& theWordAlignmentValues);
 
   private:
     bool    fRetryI2C       = true;
@@ -183,12 +184,9 @@ class CicInterface : public ChipInterface
     std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index hybrid FE Id , Value CIC FE Id
     std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
 
-    void                       UpdateExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
-    bool                       ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip);
     std::map<uint8_t, uint8_t> fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
     uint8_t                    fMaxDriveStrength = 5;
     // 4 channels per phyPort ... 12 phyPorts per CIC
-    std::vector<std::vector<uint8_t>> fWordAlignmentVals;
 
     // register map
 };

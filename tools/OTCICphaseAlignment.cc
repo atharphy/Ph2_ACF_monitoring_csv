@@ -65,8 +65,14 @@ void OTCICphaseAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTCICphaseAlignment::phaseAlignment()
 {
-    bool cDebug = false;
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure" << RESET;
+    std::string theQueryFunction = "skipSSAQuery";
+    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
+        if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
+        return true;
+    };
+    fDetectorContainer->addReadoutChipQueryFunction(theSkipSSAquery, theQueryFunction);
+
     DetectorDataContainer thePhaseHistogramContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>>(*fDetectorContainer, thePhaseHistogramContainer);
 
@@ -233,29 +239,7 @@ void OTCICphaseAlignment::phaseAlignment()
     }
 #endif
 
-    // check
-    for(auto theBoard: *fDetectorContainer)
-    {
-        if(!cDebug) continue;
-
-        fBeBoardInterface->setBoard(theBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
-        D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
-        for(auto theOpticalGroup: *theBoard)
-        {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                for(uint8_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
-                {
-                    fCicInterface->SelectMux(cCic, cPhyPort);
-                    cDebugInterface->StubDebug(true, 4);
-                }
-                fCicInterface->ControlMux(cCic, 0);
-            }
-        }
-    }
+    fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
 }
 
 void OTCICphaseAlignment::AlignAllCICinputsPS(BeBoard*            theBoard,
@@ -268,11 +252,7 @@ void OTCICphaseAlignment::AlignAllCICinputsPS(BeBoard*            theBoard,
     {
         for(auto theHybrid: *theOpticalGroup)
         {
-            for(auto theReadoutChip: *theHybrid)
-            {
-                if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
-                fReadoutChipInterface->producePhaseAlignmentPattern(theReadoutChip);
-            }
+            for(auto theReadoutChip: *theHybrid) { fReadoutChipInterface->producePhaseAlignmentPattern(theReadoutChip); }
         }
     }
 

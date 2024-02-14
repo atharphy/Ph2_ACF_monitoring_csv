@@ -56,7 +56,7 @@ class D19clpGBTInterface : public lpGBTInterface
                                       ReadoutChipInterface*                  pReadoutChipInterface) override{};
     LpGBTalignmentResult PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::map<uint8_t, std::vector<uint8_t>>& groupsAndChannels, size_t pMaxAttempts);
 
-    bool didAlignmentSucceded(LpGBTalignmentResult& theOpticalGroupAlignmentResult, float minAlignmentSuccessRate, const Ph2_HwDescription::OpticalGroup *theOpticalGroup);
+    bool didAlignmentSucceded(LpGBTalignmentResult& theOpticalGroupAlignmentResult, float minAlignmentSuccessRate, const Ph2_HwDescription::OpticalGroup* theOpticalGroup);
     // 0 [RHS], 1 [LHS]
     // active reset functions
     void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
