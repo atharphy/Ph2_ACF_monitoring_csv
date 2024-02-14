@@ -160,7 +160,6 @@ std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pS
     for(size_t cIndex = 0; cIndex < cNumberOfChannels; cIndex++)
     {
         uint32_t cSeedChannel = 2 * (cSeedStrip - 1) + !pSeedLayer + 2 * cIndex;
-        // LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
         cChannelList.push_back(static_cast<uint32_t>(cSeedChannel));
     }
     return cChannelList;
@@ -794,11 +793,15 @@ void CbcInterface::produceStubLine0PhaseAlignmentPattern(ReadoutChip* pChip)
     WriteChipReg(pChip, "ClusterCut", 4);
     selectLogicMode(pChip, "Sampled", true, true);
 
-    WriteChipReg(pChip, "Bend0", 0x0A); //forcing Bend0 to ouput the needed bend code for running the alignment
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
+    theRegisterVector.push_back({"Bend7", 0x0A}); //forcing Bend7 to ouput the needed bend code for running the alignment
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
+    WriteChipMultReg(pChip, theRegisterVector);
     // Also lines 1 and 2 are injected automatically
     LOG(DEBUG) << BOLDBLUE << "Injecting on stub line 0 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
     std::vector<uint8_t> cSeeds_ph1{0x55, 0xAA};
-    std::vector<int>     cBends_ph1(cSeeds_ph1.size(), -14);
+    std::vector<int>     cBends_ph1(cSeeds_ph1.size(), 0);
     injectStubs(pChip, cSeeds_ph1, cBends_ph1);
 }
 
@@ -812,10 +815,15 @@ void CbcInterface::produceStubLines1To4PhaseAlignmentPattern(ReadoutChip* pChip)
     WriteChipReg(pChip, "ClusterCut", 4);
     selectLogicMode(pChip, "Sampled", true, true);
 
-    WriteChipReg(pChip, "Bend0", 0x0A); //forcing Bend0 to ouput the needed bend code for running the alignment
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
+    theRegisterVector.push_back({"Bend7", 0x0A}); //forcing Bend7 to ouput the needed bend code for running the alignment
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
+    WriteChipMultReg(pChip, theRegisterVector);
+
     LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
     std::vector<uint8_t> cSeeds_ph3{0x2A, 0x55, 0xAA};
-    std::vector<int>     cBends_ph3(cSeeds_ph3.size(), -14);
+    std::vector<int>     cBends_ph3(cSeeds_ph3.size(), 0);
     injectStubs(pChip, cSeeds_ph3, cBends_ph3);
 }
 
@@ -881,22 +889,18 @@ void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
     WriteChipReg(pChip, "ClusterCut", 4);
 
     selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
+    theRegisterVector.push_back({"Bend7", fWordAlignmentPatterns[3] & 0x0F}); // Set bend 0 to output of stub 1 required pattern
+    theRegisterVector.push_back({"Bend8", (fWordAlignmentPatterns[3] & 0xF0) >> 4}); // Set bend 2 to output of stub 1 required pattern
+    theRegisterVector.push_back({"Bend9", fWordAlignmentPatterns[4] & 0x0F}); // Set bend 4 to output of stub 1 required pattern
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
+
+    WriteChipMultReg(pChip, theRegisterVector);
     std::vector<uint8_t> cStubs{fWordAlignmentPatterns[0], fWordAlignmentPatterns[1], fWordAlignmentPatterns[2]};
-    std::vector<uint8_t> cBendLUT = readLUT(static_cast<ReadoutChip*>(pChip));
-    std::vector<uint8_t> cBendCodes{
-        static_cast<uint8_t>(fWordAlignmentPatterns[3] & 0x0F), static_cast<uint8_t>((fWordAlignmentPatterns[3] & 0xF0) >> 4), static_cast<uint8_t>(fWordAlignmentPatterns[4] & 0x0F)};
-    std::vector<int> cBends(3, 0);
-    for(size_t cIndex = 0; cIndex < cBendCodes.size(); cIndex += 1)
-    {
-        auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCodes[cIndex]);
-        if(cIterator != cBendLUT.end())
-        {
-            int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
-            double cBend_strips = -7. + 0.5 * cPosition;
-            cBends[cIndex]      = cBend_strips * 2;
-            LOG(DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCodes[cIndex]) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
-        }
-    }
+    std::vector<int> cBends{0, 2, 4};
+
     injectStubs(static_cast<ReadoutChip*>(pChip), cStubs, cBends);
 }
 uint32_t CbcInterface::ReadChipFuseID(Chip* pCbc)
