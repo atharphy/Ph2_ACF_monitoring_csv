@@ -104,28 +104,28 @@ void OTCMNoise::TakeData()
     DetectorDataContainer the2DHybridCorrelationContainer;
 
     ContainerFactory::copyAndInitStructure<EmptyContainer,
-                                           GenericDataArray_2D<NCHANNELS + 1, HYBRID_CHANNELS_OT + 1, uint32_t>,
+                                           GenericDataArray<uint32_t, NCHANNELS + 1, HYBRID_CHANNELS_OT + 1>,
                                            EmptyContainer,
-                                           GenericDataArray_2D<HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1, uint32_t>,
+                                           GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1>,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, the2DHybridCorrelationContainer);
 
     ContainerFactory::copyAndInitStructure<EmptyContainer,
                                            EmptyContainer,
                                            EmptyContainer,
-                                           GenericDataArray_2D<TOTAL_CHANNELS_OT / 2 + 1, TOTAL_CHANNELS_OT / 2 + 1, uint32_t>,
+                                           GenericDataArray<uint32_t, TOTAL_CHANNELS_OT / 2 + 1, TOTAL_CHANNELS_OT / 2 + 1>,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, the2DSensorModuleCorrelationContainer);
 
     ContainerFactory::copyAndInitStructure<EmptyContainer,
                                            EmptyContainer,
-                                           GenericDataArray_2D<(HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1), uint32_t>,
+                                           GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>,
                                            EmptyContainer,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, the2DSensorHybridCorrelationContainer);
 
     ContainerFactory::copyAndInitStructure<EmptyContainer,
-                                           GenericDataArray_2D<(NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1), uint32_t>,
+                                           GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>,
                                            EmptyContainer,
                                            EmptyContainer,
                                            EmptyContainer,
@@ -200,7 +200,7 @@ void OTCMNoise::TakeData()
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
                                 ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray_2D<(NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1), uint32_t>>()(cEventHitsEven, cEventHitsOdd) += 1;
+                                ->getSummary<GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>>()[cEventHitsEven][cEventHitsOdd] += 1;
 
                             // for 2d correlation, save channels with hits per chip
                             if(f2DHistograms)
@@ -221,18 +221,18 @@ void OTCMNoise::TakeData()
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
                                 ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray_2D<NCHANNELS + 1, HYBRID_CHANNELS_OT + 1, uint32_t>>()(cChipCorrelationMap[cHybrid->getId()][cChip->getId()], cHybridHits) += 1;
+                                ->getSummary<GenericDataArray<uint32_t, NCHANNELS + 1, HYBRID_CHANNELS_OT + 1>>()[cChipCorrelationMap[cHybrid->getId()][cChip->getId()]][cHybridHits] += 1;
                         }
 
                         the2DSensorHybridCorrelationContainer.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
-                            ->getSummary<GenericDataArray_2D<(HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1), uint32_t>>()(cHybridHitsEven, cHybridHitsOdd) += 1;
+                            ->getSummary<GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>>()[cHybridHitsEven][cHybridHitsOdd] += 1;
                                                 
                         auto theHybridContainerValues = &(theHybridHitContainer.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
-                            ->getSummary<GenericDataArray<3*(HYBRID_CHANNELS_OT + 1), uint32_t>>());
+                            ->getSummary<GenericDataArray<uint32_t, 3*(HYBRID_CHANNELS_OT + 1)>>());
                         (*theHybridContainerValues)[                               cHybridHitsEven  ]++;
                         (*theHybridContainerValues)[  (HYBRID_CHANNELS_OT + 1) +   cHybridHitsOdd   ]++;
                         (*theHybridContainerValues)[2*(HYBRID_CHANNELS_OT + 1) +   cHybridHits      ]++;
@@ -242,7 +242,7 @@ void OTCMNoise::TakeData()
 
                     auto theModuleContainerValues = &(theModuleHitContainer.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
-                                                ->getSummary<GenericDataArray<3*(TOTAL_CHANNELS_OT + 1), uint32_t>>());
+                                                ->getSummary<GenericDataArray<uint32_t, 3*(TOTAL_CHANNELS_OT + 1)>>());
 
                     (*theModuleContainerValues)[                              cModuleHitsEven  ]++;
                     (*theModuleContainerValues)[  (TOTAL_CHANNELS_OT + 1) +   cModuleHitsOdd   ]++;
@@ -251,11 +251,11 @@ void OTCMNoise::TakeData()
 
                     the2DSensorModuleCorrelationContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
-                        ->getSummary<GenericDataArray_2D<(TOTAL_CHANNELS_OT / 2 + 1), (TOTAL_CHANNELS_OT / 2 + 1), uint32_t>>()(cModuleHitsEven, cModuleHitsOdd) += 1;
+                        ->getSummary<GenericDataArray<uint32_t, (TOTAL_CHANNELS_OT / 2 + 1), (TOTAL_CHANNELS_OT / 2 + 1)>>()[cModuleHitsEven][cModuleHitsOdd] += 1;
 
                     the2DHybridCorrelationContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
-                        ->getSummary<GenericDataArray_2D<HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1, uint32_t>>()(cHybridCorrelationMap.begin()->second, cHybridCorrelationMap.rbegin()->second) +=
+                        ->getSummary<GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1>>()[cHybridCorrelationMap.begin()->second][cHybridCorrelationMap.rbegin()->second] +=
                         1;
 
                     if(f2DHistograms)
@@ -267,7 +267,7 @@ void OTCMNoise::TakeData()
                             {
                                 the2DHitContainer.getObject(cBoard->getId())
                                     ->getObject(cOpticalGroup->getId())
-                                    ->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(hit_channels[iCh1], hit_channels[iCh2]) += 1;
+                                    ->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[hit_channels[iCh1]][hit_channels[iCh2]] += 1;
                             }
                         }
                     }

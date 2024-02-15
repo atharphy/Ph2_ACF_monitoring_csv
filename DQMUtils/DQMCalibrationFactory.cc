@@ -121,7 +121,17 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICphaseAlignment,
              DQMHistogramOTCICwordAlignment,
              DQMHistogramLatencyScan>("otlatency");
-    Register<DQMMetadataOT, DQMHistogramPedeNoise,DQMHistogramOTCMNoise>("commonmodemeas");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise,
+             DQMHistogramOTCMNoise>("commonmodemeas");
+
 
     // IT calibrations
     Register<DQMMetadataIT, PixelAliveHistograms>("pixelalive");

@@ -84,7 +84,19 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTTemperature>("Outer Tracker", "calibrationandpedenoise");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, CalibrationExample>("Outer Tracker", "calibrationexample");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, LatencyScan>("Outer Tracker", "otlatency");
-    Register<TuneLpGBTVref, OTTemperature, OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, CicFEAlignment, PedeNoise, TuneLpGBTVref,  OTCMNoise>("Outer Tracker","commonmodemeas");
+    Register<TuneLpGBTVref,
+             OTTemperature,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             PedestalEqualization,
+             PedeNoise,
+             TuneLpGBTVref,
+             OTCMNoise,
+             OTTemperature>("Outer Tracker", "commonmodemeas");
 
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, CBCPulseShape>("2S Module", "cbcpulseshape");
