@@ -327,7 +327,10 @@
       <MonitoringElement device="RD53"  register="TEMPSENS_CENTER"      enable="1"/>
       <MonitoringElement device="RD53"  register="INTERNAL_NTC"         enable="1"/>
 
-      <MonitoringElement device="LpGBT" register="TEMP"                 enable="0"/>
+      <MonitoringElement device="LpGBT" register="TEMP"                 enable="1"/>
+      <MonitoringElement device="LpGBT" register="VDDTX"                enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDDRX"                enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDDA"                 enable="0"/>
       <MonitoringElement device="LpGBT" register="VDD"                  enable="0"/>
       <MonitoringElement device="LpGBT" register="PUSMStatus"           enable="0"/>
     </Monitoring>
