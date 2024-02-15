@@ -185,15 +185,10 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     // #######################################
     // # Properly configure lpGBT to use ADC #
     // #######################################
-    
-    uint32_t pChipId = pChip->getId();
-    LoadCalibrationData(static_cast<lpGBT*>(pChip),pChipId);
-
-    EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
-    
-    TuneVrefControlLib(static_cast<lpGBT*>(pChip));
-    
-    AutoTuneVref(static_cast<lpGBT*>(pChip));
+    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), pChip->getId());
+    lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
+    lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
+    lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));
 
     return true;
 }
