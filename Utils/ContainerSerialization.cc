@@ -48,6 +48,13 @@ BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<TO
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<std::vector<double>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<std::vector<float>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<std::vector<uint16_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<(NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1), uint32_t>,EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<(HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1), uint32_t>,EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<3*(NCHANNELS + 1), uint32_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<3*(HYBRID_CHANNELS_OT + 1), uint32_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<3*(TOTAL_CHANNELS_OT + 1), uint32_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<NCHANNELS + 1, HYBRID_CHANNELS_OT + 1, uint32_t>,EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1, uint32_t>,EmptyContainer>)))
 
 ContainerSerialization::ContainerSerialization(const std::string& calibrationName) : fCalibrationName(calibrationName) {}
 

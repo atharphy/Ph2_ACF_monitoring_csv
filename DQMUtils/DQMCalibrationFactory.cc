@@ -42,7 +42,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
     Register<DQMMetadataOT, CBCHistogramPulseShape>("cbcpulseshape");
     Register<DQMMetadataOT, DQMHistogramLatencyScan>("otlatency");
-    Register<DQMMetadataOT, DQMHistogramOTCMNoise>("commonmodemeas");
+    Register<DQMMetadataOT, DQMHistogramPedeNoise,DQMHistogramOTCMNoise>("commonmodemeas");
 
     // IT calibrations
     Register<DQMMetadataIT, PixelAliveHistograms>("pixelalive");

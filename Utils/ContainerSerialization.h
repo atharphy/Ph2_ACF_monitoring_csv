@@ -66,6 +66,13 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<TOTAL_CH
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<double>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<float>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<uint16_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<(NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1), uint32_t>,EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<(HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1), uint32_t>,EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<3*(NCHANNELS + 1), uint32_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<3*(HYBRID_CHANNELS_OT + 1), uint32_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<3*(TOTAL_CHANNELS_OT + 1), uint32_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<NCHANNELS + 1, HYBRID_CHANNELS_OT + 1, uint32_t>,EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray_2D<HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1, uint32_t>,EmptyContainer>)))
 
 #include "Utils/Occupancy.h"
 #include <arpa/inet.h>
