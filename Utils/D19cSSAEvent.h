@@ -52,7 +52,7 @@ class D19cSSAEvent : public Event
         }
     }
 
-    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
 
   private:
     EventDataVector           fEventDataVector;

@@ -87,7 +87,7 @@ void D19SCEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData
 }
 
 // required by event but not sure if makes sense for AS
-void D19SCEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+void D19SCEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId)
 {
     std::vector<uint32_t> hVec = GetHits(hybridId, chipContainer->getId());
     unsigned int          i    = 0;

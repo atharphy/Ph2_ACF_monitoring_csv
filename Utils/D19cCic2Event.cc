@@ -368,7 +368,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     } while(cEventIterator < pData.end());
 }
 
-void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId)
 {
     // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling GetHits" << std::endl;
     std::vector<uint32_t> cHits;
