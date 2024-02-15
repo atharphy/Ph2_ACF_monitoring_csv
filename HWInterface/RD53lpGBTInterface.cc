@@ -182,23 +182,18 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
                   << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
-    // *************************************************************************************
+    // #######################################
+    // # Properly configure lpGBT to use ADC #
+    // #######################################
     
-    // void    LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32_t pChipId, std::string pFileName = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv"));
     uint32_t pChipId = pChip->getId();
     LoadCalibrationData(static_cast<lpGBT*>(pChip),pChipId);
 
-    // float   EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor = true);
     EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
     
-    // void    TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pEnable = true);
     TuneVrefControlLib(static_cast<lpGBT*>(pChip));
     
-    // void    AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor = true);
     AutoTuneVref(static_cast<lpGBT*>(pChip));
-    
-    
-    // **************************************************************************************
 
     return true;
 }
