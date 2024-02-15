@@ -192,8 +192,8 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     std::ifstream stream(pFileName);
     if (!stream)
     {
-         LOG(ERROR) << BOLDRED << "Error: The filename " << pFileName << " does not exist!" << RESET;
-         return false;
+        LOG(ERROR) << BOLDRED << "Error: The filename " << pFileName << " does not exist!" << RESET;
+        exit(EXIT_FAILURE);
     }
 
     LoadCalibrationData(static_cast<lpGBT*>(pChip),pChipId, pFileName);
