@@ -310,9 +310,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
                 LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                 fCicInterface = new CicInterface(fBeBoardFWMap);
-                // check event type
-                bool cWithCBC3 = !(cFirstBoard->getEventType() == EventType::VR2S);
-                fCicInterface->setWith8CBC3(cWithCBC3);
                 if(cFirstOpticalGroup->flpGBT != nullptr)
                 {
                     bool cFoundLpgbt = fCicInterface->lpGBTCheck(cFirstBoard);
@@ -360,7 +357,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
-            abort();
+            exit(EXIT_FAILURE);
         }
 
         fDetectorMonitor->forkMonitor();
@@ -530,13 +527,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ####################################
     // # Check AURORA lock on data stream #
     // ####################################
-    try
+    const bool stopIfCommFails = SystemController::findValueInSettings<double>("StopIfCommFails", 1);
+    if((static_cast<RD53FWInterface*>(theBeBoardFW)->CheckChipCommunication(pBoard) == false) && (stopIfCommFails == true))
     {
-        static_cast<RD53FWInterface*>(theBeBoardFW)->CheckChipCommunication(pBoard);
-    }
-    catch(const std::exception& e)
-    {
-        LOG(WARNING) << BOLDRED << "===== Aborting: " << BOLDYELLOW << e.what() << BOLDRED << " =====" << RESET;
+        LOG(ERROR) << BOLDRED << "===== Aborting =====" << RESET;
+        exit(EXIT_FAILURE);
     }
 }
 

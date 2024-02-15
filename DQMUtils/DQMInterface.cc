@@ -188,7 +188,7 @@ bool DQMInterface::running()
                 }
                 if(!decodedByOneDQM)
                 {
-                    LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << "None decoded message " << inputStream << ", aborting..." << RESET;
+                    LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << " No DQM histogrammer decoded message " << inputStream << ", aborting..." << RESET;
                     abort();
                 }
             }

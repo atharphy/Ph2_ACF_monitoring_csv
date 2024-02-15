@@ -31,7 +31,7 @@ void MemoryCheck2S::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
+        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second.fValue)); }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         auto& cRegMapThisBoard = fRegMapContainer.getObject(cBoard->getId());
@@ -1624,15 +1624,15 @@ void MemoryCheck2S::SaveOptimalTaps()
             for(auto cHybrid: *cOpticalGroup)
             {
                 fPhyPort.fHybridId = cHybrid->getId();
-                auto& cCic         = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                auto  cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                // auto& cCic         = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                // auto  cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
                 for(size_t cPhyPortChnl = 0; cPhyPortChnl < 4; cPhyPortChnl++)
                 {
                     for(size_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
                     {
                         fPhyPort.fPort    = cPhyPort;
                         fPhyPort.fChannel = cPhyPortChnl;
-                        fPhyPort.fTap     = cOptimalTaps[cPhyPortChnl][cPhyPort];
+                        // fPhyPort.fTap     = cOptimalTaps[cPhyPortChnl][cPhyPort];
 #ifdef __USE_ROOT__
                         TTree* cTree = static_cast<TTree*>(getHist(cBoard, "PhyPortTree"));
                         cTree->Fill();

@@ -148,6 +148,13 @@
     <Setting name="KiraCalibrationIntensityStart" > 29000 </Setting>
     <Setting name="KiraCalibrationIntensityStop" > 31500 </Setting>
     <Setting name="KiraCalibrationIntensityStep" > 100 </Setting>
+    <Setting name="OTverifyBoardDataWordNumberOfIterations">100</Setting>
+    <Setting name="OTalignLpGBTinputsNumberOfAlignmentIterations">100</Setting>
+    <Setting name="OTalignLpGBTinputsMinAlignmentSuccessRate">0.99</Setting>
+
+    <Setting name="OTCICphaseAlignmentNumberOfAlignmentIterations">100</Setting>
+    <Setting name="OTCICphaseAlignmentMinLockingSuccessRate">0.95</Setting>
+    
 </Settings>
 
 

@@ -11,6 +11,7 @@
 #define _BeBoard_h__
 
 #include "Definition.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "OpticalGroup.h"
 #include "Utils/ConditionDataSet.h"
 #include "Utils/Container.h"
@@ -28,7 +29,7 @@
  */
 namespace Ph2_HwDescription
 {
-using BeBoardRegMap = std::map<std::string, uint32_t>; /*!< Map containing the registers of a board */
+using BeBoardRegMap = std::map<std::string, BeBoardRegItem>; /*!< Map containing the registers of a board */
 
 /*!
  * \class BeBoard
@@ -174,19 +175,23 @@ class BeBoard : public BoardContainer
     std::vector<FrontEndType> connectedFrontEndTypes() const;
     int                       dummyValue_ = 1989;
 
-    void dumpRegisters()
-    {
-        for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
-    }
+    void dumpRegisters();
 
     void              saveRegMap(const std::string& fileName);
     std::stringstream getRegMapStream() const;
 
-    void                                          takeSnapshot();
-    void                                          clearSnapshot();
-    std::vector<std::pair<std::string, uint32_t>> getSnapshot() const;
-    void                                          reinitializeFreeRegisters();
-    void                                          addFreeRegister(const std::regex& theRegisterName);
+    enum class RegisterType
+    {
+        Utility,
+        User
+    };
+
+    void                                             takeSnapshot();
+    void                                             clearSnapshot();
+    std::vector<std::pair<std::string, uint32_t>>    getSnapshot() const;
+    void                                             reinitializeFreeRegisters();
+    void                                             addFreeRegister(const std::regex& theRegisterName);
+    std::vector<std::pair<std::regex, RegisterType>> getFreeRegisterRegex() const { return fListOfFreeRegisters; };
 
     void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue);
 
@@ -215,11 +220,12 @@ class BeBoard : public BoardContainer
      * \brief Load RegMap from a file
      * \param filename
      */
-    void                    loadConfigFile(const std::string& filename);
-    BeBoardRegMap           fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
-    bool                    fTrackModifiedRegistersEnabled{false};
-    BeBoardRegMap           fModifiedRegisters{};
-    std::vector<std::regex> fListOfFreeRegisters{};
+    void                                             loadConfigFile(const std::string& filename);
+    void                                             initializeFreeRegisters();
+    BeBoardRegMap                                    fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
+    bool                                             fTrackModifiedRegistersEnabled{false};
+    std::map<std::string, uint32_t>                  fModifiedRegisters{};
+    std::vector<std::pair<std::regex, RegisterType>> fListOfFreeRegisters{};
 };
 } // namespace Ph2_HwDescription
 

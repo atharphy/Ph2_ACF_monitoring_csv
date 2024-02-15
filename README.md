@@ -35,7 +35,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 ### Suggested software and firmware versions:
-- Software git branch / tag : `Dev` / `v4-18`
+- Software git branch / tag : `Dev` / `v4-20`
 - Firmware tag: `v4-08`
 
 ### Important webpages and information:
@@ -301,7 +301,7 @@ to run the DQM code from the June '15 beamtest
 ### Setup on CentOs8 (deprecated)
 The following procedure will install (in order):
 1. the `boost` and `pugixml` libraries
-2. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+2. the `cactus` libraries for `IPbus` (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
 3. `root` with all its needed libraries
 4. `cmake`, tools for clang, including `clang-format` and `git-extras`
 
@@ -362,9 +362,13 @@ The following procedure will install (in order):
 2. when installing `rarpd` use the version for `Fedora`
 3. the `boost` and `pugixml` libraries
 4. `erlang` (using [these instructions](https://www.rabbitmq.com/install-rpm.html))
-5. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+5. the `cactus` libraries for `IPbus` (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
 6. `root` with all its needed libraries
 7. `cmake`, tools for clang, including `clang-format` and `git-extras`
+8. `devtoolset 12`
+9. `python3`
+10. `protobuf`
+11. `pybind11`
 
 #### Complete the CERN installation
 Make sure that the CERN installation is complete by running

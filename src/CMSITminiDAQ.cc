@@ -601,9 +601,13 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
 #endif
     }
-    else if((program == false) && (whichCalib != ""))
+    else if(program == false)
     {
-        LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
+        if(whichCalib == "")
+            LOG(ERROR) << BOLDRED << "Error: calibration not specified" << RESET;
+        else
+            LOG(ERROR) << BOLDRED << "Error: option not recognized (" << BOLDYELLOW << whichCalib << BOLDRED << ")" << RESET;
+
         mySysCntr.Destroy();
         exit(EXIT_FAILURE);
     }

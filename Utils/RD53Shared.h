@@ -50,6 +50,7 @@ const uint8_t  READOUTSLEEP           = 50;                                     
 const uint8_t  MAXATTEMPTS            = 10;                                              // Maximum number of attempts
 const uint16_t MAXATTEMPTSCMDDISPATCH = 100;                                             // Maximum number of attempts to dispatch a command
 const uint8_t  MAXSTEPS               = 10;                                              // Maximum number of steps for a scan
+const uint8_t  NENDOFCALIB            = 2;                                               // Maximum number of end-of-calib data
 
 enum class INJtype : uint8_t
 {

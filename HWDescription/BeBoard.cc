@@ -9,7 +9,8 @@
 
  */
 
-#include "BeBoard.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "Parser/ParserDefinitions.h"
 #include "pugixml.hpp"
 #include <fstream>
@@ -40,13 +41,13 @@ uint32_t BeBoard::getReg(const std::string& pReg) const
         return 0;
     }
     else
-        return i->second;
+        return i->second.fValue;
 }
 
 void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
 {
-    auto oldRegister = fRegMap[pReg];
-    fRegMap[pReg]    = psetValue;
+    auto oldRegister     = fRegMap[pReg].fValue;
+    fRegMap[pReg].fValue = psetValue;
     if(fTrackModifiedRegistersEnabled)
     {
         if(fModifiedRegisters.find(pReg) == fModifiedRegisters.end()) // check if it already tracked
@@ -54,7 +55,7 @@ void BeBoard::setReg(const std::string& pReg, uint32_t psetValue)
             bool isFreeRegister = false;
             for(const auto& freeRegister: fListOfFreeRegisters)
             {
-                isFreeRegister = std::regex_match(pReg, freeRegister);
+                isFreeRegister = std::regex_match(pReg, freeRegister.first);
                 if(isFreeRegister) break;
             }
             if(!isFreeRegister && oldRegister != psetValue) { fModifiedRegisters[pReg] = oldRegister; }
@@ -124,7 +125,9 @@ void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttribut
 
             pAttributeString += pRegisterNode.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
             pValue = convertAnyDouble(pRegisterNode.first_child().value());
-            this->setReg(pAttributeString, pValue);
+            BeBoardRegItem theRegister(pValue);
+            theRegister.fPrmptCfg     = true;
+            fRegMap[pAttributeString] = theRegister;
         }
     }
 }
@@ -133,6 +136,7 @@ void BeBoard::parseRegister(pugi::xml_node pRegisterNode, std::string& pAttribut
 
 void BeBoard::loadConfigFile(const std::string& filename)
 {
+    initializeFreeRegisters();
     pugi::xml_document     registerPugiDocument;
     pugi::xml_parse_result result = registerPugiDocument.load_file(filename.c_str());
     if(!result) // Try if it is not a file, but a string containing the full xml
@@ -189,12 +193,22 @@ void BeBoard::clearSnapshot()
 std::vector<std::pair<std::string, uint32_t>> BeBoard::getSnapshot() const
 {
     std::vector<std::pair<std::string, uint32_t>> theModifiedRegisterVector(fModifiedRegisters.begin(), fModifiedRegisters.end());
+    theModifiedRegisterVector.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1}); // needed to make sure that it trigger config updates it it properly loaded
     return theModifiedRegisterVector;
 }
 
-void BeBoard::reinitializeFreeRegisters() { fListOfFreeRegisters.clear(); }
+void BeBoard::reinitializeFreeRegisters()
+{
+    std::remove_if(fListOfFreeRegisters.begin(), fListOfFreeRegisters.end(), [](std::pair<std::regex, RegisterType> theRegister) { return (theRegister.second == RegisterType::User); });
+}
 
-void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(theRegisterName); }
+void BeBoard::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("sysreg\\.buf_test\\..*"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("buf_cta\\..*"), RegisterType::Utility));
+}
+
+void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRegisters.push_back(std::make_pair(theRegisterName, RegisterType::User)); }
 
 std::unique_ptr<pugi::xml_document> BeBoard::createRegisterPugiDocument() const
 {
@@ -221,7 +235,7 @@ std::unique_ptr<pugi::xml_document> BeBoard::createRegisterPugiDocument() const
         splitRegister(theRegisterNameAndValue.first, theSplittedRegisterName);
         // for(const auto& reg : theSplittedRegisterName) std::cout<<reg<< " | ";
         // std::cout<<std::endl;
-        theRegisterListSplitted.push_back(std::make_pair(theSplittedRegisterName, theRegisterNameAndValue.second));
+        theRegisterListSplitted.push_back(std::make_pair(theSplittedRegisterName, theRegisterNameAndValue.second.fValue));
     }
 
     std::function<void(pugi::xml_node&, const std::vector<std::pair<std::vector<std::string>, uint32_t>>&)> groupByRegisterAndDumpIntoFile;
@@ -282,6 +296,11 @@ std::stringstream BeBoard::getRegMapStream() const
     auto              registerPugiDocument = createRegisterPugiDocument();
     registerPugiDocument->save(theStream);
     return theStream;
+}
+
+void BeBoard::dumpRegisters()
+{
+    for(const auto& reg: fRegMap) std::cout << reg.first << " " << reg.second.fValue << std::endl;
 }
 
 } // namespace Ph2_HwDescription

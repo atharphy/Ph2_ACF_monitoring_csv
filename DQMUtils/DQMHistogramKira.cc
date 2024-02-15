@@ -223,7 +223,7 @@ void DQMHistogramKira::fillBottomSensorPlots(DetectorDataContainer& pHitContaine
                     cKIRAHitsBottomSensor->GetXaxis()->SetTitle("Bottom Sensor CBC Channel");
                     cKIRAHitsBottomSensor->GetYaxis()->SetTitle("Channel Hit Occupancy");
                     auto cNhits =
-                        pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<VECSIZE, float>>();
+                        pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<float, VECSIZE>>();
                     for(uint32_t cIndx = 0; cIndx < 127; cIndx++)
                     {
                         cKIRAHitsBottomSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents));
@@ -262,7 +262,7 @@ void DQMHistogramKira::fillTopSensorPlots(DetectorDataContainer& pHitContainer, 
                     cKIRAHitsTopSensor->GetXaxis()->SetTitle("Top Sensor CBC Channel");
                     cKIRAHitsTopSensor->GetYaxis()->SetTitle("Channel Hit Occupancy");
                     auto cNhits =
-                        pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<VECSIZE, float>>();
+                        pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<float, VECSIZE>>();
                     for(uint32_t cIndx = 0; cIndx < 127; cIndx++)
                     {
                         cKIRAHitsTopSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents));
@@ -316,7 +316,7 @@ void DQMHistogramKira::fillSensorPlotsCalibration(DetectorDataContainer& pHitCon
                                           ->getObject(opticalGroup->getId())
                                           ->getObject(hybrid->getId())
                                           ->getObject(cChip->getId())
-                                          ->getSummary<GenericDataArray<VECSIZE, float>>();
+                                          ->getSummary<GenericDataArray<float, VECSIZE>>();
                         for(uint32_t cIndx = 0; cIndx < 127; cIndx++) { cHitMap->SetBinContent(cBinX, 127 * cChip->getId() + cIndx + 1, cNhits[cIndx] / (1.0 * pNevents)); }
                     }
                 }

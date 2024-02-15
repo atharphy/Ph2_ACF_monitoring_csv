@@ -20,13 +20,13 @@ if [ "$#" -eq 1 ]; then
     echo
 
     echo "Comparing LpGBT files"
-    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpGBT_v1_PS.txt ${run_number} "BE*_OG*_lpGBT*_lpGBT_v1_PS.txt" LpGBT
+    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpGBT_v1_PS.txt ${run_number} "BE*_OG*_lpGBT*.txt" LpGBT
     echo
     echo
     echo
 
     echo "Comparing CIC files"
-    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/CicFiles/CIC2_PS.txt ${run_number} "BE*_OG*_FE*_CIC2_PS.txt" CIC
+    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/CicFiles/CIC2_PS.txt ${run_number} "BE*_OG*_FE*_CIC.txt" CIC
     echo
     echo
     echo
@@ -56,13 +56,13 @@ else
     echo
 
     echo "Comparing LpGBT files"
-    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesFromTwoRuns.sh ${run_number_1} ${run_number_2} "BE*_OG*_lpGBT*_lpGBT_v1_PS.txt" LpGBT
+    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesFromTwoRuns.sh ${run_number_1} ${run_number_2} "BE*_OG*_lpGBT*.txt" LpGBT
     echo
     echo
     echo
 
     echo "Comparing CIC files"
-    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesFromTwoRuns.sh ${run_number_1} ${run_number_2} "BE*_OG*_FE*_CIC2_PS.txt" CIC
+    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesFromTwoRuns.sh ${run_number_1} ${run_number_2} "BE*_OG*_FE*_CIC.txt" CIC
     echo
     echo
     echo

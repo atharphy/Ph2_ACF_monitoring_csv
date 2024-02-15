@@ -5,11 +5,6 @@
 	<Register name="clock_source_u8">3</Register>
 	<Register name="coax_select">1</Register>
 	<Register name="icap">4294967257</Register>
-	<Register name="buf_cta">
-		<Register name="FIFO">131074</Register>
-		<Register name="FPGAtoMMCcounters">33488896</Register>
-		<Register name="MMCtoFPGAcounters">197631</Register>
-	</Register>
 	<Register name="fc7_daq_cnfg">
 		<Register name="amc13">
 			<Register name="sw_tts_state">0</Register>
@@ -237,7 +232,7 @@
 		</Register>
 		<Register name="sync_block">
 			<Register name="delay">10000</Register>
-			<Register name="enable">0</Register>
+			<Register name="enable">1</Register>
 			<Register name="is_bc0_enable">1</Register>
 			<Register name="is_resync_enable">0</Register>
 			<Register name="num_triggers">99</Register>
@@ -702,11 +697,6 @@
 	<Register name="sysreg">
 		<Register name="board_id">1178810144</Register>
 		<Register name="rev_id">825699892</Register>
-		<Register name="buf_test">
-			<Register name="FIFO">131074</Register>
-			<Register name="FPGAtoMMCcounters">33488896</Register>
-			<Register name="MMCtoFPGAcounters">132095</Register>
-		</Register>
 		<Register name="ctrl">
 			<Register name="cdce_ctrl_sel">1</Register>
 			<Register name="cdce_powerup">1</Register>

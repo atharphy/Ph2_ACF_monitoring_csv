@@ -82,11 +82,6 @@ void RegisterHelper::restoreSnapshot()
     for(auto theBoard: *fDetectorContainer)
     {
         const auto modifiedBoardRegisters = theBoard->getSnapshot();
-        for(auto registerNameAndValue: modifiedBoardRegisters)
-        {
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Setting back board register " << registerNameAndValue.first << " to 0x" << std::hex << +registerNameAndValue.second << std::dec
-                      << std::endl;
-        }
         fBeBoardInterface->WriteBoardMultReg(theBoard, modifiedBoardRegisters);
         for(auto theOpticalGroup: *theBoard)
         {

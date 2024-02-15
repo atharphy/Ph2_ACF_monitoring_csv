@@ -70,7 +70,7 @@ void OTCMNoise::TakeData()
     // channel, chip, hybrid, optical group, board, detector
     // can have 0 or 255 hits, need NCHANNELS+1 (inclusive)
     ContainerFactory::copyAndInitStructure<EmptyContainer,
-                                           GenericDataArray<3*(NCHANNELS + 1), uint32_t>,
+                                           GenericDataArray<uint32_t, 3*(NCHANNELS + 1)>,
                                            EmptyContainer,
                                            EmptyContainer,
                                            EmptyContainer,
@@ -78,7 +78,7 @@ void OTCMNoise::TakeData()
 
     ContainerFactory::copyAndInitStructure<EmptyContainer,
                                            EmptyContainer,
-                                           GenericDataArray<3*(HYBRID_CHANNELS_OT + 1), uint32_t>,
+                                           GenericDataArray<uint32_t, 3*(HYBRID_CHANNELS_OT + 1)>,
                                            EmptyContainer,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, theHybridHitContainer);
@@ -86,7 +86,7 @@ void OTCMNoise::TakeData()
     ContainerFactory::copyAndInitStructure<EmptyContainer,
                                            EmptyContainer,
                                            EmptyContainer,
-                                           GenericDataArray<3*(TOTAL_CHANNELS_OT + 1), uint32_t>,
+                                           GenericDataArray<uint32_t, 3*(TOTAL_CHANNELS_OT + 1)>,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, theModuleHitContainer);
 
@@ -94,7 +94,7 @@ void OTCMNoise::TakeData()
 
     // 2D arrays for module-level and hybrid-level correlation
     if(f2DHistograms)
-        ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>, EmptyContainer, EmptyContainer>(
+        ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>, EmptyContainer, EmptyContainer>(
             *fDetectorContainer, the2DHitContainer);
 
     // Creating the correlation plots... Maybe a lot of RAM being used?
@@ -185,7 +185,7 @@ void OTCMNoise::TakeData()
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
                                 ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray<3*(NCHANNELS + 1), uint32_t>>());
+                                ->getSummary<GenericDataArray<uint32_t, 3*(NCHANNELS + 1)>>());
 
                             (*theChipHitContainerValues)[                      cEventHitsEven  ]++;
                             (*theChipHitContainerValues)[  (NCHANNELS + 1) +   cEventHitsOdd   ]++;
