@@ -349,7 +349,7 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     // ##########
     // # Header #
     // ##########
-    commandList.emplace_back(bits::pack<6, 10, 16>(RD53FWconstants::HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), n32bitWords));
+    commandList.emplace_back(bits::pack<6, 10, 16>(RD53FWconstants::HEADEAR_WRTCMD, (hybridId < 0 ? this->enabledHybrids : 1 << hybridId), n32bitWords));
 
     // ############
     // # Commands #

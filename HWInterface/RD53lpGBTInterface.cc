@@ -185,6 +185,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     // #######################################
     // # Properly configure lpGBT to use ADC #
     // #######################################
+<<<<<<< HEAD
     
     uint32_t pChipId = pChip->getId();
     std::string pFileName = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv");
@@ -203,6 +204,12 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     TuneVrefControlLib(static_cast<lpGBT*>(pChip));
     
     AutoTuneVref(static_cast<lpGBT*>(pChip));
+=======
+    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), pChip->getId());
+    lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
+    lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
+    lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));
+>>>>>>> 531ca4ad94d9fb6107b972638b00e356c2f633e6
 
     return true;
 }

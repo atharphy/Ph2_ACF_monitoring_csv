@@ -201,7 +201,7 @@ class D19cCbc3Event : public Event
 
     std::vector<Cluster> getClusters(uint8_t pHybridId, uint8_t pCbcId) const override;
 
-    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
 
     void print(std::ostream& out) const override;
 

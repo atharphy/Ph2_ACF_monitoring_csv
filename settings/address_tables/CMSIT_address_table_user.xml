@@ -285,11 +285,6 @@
       <node id="lane_up"               mask="0x0FFFFF00"      permission="r"       description="" />
     </node>
 
-<!-- Requires new FW
-    <node id="aurora_rx_lane_up"    address="0x00000007"      permission="r"       description=""> </node>
-    <node id="aurora_rx_channel_up" address="0x00000008"      permission="r"       description=""> </node>
-    <node id="aurora_rx_gt_locked"  address="0x00000009"      permission="r"       description=""> </node>
--->
     <node id="aurora_rx_channel_up" address="0x00000007"      permission="r"       description=""> </node>
 
     <!-- Readout -->
@@ -321,8 +316,8 @@
     <node id="AutoRead_Reg_A"       address="0x00000011"      permission="r"       description="Auto-Read Register-A Data of the selected chip"> </node>
     <node id="AutoRead_Reg_B"       address="0x00000012"      permission="r"       description="Auto-Read Register-B Data of the selected chip"> </node>
 
-    <node id="gtx_refclk_rate"      address="0x00000013"      permission="r"> </node>
-    <node id="clkin_rate"           address="0x00000014"      permission="r"> </node>
+    <node id="gtx_refclk_rate"      address="0x00000013"      permission="r"       description=""> </node>
+    <node id="clkin_rate"           address="0x00000014"      permission="r"       description=""> </node>
 
     <node id="i2c_block_1"          address="0x00000015"      permission="r"       description="">
       <node id="NTC1"                  mask="0x00000FFF"      permission="r"       description="" />
@@ -334,9 +329,9 @@
       <node id="gnd_sense"             mask="0x00FFF000"      permission="r"       description="" />
     </node>
 
-    <node id="prbs_ber_cntr"        address="0x00000018"      permission="r"> </node>
-    <node id="prbs_frame_cntr_low"  address="0x00000019"      permission="r"> </node>
-    <node id="prbs_frame_cntr_high" address="0x0000001A"      permission="r"> </node>
+    <node id="prbs_ber_cntr"        address="0x00000018"      permission="r"       description=""> </node>
+    <node id="prbs_frame_cntr_low"  address="0x00000019"      permission="r"       description=""> </node>
+    <node id="prbs_frame_cntr_high" address="0x0000001A"      permission="r"       description=""> </node>
 
     <!-- Optical Link -->
     <node id="lpgbt_fpga"           address="0x00000017"      permission="r"       description="Status Signals from the lpgbt-fpga core">

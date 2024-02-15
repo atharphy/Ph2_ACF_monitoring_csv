@@ -47,7 +47,7 @@ D19cCbc3Event::D19cCbc3Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     // SetEvent (pBoard, fNCbc, list );
 }
 
-void D19cCbc3Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+void D19cCbc3Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId)
 {
     unsigned int i = 0;
     for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)

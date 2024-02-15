@@ -604,7 +604,7 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
 #endif
     }
-    else if(program == false)
+    else if((program == false) && (dumpRegs == false))
     {
         if(whichCalib == "")
             LOG(ERROR) << BOLDRED << "Error: calibration not specified" << RESET;
