@@ -96,7 +96,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedeNoise,
              TuneLpGBTVref,
              OTCMNoise,
-             OTTemperature>("Outer Tracker", "commonmodemeas");
+             OTTemperature>("Outer Tracker", "cmNoise");
 
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, CBCPulseShape>("2S Module", "cbcpulseshape");

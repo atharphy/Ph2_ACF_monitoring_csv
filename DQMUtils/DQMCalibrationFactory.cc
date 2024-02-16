@@ -130,7 +130,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICwordAlignment,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise,
-             DQMHistogramOTCMNoise>("commonmodemeas");
+             DQMHistogramOTCMNoise>("cmNoise");
 
 
     // IT calibrations
