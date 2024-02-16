@@ -20,6 +20,7 @@
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/Physics2S.h"
+#include "tools/OTCMNoise.h"
 #include "tools/RD53ClockDelay.h"
 #include "tools/RD53DataTransmissionTest.h"
 #include "tools/RD53Gain.h"
@@ -86,6 +87,19 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTTemperature>("Outer Tracker", "calibrationandpedenoise");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, CalibrationExample>("Outer Tracker", "calibrationexample");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, LatencyScan>("Outer Tracker", "otlatency");
+    Register<TuneLpGBTVref,
+             OTTemperature,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             PedestalEqualization,
+             PedeNoise,
+             TuneLpGBTVref,
+             OTCMNoise,
+             OTTemperature>("Outer Tracker", "cmNoise");
 
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, CBCPulseShape>("2S Module", "cbcpulseshape");
