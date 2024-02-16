@@ -1862,10 +1862,10 @@ void DataChecker::ReadDataTest()
                 {
                     // ReadoutChip *cReadoutChip = static_cast<ReadoutChip*>(cChip);
                     if(cChip->getId() == 0)
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cChip, {10, 244}, {0, 0}, true);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cChip, {{10, 0}, {244, 0}}, true);
                     else
                         fReadoutChipInterface->WriteChipReg(cChip, "VCth", 100);
-                    // static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , {2} , {0}, true );
+                    // static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , {{2,0}} , true );
                 }
             }
         }
@@ -1922,12 +1922,12 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
                     if(cReadoutChip->getId() % 2 == 0)
                     {
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", cTh1);
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {10, 244}, {0, 0}, true);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {{10, 0}, {244, 0}}, true);
                     }
                     else
                     {
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", cTh2);
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {2}, {0}, true);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {{2, 0}}, true);
                     }
                 }
             }
@@ -5215,16 +5215,8 @@ void DataChecker::ReadNeventsTest()
                     {
                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         {
-                            std::vector<uint8_t> cSeeds{10};
-                            cSeeds[0] = 2 * (cChip->getHybridId() + 1) + 5;
-                            std::vector<int> cBends{0};
-                            for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
-                            {
-                                auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
-                                LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " expect to see hits in channels : " << RESET;
-                                for(auto cHit: cHitList) LOG(INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
-                            }
-                            (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
+                            std::vector<std::pair<uint8_t, int>> seedAndBend{{2 * (cChip->getHybridId() + 1) + 5, 0}};
+                            (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, seedAndBend, cWithNoise);
                         }
                         else if(cChip->getFrontEndType() == FrontEndType::MPA)
                         {
@@ -5468,8 +5460,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                         // both stub and bend are in units of half strips
                         // if using TP then always inject a stub with bend 0 ..
                         // later will use offset window to modify bend [ should probably put this in inject stub ]
-                        uint8_t cBend_halfStrips = cStub.second;
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, {cStub.first}, {cBend_halfStrips}, false);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, {cStub}, false);
                         // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5
                         // strips set offsets needs to be fixed
                         /*
@@ -6232,7 +6223,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
                         // if using TP then always inject a stub with bend 0 ..
                         // later will use offset window to modify bend [ should probably put this in inject stub ]
                         uint8_t cBend_halfStrips = (pWithNoise) ? cStub.second : 0;
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, {cStub.first}, {cBend_halfStrips}, pWithNoise);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, {{cStub.first, cBend_halfStrips}}, pWithNoise);
                         // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5
                         // strips set offsets needs to be fixed
                         /*
@@ -6408,8 +6399,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
     uint8_t cSecondSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 3) / 2.))); // in half strips
     uint8_t cThirdSeed  = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 5) / 2.))); // in half strips
 
-    std::vector<uint8_t> cSeeds{cFirstSeed}; // cThirdSeed};
-    std::vector<int>     cBends(cSeeds.size(), cBend);
+    std::vector<std::pair<uint8_t, int>> cSeeds{{cFirstSeed, cBend}}; // cThirdSeed};
 
     LOG(INFO) << BOLDMAGENTA << "First stub expected to be " << std::bitset<8>(cFirstSeed) << RESET;
     LOG(INFO) << BOLDMAGENTA << "Second stub line expected to be " << std::bitset<8>(cSecondSeed) << RESET;
@@ -6440,7 +6430,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
                     if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) != pChipIds.end())
                     {
                         // first pattern - stubs lines 0,1,3
-                        cReadoutChipInterface->injectStubs(cReadoutChip, cSeeds, cBends, false);
+                        cReadoutChipInterface->injectStubs(cReadoutChip, cSeeds, false);
                         // set threshold back to low
                         // fReadoutChipInterface->WriteChipReg(cReadoutChip,"VCth",cThreshold);
                         // fReadoutChipInterface->WriteChipReg ( cReadoutChip, "TestPulseGroup", cTPgroup );
@@ -6550,7 +6540,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                     if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) != pChipIds.end())
                     {
                         // first pattern - stubs lines 0,1,3
-                        cReadoutChipInterface->injectStubs(cReadoutChip, {10}, {0}, true);
+                        cReadoutChipInterface->injectStubs(cReadoutChip, {{10,0}}, true);
                         // switch off HitOr
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "HitOr", 0);
                         // enable stub logic

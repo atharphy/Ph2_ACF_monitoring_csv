@@ -253,27 +253,26 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 bool cWithNoise = false;
                 // inject stubs with TP
                 uint8_t              cSeed = 60; // 2 + (uint8_t)(cChip->getId()*2);
-                std::vector<uint8_t> cSeeds{cSeed};
-                std::vector<int>     cBends{0};
+                std::vector<std::pair<uint8_t, int>> cSeeds{{cSeed, 0}};
                 // make sure we are within the limits of the CIC
                 // only inject 3 stubs here
                 if(cNinjectedStubsThisHybrid > cMaxStubs)
                 {
                     cSeeds.clear();
-                    cBends.clear();
                 }
 
                 size_t cNhits = 0;
+                for(const auto& theSeedAndBend: cSeeds)
                 for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
                 {
-                    auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                    auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, theSeedAndBend.first, theSeedAndBend.second);
                     cNinjectedHits += cHitList.size();
                     cNhits += cHitList.size();
                 }
 
                 cNinjectedStubs += cSeeds.size();
                 cNinjectedStubsThisHybrid += cSeeds.size();
-                (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
+                (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise);
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
                 // // enable stub logic
                 // // make sure OR mode is used

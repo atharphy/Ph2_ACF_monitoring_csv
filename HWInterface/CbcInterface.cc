@@ -180,7 +180,7 @@ std::vector<uint8_t> CbcInterface::stubInjectionPattern(ReadoutChip* pChip, uint
     bool cLayerSwap = (this->ReadChipReg(pChip, "LayerSwap") == 1);
     return stubInjectionPattern(pStubAddress, pStubBend, cLayerSwap);
 }
-bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends, bool pUseNoise, bool pUseOffsets, uint8_t pAllOff)
+bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<std::pair<uint8_t, int>> theStubAddressesAndBendVector, bool pUseNoise, bool pUseOffsets, uint8_t pAllOff)
 {
     setBoard(pCbc->getBeBoardId());
 
@@ -188,9 +188,9 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
     cChannelMask.disableAllChannels();
     std::vector<uint8_t> cActiveChannels(0);
     std::vector<uint8_t> cDisabledChannels(0);
-    for(size_t cIndex = 0; cIndex < pStubAddresses.size(); cIndex += 1)
+    for(const auto& theStubAddressesAndBend : theStubAddressesAndBendVector)
     {
-        std::vector<uint8_t> cPattern = this->stubInjectionPattern(pCbc, pStubAddresses[cIndex], pStubBends[cIndex]);
+        std::vector<uint8_t> cPattern = this->stubInjectionPattern(pCbc, theStubAddressesAndBend.first, theStubAddressesAndBend.second);
         // for(auto cChannel: cPattern) cChannelMask.enableChannel(cChannel);
         for(size_t cChnl = 0; cChnl < pCbc->size(); cChnl++)
         {
@@ -800,9 +800,8 @@ void CbcInterface::produceStubLine0PhaseAlignmentPattern(ReadoutChip* pChip)
     WriteChipMultReg(pChip, theRegisterVector);
     // Also lines 1 and 2 are injected automatically
     LOG(DEBUG) << BOLDBLUE << "Injecting on stub line 0 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
-    std::vector<uint8_t> cSeeds_ph1{0x55, 0xAA};
-    std::vector<int>     cBends_ph1(cSeeds_ph1.size(), 0);
-    injectStubs(pChip, cSeeds_ph1, cBends_ph1);
+    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{0x55, 0}, {0xAA, 0}};
+    injectStubs(pChip, stubSeedAndBend);
 }
 
 void CbcInterface::produceStubLines1To4PhaseAlignmentPattern(ReadoutChip* pChip)
@@ -822,9 +821,8 @@ void CbcInterface::produceStubLines1To4PhaseAlignmentPattern(ReadoutChip* pChip)
     WriteChipMultReg(pChip, theRegisterVector);
 
     LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
-    std::vector<uint8_t> cSeeds_ph3{0x2A, 0x55, 0xAA};
-    std::vector<int>     cBends_ph3(cSeeds_ph3.size(), 0);
-    injectStubs(pChip, cSeeds_ph3, cBends_ph3);
+    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{0x2A, 0}, {0x55, 0}, {0xAA, 0}};
+    injectStubs(pChip, stubSeedAndBend);
 }
 
 void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
@@ -858,18 +856,17 @@ void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
         // seeds on stub line 0 , stub line 1
         // bends on stub line 2
         LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 0,1 and 2 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
-        std::vector<uint8_t> cSeeds_ph1{0x55, 0xAA};
-        std::vector<int>     cBends_ph1(cSeeds_ph1.size(), static_cast<int>(cBend_strips * 2));
-        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph1, cBends_ph1);
+        int theBendValue = static_cast<int>(cBend_strips * 2);
+        std::vector<std::pair<uint8_t, int>> stubBendAndValueFirstStep{{0x55, theBendValue}, {0xAA, theBendValue}};
+        injectStubs(static_cast<ReadoutChip*>(pChip), stubBendAndValueFirstStep);
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
 
         // second pattern - 1, 2, 3 , 4
         // whatever on stub line 0
         // then alignment pattern on stub lines 1 + 2
         LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
-        std::vector<uint8_t> cSeeds_ph3{42, 0x55, 0xAA};
-        std::vector<int>     cBends_ph3(cSeeds_ph3.size(), static_cast<int>(cBend_strips * 2));
-        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph3, cBends_ph3);
+        std::vector<std::pair<uint8_t, int>> stubBendAndValueSecondStep{{42, theBendValue}, {0x55, theBendValue}, {0xAA, theBendValue}};
+        injectStubs(static_cast<ReadoutChip*>(pChip), stubBendAndValueSecondStep);
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
     }
     else
@@ -898,10 +895,9 @@ void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
     theRegisterVector.push_back({"CoincWind&Offset34", 0x00});                       // set stub window offset to 0
 
     WriteChipMultReg(pChip, theRegisterVector);
-    std::vector<uint8_t> cStubs{fWordAlignmentPatterns[0], fWordAlignmentPatterns[1], fWordAlignmentPatterns[2]};
-    std::vector<int>     cBends{0, 2, 4};
+    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fWordAlignmentPatterns[0], 0}, {fWordAlignmentPatterns[1], 2}, {fWordAlignmentPatterns[2], 4}};
 
-    injectStubs(static_cast<ReadoutChip*>(pChip), cStubs, cBends);
+    injectStubs(static_cast<ReadoutChip*>(pChip), stubSeedAndBend);
 }
 uint32_t CbcInterface::ReadChipFuseID(Chip* pCbc)
 {
