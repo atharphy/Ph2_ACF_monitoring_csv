@@ -332,28 +332,28 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     // for now .. I need to do this twice
     // figure out why in theFW
     cDebugInterface->StubDebug(true, 6, false);
-    auto cLines        = cDebugInterface->StubDebug(true, 6, false).first;
-    cStatus.second     = cLines[pPhyPortCnfg.second];
-    cStatus.first      = 0;
-    auto        cFound = cStatus.second.find(cPatternToMatch);
-    std::string cPatternReceived;
-    if(cFound != std::string::npos)
-    {
-        cPatternReceived = cStatus.second.substr(cFound, cStatus.second.length() - cFound) + cStatus.second.substr(0, cFound);
-        LOG(DEBUG) << BOLDYELLOW << "Shifted str : " << cPatternReceived << " - bit shift is " << cFound << RESET;
-    }
-    else
-        cPatternReceived = cStatus.second;
+    // auto cLines        = cDebugInterface->StubDebug(true, 6, false).first;
+    // cStatus.second     = cLines[pPhyPortCnfg.second];
+    // cStatus.first      = 0;
+    // auto        cFound = cStatus.second.find(cPatternToMatch);
+    // std::string cPatternReceived;
+    // if(cFound != std::string::npos)
+    // {
+    //     cPatternReceived = cStatus.second.substr(cFound, cStatus.second.length() - cFound) + cStatus.second.substr(0, cFound);
+    //     LOG(DEBUG) << BOLDYELLOW << "Shifted str : " << cPatternReceived << " - bit shift is " << cFound << RESET;
+    // }
+    // else
+    //     cPatternReceived = cStatus.second;
 
-    for(uint8_t cSize = 0; cSize < cPatternReceived.length(); cSize += 8)
-    {
-        auto cSubStr = cPatternReceived.substr(cSize, 8);
-        for(uint8_t cIndx = 0; cIndx < cSubStr.size(); cIndx++)
-        {
-            if(cSubStr[cIndx] != cPatternToMatch[cIndx]) cStatus.first++;
-        }
-    }
-    cStatus.second = cPatternReceived;
+    // for(uint8_t cSize = 0; cSize < cPatternReceived.length(); cSize += 8)
+    // {
+    //     auto cSubStr = cPatternReceived.substr(cSize, 8);
+    //     for(uint8_t cIndx = 0; cIndx < cSubStr.size(); cIndx++)
+    //     {
+    //         if(cSubStr[cIndx] != cPatternToMatch[cIndx]) cStatus.first++;
+    //     }
+    // }
+    // cStatus.second = cPatternReceived;
     return cStatus;
 }
 void CicFEAlignment::CheckOutLine(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase, DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter)

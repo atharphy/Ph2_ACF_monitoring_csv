@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <vector>
+#include <bitset>
 
 #include <tuple> // new
 
@@ -197,6 +198,34 @@ std::string getReadoutChipString(uint16_t boardId, uint16_t opticalGroupId, uint
 time_t getTimeStamp();
 
 std::string getTimeStampString();
+
+template <size_t N>
+std::bitset<N> reorderBytes(const std::vector<uint32_t> theWordVector, uint8_t wordSize = 1)
+{
+    if(wordSize != 1 && wordSize != 2)
+    {
+        std::cerr << "getPatternPrintout wordSize can be only 1 or 2" << std::endl;
+        abort();
+    }
+    std::bitset<N> reorderedByteVector;
+    uint16_t mask = 0xFF;
+    if(wordSize == 2) mask = 0xFFFF;
+
+    size_t numberOfTotalBytes = theWordVector.size()*sizeof(uint32_t) - wordSize;
+    
+    for(size_t theWordIndex = 0; theWordIndex < theWordVector.size(); ++theWordIndex)
+    {
+        for(uint8_t theByteShift = 0; theByteShift < sizeof(uint32_t); theByteShift += wordSize)
+        {
+            std::bitset<N> byteValue {((theWordVector[theWordIndex] >> (theByteShift * 8)) & mask)};
+            byteValue = byteValue << numberOfTotalBytes * 8;
+            numberOfTotalBytes -= wordSize;
+            reorderedByteVector |= byteValue;
+        }
+    }
+
+    return reorderedByteVector;
+}
 
 template <typename T>
 std::string getPatternPrintout(const std::vector<T> theWordVector, uint8_t wordSize = 1)

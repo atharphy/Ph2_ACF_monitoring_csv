@@ -52,9 +52,14 @@ class OTverifyCICdataWord : public Tool
     void    runIntegrityTest();
     void    runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
     void    runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
+    void    injectAndMatch2SstubPatterns(Ph2_HwDescription::ReadoutChip* theChip, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket, std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector, std::vector<uint8_t> lineToMatchList);
+    std::vector<std::pair<std::bitset<160>, std::bitset<160>>> reproduce2SstubPattern(uint8_t chipId, std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector);
+    bool isPatternFound(std::pair<std::bitset<160>, std::bitset<160>> theExpectedPatternAndMask, std::bitset<160> theLinePattern);
 
     size_t fNumberOfIterations {1};
-    
+    // For simplicity, make sure bendind code is always greater than half value (0x7)
+    std::map<uint8_t, uint8_t> fBendingAndCode{{0, 0x9}, {2, 0xB}, {4, 0xF}};
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTverifyCICdataWord fDQMHistogramOTverifyCICdataWord;
