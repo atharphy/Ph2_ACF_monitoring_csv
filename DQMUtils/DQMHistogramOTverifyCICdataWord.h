@@ -55,7 +55,10 @@ class DQMHistogramOTverifyCICdataWord : public DQMHistogramBase
      */
     void reset(void) override;
 
+    void fillPatternMatchingEfficiencyResults(DetectorDataContainer& thePatternMatchingEfficiencyContainer);
+
   private:
     DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fPatternMatchingEfficiencyHistogramContainer;
 };
 #endif
