@@ -23,7 +23,7 @@ void OTverifyCICdataWord::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations = 1;
+    fNumberOfIterations = 100;
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyCICdataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -141,6 +141,7 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInt
             auto theFeConfigRegisterValue = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
             theFeConfigRegisterValue |= 0x04; //Force bending to be sent out in the stub stream
             fCicInterface->WriteChipReg(cCic, "FE_CONFIG", theFeConfigRegisterValue);
+            auto theChipToCICMapping = fCicInterface->getMapping(cCic);
             for(auto theChip: *theHybrid)
             {
                 if(theChip->getFrontEndType() == FrontEndType::SSA2) continue;
@@ -153,10 +154,10 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInt
                 auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                 fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
 
+                uint8_t chipIdForCIC = theChipToCICMapping[theChip->getId()%8];
                 fCicInterface->EnableFEs(cCic, {uint8_t(theChip->getId()%8)}, true);
-                if(isA2Smodule) injectStubs2S(theChip, theDebugInterface, numberOfBytesInSinglePacket);
-                else            injectStubsPS(theChip, theDebugInterface, numberOfBytesInSinglePacket);
-                break;
+                if(isA2Smodule) injectStubs2S(theChip, chipIdForCIC, theDebugInterface, numberOfBytesInSinglePacket);
+                else            injectStubsPS(theChip, chipIdForCIC, theDebugInterface, numberOfBytesInSinglePacket);
                 // fReadoutChipInterface->MaskAllChannels(theChip, true);
             }
         }
@@ -164,8 +165,10 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInt
 }
 
 
-void OTverifyCICdataWord::injectStubs2S(ReadoutChip* theChip, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
+void OTverifyCICdataWord::injectStubs2S(ReadoutChip* theChip, uint8_t chipIdForCIC, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
 {
+    LOG(INFO) << BOLDBLUE <<  "injecting stubs on CBC Id " << +theChip->getId() << RESET;
+
     fReadoutChipInterface->WriteChipReg(theChip, "HitOr", 1);
     fReadoutChipInterface->WriteChipReg(theChip, "PtCut", 14);
     fReadoutChipInterface->WriteChipReg(theChip, "ClusterCut", 4);
@@ -182,25 +185,25 @@ void OTverifyCICdataWord::injectStubs2S(ReadoutChip* theChip, D19cDebugFWInterfa
     // inject stubs on CBC to CIC stub lines 0 (first stub address) lines 1 (second stub address), line 3 (first and second stub bend)
     std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorFirstPattern {{0x0A, 0}, {0xA0, 2}, {0xAA, 4}};
     // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorFirstPattern {{0x7F, 4}};
-    std::vector<uint8_t> lineToMatchListFirstPattern {0, 1, 3};
-    injectAndMatch2SstubPatterns(theChip, theDebugInterface, numberOfBytesInSinglePacket, stubSeedAndBendingVectorFirstPattern, lineToMatchListFirstPattern);
+    std::vector<uint8_t> lineToMatchListFirstPattern {0, 1, 2, 3, 4};
+    injectAndMatch2SstubPatterns(theChip, chipIdForCIC, theDebugInterface, numberOfBytesInSinglePacket, stubSeedAndBendingVectorFirstPattern, lineToMatchListFirstPattern);
 
     // // inject stubs on CBC to CIC stub lines 2 (third stub address), line 4 (thirt stub bend)
-    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorSecondPattern {{0x0A, 4}, {0xA0, 0}, {0xAA, 2}};
-    // std::vector<uint8_t> lineToMatchListSecondPattern {2, 4};
-    // injectAndMatch2SstubPatterns(theChip, theDebugInterface, numberOfBytesInSinglePacket, stubSeedAndBendingVectorSecondPattern, lineToMatchListSecondPattern);
+    std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorSecondPattern {{0x0A, 4}, {0xA0, 0}, {0xAA, 2}};
+    std::vector<uint8_t> lineToMatchListSecondPattern {0, 1, 2, 3, 4};
+    injectAndMatch2SstubPatterns(theChip, chipIdForCIC, theDebugInterface, numberOfBytesInSinglePacket, stubSeedAndBendingVectorSecondPattern, lineToMatchListSecondPattern);
     
     return;
 }
 
-void OTverifyCICdataWord::injectAndMatch2SstubPatterns(ReadoutChip* theChip, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket, std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector, std::vector<uint8_t> lineToMatchList)
+void OTverifyCICdataWord::injectAndMatch2SstubPatterns(ReadoutChip* theChip, uint8_t chipIdForCIC, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket, std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector, std::vector<uint8_t> lineToMatchList)
 {
     size_t cNlines = 5;
     bool isKickoff = true;
     fReadoutChipInterface->MaskAllChannels(theChip, true);
     static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, stubSeedAndBendingVector);
 
-    auto lineDataAndMaskWordVector = reproduce2SstubPattern(theChip->getId(), stubSeedAndBendingVector);
+    auto lineDataAndMaskWordVector = reproduce2SstubPattern(chipIdForCIC, stubSeedAndBendingVector);
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] itearation = " << iteration << std::endl;
@@ -213,9 +216,9 @@ void OTverifyCICdataWord::injectAndMatch2SstubPatterns(ReadoutChip* theChip, D19
             {
                 theFullBiset[i * cNlines + (cNlines - 1 - line)] = reorderedLineOuput[i];
             }
-            std::cout << "Line         " << +line  << " -> 0x" << std::hex << reorderedLineOuput.to_string() << std::dec << std::endl;
+            // std::cout << "Line         " << +line  << " -> 0x" << std::hex << reorderedLineOuput.to_string() << std::dec << std::endl;
         }
-        std::cout << "Full data "  << std::hex << theFullBiset.to_string() << std::dec << std::endl;
+        // std::cout << "Full data "  << std::hex << theFullBiset.to_string() << std::dec << std::endl;
 
         // for(size_t line=0; line<cNlines; ++line)
         // {
@@ -237,7 +240,7 @@ void OTverifyCICdataWord::injectAndMatch2SstubPatterns(ReadoutChip* theChip, D19
     }
 }
 
-std::vector<std::pair<std::bitset<160>, std::bitset<160>>> OTverifyCICdataWord::reproduce2SstubPattern(uint8_t chipId, std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector)
+std::vector<std::pair<std::bitset<160>, std::bitset<160>>> OTverifyCICdataWord::reproduce2SstubPattern(uint8_t chipIdForCIC, std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector)
 {
     size_t  numberOfLines = 5;
     uint8_t maximumStubNumber = 16;
@@ -269,10 +272,10 @@ std::vector<std::pair<std::bitset<160>, std::bitset<160>>> OTverifyCICdataWord::
     valueAndShiftVector.push_back(std::make_tuple<std::bitset<320>, size_t, bool>(0x000, 12, false)); // Bx Id
     valueAndShiftVector.push_back(std::make_tuple<std::bitset<320>, size_t, bool>(numberOfStubs, 6, true)); // number of stubs
 
-    auto addStubPackage = [&valueAndShiftVector, chipId](uint8_t bxShift, uint8_t stubAddress, uint8_t stubBend)
+    auto addStubPackage = [&valueAndShiftVector, chipIdForCIC](uint8_t bxShift, uint8_t stubAddress, uint8_t stubBend)
     {
         valueAndShiftVector.push_back(std::make_tuple<std::bitset<320>, size_t, bool>(bxShift, 3, false)); // Bx shift
-        valueAndShiftVector.push_back(std::make_tuple<std::bitset<320>, size_t, bool>(chipId, 3, true)); // Chip Address
+        valueAndShiftVector.push_back(std::make_tuple<std::bitset<320>, size_t, bool>(chipIdForCIC, 3, true)); // Chip Address
         valueAndShiftVector.push_back(std::make_tuple<std::bitset<320>, size_t, bool>(stubAddress, 8, true)); // Stub seed
         valueAndShiftVector.push_back(std::make_tuple<std::bitset<320>, size_t, bool>(stubBend, 4, true)); // Stub bend
     };
@@ -308,8 +311,8 @@ std::vector<std::pair<std::bitset<160>, std::bitset<160>>> OTverifyCICdataWord::
         }
     }
 
-    std::cout << dataWord.to_string() << std::endl;
-    std::cout << maskWord.to_string() << std::endl;
+    // std::cout << dataWord.to_string() << std::endl;
+    // std::cout << maskWord.to_string() << std::endl;
 
     std::vector<std::pair<std::bitset<160>, std::bitset<160>>> lineDataAndMaskWordVector(numberOfLines, {0,0});
 
@@ -328,7 +331,7 @@ std::vector<std::pair<std::bitset<160>, std::bitset<160>>> OTverifyCICdataWord::
 
 
 
-void OTverifyCICdataWord::injectStubsPS(ReadoutChip* theChip, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
+void OTverifyCICdataWord::injectStubsPS(ReadoutChip* theChip, uint8_t chipIdForCIC, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
 {
     size_t cNlines = 6;
     // fReadoutChipInterface->WriteChipReg(theChip, "HitOr", 1);
@@ -368,14 +371,14 @@ bool OTverifyCICdataWord::isPatternFound(std::pair<std::bitset<160>, std::bitset
     size_t numberBytesCharactersToMatch = 0 ;
     size_t maximumBitShift = 160/8 - numberBytesCharactersToMatch;
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << theExpectedPatternAndMask.first.to_string() << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << theExpectedPatternAndMask.second.to_string() << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << theLinePattern.to_string() << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << theExpectedPatternAndMask.first.to_string() << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << theExpectedPatternAndMask.second.to_string() << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << theLinePattern.to_string() << std::endl;
 
     for(size_t byteShift = 0; byteShift < maximumBitShift; ++byteShift)
     {
         size_t bitShift = byteShift * 8;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << ((theLinePattern >> bitShift) & theExpectedPatternAndMask.second).to_string() << std::endl;
+        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << ((theLinePattern >> bitShift) & theExpectedPatternAndMask.second).to_string() << std::endl;
         if(((theLinePattern >> bitShift) & theExpectedPatternAndMask.second) == (theExpectedPatternAndMask.first & theExpectedPatternAndMask.second) )
         {
             return true;
