@@ -130,7 +130,7 @@ class D19cMPAEvent : public Event
     std::vector<Cluster> getClusters(uint8_t pHybridId, uint8_t pCbcId) const override;
     std::string          GlibFlagString(uint8_t pHybridId, uint8_t pCbcId) const override;
 
-    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
 
     /*!
      * \brief Function to get Stub bit

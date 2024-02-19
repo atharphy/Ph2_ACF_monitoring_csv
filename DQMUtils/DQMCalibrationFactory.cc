@@ -6,21 +6,22 @@
 #include "DQMUtils/DQMHistogramLatencyScan.h"
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
 #include "DQMUtils/DQMHistogramOTCICwordAlignment.h"
+#include "DQMUtils/DQMHistogramOTCMNoise.h"
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputs.h"
 #include "DQMUtils/DQMHistogramOTalignStubPackage.h"
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #include "DQMUtils/DQMHistogramPedestalEqualization.h"
-#include "DQMUtils/DQMHistogramOTCMNoise.h"
 #include "DQMUtils/DQMMetadataIT.h"
 #include "DQMUtils/DQMMetadataOT.h"
 #include "DQMUtils/PSPhysicsHistograms.h"
 #include "DQMUtils/Physics2SHistograms.h"
 #include "DQMUtils/RD53ClockDelayHistograms.h"
-#include "DQMUtils/RD53DataTransmissionTestGraphs.h"
+#include "DQMUtils/RD53DataReadbackOptimizationHistograms.h"
 #include "DQMUtils/RD53GainHistograms.h"
 #include "DQMUtils/RD53GainOptimizationHistograms.h"
+#include "DQMUtils/RD53GenericDacDacScanHistograms.h"
 #include "DQMUtils/RD53InjectionDelayHistograms.h"
 #include "DQMUtils/RD53LatencyHistograms.h"
 #include "DQMUtils/RD53PhysicsHistograms.h"
@@ -28,6 +29,7 @@
 #include "DQMUtils/RD53SCurveHistograms.h"
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
+#include "DQMUtils/RD53VoltageTuningHistograms.h"
 
 using namespace MessageUtils;
 
@@ -131,9 +133,12 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise,
              DQMHistogramOTCMNoise>("cmNoise");
+    Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
+    Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
 
-
-    // IT calibrations
+    // ###################
+    // # IT calibrations #
+    // ###################
     Register<DQMMetadataIT, PixelAliveHistograms>("pixelalive");
     Register<DQMMetadataIT, PixelAliveHistograms>("noise");
     Register<DQMMetadataIT, SCurveHistograms>("scurve");
@@ -145,10 +150,10 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataIT, LatencyHistograms>("latency");
     Register<DQMMetadataIT, InjectionDelayHistograms>("injdelay");
     Register<DQMMetadataIT, ClockDelayHistograms>("clockdelay");
+    Register<DQMMetadataIT, DataReadbackOptimizationHistograms>("datarbopt");
+    Register<DQMMetadataIT, GenericDacDacScanHistograms>("genericdacdac");
+    Register<DQMMetadataIT, VoltageTuningHistograms>("voltagetuning");
     Register<DQMMetadataIT, PhysicsHistograms>("physics");
-    Register<DQMMetadataIT, PSPhysicsHistograms>("psphysics");
-    Register<DQMMetadataIT, Physics2SHistograms>("physics2s");
-    Register<DQMMetadataIT, DataTransmissionTestGraphs>("datatrtest");
 }
 
 DQMCalibrationFactory::~DQMCalibrationFactory()

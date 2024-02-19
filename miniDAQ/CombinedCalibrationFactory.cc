@@ -10,6 +10,7 @@
 #include "tools/LatencyScan.h"
 #include "tools/OTCICphaseAlignment.h"
 #include "tools/OTCICwordAlignment.h"
+#include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTalignBoardDataWord.h"
@@ -20,9 +21,7 @@
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/Physics2S.h"
-#include "tools/OTCMNoise.h"
 #include "tools/RD53ClockDelay.h"
-#include "tools/RD53DataTransmissionTest.h"
 #include "tools/RD53Gain.h"
 #include "tools/RD53GainOptimization.h"
 #include "tools/RD53InjectionDelay.h"
@@ -118,7 +117,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<InjectionDelay>("Inner Tracker", "injdelay");
     Register<ClockDelay>("Inner Tracker", "clockdelay");
     Register<Physics>("Inner Tracker", "physics");
-    Register<DataTransmissionTest>("Inner Tracker", "datatrtest");
 }
 
 CombinedCalibrationFactory::~CombinedCalibrationFactory()

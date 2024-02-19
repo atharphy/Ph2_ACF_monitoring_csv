@@ -80,12 +80,6 @@ class RD53Interface : public ReadoutChipInterface
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(cmd), pChip->getHybridId());
     }
 
-    template <typename T, size_t N>
-    static size_t ArraySize(const T (&)[N])
-    {
-        return N;
-    }
-
     uint16_t SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size);
     uint16_t GetFieldValue(uint16_t regValue, uint8_t start, uint8_t size);
     struct SpecialRegInfo

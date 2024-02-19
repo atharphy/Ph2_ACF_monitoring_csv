@@ -72,11 +72,11 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
     if(titleX.str() == "") titleX << regNameDAC1;
     if(titleY.str() == "") titleY << regNameDAC2;
 
-    auto hGenericDac1Scan = CanvasContainer<TH1F>("GenericDac1Scan", "GenericDac1Scan", (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1, startValueDAC1, stopValueDAC1 + stepDAC1);
-    bookImplementer(theOutputFile, theDetectorStructure, GenericDac1Scan, hGenericDac1Scan, regNameDAC1.c_str(), "Entries");
+    auto hGenericDac1 = CanvasContainer<TH1F>("GenericDac1", "Generic Dac1", (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1, startValueDAC1, stopValueDAC1 + stepDAC1);
+    bookImplementer(theOutputFile, theDetectorStructure, GenericDac1, hGenericDac1, regNameDAC1.c_str(), "Entries");
 
-    auto hGenericDac2Scan = CanvasContainer<TH1F>("GenericDac2Scan", "GenericDac2Scan", (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1, startValueDAC2, stopValueDAC2 + stepDAC2);
-    bookImplementer(theOutputFile, theDetectorStructure, GenericDac2Scan, hGenericDac2Scan, regNameDAC2.c_str(), "Entries");
+    auto hGenericDac2 = CanvasContainer<TH1F>("GenericDac2", "Generic Dac2", (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1, startValueDAC2, stopValueDAC2 + stepDAC2);
+    bookImplementer(theOutputFile, theDetectorStructure, GenericDac2, hGenericDac2, regNameDAC2.c_str(), "Entries");
 
     auto hOcc2D = CanvasContainer<TH2F>("GenericDacDacScanScan",
                                         "Generic DAC-DAC Scan",
@@ -94,7 +94,7 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
 bool GenericDacDacScanHistograms::fill(std::string& inputStream)
 {
     ContainerSerialization theOccupancySerialization("GenericDacDacScanOccupancy");
-    ContainerSerialization theDACDACSerialization("GenericDacDacScanDACDAC");
+    ContainerSerialization theDACDACSerialization("GenericDacDacDACDAC");
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
@@ -105,7 +105,7 @@ bool GenericDacDacScanHistograms::fill(std::string& inputStream)
     if(theDACDACSerialization.attachDeserializer(inputStream))
     {
         DetectorDataContainer fDetectorData = theDACDACSerialization.deserializeChipContainer<EmptyContainer, std::pair<uint16_t, uint16_t>>(fDetectorContainer);
-        GenericDacDacScanHistograms::fillGenericDacDacScan(fDetectorData);
+        GenericDacDacScanHistograms::fillGenericDacDac(fDetectorData);
         return true;
     }
     return false;
@@ -133,36 +133,36 @@ void GenericDacDacScanHistograms::fillOccupancy(const DetectorDataContainer& Occ
                 }
 }
 
-void GenericDacDacScanHistograms::fillGenericDacDacScan(const DetectorDataContainer& GenericDacDacScanContainer)
+void GenericDacDacScanHistograms::fillGenericDacDac(const DetectorDataContainer& GenericDacDacContainer)
 {
-    for(const auto cBoard: GenericDacDacScanContainer)
+    for(const auto cBoard: GenericDacDacContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
                     if(cChip->hasSummary() == false) continue;
 
-                    auto* GenericDac1ScanHist = GenericDac1Scan.getObject(cBoard->getId())
-                                                    ->getObject(cOpticalGroup->getId())
-                                                    ->getObject(cHybrid->getId())
-                                                    ->getObject(cChip->getId())
-                                                    ->getSummary<CanvasContainer<TH1F>>()
-                                                    .fTheHistogram;
-                    auto* GenericDac2ScanHist = GenericDac2Scan.getObject(cBoard->getId())
-                                                    ->getObject(cOpticalGroup->getId())
-                                                    ->getObject(cHybrid->getId())
-                                                    ->getObject(cChip->getId())
-                                                    ->getSummary<CanvasContainer<TH1F>>()
-                                                    .fTheHistogram;
+                    auto* GenericDac1Hist = GenericDac1.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH1F>>()
+                                                .fTheHistogram;
+                    auto* GenericDac2Hist = GenericDac2.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH1F>>()
+                                                .fTheHistogram;
 
-                    GenericDac1ScanHist->Fill(cChip->getSummary<std::pair<uint16_t, uint16_t>>().first);
-                    GenericDac2ScanHist->Fill(cChip->getSummary<std::pair<uint16_t, uint16_t>>().second);
+                    GenericDac1Hist->Fill(cChip->getSummary<std::pair<uint16_t, uint16_t>>().first);
+                    GenericDac2Hist->Fill(cChip->getSummary<std::pair<uint16_t, uint16_t>>().second);
                 }
 }
 
 void GenericDacDacScanHistograms::process()
 {
     draw<TH2F>(Occupancy2D, "gcolz");
-    draw<TH1F>(GenericDac1Scan);
-    draw<TH1F>(GenericDac2Scan);
+    draw<TH1F>(GenericDac1);
+    draw<TH1F>(GenericDac2);
 }

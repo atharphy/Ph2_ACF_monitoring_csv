@@ -19,15 +19,9 @@ void Physics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
-    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
     frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################

@@ -10,10 +10,10 @@
 #ifndef RD53DataTransmissionTest_H
 #define RD53DataTransmissionTest_H
 
-#include "RD53BERtest.h"
+#include "tools/RD53BERtest.h"
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/RD53DataTransmissionTestGraphs.h"
+#include "DQMUtils/ProductionITRD53A/RD53DataTransmissionTestGraphs.h"
 #else
 typedef bool DataTransmissionTestGraphs;
 #endif
