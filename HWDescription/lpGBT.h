@@ -91,11 +91,7 @@ class lpGBT : public Chip
     void  setTemperature(float cTemperature) { fTemperature = cTemperature; }
     float getTemperature() { return fTemperature; }
 
-    std::string getConfigFilePath(const std::string& fName2Add = "") const
-    {
-      std::string output = this->fConfigFilePath;
-      return output;
-    }
+    std::string getConfigFilePath() const { return fConfigFilePath; }
 
   private:
     bool                         phaseRxAligned; // @TMP@
