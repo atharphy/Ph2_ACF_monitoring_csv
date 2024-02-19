@@ -139,7 +139,7 @@ void ClockDelay::run()
     la.analyze();
 
     ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
-    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    CalibBase::fillVectorContainer<float>(theOccContainer, dacList.size(), 0);
 
     // #######################
     // # Set initial latency #

@@ -141,7 +141,7 @@ class RD53Event : public Ph2_HwInterface::Event
     // # Generic member functions #
     // ############################
     void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
-    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
 
     static void clearEventContainer(Ph2_HwDescription::BeBoard& theBoard, DetectorDataContainer& theContainer);
     static void addBoardInfo2Events(const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53Event>& decodedEvents);
@@ -173,7 +173,7 @@ class RD53Event : public Ph2_HwInterface::Event
 
   private:
     bool        isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;
-    static int  lane2chipId(const Ph2_HwDescription::BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane);
+    static int  lane2chipId(const Ph2_HwDescription::BeBoard* pBoard, uint8_t hybrid_id, uint8_t chip_lane);
     static void decoderThread(std::vector<uint32_t>*& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint32_t& eventStatus, std::atomic<bool>& workDone);
 
     static std::vector<std::thread>            decodingThreads;

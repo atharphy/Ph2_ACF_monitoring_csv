@@ -116,7 +116,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     if(PUSMStatus != revertedPUSMStatusMap["READY"])
     {
         LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
-        return false;
+        // return false;
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
 
@@ -181,6 +181,29 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         LOG(INFO) << BOLDBLUE << "\t--> DLL status of Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " is 0x" << BOLDYELLOW << std::hex << +lpGBTInterface::GetRxDllStatus(pChip, cGroup)
                   << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+    // #######################################
+    // # Properly configure lpGBT to use ADC #
+    // #######################################
+    std::string   ConfigFilePath = static_cast<lpGBT*>(pChip)->getConfigFilePath();
+    std::ifstream stream(ConfigFilePath);
+    if(!stream)
+    {
+        LOG(WARNING) << BOLDRED << "Error: The LpGBT ADC calibraton file name " << BOLDYELLOW << ConfigFilePath << BOLDRED << " does not exist" << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path." << RESET;
+        ConfigFilePath = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv");
+        std::ifstream stream(ConfigFilePath);
+        if(!stream)
+        {
+            LOG(WARNING) << BOLDRED << "Error: The hardcoded file name " << BOLDYELLOW << ConfigFilePath << BOLDRED << " does not exist" << RESET;
+            LOG(WARNING) << BOLDBLUE << "\t--> Proceeding withoug LpGBT ADC calibrations" << RESET;
+        }
+    }
+
+    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), pChip->getId(), ConfigFilePath);
+    lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
+    lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
+    lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));
 
     return true;
 }

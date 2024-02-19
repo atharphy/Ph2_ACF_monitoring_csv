@@ -37,7 +37,7 @@ void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const std:
             for(const auto& cChip: *cHybrid) RD53Event::fillChipDataContainer(cChip, testChannelGroup, cHybrid->getId());
 }
 
-void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId)
 {
     bool   vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
     size_t chipIndx;
@@ -71,7 +71,7 @@ bool RD53Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipInd
     return true;
 }
 
-int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t hybrid_id, uint16_t chip_lane)
+int RD53Event::lane2chipId(const BeBoard* pBoard, uint8_t hybrid_id, uint8_t chip_lane)
 {
     // #######################################################
     // # Translate lane to chip ID                           #

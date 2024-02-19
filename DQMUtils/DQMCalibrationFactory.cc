@@ -11,9 +11,10 @@
 #include "DQMUtils/PSPhysicsHistograms.h"
 #include "DQMUtils/Physics2SHistograms.h"
 #include "DQMUtils/RD53ClockDelayHistograms.h"
-#include "DQMUtils/RD53DataTransmissionTestGraphs.h"
+#include "DQMUtils/RD53DataReadbackOptimizationHistograms.h"
 #include "DQMUtils/RD53GainHistograms.h"
 #include "DQMUtils/RD53GainOptimizationHistograms.h"
+#include "DQMUtils/RD53GenericDacDacScanHistograms.h"
 #include "DQMUtils/RD53InjectionDelayHistograms.h"
 #include "DQMUtils/RD53LatencyHistograms.h"
 #include "DQMUtils/RD53PhysicsHistograms.h"
@@ -21,6 +22,7 @@
 #include "DQMUtils/RD53SCurveHistograms.h"
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
+#include "DQMUtils/RD53VoltageTuningHistograms.h"
 
 using namespace MessageUtils;
 
@@ -41,6 +43,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
     Register<DQMMetadataOT, CBCHistogramPulseShape>("cbcpulseshape");
     Register<DQMMetadataOT, DQMHistogramLatencyScan>("otlatency");
+    Register<DQMMetadataIT, PSPhysicsHistograms>("psphysics");
+    Register<DQMMetadataIT, Physics2SHistograms>("physics2s");
 
     // IT calibrations
     Register<DQMMetadataIT, PixelAliveHistograms>("pixelalive");
@@ -54,10 +58,10 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataIT, LatencyHistograms>("latency");
     Register<DQMMetadataIT, InjectionDelayHistograms>("injdelay");
     Register<DQMMetadataIT, ClockDelayHistograms>("clockdelay");
+    Register<DQMMetadataIT, DataReadbackOptimizationHistograms>("datarbopt");
+    Register<DQMMetadataIT, GenericDacDacScanHistograms>("genericdacdac");
+    Register<DQMMetadataIT, VoltageTuningHistograms>("voltagetuning");
     Register<DQMMetadataIT, PhysicsHistograms>("physics");
-    Register<DQMMetadataIT, PSPhysicsHistograms>("psphysics");
-    Register<DQMMetadataIT, Physics2SHistograms>("physics2s");
-    Register<DQMMetadataIT, DataTransmissionTestGraphs>("datatrtest");
 }
 
 DQMCalibrationFactory::~DQMCalibrationFactory()

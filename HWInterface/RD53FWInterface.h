@@ -235,7 +235,7 @@ class RD53FWInterface : public BeBoardFWInterface
     size_t             ddr3Offset;
     bool               singleChip;
     uint32_t           FWinfo;
-    uint16_t           enabledHybrids;
+    uint32_t           enabledHybrids;
     bool               isChipCommunicationOK{false};
     size_t             NcorruptedNevents{0};
     size_t             NtrialsNevents{0};

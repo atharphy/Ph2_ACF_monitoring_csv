@@ -24,12 +24,12 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const char* registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
-    bool               doWriteClkDataDelay        = false;
+    static const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
+    bool                               doWriteClkDataDelay      = false;
 
-    for(auto i = 0u; i < ArraySize(registerClkDataDelayList); i++)
+    for(auto i = 0u; i < registerClkDataDelayList.size(); i++)
     {
-        auto cRegItem = pRD53RegMap.find(registerClkDataDelayList[i]);
+        auto cRegItem = pRD53RegMap.find(*std::next(registerClkDataDelayList.begin(), i));
         if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
         {
             doWriteClkDataDelay = true;
@@ -53,22 +53,12 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {"HighGain_LIN",
-                                                            "RESISTORI2V",
-                                                            "ADC_OFFSET_VOLT",
-                                                            "ADC_MAXIMUM_VOLT",
-                                                            "TEMPSENS_IDEAL_FACTOR",
-                                                            "SAMPLE_N_TIMES",
-                                                            "VREF_ADC",
-                                                            "CLK_DATA_DELAY",
-                                                            "CLK_DATA_DELAY_DATA",
-                                                            "CLK_DATA_DELAY_CLK",
-                                                            "CLK_DATA_DELAY_2INV"};                                                                                      // @CONST@
-    static const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"}; // @CONST@
+    static const std::set<std::string> registerBlackList = {"HighGain_LIN", "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
+    static const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};                  // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
-            (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
+            (registerClkDataDelayList.find(cRegItem.first) == registerClkDataDelayList.end()) && (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
            (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
         {
             if(cRegItem.first == "CDR_CONFIG")
@@ -79,6 +69,8 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
 
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
         }
+        else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
+            pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
 
     // ###################################
     // # Programmig pixel cell registers #
