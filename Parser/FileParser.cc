@@ -1221,8 +1221,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
                         const auto frontEndType = cName.find(RD53A_NODE_NAME) != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
                         pBoard->setFrontEndType(frontEndType);
-                        if(cNextName.empty() || cNextName != cName) parseGlobalRD53Settings(pHybridNode, cHybrid, os);
                         parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
+                        if(cNextName.empty() || cNextName != cName) parseGlobalRD53Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName.find(CBC_NODE_NAME) != std::string::npos)
                     {
