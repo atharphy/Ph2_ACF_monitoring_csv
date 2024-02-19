@@ -193,6 +193,7 @@ void BeBoard::clearSnapshot()
 std::vector<std::pair<std::string, uint32_t>> BeBoard::getSnapshot() const
 {
     std::vector<std::pair<std::string, uint32_t>> theModifiedRegisterVector(fModifiedRegisters.begin(), fModifiedRegisters.end());
+    theModifiedRegisterVector.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1}); // needed to make sure that it trigger config updates it it properly loaded
     return theModifiedRegisterVector;
 }
 

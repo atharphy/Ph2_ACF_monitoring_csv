@@ -17,7 +17,6 @@
 #include "tools/Channel.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
-#include "tools/StubBackEndAlignment.h"
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>

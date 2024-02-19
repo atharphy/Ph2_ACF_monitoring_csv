@@ -232,7 +232,7 @@
 		</Register>
 		<Register name="sync_block">
 			<Register name="delay">10000</Register>
-			<Register name="enable">0</Register>
+			<Register name="enable">1</Register>
 			<Register name="is_bc0_enable">1</Register>
 			<Register name="is_resync_enable">0</Register>
 			<Register name="num_triggers">99</Register>

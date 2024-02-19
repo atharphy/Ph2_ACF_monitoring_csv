@@ -56,9 +56,11 @@ class DQMHistogramOTalignBoardDataWord : public DQMHistogramBase
     void reset(void) override;
 
     void fillBitSlipValues(DetectorDataContainer& theBitSlipContainer);
+    void fillAlignmentRetryNumber(DetectorDataContainer& theAlignmentRetryContainer);
 
   private:
-    DetectorDataContainer fDetectorData;
+    DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fBitSlipHistogramContainer;
+    DetectorDataContainer fAlignmentRetryHistogramContainer;
 };
 #endif
