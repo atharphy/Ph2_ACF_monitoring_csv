@@ -203,8 +203,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         {
             LOG(ERROR) << BOLDRED << "Error: The hardcoded filename " << ConfigFilePath << " does not exist!" << RESET;
         }
-
-        //return false;   //TEST
+          
     }
 
     lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), pChip->getId(), ConfigFilePath);

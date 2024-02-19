@@ -231,7 +231,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
 void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os)
 {
     std::string cFilePath       = "";
-    std::string cConfigFilePath = "";
+    std::string fConfigFilePath = "";
     uint32_t    cOpticalGroupId = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     uint32_t    cFMCId;
     std::string inputFMCid = pOpticalGroupNode.attribute(OPTICALGROUP_FMCID_ATTRIBUTE_NAME).value();
@@ -261,12 +261,10 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             cFilePath = expandEnvironmentVariables(theChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value());
             if((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
         } 
-        // **************************************
         else if(static_cast<std::string>(theChild.name()) == LPGBT_CONFIGFILE_NODE_NAME)
         {
-            cConfigFilePath = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_FILENAME_ATTRIBUTE_NAME).value());          
+            fConfigFilePath = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_FILENAME_ATTRIBUTE_NAME).value());          
         }
-        // ****************************************
         else if(static_cast<std::string>(theChild.name()) == LPGBT_NODE_NAME)
         {
             std::string fileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
@@ -276,9 +274,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             uint8_t cChipVersion = theChild.attribute(LPGBT_VERSION_ATTRIBUTE_NAME).as_uint();
             bool    cIsOptical   = theChild.attribute(LPGBT_OPTICAL_ATTRIBUTE_NAME).as_bool();
 
-            // *************************************
-            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName, cConfigFilePath);
-            // *************************************
+            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName, fConfigFilePath);
 
             thelpGBT->setVersion(cChipVersion);
             thelpGBT->setOptical(cIsOptical);
