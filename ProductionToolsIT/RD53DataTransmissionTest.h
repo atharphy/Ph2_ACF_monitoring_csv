@@ -13,7 +13,7 @@
 #include "tools/RD53BERtest.h"
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/RD53DataTransmissionTestGraphs.h"
+#include "DQMUtils/ProductionITRD53A/RD53DataTransmissionTestGraphs.h"
 #else
 typedef bool DataTransmissionTestGraphs;
 #endif
