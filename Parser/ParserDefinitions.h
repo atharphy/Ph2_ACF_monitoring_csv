@@ -14,6 +14,7 @@
 #define OPTICALGROUP_NODE_NAME "OpticalGroup"
 #define NTCPROPERTIES_NODE_NAME "NTCProperties"
 #define LPGBT_FILES_NODE_NAME "lpGBT_Files"
+#define LPGBT_CONFIGFILE_NODE_NAME "lpGBT_ConfigFile"
 #define LPGBT_NODE_NAME "lpGBT"
 
 #define HYBRID_NODE_NAME "Hybrid"
@@ -49,6 +50,7 @@
 #define COMMON_ID_ATTRIBUTE_NAME "Id"
 #define COMMON_RESET_ATTRIBUTE_NAME "reset"
 #define COMMON_PATH_ATTRIBUTE_NAME "path"
+#define COMMON_FILENAME_ATTRIBUTE_NAME "filename"
 #define COMMON_CONFIGFILE_ATTRIBUTE_NAME "configfile"
 #define COMMON_NAME_ATTRIBUTE_NAME "name"
 

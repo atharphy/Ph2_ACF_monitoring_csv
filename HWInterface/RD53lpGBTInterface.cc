@@ -185,7 +185,25 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     // #######################################
     // # Properly configure lpGBT to use ADC #
     // #######################################
-    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), pChip->getId());
+    
+    std::string ConfigFilePath = static_cast<lpGBT*>(pChip)->getConfigFilePath();
+    
+    std::ifstream stream(ConfigFilePath);
+    if (!stream)
+    {
+        LOG(ERROR) << BOLDRED << "Error: The given filename " << ConfigFilePath << " does not exist!" << RESET;
+        LOG(ERROR) << BOLDRED << "Proceeding with the hardcoded path." << RESET;
+
+        ConfigFilePath = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv");
+        std::ifstream stream(ConfigFilePath);
+        if (!stream)
+        {
+            LOG(ERROR) << BOLDRED << "Error: The hardcoded filename " << ConfigFilePath << " does not exist!" << RESET;
+        }
+
+    }
+
+    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), pChip->getId(), ConfigFilePath);
     lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
     lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
     lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));
