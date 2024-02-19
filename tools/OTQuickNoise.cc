@@ -54,9 +54,9 @@ void OTQuickNoise::TakeData()
 
     DetectorDataContainer theHitContainer;
     ContainerFactory::copyAndInitStructure<EmptyContainer,
-                                           GenericDataArray<(NCHANNELS + 1), uint32_t>,
-                                           GenericDataArray<(HYBRID_CHANNELS_OT + 1), uint32_t>,
-                                           GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>,
+                                           GenericDataArray<uint32_t, NCHANNELS + 1>,
+                                           GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1>,
+                                           GenericDataArray<uint32_t, TOTAL_CHANNELS_OT + 1>,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, theHitContainer);
 #ifdef __USE_ROOT__

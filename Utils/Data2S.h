@@ -22,8 +22,8 @@ template <size_t ClusterSize, size_t StubSize>
 class Data2S //: public streammable
 {
   public:
-    GenericDataArray<ClusterSize, Ph2_HwInterface::Cluster> fClusters;
-    GenericDataArray<StubSize, Ph2_HwInterface::Stub>       fStubs;
+    GenericDataArray<Ph2_HwInterface::Cluster, ClusterSize> fClusters;
+    GenericDataArray<Ph2_HwInterface::Stub, StubSize>       fStubs;
 };
 
 #endif

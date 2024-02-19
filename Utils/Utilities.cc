@@ -278,6 +278,8 @@ double hitProbabilityFunction(double* pStrips, double* pPar)
     double result = 0;
     double hitProb;
     double sampleProbability, x;
+    double indFraction = 0;
+    if(abs(cmnFraction) <= 1) indFraction = pow(1 - cmnFraction * cmnFraction, 0.5);
 
     int iStrips = int(ceil(pStrips[0] - 0.5));               // round to nearest integer
     if((iStrips < 0) || (iStrips > nActiveStrips)) return 0; // only defined in range
@@ -292,7 +294,7 @@ double hitProbabilityFunction(double* pStrips, double* pPar)
         sampleProbability -= hitProbability(x + samplingHalfStep);
 
         // probability of hit taking cmn into account
-        hitProb = hitProbability(threshold + x * cmnFraction);
+        hitProb = hitProbability((threshold + x * cmnFraction) * indFraction);
         // distribution function scaled to nevents
         result += binomialPdf(int(nActiveStrips), iStrips, hitProb) * sampleProbability * nEvents;
     }

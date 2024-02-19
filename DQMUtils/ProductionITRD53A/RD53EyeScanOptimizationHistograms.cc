@@ -68,10 +68,10 @@ bool EyeScanOptimizationHistograms::fill(std::string& inputStream)
 {
     // const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    // ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP0scanStreamer("TAP0scan");
-    // ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP1scanStreamer("TAP1scan");
-    // ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP2scanStreamer("TAP2scan");
-    // ChipContainerStream<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>> theTAP3DscanStreamer("TAP2scan");
+    // ChipContainerStream<EmptyContainer, GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>> theTAP0scanStreamer("TAP0scan");
+    // ChipContainerStream<EmptyContainer, GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>> theTAP1scanStreamer("TAP1scan");
+    // ChipContainerStream<EmptyContainer, GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>> theTAP2scanStreamer("TAP2scan");
+    // ChipContainerStream<EmptyContainer, GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>> theTAP3DscanStreamer("TAP2scan");
 
     // if(theTAP0scanStreamer.attachBuffer(&dataBuffer))
     // {
@@ -116,7 +116,7 @@ void EyeScanOptimizationHistograms::fillScanTAP0(const DetectorDataContainer& TA
                 {
                     for(auto& obs: observables)
                     {
-                        if(cChip->getSummaryContainer<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>() == nullptr) continue;
+                        if(cChip->getSummaryContainer<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>() == nullptr) continue;
 
                         auto* TAP0scanHist = TAP0scan[obs]
                                                  ->getObject(cBoard->getId())
@@ -128,8 +128,8 @@ void EyeScanOptimizationHistograms::fillScanTAP0(const DetectorDataContainer& TA
 
                         for(auto i = 0; i < TAP0scanHist->GetNbinsX(); i++)
                         {
-                            TAP0scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i][obs].at(0));
-                            TAP0scanHist->SetBinError(i + 1, cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i][obs].at(5));
+                            TAP0scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>().data[i][obs].at(0));
+                            TAP0scanHist->SetBinError(i + 1, cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>().data[i][obs].at(5));
                         }
                     }
                 }
@@ -146,7 +146,7 @@ void EyeScanOptimizationHistograms::fillScanTAP1(const DetectorDataContainer& TA
                 {
                     for(auto& obs: observables)
                     {
-                        if(cChip->getSummaryContainer<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>() == nullptr) continue;
+                        if(cChip->getSummaryContainer<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>() == nullptr) continue;
 
                         auto* TAP1scanHist = TAP1scan[obs]
                                                  ->getObject(cBoard->getId())
@@ -158,8 +158,8 @@ void EyeScanOptimizationHistograms::fillScanTAP1(const DetectorDataContainer& TA
 
                         for(auto i = 0; i < TAP1scanHist->GetNbinsX(); i++)
                         {
-                            TAP1scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i][obs].at(0));
-                            TAP1scanHist->SetBinError(i + 1, cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i][obs].at(5));
+                            TAP1scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>().data[i][obs].at(0));
+                            TAP1scanHist->SetBinError(i + 1, cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>().data[i][obs].at(5));
                         }
                     }
                 }
@@ -176,7 +176,7 @@ void EyeScanOptimizationHistograms::fillScanTAP2(const DetectorDataContainer& TA
                 {
                     for(auto& obs: observables)
                     {
-                        if(cChip->getSummaryContainer<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>() == nullptr) continue;
+                        if(cChip->getSummaryContainer<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>() == nullptr) continue;
 
                         auto* TAP2scanHist = TAP2scan[obs]
                                                  ->getObject(cBoard->getId())
@@ -188,8 +188,8 @@ void EyeScanOptimizationHistograms::fillScanTAP2(const DetectorDataContainer& TA
 
                         for(auto i = 0; i < TAP2scanHist->GetNbinsX(); i++)
                         {
-                            TAP2scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i][obs].at(0));
-                            TAP2scanHist->SetBinError(i + 1, cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i][obs].at(5));
+                            TAP2scanHist->SetBinContent(i + 1, cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>().data[i][obs].at(0));
+                            TAP2scanHist->SetBinError(i + 1, cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>().data[i][obs].at(5));
                         }
                     }
                 }
@@ -208,7 +208,7 @@ void EyeScanOptimizationHistograms::fillScan3D(const DetectorDataContainer& the3
                 {
                     for(auto& obs: observables)
                     {
-                        if(cChip->getSummaryContainer<GenericDataArray<TAPsize * TAPsize * TAPsize>>() == nullptr) continue;
+                        if(cChip->getSummaryContainer<GenericDataArray<float, TAPsize * TAPsize * TAPsize>>() == nullptr) continue;
 
                         auto* TAP3DscanHist = ThreeDscan[obs]
                                                   ->getObject(cBoard->getId())
@@ -227,13 +227,13 @@ void EyeScanOptimizationHistograms::fillScan3D(const DetectorDataContainer& the3
                                     TAP3DscanHist->SetBinContent(i + 1,
                                                                  j + 1,
                                                                  k + 1,
-                                                                 cChip->getSummary<GenericDataArray<TAPsize * TAPsize * TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>()
+                                                                 cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize * TAPsize * TAPsize>>()
                                                                      .data[i + j * nStepsTAP1 + k * nStepsTAP1 * nStepsTAP2][obs]
                                                                      .at(0));
                                     TAP3DscanHist->SetBinError(i + 1,
                                                                j + 1,
                                                                k + 1,
-                                                               cChip->getSummary<GenericDataArray<TAPsize * TAPsize * TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>()
+                                                               cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize * TAPsize * TAPsize>>()
                                                                    .data[i + j * nStepsTAP1 + k * nStepsTAP1 * nStepsTAP2][obs]
                                                                    .at(5));
                                 }
