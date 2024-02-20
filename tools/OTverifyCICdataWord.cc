@@ -24,7 +24,8 @@ void OTverifyCICdataWord::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations = 100;
+    fNumberOfIterations = findValueInSettings<double>("OTverifyCICdataWordNumberOfIterations", 1000);
+
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyCICdataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -102,39 +103,60 @@ void OTverifyCICdataWord::runIntegrityTest()
 
 void OTverifyCICdataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
 {
-    // LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
     // // Set board trigger configuration for L1 alignment
-    // std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    // cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
-    // cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
-    // cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
-    // cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-    // cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    // cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
-    // cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
-    // fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
+    std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
+    cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
+    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
 
-    // for(auto theOpticalGroup: *theBoard)
-    // {
-    //     uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
-    //     for(auto theHybrid: *theOpticalGroup)
-    //     {
-    //         auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-    //         if(cCic == nullptr) continue;
+    for(auto theOpticalGroup: *theBoard)
+    {
+        uint8_t numberOfBytesInSinglePacket = (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10) ? 2 : 1;
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            bool isA2Smodule = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S;
+            auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+            fCicInterface->SetSparsification(cCic, true);
 
-    //         auto& theHybridPatternMatchingEfficiency =
-    //             fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
+            // auto& theHybridPatternMatchingEfficiency =
+            //     fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
 
-    //         // select lines for slvs debug
-    //         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-    //         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-    //         for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
-    //         {
-    //             auto lineOutputVector = theDebugInterface->L1ADebug(1, false);
-    //             LOG(ERROR) << BOLDRED << "Line " << lineIndex << " -> " << getPatternPrintout(lineOutputVector.second[lineIndex], numberOfBytesInSinglePacket) << RESET;
-    //     }
-    // }
+            // select lines for slvs debug
+            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
+            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+            if(isA2Smodule) injectL12S(theHybrid, theDebugInterface, numberOfBytesInSinglePacket);
+            else            injectL1PS(theHybrid, theDebugInterface, numberOfBytesInSinglePacket);
+        }
+    }
 }
+
+void OTverifyCICdataWord::injectL12S(Ph2_HwDescription::Hybrid* theHybrid, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
+{
+    for(auto theChip: *theHybrid)
+    {
+        fReadoutChipInterface->MaskAllChannels(theChip, true);
+    }
+
+    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+    {
+        auto lineOutputVector = theDebugInterface->L1ADebug(1, false);
+        LOG(ERROR) << BOLDRED << "L1 Line -> " << getPatternPrintout(lineOutputVector, numberOfBytesInSinglePacket) << RESET;
+    }
+}
+
+void OTverifyCICdataWord::injectL1PS(Ph2_HwDescription::Hybrid* theHybrid, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
+{
+
+}
+
+
 
 
 void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
@@ -144,7 +166,7 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInt
     for(auto theOpticalGroup: *theBoard)
     {
         bool isA2Smodule = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S;
-        uint8_t numberOfBytesInSinglePacket = (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10) ? 2 : 1;;
+        uint8_t numberOfBytesInSinglePacket = (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10) ? 2 : 1;
         for(auto theHybrid: *theOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
@@ -177,7 +199,6 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInt
     }
 }
 
-
 void OTverifyCICdataWord::injectStubs2S(ReadoutChip* theChip, uint8_t chipIdForCIC, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
 {
     LOG(INFO) << BOLDBLUE <<  "injecting stubs on CBC Id " << +theChip->getId() << RESET;
@@ -197,18 +218,20 @@ void OTverifyCICdataWord::injectStubs2S(ReadoutChip* theChip, uint8_t chipIdForC
 
     // inject stubs on CBC to CIC stub lines 0 (first stub address) lines 1 (second stub address), line 3 (first and second stub bend)
     std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorFirstPattern {{0x0A, 0}, {0xA0, 2}, {0xAA, 4}};
-    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorFirstPattern {{0x7F, 4}};
+    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorFirstPattern {{0x0A, 4}};
+    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorFirstPattern {{0x0A, 0}, {0xA0, 2}};
+    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorFirstPattern {};
     float matchingEfficiencyFirstPattern = injectAndMatch2SstubPatterns(theChip, chipIdForCIC, theDebugInterface, numberOfBytesInSinglePacket, stubSeedAndBendingVectorFirstPattern);
 
     // // inject stubs on CBC to CIC stub lines 2 (third stub address), line 4 (thirt stub bend)
     std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorSecondPattern {{0x0A, 4}, {0xA0, 0}, {0xAA, 2}};
+    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorSecondPattern {{0x0A, 4}};
+    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorSecondPattern {{0x0A, 0}, {0xA0, 2}};
+    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVectorSecondPattern {};
     float matchingEfficiencySecondPattern = injectAndMatch2SstubPatterns(theChip, chipIdForCIC, theDebugInterface, numberOfBytesInSinglePacket, stubSeedAndBendingVectorSecondPattern);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] before" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fPatternMatchingEfficiencyContainer.size = " << fPatternMatchingEfficiencyContainer.size() << std::endl;
     
     fPatternMatchingEfficiencyContainer.getObject(theChip->getBeBoardId())->getObject(theChip->getOpticalGroupId())->getObject(theChip->getHybridId())->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()[theChip->getId()][1] = (matchingEfficiencyFirstPattern + matchingEfficiencySecondPattern)/2;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] after" << std::endl;
-
+    
     return;
 }
 
@@ -249,7 +272,7 @@ float OTverifyCICdataWord::injectAndMatch2SstubPatterns(ReadoutChip* theChip, ui
         }
     }
 
-    matchingEfficiency /= fNumberOfIterations;
+    matchingEfficiency /= (fNumberOfIterations*cNlines);
 
     return matchingEfficiency;
 }
@@ -324,9 +347,6 @@ std::vector<std::pair<std::bitset<160>, std::bitset<160>>> OTverifyCICdataWord::
             maskWord &= tmpMask;
         }
     }
-
-    // std::cout << dataWord.to_string() << std::endl;
-    // std::cout << maskWord.to_string() << std::endl;
 
     std::vector<std::pair<std::bitset<160>, std::bitset<160>>> lineDataAndMaskWordVector(numberOfLines, {0,0});
 
