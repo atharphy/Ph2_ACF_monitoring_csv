@@ -86,7 +86,8 @@ void ExceptionHandler::disableOpticalGroup(uint16_t boardId, uint16_t opticalGro
     updateFWInformation(boardId);
     if(fDetectorContainer->getObject(boardId)->size() == 0)
     {
-        LOG(INFO) << BOLDRED << "No optical group enabled on Board id " << boardId << " --- Full board will be disabled" << RESET;
+        LOG(WARNING) << BOLDRED << "No optical group enabled on Board ID" << BOLDYELLOW << boardId << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> Full board will be disabled" << RESET;
         disableBoard(boardId);
     }
 }

@@ -44,7 +44,6 @@ class ThrEqualizationHistograms : public DQMHistogramBase
 
     size_t startValue;
     size_t stopValue;
-    size_t TDACGainNSteps;
     size_t nEvents;
 
     size_t nRows;

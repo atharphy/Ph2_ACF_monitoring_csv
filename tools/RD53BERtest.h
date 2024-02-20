@@ -27,7 +27,6 @@ class BERtest : public CalibBase
     ~BERtest()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -46,11 +45,13 @@ class BERtest : public CalibBase
     void fillHisto() override;
 
   protected:
-    size_t      chain2test;
-    bool        given_time;
-    double      frames_or_time;
-    bool        doDisplay;
-    std::string dataOutputDir;
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
+    size_t chain2test;
+    bool   given_time;
+    double frames_or_time;
+    bool   doDisplay;
 
     DetectorDataContainer theBERtestContainer;
 };

@@ -18,11 +18,11 @@ void BERtest::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
+    CalibBase::ConfigureCalibration();
     chain2test     = this->findValueInSettings<double>("chain2Test");
     given_time     = this->findValueInSettings<double>("byTime");
     frames_or_time = this->findValueInSettings<double>("framesORtime");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
 
     // ##########################################################################################
     // # Select BER counter meaning: number of frames with errors or number of bits with errors #

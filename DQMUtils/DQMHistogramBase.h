@@ -47,6 +47,7 @@ struct sfinae_true_DQMHistogramBase : std::true_type
 
 template <typename T>
 static auto test_SetZTitle(int) -> sfinae_true_DQMHistogramBase<decltype(std::declval<T>().SetZTitle(""))>;
+
 template <typename>
 static auto test_SetZTitle(long) -> std::false_type;
 } // namespace user_detail
@@ -98,7 +99,7 @@ class DQMHistogramBase
     /*!
      * destructor
      */
-    virtual ~DQMHistogramBase() { ; }
+    virtual ~DQMHistogramBase() {}
 
     /*!
      * \brief Book histograms

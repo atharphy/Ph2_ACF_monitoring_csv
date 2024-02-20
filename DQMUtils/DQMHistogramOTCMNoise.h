@@ -45,23 +45,23 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
      */
     bool fill(std::string& inputStream) override;
 
-    //Fill correlation between top & bottom sensors, split by detector structure
+    // Fill correlation between top & bottom sensors, split by detector structure
     bool fillSensorChipCorrelationPlots(DetectorDataContainer& theHitData);
     bool fillSensorHybridCorrelationPlots(DetectorDataContainer& theHitData);
     bool fillSensorModuleCorrelationPlots(DetectorDataContainer& theHitData);
 
     bool fill2DHitPlots(DetectorDataContainer& theHitData);
     bool fillHybridCorrelationPlots(DetectorDataContainer& theHybridData);
-    bool fillHitProfile(DetectorDataContainer& theHitData); //Not used at the moment
+    bool fillHitProfile(DetectorDataContainer& theHitData); // Not used at the moment
 
-    //Fill number of hits distribution, split by detector structure
+    // Fill number of hits distribution, split by detector structure
     bool fillChipHitPlots(DetectorDataContainer& theHitData, bool pFitDistributions);
     bool fillChipHitPlots(DetectorDataContainer& theHitData);
     bool fillHybridHitPlots(DetectorDataContainer& theHitData);
     bool fillModuleHitPlots(DetectorDataContainer& theHitData);
 
     template <typename T1, typename T2, typename T3, typename T4>
-    bool processInputStream(std::string streamName, std::string & inputStream , bool (DQMHistogramOTCMNoise::*)(DetectorDataContainer&));
+    bool processInputStream(std::string streamName, std::string& inputStream, bool (DQMHistogramOTCMNoise::*)(DetectorDataContainer&));
 
     /*!
      * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
@@ -98,7 +98,6 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     DetectorDataContainer f2DChipSensorCorrelation;
     DetectorDataContainer f2DHybridCorrelation;
     DetectorDataContainer f2DChipCorrelation;
-
 
     uint32_t fNevents;
     bool     f2DHistograms;

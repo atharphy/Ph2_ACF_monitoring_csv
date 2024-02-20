@@ -171,7 +171,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 {
                     enableDataMerging = true;
                     slaveEn |= 1 << lane;
-                    primaries[lane] = static_cast<RD53*>(cChip)->laneConfig.master;
+                    primaries[lane] = static_cast<RD53*>(cChip)->laneConfig.masterLane;
                 }
 
                 // ##############################
@@ -349,7 +349,7 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     // ##########
     // # Header #
     // ##########
-    commandList.emplace_back(bits::pack<6, 10, 16>(RD53FWconstants::HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), n32bitWords));
+    commandList.emplace_back(bits::pack<6, 10, 16>(RD53FWconstants::HEADEAR_WRTCMD, (hybridId < 0 ? this->enabledHybrids : 1 << hybridId), n32bitWords));
 
     // ############
     // # Commands #
@@ -462,7 +462,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         return isChipCommunicationOK;
     }
     LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << ", i.e. "
-              << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
+              << BOLDYELLOW << std::bitset<32>(chips_en) << RESET;
 
     uint32_t              channel_up;
     int                   nAttempts = 0;
@@ -479,7 +479,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
         LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "active" << BOLDBLUE << " data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << ", i.e. "
-                  << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
+                  << BOLDYELLOW << std::bitset<32>(channel_up) << RESET;
 
         if(chips_en & ~channel_up) LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive" << BOLDYELLOW << " -- > retry " << RESET;
         nAttempts++;
@@ -1014,9 +1014,9 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     rxStatus  = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.rx_ready");
     mgtStatus = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.mgt_ready");
 
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << std::setw(2) << txStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << std::setw(2) << rxStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << std::setw(2) << mgtStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << std::setw(2) << txStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(txStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << std::setw(2) << rxStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(rxStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << std::setw(2) << mgtStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(mgtStatus) << RESET;
 }
 
 bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify)

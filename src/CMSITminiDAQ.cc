@@ -14,7 +14,6 @@
 #include "tools/RD53BERtest.h"
 #include "tools/RD53ClockDelay.h"
 #include "tools/RD53DataReadbackOptimization.h"
-#include "tools/RD53DataTransmissionTest.h"
 #include "tools/RD53Gain.h"
 #include "tools/RD53GainOptimization.h"
 #include "tools/RD53GenericDacDacScan.h"
@@ -46,6 +45,23 @@ INITIALIZE_EASYLOGGINGPP
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+
+void introBanner()
+{
+    // #######################
+    // # Introductory banner #
+    // #######################
+    LOG(INFO) << BOLDGREEN << "       ____  _     ____         _    ____ _____" << RESET;
+    LOG(INFO) << BOLDGREEN << "      |  _ \\| |__ |___ \\       / \\  / ___|  ___|" << RESET;
+    LOG(INFO) << BOLDGREEN << "      | |_) | '_ \\  __) |____ / _ \\| |   | |_" << RESET;
+    LOG(INFO) << BOLDGREEN << "      |  __/| | | |/ __/_____/ ___ \\ |___|  _|" << RESET;
+    LOG(INFO) << BOLDGREEN << "      |_|   |_| |_|_____|   /_/   \\_\\____|_|\n" << RESET;
+    LOG(INFO) << BOLDGREEN << "  ____ __  __ ____ ___ _____          _       _ ____    _    ___" << RESET;
+    LOG(INFO) << BOLDGREEN << " / ___|  \\/  / ___|_ _|_   _| __ ___ (_)_ __ (_)  _ \\  / \\  / _ \\" << RESET;
+    LOG(INFO) << BOLDGREEN << "| |   | |\\/| \\___ \\| |  | || '_ ` _ \\| | '_ \\| | | | |/ _ \\| | | |" << RESET;
+    LOG(INFO) << BOLDGREEN << "| |___| |  | |___) | |  | || | | | | | | | | | | |_| / ___ \\ |_| |" << RESET;
+    LOG(INFO) << BOLDGREEN << " \\____|_|  |_|____/___| |_||_| |_| |_|_|_| |_|_|____/_/   \\_\\__\\_\\\n" << RESET;
+}
 
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
@@ -107,7 +123,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj"
-                     "injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning gendacdac]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -185,6 +201,7 @@ int main(int argc, char** argv)
     conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
     el::Loggers::reconfigureAllLoggers(conf);
 
+    introBanner();
     SystemController mySysCntr;
 
     // ##################################
@@ -236,7 +253,7 @@ int main(int argc, char** argv)
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
 
-    std::cout << std::endl;
+    LOG(INFO) << RESET;
 
     // ###################
     // # Run Calibration #
@@ -269,20 +286,6 @@ int main(int argc, char** argv)
         dro.localConfigure(fileName, runNumber);
         dro.run();
         dro.draw();
-    }
-    else if(whichCalib == "datatrtest")
-    {
-        // ##############################
-        // # Run Data Transmission Test #
-        // ##############################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Data Transmission Test @@@" << RESET;
-
-        std::string          fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DataTransmissionTest");
-        DataTransmissionTest dtt;
-        dtt.Inherit(&mySysCntr);
-        dtt.localConfigure(fileName, runNumber);
-        dtt.run();
-        dtt.draw();
     }
     else if(whichCalib == "pixelalive")
     {
@@ -601,7 +604,7 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
 #endif
     }
-    else if(program == false)
+    else if((program == false) && (dumpRegs == false))
     {
         if(whichCalib == "")
             LOG(ERROR) << BOLDRED << "Error: calibration not specified" << RESET;

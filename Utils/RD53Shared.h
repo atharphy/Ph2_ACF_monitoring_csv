@@ -39,6 +39,7 @@ extern Ph2_HwInterface::RD53Interface* chipInterface;
 
 const char     RESULTDIR[]            = "Results";                                       // Directory containing the results
 const float    PRECISION              = 1e-2;                                            // Resolution on computing observables
+const float    SUPERPRECISION         = 1e-9;                                            // Super resolution on computing observables
 const uint8_t  ISGOOD                 = 0;                                               // Encoding good channels
 const uint8_t  ISMASKED               = 1;                                               // Encoding masked channels
 const uint8_t  ISDISABLED             = 2;                                               // Encoding disabled channels

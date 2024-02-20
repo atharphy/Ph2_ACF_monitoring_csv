@@ -19,6 +19,7 @@
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
+#include "TKey.h"
 #endif
 
 // ##################################
@@ -28,6 +29,14 @@ class CalibBase : public Tool
 {
   public:
     CalibBase() : showErrorReport(true) {}
+    ~CalibBase()
+    {
+#ifdef __USE_ROOT__
+        if(splitByHybrid == true) splitHistoFileByHybrid(this->fResultFile);
+#endif
+        this->CloseResultFile();
+    }
+
     void    chipErrorReport() const;
     void    copyMaskFromDefault(const std::string& which = "all") const;
     void    saveChipRegisters(bool doUpdateChip);
@@ -35,6 +44,9 @@ class CalibBase : public Tool
     void    saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector, const std::vector<uint16_t>& dacList, size_t offset, size_t nEvents, const std::string& name);
     uint8_t assignGroupType(RD53Shared::INJtype injType) const;
     void    prepareChipQueryForEnDis(const std::string& queryName);
+    void    ResetBoardsReadBkFIFO();
+
+    void ConfigureCalibration() override;
 
     virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1);
     virtual void   run()                      = 0;
@@ -120,12 +132,34 @@ class CalibBase : public Tool
     }
 
   protected:
-    int         theCurrentRun;
-    bool        showErrorReport;
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
+    size_t      rowStart;
+    size_t      rowStop;
+    size_t      colStart;
+    size_t      colStop;
+    size_t      nEvents;
+    size_t      nEvtsBurst;
+    size_t      nTRIGxEvent;
+    bool        splitByHybrid;
     std::string dataOutputDir;
+
+    int  theCurrentRun;
+    bool showErrorReport;
 
   private:
     virtual void fillHisto() = 0;
+
+    // ###############################
+    // # Split output file by Hybrid #
+    // ###############################
+#ifdef __USE_ROOT__
+    bool splitHistoFileByHybrid(TFile* theInputFile);
+    void copyDirectories(TFile* theInputFile, TFile* theOutputFile, const std::string& hybridName);
+    void copyContent(TFile* theInputFile, TFile* theOutputFile, const std::string& dirName);
+    bool openRootFileFolder(TFile* theInputFile, const std::string& folderName);
+#endif
 };
 
 #endif

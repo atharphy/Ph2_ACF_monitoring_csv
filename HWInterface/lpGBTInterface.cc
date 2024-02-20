@@ -77,8 +77,9 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
 
     if(cSuccess == false)
     {
-        LOG(INFO) << BOLDRED << "LpGBT register writing issue on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --> OpticalGroup will be disabled"
-                  << RESET;
+        LOG(WARNING) << BOLDRED << "LpGBT register writing issue on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
+                     << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return cSuccess;
     }
@@ -444,21 +445,19 @@ void lpGBTInterface::SetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     auto        cIt  = fPhaseTapMap.find(cKey);
     if(cIt != fPhaseTapMap.end()) { cIt->second = pPhase; }
     else
-    {
         throw std::runtime_error(std::string("Unused Channel or Group!"));
-    }
 }
 
 uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel)
 {
     std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
     auto        cIt  = fPhaseTapMap.find(cKey);
+
     if(cIt != fPhaseTapMap.end()) { return cIt->second; }
     else
-    {
         throw std::runtime_error(std::string("Unused Channel or Group!"));
-        return 15;
-    }
+
+    return 15;
 }
 
 // ####################################
@@ -992,8 +991,9 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
-        LOG(INFO) << BOLDRED << "LpGBT ADC conversion timed out on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
-                  << RESET;
+        LOG(WARNING) << BOLDRED << "LpGBT ADC conversion timed out on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
+                     << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return 0;
     }
@@ -1083,8 +1083,9 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
         lpGBTInterface::StartBERT(pChip, false); // Stop
-        LOG(INFO) << BOLDRED << "LpGBT BERT : All zeros at input on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
-                  << RESET;
+        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
+                     << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return 0.;
     }
@@ -1166,8 +1167,9 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
         lpGBTInterface::StartBERT(pChip, false); // Stop
-        LOG(INFO) << BOLDRED << "LpGBT BERT : All zeros at input on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
-                  << RESET;
+        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
+                     << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return 0.;
     }
@@ -1304,8 +1306,9 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
         // In the test system a run time error is undesired
         return false;
 #else
-        LOG(INFO) << BOLDRED << "LpGBT I2C write transaction FAILED on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
-                  << RESET;
+        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
+                     << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return false;
 #endif
@@ -1346,8 +1349,9 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
         // In the test system a run time error is undesired
         return false;
 #else
-        LOG(INFO) << BOLDRED << "LpGBT I2C read transaction FAILED on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " --- OpticalGroup will be disabled"
-                  << RESET;
+        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
+                     << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return false;
 #endif
@@ -1395,8 +1399,8 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
     // # LpgbtCalibrationWarning: If loading fCalibration data failed.
     // # FileNotFoundError: If the file does not exis
 
-    LOG(INFO) << BOLDGREEN << "Loading Calibration data for LpGBT on Board " << +pChip->getBeBoardId() << " OpticalGroup " << +pChip->getOpticalGroupId() << " with Fuse ID 0x" << std::hex << +pChipId
-              << std::dec << " from " << pFileName << RESET;
+    LOG(INFO) << GREEN << "Loading Calibration data for LpGBT on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
+              << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
     bool cCalibrationLoaded = false;
 
     std::ifstream                         file(pFileName.c_str(), std::ios::in);
@@ -1412,9 +1416,11 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
         {
             cRowCounter++;
             if(cRowCounter < 5)
-            { // skip header (version check possible)
+            {
+                // Skip header (version check possible)
                 if(cRowCounter == 4)
-                { // read field names
+                {
+                    // Read field names
                     cHeaderRow.clear();
                     std::stringstream str(line);
                     while(getline(str, word, ',')) { cHeaderRow.push_back(word); }
@@ -1424,12 +1430,9 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
             row.clear();
             std::stringstream str(line);
 
-            while(getline(str, word, ',')) { row.push_back(word); }
+            while(getline(str, word, ',')) row.push_back(word);
             uint32_t cRowChipId = strtoul(row[0].c_str(), 0, 16);
-            // for(uint32_t i=0;i<32;i++){
-            //     if(cRowChipId == 0x00244200){
-            //     LOG(INFO) << BOLDBLUE << std::hex << (cRowChipId ^ (1 << i )) << std::dec << RESET;
-            // }
+
             if(cRowChipId == pChipId)
             {
                 for(uint32_t j = 1; j < row.size(); j++)
@@ -1444,14 +1447,13 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
                 break;
             }
         }
+
         if(!cCalibrationLoaded)
         {
-            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Calibration data not available for LpGBT on Board " << +pChip->getBeBoardId() << " OpticalGroup "
-                      << +pChip->getOpticalGroupId() << " with Fuse ID 0x" << std::hex << +pChipId << std::dec << RESET;
-            LOG(INFO) << BOLDYELLOW << "Warning lpGBTInterface::LoadCalibrationData: Using default calibration data" << RESET;
-            // throw std::runtime_error(std::string("LpgbtCalibrationError"));
+            LOG(WARNING) << BOLDRED << "[lpGBTInterface::LoadCalibrationData] Calibration data not available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED
+                         << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId() << BOLDRED << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> Using default calibration data" << RESET;
         }
-        // for(auto it = pChip->getADCCalibrationData().cbegin(); it != pChip->getADCCalibrationData().cend(); ++it) { LOG(DEBUG) << BOLDBLUE << it->first << " = " << it->second << RESET; }
     }
     else
     {
@@ -1499,7 +1501,7 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* p
         uint16_t cAdcVal = ReadADC(pChip, "TEMP", "VREF/2", 0);
         LOG(DEBUG) << BOLDGREEN << "Temperature readout: 0x" << std::hex << +cAdcVal << std::dec << " [LSB]" << RESET;
 
-        // estimate the junction temperature
+        // Estimate the junction temperature
         cMeasurements.push_back(cAdcVal * pChip->getADCCalibrationData()["TEMPERATURE_UNCALVREF_SLOPE"] + pChip->getADCCalibrationData()["TEMPERATURE_UNCALVREF_OFFSET"]);
     }
     float cTemperature = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
@@ -1541,10 +1543,10 @@ void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTe
     */
     float cTemperature = EstimateTemperatureUncalibVref(pChip, pResetTempSensor);
 
-    // update temperature estimate
+    // Update temperature estimate
     pChip->setTemperature(cTemperature);
 
-    // tune VREF
+    // Tune VREF
     TuneVrefControlLib(pChip);
 }
 
@@ -1728,6 +1730,7 @@ void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::lpGBT* pChip, const std::
     uint8_t cCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, pCurrentA);
     ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cCode});
 }
+
 float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, bool pImprovePrecision)
 {
     LOG(INFO) << BOLDYELLOW << "pExpectedROhm not provided. Performing auto ranging." << RESET;
@@ -1745,6 +1748,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
     LOG(DEBUG) << BOLDBLUE << "First estimate of resistance: " << cExpectedROhm / 1e3 << " kOhm" << RESET;
     return MeasureResistance(pChip, pChannel, cExpectedROhm, pImprovePrecision);
 }
+
 float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, float pExpectedROhm, bool pImprovePrecision)
 {
     /* """Measure resistance connected between the ground (VSS) and a given ADC channel.
@@ -1838,7 +1842,6 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
         Raises:
             LpgbtException: in case the conversion timeout is exceeded
     """ */
-
     if(pResetTempSensor)
     {
         auto cVal = ReadChipReg(pChip, "ADCMon");
@@ -1894,7 +1897,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
 
     float cVsup = cVadc * (pChip->getADCCalibrationData()["VDDMON_SLOPE"] + pChip->getTemperature() * pChip->getADCCalibrationData()["VDDMON_SLOPE_TEMP"]);
 
-    // disable VDD monitor (if requested)
+    // Disable VDD monitor (if requested)
     if(pDisableMonitorAfterMeasurement) { ConfigureInternalMonitoring(pChip, false); }
     LOG(DEBUG) << BOLDGREEN << "lpGBTInterface::MeasurePowerSupplyVoltage: " << pPowerSupply << " " << cVsup << " V" << RESET;
 
