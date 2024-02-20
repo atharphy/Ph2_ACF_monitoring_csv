@@ -231,7 +231,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
 void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os)
 {
     std::string cFilePath       = "";
-    std::string fConfigFilePath = "";
+    std::string theConfigFilePath = "";
     uint32_t    cOpticalGroupId = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     uint32_t    cFMCId;
     std::string inputFMCid = pOpticalGroupNode.attribute(OPTICALGROUP_FMCID_ATTRIBUTE_NAME).value();
@@ -262,18 +262,18 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             if((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
         }
         else if(static_cast<std::string>(theChild.name()) == LPGBT_CONFIGFILE_NODE_NAME)
-            fConfigFilePath = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_FILENAME_ATTRIBUTE_NAME).value());
+            theConfigFilePath = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_FILENAME_ATTRIBUTE_NAME).value());
         else if(static_cast<std::string>(theChild.name()) == LPGBT_NODE_NAME)
         {
             std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
             os << BOLDBLUE << "|\t|----OpticalGroup --> Id: " << BOLDYELLOW << cOpticalGroupId << BOLDBLUE << ", FMC Id: " << BOLDYELLOW << cFMCId << RESET << std::endl;
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << chipFileName << RESET << std::endl;
-            os << BOLDBLUE << "|\t|\t|---- ADC Config. File: " << BOLDYELLOW << fConfigFilePath << RESET << std::endl;
+            os << BOLDBLUE << "|\t|\t|---- ADC Config. File: " << BOLDYELLOW << theConfigFilePath << RESET << std::endl;
             uint8_t cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
             uint8_t cChipVersion = theChild.attribute(LPGBT_VERSION_ATTRIBUTE_NAME).as_uint();
             bool    cIsOptical   = theChild.attribute(LPGBT_OPTICAL_ATTRIBUTE_NAME).as_bool();
 
-            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, chipFileName, fConfigFilePath);
+            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, chipFileName, theConfigFilePath);
 
             thelpGBT->setVersion(cChipVersion);
             thelpGBT->setOptical(cIsOptical);

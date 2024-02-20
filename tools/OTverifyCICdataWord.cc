@@ -156,8 +156,13 @@ void OTverifyCICdataWord::injectL1PS(Ph2_HwDescription::Hybrid* theHybrid, D19cD
 
 }
 
-
-
+bool OTverifyCICdataWord::matchL1Pattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
+{
+    uint32_t header     = 0xffffffe;
+    uint32_t headerMask = 0xfffffff;
+    std::pair<bool, size_t> isFoundAndWhere =  matchPattern(theWordVector, numberOfBytesInSinglePacket, header, headerMask);
+    return isFoundAndWhere.first;
+}
 
 void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
 {

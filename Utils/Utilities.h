@@ -263,4 +263,6 @@ std::string getPatternPrintout(const std::vector<T> theWordVector, uint8_t wordS
     return thePattern.str();
 }
 
+std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask);
+
 #endif

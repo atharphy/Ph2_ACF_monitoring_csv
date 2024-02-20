@@ -59,6 +59,8 @@ class OTverifyCICdataWord : public Tool
     void injectL12S(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
     void injectL1PS(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
 
+    bool matchL1Pattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket);
+
     size_t fNumberOfIterations {1000};
     // For simplicity, make sure bendind code is always greater than half value (0x7)
     std::map<uint8_t, uint8_t> fBendingAndCode{{0, 0x9}, {2, 0xB}, {4, 0xF}};

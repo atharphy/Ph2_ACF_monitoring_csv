@@ -276,61 +276,10 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
 
 bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
 {
-    uint64_t header     = 0x00000ffffffe;
-    uint64_t headerMask = 0xffffffffffff;
-
-    // create a mask that is 0xFF for 5G and 0xFFFF for 10G modules
-    uint16_t mask = 0xFF;
-    if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
-
-    int maxWritePatternShift = sizeof(uint64_t) / numberOfBytesInSinglePacket - 1;
-
-    auto mergeIntoLongInt = [&theWordVector, maxWritePatternShift, mask, numberOfBytesInSinglePacket](uint8_t numberOfBytesToSkip) {
-        std::vector<uint64_t> longIntWordVector;
-
-        uint64_t longIntWord             = 0;
-        int      writeSinglePatternShift = maxWritePatternShift;
-        for(auto theWord: theWordVector)
-        {
-            uint64_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
-            for(uint8_t readSinglePatterShift = 0; readSinglePatterShift < (sizeof(uint32_t) / numberOfBytesInSinglePacket); ++readSinglePatterShift)
-            {
-                if(numberOfBytesToSkip > 0)
-                {
-                    --numberOfBytesToSkip;
-                    continue;
-                }
-                longIntWord = longIntWord | (((tmpLongIntWord >> (readSinglePatterShift * 8 * numberOfBytesInSinglePacket)) & mask) << (writeSinglePatternShift * numberOfBytesInSinglePacket * 8));
-                // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is
-                // " << std::hex <<
-                // (((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << (writeSinglePatternShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
-                --writeSinglePatternShift;
-                if(writeSinglePatternShift < 0)
-                {
-                    longIntWordVector.push_back(longIntWord);
-                    longIntWord             = 0;
-                    writeSinglePatternShift = maxWritePatternShift;
-                }
-            }
-        }
-
-        return longIntWordVector;
-    };
-
-    for(uint8_t numberOfBytesToSkip = 0; numberOfBytesToSkip < 8; ++numberOfBytesToSkip)
-    {
-        std::vector<uint64_t> longIntWordVector = mergeIntoLongInt(numberOfBytesToSkip);
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] byteshift = " << +numberOfBytesToSkip << " pattern : " << getPatternPrintout(longIntWordVector) << std::hex << std::endl;
-        for(auto longIntWord: longIntWordVector)
-        {
-            if((longIntWord & headerMask) == header) return true;
-        }
-    }
-
-    LOG(ERROR) << BOLDRED << "OTverifyBoardDataWord::isL1HeaderFound - Error, expected pattern not found" << RESET;
-    LOG(ERROR) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket) << RESET;
-
-    return false; // header not found
+    uint32_t header     = 0xffffffe;
+    uint32_t headerMask = 0xfffffff;
+    std::pair<bool, size_t> isFoundAndWhere =  matchPattern(theWordVector, numberOfBytesInSinglePacket, header, headerMask);
+    return isFoundAndWhere.first;
 }
 
 uint8_t OTverifyBoardDataWord::getNumberOfBytesInSinglePacket(OpticalGroup* cOpticalGroup) const
