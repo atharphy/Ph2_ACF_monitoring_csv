@@ -9,18 +9,18 @@
                 <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
         <SSA_Files path="./settings/SSAFiles/" />
-        <SSA2 Id="0" configfile="SSA2.txt" />
-        <SSA2 Id="1" configfile="SSA2.txt" />
-        <SSA2 Id="2" configfile="SSA2.txt" /> 
-        <!-- <SSA2 Id="3" configfile="SSA2.txt" /> -->
-        <!-- <SSA2 Id="4" configfile="SSA2.txt" /> -->
-        <SSA2 Id="5" configfile="SSA2.txt" />
-        <SSA2 Id="6" configfile="SSA2.txt" />
-        <SSA2 Id="7" configfile="SSA2.txt" />
+        <SSA2 Id="0" configFile="SSA2.txt" />
+        <SSA2 Id="1" configFile="SSA2.txt" />
+        <SSA2 Id="2" configFile="SSA2.txt" /> 
+        <!-- <SSA2 Id="3" configFile="SSA2.txt" /> -->
+        <!-- <SSA2 Id="4" configFile="SSA2.txt" /> -->
+        <SSA2 Id="5" configFile="SSA2.txt" />
+        <SSA2 Id="6" configFile="SSA2.txt" />
+        <SSA2 Id="7" configFile="SSA2.txt" />
 
 
         <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-        <CIC2 Id="8" configfile="CIC2_PS.txt" />
+        <CIC2 Id="8" configFile="CIC2_PS.txt" />
     </Hybrid>
     </OpticalGroup>
 

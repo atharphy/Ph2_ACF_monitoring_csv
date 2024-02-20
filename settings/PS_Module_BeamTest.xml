@@ -10,7 +10,7 @@
     
     <OpticalGroup Id="0" FMCId="L12" reset="1">
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0_PS.txt">
+        <lpGBT Id="0" version="0" optical="1" configFile="lpGBT_v0_PS.txt">
           <Settings
           />
         </lpGBT>
@@ -33,26 +33,26 @@
             </Global>
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_NoisePS26mm_BeamTest_Run41/" />
-            <SSA Id="0" configfile="BE0_OG0_FE0_Chip0SSA.txt" />
-            <SSA Id="1" configfile="BE0_OG0_FE0_Chip1SSA.txt" />
-            <SSA Id="2" configfile="BE0_OG0_FE0_Chip2SSA.txt" />
-            <SSA Id="4" configfile="BE0_OG0_FE0_Chip4SSA.txt" />
-            <SSA Id="5" configfile="BE0_OG0_FE0_Chip5SSA.txt" />
-            <SSA Id="6" configfile="BE0_OG0_FE0_Chip6SSA.txt" />
-            <SSA Id="7" configfile="BE0_OG0_FE0_Chip7SSA.txt" />
+            <SSA Id="0" configFile="BE0_OG0_FE0_Chip0SSA.txt" />
+            <SSA Id="1" configFile="BE0_OG0_FE0_Chip1SSA.txt" />
+            <SSA Id="2" configFile="BE0_OG0_FE0_Chip2SSA.txt" />
+            <SSA Id="4" configFile="BE0_OG0_FE0_Chip4SSA.txt" />
+            <SSA Id="5" configFile="BE0_OG0_FE0_Chip5SSA.txt" />
+            <SSA Id="6" configFile="BE0_OG0_FE0_Chip6SSA.txt" />
+            <SSA Id="7" configFile="BE0_OG0_FE0_Chip7SSA.txt" />
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_NoisePS26mm_BeamTest_Run41/" />
-            <MPA Id="8" configfile="BE0_OG0_FE0_Chip8.txt" />
-            <MPA Id="9" configfile="BE0_OG0_FE0_Chip9.txt" />
-            <MPA Id="10" configfile="BE0_OG0_FE0_Chip10.txt" />
-            <MPA Id="11" configfile="BE0_OG0_FE0_Chip11.txt" />
-            <MPA Id="12" configfile="BE0_OG0_FE0_Chip12.txt" />
-            <MPA Id="13" configfile="BE0_OG0_FE0_Chip13.txt" />
-            <MPA Id="14" configfile="BE0_OG0_FE0_Chip14.txt" />
-            <MPA Id="15" configfile="BE0_OG0_FE0_Chip15.txt" />
+            <MPA Id="8" configFile="BE0_OG0_FE0_Chip8.txt" />
+            <MPA Id="9" configFile="BE0_OG0_FE0_Chip9.txt" />
+            <MPA Id="10" configFile="BE0_OG0_FE0_Chip10.txt" />
+            <MPA Id="11" configFile="BE0_OG0_FE0_Chip11.txt" />
+            <MPA Id="12" configFile="BE0_OG0_FE0_Chip12.txt" />
+            <MPA Id="13" configFile="BE0_OG0_FE0_Chip13.txt" />
+            <MPA Id="14" configFile="BE0_OG0_FE0_Chip14.txt" />
+            <MPA Id="15" configFile="BE0_OG0_FE0_Chip15.txt" />
  
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <CIC Id="8" configFile="CIC_default.txt" />
         </Hybrid>
 
         <Hybrid Id="1" enable="1" reset="1" i2cMaster="1">
@@ -75,26 +75,26 @@
             </Global>
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_NoisePS26mm_BeamTest_Run41/" />
-            <SSA Id="0" configfile="BE0_OG0_FE1_Chip0SSA.txt" />
-            <SSA Id="1" configfile="BE0_OG0_FE1_Chip1SSA.txt" />
-            <SSA Id="2" configfile="BE0_OG0_FE1_Chip2SSA.txt" />
-            <SSA Id="4" configfile="BE0_OG0_FE1_Chip4SSA.txt" />
-            <SSA Id="5" configfile="BE0_OG0_FE1_Chip5SSA.txt" />
-            <SSA Id="6" configfile="BE0_OG0_FE1_Chip6SSA.txt" />
-            <SSA Id="7" configfile="BE0_OG0_FE1_Chip7SSA.txt" />
+            <SSA Id="0" configFile="BE0_OG0_FE1_Chip0SSA.txt" />
+            <SSA Id="1" configFile="BE0_OG0_FE1_Chip1SSA.txt" />
+            <SSA Id="2" configFile="BE0_OG0_FE1_Chip2SSA.txt" />
+            <SSA Id="4" configFile="BE0_OG0_FE1_Chip4SSA.txt" />
+            <SSA Id="5" configFile="BE0_OG0_FE1_Chip5SSA.txt" />
+            <SSA Id="6" configFile="BE0_OG0_FE1_Chip6SSA.txt" />
+            <SSA Id="7" configFile="BE0_OG0_FE1_Chip7SSA.txt" />
 
             <MPA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_NoisePS26mm_BeamTest_Run41/" />
-            <MPA Id="8" configfile="BE0_OG0_FE1_Chip8.txt" />
-            <MPA Id="9" configfile="BE0_OG0_FE1_Chip9.txt" />
-            <MPA Id="10" configfile="BE0_OG0_FE1_Chip10.txt" />
-            <MPA Id="11" configfile="BE0_OG0_FE1_Chip11.txt" />
-            <MPA Id="12" configfile="BE0_OG0_FE1_Chip12.txt" />
-            <MPA Id="13" configfile="BE0_OG0_FE1_Chip13.txt" />
-            <MPA Id="14" configfile="BE0_OG0_FE1_Chip14.txt" />
-            <MPA Id="15" configfile="BE0_OG0_FE1_Chip15.txt" />
+            <MPA Id="8" configFile="BE0_OG0_FE1_Chip8.txt" />
+            <MPA Id="9" configFile="BE0_OG0_FE1_Chip9.txt" />
+            <MPA Id="10" configFile="BE0_OG0_FE1_Chip10.txt" />
+            <MPA Id="11" configFile="BE0_OG0_FE1_Chip11.txt" />
+            <MPA Id="12" configFile="BE0_OG0_FE1_Chip12.txt" />
+            <MPA Id="13" configFile="BE0_OG0_FE1_Chip13.txt" />
+            <MPA Id="14" configFile="BE0_OG0_FE1_Chip14.txt" />
+            <MPA Id="15" configFile="BE0_OG0_FE1_Chip15.txt" />
 
  	    <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <CIC Id="8" configFile="CIC_default.txt" />
         </Hybrid>
  
     </OpticalGroup>
