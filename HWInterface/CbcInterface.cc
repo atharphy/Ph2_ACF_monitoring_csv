@@ -180,6 +180,26 @@ std::vector<uint8_t> CbcInterface::stubInjectionPattern(ReadoutChip* pChip, uint
     bool cLayerSwap = (this->ReadChipReg(pChip, "LayerSwap") == 1);
     return stubInjectionPattern(pStubAddress, pStubBend, cLayerSwap);
 }
+
+bool CbcInterface::injectClusters(ReadoutChip* pCbc, std::vector<std::pair<uint8_t, uint8_t>> theClusterAddressAndWidthVector)
+{
+    ChannelGroup<NCHANNELS> theChannelMask;
+    theChannelMask.disableAllChannels();
+    std::vector<uint8_t> cActiveChannels(0);
+    std::vector<uint8_t> cDisabledChannels(0);
+    for(const auto& theClusterAddressAndWidth : theClusterAddressAndWidthVector)
+    {
+        for(size_t strip=0; strip<theClusterAddressAndWidth.second; ++strip)
+        {
+            theChannelMask.enableChannel(theClusterAddressAndWidth.first + 2*strip);
+        }
+    }
+
+    uint16_t cVcth = 1023;
+    this->WriteChipReg(pCbc, "VCth", cVcth);
+    return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS>>(std::move(theChannelMask)));
+}
+
 bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<std::pair<uint8_t, int>> theStubAddressesAndBendVector, bool pUseNoise, bool pUseOffsets, uint8_t pAllOff)
 {
     setBoard(pCbc->getBeBoardId());

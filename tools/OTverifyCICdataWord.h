@@ -20,7 +20,6 @@
 namespace Ph2_HwDescription
 {
     class ReadoutChip;
-    class Hybrid;
     class BeBoard;
 }
 
@@ -28,6 +27,8 @@ namespace Ph2_HwInterface
 {
     class D19cDebugFWInterface;
 }
+
+class PatternMatcher;
 
 class OTverifyCICdataWord : public Tool
 {
@@ -56,10 +57,10 @@ class OTverifyCICdataWord : public Tool
     float   injectAndMatch2SstubPatterns(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket, std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector);
     std::vector<std::pair<std::bitset<160>, std::bitset<160>>> reproduce2SstubPattern(uint8_t chipIdForCIC, std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector);
     bool isPatternFound(std::pair<std::bitset<160>, std::bitset<160>> theExpectedPatternAndMask, std::bitset<160> theLinePattern);
-    void injectL12S(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
-    void injectL1PS(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
+    void injectL12S(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
+    void injectL1PS(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
 
-    bool matchL1Pattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket);
+    bool matchL1Pattern(std::vector<uint32_t>& theWordVector, PatternMatcher thePatternMatcher, uint8_t numberOfBytesInSinglePacket);
 
     size_t fNumberOfIterations {1000};
     // For simplicity, make sure bendind code is always greater than half value (0x7)

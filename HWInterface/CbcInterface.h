@@ -119,6 +119,7 @@ class CbcInterface : public ReadoutChipInterface
     std::vector<uint8_t> stubInjectionPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend);
     bool                 selectLogicMode(Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerify = true);
     bool                 enableHipSuppression(Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerify = true);
+    bool                 injectClusters(Ph2_HwDescription::ReadoutChip* pCbc, std::vector<std::pair<uint8_t, uint8_t>> theClusterAddressAndWidthVector);
     bool                 injectStubs(Ph2_HwDescription::ReadoutChip* pCbc,
                                      std::vector<std::pair<uint8_t, int>> theStubAddressesAndBendVector,
                                      bool                            pUseNoise   = true,

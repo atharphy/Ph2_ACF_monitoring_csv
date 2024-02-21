@@ -331,51 +331,49 @@ std::string getTimeStampString()
     return time_str;
 }
 
-
-
-std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask)
+std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,  uint8_t numberOfBytesInSinglePacket, uint8_t numberOfBytesToSkip) 
 {
     uint16_t mask = 0xFF;
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
-
+    
     int maxWritePatternShift = sizeof(uint32_t) / numberOfBytesInSinglePacket - 1;
+    std::vector<uint32_t> longIntWordVector;
 
-    auto mergeIntoLongInt = [&theWordVector, maxWritePatternShift, mask, numberOfBytesInSinglePacket](uint8_t numberOfBytesToSkip) {
-        std::vector<uint32_t> longIntWordVector;
-
-        uint32_t longIntWord             = 0;
-        int      writeSinglePatternShift = maxWritePatternShift;
-        for(auto theWord: theWordVector)
+    uint32_t longIntWord             = 0;
+    int      writeSinglePatternShift = maxWritePatternShift;
+    for(auto theWord: theWordVector)
+    {
+        uint32_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
+        for(uint8_t readSinglePatterShift = 0; readSinglePatterShift < (sizeof(uint32_t) / numberOfBytesInSinglePacket); ++readSinglePatterShift)
         {
-            uint32_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
-            for(uint8_t readSinglePatterShift = 0; readSinglePatterShift < (sizeof(uint32_t) / numberOfBytesInSinglePacket); ++readSinglePatterShift)
+            if(numberOfBytesToSkip > 0)
             {
-                if(numberOfBytesToSkip > 0)
-                {
-                    --numberOfBytesToSkip;
-                    continue;
-                }
-                longIntWord = longIntWord | (((tmpLongIntWord >> (readSinglePatterShift * 8 * numberOfBytesInSinglePacket)) & mask) << (writeSinglePatternShift * numberOfBytesInSinglePacket * 8));
-                // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is
-                // " << std::hex <<
-                // (((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << (writeSinglePatternShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
-                --writeSinglePatternShift;
-                if(writeSinglePatternShift < 0)
-                {
-                    longIntWordVector.push_back(longIntWord);
-                    longIntWord             = 0;
-                    writeSinglePatternShift = maxWritePatternShift;
-                }
+                --numberOfBytesToSkip;
+                continue;
+            }
+            longIntWord = longIntWord | (((tmpLongIntWord >> (readSinglePatterShift * 8 * numberOfBytesInSinglePacket)) & mask) << (writeSinglePatternShift * numberOfBytesInSinglePacket * 8));
+            // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is
+            // " << std::hex <<
+            // (((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << (writeSinglePatternShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
+            --writeSinglePatternShift;
+            if(writeSinglePatternShift < 0)
+            {
+                longIntWordVector.push_back(longIntWord);
+                longIntWord             = 0;
+                writeSinglePatternShift = maxWritePatternShift;
             }
         }
+    }
 
-        return longIntWordVector;
-    };
+    return longIntWordVector;
+}
 
+std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask)
+{
     uint8_t numberOfBytesInWord = sizeof(uint32_t);
     for(uint8_t numberOfBytesToSkip = 0; numberOfBytesToSkip < numberOfBytesInWord; ++numberOfBytesToSkip)
     {
-        std::vector<uint32_t> longIntWordVector = mergeIntoLongInt(numberOfBytesToSkip);
+        std::vector<uint32_t> longIntWordVector = applyByteShift(theWordVector, numberOfBytesInSinglePacket, numberOfBytesToSkip);
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] byteshift = " << +numberOfBytesToSkip << " pattern : " << getPatternPrintout(longIntWordVector) << std::hex << std::endl;
         for(size_t wordIndex=0; wordIndex<longIntWordVector.size(); ++wordIndex)
         {
@@ -383,8 +381,8 @@ std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector,
         }
     }
 
-    LOG(ERROR) << BOLDRED << "Error, expected pattern not found" << RESET;
-    LOG(ERROR) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket) << RESET;
+    LOG(DEBUG) << BOLDRED << "Error, expected pattern not found" << RESET;
+    LOG(DEBUG) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket) << RESET;
 
     return {false, 0}; // pattern not found
 }
