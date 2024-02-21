@@ -212,8 +212,8 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #
     // ####################################################
-    float ReadHybridTemperature(int hybridId);
-    float ReadHybridVoltage(int hybridId);
+    float ReadHybridTemperature(int hybridId, bool silentRunning = false);
+    float ReadHybridVoltage(int hybridId, bool silentRunning = false);
     float calcTemperature(uint32_t sensor1, uint32_t sensor2, int beta = 3435);
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 

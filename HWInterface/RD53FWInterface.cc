@@ -1204,7 +1204,7 @@ void RD53FWInterface::ReadClockGenerator()
 // # FMC ADC measurements: temperature and voltage #
 // #################################################
 
-float RD53FWInterface::ReadHybridTemperature(int hybridId)
+float RD53FWInterface::ReadHybridTemperature(int hybridId, bool silentRunning)
 {
     const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%] @CONST@
 
@@ -1216,13 +1216,14 @@ float RD53FWInterface::ReadHybridTemperature(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcTemperature(sensor1, sensor2);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE << " temperature: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " C"
-              << std::setprecision(-1) << RESET;
+    if(silentRunning == false)
+        LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE << " temperature: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
+                  << " C" << std::setprecision(-1) << RESET;
 
     return value;
 }
 
-float RD53FWInterface::ReadHybridVoltage(int hybridId)
+float RD53FWInterface::ReadHybridVoltage(int hybridId, bool silentRunning)
 {
     const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%] @CONST@
 
@@ -1234,8 +1235,9 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " V"
-              << std::setprecision(-1) << RESET;
+    if(silentRunning == false)
+        LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " V"
+                  << std::setprecision(-1) << RESET;
 
     return value;
 }

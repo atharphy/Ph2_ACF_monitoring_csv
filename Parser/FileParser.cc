@@ -1978,12 +1978,21 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
     pugi::xml_node theMonitorNode            = doc.child(HW_DESCRIPTION_NODE_NAME).child(MONITORINGSETTINGS_NODE_NAME).child(MONITORING_NODE_NAME);
     theDetectorMonitorConfig.fMonitoringType = theMonitorNode.attribute(MONITORING_NODE_TYPE_ATTRIBUTE_NAME).value();
     std::string enableString                 = theMonitorNode.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value();
+    std::string silenRunString               = theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME).value();
+
     if(enableString == "1")
         theDetectorMonitorConfig.fEnable = true;
     else if(enableString == "0")
         theDetectorMonitorConfig.fEnable = false;
     else
         throw std::runtime_error("FileParser::parseMonitor: Error - monitor enable flag not recognized");
+
+    if(silenRunString == "1")
+        theDetectorMonitorConfig.fSilentRunning = true;
+    else if(silenRunString == "0")
+        theDetectorMonitorConfig.fSilentRunning = false;
+    else
+        throw std::runtime_error("FileParser::parseMonitor: Error - monitor silentRunning flag not recognized");
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child(MONITORINGSLEEPTIME_NODE_NAME).first_child().value());
 

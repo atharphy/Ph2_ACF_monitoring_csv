@@ -131,7 +131,7 @@ void VoltageTuning::run()
 
                         auto defaultDig = (static_cast<size_t>(RD53Shared::setBits(nBitsAna) * STARTfraction) << nBitsDig) | static_cast<size_t>(RD53Shared::setBits(nBitsDig) * STARTfraction);
                         RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultDig);
-                        float initDig = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg) * CONVERSIONfactor;
+                        float initDig = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg, true) * CONVERSIONfactor;
 
                         std::vector<int> scanrangeDig = VoltageTuning::createScanRange(cChip, "VOLTAGE_TRIM_DIG", targetDig_, initDig);
                         bool             isUpward     = false;
@@ -143,7 +143,7 @@ void VoltageTuning::run()
                             auto vTrimDecimal = (static_cast<size_t>(RD53Shared::setBits(nBitsAna) * STARTfraction) << nBitsDig) | scanrangeDig[it];
 
                             RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
-                            float readingDig = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg) * CONVERSIONfactor;
+                            float readingDig = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg, true) * CONVERSIONfactor;
                             float diff       = fabs(readingDig - targetDig_);
 
                             trimVoltageDig.push_back(diff);
@@ -181,7 +181,7 @@ void VoltageTuning::run()
 
                         auto defaultAna = (static_cast<size_t>(RD53Shared::setBits(nBitsAna) * STARTfraction) << nBitsDig) | vdddNewSetting;
                         RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultAna);
-                        float initAna = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg) * CONVERSIONfactor;
+                        float initAna = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg, true) * CONVERSIONfactor;
 
                         std::vector<int> scanrangeAna = VoltageTuning::createScanRange(cChip, "VOLTAGE_TRIM_ANA", targetAna_, initAna);
                         isUpward                      = false;
@@ -193,7 +193,7 @@ void VoltageTuning::run()
                             auto vTrimDecimal = (scanrangeAna[it] << nBitsDig) | vdddNewSetting;
 
                             RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
-                            float readingAna = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg) * CONVERSIONfactor;
+                            float readingAna = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg, true) * CONVERSIONfactor;
                             float diff       = fabs(readingAna - targetAna_);
 
                             trimVoltageAna.push_back(diff);
@@ -226,8 +226,8 @@ void VoltageTuning::run()
 
                         RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", finalDecimal);
 
-                        auto finalVDDD = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg) * CONVERSIONfactor;
-                        auto finalVDDA = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg) * CONVERSIONfactor;
+                        auto finalVDDD = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg, true) * CONVERSIONfactor;
+                        auto finalVDDA = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg, true) * CONVERSIONfactor;
 
                         LOG(INFO) << CYAN << "Final voltage readings after tuning" << RESET;
                         LOG(INFO) << BOLDBLUE << "\t--> Final VDDD reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDD << BOLDBLUE << " V" << RESET;
@@ -292,7 +292,7 @@ void VoltageTuning::run()
                     RD53ChipInterface->MaskAllChannels(cChip, true);
                     LOG(INFO) << GREEN << "Disabling all pixels for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
                               << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    auto allDisabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURR");
+                    auto allDisabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURR", true);
 
                     // #######################
                     // # Enable all channels #
@@ -306,7 +306,7 @@ void VoltageTuning::run()
                     RD53ChipInterface->MaskAllChannels(cChip, false);
                     LOG(INFO) << GREEN << "Enabling all pixels for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
                               << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    auto allEnabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURR");
+                    auto allEnabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURR", true);
 
                     // ##################################
                     // # Restore original configuration #

@@ -1892,7 +1892,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
 
     // Enable VDD monitor
     ConfigureInternalMonitoring(pChip, true);
-    // perform conversion
+    // Perform conversion
     float cVadc = AdcGetVin(pChip, pPowerSupply, "VREF/2", 0, pSamples);
 
     float cVsup = cVadc * (pChip->getADCCalibrationData()["VDDMON_SLOPE"] + pChip->getTemperature() * pChip->getADCCalibrationData()["VDDMON_SLOPE_TEMP"]);
