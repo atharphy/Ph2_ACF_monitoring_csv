@@ -34,14 +34,8 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
         idOffset   = 8;
     }
 
-    HistContainer<TH2F> patternMatchingEfficiencyHistogram("PatternMatchingEfficiencyCIC",
-                                                   "Pattern Matching Efficiency CIC",
-                                                   NUMBER_OF_CIC_PORTS,
-                                                   idOffset - 0.5,
-                                                   idOffset + NUMBER_OF_CIC_PORTS - 0.5,
-                                                   2,
-                                                   -0.5,
-                                                   1.5);
+    HistContainer<TH2F> patternMatchingEfficiencyHistogram(
+        "PatternMatchingEfficiencyCIC", "Pattern Matching Efficiency CIC", NUMBER_OF_CIC_PORTS, idOffset - 0.5, idOffset + NUMBER_OF_CIC_PORTS - 0.5, 2, -0.5, 1.5);
     patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
@@ -50,9 +44,7 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
     patternMatchingEfficiencyHistogram.fTheHistogram->SetMaximum(1);
     patternMatchingEfficiencyHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPatternMatchingEfficiencyHistogramContainer, patternMatchingEfficiencyHistogram);
-
 }
-
 
 //========================================================================================================================
 void DQMHistogramOTverifyCICdataWord::fillPatternMatchingEfficiencyResults(DetectorDataContainer& thePatternMatchingEfficiencyContainer)
@@ -67,13 +59,15 @@ void DQMHistogramOTverifyCICdataWord::fillPatternMatchingEfficiencyResults(Detec
 
                 auto thePatternMatchingEfficiencyVector = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>();
 
-                TH2F* patternMatchingEfficiencyHistogram =
-                    fPatternMatchingEfficiencyHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH2F* patternMatchingEfficiencyHistogram = fPatternMatchingEfficiencyHistogramContainer.getObject(board->getId())
+                                                               ->getObject(opticalGroup->getId())
+                                                               ->getObject(hybrid->getId())
+                                                               ->getSummary<HistContainer<TH2F>>()
+                                                               .fTheHistogram;
 
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    for(size_t cLineId = 0; cLineId < 2; cLineId++)
-                    { patternMatchingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, thePatternMatchingEfficiencyVector[chipId][cLineId]); }
+                    for(size_t cLineId = 0; cLineId < 2; cLineId++) { patternMatchingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, thePatternMatchingEfficiencyVector[chipId][cLineId]); }
                 }
             }
         }
@@ -85,7 +79,6 @@ void DQMHistogramOTverifyCICdataWord::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -104,8 +97,8 @@ bool DQMHistogramOTverifyCICdataWord::fill(std::string& inputStream)
     {
         std::cout << "Matched OTverifyCICdataWord PatternMatchingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
-            thePatternMatchinEfficiencyContainerSerialization
-                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>, EmptyContainer>(fDetectorContainer);
+            thePatternMatchinEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>, EmptyContainer>(
+                fDetectorContainer);
         fillPatternMatchingEfficiencyResults(theDetectorData);
         return true;
     }

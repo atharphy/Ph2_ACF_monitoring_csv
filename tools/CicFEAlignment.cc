@@ -231,14 +231,14 @@ uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
-                        auto                 cInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                        std::vector<uint8_t> cBendLUT   = cInterface->readLUT(static_cast<ReadoutChip*>(cChip));
-                        auto                 cIterator  = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
+                        auto                                 cInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                        std::vector<uint8_t>                 cBendLUT   = cInterface->readLUT(static_cast<ReadoutChip*>(cChip));
+                        auto                                 cIterator  = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
                         std::vector<std::pair<uint8_t, int>> theStubAddressAndBendVector;
                         if(cIterator != cBendLUT.end())
                         {
-                            int              cPosition    = std::distance(cBendLUT.begin(), cIterator);
-                            double           cBend_strips = -7. + 0.5 * cPosition;
+                            int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
+                            double cBend_strips = -7. + 0.5 * cPosition;
                             for(const auto theStub: cStubs) theStubAddressAndBendVector.push_back({theStub, static_cast<int>(cBend_strips * 2)});
                             cInterface->injectStubs(static_cast<ReadoutChip*>(cChip), theStubAddressAndBendVector);
                         }

@@ -1123,14 +1123,11 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                         continue;
                     } // with noise .. all would be on/off
 
-                    uint8_t              cSeed = 2 * (cChip->getId() + 1);
+                    uint8_t                              cSeed = 2 * (cChip->getId() + 1);
                     std::vector<std::pair<uint8_t, int>> cSeeds{{cSeed, 0}};
 
                     // if( cChip->getId()%2 == 0 )
-                    if(std::find(pActiveCbcs.begin(), pActiveCbcs.end(), cChip->getId()) == pActiveCbcs.end())
-                    {
-                        cSeeds.clear();
-                    }
+                    if(std::find(pActiveCbcs.begin(), pActiveCbcs.end(), cChip->getId()) == pActiveCbcs.end()) { cSeeds.clear(); }
 
                     // retrieve hit list from stubs
                     std::vector<uint8_t> cCompleteHitList;
@@ -1335,7 +1332,7 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
                             continue;
                         }
 
-                        uint8_t              cSeed = 10 + 2 * (cChip->getId() + 1);
+                        uint8_t                              cSeed = 10 + 2 * (cChip->getId() + 1);
                         std::vector<std::pair<uint8_t, int>> cSeeds{{cSeed, 0}};
 
                         for(const auto theSeedAndBend: cSeeds)

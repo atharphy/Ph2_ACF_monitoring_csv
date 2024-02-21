@@ -6540,7 +6540,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                     if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) != pChipIds.end())
                     {
                         // first pattern - stubs lines 0,1,3
-                        cReadoutChipInterface->injectStubs(cReadoutChip, {{10,0}}, true);
+                        cReadoutChipInterface->injectStubs(cReadoutChip, {{10, 0}}, true);
                         // switch off HitOr
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "HitOr", 0);
                         // enable stub logic

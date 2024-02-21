@@ -158,7 +158,7 @@ class CicInterface : public ChipInterface
                 return fFeMappingPSL;
         }
     }
-    
+
   private:
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;

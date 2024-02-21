@@ -1,18 +1,18 @@
 #include "Utils/PatternMatcher.h"
 #include <iostream>
 
-PatternMatcher::PatternMatcher(){}
+PatternMatcher::PatternMatcher() {}
 
-PatternMatcher::~PatternMatcher(){}
+PatternMatcher::~PatternMatcher() {}
 
 void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, uint8_t thePatternBitLenght)
 {
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << std::hex << thePattern << " " << thePatternMask << std::dec << " " << +thePatternBitLenght << std::endl;
-    
-    uint8_t numberOfBitsInWord = (sizeof(uint32_t))*8;
+
+    uint8_t numberOfBitsInWord = (sizeof(uint32_t)) * 8;
     uint8_t availableBitNumber = numberOfBitsInWord - fPatternNumberOfBits % numberOfBitsInWord;
-    if(availableBitNumber == numberOfBitsInWord)  fPatternAndMaskVector.push_back({0, 0});
-    auto& thePatternCurrentWord     = fPatternAndMaskVector.back();
+    if(availableBitNumber == numberOfBitsInWord) fPatternAndMaskVector.push_back({0, 0});
+    auto& thePatternCurrentWord = fPatternAndMaskVector.back();
 
     if(availableBitNumber >= thePatternBitLenght)
     {
@@ -36,7 +36,6 @@ void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, 
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Pattern  -> ";
     // for(const auto word : fPatternAndMaskVector) std::cout << std::hex << word.first << std::dec << " ";
     // std::cout << std::endl;
-
 }
 
 bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
@@ -49,14 +48,13 @@ bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
     // for(const auto word : fPatternAndMaskVector) std::cout << std::hex << word.first << std::dec << " ";
     // std::cout << std::endl;
 
-    for(size_t patternIndex = 0; patternIndex<fPatternAndMaskVector.size(); ++patternIndex)
+    for(size_t patternIndex = 0; patternIndex < fPatternAndMaskVector.size(); ++patternIndex)
     {
         auto thePatternAndMaskWord = fPatternAndMaskVector[patternIndex];
-        auto theIncomigMaskedWord = theWordVector[patternIndex] & thePatternAndMaskWord.second;
-        auto thePatternMaskedWord = thePatternAndMaskWord.first & thePatternAndMaskWord.second;
+        auto theIncomigMaskedWord  = theWordVector[patternIndex] & thePatternAndMaskWord.second;
+        auto thePatternMaskedWord  = thePatternAndMaskWord.first & thePatternAndMaskWord.second;
         if(theIncomigMaskedWord != thePatternMaskedWord) return false;
     }
 
     return true;
 }
-

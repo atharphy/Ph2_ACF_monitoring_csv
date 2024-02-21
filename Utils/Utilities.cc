@@ -10,9 +10,9 @@
 */
 
 #include "Utils/Utilities.h"
-#include <boost/math/special_functions/binomial.hpp>
-#include "Utils/easylogging++.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
+#include <boost/math/special_functions/binomial.hpp>
 
 long getTimeTook(struct timeval& pStart, bool pMili)
 {
@@ -331,12 +331,12 @@ std::string getTimeStampString()
     return time_str;
 }
 
-std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,  uint8_t numberOfBytesInSinglePacket, uint8_t numberOfBytesToSkip) 
+std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfBytesToSkip)
 {
     uint16_t mask = 0xFF;
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
-    
-    int maxWritePatternShift = sizeof(uint32_t) / numberOfBytesInSinglePacket - 1;
+
+    int                   maxWritePatternShift = sizeof(uint32_t) / numberOfBytesInSinglePacket - 1;
     std::vector<uint32_t> longIntWordVector;
 
     uint32_t longIntWord             = 0;
@@ -375,9 +375,9 @@ std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector,
     {
         std::vector<uint32_t> longIntWordVector = applyByteShift(theWordVector, numberOfBytesInSinglePacket, numberOfBytesToSkip);
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] byteshift = " << +numberOfBytesToSkip << " pattern : " << getPatternPrintout(longIntWordVector) << std::hex << std::endl;
-        for(size_t wordIndex=0; wordIndex<longIntWordVector.size(); ++wordIndex)
+        for(size_t wordIndex = 0; wordIndex < longIntWordVector.size(); ++wordIndex)
         {
-            if((longIntWordVector[wordIndex] & patternMask) == pattern) return {true, wordIndex*numberOfBytesInWord + numberOfBytesToSkip};
+            if((longIntWordVector[wordIndex] & patternMask) == pattern) return {true, wordIndex * numberOfBytesInWord + numberOfBytesToSkip};
         }
     }
 

@@ -230,9 +230,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
 
 void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os)
 {
-    std::string cFilePath       = "";
+    std::string cFilePath         = "";
     std::string theConfigFilePath = "";
-    uint32_t    cOpticalGroupId = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
+    uint32_t    cOpticalGroupId   = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     uint32_t    cFMCId;
     std::string inputFMCid = pOpticalGroupNode.attribute(OPTICALGROUP_FMCID_ATTRIBUTE_NAME).value();
     if(inputFMCid == OPTICALGROUP_FMCID_ATTRIBUTE_L12_VALUE)

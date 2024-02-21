@@ -31,7 +31,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <vector>
-#include <bitset>
 
 #include <tuple> // new
 
@@ -208,16 +207,16 @@ std::bitset<N> reorderBytes(const std::vector<uint32_t> theWordVector, uint8_t w
         abort();
     }
     std::bitset<N> reorderedByteVector;
-    uint16_t mask = 0xFF;
+    uint16_t       mask = 0xFF;
     if(wordSize == 2) mask = 0xFFFF;
 
-    size_t numberOfTotalBytes = theWordVector.size()*sizeof(uint32_t) - wordSize;
-    
+    size_t numberOfTotalBytes = theWordVector.size() * sizeof(uint32_t) - wordSize;
+
     for(size_t theWordIndex = 0; theWordIndex < theWordVector.size(); ++theWordIndex)
     {
         for(uint8_t theByteShift = 0; theByteShift < sizeof(uint32_t); theByteShift += wordSize)
         {
-            std::bitset<N> byteValue {((theWordVector[theWordIndex] >> (theByteShift * 8)) & mask)};
+            std::bitset<N> byteValue{((theWordVector[theWordIndex] >> (theByteShift * 8)) & mask)};
             byteValue = byteValue << numberOfTotalBytes * 8;
             numberOfTotalBytes -= wordSize;
             reorderedByteVector |= byteValue;
@@ -263,7 +262,7 @@ std::string getPatternPrintout(const std::vector<T> theWordVector, uint8_t wordS
     return thePattern.str();
 }
 
-std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,  uint8_t numberOfBytesInSinglePacket, uint8_t numberOfBytesToSkip);
+std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfBytesToSkip);
 
 std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask);
 

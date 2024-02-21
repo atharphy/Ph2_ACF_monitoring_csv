@@ -464,8 +464,8 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
                 double cBend_strips = -7. + 0.5 * cPosition;
                 // LOG(DEBUG) << BOLDBLUE << "Bend code of " << +cBendCode_phAlign << " found in register " << cPosition << " so a bend of " << cBend_strips << RESET;
 
-                uint8_t              cSuccess = 0x00;
-                int theBendValue = static_cast<int>(cBend_strips * 2);
+                uint8_t                              cSuccess     = 0x00;
+                int                                  theBendValue = static_cast<int>(cBend_strips * 2);
                 std::vector<std::pair<uint8_t, int>> cSeedAndBendList{{0x82, theBendValue}, {0x8E, theBendValue}, {0x9E, theBendValue}};
                 static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theReadoutChip, cSeedAndBendList);
                 // first align lines with stub seeds
@@ -494,8 +494,8 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
 
                 cAligned = (cAligned && cSuccess == 0x1F);
                 LOG(INFO) << BOLDBLUE << "Success register for this chip is " << std::bitset<8>(cSuccess) << RESET;
-                LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>(cSeedAndBendList[0].first) << ", " << std::bitset<8>(cSeedAndBendList[1].first) << ", " << std::bitset<8>(cSeedAndBendList[2].first) << " on stub lines  0, 1 and 2."
-                          << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>(cSeedAndBendList[0].first) << ", " << std::bitset<8>(cSeedAndBendList[1].first) << ", "
+                          << std::bitset<8>(cSeedAndBendList[2].first) << " on stub lines  0, 1 and 2." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((cBendCode_phAlign << 4) | cBendCode_phAlign) << " on stub line  4." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((1 << 7) | cBendCode_phAlign) << " on stub line  5." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "After alignment of last stub line ... stub lines 0-5: " << RESET;

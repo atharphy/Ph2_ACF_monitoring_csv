@@ -276,9 +276,9 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
 
 bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
 {
-    uint32_t header     = 0x0ffffffe;
-    uint32_t headerMask = 0xffffffff;
-    std::pair<bool, size_t> isFoundAndWhere =  matchPattern(theWordVector, numberOfBytesInSinglePacket, header, headerMask);
+    uint32_t                header          = 0x0ffffffe;
+    uint32_t                headerMask      = 0xffffffff;
+    std::pair<bool, size_t> isFoundAndWhere = matchPattern(theWordVector, numberOfBytesInSinglePacket, header, headerMask);
     return isFoundAndWhere.first;
 }
 

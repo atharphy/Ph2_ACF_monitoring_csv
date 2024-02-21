@@ -187,12 +187,9 @@ bool CbcInterface::injectClusters(ReadoutChip* pCbc, std::vector<std::pair<uint8
     theChannelMask.disableAllChannels();
     std::vector<uint8_t> cActiveChannels(0);
     std::vector<uint8_t> cDisabledChannels(0);
-    for(const auto& theClusterAddressAndWidth : theClusterAddressAndWidthVector)
+    for(const auto& theClusterAddressAndWidth: theClusterAddressAndWidthVector)
     {
-        for(size_t strip=0; strip<theClusterAddressAndWidth.second; ++strip)
-        {
-            theChannelMask.enableChannel(theClusterAddressAndWidth.first + 2*strip);
-        }
+        for(size_t strip = 0; strip < theClusterAddressAndWidth.second; ++strip) { theChannelMask.enableChannel(theClusterAddressAndWidth.first + 2 * strip); }
     }
 
     uint16_t cVcth = 1023;
@@ -208,7 +205,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<std::pair<uint8_t,
     cChannelMask.disableAllChannels();
     std::vector<uint8_t> cActiveChannels(0);
     std::vector<uint8_t> cDisabledChannels(0);
-    for(const auto& theStubAddressesAndBend : theStubAddressesAndBendVector)
+    for(const auto& theStubAddressesAndBend: theStubAddressesAndBendVector)
     {
         std::vector<uint8_t> cPattern = this->stubInjectionPattern(pCbc, theStubAddressesAndBend.first, theStubAddressesAndBend.second);
         // for(auto cChannel: cPattern) cChannelMask.enableChannel(cChannel);
@@ -876,7 +873,7 @@ void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
         // seeds on stub line 0 , stub line 1
         // bends on stub line 2
         LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 0,1 and 2 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
-        int theBendValue = static_cast<int>(cBend_strips * 2);
+        int                                  theBendValue = static_cast<int>(cBend_strips * 2);
         std::vector<std::pair<uint8_t, int>> stubBendAndValueFirstStep{{0x55, theBendValue}, {0xAA, theBendValue}};
         injectStubs(static_cast<ReadoutChip*>(pChip), stubBendAndValueFirstStep);
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
