@@ -145,6 +145,20 @@ class CicInterface : public ChipInterface
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1> retrieveExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip, const GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>& theWordAlignmentValues);
 
+    std::vector<uint8_t> getMapping(Ph2_HwDescription::Chip* pChip)
+    {
+        bool c2S = ((pChip->getReg("FE_CONFIG") & 0x01) == 0);
+        if(c2S)
+            return fFeMapping2S;
+        else // a bit too many else, but easier to read
+        {
+            if(pChip->getHybridId() % 2 == 0)
+                return fFeMappingPSR;
+            else
+                return fFeMappingPSL;
+        }
+    }
+
   private:
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;
@@ -164,20 +178,6 @@ class CicInterface : public ChipInterface
     uint16_t fWriteErrors        = 0;
     uint16_t fReW                = 0;
     uint16_t fReWR               = 0;
-
-    std::vector<uint8_t> getMapping(Ph2_HwDescription::Chip* pChip)
-    {
-        bool c2S = ((pChip->getReg("FE_CONFIG") & 0x01) == 0);
-        if(c2S)
-            return fFeMapping2S;
-        else // a bit too many else, but easier to read
-        {
-            if(pChip->getHybridId() % 2 == 0)
-                return fFeMappingPSR;
-            else
-                return fFeMappingPSL;
-        }
-    }
 
   protected:
     std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};  // Index CIC FE Id , Value Hybrid FE Id

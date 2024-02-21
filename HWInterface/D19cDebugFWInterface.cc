@@ -69,7 +69,8 @@ std::vector<uint32_t> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPri
 
     return cWords;
 }
-std::pair<std::vector<std::string>, std::vector<std::vector<uint32_t>>> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
+
+std::vector<std::vector<uint32_t>> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
 {
     LOG(DEBUG) << BOLDBLUE << "D19cDebugFWInterface::StubDebug ...." << RESET;
 
@@ -123,7 +124,7 @@ std::pair<std::vector<std::string>, std::vector<std::vector<uint32_t>>> D19cDebu
         // cStrLength = cOutput.length();
         cLine++;
     } while(cLine < pNlines);
-    return std::make_pair(cLines, lineWordVector);
+    return lineWordVector;
 }
 std::vector<std::string> D19cDebugFWInterface::ScopeStubLines(bool pWithTestPulse)
 {

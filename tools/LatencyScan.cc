@@ -1007,7 +1007,7 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
                         if(cMaskOthers && cChip->getId() == 0)
                         {
                             uint8_t cFirstSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 0) / 2.))); // in half strips
-                            cReadoutChipInterface->injectStubs(cChip, {cFirstSeed}, {0}, false);
+                            cReadoutChipInterface->injectStubs(cChip, {{cFirstSeed, 0}}, false);
                         }
                         else if(cMaskOthers)
                         {
