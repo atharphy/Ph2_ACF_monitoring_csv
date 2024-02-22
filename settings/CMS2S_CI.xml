@@ -29,11 +29,11 @@
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" configfile="CBC3_default.txt" />
-            <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="0" enable="1" configfile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configfile="CBC3_default.txt" />
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <CIC Id="8" enable="1" configfile="CIC_default.txt" />
         </Hybrid>
     </OpticalGroup>
   </BeBoard>
