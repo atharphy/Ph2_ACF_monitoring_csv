@@ -47,7 +47,7 @@
             <CIC2 Id="8" enable="1" configFile="CIC2_PS.txt" />
         </Hybrid>
         
-        <Hybrid Id="1" enable="0" reset="1" invertClock="0">
+        <Hybrid Id="1" enable="1" reset="1" invertClock="0">
             <Global>
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
