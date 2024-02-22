@@ -33,13 +33,13 @@
             </Global>
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="0" configFile="SSA.txt" />
+            <SSA Id="0" enable="1" configFile="SSA.txt" />
           
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="8" configFile="MPA.txt" />
+            <MPA Id="8" enable="1" configFile="MPA.txt" />
 
 	    <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configFile="CIC_default.txt" />
+            <CIC Id="8" enable="1" configFile="CIC_default.txt" />
         </Hybrid>
 
 	<Hybrid Id="1" enable="0" reset="1">
@@ -62,27 +62,27 @@
             </Global>
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA Id="0" configFile="SSA.txt" />
-            <SSA Id="1" configFile="SSA.txt" />
-            <SSA Id="2" configFile="SSA.txt" />
-            <SSA Id="3" configFile="SSA.txt" />
-            <SSA Id="4" configFile="SSA.txt" />
-            <SSA Id="5" configFile="SSA.txt" />
-            <SSA Id="6" configFile="SSA.txt" />
-            <SSA Id="7" configFile="SSA.txt" /> 
+            <SSA Id="0" enable="1" configFile="SSA.txt" />
+            <SSA Id="1" enable="1" configFile="SSA.txt" />
+            <SSA Id="2" enable="1" configFile="SSA.txt" />
+            <SSA Id="3" enable="1" configFile="SSA.txt" />
+            <SSA Id="4" enable="1" configFile="SSA.txt" />
+            <SSA Id="5" enable="1" configFile="SSA.txt" />
+            <SSA Id="6" enable="1" configFile="SSA.txt" />
+            <SSA Id="7" enable="1" configFile="SSA.txt" /> 
           
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA Id="8" configFile="MPA.txt" />
-            <MPA Id="9" configFile="MPA.txt" />
-            <MPA Id="10" configFile="MPA.txt" />
-            <MPA Id="11" configFile="MPA.txt" />
-            <MPA Id="12" configFile="MPA.txt" />
-            <MPA Id="13" configFile="MPA.txt" />
-            <MPA Id="14" configFile="MPA.txt" />
-            <MPA Id="15" configFile="MPA.txt" /> 
+            <MPA Id="8" enable="1" configFile="MPA.txt" />
+            <MPA Id="9" enable="1" configFile="MPA.txt" />
+            <MPA Id="10" enable="1" configFile="MPA.txt" />
+            <MPA Id="11" enable="1" configFile="MPA.txt" />
+            <MPA Id="12" enable="1" configFile="MPA.txt" />
+            <MPA Id="13" enable="1" configFile="MPA.txt" />
+            <MPA Id="14" enable="1" configFile="MPA.txt" />
+            <MPA Id="15" enable="1" configFile="MPA.txt" /> 
 
 	    <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configFile="CIC_default.txt" />
+            <CIC Id="8" enable="1" configFile="CIC_default.txt" />
         </Hybrid>
 
     </OpticalGroup>

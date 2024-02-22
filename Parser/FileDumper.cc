@@ -253,6 +253,7 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
 
     pugi::xml_node theReadoutChipNode                                     = theMotherNode.append_child(theReadoutChipNodeName.c_str());
     theReadoutChipNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME)         = std::to_string(theReadoutChip->getId()).c_str();
+    theReadoutChipNode.append_attribute(COMMON_ENABLE_ATTRIBUTE_NAME)     = "1";
     theReadoutChipNode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
 }
 

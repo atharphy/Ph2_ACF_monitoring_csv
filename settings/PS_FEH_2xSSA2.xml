@@ -10,14 +10,14 @@
         </Global>
 
         <SSA_Files path="./settings/SSAFiles/" />
-        <SSA2 Id="0" configFile="SSA2.txt" />
-        <SSA2 Id="1" configFile="SSA2.txt" />
-        <SSA2 Id="2" configFile="SSA2.txt" />
+        <SSA2 Id="0" enable="1" configFile="SSA2.txt" />
+        <SSA2 Id="1" enable="1" configFile="SSA2.txt" />
+        <SSA2 Id="2" enable="1" configFile="SSA2.txt" />
         <!-- <SSA2 Id="3" configFile="SSA2.txt" /> -->
-        <SSA2 Id="4" configFile="SSA2.txt" />
-        <SSA2 Id="5" configFile="SSA2.txt" />
-        <SSA2 Id="6" configFile="SSA2.txt" />
-        <SSA2 Id="7" configFile="SSA2.txt" />
+        <SSA2 Id="4" enable="1" configFile="SSA2.txt" />
+        <SSA2 Id="5" enable="1" configFile="SSA2.txt" />
+        <SSA2 Id="6" enable="1" configFile="SSA2.txt" />
+        <SSA2 Id="7" enable="1" configFile="SSA2.txt" />
     </Hybrid>
     </OpticalGroup>
 

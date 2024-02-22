@@ -232,28 +232,28 @@ class BeBoardInterface
     // ########################
     // # Monitoring functions #
     // ########################
-    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)
+    void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args, bool silentRunning = false)
     {
         std::lock_guard<std::recursive_mutex> theGuard(theMtx);
-        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args);
+        static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args, silentRunning);
     }
 
-    float ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::string& arg)
+    float ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::string& arg, bool silentRunning = false)
     {
         std::lock_guard<std::recursive_mutex> theGuard(theMtx);
-        return static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, arg);
+        return static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, arg, silentRunning);
     }
 
-    float ReadHybridVoltageMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip)
+    float ReadHybridVoltageMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false)
     {
         std::lock_guard<std::recursive_mutex> theGuard(theMtx);
-        return pReadoutChipInterface->ReadHybridVoltage(pChip);
+        return pReadoutChipInterface->ReadHybridVoltage(pChip, silentRunning);
     }
 
-    float ReadHybridTemperatureMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip)
+    float ReadHybridTemperatureMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false)
     {
         std::lock_guard<std::recursive_mutex> theGuard(theMtx);
-        return pReadoutChipInterface->ReadHybridTemperature(pChip);
+        return pReadoutChipInterface->ReadHybridTemperature(pChip, silentRunning);
     }
 
     /*!
