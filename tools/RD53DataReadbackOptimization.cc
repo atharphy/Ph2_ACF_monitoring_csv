@@ -220,7 +220,7 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                     // # Fill TAP container and download new DAC values #
                     // ##################################################
                     theTAPContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regVal);
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regVal, false);
                 }
 }
 

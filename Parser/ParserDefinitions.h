@@ -53,6 +53,7 @@
 #define COMMON_FILENAME_ATTRIBUTE_NAME "fileName"
 #define COMMON_CONFIGFILE_ATTRIBUTE_NAME "configFile"
 #define COMMON_NAME_ATTRIBUTE_NAME "name"
+#define COMMON_ENABLE_ATTRIBUTE_NAME "enable"
 
 // BeBoard attubutes
 #define BEBOARD_TYPE_ATTRIBUTE_NAME "boardType"
