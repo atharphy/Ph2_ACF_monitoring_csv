@@ -1450,8 +1450,8 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
 
         if(!cCalibrationLoaded)
         {
-            LOG(WARNING) << BOLDRED << "[lpGBTInterface::LoadCalibrationData] Calibration data not available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED
-                         << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId() << BOLDRED << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
+            LOG(WARNING) << BOLDRED << "Calibration data not available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW
+                         << +pChip->getOpticalGroupId() << BOLDRED << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
             LOG(INFO) << BOLDBLUE << "\t--> Using default calibration data" << RESET;
         }
     }
