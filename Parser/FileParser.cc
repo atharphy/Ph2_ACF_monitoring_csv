@@ -1978,7 +1978,7 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
     pugi::xml_node theMonitorNode            = doc.child(HW_DESCRIPTION_NODE_NAME).child(MONITORINGSETTINGS_NODE_NAME).child(MONITORING_NODE_NAME);
     theDetectorMonitorConfig.fMonitoringType = theMonitorNode.attribute(MONITORING_NODE_TYPE_ATTRIBUTE_NAME).value();
     std::string enableString                 = theMonitorNode.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value();
-    std::string silenRunString               = theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME).value();
+    std::string silenRunString               = (theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME) ? theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME).value() : "0");
 
     if(enableString == "1")
         theDetectorMonitorConfig.fEnable = true;
