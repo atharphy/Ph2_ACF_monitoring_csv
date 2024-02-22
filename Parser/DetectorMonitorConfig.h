@@ -26,6 +26,7 @@ struct DetectorMonitorConfig
     int         fSleepTimeMs{1000};
     std::string fMonitoringType{MONITORING_NODE_TYPE_ATTRIBUTE_NONE_VALUE};
     bool        fEnable{false};
+    bool        fSilentRunning{false};
 
     void addElementToMonitor(const std::string& chipName, const std::string& registerName, const bool enable)
     {
