@@ -119,12 +119,12 @@ class CbcInterface : public ReadoutChipInterface
     std::vector<uint8_t> stubInjectionPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend);
     bool                 selectLogicMode(Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerify = true);
     bool                 enableHipSuppression(Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerify = true);
-    bool                 injectStubs(Ph2_HwDescription::ReadoutChip* pCbc,
-                                     std::vector<uint8_t>            pStubAddresses,
-                                     std::vector<int>                pStubBends,
-                                     bool                            pUseNoise   = true,
-                                     bool                            pUseOffsets = false,
-                                     uint8_t                         pAllOff     = 0xFF); // address + bend in units of half strips
+    bool                 injectClusters(Ph2_HwDescription::ReadoutChip* pCbc, std::vector<std::pair<uint8_t, uint8_t>> theClusterAddressAndWidthVector);
+    bool                 injectStubs(Ph2_HwDescription::ReadoutChip*      pCbc,
+                                     std::vector<std::pair<uint8_t, int>> theStubAddressesAndBendVector,
+                                     bool                                 pUseNoise   = true,
+                                     bool                                 pUseOffsets = false,
+                                     uint8_t                              pAllOff     = 0xFF); // address + bend in units of half strips
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc, uint8_t pMode = 0);
     uint8_t              GetLastPage(Ph2_HwDescription::Chip* pCbc);

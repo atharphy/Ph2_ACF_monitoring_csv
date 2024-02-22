@@ -954,9 +954,9 @@ bool CicInterface::SelectOutput(Chip* pChip, bool pFixedPattern)
 }
 bool CicInterface::SetSparsification(Chip* pChip, uint8_t pEnable)
 {
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
+    std::string cRegName  = "FE_CONFIG";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pEnable : (cRegValue & 0x2F) | (pEnable << 4);
+    uint16_t    cValue    = (cRegValue & 0x2F) | (pEnable << 4);
     return this->WriteChipReg(pChip, cRegName, cValue);
 }
 bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEnable)

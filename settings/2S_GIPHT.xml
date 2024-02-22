@@ -11,7 +11,7 @@
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
 
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1_2S.txt">
+        <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
           <Settings
           />
           <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -28,17 +28,17 @@
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="1" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="2" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="3" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="4" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="5" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="6" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="7" enable="1" configfile="CBC3_default.txt" /> 
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" enable="1" configfile="CIC2_2S.txt" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
         </Hybrid>
         <Hybrid Id="1" enable="1" reset="1">
             <Global>
@@ -52,17 +52,17 @@
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="1" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="2" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="3" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="4" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="5" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="6" enable="1" configfile="CBC3_default.txt" />
-            <CBC Id="7" enable="1" configfile="CBC3_default.txt" /> 
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" enable="1" configfile="CIC2_2S.txt" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
         </Hybrid>
     </OpticalGroup>
   </BeBoard>
@@ -154,6 +154,7 @@
 
     <Setting name="OTCICphaseAlignmentNumberOfAlignmentIterations">100</Setting>
     <Setting name="OTCICphaseAlignmentMinLockingSuccessRate">0.95</Setting>
+    <Setting name="OTverifyCICdataWordNumberOfIterations">1000</Setting>
     
 </Settings>
 
