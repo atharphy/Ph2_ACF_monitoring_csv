@@ -189,29 +189,29 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
     {
         cReadBack = ReadChipReg(pChip, "FUSEStatus");
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEStatus = " << +cReadBack << RESET;
+        LOG(DEBUG) << GREEN << "lpgbt FUSEStatus = " << +cReadBack << RESET;
     }
     WriteChipReg(pChip, "FUSEBlowAddH", cFuseH);
     WriteChipReg(pChip, "FUSEBlowAddL", cFuseL);
 
-    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEBlowAddH = " << +cFuseH << RESET;
-    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEBlowAddL = " << +cFuseL << RESET;
+    LOG(DEBUG) << GREEN << "lpgbt FUSEBlowAddH = " << +cFuseH << RESET;
+    LOG(DEBUG) << GREEN << "lpgbt FUSEBlowAddL = " << +cFuseL << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesA");
     cResult   = cResult | (cReadBack);
-    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesA = " << +cReadBack << RESET;
+    LOG(DEBUG) << GREEN << "lpgbt FUSEValuesA = " << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesB");
     cResult   = cResult | (cReadBack << 8);
-    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesB = " << +cReadBack << RESET;
+    LOG(DEBUG) << GREEN << "lpgbt FUSEValuesB = " << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesC");
     cResult   = cResult | (cReadBack << 16);
-    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesC = " << +cReadBack << RESET;
+    LOG(DEBUG) << GREEN << "lpgbt FUSEValuesC = " << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesD");
     cResult   = cResult | (cReadBack << 24);
-    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesD = " << +cReadBack << RESET;
+    LOG(DEBUG) << GREEN << "lpgbt FUSEValuesD = " << +cReadBack << RESET;
 
     WriteChipReg(pChip, "FUSEControl", 0);
 
@@ -1469,15 +1469,15 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* p
     // # Estimate temperature using internal temperature sensor and uncalibrated VREF.
     // # WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
     // # Side effects:
-    // #    ADC configuration.
+    // #    ADC configuration
     // # Arguments:
-    // #    pResetTempSensor: Reset temperature sensor before using it.
+    // #    pResetTempSensor: Reset temperature sensor before using it
 
     // # Return:
-    // #    Temperature estimate in degree C.
+    // #    Temperature estimate in degree C
 
     uint8_t cVrefCode = (uint32_t)std::round(pChip->getADCCalibrationData()["VREF_OFFSET"]);
-    LOG(DEBUG) << BOLDGREEN << "Enable VREF at code: 0x" << std::hex << +cVrefCode << std::dec << " [LSB]" << RESET;
+    LOG(DEBUG) << GREEN << "Enable VREF at code: 0x" << BOLDYELLOW << std::hex << +cVrefCode << std::dec << RESET << GREEN << " LSB" << RESET;
 
     EnableInternalVref(pChip, true);
     SetVrefTune(pChip, cVrefCode);
@@ -1499,13 +1499,13 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* p
     for(uint8_t cIndx = 0; cIndx < 10; cIndx++)
     {
         uint16_t cAdcVal = ReadADC(pChip, "TEMP", "VREF/2", 0);
-        LOG(DEBUG) << BOLDGREEN << "Temperature readout: 0x" << std::hex << +cAdcVal << std::dec << " [LSB]" << RESET;
+        LOG(DEBUG) << GREEN << "Temperature readout: 0x" << BOLDYELLOW << std::hex << +cAdcVal << std::dec << RESET << GREEN << " LSB" << RESET;
 
         // Estimate the junction temperature
         cMeasurements.push_back(cAdcVal * pChip->getADCCalibrationData()["TEMPERATURE_UNCALVREF_SLOPE"] + pChip->getADCCalibrationData()["TEMPERATURE_UNCALVREF_OFFSET"]);
     }
     float cTemperature = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-    LOG(INFO) << BOLDGREEN << "Temperature estimate: " << cTemperature << " [C]" << RESET;
+    LOG(INFO) << GREEN << "LpGBT temperature estimate: " << BOLDYELLOW << std::setprecision(3) << cTemperature << std::setprecision(-1) << RESET << GREEN << " C" << RESET;
     return cTemperature;
 }
 
@@ -1523,7 +1523,7 @@ void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pE
     */
 
     uint8_t cCodeOpt = (uint32_t)std::round(pChip->getADCCalibrationData()["VREF_SLOPE"] * pChip->getTemperature() + pChip->getADCCalibrationData()["VREF_OFFSET"]);
-    LOG(INFO) << BOLDGREEN << "REFTune = 0x" << std::hex << +cCodeOpt << std::dec << RESET;
+    LOG(DEBUG) << GREEN << "REFTune = 0x" << BOLDYELLOW << std::hex << +cCodeOpt << std::dec << RESET;
     EnableInternalVref(pChip, pEnable);
     SetVrefTune(pChip, cCodeOpt);
 }
@@ -1555,14 +1555,14 @@ void lpGBTInterface::VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltage
     /*  """Set requested voltage at the output of the lpGBT voltage DAC.
 
         Prerequisites:
-            VREF should be tuned to 1V.
+            VREF should be tuned to 1V
 
         Arguments:
             pVoltageV: voltage in volts (0-1)
             pEnable: voltage DAC state
 
         Raises:
-            LpgbtOutOfRangeError: If the requested voltage cannot be achieved.
+            LpGBTOutOfRangeError: If the requested voltage cannot be achieved
     """ */
     if((pVoltageV > 1.) or (pVoltageV < 0.))
     {
@@ -1577,8 +1577,6 @@ void lpGBTInterface::VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltage
         LOG(ERROR) << BOLDRED << "VdacSetVout::_CdacCodeToCurrent: VDAC can not deliver requested voltage." << RESET;
         throw std::runtime_error(std::string("VDAC can not deliver requested voltage."));
     }
-    // lpgbt interface is missing a voltage DAC function (unused in tracker?)
-    // self.vdac_setup(dac_code, enable)
 }
 
 float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples)
@@ -1604,7 +1602,8 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::stri
     float cCalRes = ((pChip->getADCCalibrationData()[cAdcStr + "_SLOPE"] + pChip->getTemperature() * pChip->getADCCalibrationData()[cAdcStr + "_SLOPE_TEMP"]) * cResult +
                      pChip->getADCCalibrationData()[cAdcStr + "_OFFSET"] + pChip->getTemperature() * pChip->getADCCalibrationData()[cAdcStr + "_OFFSET_TEMP"]);
 
-    LOG(DEBUG) << BOLDGREEN << "Measured calibrated Vin for " << pADCInputP << " and " << pADCInputN << " is " << cCalRes << " [V]" << RESET;
+    LOG(DEBUG) << GREEN << "Measured calibrated Vin for " << BOLDYELLOW << pADCInputP << RESET << GREEN << " and " << BOLDYELLOW << pADCInputN << RESET << GREEN << " is " << BOLDYELLOW << cCalRes
+               << RESET << GREEN << " V" << RESET;
     return cCalRes;
 }
 
@@ -1617,7 +1616,7 @@ float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::lpGBT* pChip, const 
             pCode: CDAC code
 
         Returns:
-            Estimate of the output current in Amps.
+            Estimate of the output current in Amps
     """ */
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
@@ -1632,14 +1631,14 @@ float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::lpGBT* pChip, const 
 
 float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, uint8_t pCode)
 {
-    /*  """Return estimate of the CDAC output resistance for specific code.
+    /* """Return estimate of the CDAC output resistance for specific code
 
         Arguments:
             pChannel: CDAC channel
             pCode: CDAC code
 
         Returns:
-            Estimate of the output resistance in Ohms.
+            Estimate of the output resistance in Ohms
     """ */
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
@@ -1657,17 +1656,17 @@ float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::lpGBT* pChip, const std
 
 uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, float pCurrentA)
 {
-    /*  """Return optimum CDAC code for the requested current (in amps)
+    /* """Return optimum CDAC code for the requested current (in amps)
 
         Arguments:
             pChannel: CDAC channel
-            pCurrentA: Output current [A]
+            pCurrentA: Output current in Amps
 
         Returns:
             The optimum CDAC code
 
         Raises:
-            LpgbtOutOfRangeError: If the requested current cannot be achieved.
+            LpGBTOutOfRangeError: If the requested current cannot be achieved
     """ */
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
@@ -1702,19 +1701,19 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::lpGBT* 
         throw std::runtime_error(std::string("CDAC can not deliver requested current."));
     }
 
-    return (uint16_t)cCode;
+    return cCode;
 }
 
 void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, float pCurrentA)
 {
-    /*   """Configure the lpGBT current DAC.
+    /* """Configure the lpGBT current DAC
 
         Side effects:
-            Disable all other current sources.
+            Disable all other current sources
 
         Arguments:
             pChannel: ADC channel to connect to current DAC to
-            pCurrentA: Output current [A]
+            pCurrentA: Output current in Amps
     """ */
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
@@ -1769,11 +1768,11 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
        for maximum precision.
 
     Prerequisites:
-        VREF should be tuned to 1V.
+        VREF should be tuned to 1V
 
     Side effects:
-        ADC settings.
-        CDAC settings.
+        ADC settings
+        CDAC settings
 
     Arguments:
         pChannel: ADC channel to be used for the measurement
@@ -1824,10 +1823,10 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
 
 float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples, bool pResetTempSensor)
 {
-    /*  """Measure junction temperature.
+    /* """Measure junction temperature
 
         Prerequisites:
-            VREF should be tuned to 1V.
+            VREF should be tuned to 1V
 
         Side effects:
             ADC settings.
@@ -1840,7 +1839,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
             Temperature [C]
 
         Raises:
-            LpgbtException: in case the conversion timeout is exceeded
+            LpGBTException: in case the conversion timeout is exceeded
     """ */
     if(pResetTempSensor)
     {
@@ -1864,17 +1863,17 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
 
 float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples, bool pDisableMonitorAfterMeasurement)
 {
-    /*  """Measure power supply voltage.
+    /* """Measure power supply voltage
 
         Prerequisites:
-            VREF should be tuned to 1V.
+            VREF should be tuned to 1V
 
         Side effects:
-            ADC settings.
-            Settings of VDD monitors.
+            ADC settings
+            Settings of VDD monitors
 
         Arguments:
-            pPowerSupply: Power supply rail to be measured (VDDTX,
+            pPowerSupply: Power supply rail to be measured (VDDTX
                           VDDRX, VDD, VDDA)
             pSamples: how many conversions to perform
 
@@ -1882,7 +1881,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
             Calibrated reading of a power supply voltage in V
 
         Raises:
-            LpgbtException: in case the conversion timeout is exceeded
+            LpGBTException: in case the conversion timeout is exceeded
     """ */
     if(!(pPowerSupply != "VDDTX" or pPowerSupply != "VDDRX" or pPowerSupply != "VDD" or pPowerSupply != "VDDA"))
     {
@@ -1899,7 +1898,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
 
     // Disable VDD monitor (if requested)
     if(pDisableMonitorAfterMeasurement) { ConfigureInternalMonitoring(pChip, false); }
-    LOG(DEBUG) << BOLDGREEN << "lpGBTInterface::MeasurePowerSupplyVoltage: " << pPowerSupply << " " << cVsup << " V" << RESET;
+    LOG(DEBUG) << GREEN << "[lpGBTInterface::MeasurePowerSupplyVoltage] " << BOLDYELLOW << pPowerSupply << " " << cVsup << RESET << GREEN << " V" << RESET;
 
     return cVsup;
 }
