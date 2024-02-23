@@ -149,12 +149,13 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 void Physics::run()
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
+    Physics::draw();
 
     while(Tool::fKeepRunning == true)
     {
         RD53Event::decodedEvents.clear();
         Physics::analyze();
-        Physics::draw();
+        Physics::draw(false);
 
         if(strcmp(frontEnd->name, "SYNC") == 0) // @TMP@
             for(const auto cBoard: *fDetectorContainer)
@@ -186,7 +187,7 @@ void Physics::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    CalibBase::bookHistoSaveMetadata(histos);
+    if(saveData == true) CalibBase::bookHistoSaveMetadata(histos);
     Physics::fillHisto();
     histos->process();
 
