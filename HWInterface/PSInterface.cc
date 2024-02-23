@@ -161,4 +161,17 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     }
 }
 
+bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
+{
+    if(pPS->getFrontEndType() == FrontEndType::MPA2)
+    {
+        return theMPA2Interface->injectNoiseClusters(pPS, theClusterList);
+    }
+    else
+    {
+        return theSSA2Interface->injectNoiseClusters(pPS, theClusterList);
+    }
+}
+
+
 } // namespace Ph2_HwInterface

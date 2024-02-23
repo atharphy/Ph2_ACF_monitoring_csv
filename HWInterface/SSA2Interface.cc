@@ -1046,6 +1046,42 @@ bool SSA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 
     return success;
 }
-bool SSA2Interface::ConfigureChipOriginalMask(ReadoutChip* pSSA2, bool pVerify, uint32_t pBlockSize) { return true; }
-bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerify) { return true; }
+bool SSA2Interface::ConfigureChipOriginalMask(ReadoutChip* pSSA2, bool pVerify, uint32_t pBlockSize)
+{
+    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NCHANNELS>>();
+    return maskChannelGroup(pSSA2, allChannelEnabledGroup, pVerify);    
+}
+
+bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerify)
+{
+    return WriteChipRegBits(pSSA2, "ENFLAGS", mask ? 0 : 1, "mask_strip", 0x01, pVerify);
+}
+
+bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
+{
+    // This only works with synchronous counters by construction
+    bool success = true;
+    success &= WriteChipReg(pSSA2, "Bias_THDAC", 0);
+    success &= MaskAllChannels(pSSA2, true);
+
+
+    success &= WriteChipReg(pSSA2, "mask_strip", 0x01);
+
+    std::vector<std::pair<std::string, uint16_t>> theUnmaskRegisterList;
+    for(const auto& theCluster : theClusterList)
+    {
+        for(uint8_t stripIndex=0; stripIndex<std::get<2>(theCluster); ++stripIndex)
+        {
+            std::string registerName = "ENFLAGS_S" + std::to_string(std::get<0>(theCluster) + stripIndex + 1);
+            theUnmaskRegisterList.push_back({registerName, 1});
+        }
+    }
+
+    success &= WriteChipMultReg(pSSA2, theUnmaskRegisterList);
+
+    success &= WriteChipReg(pSSA2, "mask_strip", 0xFF);
+
+    return success;
+}
+
 } // namespace Ph2_HwInterface

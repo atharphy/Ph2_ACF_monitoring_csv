@@ -91,7 +91,7 @@ class MPA2Interface : public ReadoutChipInterface
 
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pMPA, bool pVerify, uint32_t pBlockSize);
     //
-    bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pMPA, bool mask, bool pVerify) { return true; }
+    bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pMPA, bool mask, bool pVerify = true);
 
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
     void                 Cleardata();
@@ -113,6 +113,7 @@ class MPA2Interface : public ReadoutChipInterface
     uint16_t             ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
 
     float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
+    bool     injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
 
   private:
     // pixelEnable bits

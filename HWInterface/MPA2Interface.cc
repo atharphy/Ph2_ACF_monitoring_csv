@@ -1354,4 +1354,50 @@ void MPA2Interface::Cleardata()
     // fBoardFW->Cleardata( );
 }
 
+bool MPA2Interface::MaskAllChannels(ReadoutChip* pMPA, bool mask, bool pVerify)
+{
+    return WriteChipRegBits(pMPA, "ENFLAGS_ALL", mask ? 0 : 1, "Mask_ALL", 0x01, pVerify);
+}
+
+
+bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
+{
+    // This only works with synchronous counters by construction
+    bool success = true;
+    success &= WriteChipReg(pMPA, "ENFLAGS_ALL", 0xa);
+    success &= WriteChipReg(pMPA, "Control_1", 0x00); 
+    success &= WriteChipReg(pMPA, "PixelControl_ALL", 0x1E); 
+    success &= Set_threshold(pMPA, 0);
+    success &= WriteChipReg(pMPA, "TrimDAC_ALL", 0x0);
+
+    success &= WriteChipReg(pMPA, "Mask_ALL", 0x01);
+
+    for(const auto& theCluster : theClusterList)
+    {
+        for(uint8_t rowIndex=0; rowIndex<std::get<2>(theCluster); ++rowIndex)
+        {
+            maskRowCol(pMPA, std::get<0>(theCluster) + rowIndex, std::get<1>(theCluster), 0);
+        }
+    }
+
+    success &= WriteChipReg(pMPA, "Mask_ALL", 0xFF);
+
+    // std::vector<std::string> listOfRegisters;
+    // for(size_t pixelNumber = 0; pixelNumber < NMPACHANNELS; ++pixelNumber)
+    // {
+    //     std::string registerName = "ENFLAGS_P" + std::to_string(pixelNumber+1);
+    //     listOfRegisters.push_back(registerName);
+    // }
+
+    // auto listOfReadRegisters = ReadChipMultReg(pMPA, listOfRegisters);
+
+    // for(const auto& registerValue: listOfReadRegisters)
+    // {
+    //     if(registerValue.second != 0x0a)
+    //         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Unmasked channel " << registerValue.first << " = 0x" << std::hex << +registerValue.second << std::dec << std::endl;
+    // }
+
+    return success;
+}
+
 } // namespace Ph2_HwInterface
