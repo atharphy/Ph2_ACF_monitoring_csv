@@ -60,7 +60,7 @@ void ClockDelay::Running()
 
     ClockDelay::run();
     ClockDelay::analyze();
-    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
+    ClockDelay::draw();
     ClockDelay::sendData();
     la.sendData();
 }
@@ -80,12 +80,7 @@ void ClockDelay::sendData()
 void ClockDelay::Stop()
 {
     LOG(INFO) << GREEN << "[ClockDelay::Stop] Stopping" << RESET;
-
     Tool::Stop();
-
-    ClockDelay::draw();
-    this->SaveAndClose();
-
     RD53RunProgress::reset();
 }
 

@@ -60,7 +60,7 @@ void InjectionDelay::Running()
 
     InjectionDelay::run();
     InjectionDelay::analyze();
-    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
+    InjectionDelay::draw();
     InjectionDelay::sendData();
     la.sendData();
 }
@@ -80,12 +80,7 @@ void InjectionDelay::sendData()
 void InjectionDelay::Stop()
 {
     LOG(INFO) << GREEN << "[InjectionDelay::Stop] Stopping" << RESET;
-
     Tool::Stop();
-
-    InjectionDelay::draw();
-    this->SaveAndClose();
-
     RD53RunProgress::reset();
 }
 

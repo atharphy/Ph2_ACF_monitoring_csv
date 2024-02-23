@@ -79,7 +79,7 @@ void ThrEqualization::Running()
 
     ThrEqualization::run();
     ThrEqualization::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    ThrEqualization::draw();
     ThrEqualization::sendData();
     PixelAlive::sendData();
 }
@@ -105,12 +105,7 @@ void ThrEqualization::sendData()
 void ThrEqualization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrEqualization::Stop] Stopping" << RESET;
-
     Tool::Stop();
-
-    ThrEqualization::draw();
-    this->SaveAndClose();
-
     RD53RunProgress::reset();
 }
 

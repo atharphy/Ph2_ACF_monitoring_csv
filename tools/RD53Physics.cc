@@ -87,7 +87,6 @@ void Physics::sendData()
 void Physics::Stop()
 {
     LOG(INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
-
     Tool::Stop();
 
     // #################################
@@ -104,9 +103,6 @@ void Physics::Stop()
     // # Save chip registers #
     // #######################
     CalibBase::saveChipRegisters(doUpdateChip);
-
-    Physics::draw();
-    this->SaveAndClose();
 
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
@@ -178,6 +174,8 @@ void Physics::run()
 
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
+
+    Physics::draw();
 }
 
 void Physics::draw(bool saveData)
