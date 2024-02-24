@@ -86,8 +86,7 @@ void DataReadbackOptimization::sendData()
 void DataReadbackOptimization::Stop()
 {
     LOG(INFO) << GREEN << "[DataReadbackOptimization::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void DataReadbackOptimization::localConfigure(const std::string& histoFileName, int currentRun)

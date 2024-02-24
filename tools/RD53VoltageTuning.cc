@@ -52,8 +52,7 @@ void VoltageTuning::sendData()
 void VoltageTuning::Stop()
 {
     LOG(INFO) << GREEN << "[VoltageTuning::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void VoltageTuning::localConfigure(const std::string& histoFileName, int currentRun)

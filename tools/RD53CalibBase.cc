@@ -28,6 +28,18 @@ void CalibBase::ConfigureCalibration()
     dataOutputDir = this->findValueInSettings<std::string>("DataOutputDir", "");
 }
 
+void CalibBase::Stop()
+{
+    Tool::Stop();
+
+#ifdef __USE_ROOT__
+    if((splitByHybrid == true) && (this->fResultFile != nullptr) && (this->fResultFile->IsOpen())) splitHistoFileByHybrid(this->fResultFile);
+#endif
+    this->CloseResultFile();
+
+    RD53RunProgress::reset();
+}
+
 void CalibBase::chipErrorReport() const
 {
     if(showErrorReport == true)

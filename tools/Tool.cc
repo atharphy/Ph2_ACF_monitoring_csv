@@ -230,7 +230,6 @@ void Tool::Stop()
 
         Tool::SaveResults();
         Tool::WriteRootFile();
-        Tool::CloseResultFile();
     }
 }
 

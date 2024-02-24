@@ -80,8 +80,7 @@ void ClockDelay::sendData()
 void ClockDelay::Stop()
 {
     LOG(INFO) << GREEN << "[ClockDelay::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void ClockDelay::localConfigure(const std::string& histoFileName, int currentRun)

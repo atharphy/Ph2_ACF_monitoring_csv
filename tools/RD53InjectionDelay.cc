@@ -80,8 +80,7 @@ void InjectionDelay::sendData()
 void InjectionDelay::Stop()
 {
     LOG(INFO) << GREEN << "[InjectionDelay::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void InjectionDelay::localConfigure(const std::string& histoFileName, int currentRun)
