@@ -72,7 +72,7 @@
 			<Register name="stubs_mask">1</Register>
 			<Register name="trigger_source">3</Register>
 			<Register name="triggers_to_accept">0</Register>
-			<Register name="user_trigger_frequency">1000</Register>
+			<Register name="user_trigger_frequency">10</Register>
 			<Register name="generic_fcmd">
 				<Register name="number_of_cmds_to_play">0</Register>
 				<Register name="number_of_repetitions">0</Register>
