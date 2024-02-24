@@ -87,7 +87,6 @@ void Physics::sendData()
 void Physics::Stop()
 {
     LOG(INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
-
     Tool::Stop();
 
     // #################################
@@ -104,9 +103,6 @@ void Physics::Stop()
     // # Save chip registers #
     // #######################
     CalibBase::saveChipRegisters(doUpdateChip);
-
-    Physics::draw();
-    this->SaveAndClose();
 
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
@@ -149,12 +145,13 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 void Physics::run()
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
+    Physics::draw();
 
     while(Tool::fKeepRunning == true)
     {
         RD53Event::decodedEvents.clear();
         Physics::analyze();
-        Physics::draw();
+        Physics::draw(false);
 
         if(strcmp(frontEnd->name, "SYNC") == 0) // @TMP@
             for(const auto cBoard: *fDetectorContainer)
@@ -177,6 +174,8 @@ void Physics::run()
 
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
+
+    Physics::draw();
 }
 
 void Physics::draw(bool saveData)
@@ -186,7 +185,7 @@ void Physics::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    CalibBase::bookHistoSaveMetadata(histos);
+    if(saveData == true) CalibBase::bookHistoSaveMetadata(histos);
     Physics::fillHisto();
     histos->process();
 

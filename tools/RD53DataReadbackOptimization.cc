@@ -55,7 +55,7 @@ void DataReadbackOptimization::Running()
     LOG(INFO) << GREEN << "[DataReadbackOptimization::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     DataReadbackOptimization::run();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    DataReadbackOptimization::draw();
     DataReadbackOptimization::sendData();
 }
 
@@ -86,12 +86,7 @@ void DataReadbackOptimization::sendData()
 void DataReadbackOptimization::Stop()
 {
     LOG(INFO) << GREEN << "[DataReadbackOptimization::Stop] Stopping" << RESET;
-
     Tool::Stop();
-
-    DataReadbackOptimization::draw();
-    this->SaveAndClose();
-
     RD53RunProgress::reset();
 }
 

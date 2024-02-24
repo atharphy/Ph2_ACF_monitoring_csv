@@ -77,7 +77,7 @@ void Gain::Running()
 
     Gain::run();
     Gain::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    Gain::draw();
     Gain::sendData();
 }
 
@@ -104,12 +104,7 @@ void Gain::sendData()
 void Gain::Stop()
 {
     LOG(INFO) << GREEN << "[Gain::Stop] Stopping" << RESET;
-
     Tool::Stop();
-
-    Gain::draw();
-    this->SaveAndClose();
-
     RD53RunProgress::reset();
 }
 

@@ -16,6 +16,15 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
+const std::set<std::string> RD53FWInterface::FastCommandsConfig::fastCmdWhiteList = {"user.ctrl_regs.fast_cmd_reg_2.trigger_source",
+                                                                                     "user.ctrl_regs.fast_cmd_reg_2.init_ecr_en",
+                                                                                     "user.ctrl_regs.fast_cmd_reg_2.backpressure_en",
+                                                                                     "user.ctrl_regs.fast_cmd_reg_2.veto_en",
+                                                                                     "user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",
+                                                                                     "user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",
+                                                                                     "user.ctrl_regs.fast_cmd_reg_2.trigger_duration",
+                                                                                     "user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12"}; // @CONST@
+
 RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
     : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), ddr3Offset(0), FWinfo(0)
 {
@@ -113,44 +122,12 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##################
     // # Configure DIO5 #
     // ##################
+    LOG(INFO) << GREEN << "Initializing DIO5" << RESET;
     RD53FWInterface::DIO5Config cfgDIO5;
-    LOG(INFO) << GREEN << "Initializing DIO5:" << RESET;
-    for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.second.fPrmptCfg == true) &&
-           ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos)))
-        {
-            LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
-            if(it.first.find("HitOr_enable_l12") != std::string::npos)
-                RD53FWInterface::localCfgFastCmd.enable_hitor = it.second.fValue;
-            else if(it.first.find("ext_clk_en") != std::string::npos)
-            {
-                cfgDIO5.enable     = cfgDIO5.enable | it.second.fValue;
-                cfgDIO5.ch_out_en  = cfgDIO5.ch_out_en & 0x0F;
-                cfgDIO5.ext_clk_en = it.second.fValue;
-            }
-            else
-            {
-                RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second.fValue);
-                if(static_cast<RD53FWInterface::TriggerSource>(it.second.fValue) == TriggerSource::External)
-                {
-                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
-                    cfgDIO5.enable    = true;
-                    cfgDIO5.ch_out_en = cfgDIO5.ch_out_en & 0x1D;
-                }
-                else if(static_cast<RD53FWInterface::TriggerSource>(it.second.fValue) == TriggerSource::TLU)
-                {
-                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
-                    cfgDIO5.enable             = true;
-                    cfgDIO5.ch_out_en          = cfgDIO5.ch_out_en | 0x05;
-                    cfgDIO5.tlu_en             = true;
-                    cfgDIO5.tlu_handshake_mode = 0x02;
-                }
-            }
-        }
-
-    RD53FWInterface::ConfigureDIO5(&cfgDIO5);
-    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+    RD53FWInterface::ConfigureDIO5(pBoard, &cfgDIO5);
+    RD53FWInterface::SendDIO5Cfg(&cfgDIO5);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
     // #########################
     // # Configure DataMerging #
@@ -310,19 +287,21 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     bool                                          extTluReg2    = false;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
 
-    LOG(INFO) << GREEN << "Initializing board's registers:" << RESET;
+    LOG(INFO) << GREEN << "Initializing board's registers" << RESET;
 
     for(const auto& it: pBoard->getBeBoardRegMap())
-    {
-        if((it.second.fPrmptCfg == true) && (it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
+        if(it.second.fPrmptCfg == true)
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
-            cVecReg.push_back({it.first, it.second.fValue});
-            if(it.first.find("gtx_rx_polarity") != std::string::npos) gtxRxPolarity = true;
-            if(it.first.find("fast_cmd_reg_1") != std::string::npos) fastCmdReg1 = true;
-            if(it.first.find("ext_tlu_reg2") != std::string::npos) extTluReg2 = true;
+            if(FastCommandsConfig::fastCmdWhiteList.find(it.first) == FastCommandsConfig::fastCmdWhiteList.end())
+            {
+                cVecReg.push_back({it.first, it.second.fValue});
+                if(it.first.find("gtx_rx_polarity") != std::string::npos) gtxRxPolarity = true;
+                if(it.first.find("fast_cmd_reg_1") != std::string::npos) fastCmdReg1 = true;
+                if(it.first.find("ext_tlu_reg2") != std::string::npos) extTluReg2 = true;
+            }
         }
-    }
+
     if(cVecReg.size() != 0)
     {
         RegManager::WriteStackReg(cVecReg);
@@ -760,14 +739,14 @@ void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)
     RegManager::WriteStackReg({{cmdReg, 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}, {cmdReg, 0}});
 }
 
-void RD53FWInterface::SendFastCommands(const FastCommandsConfig* cfg)
+void RD53FWInterface::SendFastCommands(const FastCommandsConfig* config)
 {
     const int GLOBAL_PULSE_WIDTH = 0x6; // @TMP@
 
-    if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
+    if(config == nullptr) config = &(RD53FWInterface::localCfgFastCmd);
 
     // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
-    if(cfg->autozero_source != AutozeroSource::Disabled)
+    if(config->autozero_source != AutozeroSource::Disabled)
         RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53AConstants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
 
     // ##################################
@@ -776,36 +755,36 @@ void RD53FWInterface::SendFastCommands(const FastCommandsConfig* cfg)
     RegManager::WriteStackReg({// ############################
                                // # General data for trigger #
                                // ############################
-                               {"user.ctrl_regs.fast_cmd_reg_2.trigger_source", (uint32_t)cfg->trigger_source},
-                               {"user.ctrl_regs.fast_cmd_reg_2.backpressure_en", (uint32_t)cfg->backpressure_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.init_ecr_en", (uint32_t)cfg->initial_ecr_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.veto_en", (uint32_t)cfg->veto_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay", (uint32_t)cfg->ext_trigger_delay},
-                               {"user.ctrl_regs.fast_cmd_reg_2.trigger_duration", (uint32_t)cfg->trigger_duration},
-                               {"user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12", (uint32_t)cfg->enable_hitor},
-                               {"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", (uint32_t)cfg->n_triggers},
+                               {"user.ctrl_regs.fast_cmd_reg_2.trigger_source", (uint32_t)config->trigger_source},
+                               {"user.ctrl_regs.fast_cmd_reg_2.backpressure_en", (uint32_t)config->backpressure_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.init_ecr_en", (uint32_t)config->initial_ecr_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.veto_en", (uint32_t)config->veto_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay", (uint32_t)config->ext_trigger_delay},
+                               {"user.ctrl_regs.fast_cmd_reg_2.trigger_duration", (uint32_t)config->trigger_duration},
+                               {"user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12", (uint32_t)config->enable_hitor},
+                               {"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", (uint32_t)config->n_triggers},
 
                                // ##############################
                                // # Fast command configuration #
                                // ##############################
-                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en", (uint32_t)cfg->fast_cmd_fsm.ecr_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en", (uint32_t)cfg->fast_cmd_fsm.first_cal_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en", (uint32_t)cfg->fast_cmd_fsm.second_cal_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en", (uint32_t)(cfg->enable_hitor != 0 ? 0 : cfg->fast_cmd_fsm.trigger_en)},
+                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en", (uint32_t)config->fast_cmd_fsm.ecr_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en", (uint32_t)config->fast_cmd_fsm.first_cal_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en", (uint32_t)config->fast_cmd_fsm.second_cal_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en", (uint32_t)(config->enable_hitor != 0 ? 0 : config->fast_cmd_fsm.trigger_en)},
 
-                               {"user.ctrl_regs.fast_cmd_reg_6.delay_after_init_prime", (uint32_t)cfg->fast_cmd_fsm.delay_after_first_prime},
-                               {"user.ctrl_regs.fast_cmd_reg_7.delay_after_ecr", (uint32_t)cfg->fast_cmd_fsm.delay_after_ecr},
-                               {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero", (uint32_t)cfg->fast_cmd_fsm.delay_after_autozero}, // @TMP@
-                               {"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime", (uint32_t)cfg->fast_cmd_fsm.first_cal_data},
-                               {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_prime},
-                               {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject", (uint32_t)cfg->fast_cmd_fsm.second_cal_data},
-                               {"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_inject},
-                               {"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_trigger},
+                               {"user.ctrl_regs.fast_cmd_reg_6.delay_after_init_prime", (uint32_t)config->fast_cmd_fsm.delay_after_first_prime},
+                               {"user.ctrl_regs.fast_cmd_reg_7.delay_after_ecr", (uint32_t)config->fast_cmd_fsm.delay_after_ecr},
+                               {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero", (uint32_t)config->fast_cmd_fsm.delay_after_autozero}, // @TMP@
+                               {"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime", (uint32_t)config->fast_cmd_fsm.first_cal_data},
+                               {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse", (uint32_t)config->fast_cmd_fsm.delay_after_prime},
+                               {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject", (uint32_t)config->fast_cmd_fsm.second_cal_data},
+                               {"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)config->fast_cmd_fsm.delay_after_inject},
+                               {"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse", (uint32_t)config->fast_cmd_fsm.delay_after_trigger},
 
                                // ################################
                                // # @TMP@ Autozero configuration #
                                // ################################
-                               {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)cfg->autozero_source},
+                               {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)config->autozero_source},
                                {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53AConstants::BROADCAST_CHIPID, 0, GLOBAL_PULSE_WIDTH, 0)}});
 
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
@@ -949,9 +928,79 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
                          ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en == true) ? (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + 1) * 4 + 7 : 0) + 4)
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
+
+    // ##################################################
+    // # Configure remaining parameters of FastCommands #
+    // ##################################################
+    for(const auto& it: pBoard->getBeBoardRegMap())
+    {
+        if((it.second.fPrmptCfg == true) && (FastCommandsConfig::fastCmdWhiteList.find(it.first) != FastCommandsConfig::fastCmdWhiteList.end()))
+        {
+            if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 0))
+                RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second.fValue);
+            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 1))
+                RD53FWInterface::localCfgFastCmd.initial_ecr_en = it.second.fValue;
+            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 2))
+                RD53FWInterface::localCfgFastCmd.backpressure_en = it.second.fValue;
+            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 2))
+                RD53FWInterface::localCfgFastCmd.veto_en = it.second.fValue;
+            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 3))
+                RD53FWInterface::localCfgFastCmd.n_triggers = it.second.fValue;
+            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 4))
+                RD53FWInterface::localCfgFastCmd.ext_trigger_delay = it.second.fValue;
+            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 5))
+                RD53FWInterface::localCfgFastCmd.trigger_duration = it.second.fValue;
+            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 6))
+                RD53FWInterface::localCfgFastCmd.enable_hitor = it.second.fValue;
+        }
+    }
 }
 
-void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
+void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
+{
+    for(const auto& it: pBoard->getBeBoardRegMap())
+        if((it.second.fPrmptCfg == true) &&
+           ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos) || (it.first.find("dio5_ch1_thr") != std::string::npos) ||
+            (it.first.find("dio5_ch2_thr") != std::string::npos) || (it.first.find("dio5_ch3_thr") != std::string::npos) || (it.first.find("dio5_ch4_thr") != std::string::npos) ||
+            (it.first.find("dio5_ch5_thr") != std::string::npos)))
+        {
+            if(it.first.find("ext_clk_en") != std::string::npos)
+            {
+                config->enable     = config->enable | it.second.fValue;
+                config->ch_out_en  = config->ch_out_en & 0x0F;
+                config->ext_clk_en = it.second.fValue;
+            }
+            else if(it.first.find("trigger_source") != std::string::npos)
+            {
+                if(static_cast<RD53FWInterface::TriggerSource>(it.second.fValue) == TriggerSource::External)
+                {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
+                    config->enable    = true;
+                    config->ch_out_en = config->ch_out_en & 0x1D;
+                }
+                else if(static_cast<RD53FWInterface::TriggerSource>(it.second.fValue) == TriggerSource::TLU)
+                {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
+                    config->enable             = true;
+                    config->ch_out_en          = config->ch_out_en | 0x05;
+                    config->tlu_en             = true;
+                    config->tlu_handshake_mode = 0x02;
+                }
+            }
+            else if(it.first.find("dio5_ch1_thr") != std::string::npos)
+                config->ch1_thr = it.second.fValue;
+            else if(it.first.find("dio5_ch2_thr") != std::string::npos)
+                config->ch2_thr = it.second.fValue;
+            else if(it.first.find("dio5_ch3_thr") != std::string::npos)
+                config->ch3_thr = it.second.fValue;
+            else if(it.first.find("dio5_ch4_thr") != std::string::npos)
+                config->ch4_thr = it.second.fValue;
+            else if(it.first.find("dio5_ch5_thr") != std::string::npos)
+                config->ch5_thr = it.second.fValue;
+        }
+}
+
+void RD53FWInterface::SendDIO5Cfg(const DIO5Config* config)
 {
     const uint8_t fiftyOhmEnable = 0x12; // @CONST@
 
@@ -959,17 +1008,17 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 
     if(RegManager::ReadReg("user.stat_regs.global_reg.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
-    RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)cfg->enable},
-                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)cfg->ch_out_en},
+    RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)config->enable},
+                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)config->ch_out_en},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)fiftyOhmEnable},
-                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr", (uint32_t)cfg->ch1_thr},
-                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr", (uint32_t)cfg->ch2_thr},
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr", (uint32_t)cfg->ch3_thr},
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch4_thr", (uint32_t)cfg->ch4_thr},
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr", (uint32_t)cfg->ch5_thr},
-                               {"user.ctrl_regs.ext_tlu_reg2.tlu_en", (uint32_t)cfg->tlu_en},
-                               {"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)cfg->tlu_handshake_mode},
-                               {"user.ctrl_regs.reset_reg.ext_clk_en", (uint32_t)cfg->ext_clk_en}});
+                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr", (uint32_t)config->ch1_thr},
+                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr", (uint32_t)config->ch2_thr},
+                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr", (uint32_t)config->ch3_thr},
+                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch4_thr", (uint32_t)config->ch4_thr},
+                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr", (uint32_t)config->ch5_thr},
+                               {"user.ctrl_regs.ext_tlu_reg2.tlu_en", (uint32_t)config->tlu_en},
+                               {"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)config->tlu_handshake_mode},
+                               {"user.ctrl_regs.reset_reg.ext_clk_en", (uint32_t)config->ext_clk_en}});
 
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
 }

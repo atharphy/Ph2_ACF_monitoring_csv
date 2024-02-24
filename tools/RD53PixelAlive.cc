@@ -64,7 +64,7 @@ void PixelAlive::Running()
 
     PixelAlive::run();
     PixelAlive::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    PixelAlive::draw();
     PixelAlive::sendData();
 }
 
@@ -86,12 +86,7 @@ void PixelAlive::sendData()
 void PixelAlive::Stop()
 {
     LOG(INFO) << GREEN << "[PixelAlive::Stop] Stopping" << RESET;
-
     Tool::Stop();
-
-    PixelAlive::draw();
-    this->SaveAndClose();
-
     RD53RunProgress::reset();
 }
 

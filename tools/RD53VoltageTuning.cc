@@ -33,6 +33,7 @@ void VoltageTuning::Running()
 
     VoltageTuning::run();
     VoltageTuning::analyze();
+    VoltageTuning::draw();
     VoltageTuning::sendData();
 }
 
@@ -51,12 +52,7 @@ void VoltageTuning::sendData()
 void VoltageTuning::Stop()
 {
     LOG(INFO) << GREEN << "[VoltageTuning::Stop] Stopping" << RESET;
-
     Tool::Stop();
-
-    VoltageTuning::draw();
-    this->SaveAndClose();
-
     RD53RunProgress::reset();
 }
 

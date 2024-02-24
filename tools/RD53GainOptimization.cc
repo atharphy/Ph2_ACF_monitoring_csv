@@ -62,7 +62,7 @@ void GainOptimization::Running()
 
     GainOptimization::run();
     GainOptimization::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    GainOptimization::draw();
     GainOptimization::sendData();
     Gain::sendData();
 }
@@ -79,12 +79,7 @@ void GainOptimization::sendData()
 void GainOptimization::Stop()
 {
     LOG(INFO) << GREEN << "[GainOptimization::Stop] Stopping" << RESET;
-
     Tool::Stop();
-
-    GainOptimization::draw();
-    this->SaveAndClose();
-
     RD53RunProgress::reset();
 }
 
