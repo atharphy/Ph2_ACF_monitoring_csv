@@ -104,8 +104,7 @@ void Gain::sendData()
 void Gain::Stop()
 {
     LOG(INFO) << GREEN << "[Gain::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void Gain::localConfigure(const std::string& histoFileName, int currentRun)

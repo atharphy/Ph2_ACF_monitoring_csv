@@ -98,8 +98,7 @@ void SCurve::sendData()
 void SCurve::Stop()
 {
     LOG(INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void SCurve::localConfigure(const std::string& histoFileName, int currentRun)

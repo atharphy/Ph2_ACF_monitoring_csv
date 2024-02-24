@@ -87,8 +87,7 @@ void GenericDacDacScan::sendData()
 void GenericDacDacScan::Stop()
 {
     LOG(INFO) << GREEN << "[GenericDacDacScan::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void GenericDacDacScan::localConfigure(const std::string& histoFileName, int currentRun)

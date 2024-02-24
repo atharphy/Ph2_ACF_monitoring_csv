@@ -52,8 +52,7 @@ void BERtest::sendData()
 void BERtest::Stop()
 {
     LOG(INFO) << GREEN << "[BERtest::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void BERtest::localConfigure(const std::string& histoFileName, int currentRun)

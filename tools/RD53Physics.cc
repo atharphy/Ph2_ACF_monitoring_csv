@@ -19,6 +19,7 @@ void Physics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
+    CalibBase::ConfigureCalibration();
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
@@ -65,7 +66,7 @@ void Physics::Running()
 
     numberOfEventsPerRun  = 0;
     corruptedEventCounter = 0;
-    LOG(INFO) << BOLDBLUE << "[Physics::Running]\t--> Run started" << RESET;
+    LOG(INFO) << BOLDBLUE << "[Physics::Running] --> Run started" << RESET;
     Physics::run();
 }
 
@@ -87,7 +88,7 @@ void Physics::sendData()
 void Physics::Stop()
 {
     LOG(INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
-    Tool::Stop();
+    CalibBase::Stop();
 
     // #################################
     // # Reset masks to default values #

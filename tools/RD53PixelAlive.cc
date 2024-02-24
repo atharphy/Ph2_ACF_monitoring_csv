@@ -86,8 +86,7 @@ void PixelAlive::sendData()
 void PixelAlive::Stop()
 {
     LOG(INFO) << GREEN << "[PixelAlive::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun)

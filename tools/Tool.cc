@@ -230,16 +230,7 @@ void Tool::Stop()
 
         Tool::SaveResults();
         Tool::WriteRootFile();
-        Tool::CloseResultFile();
     }
-}
-
-void Tool::SaveAndClose()
-{
-    Tool::dumpConfigFiles();
-    Tool::SaveResults();
-    Tool::WriteRootFile();
-    Tool::CloseResultFile();
 }
 
 void Tool::Inherit(const Tool* pTool)

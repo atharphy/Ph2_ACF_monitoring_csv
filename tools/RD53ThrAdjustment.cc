@@ -80,8 +80,7 @@ void ThrAdjustment::sendData()
 void ThrAdjustment::Stop()
 {
     LOG(INFO) << GREEN << "[ThrAdjustment::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void ThrAdjustment::localConfigure(const std::string& histoFileName, int currentRun)

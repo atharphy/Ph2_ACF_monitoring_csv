@@ -105,8 +105,7 @@ void ThrEqualization::sendData()
 void ThrEqualization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrEqualization::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void ThrEqualization::localConfigure(const std::string& histoFileName, int currentRun)

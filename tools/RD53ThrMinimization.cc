@@ -81,8 +81,7 @@ void ThrMinimization::sendData()
 void ThrMinimization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrMinimization::Stop] Stopping" << RESET;
-    Tool::Stop();
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void ThrMinimization::localConfigure(const std::string& histoFileName, int currentRun)
