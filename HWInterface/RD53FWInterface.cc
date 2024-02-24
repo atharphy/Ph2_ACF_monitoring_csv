@@ -16,14 +16,14 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-const std::set<std::string> RD53FWInterface::FastCommandsConfig::fastCmdWhiteList = {"user.ctrl_regs.fast_cmd_reg_2.trigger_source",
-                                                                                     "user.ctrl_regs.fast_cmd_reg_2.init_ecr_en",
-                                                                                     "user.ctrl_regs.fast_cmd_reg_2.backpressure_en",
-                                                                                     "user.ctrl_regs.fast_cmd_reg_2.veto_en",
-                                                                                     "user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",
-                                                                                     "user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",
-                                                                                     "user.ctrl_regs.fast_cmd_reg_2.trigger_duration",
-                                                                                     "user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12"}; // @CONST@
+const std::array<std::string, 8> RD53FWInterface::FastCommandsConfig::fastCmdWhiteList = {"user.ctrl_regs.fast_cmd_reg_2.trigger_source",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.init_ecr_en",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.backpressure_en",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.veto_en",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.trigger_duration",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12"}; // @CONST@
 
 RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
     : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), ddr3Offset(0), FWinfo(0)
@@ -293,7 +293,7 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
         if(it.second.fPrmptCfg == true)
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
-            if(FastCommandsConfig::fastCmdWhiteList.find(it.first) == FastCommandsConfig::fastCmdWhiteList.end())
+            if(std::find(FastCommandsConfig::fastCmdWhiteList.begin(), FastCommandsConfig::fastCmdWhiteList.end(), it.first) == FastCommandsConfig::fastCmdWhiteList.end())
             {
                 cVecReg.push_back({it.first, it.second.fValue});
                 if(it.first.find("gtx_rx_polarity") != std::string::npos) gtxRxPolarity = true;
@@ -934,23 +934,24 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
     // ##################################################
     for(const auto& it: pBoard->getBeBoardRegMap())
     {
-        if((it.second.fPrmptCfg == true) && (FastCommandsConfig::fastCmdWhiteList.find(it.first) != FastCommandsConfig::fastCmdWhiteList.end()))
+        if((it.second.fPrmptCfg == true) &&
+           (std::find(FastCommandsConfig::fastCmdWhiteList.begin(), FastCommandsConfig::fastCmdWhiteList.end(), it.first) != FastCommandsConfig::fastCmdWhiteList.end()))
         {
-            if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 0))
+            if(it.first == FastCommandsConfig::fastCmdWhiteList[0])
                 RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second.fValue);
-            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 1))
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[1])
                 RD53FWInterface::localCfgFastCmd.initial_ecr_en = it.second.fValue;
-            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 2))
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[2])
                 RD53FWInterface::localCfgFastCmd.backpressure_en = it.second.fValue;
-            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 2))
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[3])
                 RD53FWInterface::localCfgFastCmd.veto_en = it.second.fValue;
-            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 3))
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[4])
                 RD53FWInterface::localCfgFastCmd.n_triggers = it.second.fValue;
-            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 4))
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[5])
                 RD53FWInterface::localCfgFastCmd.ext_trigger_delay = it.second.fValue;
-            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 5))
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[6])
                 RD53FWInterface::localCfgFastCmd.trigger_duration = it.second.fValue;
-            else if(it.first == *std::next(FastCommandsConfig::fastCmdWhiteList.begin(), 6))
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[7])
                 RD53FWInterface::localCfgFastCmd.enable_hitor = it.second.fValue;
         }
     }

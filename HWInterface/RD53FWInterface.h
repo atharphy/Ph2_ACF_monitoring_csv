@@ -170,7 +170,7 @@ class RD53FWInterface : public BeBoardFWInterface
 
         FastCmdFSMConfig fast_cmd_fsm;
 
-        static const std::set<std::string> fastCmdWhiteList;
+        static const std::array<std::string, 8> fastCmdWhiteList;
     };
 
     void ConfigureFromXML(const Ph2_HwDescription::BeBoard* pBoard);
