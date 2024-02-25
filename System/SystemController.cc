@@ -898,6 +898,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
         // # Outer Tracker #
         // #################
         if(cBoard->getBoardType() == BoardType::D19C) ConfigureOT(cBoard);
+
         // #################
         // # Inner Tracker #
         // #################

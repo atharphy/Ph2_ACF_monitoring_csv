@@ -44,7 +44,7 @@ DAC_PREAMP_T_LIN          0x1A          0d150                   0d150           
 DAC_PREAMP_M_LIN          0x1B          0d150                   0d150                              10
 DAC_FC_LIN                0x1C          0d20                    0d20                               10
 DAC_KRUM_CURR_LIN         0x1D          0d70                    0d70                               10
-DAC_REF_KRUM_LIN          0x1E          0d260                   0d360                              10
+DAC_REF_KRUM_LIN          0x1E          0d360                   0d360                              10
 DAC_COMP_LIN              0x1F          0d80                    0d80                               10
 DAC_COMP_TA_LIN           0x20          0d900                   0d900                              10
 DAC_GDAC_L_LIN            0x21          0d900                   0d900                              10

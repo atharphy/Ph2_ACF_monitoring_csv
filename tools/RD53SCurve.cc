@@ -71,7 +71,7 @@ void SCurve::Running()
 
     SCurve::run();
     SCurve::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    SCurve::draw();
     SCurve::sendData();
 }
 
@@ -98,13 +98,7 @@ void SCurve::sendData()
 void SCurve::Stop()
 {
     LOG(INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    SCurve::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void SCurve::localConfigure(const std::string& histoFileName, int currentRun)
