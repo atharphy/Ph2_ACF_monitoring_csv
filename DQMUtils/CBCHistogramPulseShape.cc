@@ -113,7 +113,7 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
                                                                ->getObject(opticalGroupId)
                                                                ->getObject(hybridId)
                                                                ->getObject(chipId)
-                                                               ->getChannel<HistContainer<TH1F>>(channelNumber)
+                                                               ->getChannel<HistContainer<TH1F>>(0, channelNumber)
                                                                .fTheHistogram;
                         int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
                         channelPulseShapeHistogram->SetBinContent(currentBin, channel.fThreshold);

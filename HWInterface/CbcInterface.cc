@@ -702,13 +702,13 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
     {
         if(isMask)
         {
-            if(localRegValues.getChannel<uint16_t>(iChannel)) { channelToEnable.enableChannel(0, iChannel); }
+            if(localRegValues.getChannel<uint16_t>(0, iChannel)) { channelToEnable.enableChannel(0, iChannel); }
         }
         else
         {
             char dacName1[20];
             sprintf(dacName1, dacTemplate.c_str(), iChannel + 1);
-            cRegVec.emplace_back(dacName1, localRegValues.getChannel<uint16_t>(iChannel));
+            cRegVec.emplace_back(dacName1, localRegValues.getChannel<uint16_t>(0, iChannel));
         }
     }
 

@@ -300,7 +300,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
     std::vector<uint8_t> cVals(0);
     for(uint16_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
     {
-        cVals.push_back(localRegValues.getChannel<uint16_t>(iChannel));
+        cVals.push_back(localRegValues.getChannel<uint16_t>(0, iChannel));
         LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
     }
     auto cAllTheSame = (std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end());
@@ -309,12 +309,12 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         std::string cRegName = (dacName == "GainTrim") ? "StripControl2" : "THTRIMMING";
         LOG(INFO) << BOLDGREEN << " All local registers are the same " << RESET;
         auto cRegItem   = cRegMap[cRegName];
-        cRegItem.fValue = localRegValues.getChannel<uint8_t>(0);
+        cRegItem.fValue = localRegValues.getChannel<uint8_t>(0, 0);
         cSuccess        = fBoardFW->SingleRegisterWrite(pChip, cRegItem, false);
         cRegName        = (dacName == "GainTrim") ? "StripControl2_S32" : "THTRIMMING_S32";
         auto cRegValue  = fBoardFW->SingleRegisterRead(pChip, cRegMap[cRegName]);
         LOG(INFO) << BOLDBLUE << cRegName << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
-        cSuccess = (cRegValue == localRegValues.getChannel<uint8_t>(0));
+        cSuccess = (cRegValue == localRegValues.getChannel<uint8_t>(0, 0));
         return cSuccess;
     }
 
@@ -357,7 +357,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
             continue;
         }
         ChipRegItem cItem = cIterator->second;
-        cItem.fValue      = localRegValues.getChannel<uint16_t>(iChannel) & 0x1F;
+        cItem.fValue      = localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F;
         // LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
         cRegItems.push_back(cItem);
     }

@@ -800,7 +800,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
-                                                     ->getChannel<HistContainer<TH1F>>(cChannelNumber)
+                                                     ->getChannel<HistContainer<TH1F>>(0, cChannelNumber)
                                                      .fTheHistogram;
                             }
                             else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
@@ -809,7 +809,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
-                                                     ->getChannel<HistContainer<TH1F>>(cChannelNumber)
+                                                     ->getChannel<HistContainer<TH1F>>(0, cChannelNumber)
                                                      .fTheHistogram;
                             }
                             // std::cout << "Threshold = " << cTh + 1 << " - Occupancy = " <<  tmpOccupancy << std::endl;
@@ -855,7 +855,7 @@ void DQMHistogramPedeNoise::fitSCurves()
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
-                                                 ->getChannel<HistContainer<TH1F>>(cChannel)
+                                                 ->getChannel<HistContainer<TH1F>>(0, cChannel)
                                                  .fTheHistogram;
 
                             cChannelNoiseHistogram = fDetectorChannelStripNoiseHistograms.getObject(cBoard->getId())
@@ -878,7 +878,7 @@ void DQMHistogramPedeNoise::fitSCurves()
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
-                                                 ->getChannel<HistContainer<TH1F>>(cChannel)
+                                                 ->getChannel<HistContainer<TH1F>>(0, cChannel)
                                                  .fTheHistogram;
 
                             cChannelNoiseHistogram = fDetectorChannelPixelNoiseHistograms.getObject(cBoard->getId())
@@ -908,10 +908,10 @@ void DQMHistogramPedeNoise::fitSCurves()
                         // Fit
                         cChannelSCurve->Fit(cFit, "RQ+0");
 
-                        theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fThreshold      = cFit->GetParameter(0);
-                        theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fNoise          = cFit->GetParameter(1);
-                        theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fThresholdError = cFit->GetParError(0);
-                        theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fNoiseError     = cFit->GetParError(1);
+                        theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(0, cChannel).fThreshold      = cFit->GetParameter(0);
+                        theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(0, cChannel).fNoise          = cFit->GetParameter(1);
+                        theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(0, cChannel).fThresholdError = cFit->GetParError(0);
+                        theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(0, cChannel).fNoiseError     = cFit->GetParError(1);
                     }
                 }
             }

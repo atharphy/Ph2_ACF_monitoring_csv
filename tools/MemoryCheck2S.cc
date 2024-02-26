@@ -912,18 +912,18 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
                             auto& cDataThisOG     = cDataThisBrd->getObject(cOpticalGroup->getId());
                             auto& cDataThisHybrid = cDataThisOG->getObject(cHybrid->getId());
                             auto& cDataThisChip   = cDataThisHybrid->getObject(cChip->getId());
-                            cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
+                            cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(0, cChnl).fOccupancy;
                             cV[cIndx]             = cThresholds[cIndx];
                         }
                         auto cPedeNoise                                                   = evalNoise(cW, cV, true);
-                        cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold = cPedeNoise.first;
-                        cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise     = cPedeNoise.second;
-                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
-                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
+                        cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold = cPedeNoise.first;
+                        cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise     = cPedeNoise.second;
+                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold);
+                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise);
                         // if( cChnl%25 == 0 )
                         //     LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
-                        //         << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold
-                        //         << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise
+                        //         << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold
+                        //         << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise
                         //         << RESET;
                     } // chnl loop
                 }
@@ -976,8 +976,8 @@ void MemoryCheck2S::SetThreshold(float pSigma)
                     std::vector<float> cNoiseThisChip(0);
                     for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                     {
-                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
-                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
+                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold);
+                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise);
                     } // chnl loop
                     auto cPedStats = SummarizeStats<float>(cPedestalsThisChip);
                     // LOG (INFO) << BOLDMAGENTA << "\t\t... Mean pedestal on this chip is "
@@ -1119,7 +1119,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                     std::vector<uint8_t> cExpectedHits(0);
                     if(!cInjection) // all channels
                     {
-                        for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cAllOnes) ? 1 : 0; }
+                        for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = (cAllOnes) ? 1 : 0; }
                         continue;
                     } // with noise .. all would be on/off
 
@@ -1150,9 +1150,9 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                     {
                         bool cHitFound = std::find(cCompleteHitList.begin(), cCompleteHitList.end(), cHit) != cCompleteHitList.end();
                         if(cHitFound)
-                            cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cAllOnes) ? 1 : 0;
+                            cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = (cAllOnes) ? 1 : 0;
                         else
-                            cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = 0;
+                            cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = 0;
                     }
                     (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise, cUseOffsets);
                 } // Chip
@@ -1328,7 +1328,7 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
                         std::vector<uint8_t> cExpectedHits(0);
                         if(!cInjection) // all channels
                         {
-                            for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = cAllOnes ? 1 : 0; }
+                            for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = cAllOnes ? 1 : 0; }
                             continue;
                         }
 
@@ -1339,7 +1339,7 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
                         {
                             auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, theSeedAndBend.first, theSeedAndBend.second);
                             // LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
-                            for(auto cHit: cHitList) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = cAllOnes ? 1 : 0; }
+                            for(auto cHit: cHitList) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = cAllOnes ? 1 : 0; }
                         }
                         // make sure sampled mode is used
                         static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "Sampled", true, true);
@@ -1490,7 +1490,7 @@ void MemoryCheck2S::MemoryCheck2SSparse()
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
                     auto& cExpectedOccThisChip = cExpectedOccThisHybrid->getObject(cChip->getId());
-                    for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cThreshold == 1000) ? 1 : 0; }
+                    for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = (cThreshold == 1000) ? 1 : 0; }
                 } // Chip
             }     // Hybrid
         }         // OG
@@ -2182,11 +2182,11 @@ void MemoryCheck2S::Check()
                         for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                         {
                             // information about threshold + noise
-                            fMemEvent.fPedestal = cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold;
-                            fMemEvent.fNoise    = cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise;
+                            fMemEvent.fPedestal = cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold;
+                            fMemEvent.fNoise    = cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise;
                             // memory row
                             fMemEvent.fMemoryRow    = cChnl;
-                            float cExpectedOcc      = cExpectedOcThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
+                            float cExpectedOcc      = cExpectedOcThisChip->getChannel<Occupancy>(0, cChnl).fOccupancy;
                             int   cOcc              = (int)(std::find(cHits.begin(), cHits.end(), cChnl) != cHits.end());
                             fMemEvent.fCorrectValue = (uint8_t)(cExpectedOcc == cOcc);
                             if(fMemEvent.fCorrectValue == 0)

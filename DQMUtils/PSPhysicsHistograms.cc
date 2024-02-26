@@ -162,7 +162,7 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                                                           ->getSummary<HistContainer<TH1F>>()
                                                           .fTheHistogram;
                         // std::cout<<__LINE__<<std::endl;
-                        for(int channel = 0; channel < NSSACHANNELS; ++channel) { stripClusterHistogram->Fill(channel, chip->getChannel<float>(channel)); }
+                        for(int channel = 0; channel < NSSACHANNELS; ++channel) { stripClusterHistogram->Fill(channel, chip->getChannel<float>(0, channel)); }
                         // std::cout<<__LINE__<<std::endl;
                     }
                 }

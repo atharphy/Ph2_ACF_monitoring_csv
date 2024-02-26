@@ -702,7 +702,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
     std::vector<uint8_t> cVals(0);
     for(uint16_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
     {
-        cVals.push_back(localRegValues.getChannel<uint16_t>(iChannel));
+        cVals.push_back(localRegValues.getChannel<uint16_t>(0, iChannel));
         LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
     }
 
@@ -737,7 +737,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
     {
         std::stringstream dacName1;
         dacName1 << dacTemplate.c_str() << 1 + iChannel;
-        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1.str() << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1.str() << " to " << (localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F) << RESET;
 
         auto cIterator = cRegMap.find(dacName1.str());
         if(cIterator == cRegMap.end())
@@ -746,7 +746,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
             continue;
         }
         ChipRegItem cItem = cIterator->second;
-        cItem.fValue      = localRegValues.getChannel<uint16_t>(iChannel) & 0x1F;
+        cItem.fValue      = localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F;
         // LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
         cRegItems.push_back(cItem);
     }

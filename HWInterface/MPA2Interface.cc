@@ -975,7 +975,7 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
     std::vector<uint8_t> cVals(0);
     for(uint16_t iChannel = 0; iChannel < pMPA2->getNumberOfChannels(); ++iChannel)
     {
-        cVals.push_back(localRegValues.getChannel<uint16_t>(iChannel));
+        cVals.push_back(localRegValues.getChannel<uint16_t>(0, iChannel));
         LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
     }
 
@@ -1003,8 +1003,8 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
     {
         char dacName1[20];
         sprintf(dacName1, dacTemplate.c_str(), 1 + iChannel);
-        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
-        cSuccess = cSuccess && this->WriteChipReg(pMPA2, dacName1, (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F), pVerify);
+        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F) << RESET;
+        cSuccess = cSuccess && this->WriteChipReg(pMPA2, dacName1, (localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F), pVerify);
     }
     return cSuccess;
 }

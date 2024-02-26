@@ -268,22 +268,22 @@ void PSPixelAlive::maskNoisyChannels(BoardDataContainer* board)
                     {
     //                    float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
                         // float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
-                        // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<chip->getChannel<ThresholdAndNoise>(iChannel).fNoise<<" "<<fPedeNoiseLimit*fMean<<RESET;
-                        // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold -cPedestal)<<" "<<fPedeNoiseUntrimmedLimit<<RESET;
-                        if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(iChannel).fNoise > fPedeNoiseLimit))
+                        // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<chip->getChannel<ThresholdAndNoise>(0, iChannel).fNoise<<" "<<fPedeNoiseLimit*fMean<<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(0, iChannel).fThreshold -cPedestal)<<" "<<fPedeNoiseUntrimmedLimit<<RESET;
+                        if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(0, iChannel).fNoise > fPedeNoiseLimit))
                         {
                             nMask += 1;
-                            LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(iChannel).fNoise << ", which is over the limit of "
+                            LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(0, iChannel).fNoise << ", which is over the limit of "
                                       << fPedeNoiseLimit << RESET;
                             cOriginalMask->disableChannel(0, iChannel); //Make version of this for masking pixels
                         }
-                        if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
+                        if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(0, iChannel).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
                         {
                             uint8_t thetrim = fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(chipDC), "TrimDAC_P" + std::to_string(iChannel + 1));
 
                             nMask += 1;
                             LOG(INFO) << BOLDYELLOW << "Masking Channel:  " << iChannel << " with a pedestal difference of "
-                                      << std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
+                                      << std::fabs(chip->getChannel<ThresholdAndNoise>(0, iChannel).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
                                       << " trimval: " << +thetrim << RESET;
                             cOriginalMask->disableChannel(0, iChannel); //This is where the channel is disabled
                         }
@@ -291,8 +291,8 @@ void PSPixelAlive::maskNoisyChannels(BoardDataContainer* board)
                         // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY TH "<<cPedestal <<RESET;
                         // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY NOI "<<cNoise <<RESET;
                         // LOG(INFO) << BOLDYELLOW << "fPedeNoiseLimit "<<fPedeNoiseLimit<< " fPedeNoiseMask "<<fPedeNoiseMask <<RESET;
-                        // LOG(INFO) << BOLDYELLOW << "Noise "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(iChannel).fNoise <<RESET;
-                        // LOG(INFO) << BOLDYELLOW << "Thresh "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold  <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "Noise "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(0, iChannel).fNoise <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "Thresh "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(0, iChannel).fThreshold  <<RESET;
                     }
                     // fReadoutChipInterface->maskChannelGroup(chipDC,cOriginalMask);
                     if(nMask > 0) LOG(INFO) << BOLDYELLOW << "PedeNoise masked " << nMask << " channels..." << RESET;
@@ -439,7 +439,7 @@ void PSPixelAlive::measureOccupancy()
                                               ->getObject(cOpticalGroup->getId())
                                               ->getObject(cHybrid->getId())
                                               ->getObject(cChip->getId())
-                                              ->getChannel<Occupancy>(iChan)
+                                              ->getChannel<Occupancy>(0, iChan)
                                               .fOccupancy;
 
                         if(occupancy > (1.0 - epsilon))

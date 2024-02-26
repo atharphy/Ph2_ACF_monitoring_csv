@@ -325,7 +325,7 @@ void LatencyScan::ScanLatency()
                                             ->getObject(cChip->getId())
                                             ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                         auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                                        cOccChip->getChannel<Occupancy>(cHit).fOccupancy++;
+                                        cOccChip->getChannel<Occupancy>(0, cHit).fOccupancy++;
                                     }
                                 }
                                 else
@@ -351,7 +351,7 @@ void LatencyScan::ScanLatency()
                                                 ->getObject(cChip->getId())
                                                 ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                             // auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                                            // cOccChip->getChannel<Occupancy>(cPclstr.fAddress + cPclstr.fZpos*120 + cId).fOccupancy++;
+                                            // cOccChip->getChannel<Occupancy>(0, cPclstr.fAddress + cPclstr.fZpos*120 + cId).fOccupancy++;
                                         }
                                     }
                                     for(auto& cSclstr: cSclstrs)
@@ -366,7 +366,7 @@ void LatencyScan::ScanLatency()
                                                 ->getObject(cChip->getId())
                                                 ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                             // auto& cOccChip = cOccHybrid->getObject(cChip->getId()-cNMPAs);
-                                            // cOccChip->getChannel<Occupancy>(cSclstr.fAddress + cId).fOccupancy++;
+                                            // cOccChip->getChannel<Occupancy>(0, cSclstr.fAddress + cId).fOccupancy++;
                                         }
                                     }
                                 }
@@ -723,7 +723,7 @@ void LatencyScan::StubLatencyScan()
     //                                 for(auto cHit: cExpectedHits)
     //                                 {
     //                                     auto cFound = std::find(cHits.begin(), cHits.end(), cHit);
-    //                                     // cMatchesThisChip->getChannel<Occupancy>(cHit).fOccupancy += (cFound != cHits.end()) ? 1 : 0;
+    //                                     // cMatchesThisChip->getChannel<Occupancy>(0, cHit).fOccupancy += (cFound != cHits.end()) ? 1 : 0;
     //                                     cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
     //                                 }
     //                                 // only count stubs where the match is perfect

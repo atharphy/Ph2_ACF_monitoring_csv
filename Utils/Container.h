@@ -264,13 +264,13 @@ class ChipContainer : public BaseContainer
     unsigned int getNumberOfCols() const { return nOfCols_; }
 
     template <class T>
-    T& getChannel(unsigned int row, unsigned int col = 0)
+    T& getChannel(unsigned int row, unsigned int col)
     {
         return static_cast<ChannelContainer<T>*>(container_)->getChannel(row + col * nOfRows_);
     }
 
     template <class T>
-    const T& getChannel(unsigned int row, unsigned int col = 0) const
+    const T& getChannel(unsigned int row, unsigned int col) const
     {
         return static_cast<ChannelContainer<T>*>(container_)->getChannel(row + col * nOfRows_);
     }

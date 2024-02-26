@@ -195,12 +195,12 @@ void DQMHistogramPSPixelAlive::fillOccupancyPlots(DetectorDataContainer& theOccu
                         for(uint32_t iChan = 0; iChan < fNStripChannels; iChan++)
                         {
                             float occupancy =
-                                theOccupancy.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getChannel<Occupancy>(iChan).fOccupancy;
+                                theOccupancy.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getChannel<Occupancy>(0, iChan).fOccupancy;
                             float occupancyError = theOccupancy.getObject(board->getId())
                                                        ->getObject(opticalGroup->getId())
                                                        ->getObject(hybrid->getId())
                                                        ->getObject(chip->getId())
-                                                       ->getChannel<Occupancy>(iChan)
+                                                       ->getChannel<Occupancy>(0, iChan)
                                                        .fOccupancyError;
                             chipOccupancyHistogram->SetBinContent(iChan + 1, occupancy);
                             chipOccupancyHistogram->SetBinError(iChan + 1, occupancyError);
@@ -217,12 +217,12 @@ void DQMHistogramPSPixelAlive::fillOccupancyPlots(DetectorDataContainer& theOccu
                         for(uint32_t iChan = 0; iChan < fNPixelChannels; iChan++)
                         {
                             float occupancy =
-                                theOccupancy.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getChannel<Occupancy>(iChan).fOccupancy;
+                                theOccupancy.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getChannel<Occupancy>(0, iChan).fOccupancy;
                             float occupancyError = theOccupancy.getObject(board->getId())
                                                        ->getObject(opticalGroup->getId())
                                                        ->getObject(hybrid->getId())
                                                        ->getObject(chip->getId())
-                                                       ->getChannel<Occupancy>(iChan)
+                                                       ->getChannel<Occupancy>(0, iChan)
                                                        .fOccupancyError;
 
                             chipOccupancyHistogram->SetBinContent(iChan + 1, occupancy);

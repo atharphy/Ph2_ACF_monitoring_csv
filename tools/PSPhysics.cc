@@ -363,7 +363,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     {
                         for(uint8_t subStrip = 0; subStrip <= (stripCluster.fWidth); ++subStrip)
                         {
-                            if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(stripCluster.fAddress + subStrip);
+                            if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(0, stripCluster.fAddress + subStrip);
                         }
                     }
                     // std::cout<<__LINE__<<std::endl;
