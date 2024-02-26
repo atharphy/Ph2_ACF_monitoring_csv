@@ -946,7 +946,7 @@ int main(int argc, char* argv[])
                     }
                 }
                 // enable a few
-                std::vector<uint32_t> cPxls;
+                std::vector<std::pair<uint16_t, uint16_t>> cPxls;
                 uint16_t              cFirstRow = 10;
                 uint16_t              cNCols    = 2;
                 uint16_t              cNRows    = 1;
@@ -955,7 +955,7 @@ int main(int argc, char* argv[])
                 {
                     uint16_t cRow = cFirstRow + cNRow * 2;
                     cStrps.push_back(cRow);
-                    for(uint16_t cCol = 0; cCol < cNCols; cCol++) { cPxls.push_back((uint32_t)(cCol)*NSSACHANNELS + (uint32_t)cRow); }
+                    for(uint16_t cCol = 0; cCol < cNCols; cCol++) { cPxls.push_back({cNRow, cCol}); }
                 }
                 LOG(INFO) << BOLDBLUE << "Enabling analogue injection in " << cPxls.size() << " pixels and " << cStrps.size() << " strips." << RESET;
                 for(auto opticalGroup: *board)
@@ -969,10 +969,10 @@ int main(int argc, char* argv[])
                                 for(auto cPxl: cPxls)
                                 {
                                     std::stringstream cRegName;
-                                    cRegName << "ENFLAGS_P" << +cPxl;
+                                    cRegName << "ENFLAGS_C" << +cPxl.second << "_R" << +cPxl.first;
                                     cTool.fReadoutChipInterface->WriteChipReg(chip, cRegName.str(), 0x4F, false);
                                     std::stringstream cRegNameTrim;
-                                    cRegNameTrim << "TrimDAC_P" << +cPxl;
+                                    cRegNameTrim << "TrimDAC_C" << +cPxl.second << "_R" << +cPxl.first;
                                     cTool.fReadoutChipInterface->WriteChipReg(chip, cRegNameTrim.str(), 0x0);
                                 }
                             }

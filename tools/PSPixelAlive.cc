@@ -81,7 +81,7 @@ void PSPixelAlive::Initialise()
         else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPAROWS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
     }

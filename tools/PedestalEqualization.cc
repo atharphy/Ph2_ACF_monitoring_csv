@@ -24,7 +24,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^Channel\\d{3}$");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^TrimDAC_P\\d+$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^TrimDAC_C\\d+_R\\d+$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^TrimDAC_ALL$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^THTRIMMING_S\\d+$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^THTRIMMING_S\\d+$");
@@ -74,7 +74,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPAROWS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
     }
@@ -364,7 +364,6 @@ void PedestalEqualization::FindOffsets()
     LOG(INFO) << BOLDBLUE << "Finding offsets..." << RESET;
     // just to be sure, configure the correct VCth and VPlus values
 
-    uint32_t NCH = NCHANNELS;
     if(fUseMean)
     {
         if(fWithCBC || fWithSSA) LOG(INFO) << BOLDBLUE << "Mean VCth value of all strip chips is " << fStripTargetVcth << " - using as TargetVcth value for all strip chips!" << RESET;
@@ -427,25 +426,25 @@ void PedestalEqualization::FindOffsets()
                     //     fReadoutChipInterface->WriteChipReg(theChip, "HIP&TestMode", HIPCountValue);
                     // }
 
-                    unsigned int channelNumber = 1;
                     int          cMeanOffset   = 0;
                     ReadoutChip* roc = static_cast<ReadoutChip*>(fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId()));
                     auto         cType = roc->getFrontEndType();
-                    for(auto& channel: *chip->getChannelContainer<uint8_t>()) // for on channel - begin
-                    {
-                        char charRegName[20];
-                        if(cType == FrontEndType::CBC3) sprintf(charRegName, "Channel%03d", channelNumber++);
-                        if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
-                        if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) sprintf(charRegName, "TrimDAC_P%d", channelNumber++);
-                        std::string cRegName = charRegName;
-                        channel              = roc->getReg(cRegName);
-                        LOG(DEBUG) << BOLDGREEN << "Offset set to " << +channel << RESET;
-                        cMeanOffset += channel;
-                    }
-                    if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) NCH = NMPAROWS * NSSACHANNELS;
-                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) NCH = NSSACHANNELS;
 
-                    LOG(INFO) << BOLDRED << "Mean offset on Chip" << +chip->getId() << " is : " << (cMeanOffset) / (double)NCH << " Vcth units." << RESET;
+                    for(uint16_t row = 0; row<roc->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col<roc->getNumberOfCols(); ++col)
+                        {
+                            std::string cRegName;
+                            if(cType == FrontEndType::CBC3) cRegName = "Channel" + std::to_string(col + 1);
+                            if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) cRegName = "THTRIMMING_S"  + std::to_string(col + 1);
+                            if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) cRegName = "TrimDAC_C" + std::to_string(col) + "_R"+ std::to_string(row);
+                            auto channel              = roc->getReg(cRegName);
+                            LOG(DEBUG) << BOLDGREEN << "Offset set to " << +channel << RESET;
+                            cMeanOffset += roc->getReg(cRegName);
+                        }
+                    }
+
+                    LOG(INFO) << BOLDRED << "Mean offset on Chip" << +chip->getId() << " is : " << (cMeanOffset) / (double)roc->getNumberOfChannels() << " Vcth units." << RESET;
                 } // for on chip - end
             }     // for on hybrid - end
         }         // for on opticalGroup - end

@@ -779,7 +779,7 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
         cFileName = expandEnvironmentVariables(pMPANode.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
     cMPA->setOptical(pHybrid->isOptical());
-    cMPA->setNumberOfChannels(1, NSSACHANNELS * NMPAROWS);
+    cMPA->setNumberOfChannels(NMPAROWS, NSSACHANNELS);
     cMPA->setMasterId(pHybrid->getMasterId());
 
     os << BOLDCYAN << "|"
@@ -813,7 +813,7 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA2(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
 
     cMPA->setOptical(pHybrid->isOptical());
-    cMPA->setNumberOfChannels(1, NSSACHANNELS * NMPAROWS);
+    cMPA->setNumberOfChannels(NMPAROWS, NSSACHANNELS);
     cMPA->setMasterId(pHybrid->getMasterId());
 
     os << BOLDCYAN << "|"
@@ -1425,13 +1425,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
         {
             auto        cType        = cMapOfTypes[cChipId];
             std::string cRegNameBase = "";
-            if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-            {
-                os << GREEN << "|\t|\t|\t|\t| ---- ChipId" << +cChipId << " have " << cMapOfMaks[cChipId].size() << " MPA pixels to mask..."
-                   << "\n";
-                cRegNameBase = "ENFLAGS_P";
-            }
-            else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+            if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
             {
                 os << GREEN << "|\t|\t|\t|\t| ---- ChipId" << +cChipId << " have " << cMapOfMaks[cChipId].size() << " SSA strips to mask..."
                    << "\n";
@@ -1457,6 +1451,11 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                     uint8_t cRegisterIndex = 1 + 8 * (cChnlId / 8);
                     cRegName << std::setfill('0') << std::setw(3) << +(7 + cRegisterIndex) << "-to-" << std::setfill('0') << std::setw(3) << +(cRegisterIndex);
                     cBitShift = (cChnlId) % 8;
+                }
+                if(cType == FrontEndType::MPA2)
+                {
+                    std::cerr<< "Masking MPA from xml not implemented!" << std::endl;
+                    abort();
                 }
                 else
                 {

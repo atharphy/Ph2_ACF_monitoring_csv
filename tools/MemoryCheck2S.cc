@@ -269,7 +269,7 @@ void MemoryCheck2S::Initialise()
                     //     }
                     // }
                     // if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<1, NSSACHANNELS>;
-                    // if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<1, NMPAROWS * NSSACHANNELS>;
+                    // if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<NMPAROWS, NSSACHANNELS>;
                     // to -do .. same for MPA where have to look over cols
                 }
             } // hybrids

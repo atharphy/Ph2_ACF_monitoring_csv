@@ -62,7 +62,7 @@ class MPA : public ReadoutChip
     }
     uint8_t getNumberOfBits(const std::string& dacName) override
     {
-        if((dacName.find("TrimDAC_P", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
+        if((dacName.find("TrimDAC_C", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
             return 5;
         else
             return 8;

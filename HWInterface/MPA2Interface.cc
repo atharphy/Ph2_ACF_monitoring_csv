@@ -154,7 +154,7 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     }
     else if(pRegNode == "ENFLAGS_ALL")
     {
-        cRegItem          = pMPA2->getRegItem("ENFLAGS_P1");
+        cRegItem          = pMPA2->getRegItem("ENFLAGS_C0_R0");
         uint16_t row      = 1;
         cRegItem.fAddress = cRegItem.fAddress + ((row & 0x1F) << 11);
         return this->ReadReg(pMPA2, cRegItem.fAddress) & 0xFF;
@@ -418,8 +418,8 @@ uint16_t MPA2Interface::regRow(Chip* pChip, int pBaseRegister, int pRow)
 
 bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(cChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NMPAROWS, NSSACHANNELS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NMPAROWS, NSSACHANNELS>>(group);
 
     auto cBitset = std::bitset<NSSACHANNELS * NMPAROWS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     // cBitset = cBitset&std::bitset<NSSACHANNELS*NMPAROWS>(0x0000F0FF0);
@@ -436,16 +436,6 @@ bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<C
         bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
 
         if(bitval) continue;
-        // std::cout<<"MASK "<<ipix<<std::endl;
-        // uint32_t           cPixelIds = ipix;
-        // std::ostringstream cRegName;
-        // cRegName << "ENFLAGS_P" << std::to_string(cPixelIds+1);
-        // uint16_t regval=this->ReadChipReg(cChip, cRegName.str());
-        // regval=regval&(0xFF&bitval);
-        // std::pair<std::string, uint16_t> Req;
-        // Req.first=cRegName.str();
-        // Req.second=regval;
-        // pVecReq.push_back(Req);
 
         returnval &= maskPixel(cChip, ipix + 1, (1 - bitval), pVerify); // I  think mask 0 is enable?
     }
@@ -455,12 +445,12 @@ bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<C
 
 bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    std::bitset<NSSACHANNELS* NMPAROWS> cBitset = std::bitset<NSSACHANNELS * NMPAROWS>(std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(group)->getBitset());
+    std::bitset<NSSACHANNELS* NMPAROWS> cBitset = std::bitset<NSSACHANNELS * NMPAROWS>(std::static_pointer_cast<const ChannelGroup<NMPAROWS, NSSACHANNELS>>(group)->getBitset());
     if(cBitset.count() == 0) // no mask set... so do nothing
         return true;
 
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(cChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NMPAROWS, NSSACHANNELS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NMPAROWS, NSSACHANNELS>>(group);
 
     // cBitset=cBitset&std::bitset<NSSACHANNELS * NMPAROWS>(0xF0FF0);
 
@@ -506,7 +496,7 @@ bool MPA2Interface::ConfigureChipOriginalMask(ReadoutChip* pMPA, bool pVerify, u
     // write broadcast then mask is much much faster than full config
     configPixel(pMPA, "ENFLAGS", 0, (pixval | 0x1));
     LOG(INFO) << BOLDBLUE << "Broadcasting " << pixval << " or " << (pixval | 0x1) << RESET;
-    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<1, NSSACHANNELS * NMPAROWS>>();
+    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NMPAROWS, NSSACHANNELS>>();
     return maskChannelGroup(pMPA, allChannelEnabledGroup, pVerify);
 }
 
@@ -960,13 +950,13 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
     assert(localRegValues.size() == pMPA2->getNumberOfChannels());
     std::string dacTemplate;
 
-    if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim") { dacTemplate = "TrimDAC_P%d"; }
+    if(dacName == "TrimDAC_C" or dacName == "ThresholdTrim") { dacTemplate = "TrimDAC_C%d_R%d"; }
 
     else
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<1, NMPAROWS * NSSACHANNELS>                 channelToEnable;
+    ChannelGroup<NMPAROWS, NSSACHANNELS>                 channelToEnable;
     std::vector<uint32_t>                         cVec;
     cVec.clear();
     bool cSuccess = true;
@@ -982,12 +972,12 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
     if(std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end())
     {
         LOG(DEBUG) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
-        if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim")
+        if(dacName == "TrimDAC_C" or dacName == "ThresholdTrim")
         {
             bool cWrite = this->WriteChipReg(pMPA2, "TrimDAC_ALL", cVals[0], false);
             if(pVerify)
             {
-                auto cReadback = this->ReadChipReg(pMPA2, "TrimDAC_P100");
+                auto cReadback = this->ReadChipReg(pMPA2, "TrimDAC_C10_R10");
                 LOG(DEBUG) << BOLDMAGENTA << "Read-back a value of " << +cReadback << " from trim-dac register" << RESET;
                 return (cReadback == cVals[0]);
             }
@@ -999,12 +989,15 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
 
     LOG(DEBUG) << BOLDBLUE << "Different values for " << dacName << " ... will NOT use global register" << RESET;
 
-    for(uint16_t iChannel = 0; iChannel < pMPA2->getNumberOfChannels(); ++iChannel)
+    for(uint16_t row = 0; row < pMPA2->getNumberOfRows(); ++row)
     {
-        char dacName1[20];
-        sprintf(dacName1, dacTemplate.c_str(), 1 + iChannel);
-        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F) << RESET;
-        cSuccess = cSuccess && this->WriteChipReg(pMPA2, dacName1, (localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F), pVerify);
+        for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col)
+        {
+            char dacName1[20];
+            sprintf(dacName1, dacTemplate.c_str(), col, row);
+            LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(col, row) & 0x1F) << RESET;
+            cSuccess = cSuccess && this->WriteChipReg(pMPA2, dacName1, (localRegValues.getChannel<uint16_t>(col, row) & 0x1F), pVerify);
+        }
     }
     return cSuccess;
 }
@@ -1324,18 +1317,6 @@ void MPA2Interface::loadVref(Chip* pMPA2, uint8_t VREFvalue)
         plt.xlabel('VREF code [LSB]'); plt.ylabel('VREF value [mV]'); plt.show()
     return ret, vref_dac_new, vref_dac_vals, vref_act*/
 
-void MPA2Interface::ReadASEvent(ReadoutChip* pMPA2, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange)
-{
-    if(pSRange == std::pair<uint32_t, uint32_t>{0, 0}) pSRange = std::pair<uint32_t, uint32_t>{1, pMPA2->getNumberOfChannels()};
-    for(uint32_t i = pSRange.first; i <= pSRange.second; i++)
-    {
-        uint8_t cRP1 = this->ReadChipReg(pMPA2, "ReadCounter_LSB_P" + std::to_string(i));
-        uint8_t cRP2 = this->ReadChipReg(pMPA2, "ReadCounter_MSB_P" + std::to_string(i));
-
-        pData.push_back((cRP2 * 256) + cRP1);
-    }
-}
-
 bool MPA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
@@ -1381,21 +1362,6 @@ bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<std::tupl
     }
 
     success &= WriteChipReg(pMPA, "Mask_ALL", 0xFF);
-
-    // std::vector<std::string> listOfRegisters;
-    // for(size_t pixelNumber = 0; pixelNumber < NMPAROWS * NSSACHANNELS; ++pixelNumber)
-    // {
-    //     std::string registerName = "ENFLAGS_P" + std::to_string(pixelNumber+1);
-    //     listOfRegisters.push_back(registerName);
-    // }
-
-    // auto listOfReadRegisters = ReadChipMultReg(pMPA, listOfRegisters);
-
-    // for(const auto& registerValue: listOfReadRegisters)
-    // {
-    //     if(registerValue.second != 0x0a)
-    //         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Unmasked channel " << registerValue.first << " = 0x" << std::hex << +registerValue.second << std::dec << std::endl;
-    // }
 
     return success;
 }

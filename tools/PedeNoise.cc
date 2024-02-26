@@ -53,7 +53,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^VCth\\d$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^MaskChannel-\\d{3}-to-\\d{3}$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC\\d$");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ENFLAGS_P\\d+$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ENFLAGS_C\\d+_R\\d+$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^ENFLAG_S\\d+$");
 
@@ -110,7 +110,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPAROWS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
     }
@@ -364,55 +364,46 @@ void PedeNoise::Validate()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto           cType = cChip->getFrontEndType();
                     RegisterVector cRegVec;
-                    uint32_t       NCH = NCHANNELS;
-                    if(cType == FrontEndType::CBC3)
-                        NCH = NCHANNELS;
-                    else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-                        NCH = NSSACHANNELS;
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                        NCH = NMPAROWS * NSSACHANNELS;
-                    //
-                    for(uint32_t iChan = 0; iChan < NCH; iChan++)
+                    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
                     {
-                        // LOG (INFO) << RED << "Ch " << iChan << RESET ;
-                        float occupancy = theOccupancyContainer.getObject(cBoard->getId())
-                                              ->getObject(cOpticalGroup->getId())
-                                              ->getObject(cHybrid->getId())
-                                              ->getObject(cChip->getId())
-                                              ->getChannel<Occupancy>(0, iChan)
-                                              .fOccupancy;
-                        if(occupancy > fMaskingThreshold)
+                        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
                         {
-                            std::string message = "Found a noisy channel on Chip " + getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()) + " Channel " +
-                                                  std::to_string(iChan) + " with an occupancy of " + std::to_string(occupancy) + "(>" + std::to_string(fMaskingThreshold) + ")";
-                            if(fMaskNoisyChannels)
+                            float occupancy = theOccupancyContainer.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getChannel<Occupancy>(row, col)
+                                                .fOccupancy;
+                            if(occupancy > fMaskingThreshold)
                             {
-                                if(fWithCBC)
+                                std::string message = "Found a noisy channel on Chip " + getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()) + " row " +
+                                                    std::to_string(row) + " col " + std::to_string(col) + " with an occupancy of " + std::to_string(occupancy) + "(>" + std::to_string(fMaskingThreshold) + ")";
+                                if(fMaskNoisyChannels)
                                 {
-                                    // char cRegName[11];
-                                    // sprintf(cRegName, "Channel%03d", iChan + 1);
-                                    std::string cRegName = "Channel" + (boost::format("%|03|") % (iChan + 1)).str();
-                                    cRegVec.push_back({cRegName, 0xFF});
+                                    if(fWithCBC)
+                                    {
+                                        // char cRegName[11];
+                                        // sprintf(cRegName, "Channel%03d", iChan + 1);
+                                        std::string cRegName = "Channel" + (boost::format("%|03|") % (col + 1)).str();
+                                        cRegVec.push_back({cRegName, 0xFF});
+                                    }
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                                    {
+                                        // char cRegName[17];
+                                        // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
+                                        std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
+                                        cRegVec.push_back({cRegName, 0x1F});
+                                    }
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                                    {
+                                        std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+                                        cRegVec.push_back({cRegName, 0x1F});
+                                    }
+                                    message += ";  setting offset to 255";
                                 }
-                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
-                                {
-                                    // char cRegName[17];
-                                    // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
-                                    std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (iChan + 1)).str();
-                                    cRegVec.push_back({cRegName, 0x1F});
-                                }
-                                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
-                                {
-                                    // char cRegName[12];
-                                    // sprintf(cRegName, "TrimDAC_P%04d", iChan + 1);
-                                    std::string cRegName = "TrimDAC_P" + (boost::format("%|04|") % (iChan + 1)).str();
-                                    cRegVec.push_back({cRegName, 0x1F});
-                                }
-                                message += ";  setting offset to 255";
+                                LOG(DEBUG) << RED << message << RESET;
                             }
-                            LOG(DEBUG) << RED << message << RESET;
                         }
                     }
 
@@ -959,35 +950,36 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                      fMean=4.2;*/
                 auto     cOriginalMask = chipDC->getChipOriginalMask();
                 uint32_t nMask         = 0;
-                for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
+                for(uint16_t row = 0; row<chip->getNumberOfRows(); ++row)
                 {
-                    float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
-                    // float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
-                    // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<chip->getChannel<ThresholdAndNoise>(0, iChannel).fNoise<<" "<<fPedeNoiseLimit*fMean<<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(0, iChannel).fThreshold -cPedestal)<<" "<<fPedeNoiseUntrimmedLimit<<RESET;
-                    if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(0, iChannel).fNoise > fPedeNoiseLimit))
+                    for(uint16_t col = 0; col<chip->getNumberOfCols(); ++col)
                     {
-                        nMask += 1;
-                        LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(0, iChannel).fNoise << ", which is over the limit of "
-                                  << fPedeNoiseLimit << RESET;
-                        cOriginalMask->disableChannel(0, iChannel);
-                    }
-                    if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(0, iChannel).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
-                    {
-                        uint8_t thetrim = fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(chipDC), "TrimDAC_P" + std::to_string(iChannel + 1));
+                        float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
+                        // float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
+                        if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(row, col).fNoise > fPedeNoiseLimit))
+                        {
+                            nMask += 1;
+                            LOG(INFO) << BOLDYELLOW << "Masking row: " << row << " col " << col << " with a noise of " << chip->getChannel<ThresholdAndNoise>(row, col).fNoise << ", which is over the limit of "
+                                    << fPedeNoiseLimit << RESET;
+                            cOriginalMask->disableChannel(row, col);
+                        }
+                        if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
+                        {
+                            uint8_t thetrim = fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(chipDC), "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row));
 
-                        nMask += 1;
-                        LOG(INFO) << BOLDYELLOW << "Masking Channel:  " << iChannel << " with a pedestal difference of "
-                                  << std::fabs(chip->getChannel<ThresholdAndNoise>(0, iChannel).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
-                                  << " trimval: " << +thetrim << RESET;
-                        cOriginalMask->disableChannel(0, iChannel);
-                    }
+                            nMask += 1;
+                            LOG(INFO) << BOLDYELLOW << "Masking row: " << row << " col " << col << " with a pedestal difference of "
+                                    << std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
+                                    << " trimval: " << +thetrim << RESET;
+                            cOriginalMask->disableChannel(row, col);
+                        }
 
-                    // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY TH "<<cPedestal <<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY NOI "<<cNoise <<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "fPedeNoiseLimit "<<fPedeNoiseLimit<< " fPedeNoiseMask "<<fPedeNoiseMask <<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "Noise "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(0, iChannel).fNoise <<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "Thresh "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(0, iChannel).fThreshold  <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY TH "<<cPedestal <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY NOI "<<cNoise <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "fPedeNoiseLimit "<<fPedeNoiseLimit<< " fPedeNoiseMask "<<fPedeNoiseMask <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "Noise "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(row, col).fNoise <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "Thresh "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(row, col).fThreshold  <<RESET;
+                    }
                 }
                 // fReadoutChipInterface->maskChannelGroup(chipDC,cOriginalMask);
                 if(nMask > 0) LOG(INFO) << BOLDYELLOW << "PedeNoise masked " << nMask << " channels..." << RESET;
