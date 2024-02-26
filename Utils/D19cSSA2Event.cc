@@ -20,7 +20,7 @@ void D19cSSA2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     unsigned int i = 0;
     for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
-        if(testChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)privateDataBit(hybridId, chipContainer->getId(), i); }
+        if(testChannelGroup->isChannelEnabled(0, i)) { channel->fOccupancy += (float)privateDataBit(hybridId, chipContainer->getId(), i); }
     }
 }
 

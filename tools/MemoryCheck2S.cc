@@ -149,10 +149,10 @@ void MemoryCheck2S::Reconfigure()
                 for(auto cChip: *cHybrid)
                 {
                     auto& cMasksThisChip = cMasksThisHybrid->getObject(cChip->getId());
-                    auto& cOriginalMask  = cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<NCHANNELS>>>();
+                    auto& cOriginalMask  = cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<1, NCHANNELS>>>();
                     // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
                     // {
-                    //     bool cEnabled = cOriginalMask->isChannelEnabled(cChnl);
+                    //     bool cEnabled = cOriginalMask->isChannelEnabled(0, cChnl);
                     //     if( cEnabled )
                     //     {
                     //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDBLUE << "Reconfig Chnl#" << +cChnl << " enabled." << RESET;
@@ -242,7 +242,7 @@ void MemoryCheck2S::Initialise()
     }
 
     // read back original masks
-    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroup<NCHANNELS>>>(*fDetectorContainer, fChipMasks);
+    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroup<1, NCHANNELS>>>(*fDetectorContainer, fChipMasks);
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cMasksThisBrd = fChipMasks.getObject(cBoard->getId());
@@ -255,21 +255,21 @@ void MemoryCheck2S::Initialise()
                 for(auto cChip: *cHybrid)
                 {
                     auto& cMasksThisChip                                                   = cMasksThisHybrid->getObject(cChip->getId());
-                    cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cChip->getChipOriginalMask());
-                    // cOriginalMask = new ChannelGroup<NCHANNELS, 1>;
+                    cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<1, NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<1, NCHANNELS>>(cChip->getChipOriginalMask());
+                    // cOriginalMask = new ChannelGroup<1, NCHANNELS>;
                     // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
                     // {
-                    //     bool cEnabled = cMsk->isChannelEnabled(cChnl);
-                    //     if( cEnabled ){ cOriginalMask->enableChannel( cChnl );
+                    //     bool cEnabled = cMsk->isChannelEnabled(0, cChnl);
+                    //     if( cEnabled ){ cOriginalMask->enableChannel(0, cChnl );
                     //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " enabled." << RESET;
                     //     }
                     //     else{
-                    //         cOriginalMask->disableChannel( cChnl );
+                    //         cOriginalMask->disableChannel(0, cChnl);
                     //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " disabled." << RESET;
                     //     }
                     // }
-                    // if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, 1>;
-                    // if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, NMPACOLS>;
+                    // if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<1, NSSACHANNELS>;
+                    // if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<1, NMPAROWS * NSSACHANNELS>;
                     // to -do .. same for MPA where have to look over cols
                 }
             } // hybrids

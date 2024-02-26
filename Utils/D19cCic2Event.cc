@@ -385,7 +385,7 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     float cOcc = 0;
     for(auto cHit: cHits)
     {
-        if(testChannelGroup->isChannelEnabled(cHit))
+        if(testChannelGroup->isChannelEnabled(0, cHit))
         {
             chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
             cOcc += cHit;

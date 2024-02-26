@@ -345,7 +345,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
 
     // write local registers
     cRegItems.clear();
-    ChannelGroup<NCHANNELS, 1> channelToEnable;
+    ChannelGroup<1, NCHANNELS> channelToEnable;
     for(uint8_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
     {
         std::stringstream dacName;
@@ -973,8 +973,8 @@ bool SSA2Interface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionA
 
 bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(pChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(pChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(group);
     auto cBitset       = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     LOG(DEBUG) << BOLDYELLOW << "\t... Applying mask to SSA" << +pChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
                << " original mask  \t... : " << cOriginalMask << " enabled channels "
@@ -1005,8 +1005,8 @@ bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr
 }
 bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(pChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(pChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(group);
     auto cBitset       = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     LOG(DEBUG) << BOLDYELLOW << "\t... Applying mask to SSA" << +pChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
                << " original mask  \t... : " << cOriginalMask << " enabled channels "
@@ -1048,7 +1048,7 @@ bool SSA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 }
 bool SSA2Interface::ConfigureChipOriginalMask(ReadoutChip* pSSA2, bool pVerify, uint32_t pBlockSize)
 {
-    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NCHANNELS>>();
+    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<1, NCHANNELS>>();
     return maskChannelGroup(pSSA2, allChannelEnabledGroup, pVerify);    
 }
 

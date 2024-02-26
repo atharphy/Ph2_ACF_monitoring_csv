@@ -81,7 +81,7 @@ void PSPixelAlive::Initialise()
         else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPAROWS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
     }
@@ -275,7 +275,7 @@ void PSPixelAlive::maskNoisyChannels(BoardDataContainer* board)
                             nMask += 1;
                             LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(iChannel).fNoise << ", which is over the limit of "
                                       << fPedeNoiseLimit << RESET;
-                            cOriginalMask->disableChannel(iChannel); //Make version of this for masking pixels
+                            cOriginalMask->disableChannel(0, iChannel); //Make version of this for masking pixels
                         }
                         if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
                         {
@@ -285,7 +285,7 @@ void PSPixelAlive::maskNoisyChannels(BoardDataContainer* board)
                             LOG(INFO) << BOLDYELLOW << "Masking Channel:  " << iChannel << " with a pedestal difference of "
                                       << std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
                                       << " trimval: " << +thetrim << RESET;
-                            cOriginalMask->disableChannel(iChannel); //This is where the channel is disabled
+                            cOriginalMask->disableChannel(0, iChannel); //This is where the channel is disabled
                         }
 
                         // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY TH "<<cPedestal <<RESET;
@@ -452,7 +452,7 @@ void PSPixelAlive::measureOccupancy()
                             LOG(INFO) << RED << "Masking Channel(" << iChan << ") Occupancy = " << occupancy << RESET;
                             if(fPSPixelAliveMask)
                             {
-                                cOriginalMask->disableChannel(iChan); // Mask failing pixel
+                                cOriginalMask->disableChannel(0, iChan); // Mask failing pixel
                                 if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                                     nMask_SSA++;
                                 else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)

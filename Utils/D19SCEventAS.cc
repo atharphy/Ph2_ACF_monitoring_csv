@@ -94,7 +94,7 @@ void D19SCEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const
 
     for(ChannelContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
-        if(testChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += hVec[i]; }
+        if(testChannelGroup->isChannelEnabled(0, i)) { channel->fOccupancy += hVec[i]; }
     }
 }
 

@@ -494,7 +494,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
         cFileName = expandEnvironmentVariables(pSSAnode.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
     ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
     cSSA->setOptical(pHybrid->isOptical());
-    cSSA->setNumberOfChannels(NSSACHANNELS);
+    cSSA->setNumberOfChannels(1, NSSACHANNELS);
     cSSA->setMasterId(pHybrid->getMasterId());
 
     os << BOLDCYAN << "|"
@@ -640,7 +640,7 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
         cFileName = expandEnvironmentVariables(pSSAnode.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
     ReadoutChip* cSSA2 = pHybrid->addChipContainer(cChipId, new SSA2(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
     cSSA2->setOptical(pHybrid->isOptical());
-    cSSA2->setNumberOfChannels(NSSACHANNELS);
+    cSSA2->setNumberOfChannels(1, NSSACHANNELS);
     cSSA2->setMasterId(pHybrid->getMasterId());
 }
 
@@ -779,7 +779,7 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
         cFileName = expandEnvironmentVariables(pMPANode.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
     cMPA->setOptical(pHybrid->isOptical());
-    cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
+    cMPA->setNumberOfChannels(1, NSSACHANNELS * NMPAROWS);
     cMPA->setMasterId(pHybrid->getMasterId());
 
     os << BOLDCYAN << "|"
@@ -813,7 +813,7 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA2(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
 
     cMPA->setOptical(pHybrid->isOptical());
-    cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
+    cMPA->setNumberOfChannels(1, NSSACHANNELS * NMPAROWS);
     cMPA->setMasterId(pHybrid->getMasterId());
 
     os << BOLDCYAN << "|"
@@ -1522,7 +1522,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     uint32_t     cChipId = pCbcNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cChipId, cFileName));
     cCbc->setOptical(cHybrid->isOptical());
-    cCbc->setNumberOfChannels(254);
+    cCbc->setNumberOfChannels(1, NCHANNELS);
     cCbc->setMasterId(cHybrid->getMasterId());
 
     os << BOLDCYAN << "|"

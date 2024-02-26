@@ -2,8 +2,8 @@
 
 // MPAChannelGroupHandler::MPAChannelGroupHandler()
 // {
-//     allChannelGroup_     = new ChannelGroup<120, 16>();
-//     currentChannelGroup_ = new ChannelGroup<120, 16>();
+//     allChannelGroup_     = new ChannelGroup<1, NMPAROWS * NSSACHANNELS>();
+//     currentChannelGroup_ = new ChannelGroup<1, NMPAROWS * NSSACHANNELS>();
 // }
 
 // MPAChannelGroupHandler::~MPAChannelGroupHandler()
@@ -13,16 +13,16 @@
 // }
 MPAChannelGroupHandler::MPAChannelGroupHandler()
 {
-    allChannelGroup_     = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
-    currentChannelGroup_ = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
+    allChannelGroup_     = std::make_shared<ChannelGroup<1, NMPAROWS * NSSACHANNELS>>();
+    currentChannelGroup_ = std::make_shared<ChannelGroup<1, NMPAROWS * NSSACHANNELS>>();
 
     allChannelGroup_->enableAllChannels();
 }
 
-MPAChannelGroupHandler::MPAChannelGroupHandler(std::bitset<NSSACHANNELS * NMPACOLS>&& inputChannelsBitset)
+MPAChannelGroupHandler::MPAChannelGroupHandler(std::bitset<NSSACHANNELS * NMPAROWS>&& inputChannelsBitset)
 {
-    allChannelGroup_     = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>(std::move(inputChannelsBitset));
-    currentChannelGroup_ = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>(std::move(inputChannelsBitset));
+    allChannelGroup_     = std::make_shared<ChannelGroup<1, NMPAROWS * NSSACHANNELS>>(std::move(inputChannelsBitset));
+    currentChannelGroup_ = std::make_shared<ChannelGroup<1, NMPAROWS * NSSACHANNELS>>(std::move(inputChannelsBitset));
 }
 
 MPAChannelGroupHandler::~MPAChannelGroupHandler() {}

@@ -110,7 +110,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPAROWS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
     }
@@ -721,7 +721,7 @@ void PedeNoise::extractPedeNoise()
                                     ->getObject(chip->getId())
                                     ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                     ->allChannelGroup()
-                                    ->isChannelEnabled(iChannel))
+                                    ->isChannelEnabled(0, iChannel))
                                 continue;
 
                             float currentOccupancy = 0, previousOccupancy = 0, binCenter = 0;
@@ -827,7 +827,7 @@ void PedeNoise::extractPedeNoise()
                                 ->getObject(chip->getId())
                                 ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                 ->allChannelGroup()
-                                ->isChannelEnabled(iChannel))
+                                ->isChannelEnabled(0, iChannel))
                             continue;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
@@ -970,7 +970,7 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                         nMask += 1;
                         LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(iChannel).fNoise << ", which is over the limit of "
                                   << fPedeNoiseLimit << RESET;
-                        cOriginalMask->disableChannel(iChannel);
+                        cOriginalMask->disableChannel(0, iChannel);
                     }
                     if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
                     {
@@ -980,7 +980,7 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                         LOG(INFO) << BOLDYELLOW << "Masking Channel:  " << iChannel << " with a pedestal difference of "
                                   << std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
                                   << " trimval: " << +thetrim << RESET;
-                        cOriginalMask->disableChannel(iChannel);
+                        cOriginalMask->disableChannel(0, iChannel);
                     }
 
                     // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY TH "<<cPedestal <<RESET;

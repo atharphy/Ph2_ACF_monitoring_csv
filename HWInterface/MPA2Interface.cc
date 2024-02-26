@@ -418,11 +418,11 @@ uint16_t MPA2Interface::regRow(Chip* pChip, int pBaseRegister, int pRow)
 
 bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(cChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(group);
 
-    auto cBitset = std::bitset<NSSACHANNELS * NMPACOLS>(groupToMask->getBitset() & cOriginalMask->getBitset());
-    // cBitset = cBitset&std::bitset<NSSACHANNELS*NMPACOLS>(0x0000F0FF0);
+    auto cBitset = std::bitset<NSSACHANNELS * NMPAROWS>(groupToMask->getBitset() & cOriginalMask->getBitset());
+    // cBitset = cBitset&std::bitset<NSSACHANNELS*NMPAROWS>(0x0000F0FF0);
     LOG(DEBUG) << BOLDBLUE << "\t... Applying mask to MPA" << +cChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
                << " original mask  \t... : " << cOriginalMask << " enabled channels "
                << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
@@ -430,9 +430,9 @@ bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<C
     // std::vector<std::pair<std::string, uint16_t>> pVecReq;
     // pVecReq.clear();
     bool returnval = true;
-    for(uint32_t ipix = 0; ipix < (NSSACHANNELS * NMPACOLS); ipix++)
+    for(uint32_t ipix = 0; ipix < (NSSACHANNELS * NMPAROWS); ipix++)
     {
-        auto shifted = std::bitset<NSSACHANNELS * NMPACOLS>(0x1) << ipix;
+        auto shifted = std::bitset<NSSACHANNELS * NMPAROWS>(0x1) << ipix;
         bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
 
         if(bitval) continue;
@@ -455,23 +455,23 @@ bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<C
 
 bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    std::bitset<NSSACHANNELS* NMPACOLS> cBitset = std::bitset<NSSACHANNELS * NMPACOLS>(std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group)->getBitset());
+    std::bitset<NSSACHANNELS* NMPAROWS> cBitset = std::bitset<NSSACHANNELS * NMPAROWS>(std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(group)->getBitset());
     if(cBitset.count() == 0) // no mask set... so do nothing
         return true;
 
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(cChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS * NMPAROWS>>(group);
 
-    // cBitset=cBitset&std::bitset<NSSACHANNELS * NMPACOLS>(0xF0FF0);
+    // cBitset=cBitset&std::bitset<NSSACHANNELS * NMPAROWS>(0xF0FF0);
 
     LOG(DEBUG) << BOLDBLUE << "\t... Applying injection to MPA" << +cChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
                << " original mask  \t... : " << cOriginalMask << " enabled channels "
                << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
 
     bool returnval = true;
-    for(uint32_t ipix = 0; ipix < (NSSACHANNELS * NMPACOLS); ipix++)
+    for(uint32_t ipix = 0; ipix < (NSSACHANNELS * NMPAROWS); ipix++)
     {
-        auto shifted = std::bitset<NSSACHANNELS * NMPACOLS>(0x1) << ipix;
+        auto shifted = std::bitset<NSSACHANNELS * NMPAROWS>(0x1) << ipix;
         bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
 
         returnval &= enablePixelInjection(cChip, ipix + 1, bitval, pVerify);
@@ -506,7 +506,7 @@ bool MPA2Interface::ConfigureChipOriginalMask(ReadoutChip* pMPA, bool pVerify, u
     // write broadcast then mask is much much faster than full config
     configPixel(pMPA, "ENFLAGS", 0, (pixval | 0x1));
     LOG(INFO) << BOLDBLUE << "Broadcasting " << pixval << " or " << (pixval | 0x1) << RESET;
-    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
+    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<1, NSSACHANNELS * NMPAROWS>>();
     return maskChannelGroup(pMPA, allChannelEnabledGroup, pVerify);
 }
 
@@ -966,7 +966,7 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<NMPACHANNELS, 1>                 channelToEnable;
+    ChannelGroup<1, NMPACHANNELS>                 channelToEnable;
     std::vector<uint32_t>                         cVec;
     cVec.clear();
     bool cSuccess = true;
@@ -1057,7 +1057,7 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
                 if((cMapItem.second.fValue & 0x1) == 0)
                 {
                     // std::cout<<cMapItem.first<<","<<cMapItem.second.fValue<<" MASK"<<std::endl;
-                    cOriginalMask->disableChannel(std::stoi(cMapItem.first.substr(9, cMapItem.first.size())) - 1);
+                    cOriginalMask->disableChannel(0, std::stoi(cMapItem.first.substr(9, cMapItem.first.size())) - 1);
                 }
             }
         }

@@ -105,7 +105,7 @@ void D19cMPAEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, con
     size_t                cChnl = 0;
     for(auto cHit: cHits)
     {
-        if(testChannelGroup->isChannelEnabled(cChnl))
+        if(testChannelGroup->isChannelEnabled(0, cChnl))
         {
             if(cChnl < 10) LOG(INFO) << BOLDBLUE << cChnl << " found " << cHit << RESET;
             chipContainer->getChannelContainer<Occupancy>()->at(cChnl).fOccupancy += cHit;

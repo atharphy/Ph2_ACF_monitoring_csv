@@ -440,7 +440,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
                 ReadoutChip* theReadoutChip = static_cast<ReadoutChip*>(cReadoutChip);
                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cReadoutChip->getId());
                 // original mask
-                auto cOriginalMask = std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cReadoutChip->getChipOriginalMask());
+                auto cOriginalMask = std::static_pointer_cast<ChannelGroup<1, NCHANNELS>>(cReadoutChip->getChipOriginalMask());
                 // original threshold
                 uint16_t cThreshold = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadChipReg(theReadoutChip, "VCth");
                 // original HIT OR setting

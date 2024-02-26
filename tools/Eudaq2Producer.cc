@@ -594,7 +594,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
         uint8_t  cMaxNChip      = 8;
         uint8_t  cMaxNHybrid    = 2;
         uint16_t cNPixelColumns = (NMPACHANNELS / 16) * cMaxNChip;
-        uint16_t cNPixelRows    = NMPACOLS * cMaxNHybrid;
+        uint16_t cNPixelRows    = NMPAROWS * cMaxNHybrid;
         uint16_t cNStripColumns = NSSACHANNELS * cMaxNChip;
         uint16_t cNStripRows    = cMaxNHybrid;
         // Loop over optical groups

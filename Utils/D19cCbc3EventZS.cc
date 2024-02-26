@@ -23,7 +23,7 @@ void D19cCbc3EventZS::fillChipDataContainer(ChipDataContainer* chipContainer, co
     unsigned int i = 0;
     for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
-        if(testChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)DataBit(hybridId, chipContainer->getId(), i); }
+        if(testChannelGroup->isChannelEnabled(0, i)) { channel->fOccupancy += (float)DataBit(hybridId, chipContainer->getId(), i); }
     }
 }
 

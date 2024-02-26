@@ -38,7 +38,7 @@ class MPA2 : public ReadoutChip
 {
   public:
     static constexpr size_t nRows = NSSACHANNELS;
-    static constexpr size_t nCols = NMPACOLS;
+    static constexpr size_t nCols = NMPAROWS;
 
     MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename);
     // C'tors with object FE Description

@@ -38,7 +38,7 @@ void LatencyScan::Initialize()
     else if(cWithPS)
     {
         MPAChannelGroupHandler theChannelGroupHandlerMPA;
-        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPAROWS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA);
 
         SSAChannelGroupHandler theChannelGroupHandlerSSA;
@@ -48,7 +48,7 @@ void LatencyScan::Initialize()
     else if(cWithPSv2)
     {
         MPAChannelGroupHandler theChannelGroupHandlerMPA;
-        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPAROWS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
 
         SSAChannelGroupHandler theChannelGroupHandlerSSA;

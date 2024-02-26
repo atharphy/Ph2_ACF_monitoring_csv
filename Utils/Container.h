@@ -251,7 +251,7 @@ class ChipContainer : public BaseContainer
         return static_cast<ChannelContainer<T>*>(container_)->end();
     }
 
-    void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols = 1)
+    void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols)
     {
         nOfRows_ = numberOfRows;
         nOfCols_ = numberOfCols;

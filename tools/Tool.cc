@@ -1869,7 +1869,7 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                                             ->getChannel<Occupancy>(tempMaskList[iChannel])
                                             .fOccupancy) > (targetOccupancy + 2.0 * occDiff.second))
                                     {
-                                        cOriginalMask->disableChannel(tempMaskList[iChannel]);
+                                        cOriginalMask->disableChannel(0, tempMaskList[iChannel]);
                                         LOG(INFO) << BOLDRED << "Masking Channel:  " << tempMaskList[iChannel] << RESET;
                                         // LOG(INFO) << BOLDYELLOW << "MASKHIGH"<<RESET;
                                     }
@@ -1891,7 +1891,7 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                                             ->getChannel<Occupancy>(tempMaskList[iChannel])
                                             .fOccupancy) < (targetOccupancy + 2.0 * occDiff.first))
                                     {
-                                        cOriginalMask->disableChannel(tempMaskList[iChannel]);
+                                        cOriginalMask->disableChannel(0, tempMaskList[iChannel]);
                                         LOG(INFO) << BOLDRED << "Masking Channel:  " << tempMaskList[iChannel] << RESET;
                                         // LOG(INFO) << BOLDYELLOW << "MASKLOW"<<RESET;
                                     }
