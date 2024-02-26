@@ -442,7 +442,7 @@ void PedestalEqualization::FindOffsets()
                         LOG(DEBUG) << BOLDGREEN << "Offset set to " << +channel << RESET;
                         cMeanOffset += channel;
                     }
-                    if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) NCH = NMPACHANNELS;
+                    if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) NCH = NMPAROWS * NSSACHANNELS;
                     if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) NCH = NSSACHANNELS;
 
                     LOG(INFO) << BOLDRED << "Mean offset on Chip" << +chip->getId() << " is : " << (cMeanOffset) / (double)NCH << " Vcth units." << RESET;

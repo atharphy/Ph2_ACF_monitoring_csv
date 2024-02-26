@@ -722,7 +722,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<1, NMPACHANNELS>                 channelToEnable;
+    ChannelGroup<1, NMPAROWS * NSSACHANNELS>                 channelToEnable;
     std::vector<uint32_t>                         cVec;
     cVec.clear();
     bool cSuccess = true;

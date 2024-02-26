@@ -254,7 +254,7 @@ void PSPixelAlive::maskNoisyChannels(BoardDataContainer* board)
                     // else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                     //  NCH = NSSACHANNELS;
                     // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                    //  NCH = NMPACHANNELS;
+                    //  NCH = NMPAROWS * NSSACHANNELS;
 
     //                float fMean=1.0;
     //                        if(cType == FrontEndType::MPA or  cType == FrontEndType::MPA2)
@@ -427,7 +427,7 @@ void PSPixelAlive::measureOccupancy()
                     if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                         NCH = NSSACHANNELS;
                     else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                        NCH = NMPACHANNELS;
+                        NCH = NMPAROWS * NSSACHANNELS;
 
                     auto chipDC        = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     auto cOriginalMask = chipDC->getChipOriginalMask();

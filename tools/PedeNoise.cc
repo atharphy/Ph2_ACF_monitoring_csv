@@ -372,7 +372,7 @@ void PedeNoise::Validate()
                     else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                         NCH = NSSACHANNELS;
                     else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                        NCH = NMPACHANNELS;
+                        NCH = NMPAROWS * NSSACHANNELS;
                     //
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
@@ -950,7 +950,7 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                 // else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                 //  NCH = NSSACHANNELS;
                 // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                //  NCH = NMPACHANNELS;
+                //  NCH = NMPAROWS * NSSACHANNELS;
 
                 /*float fMean=1.0;
                         if(cType == FrontEndType::MPA or  cType == FrontEndType::MPA2)

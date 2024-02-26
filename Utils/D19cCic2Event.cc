@@ -894,11 +894,11 @@ uint32_t D19cCic2Event::PipelineAddress(uint8_t pHybridId, uint8_t pReadoutChipI
         return cPipeline.to_ulong();
     }
 }
-std::bitset<NMPACHANNELS> D19cCic2Event::decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
+std::bitset<NMPAROWS * NSSACHANNELS> D19cCic2Event::decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
     auto&                     cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
-    std::bitset<NMPACHANNELS> cBitSet(0);
+    std::bitset<NMPAROWS * NSSACHANNELS> cBitSet(0);
     size_t                    cClusterId = 0;
     for(auto cCluster: cClusterWords)
     {

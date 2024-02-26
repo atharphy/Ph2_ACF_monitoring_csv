@@ -208,7 +208,7 @@ class D19cCic2Event : public Event
     uint32_t BxId(uint8_t pHybridId) const override;
     uint16_t Status(uint8_t pHybridId) const;
 
-    std::bitset<NMPACHANNELS> decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    std::bitset<NMPAROWS * NSSACHANNELS> decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
     std::bitset<NSSACHANNELS> decodeSClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
     std::bitset<NCHANNELS>    decodeClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
     std::bitset<RAW_L1_CBC>   getRawL1Word(uint8_t pHybridId, uint8_t pReadoutChipId) const;

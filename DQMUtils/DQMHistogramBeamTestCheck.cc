@@ -63,7 +63,7 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
                 {
                     cN += chip->size();
                     // only account for seeds in MPAs/CBCs
-                    if(chip->size() == NMPACHANNELS)
+                    if(chip->size() == NMPAROWS * NSSACHANNELS)
                     {
                         cNSeedS0 = chip->size() / NMPAROWS;
                         cNS0     = chip->size() / NMPAROWS;
@@ -844,13 +844,13 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                     for(auto channel: *cChipStubOCc->getChannelContainer<Occupancy>())
                     {
                         // this is only valid for MPA
-                        if(chip->size() != NMPACHANNELS && chip->size() != NCHANNELS) continue;
+                        if(chip->size() != NMPAROWS * NSSACHANNELS && chip->size() != NCHANNELS) continue;
                         // sensor id
-                        uint8_t  cSensorId  = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPACHANNELS);
+                        uint8_t  cSensorId  = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPAROWS * NSSACHANNELS);
                         uint32_t cNChannels = (cSensorId == 0) ? cStubMapS0->GetXaxis()->GetNbins() / 8. : cStubMapS1->GetXaxis()->GetNbins() / 8.;
                         // rows and columns
                         uint32_t cNRows = (chip->size() == NCHANNELS) ? NCHANNELS / cDivider : NSSACHANNELS;
-                        uint32_t cNCols = (chip->size() == NMPACHANNELS) ? NMPAROWS : 1;
+                        uint32_t cNCols = (chip->size() == NMPAROWS * NSSACHANNELS) ? NMPAROWS : 1;
                         uint32_t cRow   = (chip->size() == NCHANNELS) ? cChnlIndx / cDivider : cChnlIndx % cNRows;
                         uint32_t cCol   = (cNCols == 1) ? 0 : cChnlIndx / cNRows;
                         // local x , local y
@@ -892,12 +892,12 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                     for(auto channel: *cChipHitOCc->getChannelContainer<Occupancy>())
                     {
                         // sensor id
-                        uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPACHANNELS);
+                        uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPAROWS * NSSACHANNELS);
                         // offset for plotting
                         uint32_t cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / 8. : cHitMapS1->GetXaxis()->GetNbins() / 8.;
                         // rows and columns
                         uint32_t cNRows = (chip->size() == NCHANNELS) ? NCHANNELS / cDivider : NSSACHANNELS;
-                        uint32_t cNCols = (chip->size() == NMPACHANNELS) ? NMPAROWS : 1;
+                        uint32_t cNCols = (chip->size() == NMPAROWS * NSSACHANNELS) ? NMPAROWS : 1;
                         uint32_t cRow   = (chip->size() == NCHANNELS) ? cChnlIndx / cDivider : cChnlIndx % cNRows;
                         uint32_t cCol   = (cNCols == 1) ? 0 : cChnlIndx / cNRows;
                         // local x , local y
@@ -979,11 +979,11 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                     // hits
                     int cNChannels = cS0S1->GetXaxis()->GetNbins() / 8.;
                     int cNRows     = (chip->size() == NCHANNELS) ? NCHANNELS / cDivider : NSSACHANNELS;
-                    int cNCols     = (chip->size() == NMPACHANNELS) ? NMPAROWS : 1;
+                    int cNCols     = (chip->size() == NMPAROWS * NSSACHANNELS) ? NMPAROWS : 1;
                     for(auto channel: *cChipS0Occ->getChannelContainer<Occupancy>())
                     {
                         // this is only valid for MPAs/CBCs
-                        if(chip->size() != NMPACHANNELS && chip->size() != NCHANNELS) continue;
+                        if(chip->size() != NMPAROWS * NSSACHANNELS && chip->size() != NCHANNELS) continue;
                         // rows and columns
                         uint32_t cRow = (chip->size() == NCHANNELS) ? cChnlIndx / cDivider : cChnlIndx % cNRows;
                         uint32_t cCol = (cNCols == 1) ? 0 : cChnlIndx / cNRows;
@@ -996,10 +996,10 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                             for(auto cOtherChip: *hybrid)
                             {
                                 // this is only valid for MPAs/CBCs
-                                if(cOtherChip->size() != NMPACHANNELS && chip->size() != NCHANNELS) continue;
+                                if(cOtherChip->size() != NMPAROWS * NSSACHANNELS && chip->size() != NCHANNELS) continue;
                                 auto& cChipS1Occ   = theHitMapS1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(cOtherChip->getId());
                                 cNRows             = (cOtherChip->size() == NCHANNELS) ? NCHANNELS : NSSACHANNELS;
-                                cNCols             = (cOtherChip->size() == NMPACHANNELS) ? NMPAROWS : 1;
+                                cNCols             = (cOtherChip->size() == NMPAROWS * NSSACHANNELS) ? NMPAROWS : 1;
                                 size_t cChnlIndxS1 = 0;
                                 for(auto channelS1: *cChipS1Occ->getChannelContainer<Occupancy>())
                                 {
@@ -1037,7 +1037,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                     for(auto channel: *cChipStubOcc->getChannelContainer<Occupancy>())
                     {
                         // this is only valid for MPAs/CBCs
-                        if(chip->size() != NMPACHANNELS && chip->size() != NCHANNELS) continue;
+                        if(chip->size() != NMPAROWS * NSSACHANNELS && chip->size() != NCHANNELS) continue;
                         uint32_t cRow      = (chip->size() == NCHANNELS) ? cChnlIndx / cDivider : cChnlIndx % cNRows;
                         uint8_t  cSensorId = (chip->size() == NCHANNELS) ? ((cChnlIndx % 2 == 0) ? 0 : 1) : 0;
                         // local x , local y
@@ -1092,7 +1092,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                             {
                                 auto& cChipS0Occ   = theHitMapS0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(cOtherChip->getId());
                                 cNRows             = (cOtherChip->size() == NCHANNELS) ? NCHANNELS / cDivider : NSSACHANNELS;
-                                cNCols             = (cOtherChip->size() == NMPACHANNELS) ? NMPAROWS : 1;
+                                cNCols             = (cOtherChip->size() == NMPAROWS * NSSACHANNELS) ? NMPAROWS : 1;
                                 size_t cChnlIndxS1 = 0;
                                 for(auto channelS1: *cChipS0Occ->getChannelContainer<Occupancy>())
                                 {
@@ -1121,7 +1121,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                             {
                                 auto& cChipS1Occ   = theHitMapS1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(cOtherChip->getId());
                                 cNRows             = (cOtherChip->size() == NCHANNELS) ? NCHANNELS / cDivider : NSSACHANNELS;
-                                cNCols             = (cOtherChip->size() == NMPACHANNELS) ? NMPAROWS : 1;
+                                cNCols             = (cOtherChip->size() == NMPAROWS * NSSACHANNELS) ? NMPAROWS : 1;
                                 size_t cChnlIndxS1 = 0;
                                 for(auto channelS1: *cChipS1Occ->getChannelContainer<Occupancy>())
                                 {

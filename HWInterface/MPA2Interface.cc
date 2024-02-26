@@ -966,7 +966,7 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<1, NMPACHANNELS>                 channelToEnable;
+    ChannelGroup<1, NMPAROWS * NSSACHANNELS>                 channelToEnable;
     std::vector<uint32_t>                         cVec;
     cVec.clear();
     bool cSuccess = true;
@@ -1383,7 +1383,7 @@ bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<std::tupl
     success &= WriteChipReg(pMPA, "Mask_ALL", 0xFF);
 
     // std::vector<std::string> listOfRegisters;
-    // for(size_t pixelNumber = 0; pixelNumber < NMPACHANNELS; ++pixelNumber)
+    // for(size_t pixelNumber = 0; pixelNumber < NMPAROWS * NSSACHANNELS; ++pixelNumber)
     // {
     //     std::string registerName = "ENFLAGS_P" + std::to_string(pixelNumber+1);
     //     listOfRegisters.push_back(registerName);
