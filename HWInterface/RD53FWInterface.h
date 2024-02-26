@@ -169,6 +169,8 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t enable_hitor      = 0; // Enable HitOr signals
 
         FastCmdFSMConfig fast_cmd_fsm;
+
+        static const std::array<std::string, 8> fastCmdWhiteList;
     };
 
     void ConfigureFromXML(const Ph2_HwDescription::BeBoard* pBoard);
@@ -220,7 +222,8 @@ class RD53FWInterface : public BeBoardFWInterface
   private:
     void     TurnOffFMC();
     void     TurnOnFMC();
-    void     ConfigureDIO5(const DIO5Config* config);
+    void     ConfigureDIO5(const Ph2_HwDescription::BeBoard* pBoard, DIO5Config* config);
+    void     SendDIO5Cfg(const DIO5Config* config);
     void     SendBoardCommandWithStrobe(const std::string& cmdReg);
     uint32_t GetBoardEnabledChips(const Ph2_HwDescription::BeBoard* pBoard, bool primariesOnly = false);
     uint32_t GetBoardEnabledHybrids(const Ph2_HwDescription::BeBoard* pBoard);
