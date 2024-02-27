@@ -541,15 +541,15 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupa
                                                        .fTheHistogram;
                     }
 
-                    uint cChannelBin = 1;
-
-                    auto cChannelContainer =
-                        theOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<Occupancy>();
-                    if(cChannelContainer == nullptr) continue;
-                    for(auto cChannel: *cChannelContainer)
+                    auto theChipContainer = theOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    if(theChipContainer->hasChannelContainer() == false) continue;
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        cChipValidationHistogram->SetBinContent(cChannelBin, cChannel.fOccupancy);
-                        cChipValidationHistogram->SetBinError(cChannelBin++, cChannel.fOccupancyError);
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            cChipValidationHistogram->SetBinContent(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()), theChipContainer->getChannel<Occupancy>(row, col).fOccupancy);
+                            cChipValidationHistogram->SetBinError(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()), theChipContainer->getChannel<Occupancy>(row, col).fOccupancyError);
+                        }
                     }
                 }
             }
@@ -699,6 +699,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                     {
                         for(uint16_t col = 0; col < theChipContainer->getNumberOfCols(); ++col)
                         {
+                            uint16_t channelIndex = linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols());
                             float cNoise       = (std::isnan(theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoise)) ? 666 : theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoise;
                             float cNoiseErr    = (std::isnan(theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError)) ? 666 : theChipContainer->getChannel<ThresholdAndNoise>(row, col).fNoiseError;
                             float cPedestal    = (std::isnan(theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThreshold)) ? 666 : theChipContainer->getChannel<ThresholdAndNoise>(row, col).fThreshold;
@@ -707,12 +708,12 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                             cChipNoiseHistogram->Fill(cNoise);
                             cHybridNoiseHistogram->Fill(cNoise);
 
-                            cChannelNoiseHistogram->SetBinContent(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1, cNoise);
-                            cChannelNoiseHistogram->SetBinError(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1, cNoiseErr);
-                            cChannelPedestalHistogram->SetBinContent(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1, cPedestal);
-                            cChannelPedestalHistogram->SetBinError(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1, cPedestalErr);
-                            cHybridChannelNoiseHistogram->SetBinContent(cNChannels * (cChip->getId() % 8) + linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1, cNoise);
-                            cHybridChannelNoiseHistogram->SetBinError(cNChannels * (cChip->getId() % 8) + linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1, cNoiseErr);
+                            cChannelNoiseHistogram->SetBinContent(channelIndex + 1, cNoise);
+                            cChannelNoiseHistogram->SetBinError(channelIndex + 1, cNoiseErr);
+                            cChannelPedestalHistogram->SetBinContent(channelIndex + 1, cPedestal);
+                            cChannelPedestalHistogram->SetBinError(channelIndex + 1, cPedestalErr);
+                            cHybridChannelNoiseHistogram->SetBinContent(cNChannels * (cChip->getId() % 8) + channelIndex + 1, cNoise);
+                            cHybridChannelNoiseHistogram->SetBinError(cNChannels * (cChip->getId() % 8) + channelIndex + 1, cNoiseErr);
 
                             if(cType == FrontEndType::CBC3)
                             {
@@ -732,7 +733,9 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                                 }
                             }
                             if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                            { cChannel2DPixelNoiseHistogram->SetBinContent(row + 1, col + 1, cNoise); }
+                            {
+                                cChannel2DPixelNoiseHistogram->SetBinContent(col + 1, row + 1, cNoise);
+                            }
                         }
                     }
                 }
@@ -789,8 +792,8 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                         {
                             float tmpOccupancy      = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
                             float tmpOccupancyError = theChipContainer->getChannel<Occupancy>(row, col).fOccupancyError;
-                            cChipSCurve->SetBinContent(cChannelNumber + 1, cTh + 1, tmpOccupancy);
-                            cChipSCurve->SetBinError(cChannelNumber + 1, cTh + 1, tmpOccupancyError);
+                            cChipSCurve->SetBinContent(linearizeRowAndCols(row, col, cChip->getNumberOfCols()) + 1, cTh + 1, tmpOccupancy);
+                            cChipSCurve->SetBinError(linearizeRowAndCols(row, col, cChip->getNumberOfCols()) + 1, cTh + 1, tmpOccupancyError);
 
                             if(fFitSCurves)
                             {
