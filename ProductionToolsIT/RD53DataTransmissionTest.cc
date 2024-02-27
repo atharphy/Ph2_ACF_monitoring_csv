@@ -57,13 +57,7 @@ void DataTransmissionTest::sendData()
 void DataTransmissionTest::Stop()
 {
     LOG(INFO) << GREEN << "[DataTransmissionTest::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    DataTransmissionTest::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void DataTransmissionTest::localConfigure(const std::string& histoFileName, int currentRun)

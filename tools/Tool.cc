@@ -88,6 +88,7 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
+// @Mauro@
 // void Tool::privateRunning(std::promise<int>&& thePromise)
 // {
 //     try
@@ -137,6 +138,7 @@ void Tool::waitForRunToBeCompleted()
     {
         LOG(INFO) << "Ignoring future exception, future already retrieved";
     }
+    // @Mauro@
     // std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
@@ -175,15 +177,17 @@ void Tool::Start(const StartInfo& theStartInfo)
         fMetadataHandler->fillInitialConditions();
     }
 
-    // doExit       = false;
+    // doExit             = false; // @Mauro@
     Tool::fKeepRunning = true;
     fRunNumber         = theStartInfo.getRunNumber();
-    fRunningFuture     = std::async(std::launch::async, &Tool::Running, this);
+    fRunningFuture     = std::async(std::launch::async, &Tool::Running, this); // @Fabio@
+    // @Mauro@
     // std::promise<int> thePromise;
     // fRunningFuture = thePromise.get_future();
     // fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
 }
 
+// @Mauro@
 // void Tool::InformImDone()
 // {
 //     std::unique_lock<std::recursive_mutex> theGuard(theMtx);
@@ -198,7 +202,7 @@ void Tool::Stop()
     {
         Tool::fKeepRunning = false;
         Tool::waitForRunToBeCompleted();
-        // if(fRunningThread.joinable() == true) fRunningThread.join();
+        // if(fRunningThread.joinable() == true) fRunningThread.join(); // @Mauro@
         try
         {
             if(fRunningFuture.valid()) fRunningFuture.get();
@@ -214,9 +218,9 @@ void Tool::Stop()
         SystemController::Stop();
 
         Tool::dumpConfigFiles();
-        if(fMetadataHandler != nullptr) { fMetadataHandler->fillFinalConditions(); }
+        if(fMetadataHandler != nullptr) fMetadataHandler->fillFinalConditions();
 
-        if(fDQMStreamerEnabled)
+        if(fDQMStreamerEnabled == true)
         {
             std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
             PacketHeader thePacketHeader;
@@ -226,16 +230,7 @@ void Tool::Stop()
 
         Tool::SaveResults();
         Tool::WriteRootFile();
-        Tool::CloseResultFile();
     }
-}
-
-void Tool::SaveAndClose()
-{
-    Tool::dumpConfigFiles();
-    Tool::SaveResults();
-    Tool::WriteRootFile();
-    Tool::CloseResultFile();
 }
 
 void Tool::Inherit(const Tool* pTool)
@@ -385,15 +380,12 @@ void Tool::bookSummaryTree()
  */
 void Tool::fillSummaryTree(std::string cParameter, Double_t cValue) // MINE
 {
-    // TString currentDirectory = getDirectoryName();
-    // const char* currentDirectory = gDirectory->GetPath();
     fResultFile->cd();
     fSummaryTreeParameter.clear();
     TString cParameter_TString(cParameter);
     fSummaryTreeParameter = cParameter_TString;
     fSummaryTreeValue     = cValue;
     if(fSummaryTree) fSummaryTree->Fill();
-    // fResultFile->cd(currentDirectory);
 }
 
 Double_t Tool::getSummaryParameter(std::string cParameter)
@@ -627,10 +619,9 @@ void Tool::SaveResults()
         std::string cPdfName = fDirectoryName + "/" + cCanvas.second->GetName() + ".pdf";
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
+
     // Save summary TTree
-    // fResultFile->cd();
     if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->cd();
-        // if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 #endif
 }
 
@@ -711,7 +702,7 @@ void Tool::AddMetadata()
     TTree* t = new TTree();
     t->SetName("metadata");
 
-    // save username
+    // Save username
     std::string user;
     try
     {
@@ -830,13 +821,21 @@ void Tool::dumpConfigFiles()
         const auto theBeBoardFW = this->fBeBoardFWMap[theBoard->getId()];
         const auto hwInterface  = theBeBoardFW->getHardwareInterface();
 
+        auto theBoardFreeRegisterRegex = theBoard->getFreeRegisterRegex();
+
         for(const auto& path: hwInterface->getNodes())
         {
             const auto& node = hwInterface->getNode(path);
 
             if((node.getPermission() == uhal::defs::READWRITE) && (++node.begin() == node.end()))
-            // if((node.getPermission() == uhal::defs::READWRITE || node.getPermission() == uhal::defs::READ)  && (++node.begin() == node.end()))
             {
+                bool isFreeRegister = false;
+                for(const auto& freeRegister: theBoardFreeRegisterRegex)
+                {
+                    isFreeRegister = std::regex_match(path, freeRegister.first);
+                    if(isFreeRegister) break;
+                }
+                if(isFreeRegister) continue;
                 fBeBoardInterface->ReadBoardReg(theBoard, path);
             }
         }
@@ -2006,6 +2005,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, i
                                                  ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                  ->getNumberOfGroups())
                                 continue;
+
                             fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
                                                                                      getChannelGroupHandlerContainer()
                                                                                          ->getObject(fDetectorContainer->getObject(boardId)->getId())
@@ -2129,46 +2129,24 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
 {
     MeasureBeBoardDataPerGroup theScan(this);
     theScan.setDataContainer(fDetectorDataContainer);
-    // make sure async mode uses ReadNEvents
+    // Make sure async mode uses ReadNEvents
     bool cUseReadNEvents = fUseReadNEvents;
     if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
     {
         this->setSameGlobalDac("AnalogueAsync", 1);
-        //#FIXME the commented block below throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
-        // Error: implementation of virtual member function is absent"
-        /*
-                for(auto cBoard: *fDetectorContainer)
-                {
-                    for(auto cOpticalGroup: *cBoard)
-                    {
-                        for(auto cHybrid: *cOpticalGroup)
-                        {
-                            for(auto cChip: *cHybrid) { fReadoutChipInterface->maskChannelGroup(cChip, cChip->getChipOriginalMask()); }
-                        }
-                    }
-                }
-        */
         fUseReadNEvents = true;
     }
+
     doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
-    // If in async mode normalization is a little different ..
-    // normalize by the number of triggers to accept
-    // if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
-    // {
-    //     numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_stat.fast_command_block.trigger_in_counter");
-    //     // LOG (INFO) << BOLDYELLOW << "Tool::measureBeBoardData number of events with PSAS " << numberOfEvents << RESET;
-    //     fNReadbackEvents = numberOfEvents;
-    // }
-
     if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
-    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
+        numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
+
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;
 
     if(fNormalize)
         fDetectorDataContainer->getObject(boardId)->normalizeAndAverageContainers(fDetectorContainer->getObject(boardId), getChannelGroupHandlerContainer()->getObject(boardId), numberOfEvents);
     fUseReadNEvents = cUseReadNEvents;
-    // LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " end " << RESET;
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup

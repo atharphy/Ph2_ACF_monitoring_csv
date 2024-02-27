@@ -63,7 +63,7 @@ void ThrAdjustment::Running()
 
     ThrAdjustment::run();
     ThrAdjustment::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    ThrAdjustment::draw();
     ThrAdjustment::sendData();
     PixelAlive::sendData();
 }
@@ -80,17 +80,16 @@ void ThrAdjustment::sendData()
 void ThrAdjustment::Stop()
 {
     LOG(INFO) << GREEN << "[ThrAdjustment::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    ThrAdjustment::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void ThrAdjustment::localConfigure(const std::string& histoFileName, int currentRun)
 {
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
+
     histos             = nullptr;
     PixelAlive::histos = nullptr;
 

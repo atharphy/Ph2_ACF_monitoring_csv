@@ -35,7 +35,6 @@ class VoltageTuning : public CalibBase
     ~VoltageTuning()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -61,14 +60,14 @@ class VoltageTuning : public CalibBase
     DetectorDataContainer theDigContainer;
 
   protected:
-    size_t      colStart;
-    size_t      colStop;
-    float       targetDig;
-    float       targetAna;
-    float       toleranceDig;
-    float       toleranceAna;
-    bool        doDisplay;
-    std::string dataOutputDir;
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
+    float targetDig;
+    float targetAna;
+    float toleranceDig;
+    float toleranceAna;
+    bool  doDisplay;
 };
 
 #endif

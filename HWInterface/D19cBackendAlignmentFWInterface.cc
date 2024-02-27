@@ -240,11 +240,20 @@ Reply D19cBackendAlignmentFWInterface::AlignWord(AlignerObject pAlignerObject, L
         SendCommand("SetSyncPattern");
     }
     SendCommand("AlignLine");
-    std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
-    ClearStatus();
-    SendCommand("ReturnResult");
-    GetReply("ReturnResult");
 
+    bool isDone                  = false;
+    int  maxNumberOfIterations   = 10;
+    int  currentInterationNumber = 0;
+    while(!isDone && currentInterationNumber < maxNumberOfIterations)
+    {
+        ++currentInterationNumber;
+        std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
+        ClearStatus();
+        SendCommand("ReturnResult");
+        GetReply("ReturnResult");
+        isDone = (fStatus.fDone == 1);
+    }
+    if(currentInterationNumber == maxNumberOfIterations) LOG(ERROR) << BOLDRED << "D19cBackendAlignmentFWInterface::AlignWord - Align Line procedure timed out" << RESET;
     cReply.fCnfg    = fLineConfiguration;
     cReply.fSuccess = IsLineWordAligned(); //(fStatus.fDone == 1 && IsLineWordAligned());
     Print();

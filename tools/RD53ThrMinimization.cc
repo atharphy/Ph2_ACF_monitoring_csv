@@ -64,7 +64,7 @@ void ThrMinimization::Running()
 
     ThrMinimization::run();
     ThrMinimization::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    ThrMinimization::draw();
     ThrMinimization::sendData();
     PixelAlive::sendData();
 }
@@ -81,17 +81,16 @@ void ThrMinimization::sendData()
 void ThrMinimization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrMinimization::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    ThrMinimization::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void ThrMinimization::localConfigure(const std::string& histoFileName, int currentRun)
 {
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
+
     histos             = nullptr;
     PixelAlive::histos = nullptr;
 

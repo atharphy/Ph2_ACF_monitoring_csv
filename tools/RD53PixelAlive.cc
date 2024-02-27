@@ -18,13 +18,7 @@ void PixelAlive::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings<double>("ROWstart");
-    rowStop         = this->findValueInSettings<double>("ROWstop");
-    colStart        = this->findValueInSettings<double>("COLstart");
-    colStop         = this->findValueInSettings<double>("COLstop");
-    nEvents         = this->findValueInSettings<double>("nEvents", 1);
-    nEvtsBurst      = this->findValueInSettings<double>("nEvtsBurst", 1) < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
-    nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
+    CalibBase::ConfigureCalibration();
     injType         = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     nHITxCol        = this->findValueInSettings<double>("nHITxCol");
     doDataIntegrity = this->findValueInSettings<double>("DoDataIntegrity");
@@ -34,7 +28,6 @@ void PixelAlive::ConfigureCalibration()
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
-    dataOutputDir   = this->findValueInSettings<std::string>("DataOutputDir", "");
     frontEnd        = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################
@@ -71,7 +64,7 @@ void PixelAlive::Running()
 
     PixelAlive::run();
     PixelAlive::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    PixelAlive::draw();
     PixelAlive::sendData();
 }
 
@@ -93,13 +86,7 @@ void PixelAlive::sendData()
 void PixelAlive::Stop()
 {
     LOG(INFO) << GREEN << "[PixelAlive::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    PixelAlive::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun)
@@ -176,6 +163,7 @@ void PixelAlive::run()
                                 // # Run analysis #
                                 // ################
                                 this->SetTestPulse(false);
+                                this->fMaskChannelsFromOtherGroups = false;
                                 this->measureData(1, 1);
 
                                 // #####################

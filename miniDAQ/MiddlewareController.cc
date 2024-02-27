@@ -10,7 +10,6 @@
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RD53ClockDelay.h"
-#include "tools/RD53DataTransmissionTest.h"
 #include "tools/RD53Gain.h"
 #include "tools/RD53GainOptimization.h"
 #include "tools/RD53InjectionDelay.h"
@@ -27,7 +26,6 @@
 #include "tools/LinkAlignmentOT.h"
 #include "tools/PSPhysics.h"
 #include "tools/Physics2S.h"
-#include "tools/StubBackEndAlignment.h"
 
 #include "MessageUtils/cpp/QueryMessage.pb.h"
 #include "MessageUtils/cpp/ReplyMessage.pb.h"

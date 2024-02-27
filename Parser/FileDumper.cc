@@ -15,7 +15,17 @@
 
 using namespace Ph2_HwDescription;
 
-FileDumper::FileDumper(const std::string& outputDirectory) { fOutputDirectory = std::string(getenv("PH2ACF_BASE_DIR")) + "/" + outputDirectory + "/"; }
+FileDumper::FileDumper(const std::string& outputDirectory)
+{
+    fOutputDirectory = std::string(getenv("PH2ACF_BASE_DIR")) + "/" + outputDirectory + "/";
+    // Overwrite if GUI is involved
+    if(std::getenv("GIPHT_RESULT_FOLDER"))
+    {
+        LOG(INFO) << "OT Module GUI (GIPHT) result directory environmental variable set: " << std::getenv("GIPHT_RESULT_FOLDER") << RESET;
+        fOutputDirectory = std::getenv("GIPHT_RESULT_FOLDER");
+        LOG(INFO) << "Use " << fOutputDirectory << " for file dump" << RESET;
+    }
+}
 
 FileDumper::~FileDumper() {}
 
@@ -45,7 +55,7 @@ std::stringstream FileDumper::dumpConfigurationFiles(DetectorContainer*         
 
     LOG(INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fOutputDirectory << RESET;
 
-    if(doc.save_file(outputFileName.c_str())) { LOG(INFO) << BOLDYELLOW << "New configuration file saved: " << outputFileName << std::endl; }
+    if(doc.save_file(outputFileName.c_str())) { LOG(INFO) << BOLDYELLOW << "New configuration file saved: " << outputFileName << RESET; }
     else
     {
         LOG(ERROR) << BOLDRED << "Error saving the new configuration file." << RESET;
@@ -243,6 +253,7 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
 
     pugi::xml_node theReadoutChipNode                                     = theMotherNode.append_child(theReadoutChipNodeName.c_str());
     theReadoutChipNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME)         = std::to_string(theReadoutChip->getId()).c_str();
+    theReadoutChipNode.append_attribute(COMMON_ENABLE_ATTRIBUTE_NAME)     = "1";
     theReadoutChipNode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
 }
 

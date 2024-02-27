@@ -5,15 +5,24 @@
 #include "tools/CBCPulseShape.h"
 #include "tools/CalibrationExample.h"
 #include "tools/CombinedCalibration.h"
+#include "tools/ConfigureOnly.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
+#include "tools/OTCICphaseAlignment.h"
+#include "tools/OTCICwordAlignment.h"
+#include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
-#include "tools/PSAlignment.h"
+#include "tools/OTalignBoardDataWord.h"
+#include "tools/OTalignLpGBTinputs.h"
+#include "tools/OTalignStubPackage.h"
+#include "tools/OTverifyBoardDataWord.h"
+#include "tools/OTverifyCICdataWord.h"
+#include "tools/PSPhysics.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/Physics2S.h"
 #include "tools/RD53ClockDelay.h"
-#include "tools/RD53DataTransmissionTest.h"
 #include "tools/RD53Gain.h"
 #include "tools/RD53GainOptimization.h"
 #include "tools/RD53InjectionDelay.h"
@@ -26,15 +35,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-//#include "tools/SSAPhysics.h"
-#include "tools/CicFEAlignment.h"
-#include "tools/ConfigureOnly.h"
-#include "tools/LinkAlignmentOT.h"
-#include "tools/OTalignBoardDataWord.h"
-#include "tools/OTalignLpGBTinputs.h"
-#include "tools/PSPhysics.h"
-#include "tools/Physics2S.h"
-#include "tools/StubBackEndAlignment.h"
 
 using namespace MessageUtils;
 
@@ -49,18 +49,63 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTVTRXLightOff>("Outer Tracker", "vtrxoff");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
-    Register<LinkAlignmentOT, CicFEAlignment>("Outer Tracker", "alignment");
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("Outer Tracker", "calibration");
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("Outer Tracker", "takedata"); // will be used in future version of GIPHT
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, KIRA>("Outer Tracker", "calibrationandkira");
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, KIRA>("Outer Tracker", "calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    Register<TuneLpGBTVref, OTTemperature, PSAlignment, LinkAlignmentOT, CicFEAlignment, PedeNoise, TuneLpGBTVref, OTTemperature>("Outer Tracker", "pedenoise");
-    Register<TuneLpGBTVref, OTTemperature, PSAlignment, LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, TuneLpGBTVref, OTTemperature>("Outer Tracker", "calibrationandpedenoise");
-    Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("Outer Tracker", "calibrationexample");
-    Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("Outer Tracker", "otlatency");
+    Register<OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
+    Register<OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord>("Outer Tracker", "alignment");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, PedestalEqualization>("Outer Tracker",
+                                                                                                                                                                                      "calibration");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, PedestalEqualization, BeamTestCheck>(
+        "Outer Tracker", "takedata"); // will be used in future version of GIPHT
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, PedestalEqualization, KIRA>(
+        "Outer Tracker", "calibrationandkira");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, PedestalEqualization, PedeNoise, KIRA>(
+        "Outer Tracker", "calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
+    Register<TuneLpGBTVref,
+             OTTemperature,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTverifyCICdataWord,
+             PedeNoise,
+             TuneLpGBTVref,
+             OTTemperature>("Outer Tracker", "pedenoise");
+    Register<TuneLpGBTVref,
+             OTTemperature,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTverifyCICdataWord,
+             PedestalEqualization,
+             PedeNoise,
+             TuneLpGBTVref,
+             OTTemperature>("Outer Tracker", "calibrationandpedenoise");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, CalibrationExample>(
+        "Outer Tracker", "calibrationexample");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, LatencyScan>("Outer Tracker",
+                                                                                                                                                                             "otlatency");
+    Register<TuneLpGBTVref,
+             OTTemperature,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             PedestalEqualization,
+             PedeNoise,
+             TuneLpGBTVref,
+             OTCMNoise,
+             OTTemperature>("Outer Tracker", "cmNoise");
 
     // 2S specific calibrations
-    Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("2S Module", "cbcpulseshape");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, CBCPulseShape>("2S Module",
+                                                                                                                                                                               "cbcpulseshape");
     Register<Physics2S>("2S Module", "physics2s");
 
     // PS specific calibrations
@@ -79,7 +124,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<InjectionDelay>("Inner Tracker", "injdelay");
     Register<ClockDelay>("Inner Tracker", "clockdelay");
     Register<Physics>("Inner Tracker", "physics");
-    Register<DataTransmissionTest>("Inner Tracker", "datatrtest");
 }
 
 CombinedCalibrationFactory::~CombinedCalibrationFactory()

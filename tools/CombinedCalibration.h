@@ -37,7 +37,12 @@ struct CombinedCalibration : public Tool
 
     CombinedCalibration() : current_tool(this) {}
 
-    void Running() { start_impl(std::make_index_sequence<size>()); }
+    void Running() override { start_impl(std::make_index_sequence<size>()); }
+    void Stop() override
+    {
+        Tool::Stop();
+        Tool::CloseResultFile();
+    }
 
   private:
     template <size_t... Is>

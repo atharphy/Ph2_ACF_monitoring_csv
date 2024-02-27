@@ -464,15 +464,15 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
                 double cBend_strips = -7. + 0.5 * cPosition;
                 // LOG(DEBUG) << BOLDBLUE << "Bend code of " << +cBendCode_phAlign << " found in register " << cPosition << " so a bend of " << cBend_strips << RESET;
 
-                uint8_t              cSuccess = 0x00;
-                std::vector<uint8_t> cSeeds{0x82, 0x8E, 0x9E};
-                std::vector<int>     cBends(cSeeds.size(), static_cast<int>(cBend_strips * 2));
-                static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theReadoutChip, cSeeds, cBends);
+                uint8_t                              cSuccess     = 0x00;
+                int                                  theBendValue = static_cast<int>(cBend_strips * 2);
+                std::vector<std::pair<uint8_t, int>> cSeedAndBendList{{0x82, theBendValue}, {0x8E, theBendValue}, {0x9E, theBendValue}};
+                static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theReadoutChip, cSeedAndBendList);
                 // first align lines with stub seeds
                 uint8_t cLineId = 1;
                 for(size_t cIndex = 0; cIndex < 3; cIndex++)
                 {
-                    cSuccess = cSuccess | (LineTuning(cReadoutChip, cLineId, cSeeds[cIndex], 8) << cIndex);
+                    cSuccess = cSuccess | (LineTuning(cReadoutChip, cLineId, cSeedAndBendList[cIndex].first, 8) << cIndex);
                     cLineId++;
                 }
                 // then align lines with stub bends
@@ -494,8 +494,8 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
 
                 cAligned = (cAligned && cSuccess == 0x1F);
                 LOG(INFO) << BOLDBLUE << "Success register for this chip is " << std::bitset<8>(cSuccess) << RESET;
-                LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>(cSeeds[0]) << ", " << std::bitset<8>(cSeeds[1]) << ", " << std::bitset<8>(cSeeds[2]) << " on stub lines  0, 1 and 2."
-                          << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>(cSeedAndBendList[0].first) << ", " << std::bitset<8>(cSeedAndBendList[1].first) << ", "
+                          << std::bitset<8>(cSeedAndBendList[2].first) << " on stub lines  0, 1 and 2." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((cBendCode_phAlign << 4) | cBendCode_phAlign) << " on stub line  4." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((1 << 7) | cBendCode_phAlign) << " on stub line  5." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "After alignment of last stub line ... stub lines 0-5: " << RESET;
@@ -521,13 +521,12 @@ bool BackEndAlignment::Align()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         // read back register map before you've done anything
-        auto cBoardRegisterMap = theBoard->getBeBoardRegMap();
-        bool cWithCIC          = false;
-        bool cWithCBC          = false;
-        bool cWithSSA          = false;
-        bool cWithSSA2         = false;
-        bool cWithMPA          = false;
-        bool cWithMPA2         = false;
+        bool cWithCIC  = false;
+        bool cWithCBC  = false;
+        bool cWithSSA  = false;
+        bool cWithSSA2 = false;
+        bool cWithMPA  = false;
+        bool cWithMPA2 = false;
 
         auto cHybrid = cBoard->getFirstObject()->getFirstObject();
         cWithCIC     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;

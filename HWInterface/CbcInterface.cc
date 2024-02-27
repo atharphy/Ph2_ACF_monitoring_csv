@@ -147,7 +147,7 @@ bool CbcInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const s
 
 bool CbcInterface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerify, uint32_t pBlockSize)
 {
-    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NCHANNELS>>();
     return CbcInterface::maskChannelGroup(pCbc, allChannelEnabledGroup, pVerify);
 }
 
@@ -160,7 +160,6 @@ std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pS
     for(size_t cIndex = 0; cIndex < cNumberOfChannels; cIndex++)
     {
         uint32_t cSeedChannel = 2 * (cSeedStrip - 1) + !pSeedLayer + 2 * cIndex;
-        // LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
         cChannelList.push_back(static_cast<uint32_t>(cSeedChannel));
     }
     return cChannelList;
@@ -181,17 +180,34 @@ std::vector<uint8_t> CbcInterface::stubInjectionPattern(ReadoutChip* pChip, uint
     bool cLayerSwap = (this->ReadChipReg(pChip, "LayerSwap") == 1);
     return stubInjectionPattern(pStubAddress, pStubBend, cLayerSwap);
 }
-bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends, bool pUseNoise, bool pUseOffsets, uint8_t pAllOff)
+
+bool CbcInterface::injectClusters(ReadoutChip* pCbc, std::vector<std::pair<uint8_t, uint8_t>> theClusterAddressAndWidthVector)
+{
+    ChannelGroup<NCHANNELS> theChannelMask;
+    theChannelMask.disableAllChannels();
+    std::vector<uint8_t> cActiveChannels(0);
+    std::vector<uint8_t> cDisabledChannels(0);
+    for(const auto& theClusterAddressAndWidth: theClusterAddressAndWidthVector)
+    {
+        for(size_t strip = 0; strip < theClusterAddressAndWidth.second; ++strip) { theChannelMask.enableChannel(theClusterAddressAndWidth.first + 2 * strip); }
+    }
+
+    uint16_t cVcth = 1023;
+    this->WriteChipReg(pCbc, "VCth", cVcth);
+    return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS>>(std::move(theChannelMask)));
+}
+
+bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<std::pair<uint8_t, int>> theStubAddressesAndBendVector, bool pUseNoise, bool pUseOffsets, uint8_t pAllOff)
 {
     setBoard(pCbc->getBeBoardId());
 
-    ChannelGroup<NCHANNELS, 1> cChannelMask;
+    ChannelGroup<NCHANNELS> cChannelMask;
     cChannelMask.disableAllChannels();
     std::vector<uint8_t> cActiveChannels(0);
     std::vector<uint8_t> cDisabledChannels(0);
-    for(size_t cIndex = 0; cIndex < pStubAddresses.size(); cIndex += 1)
+    for(const auto& theStubAddressesAndBend: theStubAddressesAndBendVector)
     {
-        std::vector<uint8_t> cPattern = this->stubInjectionPattern(pCbc, pStubAddresses[cIndex], pStubBends[cIndex]);
+        std::vector<uint8_t> cPattern = this->stubInjectionPattern(pCbc, theStubAddressesAndBend.first, theStubAddressesAndBend.second);
         // for(auto cChannel: cPattern) cChannelMask.enableChannel(cChannel);
         for(size_t cChnl = 0; cChnl < pCbc->size(); cChnl++)
         {
@@ -224,7 +240,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
         this->enableInjection(pCbc, true); // enable injection
         // write register which sets TP amplitude
         // this->setInjectionAmplitude(pCbc, 0xFF - 100); // fix injection amplitude
-        return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)));
+        return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS>>(std::move(cChannelMask)));
     }
     else // with noise
     {
@@ -256,7 +272,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
         {
             uint16_t cVcth = 1023;
             this->WriteChipReg(pCbc, "VCth", cVcth);
-            return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)));
+            return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS>>(std::move(cChannelMask)));
         }
     }
 }
@@ -350,13 +366,13 @@ bool CbcInterface::enableHipSuppression(ReadoutChip* pCbc, bool pForHits, bool p
 
 bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerify)
 {
-    ChannelGroup<NCHANNELS, 1> cChannelMask;
+    ChannelGroup<NCHANNELS> cChannelMask;
     if(mask)
         cChannelMask.disableAllChannels();
     else
         cChannelMask.enableAllChannels();
     // LOG (DEBUG)  << BOLDBLUE << "Mask to be set is " << std::bitset<254>( cChannelMask.getBitset() ) << RESET;
-    return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)), pVerify);
+    return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS>>(std::move(cChannelMask)), pVerify);
 }
 
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerify)
@@ -679,7 +695,7 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<NCHANNELS, 1>                    channelToEnable;
+    ChannelGroup<NCHANNELS>                       channelToEnable;
     std::vector<uint32_t>                         cVec;
     cVec.clear();
     for(uint8_t iChannel = 0; iChannel < pCbc->getNumberOfChannels(); ++iChannel)
@@ -696,7 +712,7 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
         }
     }
 
-    if(isMask) { return maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(channelToEnable)), pVerify); }
+    if(isMask) { return maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS>>(std::move(channelToEnable)), pVerify); }
     else
         return WriteChipMultReg(pCbc, cRegVec, pVerify);
 }
@@ -768,11 +784,69 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
     }
 }
 
+void CbcInterface::produceL1phaseAlignmentPattern(ReadoutChip* pChip)
+{
+    // switch on HitOr
+    WriteChipReg(pChip, "HitOr", 1);
+    // set PtCut to maximum
+    WriteChipReg(pChip, "PtCut", 14);
+    // if I set this it doesn't work..   so no cluster cut
+    WriteChipReg(pChip, "ClusterCut", 4);
+    selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
+
+    auto cChannelMask = std::make_shared<ChannelGroup<NCHANNELS>>();
+    cChannelMask->disableAllChannels();
+    for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 2) cChannelMask->enableChannel(cChannel); // generate a hit in every Nth channel
+    this->maskChannelGroup(static_cast<ReadoutChip*>(pChip), cChannelMask);
+}
+
+void CbcInterface::produceStubLine0PhaseAlignmentPattern(ReadoutChip* pChip)
+{
+    // switch on HitOr
+    WriteChipReg(pChip, "HitOr", 1);
+    // set PtCut to maximum
+    WriteChipReg(pChip, "PtCut", 14);
+    // if I set this it doesn't work..   so no cluster cut
+    WriteChipReg(pChip, "ClusterCut", 4);
+    selectLogicMode(pChip, "Sampled", true, true);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
+    theRegisterVector.push_back({"Bend7", 0x0A});              // forcing Bend7 to ouput the needed bend code for running the alignment
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
+    WriteChipMultReg(pChip, theRegisterVector);
+    // Also lines 1 and 2 are injected automatically
+    LOG(DEBUG) << BOLDBLUE << "Injecting on stub line 0 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{0x55, 0}, {0xAA, 0}};
+    injectStubs(pChip, stubSeedAndBend);
+}
+
+void CbcInterface::produceStubLines1To4PhaseAlignmentPattern(ReadoutChip* pChip)
+{
+    // switch on HitOr
+    WriteChipReg(pChip, "HitOr", 1);
+    // set PtCut to maximum
+    WriteChipReg(pChip, "PtCut", 14);
+    // if I set this it doesn't work..   so no cluster cut
+    WriteChipReg(pChip, "ClusterCut", 4);
+    selectLogicMode(pChip, "Sampled", true, true);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
+    theRegisterVector.push_back({"Bend7", 0x0A});              // forcing Bend7 to ouput the needed bend code for running the alignment
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
+    WriteChipMultReg(pChip, theRegisterVector);
+
+    LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{0x2A, 0}, {0x55, 0}, {0xAA, 0}};
+    injectStubs(pChip, stubSeedAndBend);
+}
+
 void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
-    LOG(INFO) << BOLDMAGENTA << "Producing phase alignment pattern on CBC#" << +pChip->getId() << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Producing phase alignment pattern on CBC#" << +pChip->getId() << RESET;
     // mask for L1A alignment
-    auto cChannelMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    auto cChannelMask = std::make_shared<ChannelGroup<NCHANNELS>>();
     cChannelMask->disableAllChannels();
     for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 2) cChannelMask->enableChannel(cChannel); // generate a hit in every Nth channel
 
@@ -799,19 +873,23 @@ void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
         // seeds on stub line 0 , stub line 1
         // bends on stub line 2
         LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 0,1 and 2 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
-        std::vector<uint8_t> cSeeds_ph1{0x55, 0xAA};
-        std::vector<int>     cBends_ph1(cSeeds_ph1.size(), static_cast<int>(cBend_strips * 2));
-        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph1, cBends_ph1);
+        int                                  theBendValue = static_cast<int>(cBend_strips * 2);
+        std::vector<std::pair<uint8_t, int>> stubBendAndValueFirstStep{{0x55, theBendValue}, {0xAA, theBendValue}};
+        injectStubs(static_cast<ReadoutChip*>(pChip), stubBendAndValueFirstStep);
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
 
         // second pattern - 1, 2, 3 , 4
         // whatever on stub line 0
         // then alignment pattern on stub lines 1 + 2
         LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
-        std::vector<uint8_t> cSeeds_ph3{42, 0x55, 0xAA};
-        std::vector<int>     cBends_ph3(cSeeds_ph3.size(), static_cast<int>(cBend_strips * 2));
-        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph3, cBends_ph3);
+        std::vector<std::pair<uint8_t, int>> stubBendAndValueSecondStep{{42, theBendValue}, {0x55, theBendValue}, {0xAA, theBendValue}};
+        injectStubs(static_cast<ReadoutChip*>(pChip), stubBendAndValueSecondStep);
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
+    }
+    else
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Bend code not available in the lookup table, aborting" << RESET;
+        abort();
     }
     this->maskChannelGroup(static_cast<ReadoutChip*>(pChip), cChannelMask);
 }
@@ -825,23 +903,18 @@ void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
     WriteChipReg(pChip, "ClusterCut", 4);
 
     selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
-    std::vector<uint8_t> cStubs{fWordAlignmentPatterns[0], fWordAlignmentPatterns[1], fWordAlignmentPatterns[2]};
-    std::vector<uint8_t> cBendLUT = readLUT(static_cast<ReadoutChip*>(pChip));
-    std::vector<uint8_t> cBendCodes{
-        static_cast<uint8_t>(fWordAlignmentPatterns[3] & 0x0F), static_cast<uint8_t>((fWordAlignmentPatterns[3] & 0xF0) >> 4), static_cast<uint8_t>(fWordAlignmentPatterns[4] & 0x0F)};
-    std::vector<int> cBends(3, 0);
-    for(size_t cIndex = 0; cIndex < cBendCodes.size(); cIndex += 1)
-    {
-        auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCodes[cIndex]);
-        if(cIterator != cBendLUT.end())
-        {
-            int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
-            double cBend_strips = -7. + 0.5 * cPosition;
-            cBends[cIndex]      = cBend_strips * 2;
-            LOG(DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCodes[cIndex]) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
-        }
-    }
-    injectStubs(static_cast<ReadoutChip*>(pChip), cStubs, cBends);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
+    theRegisterVector.push_back({"Bend7", fWordAlignmentPatterns[3] & 0x0F});        // Set bend 0 to output of stub 1 required pattern
+    theRegisterVector.push_back({"Bend8", (fWordAlignmentPatterns[3] & 0xF0) >> 4}); // Set bend 2 to output of stub 1 required pattern
+    theRegisterVector.push_back({"Bend9", fWordAlignmentPatterns[4] & 0x0F});        // Set bend 4 to output of stub 1 required pattern
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});                       // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});                       // set stub window offset to 0
+
+    WriteChipMultReg(pChip, theRegisterVector);
+    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fWordAlignmentPatterns[0], 0}, {fWordAlignmentPatterns[1], 2}, {fWordAlignmentPatterns[2], 4}};
+
+    injectStubs(static_cast<ReadoutChip*>(pChip), stubSeedAndBend);
 }
 uint32_t CbcInterface::ReadChipFuseID(Chip* pCbc)
 {

@@ -2,6 +2,7 @@
 #define _D19cTriggerInterface_H__
 
 #include "HWInterface/TriggerInterface.h"
+#include <cstdint>
 #include <string>
 #include <vector>
 

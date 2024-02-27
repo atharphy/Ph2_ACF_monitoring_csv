@@ -1,6 +1,7 @@
 #ifndef _LinkInterface_H__
 #define _LinkInterface_H__
 
+#include <cstdint>
 #include <string>
 
 namespace Ph2_HwDescription

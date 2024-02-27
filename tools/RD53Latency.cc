@@ -56,7 +56,7 @@ void Latency::Running()
 
     Latency::run();
     Latency::analyze();
-    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
+    Latency::draw();
     Latency::sendData();
 }
 
@@ -75,13 +75,7 @@ void Latency::sendData()
 void Latency::Stop()
 {
     LOG(INFO) << GREEN << "[Latency::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    Latency::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void Latency::localConfigure(const std::string& histoFileName, int currentRun)
@@ -115,7 +109,7 @@ void Latency::localConfigure(const std::string& histoFileName, int currentRun)
 void Latency::run()
 {
     ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
-    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    CalibBase::fillVectorContainer<float>(theOccContainer, dacList.size(), 0);
     Latency::scanDac(frontEnd->latencyReg, dacList, &theOccContainer);
 
     // #################################

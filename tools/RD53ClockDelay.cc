@@ -60,7 +60,7 @@ void ClockDelay::Running()
 
     ClockDelay::run();
     ClockDelay::analyze();
-    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
+    ClockDelay::draw();
     ClockDelay::sendData();
     la.sendData();
 }
@@ -80,13 +80,7 @@ void ClockDelay::sendData()
 void ClockDelay::Stop()
 {
     LOG(INFO) << GREEN << "[ClockDelay::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    ClockDelay::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void ClockDelay::localConfigure(const std::string& histoFileName, int currentRun)
@@ -139,7 +133,7 @@ void ClockDelay::run()
     la.analyze();
 
     ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
-    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    CalibBase::fillVectorContainer<float>(theOccContainer, dacList.size(), 0);
 
     // #######################
     // # Set initial latency #

@@ -105,13 +105,12 @@ class Tool : public Ph2_System::SystemController
     void Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize = true) override;
 
     void Start(const StartInfo& theStartInfo) override;
-    // void InformImDone();
+    /* void InformImDone(); // @Mauro@ */
     void Stop() override;
 
     void waitForRunToBeCompleted();
-    // void privateRunning(std::promise<int>&& thePromise);
+    /* void privateRunning(std::promise<int>&& thePromise); // @Mauro@ */
     void SaveResults();
-    void SaveAndClose();
     void CloseResultFile();
 
     /*!
@@ -391,12 +390,13 @@ class Tool : public Ph2_System::SystemController
     // ################################
     static std::atomic<bool> fKeepRunning;
     int                      fRunNumber;
-    std::future<void>        fRunningFuture;
-    // bool                        doExit;
-    // std::thread                 fRunningThread;
-    // std::future<int>            fRunningFuture;
-    // std::condition_variable_any wakeUp;
-    // std::recursive_mutex        theMtx;
+    std::future<void>        fRunningFuture; // @Fabio@
+    // @Mauro@
+    /* bool                        doExit; */
+    /* std::thread                 fRunningThread; */
+    /* std::future<int>            fRunningFuture; */
+    /* std::condition_variable_any wakeUp; */
+    /* std::recursive_mutex        theMtx; */
 
     bool    fSkipMaskedChannels;
     bool    fAllChan;

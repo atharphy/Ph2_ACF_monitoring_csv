@@ -60,7 +60,7 @@ void InjectionDelay::Running()
 
     InjectionDelay::run();
     InjectionDelay::analyze();
-    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
+    InjectionDelay::draw();
     InjectionDelay::sendData();
     la.sendData();
 }
@@ -80,13 +80,7 @@ void InjectionDelay::sendData()
 void InjectionDelay::Stop()
 {
     LOG(INFO) << GREEN << "[InjectionDelay::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    InjectionDelay::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void InjectionDelay::localConfigure(const std::string& histoFileName, int currentRun)
@@ -136,7 +130,7 @@ void InjectionDelay::run()
     la.analyze();
 
     ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
-    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    CalibBase::fillVectorContainer<float>(theOccContainer, dacList.size(), 0);
 
     // #######################
     // # Set initial latency #

@@ -1,4 +1,5 @@
 #include "tools/PedeNoise.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Cbc.h"
 #include "HWDescription/SSA.h"
 #include "HWInterface/D19cFWInterface.h"
@@ -59,7 +60,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoardRegMap cRegMap      = cBoard->getBeBoardRegMap();
-        uint32_t      cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"];
+        uint32_t      cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"].fValue;
 
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
         cRegVec.clear();
@@ -1026,8 +1027,6 @@ void PedeNoise::Stop()
     LOG(INFO) << "Stopping noise measurement";
     writeObjects();
     dumpConfigFiles();
-    SaveResults();
-    WriteRootFile();
     closeFileHandler();
     clearDataMembers();
     LOG(INFO) << "Noise measurement stopped.";

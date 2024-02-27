@@ -19,15 +19,10 @@ void Physics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
+    CalibBase::ConfigureCalibration();
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
-    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
     frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################
@@ -71,7 +66,7 @@ void Physics::Running()
 
     numberOfEventsPerRun  = 0;
     corruptedEventCounter = 0;
-    LOG(INFO) << BOLDBLUE << "[Physics::Running]\t--> Run started" << RESET;
+    LOG(INFO) << BOLDBLUE << "[Physics::Running] --> Run started" << RESET;
     Physics::run();
 }
 
@@ -93,8 +88,7 @@ void Physics::sendData()
 void Physics::Stop()
 {
     LOG(INFO) << GREEN << "[Physics::Stop] Stopping" << RESET;
-
-    Tool::Stop();
+    CalibBase::Stop();
 
     // #################################
     // # Reset masks to default values #
@@ -111,9 +105,6 @@ void Physics::Stop()
     // #######################
     CalibBase::saveChipRegisters(doUpdateChip);
 
-    Physics::draw();
-    this->SaveAndClose();
-
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers (i.e. events): " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
@@ -123,6 +114,11 @@ void Physics::Stop()
 
 void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 {
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
+
     corruptedEventCounter = 0;
     histos                = nullptr;
 
@@ -150,12 +146,13 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 void Physics::run()
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
+    Physics::draw();
 
     while(Tool::fKeepRunning == true)
     {
         RD53Event::decodedEvents.clear();
         Physics::analyze();
-        Physics::draw();
+        Physics::draw(false);
 
         if(strcmp(frontEnd->name, "SYNC") == 0) // @TMP@
             for(const auto cBoard: *fDetectorContainer)
@@ -178,6 +175,8 @@ void Physics::run()
 
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
+
+    Physics::draw();
 }
 
 void Physics::draw(bool saveData)
@@ -187,7 +186,7 @@ void Physics::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    CalibBase::bookHistoSaveMetadata(histos);
+    if(saveData == true) CalibBase::bookHistoSaveMetadata(histos);
     Physics::fillHisto();
     histos->process();
 

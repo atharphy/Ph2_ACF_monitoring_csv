@@ -6,6 +6,7 @@
 #include "HWInterface/TriggerInterface.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/LpGBTalignmentResult.h"
 #include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
@@ -143,6 +144,11 @@ void CicFEAlignment::SetStubWindowOffsets(uint8_t pBendCode, int pBend)
                         LOG(DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>(pBendCode) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips [offset code "
                                    << std::bitset<4>(cOffsetCode) << "]." << RESET;
                     }
+                    else
+                    {
+                        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Bend code not available in the lookup table, aborting" << RESET;
+                        abort();
+                    }
                 }
             }
         }
@@ -225,15 +231,21 @@ uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
-                        auto                 cInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                        std::vector<uint8_t> cBendLUT   = cInterface->readLUT(static_cast<ReadoutChip*>(cChip));
-                        auto                 cIterator  = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
+                        auto                                 cInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                        std::vector<uint8_t>                 cBendLUT   = cInterface->readLUT(static_cast<ReadoutChip*>(cChip));
+                        auto                                 cIterator  = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
+                        std::vector<std::pair<uint8_t, int>> theStubAddressAndBendVector;
                         if(cIterator != cBendLUT.end())
                         {
-                            int              cPosition    = std::distance(cBendLUT.begin(), cIterator);
-                            double           cBend_strips = -7. + 0.5 * cPosition;
-                            std::vector<int> cBends(cStubs.size(), static_cast<int>(cBend_strips * 2));
-                            cInterface->injectStubs(static_cast<ReadoutChip*>(cChip), cStubs, cBends);
+                            int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
+                            double cBend_strips = -7. + 0.5 * cPosition;
+                            for(const auto theStub: cStubs) theStubAddressAndBendVector.push_back({theStub, static_cast<int>(cBend_strips * 2)});
+                            cInterface->injectStubs(static_cast<ReadoutChip*>(cChip), theStubAddressAndBendVector);
+                        }
+                        else
+                        {
+                            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Bend code not available in the lookup table, aborting" << RESET;
+                            abort();
                         }
                     }
                 } // chip
@@ -320,28 +332,28 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     // for now .. I need to do this twice
     // figure out why in theFW
     cDebugInterface->StubDebug(true, 6, false);
-    auto cLines        = cDebugInterface->StubDebug(true, 6, false);
-    cStatus.second     = cLines[pPhyPortCnfg.second];
-    cStatus.first      = 0;
-    auto        cFound = cStatus.second.find(cPatternToMatch);
-    std::string cPatternReceived;
-    if(cFound != std::string::npos)
-    {
-        cPatternReceived = cStatus.second.substr(cFound, cStatus.second.length() - cFound) + cStatus.second.substr(0, cFound);
-        LOG(DEBUG) << BOLDYELLOW << "Shifted str : " << cPatternReceived << " - bit shift is " << cFound << RESET;
-    }
-    else
-        cPatternReceived = cStatus.second;
+    // auto cLines        = cDebugInterface->StubDebug(true, 6, false).first;
+    // cStatus.second     = cLines[pPhyPortCnfg.second];
+    // cStatus.first      = 0;
+    // auto        cFound = cStatus.second.find(cPatternToMatch);
+    // std::string cPatternReceived;
+    // if(cFound != std::string::npos)
+    // {
+    //     cPatternReceived = cStatus.second.substr(cFound, cStatus.second.length() - cFound) + cStatus.second.substr(0, cFound);
+    //     LOG(DEBUG) << BOLDYELLOW << "Shifted str : " << cPatternReceived << " - bit shift is " << cFound << RESET;
+    // }
+    // else
+    //     cPatternReceived = cStatus.second;
 
-    for(uint8_t cSize = 0; cSize < cPatternReceived.length(); cSize += 8)
-    {
-        auto cSubStr = cPatternReceived.substr(cSize, 8);
-        for(uint8_t cIndx = 0; cIndx < cSubStr.size(); cIndx++)
-        {
-            if(cSubStr[cIndx] != cPatternToMatch[cIndx]) cStatus.first++;
-        }
-    }
-    cStatus.second = cPatternReceived;
+    // for(uint8_t cSize = 0; cSize < cPatternReceived.length(); cSize += 8)
+    // {
+    //     auto cSubStr = cPatternReceived.substr(cSize, 8);
+    //     for(uint8_t cIndx = 0; cIndx < cSubStr.size(); cIndx++)
+    //     {
+    //         if(cSubStr[cIndx] != cPatternToMatch[cIndx]) cStatus.first++;
+    //     }
+    // }
+    // cStatus.second = cPatternReceived;
     return cStatus;
 }
 void CicFEAlignment::CheckOutLine(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase, DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter)
@@ -385,31 +397,11 @@ void CicFEAlignment::SetStaticPhaseAlignment()
     LOG(INFO) << BOLDBLUE << "Setting CIC phase to static mode.." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cPhaseAlignmentThisBoard = fPhaseAlignmentValues.getObject(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cPhaseAlignmentThisOpticalGroup = cPhaseAlignmentThisBoard->getObject(cOpticalGroup->getId());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cPhaseAlignmentThisHybrid = cPhaseAlignmentThisOpticalGroup->getObject(cHybrid->getId());
-
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                fCicInterface->GetOptimalTaps(cCic);
-                for(auto cChip: *cHybrid)
-                {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
-                    auto& cPhaseAlignmentThisChip = cPhaseAlignmentThisHybrid->getObject(cChip->getId());
-                    auto& cPhaseAlignmentVals     = cPhaseAlignmentThisChip->getSummary<AlignmentValues>();
-
-                    auto              cPhaseTapsThisFE = fCicInterface->GetOptimalTaps(cCic, cChip->getId() % 8);
-                    std::stringstream cOutput;
-                    for(uint8_t cLineId = 0; cLineId < 6; cLineId++)
-                    {
-                        cPhaseAlignmentVals[cLineId] = cPhaseTapsThisFE[cLineId];
-                        cOutput << +cPhaseAlignmentVals[cLineId] << " ";
-                    }
-                    LOG(INFO) << BOLDBLUE << "Optimal tap found on CIC#" << +cChip->getHybridId() << " FE" << +cChip->getId() << " : " << cOutput.str() << RESET;
-                }
                 fCicInterface->SetStaticPhaseAlignment(cCic);
             }
         }
@@ -463,40 +455,11 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
         cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     }
-    bool cAligned = true;
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        std::vector<uint8_t> cGroups;
-        std::vector<uint8_t> cChannels;
-        if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
-        {
-            if(cHybrid->getId() % 2 == 0)
-            {
-                cGroups   = {0, 4, 4, 5, 5, 6};
-                cChannels = {0, 0, 2, 0, 2, 0};
-            }
-            else
-            {
-                cGroups   = {0, 1, 1, 2, 2, 3};
-                cChannels = {2, 0, 2, 0, 2, 2};
-            }
-        }
-        else
-        {
-            if(cHybrid->getId() % 2 == 0)
-            {
-                cGroups   = {4, 4, 5, 5, 6, 6, 0};
-                cChannels = {2, 0, 2, 0, 2, 0, 0};
-            }
-            else
-            {
-                cGroups   = {0, 1, 1, 2, 2, 3, 3};
-                cChannels = {2, 0, 2, 0, 2, 0, 2};
-            }
-        }
-        auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cGroups, cChannels);
-        cAligned   = cAligned && (cMode != 15);
-    }
+
+    std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels              = pOpticalGroup->getLpGBTrxGroupsAndChannels();
+    auto                                    theOpticalGroupAlignmentResult = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, 5);
+    bool                                    isAligned                      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, 1, pOpticalGroup);
+
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx = 0;
     for(auto cHybrid: *pOpticalGroup)
@@ -507,7 +470,7 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
     }
-    return cAligned;
+    return isAligned;
 }
 
 bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
@@ -622,10 +585,8 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
     bool cAligned = true;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cWordAlignmentThisBoard = fWordAlignmentValues.getObject(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto&                cWordAlignmentThisOpticalGroup = cWordAlignmentThisBoard->getObject(cOpticalGroup->getId());
             std::vector<uint8_t> cWordAligned(0);
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -635,7 +596,9 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
                 // configure word alignment pattern on CBCs
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getWordAlignmentPatterns();
                 for(auto cChip: *cHybrid) { fReadoutChipInterface->produceWordAlignmentPattern(cChip); }
-                bool cSuccessAlign = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_us * 1000);
+                bool cSuccessAlign          = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns);
+                auto theWordAlignmentValues = fCicInterface->retrieveExternalWordAlignmentValues(cCic);
+                cSuccessAlign               = cSuccessAlign && fCicInterface->ConfigureExternalWordAlignment(cCic, theWordAlignmentValues);
                 cWordAligned.push_back(cSuccessAlign ? 1 : 0);
             } // hybrid - configure word alignment patterns
 
@@ -643,53 +606,16 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
             size_t cIndx = 0;
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cWordAlignmentThisHybrid = cWordAlignmentThisOpticalGroup->getObject(cHybrid->getId());
-                auto& cCic                     = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 if(cCic == NULL) continue;
 
-                // run automated word alignment
-                // cAligned = cAligned && fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns, pWait_us * 1000);
-                std::vector<std::vector<uint8_t>> cWordAlignmentValues = fCicInterface->GetWordAlignmentValues(cCic);
-                cAligned                                               = cAligned && cWordAligned[cIndx];
+                cAligned = cAligned && cWordAligned[cIndx];
+                fCicInterface->SetStaticWordAlignment(cCic);
                 // check status
-                if(cWordAligned[cIndx])
-                {
-                    fCicInterface->SetStaticWordAlignment(cCic, 1);
-                    LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET;
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
-
-                        auto& cWordAlignmentThisChip = cWordAlignmentThisHybrid->getObject(cChip->getId());
-                        auto& cWordAlignmentVals     = cWordAlignmentThisChip->getSummary<AlignmentValues>();
-
-                        std::stringstream cOutput;
-                        for(size_t cLine = 0; cLine < 5; cLine++)
-                        {
-                            cWordAlignmentVals[cLine] = cWordAlignmentValues[cChip->getId() % 8][cLine];
-                            cOutput << +cWordAlignmentVals[cLine] << " ";
-                        }
-                        LOG(INFO) << BOLDBLUE << "Word alignment values for FE#" << +cChip->getId() << " : " << cOutput.str() << RESET;
-                    }
-                }
+                if(cWordAligned[cIndx]) { LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
-
-                        auto& cWordAlignmentThisChip = cWordAlignmentThisHybrid->getObject(cChip->getId());
-                        auto& cWordAlignmentVals     = cWordAlignmentThisChip->getSummary<AlignmentValues>();
-
-                        std::stringstream cOutput;
-                        for(size_t cLine = 0; cLine < 5; cLine++)
-                        {
-                            cWordAlignmentVals[cLine] = cWordAlignmentValues[cChip->getId() % 8][cLine];
-                            cOutput << +cWordAlignmentVals[cLine] << " ";
-                        }
-                        LOG(INFO) << BOLDBLUE << "Word alignment values for FE#" << +cChip->getId() << " : " << cOutput.str() << RESET;
-                    }
                 }
                 cIndx++;
             }

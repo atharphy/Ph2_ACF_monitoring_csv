@@ -10,8 +10,10 @@
 #ifndef __CHIPINTERFACE_H__
 #define __CHIPINTERFACE_H__
 
+#include <cstdint>
 #include <map>
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace Ph2_HwDescription

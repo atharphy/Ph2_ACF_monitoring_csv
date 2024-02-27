@@ -27,7 +27,6 @@ class ThrMinimization : public PixelAlive
     ~ThrMinimization()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -58,6 +57,9 @@ class ThrMinimization : public PixelAlive
     DetectorDataContainer theThrContainer;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     float  targetOccupancy;
     float  maxMaskedPixels;
     size_t startValue;

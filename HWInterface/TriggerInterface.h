@@ -1,6 +1,7 @@
 #ifndef _TriggerInterface_H__
 #define _TriggerInterface_H__
 
+#include <cstdint>
 #include <string>
 #include <vector>
 

@@ -29,7 +29,7 @@ class lpGBT : public Chip
         uint8_t Polarity;
     };
 
-    lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName);
+    lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& fConfigFilePath);
 
     lpGBT(const lpGBT&) = delete;
 
@@ -91,12 +91,15 @@ class lpGBT : public Chip
     void  setTemperature(float cTemperature) { fTemperature = cTemperature; }
     float getTemperature() { return fTemperature; }
 
+    std::string getConfigFilePath() const { return fConfigFilePath; }
+
   private:
     bool                         phaseRxAligned; // @TMP@
-    uint16_t                     fRxDataRate, fTxDataRate, fChipAddress;
+    uint16_t                     fRxDataRate, fTxDataRate;
     uint8_t                      fVersion, fRxHSLPolarity, fTxHSLPolarity;
     std::vector<uint8_t>         fRxGroups;
     std::vector<eportProperties> fRxProperties, fTxProperties;
+    std::string                  fConfigFilePath;
 
     // #########################################################
     // # Number of write transactions - one element per master #

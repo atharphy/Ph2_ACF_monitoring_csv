@@ -23,11 +23,7 @@ void Gain::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents", 1);
+    CalibBase::ConfigureCalibration();
     injType        = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
@@ -81,7 +77,7 @@ void Gain::Running()
 
     Gain::run();
     Gain::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    Gain::draw();
     Gain::sendData();
 }
 
@@ -108,13 +104,7 @@ void Gain::sendData()
 void Gain::Stop()
 {
     LOG(INFO) << GREEN << "[Gain::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    Gain::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void Gain::localConfigure(const std::string& histoFileName, int currentRun)

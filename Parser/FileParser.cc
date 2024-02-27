@@ -38,9 +38,7 @@ void FileParser::parseHW(const std::string& pFilename, DetectorContainer* pDetec
     // # Iterate over the BeBoard Nodes #
     // ##################################
     for(pugi::xml_node cBeBoardNode = doc.child(HW_DESCRIPTION_NODE_NAME).child(BEBOARD_NODE_NAME); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
-    {
         if(static_cast<std::string>(cBeBoardNode.name()) == BEBOARD_NODE_NAME) parseBeBoard(cBeBoardNode, pDetectorContainer, os);
-    }
 
     for(i = 0; i < 80; i++) os << "*";
 
@@ -232,8 +230,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
 
 void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os)
 {
-    std::string cFilePath       = "";
-    uint32_t    cOpticalGroupId = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
+    std::string cFilePath         = "";
+    std::string theConfigFilePath = "";
+    uint32_t    cOpticalGroupId   = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     uint32_t    cFMCId;
     std::string inputFMCid = pOpticalGroupNode.attribute(OPTICALGROUP_FMCID_ATTRIBUTE_NAME).value();
     if(inputFMCid == OPTICALGROUP_FMCID_ATTRIBUTE_L12_VALUE)
@@ -262,16 +261,20 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             cFilePath = expandEnvironmentVariables(theChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value());
             if((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
         }
+        else if(static_cast<std::string>(theChild.name()) == LPGBT_CONFIGFILE_NODE_NAME)
+            theConfigFilePath = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_FILENAME_ATTRIBUTE_NAME).value());
         else if(static_cast<std::string>(theChild.name()) == LPGBT_NODE_NAME)
         {
-            std::string fileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
+            std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
             os << BOLDBLUE << "|\t|----OpticalGroup --> Id: " << BOLDYELLOW << cOpticalGroupId << BOLDBLUE << ", FMC Id: " << BOLDYELLOW << cFMCId << RESET << std::endl;
-            os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << fileName << RESET << std::endl;
+            os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << chipFileName << RESET << std::endl;
+            os << BOLDBLUE << "|\t|\t|---- ADC Config. File: " << BOLDYELLOW << theConfigFilePath << RESET << std::endl;
             uint8_t cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
             uint8_t cChipVersion = theChild.attribute(LPGBT_VERSION_ATTRIBUTE_NAME).as_uint();
             bool    cIsOptical   = theChild.attribute(LPGBT_OPTICAL_ATTRIBUTE_NAME).as_bool();
 
-            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
+            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, chipFileName, theConfigFilePath);
+
             thelpGBT->setVersion(cChipVersion);
             thelpGBT->setOptical(cIsOptical);
 
@@ -1207,8 +1210,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             if(cIsTrackerASIC)
             {
                 if(cName.find(CHIP_FILES_APPEND_NODE_NAME) != std::string::npos)
-                { cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value())); }
-                else
+                    cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value()));
+                else if(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true)
                 {
                     int         cChipId   = cChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int();
                     std::string cFileName = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value()));
@@ -1224,7 +1227,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     else if(cName.find(CBC_NODE_NAME) != std::string::npos)
                     {
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::CBC3);
                         parseCbcContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseGlobalCbcSettings(pHybridNode, cHybrid, os);
                     }
@@ -1316,28 +1318,24 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     else if(cName == SSA_NODE_NAME)
                     {
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::SSA);
                         parseSSAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseSSASettings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == SSA2_NODE_NAME)
                     {
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::SSA2);
                         parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseSSA2Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == MPA_NODE_NAME)
                     {
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::MPA);
                         parseMPAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseMPASettings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == MPA2_NODE_NAME)
                     {
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        pBoard->setFrontEndType(FrontEndType::MPA2);
                         parseMPA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseMPA2Settings(pHybridNode, cHybrid, os);
                     }
@@ -1538,7 +1536,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
        << "|"
        << "---- CBC controlled by I2CMaster " << +cCbc->getMasterId() << RESET << std::endl;
 
-    // parse the specific CBC settings so that Registers take precedence
+    // Parse the specific CBC settings so that Registers take precedence
     parseCbcSettings(pCbcNode, cCbc, os);
 
     for(pugi::xml_node cCbcRegisterNode = pCbcNode.child("Register"); cCbcRegisterNode; cCbcRegisterNode = cCbcRegisterNode.next_sibling())
@@ -1604,8 +1602,8 @@ void FileParser::parseGlobalCbcSettings(pugi::xml_node pHybridNode, Hybrid* pHyb
 
 void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, std::ostream& os)
 {
-    // parse the cbc settings here and put them in the corresponding registers of the Chip object
-    // call this for every CBC, Register nodes should take precedence over specific settings??
+    // Parse the cbc settings here and put them in the corresponding registers of the Chip object
+    // call this for every CBC, Register nodes should take precedence over specific settings?
     FrontEndType cType = pCbc->getFrontEndType();
     os << GREEN << "|\t|\t|\t|----FrontEndType: ";
     os << GREEN << "|\t|\t|\t|----FrontEndType: ";
@@ -1623,10 +1621,10 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
         bool     cSetLatency = (cThresholdNode.attribute("latency") != nullptr);
         uint16_t cLatency    = convertAnyInt(cThresholdNode.attribute("latency").value());
 
-        // the moment the cbc object is constructed, it knows which chip type it is
+        // The moment the cbc object is constructed, it knows which chip type it is
         if(cType == FrontEndType::CBC3)
         {
-            // for beam test ... remove for now
+            // For beam test ... remove for now
             pCbc->setReg("VCth1", (cThreshold & 0x00FF));
             pCbc->setReg("VCth2", (cThreshold & 0x0300) >> 8);
             if(cSetLatency)
@@ -1911,8 +1909,8 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
     pugi::xml_node laneConfigNode = theChipNode.child("LaneConfig");
     if(laneConfigNode != nullptr)
     {
-        const bool    isPrimary = laneConfigNode.attribute("primary").as_bool(true);
-        const uint8_t master    = laneConfigNode.attribute("master").as_uint(0);
+        const bool    isPrimary  = laneConfigNode.attribute("isPrimary").as_bool(true);
+        const uint8_t masterLane = laneConfigNode.attribute("masterLane").as_uint(0);
 
         const std::string outputLanesConfig = laneConfigNode.attribute("outputLanes").as_string("0001");
         if(outputLanesConfig.size() != 4) throw std::runtime_error("The \"outputLanes\" attribute of LaneConfig should contain 4 characters ('0' up to '4').");
@@ -1926,9 +1924,9 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
         if(dualChannelInputConfig.size() != 4) throw std::runtime_error("The \"dualChannelInput\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
         auto dualChannelInput = parseString<bool, 4>(dualChannelInputConfig);
 
-        static_cast<RD53*>(theChip)->laneConfig = LaneConfig(isPrimary, master, outputLanesEnabled, singleChannelInputs, dualChannelInput);
+        static_cast<RD53*>(theChip)->laneConfig = LaneConfig(isPrimary, masterLane, outputLanesEnabled, singleChannelInputs, dualChannelInput);
 
-        os << BOLDBLUE << "|\t|\t|\t|----Lanes configuration --> primary: " << BOLDYELLOW << isPrimary << BOLDBLUE << " - master: " << BOLDYELLOW << +master << BOLDBLUE
+        os << BOLDBLUE << "|\t|\t|\t|----Lanes configuration --> is primary: " << BOLDYELLOW << isPrimary << BOLDBLUE << " - master lane: " << BOLDYELLOW << +masterLane << BOLDBLUE
            << " - output lanes: " << BOLDYELLOW << outputLanesConfig << BOLDBLUE << " - single channel inputs: " << BOLDYELLOW << singleChannelInputsConfig << BOLDBLUE
            << " - dual channel input: " << BOLDYELLOW << dualChannelInputConfig << RESET << std::endl;
     }
@@ -1980,12 +1978,21 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
     pugi::xml_node theMonitorNode            = doc.child(HW_DESCRIPTION_NODE_NAME).child(MONITORINGSETTINGS_NODE_NAME).child(MONITORING_NODE_NAME);
     theDetectorMonitorConfig.fMonitoringType = theMonitorNode.attribute(MONITORING_NODE_TYPE_ATTRIBUTE_NAME).value();
     std::string enableString                 = theMonitorNode.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value();
+    std::string silenRunString               = (theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME) ? theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME).value() : "0");
+
     if(enableString == "1")
         theDetectorMonitorConfig.fEnable = true;
     else if(enableString == "0")
         theDetectorMonitorConfig.fEnable = false;
     else
         throw std::runtime_error("FileParser::parseMonitor: Error - monitor enable flag not recognized");
+
+    if(silenRunString == "1")
+        theDetectorMonitorConfig.fSilentRunning = true;
+    else if(silenRunString == "0")
+        theDetectorMonitorConfig.fSilentRunning = false;
+    else
+        throw std::runtime_error("FileParser::parseMonitor: Error - monitor silentRunning flag not recognized");
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child(MONITORINGSLEEPTIME_NODE_NAME).first_child().value());
 

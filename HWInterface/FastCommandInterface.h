@@ -1,6 +1,7 @@
 #ifndef _FastCommandInterface_H__
 #define _FastCommandInterface_H__
 
+#include <cstdint>
 #include <string>
 #include <vector>
 

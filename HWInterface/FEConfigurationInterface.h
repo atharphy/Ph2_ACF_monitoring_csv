@@ -1,6 +1,7 @@
 #ifndef _FEConfigurationInterface_H__
 #define _FEConfigurationInterface_H__
 
+#include <cstdint>
 #include <string>
 #include <vector>
 

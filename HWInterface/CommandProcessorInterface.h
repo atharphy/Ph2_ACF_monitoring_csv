@@ -1,6 +1,7 @@
 #ifndef _CommandProcessorInterface_H__
 #define _CommandProcessorInterface_H__
 
+#include <cstdint>
 #include <string>
 #include <vector>
 

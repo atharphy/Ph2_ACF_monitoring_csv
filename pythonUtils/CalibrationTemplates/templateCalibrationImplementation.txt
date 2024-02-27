@@ -1,5 +1,6 @@
 #include "tools/CLASS_NAME_TEMPLATE.h"
 #include "System/RegisterHelper.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -42,7 +43,6 @@ void CLASS_NAME_TEMPLATE::Stop(void)
         // Calibration is not running on the SoC: processing the histograms
         fDQMHistogramCLASS_NAME_TEMPLATE.process();
     #endif
-    dumpConfigFiles();
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "CLASS_NAME_TEMPLATE stopped.";

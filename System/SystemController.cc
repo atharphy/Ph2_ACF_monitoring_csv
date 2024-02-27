@@ -310,9 +310,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
                 LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                 fCicInterface = new CicInterface(fBeBoardFWMap);
-                // check event type
-                bool cWithCBC3 = !(cFirstBoard->getEventType() == EventType::VR2S);
-                fCicInterface->setWith8CBC3(cWithCBC3);
                 if(cFirstOpticalGroup->flpGBT != nullptr)
                 {
                     bool cFoundLpgbt = fCicInterface->lpGBTCheck(cFirstBoard);
@@ -347,7 +344,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fDetectorMonitorConfig = new DetectorMonitorConfig();
     fParser.parseMonitor(pFilename, *fDetectorMonitorConfig, os);
 
-    if(fDetectorMonitorConfig->fEnable)
+    if(fDetectorMonitorConfig->fEnable == true)
     {
         if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2S_VALUE)
             fDetectorMonitor = new CBCMonitor(this, *fDetectorMonitorConfig);
@@ -360,7 +357,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
-            abort();
+            exit(EXIT_FAILURE);
         }
 
         fDetectorMonitor->forkMonitor();
@@ -426,17 +423,18 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }
 
-void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std::string>& args) const
+void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std::string>& args, bool silentRunning) const
 {
     if(args.size() != 0)
         for(const auto cOpticalGroup: *pBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    fBeBoardInterface->ReadHybridVoltageMonitor(fReadoutChipInterface, cChip);
-                    fBeBoardInterface->ReadHybridTemperatureMonitor(fReadoutChipInterface, cChip);
+                    if(silentRunning == false)
+                        LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    fBeBoardInterface->ReadHybridVoltageMonitor(fReadoutChipInterface, cChip, silentRunning);
+                    fBeBoardInterface->ReadHybridTemperatureMonitor(fReadoutChipInterface, cChip, silentRunning);
                 }
 }
 
@@ -530,13 +528,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ####################################
     // # Check AURORA lock on data stream #
     // ####################################
-    try
+    const bool stopIfCommFails = SystemController::findValueInSettings<double>("StopIfCommFails", 1);
+    if((static_cast<RD53FWInterface*>(theBeBoardFW)->CheckChipCommunication(pBoard) == false) && (stopIfCommFails == true))
     {
-        static_cast<RD53FWInterface*>(theBeBoardFW)->CheckChipCommunication(pBoard);
-    }
-    catch(const std::exception& e)
-    {
-        LOG(WARNING) << BOLDRED << "===== Aborting: " << BOLDYELLOW << e.what() << BOLDRED << " =====" << RESET;
+        LOG(ERROR) << BOLDRED << "===== Aborting =====" << RESET;
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -902,6 +898,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
         // # Outer Tracker #
         // #################
         if(cBoard->getBoardType() == BoardType::D19C) ConfigureOT(cBoard);
+
         // #################
         // # Inner Tracker #
         // #################
@@ -942,7 +939,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
     // ####################
     if(fDetectorMonitor != nullptr)
     {
-        LOG(INFO) << GREEN << "Starting monitoring thread" << RESET;
+        LOG(INFO) << GREEN << "Starting " << BOLDYELLOW << "monitoring" << RESET << GREEN << " thread" << RESET;
         fDetectorMonitor->startMonitoring();
     }
 }

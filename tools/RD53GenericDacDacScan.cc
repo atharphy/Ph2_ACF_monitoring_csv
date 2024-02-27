@@ -68,7 +68,7 @@ void GenericDacDacScan::Running()
 
     GenericDacDacScan::run();
     GenericDacDacScan::analyze();
-    CalibBase::saveChipRegisters(PixelAlive::doUpdateChip);
+    GenericDacDacScan::draw();
     GenericDacDacScan::sendData();
 }
 
@@ -79,21 +79,15 @@ void GenericDacDacScan::sendData()
         ContainerSerialization theOccupancySerialization("GenericDacDacScanOccupancy");
         theOccupancySerialization.streamByChipContainer(fDQMStreamer, theOccContainer);
 
-        ContainerSerialization theDACDACSerialization("GenericDacDacScanDACDAC");
-        theDACDACSerialization.streamByChipContainer(fDQMStreamer, theGenericDacDacScanContainer);
+        ContainerSerialization theDACDACSerialization("GenericDacDacDACDAC");
+        theDACDACSerialization.streamByChipContainer(fDQMStreamer, theGenericDacDacContainer);
     }
 }
 
 void GenericDacDacScan::Stop()
 {
     LOG(INFO) << GREEN << "[GenericDacDacScan::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    GenericDacDacScan::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void GenericDacDacScan::localConfigure(const std::string& histoFileName, int currentRun)
@@ -128,7 +122,7 @@ void GenericDacDacScan::run()
 {
     CalibBase::showErrorReport = false;
     ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theOccContainer);
-    CalibBase::fillVectorContainer<float>(theOccContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+    CalibBase::fillVectorContainer<float>(theOccContainer, dac1List.size() * dac2List.size(), 0);
     GenericDacDacScan::scanDacDac(regNameDAC1, regNameDAC2, dac1List, dac2List, &theOccContainer);
     CalibBase::showErrorReport = true;
 
@@ -157,7 +151,7 @@ void GenericDacDacScan::draw(bool saveData)
 
 void GenericDacDacScan::analyze()
 {
-    ContainerFactory::copyAndInitChip<std::pair<uint16_t, uint16_t>>(*fDetectorContainer, theGenericDacDacScanContainer);
+    ContainerFactory::copyAndInitChip<std::pair<uint16_t, uint16_t>>(*fDetectorContainer, theGenericDacDacContainer);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -198,7 +192,7 @@ void GenericDacDacScan::analyze()
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theGenericDacDacScanContainer.getObject(cBoard->getId())
+                    theGenericDacDacContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
                         ->getObject(cHybrid->getId())
                         ->getObject(cChip->getId())
@@ -210,7 +204,7 @@ void GenericDacDacScan::fillHisto()
 {
 #ifdef __USE_ROOT__
     histos->fillOccupancy(theOccContainer);
-    histos->fillGenericDacDacScan(theGenericDacDacScanContainer);
+    histos->fillGenericDacDac(theGenericDacDacContainer);
 #endif
 }
 

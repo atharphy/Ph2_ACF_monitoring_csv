@@ -31,7 +31,7 @@ void MemoryCheck2S::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
+        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second.fValue)); }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         auto& cRegMapThisBoard = fRegMapContainer.getObject(cBoard->getId());
@@ -1123,16 +1123,11 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                         continue;
                     } // with noise .. all would be on/off
 
-                    uint8_t              cSeed = 2 * (cChip->getId() + 1);
-                    std::vector<uint8_t> cSeeds{cSeed};
-                    std::vector<int>     cBends{0};
+                    uint8_t                              cSeed = 2 * (cChip->getId() + 1);
+                    std::vector<std::pair<uint8_t, int>> cSeeds{{cSeed, 0}};
 
                     // if( cChip->getId()%2 == 0 )
-                    if(std::find(pActiveCbcs.begin(), pActiveCbcs.end(), cChip->getId()) == pActiveCbcs.end())
-                    {
-                        cSeeds.clear();
-                        cBends.clear();
-                    }
+                    if(std::find(pActiveCbcs.begin(), pActiveCbcs.end(), cChip->getId()) == pActiveCbcs.end()) { cSeeds.clear(); }
 
                     // retrieve hit list from stubs
                     std::vector<uint8_t> cCompleteHitList;
@@ -1142,12 +1137,12 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                         std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(cChip);
                         // each bend code is stored in this vector - bend encoding start at -7 strips,
                         // increments by 0.5 strips
-                        uint8_t cBendCode = cBendLUT[(cBends[cIndx] / 2. - (-7.0)) / 0.5];
+                        uint8_t cBendCode = cBendLUT[(cSeeds[cIndx].second / 2. - (-7.0)) / 0.5];
                         // uint8_t cBendCode = cBendLUT[ cBends[cIndx]/2. ];
                         // bend code
-                        Stub cStub(cSeeds[cIndx], cBendCode);
+                        Stub cStub(cSeeds[cIndx].first, cBendCode);
                         cExpectedStubs.push_back(cStub);
-                        auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                        auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx].first, cSeeds[cIndx].second);
                         cCompleteHitList.insert(cCompleteHitList.end(), cHitList.begin(), cHitList.end());
                     }
                     // configure occupancy
@@ -1159,7 +1154,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                         else
                             cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = 0;
                     }
-                    (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise, cUseOffsets);
+                    (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise, cUseOffsets);
                 } // Chip
             }     // Hybrid
         }         // OG
@@ -1337,20 +1332,18 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
                             continue;
                         }
 
-                        uint8_t              cSeed = 10 + 2 * (cChip->getId() + 1);
-                        std::vector<uint8_t> cSeeds{10};
-                        cSeeds[0] = cSeed;
-                        std::vector<int> cBends{0};
+                        uint8_t                              cSeed = 10 + 2 * (cChip->getId() + 1);
+                        std::vector<std::pair<uint8_t, int>> cSeeds{{cSeed, 0}};
 
-                        for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
+                        for(const auto theSeedAndBend: cSeeds)
                         {
-                            auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                            auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, theSeedAndBend.first, theSeedAndBend.second);
                             // LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
                             for(auto cHit: cHitList) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = cAllOnes ? 1 : 0; }
                         }
                         // make sure sampled mode is used
                         static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "Sampled", true, true);
-                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise, cUseOffsets);
+                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise, cUseOffsets);
                         // if using TP injection make sure the latency is set correctly
                     }
                 } // Chip
@@ -1548,18 +1541,14 @@ void MemoryCheck2S::MemoryCheck2SSparse()
                     size_t cStart = cChnlGroup * 2;
                     // prepare injections
                     // first figure out seeds
-                    std::vector<uint8_t> cSeeds{10};
-                    cSeeds.clear();
-                    std::vector<int> cBends{0};
-                    cBends.clear();
+                    std::vector<std::pair<uint8_t, int>> cSeeds;
                     for(size_t cIndx = cStart; cIndx < cStart + 2; cIndx++)
                     {
                         int cChannel = cGroup * 2 + 1 + 16 * cIndx;
                         int cStrip   = 2 * (1 + cChannel / 2);
                         // LOG(INFO) << BOLDBLUE << "\t.. Injecting in strip#" << cStrip << RESET;
 
-                        cSeeds.push_back(cStrip);
-                        cBends.push_back(0);
+                        cSeeds.push_back({cStrip, 0});
                     } // will have 16 stubs per CBC .. which is
                     // way too much for stubs but .. ok
 
@@ -1585,7 +1574,7 @@ void MemoryCheck2S::MemoryCheck2SSparse()
                                         //         LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
                                         //     }
                                         // }
-                                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise, cUseOffsets);
+                                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise, cUseOffsets);
                                     }
                                 } // Chip
                             }     // Hybrid
@@ -1624,15 +1613,15 @@ void MemoryCheck2S::SaveOptimalTaps()
             for(auto cHybrid: *cOpticalGroup)
             {
                 fPhyPort.fHybridId = cHybrid->getId();
-                auto& cCic         = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                auto  cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                // auto& cCic         = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                // auto  cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
                 for(size_t cPhyPortChnl = 0; cPhyPortChnl < 4; cPhyPortChnl++)
                 {
                     for(size_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
                     {
                         fPhyPort.fPort    = cPhyPort;
                         fPhyPort.fChannel = cPhyPortChnl;
-                        fPhyPort.fTap     = cOptimalTaps[cPhyPortChnl][cPhyPort];
+                        // fPhyPort.fTap     = cOptimalTaps[cPhyPortChnl][cPhyPort];
 #ifdef __USE_ROOT__
                         TTree* cTree = static_cast<TTree*>(getHist(cBoard, "PhyPortTree"));
                         cTree->Fill();

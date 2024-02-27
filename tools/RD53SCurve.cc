@@ -18,11 +18,7 @@ void SCurve::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents", 1);
+    CalibBase::ConfigureCalibration();
     injType        = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
@@ -75,7 +71,7 @@ void SCurve::Running()
 
     SCurve::run();
     SCurve::analyze();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    SCurve::draw();
     SCurve::sendData();
 }
 
@@ -102,13 +98,7 @@ void SCurve::sendData()
 void SCurve::Stop()
 {
     LOG(INFO) << GREEN << "[SCurve::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    SCurve::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void SCurve::localConfigure(const std::string& histoFileName, int currentRun)

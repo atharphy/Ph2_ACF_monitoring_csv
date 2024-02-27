@@ -223,6 +223,9 @@ enum class EventType
     VR2S  = 10
 };
 
+#define NUMBER_OF_CIC_PORTS 8
+#define NUMBER_OF_LINES_PER_CIC_PORTS 6
+
 // Monitoring parameters
 #define MAX_LENGHT_PARAMETER_STRING 50
 
