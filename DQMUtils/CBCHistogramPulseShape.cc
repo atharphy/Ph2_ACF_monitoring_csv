@@ -106,19 +106,21 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
                     chipPulseShapeHistogram->SetBinError(currentBin, chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThresholdError);
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot) Get channel data and fill the histogram
-                    uint8_t channelNumber = 0;
-                    for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>()) // for on channel - begin
+                    
+                    for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
-                        TH1F* channelPulseShapeHistogram = fDetectorChannelPulseShapeHistograms.getObject(boardId)
-                                                               ->getObject(opticalGroupId)
-                                                               ->getObject(hybridId)
-                                                               ->getObject(chipId)
-                                                               ->getChannel<HistContainer<TH1F>>(0, channelNumber)
-                                                               .fTheHistogram;
-                        int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
-                        channelPulseShapeHistogram->SetBinContent(currentBin, channel.fThreshold);
-                        channelPulseShapeHistogram->SetBinError(currentBin, channel.fNoise);
-                        ++channelNumber;
+                        for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
+                        {
+                            TH1F* channelPulseShapeHistogram = fDetectorChannelPulseShapeHistograms.getObject(boardId)
+                                                                ->getObject(opticalGroupId)
+                                                                ->getObject(hybridId)
+                                                                ->getObject(chipId)
+                                                                ->getChannel<HistContainer<TH1F>>(row, col)
+                                                                .fTheHistogram;
+                            int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
+                            channelPulseShapeHistogram->SetBinContent(currentBin, chip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
+                            channelPulseShapeHistogram->SetBinError(currentBin, chip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+                        }
                     } // for on channel - end
                 }     // for on chip - end
             }         // for on hybrid - end
@@ -145,15 +147,16 @@ void CBCHistogramPulseShape::fillSCurvePlots(uint16_t vcthr, uint16_t latency, u
                                            ->getSummary<HistContainer<TH2F>>()
                                            .fTheHistogram;
 
-                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
-                    uint16_t channelNumber = 0;
-                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    if(chip->hasChannelContainer() == false) continue;
+                    for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
-                        float tmpOccupancy      = channel.fOccupancy;
-                        float tmpOccupancyError = channel.fOccupancyError;
-                        chipSCurve->SetBinContent(channelNumber + 1, vcthr + 1, tmpOccupancy);
-                        chipSCurve->SetBinError(channelNumber + 1, vcthr + 1, tmpOccupancyError);
-                        ++channelNumber;
+                        for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
+                        {
+                            float tmpOccupancy      = chip->getChannel<Occupancy>(row, col).fOccupancy;
+                            float tmpOccupancyError = chip->getChannel<Occupancy>(row, col).fOccupancyError;
+                            chipSCurve->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, vcthr + 1, tmpOccupancy);
+                            chipSCurve->SetBinError(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, vcthr + 1, tmpOccupancyError);
+                        }
                     }
                 }
             }

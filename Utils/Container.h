@@ -332,6 +332,8 @@ class ChipContainer : public BaseContainer
 
     ChannelContainerBase* getChannelContainer() { return container_; }
 
+    bool hasChannelContainer() const { return (container_ != nullptr); }
+
   protected:
     unsigned int          nOfRows_;
     unsigned int          nOfCols_;

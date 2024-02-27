@@ -266,4 +266,6 @@ std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,
 
 std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask);
 
+uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols);
+
 #endif

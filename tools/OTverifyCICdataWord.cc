@@ -214,7 +214,7 @@ void OTverifyCICdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, 
                                 ->getObject(theMPA->getHybridId())
                                 ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()[theMPA->getId()%8][0];
 
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0x55,0xA,1)};
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA,0x55,1)};
     // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{};
     // std::vector<std::pair<uint8_t,uint8_t>> theClusterList {{0xAA, 2}, {0xA0, 3}};
     // std::vector<std::pair<uint8_t,uint8_t>> theClusterList {{0xAA, 2}, {0xA0, 3}, {0x0A, 1}};

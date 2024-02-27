@@ -160,7 +160,7 @@ void DQMHistogramPedestalEqualization::fillOccupancyPlots(DetectorDataContainer&
             {
                 for(auto chip: *hybrid)
                 {
-                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
                     TH1F* chipOccupancyHistogram = fDetectorOccupancyHistograms.getObject(board->getId())
                                                        ->getObject(opticalGroup->getId())
                                                        ->getObject(hybrid->getId())
@@ -191,7 +191,7 @@ void DQMHistogramPedestalEqualization::fillOffsetPlots(DetectorDataContainer& th
             {
                 for(auto chip: *hybrid)
                 {
-                    if(chip->getChannelContainer<uint8_t>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
                     TH1I* chipOffsetHistogram = fDetectorOffsetHistograms.getObject(board->getId())
                                                     ->getObject(opticalGroup->getId())
                                                     ->getObject(hybrid->getId())

@@ -901,31 +901,35 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
                     auto&              cThNoiseThisChip = cThNoiseThisHybrid->getObject(cChip->getId());
                     std::vector<float> cPedestalsThisChip(0);
                     std::vector<float> cNoiseThisChip(0);
-                    for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                    
+                    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
                     {
-                        // S-curve for this channel
-                        std::vector<float> cW(cThresholds.size(), 0);
-                        std::vector<float> cV(cThresholds.size(), 0);
-                        for(size_t cIndx = 0; cIndx < cThresholds.size(); cIndx++)
+                        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
                         {
-                            auto& cDataThisBrd    = cScanData[cIndx]->getObject(cBoard->getId());
-                            auto& cDataThisOG     = cDataThisBrd->getObject(cOpticalGroup->getId());
-                            auto& cDataThisHybrid = cDataThisOG->getObject(cHybrid->getId());
-                            auto& cDataThisChip   = cDataThisHybrid->getObject(cChip->getId());
-                            cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(0, cChnl).fOccupancy;
-                            cV[cIndx]             = cThresholds[cIndx];
-                        }
-                        auto cPedeNoise                                                   = evalNoise(cW, cV, true);
-                        cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold = cPedeNoise.first;
-                        cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise     = cPedeNoise.second;
-                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold);
-                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise);
-                        // if( cChnl%25 == 0 )
-                        //     LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
-                        //         << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold
-                        //         << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise
-                        //         << RESET;
-                    } // chnl loop
+                            // S-curve for this channel
+                            std::vector<float> cW(cThresholds.size(), 0);
+                            std::vector<float> cV(cThresholds.size(), 0);
+                            for(size_t cIndx = 0; cIndx < cThresholds.size(); cIndx++)
+                            {
+                                auto& cDataThisBrd    = cScanData[cIndx]->getObject(cBoard->getId());
+                                auto& cDataThisOG     = cDataThisBrd->getObject(cOpticalGroup->getId());
+                                auto& cDataThisHybrid = cDataThisOG->getObject(cHybrid->getId());
+                                auto& cDataThisChip   = cDataThisHybrid->getObject(cChip->getId());
+                                cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(row, col).fOccupancy;
+                                cV[cIndx]             = cThresholds[cIndx];
+                            }
+                            auto cPedeNoise                                                   = evalNoise(cW, cV, true);
+                            cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold = cPedeNoise.first;
+                            cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise     = cPedeNoise.second;
+                            cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
+                            cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+                            // if( cChnl%25 == 0 )
+                            //     LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
+                            //         << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold
+                            //         << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise
+                            //         << RESET;
+                        } // chnl loop
+                    }
                 }
             }
         }
@@ -974,10 +978,13 @@ void MemoryCheck2S::SetThreshold(float pSigma)
                     auto&              cThNoiseThisChip = cThNoiseThisHybrid->getObject(cChip->getId());
                     std::vector<float> cPedestalsThisChip(0);
                     std::vector<float> cNoiseThisChip(0);
-                    for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
                     {
-                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold);
-                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise);
+                        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                        {
+                            cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
+                            cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+                        }
                     } // chnl loop
                     auto cPedStats = SummarizeStats<float>(cPedestalsThisChip);
                     // LOG (INFO) << BOLDMAGENTA << "\t\t... Mean pedestal on this chip is "
@@ -1119,7 +1126,13 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                     std::vector<uint8_t> cExpectedHits(0);
                     if(!cInjection) // all channels
                     {
-                        for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = (cAllOnes) ? 1 : 0; }
+                        for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                        {
+                            for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                            {
+                                cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = (cAllOnes) ? 1 : 0;
+                            }
+                        }
                         continue;
                     } // with noise .. all would be on/off
 
@@ -1146,13 +1159,16 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                         cCompleteHitList.insert(cCompleteHitList.end(), cHitList.begin(), cHitList.end());
                     }
                     // configure occupancy
-                    for(size_t cHit = 0; cHit < cChip->size(); cHit++)
+                    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
                     {
-                        bool cHitFound = std::find(cCompleteHitList.begin(), cCompleteHitList.end(), cHit) != cCompleteHitList.end();
-                        if(cHitFound)
-                            cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = (cAllOnes) ? 1 : 0;
-                        else
-                            cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = 0;
+                        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                        {
+                            bool cHitFound = std::find(cCompleteHitList.begin(), cCompleteHitList.end(), col) != cCompleteHitList.end();
+                            if(cHitFound)
+                                cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = (cAllOnes) ? 1 : 0;
+                            else
+                                cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = 0;
+                        }
                     }
                     (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise, cUseOffsets);
                 } // Chip
@@ -1328,7 +1344,13 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
                         std::vector<uint8_t> cExpectedHits(0);
                         if(!cInjection) // all channels
                         {
-                            for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = cAllOnes ? 1 : 0; }
+                            for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                            {
+                                for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                                {
+                                    cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = cAllOnes ? 1 : 0;
+                                }
+                            }
                             continue;
                         }
 
@@ -1339,7 +1361,7 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
                         {
                             auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, theSeedAndBend.first, theSeedAndBend.second);
                             // LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
-                            for(auto cHit: cHitList) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = cAllOnes ? 1 : 0; }
+                            for(auto cHit: cHitList) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = cAllOnes ? 1 : 0; } // only for CBC
                         }
                         // make sure sampled mode is used
                         static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "Sampled", true, true);
@@ -1490,7 +1512,7 @@ void MemoryCheck2S::MemoryCheck2SSparse()
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
                     auto& cExpectedOccThisChip = cExpectedOccThisHybrid->getObject(cChip->getId());
-                    for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = (cThreshold == 1000) ? 1 : 0; }
+                    for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = (cThreshold == 1000) ? 1 : 0; } // only for CBC
                 } // Chip
             }     // Hybrid
         }         // OG
@@ -2179,28 +2201,31 @@ void MemoryCheck2S::Check()
                             }
                         }
 
-                        for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                        for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
                         {
-                            // information about threshold + noise
-                            fMemEvent.fPedestal = cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fThreshold;
-                            fMemEvent.fNoise    = cThNoiseThisChip->getChannel<ThresholdAndNoise>(0, cChnl).fNoise;
-                            // memory row
-                            fMemEvent.fMemoryRow    = cChnl;
-                            float cExpectedOcc      = cExpectedOcThisChip->getChannel<Occupancy>(0, cChnl).fOccupancy;
-                            int   cOcc              = (int)(std::find(cHits.begin(), cHits.end(), cChnl) != cHits.end());
-                            fMemEvent.fCorrectValue = (uint8_t)(cExpectedOcc == cOcc);
-                            if(fMemEvent.fCorrectValue == 0)
+                            for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
                             {
-                                cBadEventsSummary.push_back(fMemEvent);
-                                // PrintMemEvent(fMemEvent);
+                                // information about threshold + noise
+                                fMemEvent.fPedestal = cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold;
+                                fMemEvent.fNoise    = cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise;
+                                // memory row
+                                fMemEvent.fMemoryRow    = col;
+                                float cExpectedOcc      = cExpectedOcThisChip->getChannel<Occupancy>(row, col).fOccupancy;
+                                int   cOcc              = (int)(std::find(cHits.begin(), cHits.end(), col) != cHits.end());
+                                fMemEvent.fCorrectValue = (uint8_t)(cExpectedOcc == cOcc);
+                                if(fMemEvent.fCorrectValue == 0)
+                                {
+                                    cBadEventsSummary.push_back(fMemEvent);
+                                    // PrintMemEvent(fMemEvent);
+                                }
+                                cNCorruptedCells += (fMemEvent.fCorrectValue == 0) ? 1 : 0;
+    // if ROOT is enabled fill tree here
+    #ifdef __USE_ROOT__
+                                TTree* cTree = static_cast<TTree*>(getHist(cHybrid, "MemoryCheck2STree"));
+                                cTree->Fill();
+    #endif
+                                cMemEventsSummary.push_back(fMemEvent);
                             }
-                            cNCorruptedCells += (fMemEvent.fCorrectValue == 0) ? 1 : 0;
-// if ROOT is enabled fill tree here
-#ifdef __USE_ROOT__
-                            TTree* cTree = static_cast<TTree*>(getHist(cHybrid, "MemoryCheck2STree"));
-                            cTree->Fill();
-#endif
-                            cMemEventsSummary.push_back(fMemEvent);
                         }
                     } // chip
                 }     // hybrid

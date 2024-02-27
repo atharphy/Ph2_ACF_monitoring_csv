@@ -92,7 +92,7 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
                            ->getObject(cOpticalGroup->getId())
                            ->getObject(cHybrid->getId())
                            ->getObject(cChip->getId())
-                           ->getChannelContainer<OccupancyAndPh>() == nullptr)
+                           ->hasChannelContainer() == false)
                         continue;
 
                     auto* hOcc2D = Occupancy2D.getObject(cBoard->getId())
@@ -147,7 +147,7 @@ void SCurveHistograms::fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseC
                            ->getObject(cOpticalGroup->getId())
                            ->getObject(cHybrid->getId())
                            ->getObject(cChip->getId())
-                           ->getChannelContainer<ThresholdAndNoise>() == nullptr)
+                           ->hasChannelContainer() == false)
                         continue;
 
                     auto* Threshold1DHist = Threshold1D.getObject(cBoard->getId())

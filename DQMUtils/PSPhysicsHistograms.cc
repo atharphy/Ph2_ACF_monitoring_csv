@@ -116,7 +116,7 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                 for(const auto chip: *hybrid)
                 {
                     // std::cout<<__LINE__<<std::endl;
-                    if(chip->getChannelContainer<float>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
 
                     // std::cout<<__LINE__<<std::endl;
                     // std::cout<<"board = "<<board->getId()<<std::endl;
@@ -181,7 +181,7 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
             {
                 for(const auto chip: *hybrid)
                 {
-                    if(chip->getChannelContainer<float>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
 
                     FrontEndType theFrontEndType =
                         fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getFrontEndType();

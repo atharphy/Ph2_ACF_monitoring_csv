@@ -382,13 +382,11 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
         return;
     }
 
-    float cOcc = 0;
     for(auto cHit: cHits)
     {
-        if(testChannelGroup->isChannelEnabled(0, cHit))
+        if(testChannelGroup->isChannelEnabled(0, cHit)) // This cannot work for PS since hits are not returned as expected
         {
             chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
-            cOcc += cHit;
         }
     }
 }

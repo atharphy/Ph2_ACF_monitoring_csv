@@ -81,18 +81,14 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     for(auto cHit: cHits)
     {
         if(testChannelGroup == nullptr) break;
-        if(testChannelGroup->isChannelEnabled(0, cChnl))
+        uint32_t cRow = cChnl / testChannelGroup->getNumberOfCols();
+        uint32_t cCol = cChnl % testChannelGroup->getNumberOfCols();
+        if(testChannelGroup->isChannelEnabled(cRow, cCol))
         {
             if(cChnl < 10) LOG(DEBUG) << BOLDYELLOW << "Chnl#" << cChnl << "\t" << cHit << RESET;
-            // uint32_t cRow = cChnl % testChannelGroup->getNumberOfRows();
-            // uint32_t cCol;
-            // if(testChannelGroup->getNumberOfCols() == 0)
-            //     cCol = 0;
-            // else
-            //     cCol = cChnl / testChannelGroup->getNumberOfRows();
 
             // if( cChnl < 10 ) LOG (INFO) << BOLDYELLOW << "Chnl#" << cChnl << "\t" << cHit  << "Row " << cRow << " Col" << cCol << RESET;
-            chipContainer->getChannel<Occupancy>(0, cChnl).fOccupancy += cHit;
+            chipContainer->getChannel<Occupancy>(cRow, cCol).fOccupancy += cHit;
             cOcc += cHit;
         }
         cChnl++;

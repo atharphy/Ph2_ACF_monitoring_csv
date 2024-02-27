@@ -212,21 +212,6 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum, uin
                //<< " [built-in MPA row " << +cRowCol.first << " col " << +cRowCol.second << " ]"
                << " register 0x" << std::hex << cAddress << std::dec << " value to write is 0x" << std::hex << +pValue << std::dec << RESET;
 
-    // if global register don't readback
-    // if(cRow == 0 || cColumn == 0) {
-    //     LOG(INFO) << BOLDMAGENTA << "GLOBAL PXL REG - making sure that I set all registers in the map to the same value.. " << RESET;
-    //     // also make sure that you've updated all the values of this register in memory
-    //     for( uint8_t cColumn=0 ; cColumn < 16; cColumn++)
-    //     {
-    //         for(uint8_t cRow=0; cRow < 120; cRow++)
-    //         {
-    //             uint32_t cPixelId = 1 + cColumn*120 + cRow;
-    //             std::stringstream cRegName;
-    //             cRegName << PIXEL_CONFIG_TABLE.find(cReg)->first << "_P" << cPixelId;
-    //             pChip->setReg(cRegName.str(), pValue);
-    //         }
-    //     }
-    // }
     pVerify = (cRow == 0 || cColumn == 0) ? false : pVerify;
     return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerify);
 }
@@ -429,13 +414,6 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     {
         this->producePhaseAlignmentPattern(static_cast<ReadoutChip*>(pMPA), pValue);
         return true;
-    }
-    else if(pRegName.find("MaskChannel") != std::string::npos)
-    {
-        std::string cToken    = "MaskChannel";
-        auto        cPixelNum = std::atoi(pRegName.substr(pRegName.find(cToken) + cToken.length(), 4).c_str());
-        LOG(DEBUG) << BOLDMAGENTA << "Masking pixel number " << +cPixelNum << " register is " << pRegName << RESET;
-        return maskPixel(pMPA, cPixelNum, pValue, pVerify);
     }
     else if(pRegName.find("SelectEdgeT1") != std::string::npos)
     {
@@ -719,10 +697,13 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
     // check if all registers are the same
     std::vector<uint8_t> cVals(0);
-    for(uint16_t iChannel = 0; iChannel < pMPA->getNumberOfChannels(); ++iChannel)
+    for(uint16_t row = 0; row < pMPA->getNumberOfRows(); ++row)
     {
-        cVals.push_back(localRegValues.getChannel<uint16_t>(0, iChannel));
-        LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
+        for(uint16_t col = 0; col < pMPA->getNumberOfCols(); ++col)
+        {
+            cVals.push_back(localRegValues.getChannel<uint16_t>(row, col));
+            LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
+        }
     }
 
     if(std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end())
@@ -751,8 +732,8 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
         {
             char dacName1[20];
             sprintf(dacName1, dacTemplate.c_str(), col, row);
-            LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(col, row) & 0x1F) << RESET;
-            cSuccess = cSuccess && this->WriteChipReg(pMPA, dacName1, (localRegValues.getChannel<uint16_t>(col, row) & 0x1F), pVerify);
+            LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(row, col) & 0x1F) << RESET;
+            cSuccess = cSuccess && this->WriteChipReg(pMPA, dacName1, (localRegValues.getChannel<uint16_t>(row, col) & 0x1F), pVerify);
         }
     }
     return cSuccess;

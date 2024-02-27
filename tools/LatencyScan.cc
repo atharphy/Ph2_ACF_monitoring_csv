@@ -325,7 +325,7 @@ void LatencyScan::ScanLatency()
                                             ->getObject(cChip->getId())
                                             ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                         auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                                        cOccChip->getChannel<Occupancy>(0, cHit).fOccupancy++;
+                                        cOccChip->getChannel<Occupancy>(0, cHit).fOccupancy++; // only for CBC
                                     }
                                 }
                                 else
@@ -351,7 +351,7 @@ void LatencyScan::ScanLatency()
                                                 ->getObject(cChip->getId())
                                                 ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                             // auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                                            // cOccChip->getChannel<Occupancy>(0, cPclstr.fAddress + cPclstr.fZpos*120 + cId).fOccupancy++;
+                                            // cOccChip->getChannel<Occupancy>(cPclstr.fZpos, cPclstr.fAddress + cId).fOccupancy++;
                                         }
                                     }
                                     for(auto& cSclstr: cSclstrs)
