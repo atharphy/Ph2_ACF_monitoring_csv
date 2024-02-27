@@ -203,15 +203,7 @@ void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
     }
 
     // Fabio: I do not think this part should be here, but I keep it for consistency with the previous code
-#if defined(__TCUSB__)
-    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 0};
-    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 0};
-    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
-    cEportGroups = {0, 1, 1, 2, 2, 3};
-    cEportChnls  = {2, 0, 2, 0, 2, 2};
-    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
-    ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
-#endif
+
 }
 
 void D19clpGBTInterface::holdPSModuleResets(Ph2_HwDescription::Chip* pChip)
@@ -310,6 +302,43 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     cEportChnls  = {2, 0, 2, 0, 2, 2};
     InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
     ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+
+    AutoTuneVref(static_cast<lpGBT*>(pChip));
+
+    LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC0\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(static_cast<lpGBT*>(pChip), "ADC0", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC1\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(static_cast<lpGBT*>(pChip), "ADC1", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC2\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(static_cast<lpGBT*>(pChip), "ADC2", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC3\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(static_cast<lpGBT*>(pChip), "ADC3", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC4\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(static_cast<lpGBT*>(pChip), "ADC4", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC5\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(static_cast<lpGBT*>(pChip), "ADC5", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC6\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(static_cast<lpGBT*>(pChip), "ADC6", "VREF/2", 0) << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
+    LOG(INFO) << BOLDGREEN << AdcGetVin(static_cast<lpGBT*>(pChip), "ADC7", "VREF/2", 0) << " V" << RESET;
+    // Example on how to use the current source to measure resistance
+    // Only for OT-2S
+    // if(pChip->getFrontEndType() == FrontEndType::OuterTracker2S) {
+    // CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
+    // LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
+    // LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;}
+    LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
+    LOG(INFO) << BOLDGREEN << MeasureTemperature(static_cast<lpGBT*>(pChip)) << " C" << RESET;
+
+    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDTX\")" << RESET;
+    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(static_cast<lpGBT*>(pChip), "VDDTX") << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDRX\")" << RESET;
+    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(static_cast<lpGBT*>(pChip), "VDDRX") << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDD\")" << RESET;
+    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(static_cast<lpGBT*>(pChip), "VDD") << " V" << RESET;
+    LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDA\")" << RESET;
+    LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(static_cast<lpGBT*>(pChip), "VDDA") << " V" << RESET;
 #endif
 }
 void D19clpGBTInterface::Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip)
