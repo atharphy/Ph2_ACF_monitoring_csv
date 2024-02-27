@@ -31,7 +31,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 
 # =x= Middleware for the Inner-Tracker (IT) system  =x=
 ```diff
-+ Last change made to this section: 05/02/2024
++ Last change made to this section: 27/02/2024
 ```
 
 ### Suggested software and firmware versions:
@@ -43,6 +43,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 - Detailed description of the various calibrations: https://cernbox.cern.ch/s/yFByejNP8Tp7VFq
 - ROC tuning sequence: https://www.overleaf.com/read/ffpkqnjjjscd
+- Latest IT-DAQ school: https://indico.cern.ch/event/1374747/
 - Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
 - Mask converter from `Ph2_ACF` to `Alki's` code: `pyUtilsIT/ConvertPh2ACFMask2Alkis.py`
 
