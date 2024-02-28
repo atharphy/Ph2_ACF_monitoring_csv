@@ -435,7 +435,12 @@ void PedestalEqualization::FindOffsets()
                         for(uint16_t col = 0; col < roc->getNumberOfCols(); ++col)
                         {
                             std::string cRegName;
-                            if(cType == FrontEndType::CBC3) cRegName = "Channel" + std::to_string(col + 1);
+                            if(cType == FrontEndType::CBC3)
+                            {
+                                char charRegName[20];
+                                cRegName = sprintf(charRegName, "Channel%03d", col);
+                                cRegName = charRegName;
+                            }
                             if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) cRegName = "THTRIMMING_S" + std::to_string(col + 1);
                             if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
                             auto channel = roc->getReg(cRegName);
