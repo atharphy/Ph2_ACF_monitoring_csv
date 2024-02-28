@@ -85,7 +85,6 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
-
 ## =x= End of Inner-Tracker section =x=
 
 
@@ -96,9 +95,9 @@ For more information on the firmware, please check the doc directory of https://
 
 
 ### Gitlab CI setup for Developers (required to submit merge requests)
-1. Enable shared Runners (if not enabled)
-    i. from `settings > CI/CD` expand the `Runners` section
-    ii. click the `Allow shared Runners` button
+Enable shared Runners (if not enabled)
+- from `settings > CI/CD` expand the `Runners` section
+- click the `Allow shared Runners` button
 
 
 ### The Ph2_ACF software
@@ -325,7 +324,7 @@ formatAll
 ```
 
 
-### git requirements (required to pull large files)
+### Git requirements (required to pull large files)
 ```bash
 sudo yum install git-lfs
 git-lfs install
