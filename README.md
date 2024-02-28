@@ -362,8 +362,8 @@ This uses TCP protocol instead of UDP which accounts for packet loss but decreas
 
 
 ##
-### Support, suggestions?
-For any support/suggestions, mail to fabio.raveraSPAMNOT@cern.ch, mauro.dinardoSPAMNOT@cern.ch
+### Support, suggestions
+For any support/suggestions, send an email to fabio.raveraSPAMNOT@cern.ch, mauro.dinardoSPAMNOT@cern.ch
 
 
 ##
