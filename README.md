@@ -232,6 +232,7 @@ tar zxvf v2.9.2.tar.gz
 ```
 
 
+##
 ### Setup on RHEL 9 or AlmaLinux 9
 The following procedure will install (in order):
 1. complete the `cern` installation
@@ -304,6 +305,7 @@ tar zxvf v2.9.2.tar.gz
 ```
 
 
+##
 ### clang-format (required to submit merge requests)
 1. Install 7.0 llvm toolset
 ```bash
@@ -317,6 +319,7 @@ formatAll
 ```
 
 
+##
 ### Git requirements (required to pull large files)
 ```bash
 sudo yum install git-lfs
@@ -325,6 +328,7 @@ git config lfs.https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git/info/lfs.locksverif
 ```
 
 
+##
 ### Nota Bene
 When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
 
@@ -335,10 +339,12 @@ Register values are:
 For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefile and also activate the uHal log in `RegManager.cc`
 
 
+##
 ### External clock and trigger
 Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/Middleware_Short_Guide.md) for instructions on how to use external clock and trigger with the various FMCs (DIO5 and CBC3 FMC)
 
 
+##
 ### Known issues
 uHAL exceptions and UDP timeouts when reading larger packet sizes from the GLIB board: this can happen for some users (cause not yet identified) but can be circumvented by changing the line
 
@@ -355,9 +361,11 @@ and then launching the CACTUS control hub by the command:
 This uses TCP protocol instead of UDP which accounts for packet loss but decreases the performance
 
 
+##
 ### Support, suggestions?
 For any support/suggestions, mail to fabio.raveraSPAMNOT@cern.ch, mauro.dinardoSPAMNOT@cern.ch
 
 
+##
 ### Firmware repository for OT tracker
 `https://udtc-ot-firmware.web.cern.ch/`
