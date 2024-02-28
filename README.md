@@ -86,7 +86,8 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
-## =x= End of Inner-Tracker section =x=
+### =x= End of Inner-Tracker section =x=
+##
 
 
 ### The Ph2_ACF software
@@ -113,6 +114,7 @@ fpgaconfig --help
 to upload a new FW image to the FC7
 
 
+##
 ### Run in docker container
 Docker container are provided to facilitate users and developers in setting up the framework.
 All docker containers can be found here: `https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry`
@@ -129,12 +131,14 @@ Suggested images are:
 Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
 
 
+##
 ### Gitlab CI setup for Developers (required to submit merge requests)
 Enable shared Runners (if not enabled)
 - from `settings > CI/CD` expand the `Runners` section
 - click the `Allow shared Runners` button
 
 
+##
 ### Setup on CentOs7
 1. Install devtoolset 10
 ```bash
@@ -176,6 +180,7 @@ tar zxvf v2.9.2.tar.gz
 ```
 
 
+##
 ### Setup on CentOs8 (deprecated)
 1. Libraries needed by Ph2_ACF
 ```bash
