@@ -53,7 +53,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^VCth\\d$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^MaskChannel-\\d{3}-to-\\d{3}$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC\\d$");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ENFLAGS_P\\d+$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ENFLAGS_C\\d+_R\\d+$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^ENFLAG_S\\d+$");
 
@@ -110,7 +110,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
     }
@@ -364,55 +364,47 @@ void PedeNoise::Validate()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto           cType = cChip->getFrontEndType();
                     RegisterVector cRegVec;
-                    uint32_t       NCH = NCHANNELS;
-                    if(cType == FrontEndType::CBC3)
-                        NCH = NCHANNELS;
-                    else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-                        NCH = NSSACHANNELS;
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                        NCH = NMPACHANNELS;
-                    //
-                    for(uint32_t iChan = 0; iChan < NCH; iChan++)
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        // LOG (INFO) << RED << "Ch " << iChan << RESET ;
-                        float occupancy = theOccupancyContainer.getObject(cBoard->getId())
-                                              ->getObject(cOpticalGroup->getId())
-                                              ->getObject(cHybrid->getId())
-                                              ->getObject(cChip->getId())
-                                              ->getChannel<Occupancy>(iChan)
-                                              .fOccupancy;
-                        if(occupancy > fMaskingThreshold)
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
-                            std::string message = "Found a noisy channel on Chip " + getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()) + " Channel " +
-                                                  std::to_string(iChan) + " with an occupancy of " + std::to_string(occupancy) + "(>" + std::to_string(fMaskingThreshold) + ")";
-                            if(fMaskNoisyChannels)
+                            float occupancy = theOccupancyContainer.getObject(cBoard->getId())
+                                                  ->getObject(cOpticalGroup->getId())
+                                                  ->getObject(cHybrid->getId())
+                                                  ->getObject(cChip->getId())
+                                                  ->getChannel<Occupancy>(row, col)
+                                                  .fOccupancy;
+                            if(occupancy > fMaskingThreshold)
                             {
-                                if(fWithCBC)
+                                std::string message = "Found a noisy channel on Chip " + getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()) + " row " +
+                                                      std::to_string(row) + " col " + std::to_string(col) + " with an occupancy of " + std::to_string(occupancy) + "(>" +
+                                                      std::to_string(fMaskingThreshold) + ")";
+                                if(fMaskNoisyChannels)
                                 {
-                                    // char cRegName[11];
-                                    // sprintf(cRegName, "Channel%03d", iChan + 1);
-                                    std::string cRegName = "Channel" + (boost::format("%|03|") % (iChan + 1)).str();
-                                    cRegVec.push_back({cRegName, 0xFF});
+                                    if(fWithCBC)
+                                    {
+                                        // char cRegName[11];
+                                        // sprintf(cRegName, "Channel%03d", iChan + 1);
+                                        std::string cRegName = "Channel" + (boost::format("%|03|") % (col + 1)).str();
+                                        cRegVec.push_back({cRegName, 0xFF});
+                                    }
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                                    {
+                                        // char cRegName[17];
+                                        // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
+                                        std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
+                                        cRegVec.push_back({cRegName, 0x1F});
+                                    }
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                                    {
+                                        std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+                                        cRegVec.push_back({cRegName, 0x1F});
+                                    }
+                                    message += ";  setting offset to 255";
                                 }
-                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
-                                {
-                                    // char cRegName[17];
-                                    // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
-                                    std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (iChan + 1)).str();
-                                    cRegVec.push_back({cRegName, 0x1F});
-                                }
-                                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
-                                {
-                                    // char cRegName[12];
-                                    // sprintf(cRegName, "TrimDAC_P%04d", iChan + 1);
-                                    std::string cRegName = "TrimDAC_P" + (boost::format("%|04|") % (iChan + 1)).str();
-                                    cRegVec.push_back({cRegName, 0x1F});
-                                }
-                                message += ";  setting offset to 255";
+                                LOG(DEBUG) << RED << message << RESET;
                             }
-                            LOG(DEBUG) << RED << message << RESET;
                         }
                     }
 
@@ -712,87 +704,90 @@ void PedeNoise::extractPedeNoise()
                 {
                     for(auto chip: *hybrid)
                     {
-                        for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
+                        for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                         {
-                            if(!getChannelGroupHandlerContainer()
-                                    ->getObject(board->getId())
+                            for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
+                            {
+                                if(!getChannelGroupHandlerContainer()
+                                        ->getObject(board->getId())
+                                        ->getObject(opticalGroup->getId())
+                                        ->getObject(hybrid->getId())
+                                        ->getObject(chip->getId())
+                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                        ->allChannelGroup()
+                                        ->isChannelEnabled(row, col))
+                                    continue;
+
+                                float currentOccupancy = 0, previousOccupancy = 0, binCenter = 0;
+                                auto  cType = chip->getFrontEndType();
+                                if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                                {
+                                    if(mStripIt == fSCurveStripOccupancyMap.rend())
+                                    {
+                                        mStripIt--;
+                                        continue;
+                                    }
+                                    previousOccupancy = (previousStripIterator)
+                                                            ->second->getObject(board->getId())
+                                                            ->getObject(opticalGroup->getId())
+                                                            ->getObject(hybrid->getId())
+                                                            ->getObject(chip->getId())
+                                                            ->getChannel<Occupancy>(row, col)
+                                                            .fOccupancy;
+                                    currentOccupancy = mStripIt->second->getObject(board->getId())
+                                                           ->getObject(opticalGroup->getId())
+                                                           ->getObject(hybrid->getId())
+                                                           ->getObject(chip->getId())
+                                                           ->getChannel<Occupancy>(row, col)
+                                                           .fOccupancy;
+                                    binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
+                                }
+                                else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                                {
+                                    if(mPixelIt == fSCurvePixelOccupancyMap.rend())
+                                    {
+                                        mPixelIt--;
+                                        continue;
+                                    }
+                                    previousOccupancy = (previousPixelIterator)
+                                                            ->second->getObject(board->getId())
+                                                            ->getObject(opticalGroup->getId())
+                                                            ->getObject(hybrid->getId())
+                                                            ->getObject(chip->getId())
+                                                            ->getChannel<Occupancy>(row, col)
+                                                            .fOccupancy;
+                                    currentOccupancy = mPixelIt->second->getObject(board->getId())
+                                                           ->getObject(opticalGroup->getId())
+                                                           ->getObject(hybrid->getId())
+                                                           ->getObject(chip->getId())
+                                                           ->getChannel<Occupancy>(row, col)
+                                                           .fOccupancy;
+                                    binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;
+                                    if(previousOccupancy > currentOccupancy) { continue; }
+                                }
+
+                                fThresholdAndNoiseContainer->getObject(board->getId())
                                     ->getObject(opticalGroup->getId())
                                     ->getObject(hybrid->getId())
                                     ->getObject(chip->getId())
-                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                    ->allChannelGroup()
-                                    ->isChannelEnabled(iChannel))
-                                continue;
+                                    ->getChannel<ThresholdAndNoise>(row, col)
+                                    .fThreshold += binCenter * (previousOccupancy - currentOccupancy);
 
-                            float currentOccupancy = 0, previousOccupancy = 0, binCenter = 0;
-                            auto  cType = chip->getFrontEndType();
-                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-                            {
-                                if(mStripIt == fSCurveStripOccupancyMap.rend())
-                                {
-                                    mStripIt--;
-                                    continue;
-                                }
-                                previousOccupancy = (previousStripIterator)
-                                                        ->second->getObject(board->getId())
-                                                        ->getObject(opticalGroup->getId())
-                                                        ->getObject(hybrid->getId())
-                                                        ->getObject(chip->getId())
-                                                        ->getChannel<Occupancy>(iChannel)
-                                                        .fOccupancy;
-                                currentOccupancy = mStripIt->second->getObject(board->getId())
-                                                       ->getObject(opticalGroup->getId())
-                                                       ->getObject(hybrid->getId())
-                                                       ->getObject(chip->getId())
-                                                       ->getChannel<Occupancy>(iChannel)
-                                                       .fOccupancy;
-                                binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
+                                // if (iChannel>1800){
+                                fThresholdAndNoiseContainer->getObject(board->getId())
+                                    ->getObject(opticalGroup->getId())
+                                    ->getObject(hybrid->getId())
+                                    ->getObject(chip->getId())
+                                    ->getChannel<ThresholdAndNoise>(row, col)
+                                    .fNoise += binCenter * binCenter * (previousOccupancy - currentOccupancy); //}
+
+                                fThresholdAndNoiseContainer->getObject(board->getId())
+                                    ->getObject(opticalGroup->getId())
+                                    ->getObject(hybrid->getId())
+                                    ->getObject(chip->getId())
+                                    ->getChannel<ThresholdAndNoise>(row, col)
+                                    .fThresholdError += previousOccupancy - currentOccupancy;
                             }
-                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                            {
-                                if(mPixelIt == fSCurvePixelOccupancyMap.rend())
-                                {
-                                    mPixelIt--;
-                                    continue;
-                                }
-                                previousOccupancy = (previousPixelIterator)
-                                                        ->second->getObject(board->getId())
-                                                        ->getObject(opticalGroup->getId())
-                                                        ->getObject(hybrid->getId())
-                                                        ->getObject(chip->getId())
-                                                        ->getChannel<Occupancy>(iChannel)
-                                                        .fOccupancy;
-                                currentOccupancy = mPixelIt->second->getObject(board->getId())
-                                                       ->getObject(opticalGroup->getId())
-                                                       ->getObject(hybrid->getId())
-                                                       ->getObject(chip->getId())
-                                                       ->getChannel<Occupancy>(iChannel)
-                                                       .fOccupancy;
-                                binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;
-                                if(previousOccupancy > currentOccupancy) { continue; }
-                            }
-
-                            fThresholdAndNoiseContainer->getObject(board->getId())
-                                ->getObject(opticalGroup->getId())
-                                ->getObject(hybrid->getId())
-                                ->getObject(chip->getId())
-                                ->getChannel<ThresholdAndNoise>(iChannel)
-                                .fThreshold += binCenter * (previousOccupancy - currentOccupancy);
-
-                            // if (iChannel>1800){
-                            fThresholdAndNoiseContainer->getObject(board->getId())
-                                ->getObject(opticalGroup->getId())
-                                ->getObject(hybrid->getId())
-                                ->getObject(chip->getId())
-                                ->getChannel<ThresholdAndNoise>(iChannel)
-                                .fNoise += binCenter * binCenter * (previousOccupancy - currentOccupancy); //}
-
-                            fThresholdAndNoiseContainer->getObject(board->getId())
-                                ->getObject(opticalGroup->getId())
-                                ->getObject(hybrid->getId())
-                                ->getObject(chip->getId())
-                                ->getChannel<ThresholdAndNoise>(iChannel)
-                                .fThresholdError += previousOccupancy - currentOccupancy;
                         }
                     }
                 }
@@ -818,36 +813,40 @@ void PedeNoise::extractPedeNoise()
             {
                 for(auto chip: *hybrid)
                 {
-                    for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
+                    for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
-                        if(!getChannelGroupHandlerContainer()
-                                ->getObject(board->getId())
-                                ->getObject(opticalGroup->getId())
-                                ->getObject(hybrid->getId())
-                                ->getObject(chip->getId())
-                                ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                ->allChannelGroup()
-                                ->isChannelEnabled(iChannel))
-                            continue;
-                        chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
-                        chip->getChannel<ThresholdAndNoise>(iChannel).fNoise /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
-                        chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold *
-                                                                                                                                            chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));
+                        for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
+                        {
+                            if(!getChannelGroupHandlerContainer()
+                                    ->getObject(board->getId())
+                                    ->getObject(opticalGroup->getId())
+                                    ->getObject(hybrid->getId())
+                                    ->getObject(chip->getId())
+                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                    ->allChannelGroup()
+                                    ->isChannelEnabled(row, col))
+                                continue;
+                            chip->getChannel<ThresholdAndNoise>(row, col).fThreshold /= chip->getChannel<ThresholdAndNoise>(row, col).fThresholdError;
+                            chip->getChannel<ThresholdAndNoise>(row, col).fNoise /= chip->getChannel<ThresholdAndNoise>(row, col).fThresholdError;
+                            chip->getChannel<ThresholdAndNoise>(row, col).fNoise =
+                                sqrt(chip->getChannel<ThresholdAndNoise>(row, col).fNoise -
+                                     (chip->getChannel<ThresholdAndNoise>(row, col).fThreshold * chip->getChannel<ThresholdAndNoise>(row, col).fThreshold));
 
-                        if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise))
-                        {
-                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving noise for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
-                                         << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
-                            chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = 0.;
+                            if(isnan(chip->getChannel<ThresholdAndNoise>(row, col).fNoise) || isinf(chip->getChannel<ThresholdAndNoise>(row, col).fNoise))
+                            {
+                                LOG(WARNING) << BOLDYELLOW << "Problem in deriving noise for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
+                                             << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
+                                chip->getChannel<ThresholdAndNoise>(row, col).fNoise = 0.;
+                            }
+                            if(isnan(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold) || isinf(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold))
+                            {
+                                LOG(WARNING) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid "
+                                             << hybrid->getId() << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
+                                chip->getChannel<ThresholdAndNoise>(row, col).fThreshold = 0.;
+                            }
+                            chip->getChannel<ThresholdAndNoise>(row, col).fThresholdError = 1;
+                            chip->getChannel<ThresholdAndNoise>(row, col).fNoiseError     = 1;
                         }
-                        if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold))
-                        {
-                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
-                                         << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
-                            chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold = 0.;
-                        }
-                        chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError = 1;
-                        chip->getChannel<ThresholdAndNoise>(iChannel).fNoiseError     = 1;
                     }
                 }
             }
@@ -950,7 +949,7 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                 // else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                 //  NCH = NSSACHANNELS;
                 // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                //  NCH = NMPACHANNELS;
+                //  NCH = NMPAROWS * NSSACHANNELS;
 
                 /*float fMean=1.0;
                         if(cType == FrontEndType::MPA or  cType == FrontEndType::MPA2)
@@ -959,35 +958,36 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                      fMean=4.2;*/
                 auto     cOriginalMask = chipDC->getChipOriginalMask();
                 uint32_t nMask         = 0;
-                for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
+                for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                 {
-                    float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
-                    // float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
-                    // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<chip->getChannel<ThresholdAndNoise>(iChannel).fNoise<<" "<<fPedeNoiseLimit*fMean<<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold -cPedestal)<<" "<<fPedeNoiseUntrimmedLimit<<RESET;
-                    if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(iChannel).fNoise > fPedeNoiseLimit))
+                    for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                     {
-                        nMask += 1;
-                        LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(iChannel).fNoise << ", which is over the limit of "
-                                  << fPedeNoiseLimit << RESET;
-                        cOriginalMask->disableChannel(iChannel);
-                    }
-                    if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
-                    {
-                        uint8_t thetrim = fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(chipDC), "TrimDAC_P" + std::to_string(iChannel + 1));
+                        float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
+                        // float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
+                        if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(row, col).fNoise > fPedeNoiseLimit))
+                        {
+                            nMask += 1;
+                            LOG(INFO) << BOLDYELLOW << "Masking row: " << row << " col " << col << " with a noise of " << chip->getChannel<ThresholdAndNoise>(row, col).fNoise
+                                      << ", which is over the limit of " << fPedeNoiseLimit << RESET;
+                            cOriginalMask->disableChannel(row, col);
+                        }
+                        if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
+                        {
+                            uint8_t thetrim = fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(chipDC), "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row));
 
-                        nMask += 1;
-                        LOG(INFO) << BOLDYELLOW << "Masking Channel:  " << iChannel << " with a pedestal difference of "
-                                  << std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
-                                  << " trimval: " << +thetrim << RESET;
-                        cOriginalMask->disableChannel(iChannel);
-                    }
+                            nMask += 1;
+                            LOG(INFO) << BOLDYELLOW << "Masking row: " << row << " col " << col << " with a pedestal difference of "
+                                      << std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
+                                      << " trimval: " << +thetrim << RESET;
+                            cOriginalMask->disableChannel(row, col);
+                        }
 
-                    // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY TH "<<cPedestal <<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY NOI "<<cNoise <<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "fPedeNoiseLimit "<<fPedeNoiseLimit<< " fPedeNoiseMask "<<fPedeNoiseMask <<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "Noise "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(iChannel).fNoise <<RESET;
-                    // LOG(INFO) << BOLDYELLOW << "Thresh "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold  <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY TH "<<cPedestal <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY NOI "<<cNoise <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "fPedeNoiseLimit "<<fPedeNoiseLimit<< " fPedeNoiseMask "<<fPedeNoiseMask <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "Noise "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(row, col).fNoise <<RESET;
+                        // LOG(INFO) << BOLDYELLOW << "Thresh "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(row, col).fThreshold  <<RESET;
+                    }
                 }
                 // fReadoutChipInterface->maskChannelGroup(chipDC,cOriginalMask);
                 if(nMask > 0) LOG(INFO) << BOLDYELLOW << "PedeNoise masked " << nMask << " channels..." << RESET;

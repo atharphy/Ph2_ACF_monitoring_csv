@@ -1022,13 +1022,18 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cIndx] = 0;
                     }
 
-                    for(uint32_t cIndx = 0; cIndx < cChip->size(); cIndx++)
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        fHitMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cIndx).fOccupancy  = 0;
-                        fStubMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cIndx).fOccupancy = 0;
-                        cClusterContainerS0->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cIndx).fOccupancy                 = 0;
-                        cClusterContainerS1->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cIndx).fOccupancy                 = 0;
-                        cSingleStubContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cIndx).fOccupancy                = 0;
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            fHitMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy =
+                                0;
+                            fStubMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy =
+                                0;
+                            cClusterContainerS0->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy  = 0;
+                            cClusterContainerS1->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy  = 0;
+                            cSingleStubContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy = 0;
+                        }
                     }
                 } // chip
             }     // hybrid
@@ -1076,14 +1081,29 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                     for(auto cChip: *cHybrid)
                     {
                         // make sure stub map for this event is set to 0
-                        for(uint32_t cCh = 0; cCh < cChip->size(); cCh++)
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            cEventL1OccS0.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cCh).fOccupancy =
-                                0;
-                            cEventL1OccS1.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cCh).fOccupancy =
-                                0;
-                            cEventStubOcc.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cCh).fOccupancy =
-                                0;
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                            {
+                                cEventL1OccS0.getObject(cBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getChannel<Occupancy>(row, col)
+                                    .fOccupancy = 0;
+                                cEventL1OccS1.getObject(cBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getChannel<Occupancy>(row, col)
+                                    .fOccupancy = 0;
+                                cEventStubOcc.getObject(cBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getChannel<Occupancy>(row, col)
+                                    .fOccupancy = 0;
+                            }
                         }
                     } // chips
 
@@ -1216,7 +1236,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             // if(pPrint)
 
                             uint16_t cMaxRows     = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : NSSACHANNELS;
-                            uint16_t cMaxCols     = (cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) ? NMPACOLS : 1;
+                            uint16_t cMaxCols     = (cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) ? NMPAROWS : 1;
                             bool     cValidCoords = (cRow < cMaxRows && cCol < cMaxCols);
 
                             if(!cValidCoords)
@@ -1256,7 +1276,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         {
                             if(pPrint) LOG(DEBUG) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " Channel " << cHit << RESET;
                             auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                            LOG(DEBUG) << cOccChip->getChannel<Occupancy>(0).fOccupancy << RESET;
+                            LOG(DEBUG) << cOccChip->getChannel<Occupancy>(0, 0).fOccupancy << RESET;
                             uint16_t cRow = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cHit : 0;
                             uint16_t cCol = 0;
                             // sensor iD - 0 -- bottoml; 1 -- top
@@ -1264,7 +1284,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             // uint16_t cMaxRows  = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : 0;
                             // if(cChip->getFrontEndType() == FrontEndType::MPA) cMaxRows = NSSACHANNELS;
                             uint16_t cMaxCols = 1;
-                            if((cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) && cSensorID == 0) cMaxCols = NMPACOLS;
+                            if((cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) && cSensorID == 0) cMaxCols = NMPAROWS;
 
                             if(cChip->getFrontEndType() != FrontEndType::CBC3)
                             {
@@ -1662,7 +1682,7 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
                                     ->getObject(cChip->getId())
                                     ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                 auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                                cOccChip->getChannel<Occupancy>(cHit).fOccupancy++;
+                                cOccChip->getChannel<Occupancy>(0, cHit).fOccupancy++; // only for CBC
                             }
                         } // chip vector
                     }     // hybrid vector

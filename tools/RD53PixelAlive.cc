@@ -198,7 +198,7 @@ void PixelAlive::run()
                                              .to_string()
                                              .erase(0, RD53Constants::NBIT_MAXREG - numberOfBits);
                             bool problems = (regValueMap[suffix] != mask);
-                            LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + suffix << (problems ? BOLDRED : BOLDBLUE) << " value = 0b" << BOLDYELLOW << value
+                            LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + suffix << (problems ? BOLDRED : BOLDBLUE) << " = 0b" << BOLDYELLOW << value
                                       << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)" << RESET;
                         }
 

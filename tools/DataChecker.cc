@@ -6752,10 +6752,10 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                     if(cChannels.size() > 0)
                     {
                         // channel mask
-                        auto cChannelMask = std::make_shared<ChannelGroup<NCHNLS, 1>>();
+                        auto cChannelMask = std::make_shared<ChannelGroup<1, NCHNLS>>();
 
                         cChannelMask->disableAllChannels();
-                        for(auto cChannel: cChannels) cChannelMask->enableChannel(cChannel);
+                        for(auto cChannel: cChannels) cChannelMask->enableChannel(0, cChannel);
 
                         std::bitset<NCHNLS> cBitset = std::bitset<NCHNLS>(cChannelMask->getBitset());
                         LOG(DEBUG) << BOLDBLUE << "Injecting stubs in chip " << +cChip->getId() << " channel mask is " << cBitset << RESET;
@@ -6871,7 +6871,7 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                         auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", cThThisChip->getSummary<uint16_t>());
 
-                        auto cChannelMask = std::make_shared<ChannelGroup<NCHNLS, 1>>();
+                        auto cChannelMask = std::make_shared<ChannelGroup<1, NCHNLS>>();
                         cChannelMask->enableAllChannels();
                         fReadoutChipInterface->maskChannelGroup(cReadoutChip, cChannelMask);
                     }
@@ -6921,7 +6921,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
     // prepare mask
     // just for CBCs for now
     fCBCMask->disableAllChannels();
-    for(auto cChannel: pChannels) fCBCMask->enableChannel(cChannel);
+    for(auto cChannel: pChannels) fCBCMask->enableChannel(0, cChannel);
 
     auto     cSetting = fSettingsMap.find("Nevents");
     uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;

@@ -27,7 +27,7 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
     fChipCode         = 3;
     fChipAddress      = 0x20 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in SSA2
-    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
     configFileName    = filename;
     loadfRegMap(filename);
@@ -48,7 +48,7 @@ SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
     fChipCode         = 3;
     fChipAddress      = 0x20 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     std::vector<std::string> cCntrlRegs{"THTRIMMING", "StripControl2", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L"};

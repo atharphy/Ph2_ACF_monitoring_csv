@@ -300,7 +300,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
     std::vector<uint8_t> cVals(0);
     for(uint16_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
     {
-        cVals.push_back(localRegValues.getChannel<uint16_t>(iChannel));
+        cVals.push_back(localRegValues.getChannel<uint16_t>(0, iChannel));
         LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
     }
     auto cAllTheSame = (std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end());
@@ -309,12 +309,12 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         std::string cRegName = (dacName == "GainTrim") ? "StripControl2" : "THTRIMMING";
         LOG(INFO) << BOLDGREEN << " All local registers are the same " << RESET;
         auto cRegItem   = cRegMap[cRegName];
-        cRegItem.fValue = localRegValues.getChannel<uint8_t>(0);
+        cRegItem.fValue = localRegValues.getChannel<uint8_t>(0, 0);
         cSuccess        = fBoardFW->SingleRegisterWrite(pChip, cRegItem, false);
         cRegName        = (dacName == "GainTrim") ? "StripControl2_S32" : "THTRIMMING_S32";
         auto cRegValue  = fBoardFW->SingleRegisterRead(pChip, cRegMap[cRegName]);
         LOG(INFO) << BOLDBLUE << cRegName << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
-        cSuccess = (cRegValue == localRegValues.getChannel<uint8_t>(0));
+        cSuccess = (cRegValue == localRegValues.getChannel<uint8_t>(0, 0));
         return cSuccess;
     }
 
@@ -345,7 +345,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
 
     // write local registers
     cRegItems.clear();
-    ChannelGroup<NCHANNELS, 1> channelToEnable;
+    ChannelGroup<1, NCHANNELS> channelToEnable;
     for(uint8_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
     {
         std::stringstream dacName;
@@ -357,7 +357,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
             continue;
         }
         ChipRegItem cItem = cIterator->second;
-        cItem.fValue      = localRegValues.getChannel<uint16_t>(iChannel) & 0x1F;
+        cItem.fValue      = localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F;
         // LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
         cRegItems.push_back(cItem);
     }
@@ -973,8 +973,8 @@ bool SSA2Interface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionA
 
 bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(pChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(pChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(group);
     auto cBitset       = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     LOG(DEBUG) << BOLDYELLOW << "\t... Applying mask to SSA" << +pChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
                << " original mask  \t... : " << cOriginalMask << " enabled channels "
@@ -1005,8 +1005,8 @@ bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr
 }
 bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(pChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(pChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(group);
     auto cBitset       = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     LOG(DEBUG) << BOLDYELLOW << "\t... Applying mask to SSA" << +pChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
                << " original mask  \t... : " << cOriginalMask << " enabled channels "
@@ -1046,6 +1046,38 @@ bool SSA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 
     return success;
 }
-bool SSA2Interface::ConfigureChipOriginalMask(ReadoutChip* pSSA2, bool pVerify, uint32_t pBlockSize) { return true; }
-bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerify) { return true; }
+bool SSA2Interface::ConfigureChipOriginalMask(ReadoutChip* pSSA2, bool pVerify, uint32_t pBlockSize)
+{
+    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<1, NCHANNELS>>();
+    return maskChannelGroup(pSSA2, allChannelEnabledGroup, pVerify);
+}
+
+bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerify) { return WriteChipRegBits(pSSA2, "ENFLAGS", mask ? 0 : 1, "mask_strip", 0x01, pVerify); }
+
+bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
+{
+    // This only works with synchronous counters by construction
+    bool success = true;
+    success &= WriteChipReg(pSSA2, "Bias_THDAC", 0);
+    success &= MaskAllChannels(pSSA2, true);
+
+    success &= WriteChipReg(pSSA2, "mask_strip", 0x01);
+
+    std::vector<std::pair<std::string, uint16_t>> theUnmaskRegisterList;
+    for(const auto& theCluster: theClusterList)
+    {
+        for(uint8_t stripIndex = 0; stripIndex < std::get<2>(theCluster); ++stripIndex)
+        {
+            std::string registerName = "ENFLAGS_S" + std::to_string(std::get<0>(theCluster) + stripIndex + 1);
+            theUnmaskRegisterList.push_back({registerName, 1});
+        }
+    }
+
+    success &= WriteChipMultReg(pSSA2, theUnmaskRegisterList);
+
+    success &= WriteChipReg(pSSA2, "mask_strip", 0xFF);
+
+    return success;
+}
+
 } // namespace Ph2_HwInterface

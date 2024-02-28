@@ -66,10 +66,10 @@ void DQMHistogramKira::book(TFile* theOutputFile, DetectorContainer& theDetector
                 {
                     cN += chip->size();
                     // only account for seeds in MPAs/CBCs
-                    if(chip->size() == NMPACHANNELS)
+                    if(chip->size() == NMPAROWS * NSSACHANNELS)
                     {
-                        cNSeedS0 = chip->size() / NMPACOLS;
-                        cNS0     = chip->size() / NMPACOLS;
+                        cNSeedS0 = chip->size() / NMPAROWS;
+                        cNS0     = chip->size() / NMPAROWS;
                     }
                     else if(chip->size() == NCHANNELS)
                     {

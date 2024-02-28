@@ -109,6 +109,7 @@ class PSInterface : public ReadoutChipInterface
     std::pair<uint16_t, uint16_t> getSsaWriteErrorSummary() { return theSSAInterface->getWriteErrorSummary(); };
     void                          resetSsaRetrySummary() { theSSAInterface->resetRetrySummary(); };
     void                          resetSsaErrorSummary() { theSSAInterface->resetErrorSummary(); };
+    bool                          injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
 
     // void                              printErrorSummary();
 };

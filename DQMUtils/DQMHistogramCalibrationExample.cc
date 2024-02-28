@@ -56,7 +56,7 @@ void DQMHistogramCalibrationExample::fillCalibrationExamplePlots(DetectorDataCon
                     uint channelBin = 1;
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
-                    if(chip->getChannelContainer<uint32_t>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
                     // Get channel data and fill the histogram
                     for(auto channel: *chip->getChannelContainer<uint32_t>())   // for on channel - begin
                     { chipHitHistogram->SetBinContent(channelBin++, channel); } // for on channel - end

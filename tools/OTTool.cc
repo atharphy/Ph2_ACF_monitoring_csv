@@ -884,7 +884,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                             auto cPxl = cInjection.fColumn * NSSACHANNELS + (uint32_t)cInjection.fRow;
                             LOG(INFO) << BOLDBLUE << " Injecting in pixel " << +cPxl << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET;
                             std::stringstream cRegName;
-                            cRegName << "ENFLAGS_P" << +cPxl;
+                            cRegName << "ENFLAGS_C" << cInjection.fColumn << "_R" << +cInjection.fRow;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x4F, false);
 
                             /* Multi strips injection*/
@@ -892,14 +892,14 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                             LOG(INFO) << BOLDBLUE << " Injecting in pixel " << +(cPxl+1) << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET;
                             // Inject in a second pixel
                             std::stringstream cRegName2;
-                            cRegName2 << "ENFLAGS_P" << +(cPxl+1);
+                            cRegName << "ENFLAGS_C" << (cInjection.fColumn + 1) << "_R" << +cInjection.fRow;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegName2.str(), 0x4F, false);
 
 
                             LOG(INFO) << BOLDBLUE << " Injecting in pixel " << +(cPxl+2) << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET;
                             // Inject in a third pixel
                             std::stringstream cRegName3;
-                            cRegName3 << "ENFLAGS_P" << +(cPxl+2);
+                           cRegName << "ENFLAGS_C" << (cInjection.fColumn + 2) << "_R" << +cInjection.fRow;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegName3.str(), 0x4F, false);
                             */
 

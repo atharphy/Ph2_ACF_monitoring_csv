@@ -43,7 +43,7 @@ void SSAPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContai
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(cChip->getChannelContainer<Occupancy>() == nullptr) continue;
+                    if(cChip->hasChannelContainer() == false) continue;
 
                     auto* chipOccupancy = fOccupancy.getObject(cBoard->getId())
                                               ->getObject(cOpticalGroup->getId())

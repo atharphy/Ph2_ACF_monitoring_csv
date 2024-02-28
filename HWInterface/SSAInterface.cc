@@ -109,8 +109,8 @@ bool SSAInterface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAm
 //
 bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(cChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(group);
 
     auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     // cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
@@ -145,8 +145,8 @@ bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<
 
 bool SSAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(cChip->getChipOriginalMask());
-    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(group);
 
     auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     // cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
@@ -696,13 +696,13 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<NCHANNELS, 1>                    channelToEnable;
+    ChannelGroup<1, NCHANNELS>                    channelToEnable;
 
     // check if all registers are the same
     std::vector<uint8_t> cVals(0);
     for(uint16_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
     {
-        cVals.push_back(localRegValues.getChannel<uint16_t>(iChannel));
+        cVals.push_back(localRegValues.getChannel<uint16_t>(0, iChannel));
         LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
     }
 
@@ -737,7 +737,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
     {
         std::stringstream dacName1;
         dacName1 << dacTemplate.c_str() << 1 + iChannel;
-        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1.str() << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1.str() << " to " << (localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F) << RESET;
 
         auto cIterator = cRegMap.find(dacName1.str());
         if(cIterator == cRegMap.end())
@@ -746,7 +746,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
             continue;
         }
         ChipRegItem cItem = cIterator->second;
-        cItem.fValue      = localRegValues.getChannel<uint16_t>(iChannel) & 0x1F;
+        cItem.fValue      = localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F;
         // LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
         cRegItems.push_back(cItem);
     }

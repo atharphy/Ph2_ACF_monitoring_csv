@@ -27,9 +27,9 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
                 for(auto cChip: *cHybrid)
                 {
                     CbcInterface*              theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                    ChannelGroup<NCHANNELS, 1> cChannelMask;
+                    ChannelGroup<1, NCHANNELS> cChannelMask;
                     cChannelMask.disableAllChannels();
-                    theCbcInterface->maskChannelGroup(cChip, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)));
+                    theCbcInterface->maskChannelGroup(cChip, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask)));
                 }
 
                 // now begin test
@@ -37,8 +37,8 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
                 {
                     for(auto cChip2: *cHybrid)
                     {
-                        ChannelGroup<NCHANNELS, 1> cChannelMask_1;
-                        ChannelGroup<NCHANNELS, 1> cChannelMask_2;
+                        ChannelGroup<1, NCHANNELS> cChannelMask_1;
+                        ChannelGroup<1, NCHANNELS> cChannelMask_2;
                         CbcInterface*              theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
 
                         if(cChip2->getId() != cChip1->getId() + 1) { continue; }
@@ -52,14 +52,14 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
                         LOG(INFO) << BOLDCYAN << "Checking stubs from lower chip " << +cChip1->getId() << " to higher chip " << +cChip2->getId() << RESET;
                         cChannelMask_1.disableAllChannels();
                         cChannelMask_2.disableAllChannels();
-                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
-                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
+                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_1)));
+                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_2)));
 
                         this->UnmaskChannels(fSharedTopHigh, cChannelMask_1);
                         this->UnmaskChannels(fSharedBottomLow, cChannelMask_2);
 
-                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
-                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
+                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_1)));
+                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_2)));
 
                         LOG(DEBUG) << "Unmasked Chip1 " << +cChannelMask_1.getNumberOfEnabledChannels() << " Unmasked Chip2 " << +cChannelMask_2.getNumberOfEnabledChannels() << RESET;
                         result = CheckStubs(cHybrid->getId(), cChip1->getId());
@@ -77,14 +77,14 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
                         LOG(INFO) << BOLDMAGENTA << "Checking stubs from higher chip to lower chip" << RESET;
                         cChannelMask_1.disableAllChannels();
                         cChannelMask_2.disableAllChannels();
-                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
-                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
+                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_1)));
+                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_2)));
 
                         this->UnmaskChannels(fSharedBottomHigh, cChannelMask_1);
                         this->UnmaskChannels(fSharedTopLow, cChannelMask_2);
 
-                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
-                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
+                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_1)));
+                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_2)));
 
                         LOG(DEBUG) << "Unmasked Chip1 " << +cChannelMask_1.getNumberOfEnabledChannels() << " Unmasked Chip2 " << +cChannelMask_2.getNumberOfEnabledChannels() << RESET;
                         result = CheckStubs(cHybrid->getId(), cChip2->getId());
@@ -98,8 +98,8 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
                         // remask channels for the next test
                         cChannelMask_2.disableAllChannels();
                         cChannelMask_1.disableAllChannels();
-                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
-                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
+                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_1)));
+                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(cChannelMask_2)));
                     }
                 }
             }
@@ -148,12 +148,12 @@ bool CheckCbcNeighbors::CheckStubs(uint8_t hybridId, uint8_t chipId)
     return eventsWStubs > 0;
 }
 
-void CheckCbcNeighbors::UnmaskChannels(std::vector<uint8_t> pToUnmask, ChannelGroup<NCHANNELS, 1>& pChannelMask)
+void CheckCbcNeighbors::UnmaskChannels(std::vector<uint8_t> pToUnmask, ChannelGroup<1, NCHANNELS>& pChannelMask)
 {
     for(size_t cChnl: pToUnmask)
     {
         LOG(DEBUG) << GREEN << "enabling " << +cChnl << RESET;
-        pChannelMask.enableChannel(cChnl);
+        pChannelMask.enableChannel(0, cChnl);
     }
 }
 

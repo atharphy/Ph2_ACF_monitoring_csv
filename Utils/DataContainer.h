@@ -594,6 +594,8 @@ class ChipDataContainer
     void serialize(Archive& theArchive, const unsigned int version)
     {
         theArchive& id_;
+        theArchive& nOfRows_;
+        theArchive& nOfCols_;
         theArchive& boost::serialization::base_object<BaseDataContainer>(*this);
         theArchive& container_;
     }
