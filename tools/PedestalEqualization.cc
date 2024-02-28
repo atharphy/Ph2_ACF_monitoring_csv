@@ -438,7 +438,7 @@ void PedestalEqualization::FindOffsets()
                             if(cType == FrontEndType::CBC3)
                             {
                                 char charRegName[20];
-                                cRegName = sprintf(charRegName, "Channel%03d", col);
+                                cRegName = sprintf(charRegName, "Channel%03d", col + 1);
                                 cRegName = charRegName;
                             }
                             if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) cRegName = "THTRIMMING_S" + std::to_string(col + 1);
@@ -446,6 +446,7 @@ void PedestalEqualization::FindOffsets()
                             auto channel = roc->getReg(cRegName);
                             LOG(DEBUG) << BOLDGREEN << "Offset set to " << +channel << RESET;
                             cMeanOffset += roc->getReg(cRegName);
+                            chip->getChannel<uint8_t>(row, col) = channel;
                         }
                     }
 
