@@ -1026,11 +1026,13 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                     {
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
-                            fHitMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy  = 0;
-                            fStubMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy = 0;
-                            cClusterContainerS0->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy                 = 0;
-                            cClusterContainerS1->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy                 = 0;
-                            cSingleStubContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy                = 0;
+                            fHitMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy =
+                                0;
+                            fStubMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy =
+                                0;
+                            cClusterContainerS0->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy  = 0;
+                            cClusterContainerS1->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy  = 0;
+                            cSingleStubContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy = 0;
                         }
                     }
                 } // chip
@@ -1083,12 +1085,24 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         {
                             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
-                                cEventL1OccS0.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy =
-                                    0;
-                                cEventL1OccS1.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy =
-                                    0;
-                                cEventStubOcc.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy =
-                                    0;
+                                cEventL1OccS0.getObject(cBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getChannel<Occupancy>(row, col)
+                                    .fOccupancy = 0;
+                                cEventL1OccS1.getObject(cBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getChannel<Occupancy>(row, col)
+                                    .fOccupancy = 0;
+                                cEventStubOcc.getObject(cBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getChannel<Occupancy>(row, col)
+                                    .fOccupancy = 0;
                             }
                         }
                     } // chips

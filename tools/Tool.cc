@@ -1276,9 +1276,9 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                 {
                     if(localDAC)
                     {
-                        for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
                                 if(occupanyDirectlyProportionalToDAC)
                                     currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row, col) =
@@ -1375,25 +1375,25 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                     std::stringstream cOut;
                     if(localDAC)
                     {
-                        for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
                                 cOut << BOLDBLUE << "localocc "
-                                    << currentStepOccupancyContainer->getObject(boardId)
+                                     << currentStepOccupancyContainer->getObject(boardId)
                                             ->getObject(cOpticalGroup->getId())
                                             ->getObject(cHybrid->getId())
                                             ->getObject(cChip->getId())
                                             ->getChannel<Occupancy>(row, col)
                                             .fOccupancy
-                                    << "\n";
+                                     << "\n";
 
                                 if(currentStepOccupancyContainer->getObject(boardId)
-                                    ->getObject(cOpticalGroup->getId())
-                                    ->getObject(cHybrid->getId())
-                                    ->getObject(cChip->getId())
-                                    ->getChannel<Occupancy>(row, col)
-                                    .fOccupancy <= targetOccupancy)
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
+                                       ->getChannel<Occupancy>(row, col)
+                                       .fOccupancy <= targetOccupancy)
                                 {
                                     previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row, col) =
                                         currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row, col);
@@ -1403,11 +1403,11 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                         ->getObject(cChip->getId())
                                         ->getChannel<Occupancy>(row, col)
                                         .fOccupancy = currentStepOccupancyContainer->getObject(boardId)
-                                                        ->getObject(cOpticalGroup->getId())
-                                                        ->getObject(cHybrid->getId())
-                                                        ->getObject(cChip->getId())
-                                                        ->getChannel<Occupancy>(row, col)
-                                                        .fOccupancy;
+                                                          ->getObject(cOpticalGroup->getId())
+                                                          ->getObject(cHybrid->getId())
+                                                          ->getObject(cChip->getId())
+                                                          ->getChannel<Occupancy>(row, col)
+                                                          .fOccupancy;
                                 }
                             }
                         }
@@ -1496,8 +1496,8 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
 
     uint16_t allOneRegister = startVal;
 
-    uint16_t              allZeroRegister  = 0;
-    uint16_t              allFalseRegister = 0;
+    uint16_t                                   allZeroRegister  = 0;
+    uint16_t                                   allFalseRegister = 0;
     std::vector<std::pair<uint16_t, uint16_t>> maskvec;
     if(localDAC)
     {
@@ -1529,10 +1529,15 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                 {
                     if(localDAC)
                     {
-                        currentMaskList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<std::pair<uint16_t, uint16_t>>>().clear();
-                        for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                        currentMaskList->getObject(boardId)
+                            ->getObject(cOpticalGroup->getId())
+                            ->getObject(cHybrid->getId())
+                            ->getObject(cChip->getId())
+                            ->getSummary<std::vector<std::pair<uint16_t, uint16_t>>>()
+                            .clear();
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
                                 if(not currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row, col))
                                 {
@@ -1576,93 +1581,97 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                     std::stringstream cOut;
                     if(localDAC)
                     {
-                        for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
-
                                 cOut << BOLDBLUE << "localocc "
-                                    << currentStepOccupancyContainer->getObject(boardId)
+                                     << currentStepOccupancyContainer->getObject(boardId)
                                             ->getObject(cOpticalGroup->getId())
                                             ->getObject(cHybrid->getId())
                                             ->getObject(cChip->getId())
                                             ->getChannel<Occupancy>(row, col)
                                             .fOccupancy
-                                    << "\n";
+                                     << "\n";
                                 if(not currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row, col))
                                 {
                                     // if (cChip->size()<500 and iChannel<10)std::cout<<"PRE occDiff
-                                    // "<<iChannel<<":"<<currentStepOccupancyContainer->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row, col).fOccupancy<<std::endl;
+                                    // "<<iChannel<<":"<<currentStepOccupancyContainer->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(row,
+                                    // col).fOccupancy<<std::endl;
                                     currentStepOccupancyContainer->getObject(boardId)
                                         ->getObject(cOpticalGroup->getId())
                                         ->getObject(cHybrid->getId())
                                         ->getObject(cChip->getId())
                                         ->getChannel<Occupancy>(row, col)
                                         .fOccupancy = std::max(currentStepOccupancyContainer->getObject(boardId)
-                                                                ->getObject(cOpticalGroup->getId())
-                                                                ->getObject(cHybrid->getId())
-                                                                ->getObject(cChip->getId())
-                                                                ->getChannel<Occupancy>(row, col)
-                                                                .fOccupancy,
-                                                            previousStepOccupancyContainer->getObject(boardId)
-                                                                ->getObject(cOpticalGroup->getId())
-                                                                ->getObject(cHybrid->getId())
-                                                                ->getObject(cChip->getId())
-                                                                ->getChannel<Occupancy>(row, col)
-                                                                .fOccupancy);
+                                                                   ->getObject(cOpticalGroup->getId())
+                                                                   ->getObject(cHybrid->getId())
+                                                                   ->getObject(cChip->getId())
+                                                                   ->getChannel<Occupancy>(row, col)
+                                                                   .fOccupancy,
+                                                               previousStepOccupancyContainer->getObject(boardId)
+                                                                   ->getObject(cOpticalGroup->getId())
+                                                                   ->getObject(cHybrid->getId())
+                                                                   ->getObject(cChip->getId())
+                                                                   ->getChannel<Occupancy>(row, col)
+                                                                   .fOccupancy);
                                     if((currentStepOccupancyContainer->getObject(boardId)
                                             ->getObject(cOpticalGroup->getId())
                                             ->getObject(cHybrid->getId())
                                             ->getObject(cChip->getId())
                                             ->getChannel<Occupancy>(row, col)
                                             .fOccupancy >= targetOccupancy) and
-                                    (previousStepOccupancyContainer->getObject(boardId)
+                                       (previousStepOccupancyContainer->getObject(boardId)
                                             ->getObject(cOpticalGroup->getId())
                                             ->getObject(cHybrid->getId())
                                             ->getObject(cChip->getId())
                                             ->getChannel<Occupancy>(row, col)
                                             .fOccupancy < targetOccupancy) and
-                                    (not first))
+                                       (not first))
                                     {
                                         if(std::fabs(currentStepOccupancyContainer->getObject(boardId)
-                                                        ->getObject(cOpticalGroup->getId())
-                                                        ->getObject(cHybrid->getId())
-                                                        ->getObject(cChip->getId())
-                                                        ->getChannel<Occupancy>(row, col)
-                                                        .fOccupancy -
-                                                    targetOccupancy) > std::fabs(previousStepOccupancyContainer->getObject(boardId)
-                                                                                    ->getObject(cOpticalGroup->getId())
-                                                                                    ->getObject(cHybrid->getId())
-                                                                                    ->getObject(cChip->getId())
-                                                                                    ->getChannel<Occupancy>(row, col)
-                                                                                    .fOccupancy -
-                                                                                targetOccupancy))
+                                                         ->getObject(cOpticalGroup->getId())
+                                                         ->getObject(cHybrid->getId())
+                                                         ->getObject(cChip->getId())
+                                                         ->getChannel<Occupancy>(row, col)
+                                                         .fOccupancy -
+                                                     targetOccupancy) > std::fabs(previousStepOccupancyContainer->getObject(boardId)
+                                                                                      ->getObject(cOpticalGroup->getId())
+                                                                                      ->getObject(cHybrid->getId())
+                                                                                      ->getObject(cChip->getId())
+                                                                                      ->getChannel<Occupancy>(row, col)
+                                                                                      .fOccupancy -
+                                                                                  targetOccupancy))
                                         {
-                                            currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row, col) -=
-                                                1;
+                                            currentDacList->getObject(boardId)
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getChannel<uint16_t>(row, col) -= 1;
                                             occDiff.first += previousStepOccupancyContainer->getObject(boardId)
-                                                                ->getObject(cOpticalGroup->getId())
-                                                                ->getObject(cHybrid->getId())
-                                                                ->getObject(cChip->getId())
-                                                                ->getChannel<Occupancy>(row, col)
-                                                                .fOccupancy -
-                                                            targetOccupancy;
+                                                                 ->getObject(cOpticalGroup->getId())
+                                                                 ->getObject(cHybrid->getId())
+                                                                 ->getObject(cChip->getId())
+                                                                 ->getChannel<Occupancy>(row, col)
+                                                                 .fOccupancy -
+                                                             targetOccupancy;
 
                                             NoccDiff.first += 1;
                                         }
                                         else
                                         {
                                             occDiff.second += currentStepOccupancyContainer->getObject(boardId)
-                                                                ->getObject(cOpticalGroup->getId())
-                                                                ->getObject(cHybrid->getId())
-                                                                ->getObject(cChip->getId())
-                                                                ->getChannel<Occupancy>(row, col)
-                                                                .fOccupancy -
-                                                            targetOccupancy;
+                                                                  ->getObject(cOpticalGroup->getId())
+                                                                  ->getObject(cHybrid->getId())
+                                                                  ->getObject(cChip->getId())
+                                                                  ->getChannel<Occupancy>(row, col)
+                                                                  .fOccupancy -
+                                                              targetOccupancy;
                                             NoccDiff.second += 1;
                                         }
 
-                                        currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row, col) = 1;
+                                        currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row, col) =
+                                            1;
                                     }
 
                                     else
@@ -1681,11 +1690,11 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                                             ->getObject(cChip->getId())
                                             ->getChannel<Occupancy>(row, col)
                                             .fOccupancy = currentStepOccupancyContainer->getObject(boardId)
-                                                            ->getObject(cOpticalGroup->getId())
-                                                            ->getObject(cHybrid->getId())
-                                                            ->getObject(cChip->getId())
-                                                            ->getChannel<Occupancy>(row, col)
-                                                            .fOccupancy;
+                                                              ->getObject(cOpticalGroup->getId())
+                                                              ->getObject(cHybrid->getId())
+                                                              ->getObject(cChip->getId())
+                                                              ->getChannel<Occupancy>(row, col)
+                                                              .fOccupancy;
                                     }
                                 }
                             }
@@ -1704,35 +1713,34 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                              << " for a DAC value of " << cCurrentDAC;
 
                         float chanavg = 0.0;
-                        for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
-
                                 currentStepOccupancyContainer->getObject(boardId)
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
                                     ->getObject(cChip->getId())
                                     ->getChannel<Occupancy>(row, col)
                                     .fOccupancy = std::max(currentStepOccupancyContainer->getObject(boardId)
-                                                            ->getObject(cOpticalGroup->getId())
-                                                            ->getObject(cHybrid->getId())
-                                                            ->getObject(cChip->getId())
-                                                            ->getChannel<Occupancy>(row, col)
-                                                            .fOccupancy,
-                                                        previousStepOccupancyContainer->getObject(boardId)
-                                                            ->getObject(cOpticalGroup->getId())
-                                                            ->getObject(cHybrid->getId())
-                                                            ->getObject(cChip->getId())
-                                                            ->getChannel<Occupancy>(row, col)
-                                                            .fOccupancy);
+                                                               ->getObject(cOpticalGroup->getId())
+                                                               ->getObject(cHybrid->getId())
+                                                               ->getObject(cChip->getId())
+                                                               ->getChannel<Occupancy>(row, col)
+                                                               .fOccupancy,
+                                                           previousStepOccupancyContainer->getObject(boardId)
+                                                               ->getObject(cOpticalGroup->getId())
+                                                               ->getObject(cHybrid->getId())
+                                                               ->getObject(cChip->getId())
+                                                               ->getChannel<Occupancy>(row, col)
+                                                               .fOccupancy);
 
                                 chanavg += float(currentStepOccupancyContainer->getObject(boardId)
-                                                    ->getObject(cOpticalGroup->getId())
-                                                    ->getObject(cHybrid->getId())
-                                                    ->getObject(cChip->getId())
-                                                    ->getChannel<Occupancy>(row, col)
-                                                    .fOccupancy >= targetOccupancy); // counts number found instead
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getChannel<Occupancy>(row, col)
+                                                     .fOccupancy >= targetOccupancy); // counts number found instead
                             }
                         }
                         chanavg /= float(cChip->size());
@@ -1785,7 +1793,6 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                             }
                             else
                             {
-
                                 previousStepOccupancyContainer->getObject(boardId)
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
@@ -1798,9 +1805,9 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                                                       ->getSummary<Occupancy, Occupancy>()
                                                       .fOccupancy;
 
-                                for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                                for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                                 {
-                                    for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                                    for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                                     {
                                         returnVec.push_back({row, col});
                                         previousStepOccupancyContainer->getObject(boardId)
@@ -1809,11 +1816,11 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                                             ->getObject(cChip->getId())
                                             ->getChannel<Occupancy>(row, col)
                                             .fOccupancy = currentStepOccupancyContainer->getObject(boardId)
-                                                            ->getObject(cOpticalGroup->getId())
-                                                            ->getObject(cHybrid->getId())
-                                                            ->getObject(cChip->getId())
-                                                            ->getChannel<Occupancy>(row, col)
-                                                            .fOccupancy;
+                                                              ->getObject(cOpticalGroup->getId())
+                                                              ->getObject(cHybrid->getId())
+                                                              ->getObject(cChip->getId())
+                                                              ->getChannel<Occupancy>(row, col)
+                                                              .fOccupancy;
                                     }
                                 }
                             }
@@ -1850,8 +1857,11 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                     auto cOriginalMask = cChip->getChipOriginalMask();
                     if(localDAC)
                     {
-                        std::vector<std::pair<uint16_t, uint16_t>> tempMaskList =
-                            currentMaskList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<std::pair<uint16_t, uint16_t>>>();
+                        std::vector<std::pair<uint16_t, uint16_t>> tempMaskList = currentMaskList->getObject(boardId)
+                                                                                      ->getObject(cOpticalGroup->getId())
+                                                                                      ->getObject(cHybrid->getId())
+                                                                                      ->getObject(cChip->getId())
+                                                                                      ->getSummary<std::vector<std::pair<uint16_t, uint16_t>>>();
 
                         for(const auto& maskedChannel: tempMaskList)
                         {

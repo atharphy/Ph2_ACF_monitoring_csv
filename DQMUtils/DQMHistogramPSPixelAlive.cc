@@ -196,14 +196,18 @@ void DQMHistogramPSPixelAlive::fillOccupancyPlots(DetectorDataContainer& theOccu
                         {
                             for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                             {
-                                float occupancy =
-                                    theOccupancy.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getChannel<Occupancy>(row, col).fOccupancy;
+                                float occupancy = theOccupancy.getObject(board->getId())
+                                                      ->getObject(opticalGroup->getId())
+                                                      ->getObject(hybrid->getId())
+                                                      ->getObject(chip->getId())
+                                                      ->getChannel<Occupancy>(row, col)
+                                                      .fOccupancy;
                                 float occupancyError = theOccupancy.getObject(board->getId())
-                                                        ->getObject(opticalGroup->getId())
-                                                        ->getObject(hybrid->getId())
-                                                        ->getObject(chip->getId())
-                                                        ->getChannel<Occupancy>(row, col)
-                                                        .fOccupancyError;
+                                                           ->getObject(opticalGroup->getId())
+                                                           ->getObject(hybrid->getId())
+                                                           ->getObject(chip->getId())
+                                                           ->getChannel<Occupancy>(row, col)
+                                                           .fOccupancyError;
                                 chipOccupancyHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, occupancy);
                                 chipOccupancyHistogram->SetBinError(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, occupancyError);
                             }
@@ -221,14 +225,18 @@ void DQMHistogramPSPixelAlive::fillOccupancyPlots(DetectorDataContainer& theOccu
                         {
                             for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                             {
-                                float occupancy =
-                                    theOccupancy.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getChannel<Occupancy>(row, col).fOccupancy;
+                                float occupancy = theOccupancy.getObject(board->getId())
+                                                      ->getObject(opticalGroup->getId())
+                                                      ->getObject(hybrid->getId())
+                                                      ->getObject(chip->getId())
+                                                      ->getChannel<Occupancy>(row, col)
+                                                      .fOccupancy;
                                 float occupancyError = theOccupancy.getObject(board->getId())
-                                                        ->getObject(opticalGroup->getId())
-                                                        ->getObject(hybrid->getId())
-                                                        ->getObject(chip->getId())
-                                                        ->getChannel<Occupancy>(row, col)
-                                                        .fOccupancyError;
+                                                           ->getObject(opticalGroup->getId())
+                                                           ->getObject(hybrid->getId())
+                                                           ->getObject(chip->getId())
+                                                           ->getChannel<Occupancy>(row, col)
+                                                           .fOccupancyError;
 
                                 chipOccupancyHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, occupancy);
                                 chipOccupancyHistogram->SetBinError(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, occupancyError);

@@ -387,7 +387,4 @@ std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector,
     return {false, 0}; // pattern not found
 }
 
-uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols)
-{
-    return col + row * numberOfCols;
-}
+uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols) { return col + row * numberOfCols; }

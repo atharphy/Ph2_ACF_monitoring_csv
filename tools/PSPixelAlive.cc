@@ -271,11 +271,12 @@ void PSPixelAlive::maskNoisyChannels(BoardDataContainer* board)
         //                    float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
                             // float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
                             // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<chip->getChannel<ThresholdAndNoise>(row, col).fNoise<<" "<<fPedeNoiseLimit*fMean<<RESET;
-                            // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold -cPedestal)<<" "<<fPedeNoiseUntrimmedLimit<<RESET;
-                            if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(row, col).fNoise > fPedeNoiseLimit))
+                            // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold -cPedestal)<<"
+    "<<fPedeNoiseUntrimmedLimit<<RESET; if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(row, col).fNoise > fPedeNoiseLimit))
                             {
                                 nMask += 1;
-                                LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(row, col).fNoise << ", which is over the limit of "
+                                LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(row, col).fNoise << ", which is over the limit
+    of "
                                         << fPedeNoiseLimit << RESET;
                                 cOriginalMask->disableChannel(row, col); //Make version of this for masking pixels
                             }
@@ -425,22 +426,22 @@ void PSPixelAlive::measureOccupancy()
                               << cChip->getId() << ")" << RESET;
                     fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 0);
                     //                    auto cChipIdx       = cChip->getId();
-                    auto     cType = cChip->getFrontEndType();
+                    auto cType = cChip->getFrontEndType();
 
                     auto chipDC        = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     auto cOriginalMask = chipDC->getChipOriginalMask();
 
-                    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
                             //			LOG (INFO) << RED << "Ch " << iChan << RESET ;
                             float occupancy = theOccupancyContainer.getObject(cBoard->getId())
-                                                ->getObject(cOpticalGroup->getId())
-                                                ->getObject(cHybrid->getId())
-                                                ->getObject(cChip->getId())
-                                                ->getChannel<Occupancy>(row, col)
-                                                .fOccupancy;
+                                                  ->getObject(cOpticalGroup->getId())
+                                                  ->getObject(cHybrid->getId())
+                                                  ->getObject(cChip->getId())
+                                                  ->getChannel<Occupancy>(row, col)
+                                                  .fOccupancy;
 
                             if(occupancy > (1.0 - epsilon))
                             {

@@ -28,9 +28,7 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
 {
     setBoard(pMPA2->getBeBoardId());
     if(pRegNode == "StubMode" || pRegNode == "LayerSwap") // should work with MPA2 address table
-    {
-        return (ReadChipReg(pMPA2, "ECM") >> 6) & 0x3;
-    }
+    { return (ReadChipReg(pMPA2, "ECM") >> 6) & 0x3; }
     else if(pRegNode == "StubWindow")
     {
         return ReadChipReg(pMPA2, "ECM") & 0x3F;
@@ -145,23 +143,25 @@ std::vector<int> MPA2Interface::decodeBendCode(ReadoutChip* pChip, uint8_t pBend
 }
 std::vector<uint8_t> MPA2Interface::readLUT(ReadoutChip* pChip, uint8_t pMode) // Only changed to CodeDM8 reg address
 {
-    std::vector<uint8_t> cBendCodes(0);
-    std::vector<std::string> listOfRegisters {"CodeDM8", "CodeM76", "CodeM54", "CodeM32", "CodeM10", "CodeP12", "CodeP34", "CodeP56", "CodeP78"};
-    auto registerReadList = ReadChipMultReg(pChip, listOfRegisters);
+    std::vector<uint8_t>     cBendCodes(0);
+    std::vector<std::string> listOfRegisters{"CodeDM8", "CodeM76", "CodeM54", "CodeM32", "CodeM10", "CodeP12", "CodeP34", "CodeP56", "CodeP78"};
+    auto                     registerReadList = ReadChipMultReg(pChip, listOfRegisters);
 
-    size_t registerIndex=0;
-    bool firstSkipped = false;
+    size_t registerIndex = 0;
+    bool   firstSkipped  = false;
     for(const auto& registerNameAndValue: registerReadList)
     {
         if(listOfRegisters[registerIndex] != registerNameAndValue.first)
         {
-            std::cerr<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] This should never happen, read registers should be in the same order of the query" << std::endl;
+            std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] This should never happen, read registers should be in the same order of the query" << std::endl;
             abort();
         }
         ++registerIndex;
 
-        if(firstSkipped) cBendCodes.push_back((registerNameAndValue.second >> 3) & 0x7);
-        else firstSkipped = true;
+        if(firstSkipped)
+            cBendCodes.push_back((registerNameAndValue.second >> 3) & 0x7);
+        else
+            firstSkipped = true;
         cBendCodes.push_back(registerNameAndValue.second & 0x7);
     }
     return cBendCodes;
@@ -172,13 +172,10 @@ bool MPA2Interface::configPixel(Chip* pChip, std::string cReg, uint16_t row, uin
     return WriteChipReg(pChip, getPixelRegisterName(cReg, row, col), pValue, pVerify);
 }
 
-uint16_t MPA2Interface::readPixel(Chip* pChip, std::string cReg, uint16_t row, uint16_t col)
+uint16_t MPA2Interface::readPixel(Chip* pChip, std::string cReg, uint16_t row, uint16_t col) { return ReadChipReg(pChip, getPixelRegisterName(cReg, row, col)); }
+bool     MPA2Interface::maskPixel(Chip* pChip, uint16_t row, uint16_t col, bool doMask, bool pVerify)
 {
-    return ReadChipReg(pChip, getPixelRegisterName(cReg, row, col));
-}
-bool MPA2Interface::maskPixel(Chip* pChip, uint16_t row, uint16_t col, bool doMask, bool pVerify)
-{
-    auto cRegValue = readPixel(pChip, "ENFLAGS", row, col);
+    auto    cRegValue = readPixel(pChip, "ENFLAGS", row, col);
     uint8_t cNewValue = (cRegValue & 0xFE) | (doMask ? 0 : 1);
     return configPixel(pChip, "ENFLAGS", row, col, cNewValue, pVerify);
 }
@@ -207,12 +204,9 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
 
     bool returnval = true;
 
-    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
     {
-        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
-        {
-            returnval &= enablePixelInjection(cChip, row, col, group->isChannelEnabled(row, col), pVerify);
-        }
+        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col) { returnval &= enablePixelInjection(cChip, row, col, group->isChannelEnabled(row, col), pVerify); }
     }
     return returnval;
 }
@@ -293,7 +287,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         uint8_t cBitShift = 2;
         uint8_t cRegMask  = (0x7 << cBitShift);
-        return this->WriteChipRegBits(pMPA2, "Control_1", (pValue << cBitShift), "Mask", cRegMask , false);
+        return this->WriteChipRegBits(pMPA2, "Control_1", (pValue << cBitShift), "Mask", cRegMask, false);
     }
     else if(pRegName == "PhaseShift")
     {
@@ -313,8 +307,8 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     }
     else if(pRegName.find("SelectEdgeT1") != std::string::npos)
     {
-        uint8_t     cBitShift = 1; // Not sure about the bits here
-        uint8_t cRegMask = (0x1 << cBitShift);
+        uint8_t cBitShift = 1; // Not sure about the bits here
+        uint8_t cRegMask  = (0x1 << cBitShift);
         return this->WriteChipRegBits(pMPA2, "EdgeSelT1Raw", (pValue << cBitShift), "Mask", cRegMask, false);
     }
     else if(pRegName.find("SelectEdgeL") != std::string::npos)
@@ -323,14 +317,14 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         auto        cLineId = std::atoi(pRegName.substr(pRegName.find(cToken) + cToken.length(), 1).c_str());
         if(cLineId == 8)
         {
-            uint8_t     cBitShift = 0; // Not sure about the bits here
-            uint8_t cRegMask = (0x1 << cBitShift);
+            uint8_t cBitShift = 0; // Not sure about the bits here
+            uint8_t cRegMask  = (0x1 << cBitShift);
             return this->WriteChipRegBits(pMPA2, "EdgeSelT1Raw", (pValue << cBitShift), "Mask", cRegMask, false);
         }
         else
         {
-            uint8_t     cBitShift = cLineId;
-            uint8_t cRegMask = (0x1 << cBitShift);
+            uint8_t cBitShift = cLineId;
+            uint8_t cRegMask  = (0x1 << cBitShift);
             return this->WriteChipRegBits(pMPA2, "EdgeSelTrig", (pValue << cBitShift), "Mask", cRegMask, false);
         }
     }
@@ -418,19 +412,19 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         success &= WriteChipReg(pMPA2, "ReadoutMode", 0x00, pVerify);
         // register mask
 
-        uint16_t enableRegisterMask  = 0x21;
-        uint16_t enableRegisterValue = ((pValue == 0) ? 0 : 1) << 5; // enabling the channel and injecting digital
+        uint16_t    enableRegisterMask  = 0x21;
+        uint16_t    enableRegisterValue = ((pValue == 0) ? 0 : 1) << 5; // enabling the channel and injecting digital
         std::string enableRegisterName;
         std::string patternRegisterName;
         if(pRegName.find("_P") != std::string::npos) // single pixel
         {
-            auto pixelAddress = extractMaskedPixelAddress(pRegName);
-            enableRegisterName = getPixelRegisterName("ENFLAGS", pixelAddress.first, pixelAddress.second);
+            auto pixelAddress   = extractMaskedPixelAddress(pRegName);
+            enableRegisterName  = getPixelRegisterName("ENFLAGS", pixelAddress.first, pixelAddress.second);
             patternRegisterName = getPixelRegisterName("DigPattern", pixelAddress.first, pixelAddress.second);
         }
         else
         {
-            enableRegisterName = "ENFLAGS_ALL";
+            enableRegisterName  = "ENFLAGS_ALL";
             patternRegisterName = "DigPattern_ALL";
         }
 
@@ -459,9 +453,9 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "AnalogueAsync")
     {
-        if(pValue!=0 && pValue != 1)
+        if(pValue != 0 && pValue != 1)
         {
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pRegName = " << pRegName << " -> pValue can be only 0 or 1" << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pRegName = " << pRegName << " -> pValue can be only 0 or 1" << std::endl;
             abort();
         }
         uint16_t enableRegisterValue;
@@ -470,12 +464,12 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         if(pValue == 1)
         {
             enableRegisterValue = 0x55;
-            readoutMode = 0x01;
+            readoutMode         = 0x01;
         }
         else
         {
             enableRegisterValue = 0x00;
-            readoutMode = 0x00;
+            readoutMode         = 0x00;
         }
 
         bool success = true;
@@ -488,7 +482,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         bool success = true;
         success &= WriteChipReg(pMPA2, "ReadoutMode", 0x00, pVerify);
-        success &= WriteChipRegBits(pMPA2, "ENFLAGS_ALL", pValue == 0 ? 0 : 1, "Mask_ALL" , 0x1, false);
+        success &= WriteChipRegBits(pMPA2, "ENFLAGS_ALL", pValue == 0 ? 0 : 1, "Mask_ALL", 0x1, false);
         return success;
     }
     else if(pRegName == "Threshold" or pRegName == "Bias_THDAC")
@@ -515,7 +509,7 @@ bool MPA2Interface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode,
 {
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
-    cRegItem.fValue = pValue;
+    cRegItem.fValue      = pValue;
     return fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerify);
 }
 
@@ -573,12 +567,12 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
 
     if(dacName != "TrimDAC_C" && dacName != "ThresholdTrim")
     {
-        LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC"; 
+        LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
         abort();
     }
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<NMPAROWS, NSSACHANNELS>                 channelToEnable;
+    ChannelGroup<NMPAROWS, NSSACHANNELS>          channelToEnable;
     std::vector<uint32_t>                         cVec;
     cVec.clear();
     bool cSuccess = true;
@@ -617,10 +611,7 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
 
     for(uint16_t row = 0; row < pMPA2->getNumberOfRows(); ++row)
     {
-        for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col)
-        {
-            registerList.push_back({getPixelRegisterName("TrimDAC", row, col), localRegValues.getChannel<uint16_t>(row, col) & 0x1F});
-        }
+        for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col) { registerList.push_back({getPixelRegisterName("TrimDAC", row, col), localRegValues.getChannel<uint16_t>(row, col) & 0x1F}); }
     }
     cSuccess &= WriteChipMultReg(pMPA2, registerList, pVerify);
     return cSuccess;
@@ -858,30 +849,23 @@ void MPA2Interface::Cleardata()
     // fBoardFW->Cleardata( );
 }
 
-bool MPA2Interface::MaskAllChannels(ReadoutChip* pMPA, bool mask, bool pVerify)
-{
-    return WriteChipRegBits(pMPA, "ENFLAGS_ALL", mask ? 0 : 1, "Mask_ALL", 0x01, pVerify);
-}
-
+bool MPA2Interface::MaskAllChannels(ReadoutChip* pMPA, bool mask, bool pVerify) { return WriteChipRegBits(pMPA, "ENFLAGS_ALL", mask ? 0 : 1, "Mask_ALL", 0x01, pVerify); }
 
 bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
     // This only works with synchronous counters by construction
     bool success = true;
     success &= WriteChipReg(pMPA, "ENFLAGS_ALL", 0xa);
-    success &= WriteChipReg(pMPA, "Control_1", 0x00); 
-    success &= WriteChipReg(pMPA, "PixelControl_ALL", 0x1E); 
+    success &= WriteChipReg(pMPA, "Control_1", 0x00);
+    success &= WriteChipReg(pMPA, "PixelControl_ALL", 0x1E);
     success &= Set_threshold(pMPA, 0);
     success &= WriteChipReg(pMPA, "TrimDAC_ALL", 0x0);
 
     success &= WriteChipReg(pMPA, "Mask_ALL", 0x01);
 
-    for(const auto& theCluster : theClusterList)
+    for(const auto& theCluster: theClusterList)
     {
-        for(uint8_t rowIndex=0; rowIndex<std::get<2>(theCluster); ++rowIndex)
-        {
-            maskPixel(pMPA, std::get<0>(theCluster) + rowIndex, std::get<1>(theCluster), 0);
-        }
+        for(uint8_t rowIndex = 0; rowIndex < std::get<2>(theCluster); ++rowIndex) { maskPixel(pMPA, std::get<0>(theCluster) + rowIndex, std::get<1>(theCluster), 0); }
     }
 
     success &= WriteChipReg(pMPA, "Mask_ALL", 0xFF);
@@ -905,11 +889,11 @@ std::pair<int, int> MPA2Interface::extractMaskedPixelAddress(const std::string& 
 
     // Extract the number after "_C"
     std::string columnAddress = registerName.substr(posC + 2, posR - posC - 2);
-    pixelAddress.second = std::stoi(columnAddress);
+    pixelAddress.second       = std::stoi(columnAddress);
 
     // Extract the number after "_R"
     std::string rowAddress = registerName.substr(posR + 2);
-    pixelAddress.first = std::stoi(rowAddress);
+    pixelAddress.first     = std::stoi(rowAddress);
 
     return pixelAddress;
 }

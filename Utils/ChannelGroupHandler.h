@@ -34,9 +34,9 @@ class ChannelGroupBase
     uint32_t         getNumberOfCols(void) const { return numberOfCols_; }
     uint32_t         getNumberOfEnabledChannels(void) const { return numberOfEnabledChannels_; }
     virtual uint32_t getNumberOfEnabledChannels(const std::shared_ptr<ChannelGroupBase> mask) const = 0;
-    virtual bool     isChannelEnabled(uint16_t row, uint16_t col) const                         = 0;
-    virtual void     enableChannel(uint16_t row, uint16_t col)                                  = 0;
-    virtual void     disableChannel(uint16_t row, uint16_t col)                                 = 0;
+    virtual bool     isChannelEnabled(uint16_t row, uint16_t col) const                             = 0;
+    virtual void     enableChannel(uint16_t row, uint16_t col)                                      = 0;
+    virtual void     disableChannel(uint16_t row, uint16_t col)                                     = 0;
     virtual void     disableAllChannels(void)                                                       = 0;
     virtual void     enableAllChannels(void)                                                        = 0;
     virtual void     flipAllChannels(void)                                                          = 0;
@@ -72,10 +72,7 @@ class ChannelGroup : public ChannelGroupBase
 
     virtual ~ChannelGroup() { ; }
 
-    inline bool isChannelEnabled(uint16_t row, uint16_t col) const override
-    { 
-        return channelsBitset_[row + numberOfRows_ * col];
-    }
+    inline bool isChannelEnabled(uint16_t row, uint16_t col) const override { return channelsBitset_[row + numberOfRows_ * col]; }
     inline void enableChannel(uint16_t row, uint16_t col) override
     {
         channelsBitset_[row + numberOfRows_ * col] = true;

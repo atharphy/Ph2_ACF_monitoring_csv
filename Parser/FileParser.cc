@@ -1454,7 +1454,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                 }
                 if(cType == FrontEndType::MPA2)
                 {
-                    std::cerr<< "Masking MPA from xml not implemented!" << std::endl;
+                    std::cerr << "Masking MPA from xml not implemented!" << std::endl;
                     abort();
                 }
                 else

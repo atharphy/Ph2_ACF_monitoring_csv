@@ -947,10 +947,10 @@ int main(int argc, char* argv[])
                 }
                 // enable a few
                 std::vector<std::pair<uint16_t, uint16_t>> cPxls;
-                uint16_t              cFirstRow = 10;
-                uint16_t              cNCols    = 2;
-                uint16_t              cNRows    = 1;
-                std::vector<uint16_t> cStrps;
+                uint16_t                                   cFirstRow = 10;
+                uint16_t                                   cNCols    = 2;
+                uint16_t                                   cNRows    = 1;
+                std::vector<uint16_t>                      cStrps;
                 for(uint16_t cNRow = 0; cNRow < cNRows; cNRow++)
                 {
                     uint16_t cRow = cFirstRow + cNRow * 2;

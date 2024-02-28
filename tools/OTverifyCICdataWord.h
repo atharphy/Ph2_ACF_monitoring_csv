@@ -53,7 +53,11 @@ class OTverifyCICdataWord : public Tool
     void  runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
     void  runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
     void  injectStubs2S(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
-    void  injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, Ph2_HwDescription::ReadoutChip* theSSA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
+    void  injectStubsPS(Ph2_HwDescription::ReadoutChip*        theMPA,
+                        Ph2_HwDescription::ReadoutChip*        theSSA,
+                        uint8_t                                chipIdForCIC,
+                        Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface,
+                        uint8_t                                numberOfBytesInSinglePacket);
     float injectAndMatch2SstubPatterns(Ph2_HwDescription::ReadoutChip*        theChip,
                                        uint8_t                                chipIdForCIC,
                                        Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface,

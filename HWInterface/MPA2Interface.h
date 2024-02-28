@@ -106,7 +106,7 @@ class MPA2Interface : public ReadoutChipInterface
     uint16_t             ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
 
     float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
-    bool     injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
+    bool  injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
 
   private:
     // pixelEnable bits
@@ -152,12 +152,12 @@ class MPA2Interface : public ReadoutChipInterface
     std::map<uint16_t, std::string>      fMap;
     std::vector<uint8_t>                 fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
 
-    bool     WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerify = false);
-    uint16_t ReadChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode);
-    bool     maskPixel(Ph2_HwDescription::Chip* pChip, uint16_t row, uint16_t col, bool doMask, bool pVerify = false);
-    bool     enablePixelInjection(Ph2_HwDescription::Chip* pChip, uint16_t row, uint16_t col, bool inject, bool pVerify);
-    void     readAllBias(Ph2_HwDescription::Chip* pMPA);
-    std::string getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col) const;
+    bool                WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerify = false);
+    uint16_t            ReadChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode);
+    bool                maskPixel(Ph2_HwDescription::Chip* pChip, uint16_t row, uint16_t col, bool doMask, bool pVerify = false);
+    bool                enablePixelInjection(Ph2_HwDescription::Chip* pChip, uint16_t row, uint16_t col, bool inject, bool pVerify);
+    void                readAllBias(Ph2_HwDescription::Chip* pMPA);
+    std::string         getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col) const;
     std::pair<int, int> extractMaskedPixelAddress(const std::string& registerName) const;
 };
 } // namespace Ph2_HwInterface

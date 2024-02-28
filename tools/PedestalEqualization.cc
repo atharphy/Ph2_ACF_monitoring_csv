@@ -426,19 +426,19 @@ void PedestalEqualization::FindOffsets()
                     //     fReadoutChipInterface->WriteChipReg(theChip, "HIP&TestMode", HIPCountValue);
                     // }
 
-                    int          cMeanOffset   = 0;
+                    int          cMeanOffset = 0;
                     ReadoutChip* roc = static_cast<ReadoutChip*>(fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId()));
                     auto         cType = roc->getFrontEndType();
 
-                    for(uint16_t row = 0; row<roc->getNumberOfRows(); ++row)
+                    for(uint16_t row = 0; row < roc->getNumberOfRows(); ++row)
                     {
-                        for(uint16_t col = 0; col<roc->getNumberOfCols(); ++col)
+                        for(uint16_t col = 0; col < roc->getNumberOfCols(); ++col)
                         {
                             std::string cRegName;
                             if(cType == FrontEndType::CBC3) cRegName = "Channel" + std::to_string(col + 1);
-                            if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) cRegName = "THTRIMMING_S"  + std::to_string(col + 1);
-                            if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) cRegName = "TrimDAC_C" + std::to_string(col) + "_R"+ std::to_string(row);
-                            auto channel              = roc->getReg(cRegName);
+                            if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) cRegName = "THTRIMMING_S" + std::to_string(col + 1);
+                            if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+                            auto channel = roc->getReg(cRegName);
                             LOG(DEBUG) << BOLDGREEN << "Offset set to " << +channel << RESET;
                             cMeanOffset += roc->getReg(cRegName);
                         }

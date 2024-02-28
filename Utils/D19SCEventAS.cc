@@ -95,9 +95,7 @@ void D19SCEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const
     for(ChannelContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
         if(testChannelGroup->isChannelEnabled(0, i)) // this event type is never used in the code
-        {
-            channel->fOccupancy += hVec[i];
-        }
+        { channel->fOccupancy += hVec[i]; }
     }
 }
 

@@ -251,13 +251,13 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                     auto  cBin   = cHist->FindBin((float)pLatency);
                     cHist->SetBinContent(cBin, cOcc * chip->size());
                     cHist->SetBinError(cBin, cError * chip->size());
-                    uint16_t cOffset   = chip->getId() * chip->size() / 2.;
+                    uint16_t cOffset = chip->getId() * chip->size() / 2.;
                     if(chip->hasChannelContainer() == false) continue;
                     for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
-                            uint16_t cChnlIndx = linearizeRowAndCols(row, col, chip->getNumberOfCols());
+                            uint16_t cChnlIndx    = linearizeRowAndCols(row, col, chip->getNumberOfCols());
                             uint16_t cStripOffset = (cChnlIndx % 2 == 0) ? cOffset : cHitMap->GetYaxis()->GetNbins() / 2. + cOffset;
                             uint16_t cStripId     = cStripOffset + cChnlIndx / 2.0;
                             cBin                  = cHitMap->FindBin((float)pLatency, cStripId);
@@ -265,7 +265,7 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                             cHitMap->SetBinError(cBin, chip->getChannel<Occupancy>(row, col).fOccupancyError);
                             if(chip->getChannel<Occupancy>(row, col).fOccupancy > 0)
                                 LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " global strip number " << +cStripId
-                                        << " - have found " << chip->getChannel<Occupancy>(row, col).fOccupancy << " hits." << RESET;
+                                           << " - have found " << chip->getChannel<Occupancy>(row, col).fOccupancy << " hits." << RESET;
                         }
                     }
                     TH2F* cLatencyTDC = fLatencyTDCHistograms.getObject(board->getId())

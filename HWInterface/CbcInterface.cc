@@ -695,7 +695,7 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<1, NCHANNELS>                       channelToEnable;
+    ChannelGroup<1, NCHANNELS>                    channelToEnable;
     std::vector<uint32_t>                         cVec;
     cVec.clear();
     for(uint8_t iChannel = 0; iChannel < pCbc->getNumberOfChannels(); ++iChannel)

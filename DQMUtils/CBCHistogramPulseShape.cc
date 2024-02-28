@@ -106,17 +106,17 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
                     chipPulseShapeHistogram->SetBinError(currentBin, chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThresholdError);
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot) Get channel data and fill the histogram
-                    
+
                     for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
                             TH1F* channelPulseShapeHistogram = fDetectorChannelPulseShapeHistograms.getObject(boardId)
-                                                                ->getObject(opticalGroupId)
-                                                                ->getObject(hybridId)
-                                                                ->getObject(chipId)
-                                                                ->getChannel<HistContainer<TH1F>>(row, col)
-                                                                .fTheHistogram;
+                                                                   ->getObject(opticalGroupId)
+                                                                   ->getObject(hybridId)
+                                                                   ->getObject(chipId)
+                                                                   ->getChannel<HistContainer<TH1F>>(row, col)
+                                                                   .fTheHistogram;
                             int currentBin = channelPulseShapeHistogram->FindBin(binCenterValue);
                             channelPulseShapeHistogram->SetBinContent(currentBin, chip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
                             channelPulseShapeHistogram->SetBinError(currentBin, chip->getChannel<ThresholdAndNoise>(row, col).fNoise);

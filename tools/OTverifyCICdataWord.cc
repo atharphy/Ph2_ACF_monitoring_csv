@@ -3,12 +3,12 @@
 #include "HWInterface/CbcInterface.h"
 #include "HWInterface/D19cDebugFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/PSInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/PatternMatcher.h"
 #include "Utils/Utilities.h"
-#include "HWInterface/PSInterface.h"
 #include <bitset>
 
 using namespace Ph2_HwDescription;
@@ -212,9 +212,9 @@ void OTverifyCICdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, 
     auto& theL1Efficiency = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
                                 ->getObject(theMPA->getOpticalGroupId())
                                 ->getObject(theMPA->getHybridId())
-                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()[theMPA->getId()%8][0];
+                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()[theMPA->getId() % 8][0];
 
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA,0x55,1)};
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
     // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{};
     // std::vector<std::pair<uint8_t,uint8_t>> theClusterList {{0xAA, 2}, {0xA0, 3}};
     // std::vector<std::pair<uint8_t,uint8_t>> theClusterList {{0xAA, 2}, {0xA0, 3}, {0x0A, 1}};
@@ -222,9 +222,7 @@ void OTverifyCICdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, 
     // fReadoutChipInterface->WriteChipReg(theMPA, "ModeSel_ALL", 2);
     // fReadoutChipInterface->WriteChipReg(theMPA, "ReadoutMode", 0);
 
-    
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PixelControl_ALL = 0x" << std::hex << +fReadoutChipInterface->ReadChipReg(theMPA, "PixelControl_ALL") << std::dec << std::endl;
-    
 
     // fReadoutChipInterface->WriteChipReg(theMPA, "PixelControl_ALL", 0x1E); // 000 111 10
 
@@ -277,8 +275,8 @@ void OTverifyCICdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, 
         }
         else
         {
-            LOG(DEBUG) << BOLDRED << "OTverifyCICdataWord::injectL12S - Error, expected L1 pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup "
-                       << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
+            LOG(DEBUG) << BOLDRED << "OTverifyCICdataWord::injectL12S - Error, expected L1 pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup " << +theMPA->getOpticalGroupId()
+                       << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
             LOG(DEBUG) << BOLDRED << "L1 pattern received " << getPatternPrintout(lineOutputVector, numberOfBytesInSinglePacket) << RESET;
         }
     }
@@ -343,7 +341,8 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInt
 
                 uint8_t chipIdForCIC = theChipToCICMapping[theChip->getId() % 8];
                 fCicInterface->EnableFEs(cCic, {uint8_t(theChip->getId() % 8)}, true);
-                if(isA2Smodule) injectStubs2S(theChip, chipIdForCIC, theDebugInterface, numberOfBytesInSinglePacket);
+                if(isA2Smodule)
+                    injectStubs2S(theChip, chipIdForCIC, theDebugInterface, numberOfBytesInSinglePacket);
                 else
                 {
                     try
@@ -522,7 +521,6 @@ std::vector<std::pair<std::bitset<160>, std::bitset<160>>> OTverifyCICdataWord::
 
     return lineDataAndMaskWordVector;
 }
-
 
 void OTverifyCICdataWord::injectStubsPS(ReadoutChip* theMPA, ReadoutChip* theSSA, uint8_t chipIdForCIC, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
 {

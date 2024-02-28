@@ -365,20 +365,21 @@ void PedeNoise::Validate()
                 for(auto cChip: *cHybrid)
                 {
                     RegisterVector cRegVec;
-                    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
                             float occupancy = theOccupancyContainer.getObject(cBoard->getId())
-                                                ->getObject(cOpticalGroup->getId())
-                                                ->getObject(cHybrid->getId())
-                                                ->getObject(cChip->getId())
-                                                ->getChannel<Occupancy>(row, col)
-                                                .fOccupancy;
+                                                  ->getObject(cOpticalGroup->getId())
+                                                  ->getObject(cHybrid->getId())
+                                                  ->getObject(cChip->getId())
+                                                  ->getChannel<Occupancy>(row, col)
+                                                  .fOccupancy;
                             if(occupancy > fMaskingThreshold)
                             {
                                 std::string message = "Found a noisy channel on Chip " + getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()) + " row " +
-                                                    std::to_string(row) + " col " + std::to_string(col) + " with an occupancy of " + std::to_string(occupancy) + "(>" + std::to_string(fMaskingThreshold) + ")";
+                                                      std::to_string(row) + " col " + std::to_string(col) + " with an occupancy of " + std::to_string(occupancy) + "(>" +
+                                                      std::to_string(fMaskingThreshold) + ")";
                                 if(fMaskNoisyChannels)
                                 {
                                     if(fWithCBC)
@@ -703,9 +704,9 @@ void PedeNoise::extractPedeNoise()
                 {
                     for(auto chip: *hybrid)
                     {
-                        for(uint16_t row = 0; row<chip->getNumberOfRows(); ++row)
+                        for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                         {
-                            for(uint16_t col = 0; col<chip->getNumberOfCols(); ++col)
+                            for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                             {
                                 if(!getChannelGroupHandlerContainer()
                                         ->getObject(board->getId())
@@ -734,11 +735,11 @@ void PedeNoise::extractPedeNoise()
                                                             ->getChannel<Occupancy>(row, col)
                                                             .fOccupancy;
                                     currentOccupancy = mStripIt->second->getObject(board->getId())
-                                                        ->getObject(opticalGroup->getId())
-                                                        ->getObject(hybrid->getId())
-                                                        ->getObject(chip->getId())
-                                                        ->getChannel<Occupancy>(row, col)
-                                                        .fOccupancy;
+                                                           ->getObject(opticalGroup->getId())
+                                                           ->getObject(hybrid->getId())
+                                                           ->getObject(chip->getId())
+                                                           ->getChannel<Occupancy>(row, col)
+                                                           .fOccupancy;
                                     binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
                                 }
                                 else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
@@ -756,11 +757,11 @@ void PedeNoise::extractPedeNoise()
                                                             ->getChannel<Occupancy>(row, col)
                                                             .fOccupancy;
                                     currentOccupancy = mPixelIt->second->getObject(board->getId())
-                                                        ->getObject(opticalGroup->getId())
-                                                        ->getObject(hybrid->getId())
-                                                        ->getObject(chip->getId())
-                                                        ->getChannel<Occupancy>(row, col)
-                                                        .fOccupancy;
+                                                           ->getObject(opticalGroup->getId())
+                                                           ->getObject(hybrid->getId())
+                                                           ->getObject(chip->getId())
+                                                           ->getChannel<Occupancy>(row, col)
+                                                           .fOccupancy;
                                     binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;
                                     if(previousOccupancy > currentOccupancy) { continue; }
                                 }
@@ -812,9 +813,9 @@ void PedeNoise::extractPedeNoise()
             {
                 for(auto chip: *hybrid)
                 {
-                    for(uint16_t row = 0; row<chip->getNumberOfRows(); ++row)
+                    for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
-                        for(uint16_t col = 0; col<chip->getNumberOfCols(); ++col)
+                        for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
                             if(!getChannelGroupHandlerContainer()
                                     ->getObject(board->getId())
@@ -827,19 +828,20 @@ void PedeNoise::extractPedeNoise()
                                 continue;
                             chip->getChannel<ThresholdAndNoise>(row, col).fThreshold /= chip->getChannel<ThresholdAndNoise>(row, col).fThresholdError;
                             chip->getChannel<ThresholdAndNoise>(row, col).fNoise /= chip->getChannel<ThresholdAndNoise>(row, col).fThresholdError;
-                            chip->getChannel<ThresholdAndNoise>(row, col).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(row, col).fNoise - (chip->getChannel<ThresholdAndNoise>(row, col).fThreshold *
-                                                                                                                                                chip->getChannel<ThresholdAndNoise>(row, col).fThreshold));
+                            chip->getChannel<ThresholdAndNoise>(row, col).fNoise =
+                                sqrt(chip->getChannel<ThresholdAndNoise>(row, col).fNoise -
+                                     (chip->getChannel<ThresholdAndNoise>(row, col).fThreshold * chip->getChannel<ThresholdAndNoise>(row, col).fThreshold));
 
                             if(isnan(chip->getChannel<ThresholdAndNoise>(row, col).fNoise) || isinf(chip->getChannel<ThresholdAndNoise>(row, col).fNoise))
                             {
                                 LOG(WARNING) << BOLDYELLOW << "Problem in deriving noise for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
-                                            << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
+                                             << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
                                 chip->getChannel<ThresholdAndNoise>(row, col).fNoise = 0.;
                             }
                             if(isnan(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold) || isinf(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold))
                             {
-                                LOG(WARNING) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
-                                            << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
+                                LOG(WARNING) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid "
+                                             << hybrid->getId() << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
                                 chip->getChannel<ThresholdAndNoise>(row, col).fThreshold = 0.;
                             }
                             chip->getChannel<ThresholdAndNoise>(row, col).fThresholdError = 1;
@@ -956,17 +958,17 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                      fMean=4.2;*/
                 auto     cOriginalMask = chipDC->getChipOriginalMask();
                 uint32_t nMask         = 0;
-                for(uint16_t row = 0; row<chip->getNumberOfRows(); ++row)
+                for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                 {
-                    for(uint16_t col = 0; col<chip->getNumberOfCols(); ++col)
+                    for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                     {
                         float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
                         // float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
                         if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(row, col).fNoise > fPedeNoiseLimit))
                         {
                             nMask += 1;
-                            LOG(INFO) << BOLDYELLOW << "Masking row: " << row << " col " << col << " with a noise of " << chip->getChannel<ThresholdAndNoise>(row, col).fNoise << ", which is over the limit of "
-                                    << fPedeNoiseLimit << RESET;
+                            LOG(INFO) << BOLDYELLOW << "Masking row: " << row << " col " << col << " with a noise of " << chip->getChannel<ThresholdAndNoise>(row, col).fNoise
+                                      << ", which is over the limit of " << fPedeNoiseLimit << RESET;
                             cOriginalMask->disableChannel(row, col);
                         }
                         if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
@@ -975,8 +977,8 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
 
                             nMask += 1;
                             LOG(INFO) << BOLDYELLOW << "Masking row: " << row << " col " << col << " with a pedestal difference of "
-                                    << std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
-                                    << " trimval: " << +thetrim << RESET;
+                                      << std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
+                                      << " trimval: " << +thetrim << RESET;
                             cOriginalMask->disableChannel(row, col);
                         }
 

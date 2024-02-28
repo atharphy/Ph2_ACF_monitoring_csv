@@ -254,7 +254,7 @@ void MemoryCheck2S::Initialise()
                 auto& cMasksThisHybrid = cMasksThisOG->getObject(cHybrid->getId());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip                                                   = cMasksThisHybrid->getObject(cChip->getId());
+                    auto& cMasksThisChip                                                      = cMasksThisHybrid->getObject(cChip->getId());
                     cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<1, NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<1, NCHANNELS>>(cChip->getChipOriginalMask());
                     // cOriginalMask = new ChannelGroup<1, NCHANNELS>;
                     // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
@@ -901,10 +901,10 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
                     auto&              cThNoiseThisChip = cThNoiseThisHybrid->getObject(cChip->getId());
                     std::vector<float> cPedestalsThisChip(0);
                     std::vector<float> cNoiseThisChip(0);
-                    
-                    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
                             // S-curve for this channel
                             std::vector<float> cW(cThresholds.size(), 0);
@@ -918,7 +918,7 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
                                 cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(row, col).fOccupancy;
                                 cV[cIndx]             = cThresholds[cIndx];
                             }
-                            auto cPedeNoise                                                   = evalNoise(cW, cV, true);
+                            auto cPedeNoise                                                      = evalNoise(cW, cV, true);
                             cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold = cPedeNoise.first;
                             cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise     = cPedeNoise.second;
                             cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
@@ -978,9 +978,9 @@ void MemoryCheck2S::SetThreshold(float pSigma)
                     auto&              cThNoiseThisChip = cThNoiseThisHybrid->getObject(cChip->getId());
                     std::vector<float> cPedestalsThisChip(0);
                     std::vector<float> cNoiseThisChip(0);
-                    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
                             cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
                             cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
@@ -1126,12 +1126,9 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                     std::vector<uint8_t> cExpectedHits(0);
                     if(!cInjection) // all channels
                     {
-                        for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
-                            {
-                                cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = (cAllOnes) ? 1 : 0;
-                            }
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col) { cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = (cAllOnes) ? 1 : 0; }
                         }
                         continue;
                     } // with noise .. all would be on/off
@@ -1159,9 +1156,9 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                         cCompleteHitList.insert(cCompleteHitList.end(), cHitList.begin(), cHitList.end());
                     }
                     // configure occupancy
-                    for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
                             bool cHitFound = std::find(cCompleteHitList.begin(), cCompleteHitList.end(), col) != cCompleteHitList.end();
                             if(cHitFound)
@@ -1344,12 +1341,9 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
                         std::vector<uint8_t> cExpectedHits(0);
                         if(!cInjection) // all channels
                         {
-                            for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                            for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                             {
-                                for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
-                                {
-                                    cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = cAllOnes ? 1 : 0;
-                                }
+                                for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col) { cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = cAllOnes ? 1 : 0; }
                             }
                             continue;
                         }
@@ -1513,10 +1507,10 @@ void MemoryCheck2S::MemoryCheck2SSparse()
 
                     auto& cExpectedOccThisChip = cExpectedOccThisHybrid->getObject(cChip->getId());
                     for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = (cThreshold == 1000) ? 1 : 0; } // only for CBC
-                } // Chip
-            }     // Hybrid
-        }         // OG
-    }             // inj over boards
+                }                                                                                                                                                          // Chip
+            }                                                                                                                                                              // Hybrid
+        }                                                                                                                                                                  // OG
+    }                                                                                                                                                                      // inj over boards
 
     // here have to be careful
     // because I can only look at a maximum of 32 clusters at a time per CBC
@@ -2201,9 +2195,9 @@ void MemoryCheck2S::Check()
                             }
                         }
 
-                        for(uint16_t row = 0; row<cChip->getNumberOfRows(); ++row)
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            for(uint16_t col = 0; col<cChip->getNumberOfCols(); ++col)
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
                                 // information about threshold + noise
                                 fMemEvent.fPedestal = cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold;
@@ -2219,11 +2213,11 @@ void MemoryCheck2S::Check()
                                     // PrintMemEvent(fMemEvent);
                                 }
                                 cNCorruptedCells += (fMemEvent.fCorrectValue == 0) ? 1 : 0;
-    // if ROOT is enabled fill tree here
-    #ifdef __USE_ROOT__
+// if ROOT is enabled fill tree here
+#ifdef __USE_ROOT__
                                 TTree* cTree = static_cast<TTree*>(getHist(cHybrid, "MemoryCheck2STree"));
                                 cTree->Fill();
-    #endif
+#endif
                                 cMemEventsSummary.push_back(fMemEvent);
                             }
                         }

@@ -203,9 +203,7 @@ void DQMHistogramPedestalEqualization::fillOffsetPlots(DetectorDataContainer& th
                     for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
-                        {
-                            chipOffsetHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()), chip->getChannel<uint8_t>(row, col)); 
-                        }
+                        { chipOffsetHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()), chip->getChannel<uint8_t>(row, col)); }
                     }
                 }
             }
