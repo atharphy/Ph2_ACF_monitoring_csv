@@ -29,7 +29,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 
-### =x= Middleware for the Inner-Tracker (IT) system  =x=
+## =x= Middleware for the Inner-Tracker (IT) system  =x=
 ```diff
 + Last change made to this section: 27/02/2024
 ```
@@ -85,7 +85,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -f firmware_file_name_on_the_PC -i firmware_file_name_on_the_microSD` to upload a new firmware to the microSD card
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
-### =x= End of Inner-Tracker section =x=
+## =x= End of Inner-Tracker section =x=
 
 
 ### The Ph2_ACF software
