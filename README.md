@@ -29,16 +29,16 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
 
 
-# =x= Middleware for the Inner-Tracker (IT) system  =x=
+### =x= Middleware for the Inner-Tracker (IT) system  =x=
 ```diff
 + Last change made to this section: 27/02/2024
 ```
 
-### Suggested software and firmware versions:
+#### Suggested software and firmware versions:
 - Software git branch / tag : `Dev` / `v4-22`
 - Firmware tag: `v4-08`
 
-### Important webpages and information:
+#### Important webpages and information:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 - Detailed description of the various calibrations: https://cernbox.cern.ch/s/yFByejNP8Tp7VFq
@@ -89,7 +89,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 
 
 ### The Ph2_ACF software
-Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal,  mentioned above):
+Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal, etc...):
 
 1. Clone the GitHub repo and run cmake
 ```bash
@@ -101,9 +101,9 @@ cd build
 cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to call it `cmake3 ..`
 ```
 
-2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the `Ph2_ACF` root directory.
+2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the `Ph2_ACF` root directory
 
-3. Don't forget to `source setup.sh` to set all the environment variables correctly.
+3. Don't forget to `source setup.sh` to set all the environment variables correctly
 
 4. Launch
 ```bash
@@ -122,8 +122,8 @@ docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
 ```
 
 Suggested images are:
-  -  For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
-  -  For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
+-  For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
+-  For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
 
 Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
 
