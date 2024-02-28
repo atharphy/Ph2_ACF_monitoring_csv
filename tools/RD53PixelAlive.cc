@@ -157,7 +157,7 @@ void PixelAlive::run()
                                 // ###########################
                                 // # Download new DAC values #
                                 // ###########################
-                                this->fReadoutChipInterface->WriteChipReg(cChip, regName + suffix, 1 << i);
+                                this->fReadoutChipInterface->WriteChipReg(cChip, regName + suffix, 1 << i, false);
 
                                 // ################
                                 // # Run analysis #
@@ -194,9 +194,11 @@ void PixelAlive::run()
                             this->fReadoutChipInterface->WriteChipReg(cChip, regName + suffix, regValueMap[suffix]);
                             const auto numberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix].fBitSize;
                             uint16_t   mask         = RD53Shared::setBits(numberOfBits);
-                            auto       value        = (std::bitset<16>(regValueMap[suffix]) & std::bitset<16>(mask)).to_string().erase(0, 16 - numberOfBits);
-                            bool       problems     = (regValueMap[suffix] != mask);
-                            LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + suffix << (problems ? BOLDRED : BOLDBLUE) << " value = " << BOLDYELLOW << value
+                            auto       value        = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[suffix]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
+                                             .to_string()
+                                             .erase(0, RD53Constants::NBIT_MAXREG - numberOfBits);
+                            bool problems = (regValueMap[suffix] != mask);
+                            LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + suffix << (problems ? BOLDRED : BOLDBLUE) << " value = 0b" << BOLDYELLOW << value
                                       << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)" << RESET;
                         }
 
