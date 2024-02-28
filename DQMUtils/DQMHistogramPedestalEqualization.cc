@@ -171,8 +171,8 @@ void DQMHistogramPedestalEqualization::fillOccupancyPlots(DetectorDataContainer&
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
-                            chipOccupancyHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()), chip->getChannel<Occupancy>(row, col).fOccupancy);
-                            chipOccupancyHistogram->SetBinError(linearizeRowAndCols(row, col, chip->getNumberOfCols()), chip->getChannel<Occupancy>(row, col).fOccupancyError);
+                            chipOccupancyHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<Occupancy>(row, col).fOccupancy);
+                            chipOccupancyHistogram->SetBinError(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<Occupancy>(row, col).fOccupancyError);
                         }
                     }
                 }
@@ -203,7 +203,7 @@ void DQMHistogramPedestalEqualization::fillOffsetPlots(DetectorDataContainer& th
                     for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
-                        { chipOffsetHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()), chip->getChannel<uint8_t>(row, col)); }
+                        { chipOffsetHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<uint8_t>(row, col)); }
                     }
                 }
             }

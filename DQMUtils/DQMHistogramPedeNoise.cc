@@ -547,8 +547,8 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupa
                     {
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
-                            cChipValidationHistogram->SetBinContent(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()), theChipContainer->getChannel<Occupancy>(row, col).fOccupancy);
-                            cChipValidationHistogram->SetBinError(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()),
+                            cChipValidationHistogram->SetBinContent(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) +1, theChipContainer->getChannel<Occupancy>(row, col).fOccupancy);
+                            cChipValidationHistogram->SetBinError(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1,
                                                                   theChipContainer->getChannel<Occupancy>(row, col).fOccupancyError);
                         }
                     }
