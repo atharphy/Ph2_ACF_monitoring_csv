@@ -88,12 +88,6 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 ## =x= End of Inner-Tracker section =x=
 
 
-### Setup
-Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
-You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384).
-For more information on the firmware, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware
-
-
 ### Gitlab CI setup for Developers (required to submit merge requests)
 Enable shared Runners (if not enabled)
 - from `settings > CI/CD` expand the `Runners` section
@@ -152,10 +146,10 @@ sudo yum install -y devtoolset-10
 sudo yum install -y boost-devel pugixml-devel json-devel
 ```
 
-2. Install uHAL. SW tested with uHAL version up to 2.7.1
+3. Install uHAL. SW tested with uHAL version up to 2.7.1
 Follow instructions from `https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html`
 
-3. Install CERN ROOT
+4. Install CERN ROOT
 ```bash
 sudo yum install -y root
 sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
@@ -171,7 +165,7 @@ sudo yum install -y cmake3
 sudo yum install -y python3 python3-devel
 ```
 
-7. Install protobuf:
+7. Install protobuf
 Follow instructions from `https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md`
 
 8. Install pybind11 (if installed in the same directoory when you plan to install the `Ph2_ACF`, the setup.sh will point to the correct location)
@@ -182,18 +176,12 @@ tar zxvf v2.9.2.tar.gz
 
 
 ### Setup on CentOs8 (deprecated)
-The following procedure will install (in order):
-1. the `boost` and `pugixml` libraries
-2. the `cactus` libraries for `IPbus` (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
-3. `root` with all its needed libraries
-4. `cmake`, tools for clang, including `clang-format` and `git-extras`
-
-#### Libraries needed by Ph2_ACF
+1. Libraries needed by Ph2_ACF
 ```bash
 sudo yum install -y boost-devel pugixml-devel json-devel
 ```
 
-#### uHAL libraries (cactus)
+2. uHAL libraries (cactus)
 ```bash
 sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
   -o /etc/yum.repos.d/ipbus-sw.repo
@@ -202,35 +190,35 @@ sudo yum clean all
 sudo yum groupinstall uhal
 ```
 
-#### ROOT
+3. ROOT
 ```bash
 sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
   root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 ```
 
-#### Build tools and some nice git extras
+4. Build tools and some nice git extras
 ```bash
 sudo yum install -y cmake3
 sudo yum install -y clang-tools-extra
 sudo yum install -y git-extras
 ```
 
-#### Install devtoolset 10
+5. Install devtoolset 10
 ```bash
 sudo yum makecache --refresh
 sudo yum -y install gcc-toolset-10
 ```
 
-#### Install python3
+6. Install python3
 ```bash
 sudo yum install -y python3 python3-devel
 ```
 
-#### Install protobuf:
+7. Install protobuf
 Follow instructions to install protobuf from (Just install section is needed)
 https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
-### Install `pybind11`
+8. Install `pybind11`
 If installed in the same directoory when you plan to install the `Ph2_ACF`, the `setup.sh` will point to the correct location
 ```bash
 wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
@@ -264,8 +252,7 @@ sudo yum install -y boost-devel pugixml-devel json-devel
 ```
 
 #### Erlang (needed by uHAL)
-This installs `erlang` from a specific rpm. It would be nice if in the future, the correct version
-of `erlang` could be made available via the CERN repository
+This installs `erlang` from a specific rpm. It would be nice if in the future, the correct version of `erlang` could be made available via the CERN repository
 ```bash
 wget https://github.com/rabbitmq/erlang-rpm/releases/download/v25.1.2/erlang-25.1.2-1.el9.x86_64.rpm
 sudo yum -y install erlang-25.1.2-1.el9.x86_64.rpm
@@ -336,10 +323,10 @@ git config lfs.https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git/info/lfs.locksverif
 When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
 
 Register values are:
-  - 8-bit unsigend integers for the CBCs that should be edited in hex notation, i.e. `0xFF`
-  - 32-bit unsigned integers for the GLIB: decimal values
+- 8-bit unsigend integers for the CBCs that should be edited in hex notation, i.e. `0xFF`
+- 32-bit unsigned integers for the GLIB: decimal values
 
-For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefile and also activate the uHal log in RegManager.cc.
+For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefile and also activate the uHal log in `RegManager.cc`
 
 
 ### External clock and trigger
