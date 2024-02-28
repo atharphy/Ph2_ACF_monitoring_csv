@@ -85,7 +85,7 @@ class Container
     {
         if(idObjectMap_.find(id) == idObjectMap_.end())
         {
-            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: Object with Id " + std::to_string(id) + " not found";
+            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: Object with ID " + std::to_string(id) + " not found";
             throw Exception(std::move(errorMessage));
         }
         return idObjectMap_[id];
@@ -95,7 +95,7 @@ class Container
     {
         if(idObjectMap_.find(id) == idObjectMap_.end())
         {
-            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: Object with Id " + std::to_string(id) + " not found";
+            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: Object with ID " + std::to_string(id) + " not found";
             throw Exception(std::move(errorMessage));
         }
         return idObjectMap_.at(id);
@@ -105,7 +105,7 @@ class Container
     {
         if(this->size() == 0)
         {
-            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: no enabled element present for id " + std::to_string(getId());
+            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: no enabled element present for ID " + std::to_string(getId());
             throw Exception(std::move(errorMessage));
         }
         return idObjectMap_.begin()->second;
@@ -115,7 +115,7 @@ class Container
     {
         if(this->size() == 0)
         {
-            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: no enabled element present for id " + std::to_string(getId());
+            std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " Error: no enabled element present for ID " + std::to_string(getId());
             throw Exception(std::move(errorMessage));
         }
         return idObjectMap_.begin()->second;
@@ -149,7 +149,7 @@ class Container
         }
         delete object;
         object         = nullptr;
-        std::string ex = std::string(__PRETTY_FUNCTION__) + " : Object Id " + std::to_string(objectId) + " already present";
+        std::string ex = std::string(__PRETTY_FUNCTION__) + " : Object ID " + std::to_string(objectId) + " already present";
         throw Exception(ex.c_str());
         return object;
     }

@@ -218,9 +218,9 @@ void Tool::Stop()
         SystemController::Stop();
 
         Tool::dumpConfigFiles();
-        if(fMetadataHandler != nullptr) { fMetadataHandler->fillFinalConditions(); }
+        if(fMetadataHandler != nullptr) fMetadataHandler->fillFinalConditions();
 
-        if(fDQMStreamerEnabled)
+        if(fDQMStreamerEnabled == true)
         {
             std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
             PacketHeader thePacketHeader;
@@ -230,16 +230,7 @@ void Tool::Stop()
 
         Tool::SaveResults();
         Tool::WriteRootFile();
-        Tool::CloseResultFile();
     }
-}
-
-void Tool::SaveAndClose()
-{
-    Tool::dumpConfigFiles();
-    Tool::SaveResults();
-    Tool::WriteRootFile();
-    Tool::CloseResultFile();
 }
 
 void Tool::Inherit(const Tool* pTool)

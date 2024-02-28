@@ -1210,8 +1210,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             if(cIsTrackerASIC)
             {
                 if(cName.find(CHIP_FILES_APPEND_NODE_NAME) != std::string::npos)
-                { cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value())); }
-                else
+                    cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value()));
+                else if(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true)
                 {
                     int         cChipId   = cChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int();
                     std::string cFileName = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value()));
@@ -1535,7 +1535,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
        << "|"
        << "---- CBC controlled by I2CMaster " << +cCbc->getMasterId() << RESET << std::endl;
 
-    // parse the specific CBC settings so that Registers take precedence
+    // Parse the specific CBC settings so that Registers take precedence
     parseCbcSettings(pCbcNode, cCbc, os);
 
     for(pugi::xml_node cCbcRegisterNode = pCbcNode.child("Register"); cCbcRegisterNode; cCbcRegisterNode = cCbcRegisterNode.next_sibling())
@@ -1601,8 +1601,8 @@ void FileParser::parseGlobalCbcSettings(pugi::xml_node pHybridNode, Hybrid* pHyb
 
 void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, std::ostream& os)
 {
-    // parse the cbc settings here and put them in the corresponding registers of the Chip object
-    // call this for every CBC, Register nodes should take precedence over specific settings??
+    // Parse the cbc settings here and put them in the corresponding registers of the Chip object
+    // call this for every CBC, Register nodes should take precedence over specific settings?
     FrontEndType cType = pCbc->getFrontEndType();
     os << GREEN << "|\t|\t|\t|----FrontEndType: ";
     os << GREEN << "|\t|\t|\t|----FrontEndType: ";
@@ -1620,10 +1620,10 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
         bool     cSetLatency = (cThresholdNode.attribute("latency") != nullptr);
         uint16_t cLatency    = convertAnyInt(cThresholdNode.attribute("latency").value());
 
-        // the moment the cbc object is constructed, it knows which chip type it is
+        // The moment the cbc object is constructed, it knows which chip type it is
         if(cType == FrontEndType::CBC3)
         {
-            // for beam test ... remove for now
+            // For beam test ... remove for now
             pCbc->setReg("VCth1", (cThreshold & 0x00FF));
             pCbc->setReg("VCth2", (cThreshold & 0x0300) >> 8);
             if(cSetLatency)
@@ -1977,12 +1977,21 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
     pugi::xml_node theMonitorNode            = doc.child(HW_DESCRIPTION_NODE_NAME).child(MONITORINGSETTINGS_NODE_NAME).child(MONITORING_NODE_NAME);
     theDetectorMonitorConfig.fMonitoringType = theMonitorNode.attribute(MONITORING_NODE_TYPE_ATTRIBUTE_NAME).value();
     std::string enableString                 = theMonitorNode.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value();
+    std::string silenRunString               = (theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME) ? theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME).value() : "0");
+
     if(enableString == "1")
         theDetectorMonitorConfig.fEnable = true;
     else if(enableString == "0")
         theDetectorMonitorConfig.fEnable = false;
     else
         throw std::runtime_error("FileParser::parseMonitor: Error - monitor enable flag not recognized");
+
+    if(silenRunString == "1")
+        theDetectorMonitorConfig.fSilentRunning = true;
+    else if(silenRunString == "0")
+        theDetectorMonitorConfig.fSilentRunning = false;
+    else
+        throw std::runtime_error("FileParser::parseMonitor: Error - monitor silentRunning flag not recognized");
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child(MONITORINGSLEEPTIME_NODE_NAME).first_child().value());
 

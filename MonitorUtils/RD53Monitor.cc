@@ -39,7 +39,7 @@ void RD53Monitor::runMonitor()
         std::vector<std::string> listOfRegisters;
         for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53"))
             if(registerName.second) listOfRegisters.push_back(registerName.first);
-        fTheSystemController->ReadSystemMonitor(cBoard, listOfRegisters);
+        fTheSystemController->ReadSystemMonitor(cBoard, listOfRegisters, fDetectorMonitorConfig.fSilentRunning);
 
         for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53"))
             if(registerName.second) runRD53RegisterMonitor(registerName.first);
@@ -62,10 +62,12 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     float registerValue;
                     try
                     {
-                        registerValue = fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName);
+                        if(fDetectorMonitorConfig.fSilentRunning == false)
+                            LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                      << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
 
-                        LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                        registerValue =
+                            fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName, fDetectorMonitorConfig.fSilentRunning);
 
                         theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
                             ValueAndTime<float>(registerValue, getTimeStamp());
@@ -101,7 +103,8 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             float registerValue;
             try
             {
-                LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
+                if(fDetectorMonitorConfig.fSilentRunning == false)
+                    LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
                 auto* lpGBTInterface = fTheSystemController->flpGBTInterface;
 
                 if(lpGBTInterface->fADCInputMap.find(registerName) != lpGBTInterface->fADCInputMap.end())
@@ -137,7 +140,7 @@ void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::stri
 {
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        ContainerSerialization theContainerSerialization("RD53MonitorRegister");
+        ContainerSerialization theContainerSerialization("ITMonitorRegister");
         theContainerSerialization.streamByChipContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
     }
 }

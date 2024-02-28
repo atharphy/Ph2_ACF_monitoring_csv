@@ -190,7 +190,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     if(!stream)
     {
         LOG(WARNING) << BOLDRED << "Error: The LpGBT ADC calibraton file name " << BOLDYELLOW << ConfigFilePath << BOLDRED << " does not exist" << RESET;
-        LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path." << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path" << RESET;
         ConfigFilePath = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv");
         std::ifstream stream(ConfigFilePath);
         if(!stream)

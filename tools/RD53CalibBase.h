@@ -29,14 +29,7 @@ class CalibBase : public Tool
 {
   public:
     CalibBase() : showErrorReport(true) {}
-    ~CalibBase()
-    {
-#ifdef __USE_ROOT__
-        if(splitByHybrid == true) splitHistoFileByHybrid(this->fResultFile);
-#endif
-        this->CloseResultFile();
-    }
-
+    ~CalibBase() { CalibBase::Stop(); }
     void    chipErrorReport() const;
     void    copyMaskFromDefault(const std::string& which = "all") const;
     void    saveChipRegisters(bool doUpdateChip);
@@ -46,6 +39,7 @@ class CalibBase : public Tool
     void    prepareChipQueryForEnDis(const std::string& queryName);
     void    ResetBoardsReadBkFIFO();
 
+    void Stop() override;
     void ConfigureCalibration() override;
 
     virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1);

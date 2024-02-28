@@ -27,17 +27,17 @@
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" configFile="CBC3_default.txt" />
-            <CBC Id="1" configFile="CBC3_default.txt" />
-            <CBC Id="2" configFile="CBC3_default.txt" />
-            <CBC Id="3" configFile="CBC3_default.txt" />
-            <CBC Id="4" configFile="CBC3_default.txt" />
-            <CBC Id="5" configFile="CBC3_default.txt" />
-            <CBC Id="6" configFile="CBC3_default.txt" />
-            <CBC Id="7" configFile="CBC3_default.txt" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configFile="CIC2_default.txt" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_default.txt" />
         </Hybrid>
         <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
             <Global>
@@ -50,17 +50,17 @@
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" configFile="CBC3_default.txt" />
-            <CBC Id="1" configFile="CBC3_default.txt" />
-            <CBC Id="2" configFile="CBC3_default.txt" />
-            <CBC Id="3" configFile="CBC3_default.txt" />
-            <CBC Id="4" configFile="CBC3_default.txt" />
-            <CBC Id="5" configFile="CBC3_default.txt" />
-            <CBC Id="6" configFile="CBC3_default.txt" />
-            <CBC Id="7" configFile="CBC3_default.txt" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configFile="CIC2_default.txt" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_default.txt" />
         </Hybrid>
     </OpticalGroup>
 

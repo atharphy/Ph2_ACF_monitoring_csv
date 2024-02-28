@@ -141,19 +141,19 @@ class ReadoutChipInterface : public ChipInterface
     /*!
      * \brief Monitorign memeber functions
      */
-    virtual float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip)
+    virtual float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;
     }
 
-    virtual float ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip)
+    virtual float ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;
     }
 
-    virtual float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName)
+    virtual float ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName, bool silentRunning = false)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;

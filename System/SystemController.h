@@ -215,7 +215,7 @@ class SystemController
      * \param args
      * \return: none
      */
-    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const std::vector<std::string>& args) const;
+    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const std::vector<std::string>& args, bool silentRunning = false) const;
 
     /*!
      * \brief Read Data from pBoard

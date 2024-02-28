@@ -241,7 +241,7 @@ void RD53Interface::SendHybridCommands(const BeBoard* pBoard, const std::vector<
 // # Dedicated to monitoring #
 // ###########################
 
-float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName)
+float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName, bool silentRunning)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -265,14 +265,16 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
             type = "CENTER";
 
         value = measureTemperature(pChip, observable, type);
-        LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << observableName << BOLDBLUE << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " C"
-                  << std::setprecision(-1) << RESET;
+        if(silentRunning == false)
+            LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << observableName << BOLDBLUE << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
+                      << " C" << std::setprecision(-1) << RESET;
     }
     else
     {
         value = RD53Interface::measureVoltageCurrent(pChip, observable, isCurrentNotVoltage);
-        LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << observableName << BOLDBLUE << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
-                  << (isCurrentNotVoltage == true ? " uA" : " V") << std::setprecision(-1) << RESET;
+        if(silentRunning == false)
+            LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << observableName << BOLDBLUE << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
+                      << (isCurrentNotVoltage == true ? " uA" : " V") << std::setprecision(-1) << RESET;
     }
 
     return value;
@@ -318,16 +320,16 @@ float RD53Interface::measureVoltageCurrent(ReadoutChip* pChip, uint32_t data, bo
     return RD53Interface::convertADC2VorI(pChip, ADC, isCurrentNotVoltage);
 }
 
-float RD53Interface::ReadHybridTemperature(ReadoutChip* pChip)
+float RD53Interface::ReadHybridTemperature(ReadoutChip* pChip, bool silentRunning)
 {
     this->setBoard(pChip->getBeBoardId());
-    return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridTemperature(pChip->getHybridId());
+    return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridTemperature(pChip->getHybridId(), silentRunning);
 }
 
-float RD53Interface::ReadHybridVoltage(ReadoutChip* pChip)
+float RD53Interface::ReadHybridVoltage(ReadoutChip* pChip, bool silentRunning)
 {
     this->setBoard(pChip->getBeBoardId());
-    return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridVoltage(pChip->getHybridId());
+    return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridVoltage(pChip->getHybridId(), silentRunning);
 }
 
 } // namespace Ph2_HwInterface

@@ -55,7 +55,7 @@ void DataReadbackOptimization::Running()
     LOG(INFO) << GREEN << "[DataReadbackOptimization::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     DataReadbackOptimization::run();
-    CalibBase::saveChipRegisters(doUpdateChip);
+    DataReadbackOptimization::draw();
     DataReadbackOptimization::sendData();
 }
 
@@ -86,13 +86,7 @@ void DataReadbackOptimization::sendData()
 void DataReadbackOptimization::Stop()
 {
     LOG(INFO) << GREEN << "[DataReadbackOptimization::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    DataReadbackOptimization::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void DataReadbackOptimization::localConfigure(const std::string& histoFileName, int currentRun)
@@ -220,7 +214,7 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
                     // # Fill TAP container and download new DAC values #
                     // ##################################################
                     theTAPContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regVal);
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, regVal, false);
                 }
 }
 
