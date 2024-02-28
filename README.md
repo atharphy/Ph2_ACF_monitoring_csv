@@ -321,6 +321,16 @@ formatAll
 
 ##
 ### To pull the large files
+Install git lfs
+```bash
+sudo yum install git-lfs
+git lfs install
+```
+go to your main Ph2_ACF folder and run
+```bash
+git config lfs.https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git/info/lfs.locksverify true # or your username instead of cms_tk_ph2
+```
+
 For example `lpGBT` calibration data for a different source repository (e.g. `cmsinnertracker`)
 ```bash
 git remote add cms_tk_ph2 https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git
