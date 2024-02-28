@@ -85,7 +85,7 @@ void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContain
             {
                 for(const auto chip: *hybrid)
                 {
-                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
 
                     TH1F* topSensorHistogram = fTopSensorHistogramContainer.getObject(board->getId())
                                                    ->getObject(opticalGroup->getId())
@@ -127,7 +127,7 @@ void Physics2SHistograms::fillStub(const DetectorDataContainer& DataContainer)
             {
                 for(const auto chip: *hybrid)
                 {
-                    if(chip->getChannelContainer<float>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
 
                     TH2F* stubHistogram = fStubHistogramContainer.getObject(board->getId())
                                               ->getObject(opticalGroup->getId())

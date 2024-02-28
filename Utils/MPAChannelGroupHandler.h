@@ -7,7 +7,7 @@ class MPAChannelGroupHandler : public ChannelGroupHandler
 {
   public:
     MPAChannelGroupHandler();
-    MPAChannelGroupHandler(std::bitset<NSSACHANNELS * NMPACOLS>&& inputChannelsBitset);
+    MPAChannelGroupHandler(std::bitset<NSSACHANNELS * NMPAROWS>&& inputChannelsBitset);
     ~MPAChannelGroupHandler();
 };
 

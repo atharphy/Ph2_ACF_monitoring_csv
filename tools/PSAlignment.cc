@@ -218,11 +218,10 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                 if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                    uint32_t cGpix = static_cast<MPA*>(cChip)->PNglobal(std::pair<uint32_t, uint32_t>(cRow, cCol));
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 150);
-                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_P" + std::to_string(cGpix), 0x37);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_P" + std::to_string(cGpix), 0x01); // enable 1 pix
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_C" + std::to_string(cCol) + "_R" + std::to_string(cRow), 0x37);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_C" + std::to_string(cCol) + "_R" + std::to_string(cRow), 0x01); // enable 1 pix
                     fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelTrig", 0x0);
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA or cChip->getFrontEndType() == FrontEndType::SSA2)
@@ -381,10 +380,9 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 0x0);
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                    uint32_t cGpix = static_cast<MPA*>(cChip)->PNglobal(std::pair<uint32_t, uint32_t>(cRow, cCol));
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_P" + std::to_string(cGpix), 0x37);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_P" + std::to_string(cGpix), 0x01); // enable 1 pix
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_C" + std::to_string(cCol) + "_R" + std::to_string(cRow), 0x37);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_C" + std::to_string(cCol) + "_R" + std::to_string(cRow), 0x01); // enable 1 pix
                     fReadoutChipInterface->WriteChipReg(cChip, "DigPattern_ALL", 0xFF);
                 }
 

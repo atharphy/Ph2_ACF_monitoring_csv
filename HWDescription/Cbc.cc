@@ -28,7 +28,7 @@ Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string&
     fChipCode         = 1;
     fChipAddress      = 0x41 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NCHANNELS>>();
     fChipOriginalMask->enableAllChannels();
     configFileName = filename;
     loadfRegMap(filename);
@@ -42,7 +42,7 @@ Cbc::Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     fChipCode         = 1;
     fChipAddress      = 0x41 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NCHANNELS>>();
     fChipOriginalMask->enableAllChannels();
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CBC3);
@@ -104,7 +104,7 @@ void Cbc::loadfRegMap(const std::string& filename)
                         for(uint8_t channel = 0; channel < 8; ++channel)
                         {
                             uint8_t chn = 1 << channel;
-                            if((fRegItem.fValue && chn) == 0) { fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20) * 8 + channel); }
+                            if((fRegItem.fValue && chn) == 0) { fChipOriginalMask->disableChannel(0, (fRegItem.fAddress - 0x20) * 8 + channel); }
                         }
                     }
                 }

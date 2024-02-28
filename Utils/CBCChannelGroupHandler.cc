@@ -3,13 +3,13 @@
 
 CBCChannelGroupHandler::CBCChannelGroupHandler()
 {
-    allChannelGroup_     = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
-    currentChannelGroup_ = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    allChannelGroup_     = std::make_shared<ChannelGroup<1, NCHANNELS>>();
+    currentChannelGroup_ = std::make_shared<ChannelGroup<1, NCHANNELS>>();
 }
 
 CBCChannelGroupHandler::CBCChannelGroupHandler(std::bitset<NCHANNELS>&& inputChannelsBitset)
 {
-    allChannelGroup_     = std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(inputChannelsBitset));
-    currentChannelGroup_ = std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(inputChannelsBitset));
+    allChannelGroup_     = std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(inputChannelsBitset));
+    currentChannelGroup_ = std::make_shared<ChannelGroup<1, NCHANNELS>>(std::move(inputChannelsBitset));
 }
 CBCChannelGroupHandler::~CBCChannelGroupHandler() {}

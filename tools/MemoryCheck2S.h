@@ -205,7 +205,7 @@ class MemoryCheck2S : public Tool
     std::chrono::seconds::rep fStopTime;
 
     // masks
-    ChannelGroup<254, 1> fCBCMask;
+    ChannelGroup<1, NCHANNELS> fCBCMask;
 
     // Containers
     DetectorDataContainer fChipMasks;

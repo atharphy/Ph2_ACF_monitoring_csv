@@ -27,7 +27,7 @@ SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId
     fChipCode         = 3;
     fChipAddress      = 0x20 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NSSACHANNELS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId     = pPartnerId;
     configFileName = filename;
@@ -47,7 +47,7 @@ SSA::SSA(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     fChipCode         = 3;
     fChipAddress      = 0x20 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NSSACHANNELS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
@@ -104,7 +104,7 @@ void SSA::loadfRegMap(const std::string& filename)
                     if(fRegItem.fValue == 0x0)
                     {
                         // LOG(INFO) << "DISABLE " << fRegItem.fAddress - 0x0101<<std::endl;
-                        fChipOriginalMask->disableChannel(fRegItem.fAddress - 0x0101);
+                        fChipOriginalMask->disableChannel(0, fRegItem.fAddress - 0x0101);
                     }
                 }
                 fRegMap[fName] = fRegItem;

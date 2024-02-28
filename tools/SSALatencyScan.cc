@@ -96,7 +96,7 @@ void SSALatencyScan::run(void)
         uint32_t maxcount = 0;
 
         int Nchans = NSSACHANNELS;
-        if(cWithMPA) Nchans = NMPACHANNELS;
+        if(cWithMPA) Nchans = NMPAROWS * NSSACHANNELS;
 
         for(uint32_t lat = 0; lat <= 255; lat++)
         {

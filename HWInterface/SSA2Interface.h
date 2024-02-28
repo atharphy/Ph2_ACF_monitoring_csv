@@ -52,6 +52,8 @@ class SSA2Interface : public ReadoutChipInterface
     float    CalculateADCLSB(Ph2_HwDescription::Chip* pSSA2, float vrefExp = SSA2_VREF_EXPECTED);
     uint16_t MeasureGND(Ph2_HwDescription::Chip* pSSA2);
 
+    bool injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
+
   private:
     uint8_t ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                                                                      // FIXME
     bool    WriteChipRegBits(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false); // FIXME

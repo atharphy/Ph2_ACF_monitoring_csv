@@ -382,14 +382,10 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
         return;
     }
 
-    float cOcc = 0;
     for(auto cHit: cHits)
     {
-        if(testChannelGroup->isChannelEnabled(cHit))
-        {
-            chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
-            cOcc += cHit;
-        }
+        if(testChannelGroup->isChannelEnabled(0, cHit)) // This cannot work for PS since hits are not returned as expected
+        { chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
     }
 }
 
@@ -894,12 +890,12 @@ uint32_t D19cCic2Event::PipelineAddress(uint8_t pHybridId, uint8_t pReadoutChipI
         return cPipeline.to_ulong();
     }
 }
-std::bitset<NMPACHANNELS> D19cCic2Event::decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
+std::bitset<NMPAROWS * NSSACHANNELS> D19cCic2Event::decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto&                     cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
-    std::bitset<NMPACHANNELS> cBitSet(0);
-    size_t                    cClusterId = 0;
+    auto&                                cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
+    std::bitset<NMPAROWS * NSSACHANNELS> cBitSet(0);
+    size_t                               cClusterId = 0;
     for(auto cCluster: cClusterWords)
     {
         uint8_t cChipId       = (cCluster & ((0x7) << (0 + 4 + 3 + 7))) >> (0 + 4 + 3 + 7);

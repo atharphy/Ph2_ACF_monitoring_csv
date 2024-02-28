@@ -593,8 +593,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
         // module map dimenstions
         uint8_t  cMaxNChip      = 8;
         uint8_t  cMaxNHybrid    = 2;
-        uint16_t cNPixelColumns = (NMPACHANNELS / 16) * cMaxNChip;
-        uint16_t cNPixelRows    = NMPACOLS * cMaxNHybrid;
+        uint16_t cNPixelColumns = (NMPAROWS * NSSACHANNELS / 16) * cMaxNChip;
+        uint16_t cNPixelRows    = NMPAROWS * cMaxNHybrid;
         uint16_t cNStripColumns = NSSACHANNELS * cMaxNChip;
         uint16_t cNStripRows    = cMaxNHybrid;
         // Loop over optical groups
@@ -631,7 +631,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             cPixelData.resize(cPixelDataOffset + 6);
                             // LOG(INFO) << BOLDRED << "Pixel Data size : " << +cPixelData.size() << RESET;
                             // tranform pixel hit Address (row) according to hybrid to build pixel map
-                            uint16_t cHitPosition = cCluster.fAddress + cHitId + (NMPACHANNELS / 16) * (cChipId % 8);
+                            uint16_t cHitPosition = cCluster.fAddress + cHitId + (NMPAROWS * NSSACHANNELS / 16) * (cChipId % 8);
                             uint16_t cHitAddress  = (cHybridId % 2 == 0) ? (960 - cHitPosition) : (cHitPosition - 1);
                             // push pixel hit address (column) in 16bits word
                             cPixelData[cPixelDataOffset + 0] = (cHitAddress >> 0) & 0xFF;
