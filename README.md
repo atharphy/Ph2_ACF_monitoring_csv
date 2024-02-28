@@ -88,12 +88,6 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 ## =x= End of Inner-Tracker section =x=
 
 
-### Gitlab CI setup for Developers (required to submit merge requests)
-Enable shared Runners (if not enabled)
-- from `settings > CI/CD` expand the `Runners` section
-- click the `Allow shared Runners` button
-
-
 ### The Ph2_ACF software
 Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal,  mentioned above):
 
@@ -132,6 +126,12 @@ Suggested images are:
   -  For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
 
 Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
+
+
+### Gitlab CI setup for Developers (required to submit merge requests)
+Enable shared Runners (if not enabled)
+- from `settings > CI/CD` expand the `Runners` section
+- click the `Allow shared Runners` button
 
 
 ### Setup on CentOs7
