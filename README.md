@@ -86,28 +86,6 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
 
-The program `CMSITminiDAQ` is the portal for all calibrations and for data taking.
-Through `CMSITminiDAQ`, and with the right command line option, you can run the following scans/ calibrations/ operation mode:
-```
-1. Latency scan
-2. PixelAlive
-3. Noise scan
-4. SCurve and cross-talk scan
-5. Gain scan
-6. Threshold equalization
-7. Gain optimization
-8. Threshold minimization
-9. Threshold adjustment
-10. Injection delay scan
-11. Clock delay scan
-12. Bit Error Rate test
-13. Data read back optimisation
-14. Chip internal voltage tuning
-15. Generic DAC-DAC scan
-16. Physics
-```
-
-It might be useful to create one `CMSIT.xml` file for each "set" of calibrations, for instance `noise`, `gain`, and "the rest".
 ## =x= End of Inner-Tracker section =x=
 
 
@@ -117,7 +95,7 @@ You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.
 For more information on the firmware, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware
 
 
-### Gitlab CI setup for Developers (required to submit merge requests!!!)
+### Gitlab CI setup for Developers (required to submit merge requests)
 1. Enable shared Runners (if not enabled)
     i. from `settings > CI/CD` expand the `Runners` section
     ii. click the `Allow shared Runners` button
@@ -341,7 +319,7 @@ yum install centos-release-scl
 yum install llvm-toolset-7.0
 ```
 
-2. If you already sourced the environment, you should be able to run the command to format the `Ph2_ACF` (to be done before each merge request!):
+2. If you already sourced the environment, you should be able to run the command to format the `Ph2_ACF` (to be done before each merge request):
 ```bash
 formatAll
 ```
