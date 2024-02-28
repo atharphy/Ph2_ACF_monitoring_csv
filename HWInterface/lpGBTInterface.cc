@@ -1389,20 +1389,20 @@ bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
 
 void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32_t pChipId, std::string pFileName)
 {
-    // # Load fCalibration data from a local CSV file based for the specific chipid.
+    // # Load fCalibration data from a local CSV file based for the specific chipid
 
     // # Arguments:
-    // # pFileName: Path of CSV file containing fCalibration data.
-    // # pChipId: ChipID for which fCalibration data should be loaded.
+    // # pFileName: Path of CSV file containing fCalibration data
+    // # pChipId: ChipID for which fCalibration data should be loaded
 
     // # Raises:
-    // # LpgbtCalibrationWarning: If loading fCalibration data failed.
+    // # LpgbtCalibrationWarning: If loading fCalibration data failed
     // # FileNotFoundError: If the file does not exis
 
     LOG(INFO) << GREEN << "Loading Calibration data for LpGBT on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
               << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
-    bool cCalibrationLoaded = false;
 
+    bool                                  cCalibrationLoaded = false;
     std::ifstream                         file(pFileName.c_str(), std::ios::in);
     std::vector<std::vector<std::string>> content;
     std::vector<std::string>              row;
@@ -1410,6 +1410,7 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
     std::map<std::string, float>          theADCcalibrationMap;
     std::string                           line, word;
     uint32_t                              cRowCounter = 0;
+
     if(file.is_open())
     {
         while(getline(file, line))
@@ -1423,10 +1424,11 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
                     // Read field names
                     cHeaderRow.clear();
                     std::stringstream str(line);
-                    while(getline(str, word, ',')) { cHeaderRow.push_back(word); }
+                    while(getline(str, word, ',')) cHeaderRow.push_back(word);
                 }
                 continue;
             }
+
             row.clear();
             std::stringstream str(line);
 
@@ -1441,6 +1443,7 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
                     LOG(DEBUG) << BOLDBLUE << row[j] << RESET;
                     theADCcalibrationMap[cHeaderRow[j]] = std::stof(row[j]);
                 }
+
                 pChip->setADCCalibrationData(theADCcalibrationMap);
                 cCalibrationLoaded = true;
 
@@ -1448,18 +1451,20 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
             }
         }
 
-        if(!cCalibrationLoaded)
+        if(cCalibrationLoaded == false)
         {
             LOG(WARNING) << BOLDRED << "Calibration data not available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW
                          << +pChip->getOpticalGroupId() << BOLDRED << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
-            LOG(INFO) << BOLDBLUE << "\t--> Using default calibration data" << RESET;
+            LOG(WARNING) << BOLDBLUE << "\t--> Proceeding without LpGBT ADC calibrations" << RESET;
         }
     }
     else
     {
-        LOG(ERROR) << BOLDRED << "lpGBTInterface::LoadCalibrationData: " << pFileName << " could not be opened. Check file path!" << RESET;
+        LOG(WARNING) << BOLDYELLOW << pFileName << BOLDRED << " could not be opened. Please check file path" << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> Proceeding without LpGBT ADC calibrations" << RESET;
         throw std::runtime_error(std::string("FileNotFoundError"));
     }
+
     pChip->setIsCalibrationDataLoaded(cCalibrationLoaded);
     file.close();
 }
