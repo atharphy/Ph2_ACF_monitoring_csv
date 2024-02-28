@@ -251,7 +251,7 @@ class ChipContainer : public BaseContainer
         return static_cast<ChannelContainer<T>*>(container_)->end();
     }
 
-    void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols = 1)
+    void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols)
     {
         nOfRows_ = numberOfRows;
         nOfCols_ = numberOfCols;
@@ -264,13 +264,13 @@ class ChipContainer : public BaseContainer
     unsigned int getNumberOfCols() const { return nOfCols_; }
 
     template <class T>
-    T& getChannel(unsigned int row, unsigned int col = 0)
+    T& getChannel(unsigned int row, unsigned int col)
     {
         return static_cast<ChannelContainer<T>*>(container_)->getChannel(row + col * nOfRows_);
     }
 
     template <class T>
-    const T& getChannel(unsigned int row, unsigned int col = 0) const
+    const T& getChannel(unsigned int row, unsigned int col) const
     {
         return static_cast<ChannelContainer<T>*>(container_)->getChannel(row + col * nOfRows_);
     }
@@ -331,6 +331,8 @@ class ChipContainer : public BaseContainer
     }
 
     ChannelContainerBase* getChannelContainer() { return container_; }
+
+    bool hasChannelContainer() const { return (container_ != nullptr); }
 
   protected:
     unsigned int          nOfRows_;

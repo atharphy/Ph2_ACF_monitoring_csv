@@ -100,7 +100,7 @@ void ShortFinder::Initialise()
     // if(cWithMPA)
     // {
     //     MPAChannelGroupHandler theChannelGroupHandler;
-    //     theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+    //     theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
     //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
     //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
     // }
@@ -155,7 +155,7 @@ void ShortFinder::Initialise()
 void ShortFinder::Stop() { this->Reset(); }
 void ShortFinder::Count(BeBoard* pBoard, const std::shared_ptr<ChannelGroupBase> pGroup)
 {
-    auto  cBitset              = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(pGroup)->getBitset());
+    auto  cBitset              = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<1, NCHANNELS>>(pGroup)->getBitset());
     auto& cThisShortsContainer = fShortsContainer.getObject(pBoard->getId());
     auto& cThisHitsContainer   = fHitsContainer.getObject(pBoard->getId());
     auto& cShorts              = fShorts.getObject(pBoard->getId());
@@ -201,7 +201,7 @@ void ShortFinder::Count(BeBoard* pBoard, const std::shared_ptr<ChannelGroupBase>
 }
 
 // //Hacky, temporary
-// void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGroup)
+// void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<1, NSSACHANNELS>* pGroup)
 // {
 
 //     auto cBitset = std::bitset<NSSACHANNELS>( pGroup->getBitset() );
@@ -515,7 +515,7 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
     {
         setSameGlobalDac("TestPulseGroup", cTestGroup);
         // bitset for this group
-        auto cBitset = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(cGroup)->getBitset());
+        auto cBitset = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<1, NCHANNELS>>(cGroup)->getBitset());
         LOG(INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET;
         LOG(DEBUG) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
 
@@ -555,7 +555,7 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
                 }
             }
         }
-        this->Count(pBoard, std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cGroup));
+        this->Count(pBoard, std::static_pointer_cast<ChannelGroup<1, NCHANNELS>>(cGroup));
         cTestGroup++;
     }
 }

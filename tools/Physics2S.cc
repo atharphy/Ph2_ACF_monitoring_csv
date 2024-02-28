@@ -256,15 +256,15 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
                         if(ceil(stub.getCenter()) != stub.getCenter())
                         {
                             // std::cout<<__LINE__<<std::endl;
-                            if(size_t(ceil(stub.getCenter())) < 254u) cChip->getChannel<float>(size_t(ceil(stub.getCenter()))) += 0.5;
+                            if(size_t(ceil(stub.getCenter())) < 254u) cChip->getChannel<float>(0, size_t(ceil(stub.getCenter()))) += 0.5;
                             // std::cout<<__LINE__<<std::endl;
-                            if(size_t(floor(stub.getCenter())) < 254u) cChip->getChannel<float>(size_t(floor(stub.getCenter()))) += 0.5;
+                            if(size_t(floor(stub.getCenter())) < 254u) cChip->getChannel<float>(0, size_t(floor(stub.getCenter()))) += 0.5;
                             // std::cout<<__LINE__<<std::endl;
                         }
                         else
                         {
                             // std::cout<<__LINE__<<std::endl;
-                            if(stub.getCenter() < 254u) ++cChip->getChannel<float>(size_t(stub.getCenter()));
+                            if(stub.getCenter() < 254u) ++cChip->getChannel<float>(0, size_t(stub.getCenter()));
                             // std::cout<<__LINE__<<std::endl;
                         }
                         // std::cout<<__LINE__<<std::endl;

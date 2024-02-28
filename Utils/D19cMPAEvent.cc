@@ -33,7 +33,7 @@ void D19cMPAEvent::fillChipDataContainer(ChipDataContainer* chipContainer, const
     unsigned int i = 0;
     for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
-        if(testChannelGroup->isChannelEnabled(i))
+        if(testChannelGroup->isChannelEnabled(0, i)) // it was never implementes, will remove it from mail branch
         {
             // TOFIX
             channel->fOccupancy += 0.0;

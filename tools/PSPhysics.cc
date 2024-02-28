@@ -109,7 +109,7 @@ void PSPhysics::ConfigureCalibration()
     setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
 
     MPAChannelGroupHandler theMPAChannelGroupHandler;
-    theMPAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+    theMPAChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
     setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA);
     setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
 }
@@ -363,7 +363,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     {
                         for(uint8_t subStrip = 0; subStrip <= (stripCluster.fWidth); ++subStrip)
                         {
-                            if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(stripCluster.fAddress + subStrip);
+                            if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(0, stripCluster.fAddress + subStrip);
                         }
                     }
                     // std::cout<<__LINE__<<std::endl;
