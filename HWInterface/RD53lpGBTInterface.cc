@@ -116,7 +116,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     if(PUSMStatus != revertedPUSMStatusMap["READY"])
     {
         LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
-        // return false;
+        return false;
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
 
@@ -166,7 +166,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
                 }
                 catch(const std::exception& e)
                 {
-                    LOG(WARNING) << BOLDRED << "Error: " << BOLDYELLOW << e.what() << RESET;
+                    LOG(WARNING) << BOLDRED << "Warning: " << BOLDYELLOW << e.what() << RESET;
                 }
         }
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
@@ -189,15 +189,9 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     std::ifstream stream(ConfigFilePath);
     if(!stream)
     {
-        LOG(WARNING) << BOLDRED << "Error: The LpGBT ADC calibraton file name " << BOLDYELLOW << ConfigFilePath << BOLDRED << " does not exist" << RESET;
-        LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path" << RESET;
+        LOG(WARNING) << BOLDRED << "The LpGBT ADC calibraton file name " << BOLDYELLOW << ConfigFilePath << BOLDRED << " does not exist" << RESET;
         ConfigFilePath = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv");
-        std::ifstream stream(ConfigFilePath);
-        if(!stream)
-        {
-            LOG(WARNING) << BOLDRED << "Error: The hardcoded file name " << BOLDYELLOW << ConfigFilePath << BOLDRED << " does not exist" << RESET;
-            LOG(WARNING) << BOLDBLUE << "\t--> Proceeding withoug LpGBT ADC calibrations" << RESET;
-        }
+        LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path: " << BOLDYELLOW << ConfigFilePath << RESET;
     }
 
     lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), pChip->getId(), ConfigFilePath);
