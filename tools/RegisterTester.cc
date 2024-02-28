@@ -1183,7 +1183,7 @@ void RegisterTester::ReconfigureRegisters(std::string pDirectoryName)
                     std::string pRegFile;
 
                     if(pDirectoryName.empty())
-                        pRegFile = "settings/CbcFiles/Cbc_default_electron.txt";
+                        pRegFile = "settings/CbcFiles/CBC3_default.txt";
                     else
                     {
                         char buffer[120];

@@ -39,7 +39,7 @@
             <MPA Id="8" enable="1" configFile="MPA.txt" />
 
 	    <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" enable="1" configFile="CIC_default.txt" />
+            <CIC Id="8" enable="1" configFile="CIC2_PS.txt" />
         </Hybrid>
 
 	<Hybrid Id="1" enable="0" reset="1">
@@ -82,7 +82,7 @@
             <MPA Id="15" enable="1" configFile="MPA.txt" /> 
 
 	    <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" enable="1" configFile="CIC_default.txt" />
+            <CIC Id="8" enable="1" configFile="CIC2_PS.txt" />
         </Hybrid>
 
     </OpticalGroup>
