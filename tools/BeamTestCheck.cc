@@ -1845,7 +1845,7 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
 
     // prepare container to hold stub information per OG
     DetectorDataContainer cStubContainer;
-    ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, cStubContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t, VECSIZE>>(*fDetectorContainer, cStubContainer);
 
     // check if stub alignment has already been run
     bool cAlignmentRun = true;
