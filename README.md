@@ -341,22 +341,6 @@ git lfs pull cms_tk_ph2
 
 
 ##
-### Nota Bene
-When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
-
-Register values are:
-- 8-bit unsigend integers for the CBCs that should be edited in hex notation, i.e. `0xFF`
-- 32-bit unsigned integers for the GLIB: decimal values
-
-For debugging purpose, you can activate `DEV_FLAG` in the sources or in the Makefile and also activate the uHal log in `RegManager.cc`
-
-
-##
-### External clock and trigger
-Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/Middleware_Short_Guide.md) for instructions on how to use external clock and trigger with the various FMCs (DIO5 and CBC3 FMC)
-
-
-##
 ### Known issues
 uHAL exceptions and UDP timeouts when reading larger packet sizes from the GLIB board: this can happen for some users (cause not yet identified) but can be circumvented by changing the line
 
