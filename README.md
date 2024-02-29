@@ -134,8 +134,8 @@ Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (
 ##
 ### Gitlab CI setup for Developers (required to submit merge requests)
 Enable shared Runners (if not enabled)
-- from `settings > CI/CD` expand the `Runners` section
-- click the `Allow shared Runners` button
+- From `settings > CI/CD` expand the `Runners` section
+- Click the `Allow shared Runners` button
 
 
 ##
@@ -182,7 +182,7 @@ tar zxvf v2.9.2.tar.gz
 
 ##
 ### Setup on CentOs8 (deprecated)
-1. Libraries needed by Ph2_ACF
+1. Libraries needed by `Ph2_ACF`
 ```bash
 sudo yum install -y boost-devel pugixml-devel json-devel
 ```
