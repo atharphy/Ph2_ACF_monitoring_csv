@@ -79,6 +79,8 @@ class LinkAlignmentOT : public OTTool
     bool WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool AlignStubPackage(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool AlignStubPackage(Ph2_HwDescription::BeBoard* pBoard);
+    bool AlignStubPackageSarah(Ph2_HwDescription::BeBoard* pBoard);
+    void AlignStubPackageLea(Ph2_HwDescription::BeBoard* pBoard);
     bool Align();
 };
 #endif

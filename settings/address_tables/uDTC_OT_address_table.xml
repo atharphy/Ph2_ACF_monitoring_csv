@@ -170,6 +170,23 @@
                 <node id="stubs"          address="0x046">
                     <node id="stub_package_delay"               mask="0x00000007"/> 
                 </node>
+                <!-- 3 bits per link. Link 0 LSB and so on -->
+                <node id="stubs_package_delay_link0_link9"          address="0x046">
+                    <node id="link0"         mask="0x00000007"/> 
+                    <node id="link1"         mask="0x00000038"/> 
+                    <node id="link2"         mask="0x000001c0"/> 
+                    <node id="link3"         mask="0x00000e00"/> 
+                    <node id="link4"         mask="0x00007000"/> 
+                    <node id="link5"         mask="0x00038000"/> 
+                    <node id="link6"         mask="0x001c0000"/> 
+                    <node id="link7"         mask="0x00e00000"/> 
+                    <node id="link8"         mask="0x07000000"/>
+                    <node id="link9"         mask="0x38000000"/> 
+                </node>
+                <node id="stubs_package_delay_link10_link11"          address="0x047">
+                    <node id="link10"         mask="0x00000007"/> 
+                    <node id="link11"         mask="0x00000038"/> 
+                </node>
             </node>
 
             <node id="readout_block"                address="0x5000">
@@ -184,6 +201,11 @@
                     <node id="zero_suppression_enable"          mask="0x00000200"/>
                 </node>
                 <node id="timeout"                          address="0x002" mask="0x0000fff"/> 
+                <!-- 9 bits per link. Link 0, 3, 6 and 9 LSB -->
+                <node id="stub_latency_link0_link2"         address="0x003" mask="0x07ffffff"/> 
+                <node id="stub_latency_link3_link5"         address="0x004" mask="0x07ffffff"/> 
+                <node id="stub_latency_link6_link8"         address="0x005" mask="0x07ffffff"/> 
+                <node id="stub_latency_link9_link11"        address="0x006" mask="0x07ffffff"/> 
             </node>
 
             <node id="dio5_block"                   address="0x6000">

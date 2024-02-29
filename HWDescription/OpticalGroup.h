@@ -60,6 +60,13 @@ class OpticalGroup
     lpGBT* flpGBT    = nullptr;
     bool   fIsLocked = false;
 
+    std::pair<uint8_t, uint16_t> getStubCnfg() { return std::make_pair(fStubPackageDelay, fStubLatency); }
+    void                         setStubCnfg(std::pair<uint8_t, uint16_t> pCnfg)
+    {
+        fStubPackageDelay = pCnfg.first;
+        fStubLatency      = pCnfg.second;
+    }
+
     void addNTC(std::string cNTCType, std::string cNTCADC, std::string cNTCLookUpTable) { fNTCMap.insert(std::make_pair(cNTCType, std::make_pair(cNTCADC, cNTCLookUpTable))); }
 
     std::map<std::string, std::pair<std::string, std::string>> getNTCMap() const { return fNTCMap; }
@@ -70,6 +77,8 @@ class OpticalGroup
     std::map<std::pair<uint8_t, uint8_t>, std::string> getLpGBTrxGroupsAndChannelsPerHybrid() const;
 
   protected:
+    uint8_t  fStubPackageDelay{0};
+    uint16_t fStubLatency{0};
   private:
 };
 } // namespace Ph2_HwDescription
