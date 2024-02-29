@@ -348,7 +348,7 @@ Register values are:
 - 8-bit unsigend integers for the CBCs that should be edited in hex notation, i.e. `0xFF`
 - 32-bit unsigned integers for the GLIB: decimal values
 
-For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefile and also activate the uHal log in `RegManager.cc`
+For debugging purpose, you can activate `DEV_FLAG` in the sources or in the Makefile and also activate the uHal log in `RegManager.cc`
 
 
 ##
