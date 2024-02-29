@@ -87,9 +87,9 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
 ### =x= End of Inner-Tracker section =x=
+
+
 ##
-
-
 ### The Ph2_ACF software
 Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal, etc...):
 
@@ -321,12 +321,12 @@ formatAll
 
 ##
 ### To pull the large files
-Install git lfs
+Install `git lfs`
 ```bash
 sudo yum install git-lfs
 git lfs install
 ```
-go to your main Ph2_ACF folder and run
+Go to your main `Ph2_ACF` folder and run
 ```bash
 git config lfs.https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git/info/lfs.locksverify true # or your username instead of cms_tk_ph2
 ```
