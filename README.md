@@ -90,7 +90,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 
 
 ##
-### The Ph2_ACF software
+### The `Ph2_ACF` software
 Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal, etc...):
 
 1. Clone the GitHub repo and run cmake
@@ -154,7 +154,7 @@ sudo yum install -y boost-devel pugixml-devel json-devel
 3. Install uHAL. SW tested with uHAL version up to 2.7.1
 Follow instructions from `https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html`
 
-4. Install CERN ROOT
+4. Install ROOT
 ```bash
 sudo yum install -y root
 sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
