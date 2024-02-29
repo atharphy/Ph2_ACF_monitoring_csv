@@ -365,6 +365,38 @@
                 <node id="stub_debug"                    mask="0x00000010"/>
             </node>
             <node id="phase_tuning_ctrl"            address="0x015" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link0_hybrid0"        address="0x020" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link0_hybrid1"        address="0x021" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link1_hybrid0"        address="0x022" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link1_hybrid1"        address="0x023" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link2_hybrid0"        address="0x024" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link2_hybrid1"        address="0x025" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link3_hybrid0"        address="0x026" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link3_hybrid1"        address="0x027" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link4_hybrid0"        address="0x028" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link4_hybrid1"        address="0x029" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link5_hybrid0"        address="0x02a" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link5_hybrid1"        address="0x02b" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link6_hybrid0"        address="0x02c" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link6_hybrid1"        address="0x02d" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link7_hybrid0"        address="0x02e" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link7_hybrid1"        address="0x02f" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link8_hybrid0"        address="0x030" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link8_hybrid1"        address="0x031" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link9_hybrid0"        address="0x032" mask="0xFFFFFFFF"/>
+            <node id="bitslip_Link9_hybrid1"        address="0x033" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkA_hybrid0"        address="0x034" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkA_hybrid1"        address="0x035" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkB_hybrid0"        address="0x036" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkB_hybrid1"        address="0x037" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkC_hybrid0"        address="0x038" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkC_hybrid1"        address="0x039" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkD_hybrid0"        address="0x03a" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkD_hybrid1"        address="0x03b" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkE_hybrid0"        address="0x03c" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkE_hybrid1"        address="0x03d" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkF_hybrid0"        address="0x03e" mask="0xFFFFFFFF"/>
+            <node id="bitslip_LinkF_hybrid1"        address="0x03f" mask="0xFFFFFFFF"/>
             <node id="cic_decoder"                  address="0x017">
                 <node id="start_bx0_alignment"              mask="0x00000001"/>
                 <node id="backend_alignment_pattern_disable"              mask="0x00000002"/>
