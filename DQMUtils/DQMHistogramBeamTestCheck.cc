@@ -829,7 +829,6 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                 TH2F* cHitMapS1 = fHitMapS1Histograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 LOG(INFO) << BOLDYELLOW << "Hit map [S0] has " << cHitMapS0->GetXaxis()->GetNbins() << " in X  and " << cHitMapS0->GetYaxis()->GetNbins() << " in Y." << RESET;
                 LOG(INFO) << BOLDYELLOW << "Hit map [S1] has " << cHitMapS1->GetXaxis()->GetNbins() << " in X  and " << cHitMapS1->GetYaxis()->GetNbins() << " in Y." << RESET;
-                float cLocalY = (hybrid->getId() % 2 == 0) ? 0 : 1;
                 // stub map
                 TH2F* cStubMapS0 = fStubMapS0Histograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 TH2F* cStubMapS1 = fStubMapS1Histograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
@@ -838,96 +837,136 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                 for(auto chip: *hybrid)
                 {
                     uint16_t cDivider = (chip->size() == NCHANNELS) ? 2 : 1;
-                    // uint16_t cOffset      = (hybrid->getId() % 2 == 0) ? (7 - chip->getId()%8) * chip->size() / cDivider : (chip->getId()%8) * chip->size() / cDivider;
-                    uint16_t cChnlIndx    = 0;
                     auto&    cChipStubOCc = theStubMap.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
-                    for(auto channel: *cChipStubOCc->getChannelContainer<Occupancy>())
+                    if(cChipStubOCc->hasChannelContainer() == false) continue;
+                    for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
-                        // this is only valid for MPA
-                        if(chip->size() != NMPAROWS * NSSACHANNELS && chip->size() != NCHANNELS) continue;
-                        // sensor id
-                        uint8_t  cSensorId  = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPAROWS * NSSACHANNELS);
-                        uint32_t cNChannels = (cSensorId == 0) ? cStubMapS0->GetXaxis()->GetNbins() / 8. : cStubMapS1->GetXaxis()->GetNbins() / 8.;
-                        // rows and columns
-                        uint32_t cNRows = (chip->size() == NCHANNELS) ? NCHANNELS / cDivider : NSSACHANNELS;
-                        uint32_t cNCols = (chip->size() == NMPAROWS * NSSACHANNELS) ? NMPAROWS : 1;
-                        uint32_t cRow   = (chip->size() == NCHANNELS) ? cChnlIndx / cDivider : cChnlIndx % cNRows;
-                        uint32_t cCol   = (cNCols == 1) ? 0 : cChnlIndx / cNRows;
-                        // local x , local y
-                        uint16_t cXOffset = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels : (chip->getId() % 8) * cNChannels;
-                        uint16_t cLocalX  = cXOffset + cRow;
-                        if(hybrid->getId() % 2 == 0) cLocalX = cXOffset + (cNChannels - cRow);
-                        cLocalY = (hybrid->getId() % 2 == 0) ? 0 + cCol * 1. / cNCols : 1 + (cNCols - (1 + cCol)) * 1. / cNCols;
-
-                        auto cBin = (cSensorId == 0) ? cStubMapS0->FindBin((float)cLocalX, (float)cLocalY) : cStubMapS1->FindBin((float)cLocalX, (float)cLocalY);
-                        if(channel.fOccupancy > 0)
-                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Channel " << +cChnlIndx << " Row " << +cRow
-                                       << " Column " << +cCol << " Offset is " << cXOffset << " Local x coordinate " << +cLocalX << " Local y coordinate " << cLocalY << " bin# " << cBin << " Channel "
-                                       << cChnlIndx << " offset is " << cXOffset << " - have found " << channel.fOccupancy << " hits " << RESET;
-
-                        // uint16_t cStripOffset = cOffset;
-                        // uint16_t cStripId     = cOffset + cChnlIndx / cDivider;
-                        // // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
-                        // if(hybrid->getId() % 2 == 0) cStripId = cOffset + (chip->size() - cChnlIndx) / cDivider;
-                        // auto    cBin      = cStubMapS0->FindBin((float)cStripId, (float)cLocalY);
-                        // if(channel.fOccupancy > 0)
-                        //     LOG(DEBUG) << BOLDBLUE << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
-                        //                << cBin << " Channel " << cChnlIndx << " offset is " << cStripOffset << " - have found " << channel.fOccupancy << " stubs " << RESET;
-
-                        if(cSensorId == 0)
+                        for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
-                            cStubMapS0->SetBinContent(cBin, channel.fOccupancy);
-                            cStubMapS0->SetBinError(cBin, channel.fOccupancyError);
-                        }
-                        else
-                        {
-                            cStubMapS1->SetBinContent(cBin, channel.fOccupancy);
-                            cStubMapS1->SetBinError(cBin, channel.fOccupancyError);
-                        }
-                        cChnlIndx++;
-                    } // chanenls
+                            bool isCBC = false;
+                            if(chip->size() == NCHANNELS) isCBC = true;
+                            bool isSSA = false;
+                            if(!isCBC && chip->getId()<8 ) isSSA = true;
+                            uint8_t  cSensorId = (chip->size() == NCHANNELS) ? (col % 2 != 0) : (chip->size() != NMPAROWS * NSSACHANNELS);
+                            uint32_t cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / (float)NCHIPS_OT : cHitMapS1->GetXaxis()->GetNbins() / (float)NCHIPS_OT;                            
+                            uint16_t cLocalX;
+                            float cLocalY =0;
+                            if(isCBC)
+                            {
+                                uint16_t cCol = col/cDivider;  
+                                if(hybrid->getId() %2 == 0)
+                                {
+                                    cLocalX = (NCHANNELS/2 - cCol) + (NCHIPS_OT - chip->getId() -1)*NCHANNELS/2;
+                                }
+                                else
+                                {
+                                    cLocalX = cCol +  chip->getId()*NCHANNELS/2;
+                                } 
+                            }
+                            else
+                            {
+                                cLocalY = (hybrid->getId() % 2 ==0) ? row+1 : 2*NMPAROWS - (row+1);
+                                cLocalY = cLocalY/ (float)NMPAROWS;
+                                if(isSSA) cLocalY = (hybrid->getId() % 2 ==0) ? 0 : 1;
+                                if(hybrid->getId() %2 == 0)
+                                {
+                                    if(isSSA) cLocalX = (NSSACHANNELS - col) + ( NCHIPS_OT - chip->getId() -1)*NSSACHANNELS;
+                                    else cLocalX = (NSSACHANNELS - col) + ( NCHIPS_OT*2 - chip->getId() -1)*NSSACHANNELS;
+                                }
+                                else
+                                {
+                                    if(isSSA) cLocalX = col +  chip->getId()*NSSACHANNELS;
+                                    else cLocalX = col + ( chip->getId()-NCHIPS_OT)*NSSACHANNELS;
 
-                    cChnlIndx         = 0;
+                                }
+                            }
+                            auto cBin  = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
+                            if(cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy > 0 )
+                            {
+                                LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " [" << cNChannels << " channels]"
+                                       << " Row " << +row << " Column " << +col  << " Local x coordinate " << cLocalX << " Local y coordinate "
+                                       << cLocalY << " bin# " << cBin << " - have found " << cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy << " hits " << RESET;
+                            }
+                            if(cSensorId == 0)
+                            {
+                                cStubMapS0->SetBinContent(cBin, cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy);
+                                cStubMapS0->SetBinError(cBin, cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancyError);
+                            }
+                            else
+                            {
+                                cStubMapS1->SetBinContent(cBin, cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy);
+                                cStubMapS1->SetBinError(cBin, cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancyError);
+                            }
+                        }// col        
+                    }// row
+
                     auto& cChipHitOCc = theHitMap.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
-                    for(auto channel: *cChipHitOCc->getChannelContainer<Occupancy>())
+                    if(cChipHitOCc->hasChannelContainer() == false) continue;
+                    for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
-                        // sensor id
-                        uint8_t cSensorId = (chip->size() == NCHANNELS) ? (cChnlIndx % 2 != 0) : (chip->size() != NMPAROWS * NSSACHANNELS);
-                        // offset for plotting
-                        uint32_t cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / 8. : cHitMapS1->GetXaxis()->GetNbins() / 8.;
-                        // rows and columns
-                        uint32_t cNRows = (chip->size() == NCHANNELS) ? NCHANNELS / cDivider : NSSACHANNELS;
-                        uint32_t cNCols = (chip->size() == NMPAROWS * NSSACHANNELS) ? NMPAROWS : 1;
-                        uint32_t cRow   = (chip->size() == NCHANNELS) ? cChnlIndx / cDivider : cChnlIndx % cNRows;
-                        uint32_t cCol   = (cNCols == 1) ? 0 : cChnlIndx / cNRows;
-                        // local x , local y
-                        uint16_t cXOffset = (hybrid->getId() % 2 == 0) ? (7 - chip->getId() % 8) * cNChannels : (chip->getId() % 8) * cNChannels;
-                        uint16_t cLocalX  = cXOffset + cRow;
-                        if(hybrid->getId() % 2 == 0) cLocalX = cXOffset + (cNChannels - cRow);
-                        if(cSensorId == 0 && chip->size() != NCHANNELS)
-                            cLocalY = (hybrid->getId() % 2 == 0) ? 0 + cCol * 1. / cNCols : 1 + (cNCols - (1 + cCol)) * 1. / cNCols;
-                        else
-                            cLocalY = (hybrid->getId() % 2 == 0) ? 0 : 1;
+                        for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
+                        {
+                            bool isCBC = false;
+                            if(chip->size() == NCHANNELS) isCBC = true;
+                            bool isSSA = false;
+                            if(!isCBC && chip->getId()<8 ) isSSA = true;
+                            uint8_t  cSensorId = (chip->size() == NCHANNELS) ? (col % 2 != 0) : (chip->size() != NMPAROWS * NSSACHANNELS);
+                            uint32_t cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / (float)NCHIPS_OT : cHitMapS1->GetXaxis()->GetNbins() / (float)NCHIPS_OT;
+                            
+                            uint16_t cLocalX;
+                            float cLocalY;
+                            if(isCBC)
+                            {
+                                uint16_t cCol = col/cDivider;
+                                if(hybrid->getId() %2 == 0)
+                                {
+                                    cLocalX = (NCHANNELS/2 - cCol) + (NCHIPS_OT - chip->getId() -1)*NCHANNELS/2;
+                                }
+                                else
+                                {
+                                    cLocalX = cCol +  chip->getId()*NCHANNELS/2;
+                                }  
 
-                        // on the RHS hybrid IDs are 7,6,5,4,3,2,1,0 [from 0,0 if 0,0 is the connection between the SEH and the RHS]
-                        auto cBinX = (cSensorId == 0) ? cHitMapS0->GetXaxis()->FindBin(cLocalX) : cHitMapS1->GetXaxis()->FindBin(cLocalX);
-                        auto cBin  = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
-                        if(channel.fOccupancy > 0 && hybrid->getId() % 2 == 1)
-                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " [" << cNChannels << " channels]"
-                                       << " Row " << +cRow << " Column " << +cCol << " BinX " << cBinX << " Offset is " << cXOffset << " Local x coordinate " << +cLocalX << " Local y coordinate "
-                                       << cLocalY << " bin# " << cBin << " Channel " << cChnlIndx << " offset is " << cXOffset << " - have found " << channel.fOccupancy << " hits " << RESET;
-                        if(cSensorId == 0)
-                        {
-                            cHitMapS0->SetBinContent(cBin, channel.fOccupancy);
-                            cHitMapS0->SetBinError(cBin, channel.fOccupancyError);
-                        }
-                        else
-                        {
-                            cHitMapS1->SetBinContent(cBin, channel.fOccupancy);
-                            cHitMapS1->SetBinError(cBin, channel.fOccupancyError);
-                        }
-                        cChnlIndx++;
-                    } // chanenls
+                                cLocalY = (hybrid->getId() % 2 == 0) ? 0 : 1;
+                            }
+                            else
+                            {
+                                cLocalY = (hybrid->getId() % 2 ==0) ? row+1 : 2*NMPAROWS - (row+1);
+                                cLocalY = cLocalY/ (float)NMPAROWS;
+                                if(isSSA) cLocalY = (hybrid->getId() % 2 ==0) ? 0 : 1;
+                                if(hybrid->getId() %2 == 0)
+                                {
+                                    if(isSSA) cLocalX = (NSSACHANNELS - col) + ( NCHIPS_OT - chip->getId() -1)*NSSACHANNELS;
+                                    else cLocalX = (NSSACHANNELS - col) + ( NCHIPS_OT*2 - chip->getId() -1)*NSSACHANNELS;
+                                }
+                                else
+                                {
+                                    if(isSSA) cLocalX = col +  chip->getId()*NSSACHANNELS;
+                                    else cLocalX = col + ( chip->getId()-NCHIPS_OT)*NSSACHANNELS;
+
+                                }
+                            }
+                            auto cBin  = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
+                            if(cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy > 0 )
+                            {
+                                LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " [" << cNChannels << " channels]"
+                                       << " Row " << +row << " Column " << +col  << " Local x coordinate " << cLocalX << " Local y coordinate "
+                                       << cLocalY << " bin# " << cBin << " - have found " << cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy << " hits " << RESET;
+                            }
+                            if(cSensorId == 0)
+                            {
+                                cHitMapS0->SetBinContent(cBin, cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy);
+                                cHitMapS0->SetBinError(cBin, cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancyError);
+                            }
+                            else
+                            {
+                                cHitMapS1->SetBinContent(cBin, cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy);
+                                cHitMapS1->SetBinError(cBin, cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancyError);
+                            }
+                        }// col        
+                    }// row    
+
+
 
                     // TDC hit map
                     TH2F* cLatencyTDC = fLatencyTDCHistograms.getObject(board->getId())
