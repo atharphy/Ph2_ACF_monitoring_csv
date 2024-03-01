@@ -783,13 +783,6 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
 }
 
 float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type, int beta)
-// #####################
-// # type == "POLY"    #
-// # type == "ANA"     #
-// # type == "DIG"     #
-// # type == "CENTER"  #
-// # type == "INT_NTC" #
-// #####################
 {
     // ################################################################################################
     // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #
@@ -811,11 +804,11 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     const float       e         = 1.6021766208e-19;
     const float       R         = 15;   // By circuit design
     const uint8_t     sensorDEM = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
-    const std::string regName   = (type == "CENTER" ? "MON_SENS_ACB" : "MON_SENS_SLDO");
+    const std::string regName   = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
 
     float idealityFactor;
-    if(type == "ANA") { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_ANA").fValue / 1e3; }
-    else if(type == "DIG")
+    if(type.find("ANA") != std::string::npos) { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_ANA").fValue / 1e3; }
+    else if(type.find("DIG") != std::string::npos)
     {
         idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_DIG").fValue / 1e3;
     }
@@ -828,12 +821,13 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     float    valueLow  = 0;
     float    valueHigh = 0;
 
-    if(type == "INT_NTC")
+    if(type.find("INTERNAL_NTC") != std::string::npos) // also matches "INTERNAL_NTC_VOLT"
     {
         bool     isCurrentNotVoltage;
         uint32_t observable = RD53BInterface::getADCobservable("INTERNAL_NTC_VOLT", isCurrentNotVoltage);
         float    voltage    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable));
-        float    current    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data), true);
+                 observable = RD53BInterface::getADCobservable("INTERNAL_NTC", isCurrentNotVoltage);
+        float    current    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable), true);
 
         // ###############################################
         // # Calculate temperature with NTC Beta formula #
@@ -843,15 +837,15 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
 
         return temperature;
     }
-    else if(type != "POLY")
+    else if(type.find("POLY") == std::string::npos)
     {
         // Get high bias voltage
-        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type == "DIG" ? 6 : 0);
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type.find("DIG") != std::string::npos ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
         valueLow = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
 
         // Get low bias voltage
-        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type == "DIG" ? 6 : 0);
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type.find("DIG") != std::string::npos ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
     }
     valueHigh = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
