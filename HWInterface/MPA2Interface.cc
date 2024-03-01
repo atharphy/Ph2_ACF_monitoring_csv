@@ -64,11 +64,11 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     }
     else if(pRegNode == "TriggerLatency")
     {
-        return ((ReadChipReg(pMPA2, "MemoryControl_2_ALL") & (0x1)) << 8) | ReadChipReg(pMPA2, "MemoryControl_1_ALL");
+        return ((ReadChipReg(pMPA2, "MemoryControl_2_R0") & (0x1)) << 8) | ReadChipReg(pMPA2, "MemoryControl_1_R0");
     }
     else if(pRegNode == "PixelControl_ALL" || pRegNode == "PixelControl")
     {
-        return ReadChipReg(pMPA2, "PixelControl_ALL");
+        return ReadChipReg(pMPA2, "PixelControl_R0");
     }
     else if(pRegNode == "ENFLAGS_ALL")
     {
