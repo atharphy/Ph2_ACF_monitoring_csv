@@ -70,7 +70,7 @@ class Tool : public Ph2_System::SystemController
     void resetPointers();
     void Destroy();
     void SoftDestroy();
-
+    void readRegs();
 #ifdef __USE_ROOT__
     /*!
      * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)

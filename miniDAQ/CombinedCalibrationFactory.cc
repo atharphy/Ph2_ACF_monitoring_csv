@@ -103,6 +103,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTCMNoise,
              OTTemperature>("Outer Tracker", "cmNoise");
 
+    Register<PedestalEqualization,
+             PedeNoise>("Outer Tracker", "calibrationandpedenoiseonly");
+
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, CBCPulseShape>("2S Module",
                                                                                                                                                                                "cbcpulseshape");

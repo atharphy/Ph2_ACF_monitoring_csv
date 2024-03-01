@@ -196,12 +196,37 @@ void Tool::Start(const StartInfo& theStartInfo)
 //     wakeUp.notify_one();
 // }
 
+
+void Tool::readRegs()
+{   
+    std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
+    for(size_t linkNumber = 0; linkNumber < 16; ++linkNumber)
+    {
+        for(size_t hybridId = 0; hybridId < 2; ++hybridId)
+        {
+            std::stringstream registerNameStream;
+            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link"  << std::uppercase << linkNumber << "_hybrid" << hybridId;
+            alignedBitslipRegisters.push_back({registerNameStream.str(), 0xFFFFFFFF});
+        }
+    }
+
+    // Reading all bitslip registers
+    fBeBoardInterface->ReadBoardMultReg(fDetectorContainer->getFirstObject(), alignedBitslipRegisters);
+
+    for(const auto& registerNameAndValue: alignedBitslipRegisters)
+    {
+        std::cout<< "Reading  " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << std::endl;
+    }
+}
+
+
 void Tool::Stop()
 {
     if(Tool::fKeepRunning == true)
     {
         Tool::fKeepRunning = false;
         Tool::waitForRunToBeCompleted();
+        readRegs();
         // if(fRunningThread.joinable() == true) fRunningThread.join(); // @Mauro@
         try
         {
@@ -215,11 +240,14 @@ void Tool::Stop()
         {
             throw std::runtime_error(e.what());
         }
-        SystemController::Stop();
+        readRegs();
 
+        SystemController::Stop();
+        readRegs();
         Tool::dumpConfigFiles();
         if(fMetadataHandler != nullptr) fMetadataHandler->fillFinalConditions();
 
+        readRegs();
         if(fDQMStreamerEnabled == true)
         {
             std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
@@ -228,8 +256,11 @@ void Tool::Stop()
             fDQMStreamer->broadcast(doneWithRunMessage);
         }
 
+        readRegs();
         Tool::SaveResults();
+        readRegs();
         Tool::WriteRootFile();
+        readRegs();
     }
 }
 

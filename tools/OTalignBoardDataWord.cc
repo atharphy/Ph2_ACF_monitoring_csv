@@ -23,6 +23,7 @@ OTalignBoardDataWord::~OTalignBoardDataWord() {}
 void OTalignBoardDataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
+    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.bitslip_Link[0-1A-F]_hybrid[01]");
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
@@ -51,8 +52,10 @@ void OTalignBoardDataWord::Running()
     LOG(INFO) << "Starting OTalignBoardDataWord measurement.";
     Initialise();
     wordAlignBEdata();
+    readRegs();
     LOG(INFO) << "Done with OTalignBoardDataWord.";
     Reset();
+    readRegs();
 }
 
 void OTalignBoardDataWord::Stop(void)
@@ -147,6 +150,33 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
             continue;
         }
     } // optical groups connected to this  board
+
+    std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
+    for(size_t linkNumber = 0; linkNumber < 16; ++linkNumber)
+    {
+        for(size_t hybridId = 0; hybridId < 2; ++hybridId)
+        {
+            std::stringstream registerNameStream;
+            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link"  << std::uppercase << linkNumber << "_hybrid" << hybridId;
+            alignedBitslipRegisters.push_back({registerNameStream.str(), 0xFFFFFFFF});
+        }
+    }
+
+    // Reading all bitslip registers
+    fBeBoardInterface->ReadBoardMultReg(theBoard, alignedBitslipRegisters);
+
+    // Set MSB to 1 to use values from bitslip registers
+    std::for_each(alignedBitslipRegisters.begin(), alignedBitslipRegisters.end(), [](std::pair<std::string, uint32_t> &registerNameAndValue) { registerNameAndValue.second = registerNameAndValue.second | 0x80000000; });
+
+    // Updating bitslip registers with MSB set to 1
+    fBeBoardInterface->WriteBoardMultReg(theBoard, alignedBitslipRegisters);
+
+    for(const auto& registerNameAndValue: alignedBitslipRegisters)
+    {
+        std::cout<< "Writing " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << std::endl;
+    }
+
+    readRegs();
 }
 
 bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
