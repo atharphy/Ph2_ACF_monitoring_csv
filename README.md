@@ -320,7 +320,7 @@ formatAll
 
 
 ##
-### To pull the large files
+### To pull large files
 Install `git lfs`
 ```bash
 sudo yum install git-lfs
