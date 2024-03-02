@@ -802,7 +802,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     const float       kb        = 1.38064852e-23; // [J/K]
     const float       e         = 1.6021766208e-19;
     const float       R         = 15;   // By circuit design
-    const uint8_t     sensorDEM = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
+    const int         nDEM      = 16;
     const std::string regName   = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
 
     const std::unordered_map<std::string, std::string> observableToCalibrationConstant = {
@@ -851,18 +851,19 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         float temperature = (voltage / idealityFactor - 1) / temperatureCoeff; // degree celsius
         return temperature;
     }
-    else
+
+    for(int sensorDEM = 0; sensorDEM < nDEM; ++sensorDEM)
     {
         // Get high bias voltage
         sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type.find("DIG") != std::string::npos ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
-        valueLow = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
+        valueLow += RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
 
         // Get low bias voltage
         sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type.find("DIG") != std::string::npos ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
+        valueHigh += RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
     }
-    valueHigh = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
 
     // ####################
     // # Turn off sensing #
@@ -870,7 +871,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     RD53Interface::WriteChipReg(pChip, "MON_SENS_ACB", 0);
     RD53Interface::WriteChipReg(pChip, "MON_SENS_SLDO", 0);
 
-    return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) - T0C;
+    return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) / nDEM - T0C;
 }
 
 } // namespace Ph2_HwInterface
