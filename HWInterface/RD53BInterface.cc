@@ -756,7 +756,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t GlbPulseVal  = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", 1 << 12 | data, false);    // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP)); // The conversion is bad if we changing the mux setting too soon after
+    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // The conversion is bad if we changing the mux setting too soon after
 
     // ########################################################
     // # Sample data multiple times for better value estimate #
