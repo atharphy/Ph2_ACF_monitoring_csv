@@ -99,6 +99,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Programmig global registers #
     // ###############################
     static const std::set<std::string> registerBlackList = {
+        "RADSENS_IDEAL_FACTOR", "RADSENS_IDEAL_FACTOR_ANA", "RADSENS_IDEAL_FACTOR_DIG", "TEMPSENS_OFFSET_TOP", "TEMPSENS_OFFSET_BOTTOM",
         "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "TEMPSENS_IDEAL_FACTOR_ANA", "TEMPSENS_IDEAL_FACTOR_DIG", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
     static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
                                                             "DAC_PREAMP_R_LIN",
@@ -785,11 +786,9 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
 float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type, int beta)
 {
     // ################################################################################################
+    // #                     TEMPERATURE MEASUREMENT FOR TRANSISTOR-BASED SENSORS                     #
     // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #
     // # Temperature is calculated based on the difference of the two, with the formula on the bottom #
-    // # idealityFactor = 5000 [1/1000] for Poly Sens Bottom                                          #
-    // # idealityFactor = 2000 [1/1000] for Poly Sens Top                                             #
-    // # idealityFactor = 1225 [1/1000] for the rest                                                  #
     // ################################################################################################
 
     this->setBoard(pChip->getBeBoardId());
@@ -806,16 +805,24 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     const uint8_t     sensorDEM = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
     const std::string regName   = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
 
-    float idealityFactor;
-    if(type.find("ANA") != std::string::npos) { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_ANA").fValue / 1e3; }
-    else if(type.find("DIG") != std::string::npos)
-    {
-        idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_DIG").fValue / 1e3;
+    const std::unordered_map<std::string, std::string> observableToCalibrationConstant = {
+	{    "TEMPSENS_ANA_SLDO", "TEMPSENS_IDEAL_FACTOR_ANA" },
+	{    "TEMPSENS_DIG_SLDO", "TEMPSENS_IDEAL_FACTOR_DIG" },
+	{      "TEMPSENS_CENTER", "TEMPSENS_IDEAL_FACTOR"     },
+	{     "RADSENS_ANA_SLDO", "RADSENS_IDEAL_FACTOR_ANA"  },
+	{     "RADSENS_DIG_SLDO", "RADSENS_IDEAL_FACTOR_DIG"  },
+	{       "RADSENS_CENTER", "RADSENS_IDEAL_FACTOR"      },
+	{    "POLY_TEMPSENS_TOP", "TEMPSENS_OFFSET_TOP"       },
+	{ "POLY_TEMPSENS_BOTTOM", "TEMPSENS_OFFSET_BOTTOM"    },
+	{    "INTERNAL_NTC_VOLT", ""                          },
+    };
+
+    const auto iterator = observableToCalibrationConstant.find(type);
+    if(iterator == observableToCalibrationConstant.end()) {
+        LOG(ERROR) << BOLDRED << "Invalid temperature sensor" << RESET;
+        return -HUGE_VALF; // unphysically low temperature as error
     }
-    else
-    {
-        idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
-    }
+    const float idealityFactor = pChip->getRegItem(iterator->second).fValue / 1e3;
 
     uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
     float    valueLow  = 0;
@@ -837,7 +844,14 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
 
         return temperature;
     }
-    else if(type.find("POLY") == std::string::npos)
+    else if(type.find("POLY") != std::string::npos)
+    {
+        const float temperatureCoeff = 0.22e-2;
+        float voltage = RD53Interface::convertADC2VorI(pChip, measureADC(pChip, data));
+        float temperature = (voltage / idealityFactor - 1) / temperatureCoeff; // degree celsius
+        return temperature;
+    }
+    else
     {
         // Get high bias voltage
         sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type.find("DIG") != std::string::npos ? 6 : 0);
