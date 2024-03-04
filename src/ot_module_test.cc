@@ -1362,7 +1362,7 @@ int main(int argc, char* argv[])
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
         cBeamTestCheck.writeObjects();
-        cBeamTestCheck.Reset();
+        // cBeamTestCheck.Reset();
     }
 
     if(!cmd.foundOption("read") && cmd.foundOption("ExternalCheck"))

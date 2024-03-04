@@ -1126,8 +1126,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 bool   cSingles       = true;
                                 for(auto cPxlCluster: cPxlClusters)
                                 {
-                                    uint32_t cRow = cPxlCluster.fAddress - 1;
-                                    uint32_t cCol = cPxlCluster.fZpos;
+                                    uint32_t cRow = cPxlCluster.fZpos;
+                                    uint32_t cCol = cPxlCluster.fAddress-1;
                                     if(cPxlCluster.fWidth != 0)
                                     {
                                         cSingles = false;
@@ -1140,8 +1140,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 double cCenterOfMassS = 0;
                                 for(auto cStrpCluster: cStripClusters)
                                 {
-                                    uint32_t cRow = cStrpCluster.fAddress - 1;
-                                    uint32_t cCol = 0;
+                                    uint32_t cRow = 0;
+                                    uint32_t cCol = cStrpCluster.fAddress - 1;
                                     if(cStrpCluster.fWidth != 0)
                                     {
                                         cSingles = false;
@@ -1156,8 +1156,10 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 for(auto cStub: cStubs)
                                 {
                                     if(!cSingles) continue;
-                                    uint32_t cRow = std::floor(cStub.getPosition() / 2.0);
-                                    uint32_t cCol = cStub.getRow();
+                                    // uint32_t cRow = std::floor(cStub.getPosition() / 2.0);
+                                    // uint32_t cCol = cStub.getRow();
+                                    uint32_t cRow = cStub.getRow();
+                                    uint32_t cCol = std::floor(cStub.getPosition() / 2.0);
                                     cSingleStubContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
                                 }
                                 double cBend                = 0;
@@ -1172,8 +1174,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                      << cDiffIndx << " ]\n";
                                 for(auto cPxlCluster: cPxlClusters)
                                 {
-                                    uint32_t cRow = cPxlCluster.fAddress - 1;
-                                    uint32_t cCol = cPxlCluster.fZpos;
+                                    uint32_t cRow = cPxlCluster.fZpos;
+                                    uint32_t cCol = cPxlCluster.fAddress - 1;
                                     if(cPxlCluster.fWidth != 0) continue;
                                     cOut << "\t\t\t\t\t.. P cluster  - row " << cRow << " column " << cCol << "\n";
                                 }
@@ -1181,8 +1183,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 for(auto cStub: cStubs)
                                 {
                                     if(!cSingles) continue;
-                                    uint32_t cRow = std::floor(cStub.getPosition() / 2.0) - 1;
-                                    uint32_t cCol = cStub.getRow();
+                                    uint32_t cRow = cStub.getRow();
+                                    uint32_t cCol = std::floor(cStub.getPosition() / 2.0) - 1;
                                     cOut << "\t\t\t\t\t.. stub in row " << +cRow << " and column " << +cCol << RESET;
                                 }
 
@@ -1225,8 +1227,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             }
                             else
                             {
-                                cRow = std::floor(cStub.getPosition() / 2.0);
-                                cCol = cStub.getRow();
+                                cRow = cStub.getRow();
+                                cCol = std::floor(cStub.getPosition() / 2.0);
                             }
                             // update bend map
                             // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5 strips
@@ -1235,8 +1237,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             fBendMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, BENDBINS>>()[cBendIndx]++;
                             // if(pPrint)
 
-                            uint16_t cMaxRows     = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : NSSACHANNELS;
-                            uint16_t cMaxCols     = (cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) ? NMPAROWS : 1;
+                            uint16_t cMaxRows     = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : NMPAROWS;
+                            uint16_t cMaxCols     = (cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) ? NSSACHANNELS : 1;
                             bool     cValidCoords = (cRow < cMaxRows && cCol < cMaxCols);
 
                             if(!cValidCoords)
@@ -1262,9 +1264,9 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
 
                         std::vector<uint16_t> cTmpS0;
                         std::vector<uint16_t> cTmpS1;
-                        uint16_t              cMaxRows = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : NSSACHANNELS;
-                        cTmpS0.assign(cMaxRows, 0);
-                        cTmpS1.assign(cMaxRows, 0);
+                        uint16_t              cMaxCols = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : NSSACHANNELS;
+                        cTmpS0.assign(cMaxCols, 0);
+                        cTmpS1.assign(cMaxCols, 0);
                         bool    cSSAExists = std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8) != cSSAIds.end();
                         uint8_t cSSAId     = (cSSAExists) ? (cChip->getId() % 8) : -1;
                         LOG(DEBUG) << BOLDYELLOW << "MPA#" << +cChip->getId() << " SSA Id " << +cSSAId << RESET;
@@ -1274,17 +1276,16 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         if(cHits.size() > 0) LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << " Chip#" << +(cChip->getId() % 8) << "   " << +cHits.size() << " hits." << RESET;
                         for(auto cHit: cHits)
                         {
-                            if(pPrint) LOG(DEBUG) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " Channel " << cHit << RESET;
                             auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                            LOG(DEBUG) << cOccChip->getChannel<Occupancy>(0, 0).fOccupancy << RESET;
-                            uint16_t cRow = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cHit : 0;
-                            uint16_t cCol = 0;
+                            if(pPrint) LOG(INFO) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " Channel " << cHit << cOccChip->getChannel<Occupancy>(0, 0).fOccupancy << RESET;
+                            uint16_t cCol = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cHit : 0;
+                            uint16_t cRow = 0;
                             // sensor iD - 0 -- bottoml; 1 -- top
-                            uint8_t cSensorID = (cChip->getFrontEndType() == FrontEndType::CBC3) ? (cHit % 2 != 0) : (cCol != 0);
+                            uint8_t cSensorID = (cChip->getFrontEndType() == FrontEndType::CBC3) ? (cHit % 2 != 0) : (cRow != 0);
                             // uint16_t cMaxRows  = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : 0;
                             // if(cChip->getFrontEndType() == FrontEndType::MPA) cMaxRows = NSSACHANNELS;
-                            uint16_t cMaxCols = 1;
-                            if((cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) && cSensorID == 0) cMaxCols = NMPAROWS;
+                            uint16_t cMaxRows = 1;
+                            if((cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) && cSensorID == 0) cMaxRows = NMPAROWS;
 
                             if(cChip->getFrontEndType() != FrontEndType::CBC3)
                             {
@@ -1292,8 +1293,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 cSensorID        = (cZPos == 0) ? 1 : 0;
                                 uint8_t cAddress = (cHit >> 8) & 0x7F;
                                 uint8_t cId      = cHit & 0xFF;
-                                cRow             = cAddress + cId;
-                                cCol             = (cZPos == 0) ? cZPos : cZPos - 1;
+                                cRow             = (cZPos == 0) ? cZPos : cZPos - 1;
+                                cCol             = cAddress + cId;
                                 if(cRow == cMaxRows || cCol == cMaxCols)
                                     LOG(INFO) << BOLDRED << "Event#" << (*cEventIter)->GetEventCount() << " Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " S" << +cSensorID
                                               << " Address " << +cAddress << " , Zpos " << +cZPos << " id " << +cId << " Row " << +cRow << " Column " << +cCol << RESET;
@@ -1388,7 +1389,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                     ->getObject(cIndices[cIndx])
                                     ->getChannel<Occupancy>(cRow, cCol)
                                     .fOccupancy++;
-                                cTmpS0[cRow]++;
+                                cTmpS0[cCol]++;
                             }
                             else if(cSensorID == 0 && cValidCoords)
                             {
@@ -1398,7 +1399,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                     ->getObject(cIndices[cIndx])
                                     ->getChannel<Occupancy>(cRow, cCol)
                                     .fOccupancy++;
-                                cTmpS0[cRow]++;
+                                cTmpS0[cCol]++;
                             }
                             else if(cValidCoords && cSSAExists)
                             {
@@ -1406,7 +1407,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 fHitMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cSSAId)->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
                                 // fHitMap.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cSSAIndices[cIndx])->getChannel<Occupancy>(cRow,
                                 // cCol).fOccupancy++;
-                                cTmpS1[cRow]++;
+                                cTmpS1[cCol]++;
                             }
                             if(pPrint && cValidCoords)
                             {
@@ -1433,11 +1434,11 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
 
                         // now check for coincidences
                         size_t cNCoincidences = 0;
-                        for(auto cRow = 0; cRow < cMaxRows; cRow++)
+                        for(auto cCol = 0; cCol < cMaxCols; cCol++)
                         {
-                            bool cCoincident = (cTmpS0[cRow] == cTmpS1[cRow] && cTmpS0[cRow] > 0);
+                            bool cCoincident = (cTmpS0[cCol] == cTmpS1[cCol] && cTmpS0[cCol] > 0);
                             cNCoincidences += (cCoincident) ? 1 : 0;
-                            if(pPrint && cCoincident) LOG(INFO) << BOLDYELLOW << "\t\t\t\t... found  a coincidence in row " << +cRow << RESET;
+                            if(pPrint && cCoincident) LOG(INFO) << BOLDYELLOW << "\t\t\t\t... found  a coincidence in column " << +cCol << RESET;
                         }
                         cCoHitCointainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint32_t>() += cNCoincidences;
                         cIndx++;
@@ -1511,7 +1512,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         LOG(INFO) << BOLDMAGENTA << "Counting step... Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " Chip#" << +(cChip->getId())
                                   << " Stubs   : " << cStubContainer->getObject(cChip->getId())->getSummary<uint32_t>() << " stubs."
                                   << " Hits S0 : " << cHitContainerS0->getObject(cChip->getId())->getSummary<uint32_t>() << " hits."
-                                  << " and found " << cCoHitCointainer->getObject(cChip->getId())->getSummary<uint32_t>() << " hits in the same row as S1 " << RESET;
+                                  << " and found " << cCoHitCointainer->getObject(cChip->getId())->getSummary<uint32_t>() << " hits in the same column as S1 " << RESET;
                     else if((cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) && cHitContainerS1->getObject(cChip->getId())->getSummary<uint32_t>() > 0)
                     {
                         LOG(INFO) << BOLDGREEN << "Counting step... Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " Chip#" << +(cChip->getId())
