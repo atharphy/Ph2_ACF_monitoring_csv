@@ -9,6 +9,7 @@
 
 #include "DQMUtils/DQMHistogramBeamTestCheck.h"
 #include "RootUtils/RootContainerFactory.h"
+#include "HWDescription/ReadoutChip.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
@@ -106,6 +107,8 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
     // need to get settings from settings map
     parseSettings(pSettingsMap);
 
+    // copy detector structrure
+    fDetectorContainer = &theDetectorStructure;
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     LOG(INFO) << "Setting histograms with range " << fLatencyRange << " and start value " << fStartLatency;
 
@@ -836,50 +839,18 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                 LOG(INFO) << BOLDYELLOW << "Stub map [S1] has " << cStubMapS1->GetXaxis()->GetNbins() << " in X  and " << cStubMapS1->GetYaxis()->GetNbins() << " in Y." << RESET;
                 for(auto chip: *hybrid)
                 {
-                    uint16_t cDivider = (chip->size() == NCHANNELS) ? 2 : 1;
+                    auto pReadoutChip = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                     auto&    cChipStubOCc = theStubMap.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                     if(cChipStubOCc->hasChannelContainer() == false) continue;
                     for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
-                            bool isCBC = false;
-                            if(chip->size() == NCHANNELS) isCBC = true;
-                            bool isSSA = false;
-                            if(!isCBC && chip->getId()<8 ) isSSA = true;
-                            uint8_t  cSensorId = (chip->size() == NCHANNELS) ? (col % 2 != 0) : (chip->size() != NMPAROWS * NSSACHANNELS);
-                            uint32_t cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / (float)NCHIPS_OT : cHitMapS1->GetXaxis()->GetNbins() / (float)NCHIPS_OT;                            
-                            uint16_t cLocalX;
-                            float cLocalY =0;
-                            if(isCBC)
-                            {
-                                uint16_t cCol = col/cDivider;  
-                                if(hybrid->getId() %2 == 0)
-                                {
-                                    cLocalX = (NCHANNELS/2 - cCol) + (NCHIPS_OT - chip->getId() -1)*NCHANNELS/2;
-                                }
-                                else
-                                {
-                                    cLocalX = cCol +  chip->getId()*NCHANNELS/2;
-                                } 
-                            }
-                            else
-                            {
-                                cLocalY = (hybrid->getId() % 2 ==0) ? row+1 : 2*NMPAROWS - (row+1);
-                                cLocalY = cLocalY/ (float)NMPAROWS;
-                                if(isSSA) cLocalY = (hybrid->getId() % 2 ==0) ? 0 : 1;
-                                if(hybrid->getId() %2 == 0)
-                                {
-                                    if(isSSA) cLocalX = (NSSACHANNELS - col) + ( NCHIPS_OT - chip->getId() -1)*NSSACHANNELS;
-                                    else cLocalX = (NSSACHANNELS - col) + ( NCHIPS_OT*2 - chip->getId() -1)*NSSACHANNELS;
-                                }
-                                else
-                                {
-                                    if(isSSA) cLocalX = col +  chip->getId()*NSSACHANNELS;
-                                    else cLocalX = col + ( chip->getId()-NCHIPS_OT)*NSSACHANNELS;
-
-                                }
-                            }
+                            uint8_t cSensorId = pReadoutChip->isTopSensor(pReadoutChip, col)? 1 : 0 ;    
+                            uint32_t cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / (float)NCHIPS_OT : cHitMapS1->GetXaxis()->GetNbins() / (float)NCHIPS_OT;
+                            std::pair<uint16_t,uint16_t> cGlobalCoordinates = pReadoutChip->getGlobalCoordinates(pReadoutChip, col, row);
+                            uint16_t cLocalX = cGlobalCoordinates.first;
+                            float cLocalY    = (float)cGlobalCoordinates.second/chip->getNumberOfRows();
                             auto cBin  = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
                             if(cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy > 0 )
                             {
@@ -906,46 +877,11 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
-                            bool isCBC = false;
-                            if(chip->size() == NCHANNELS) isCBC = true;
-                            bool isSSA = false;
-                            if(!isCBC && chip->getId()<8 ) isSSA = true;
-                            uint8_t  cSensorId = (chip->size() == NCHANNELS) ? (col % 2 != 0) : (chip->size() != NMPAROWS * NSSACHANNELS);
+                            uint8_t cSensorId = pReadoutChip->isTopSensor(pReadoutChip, col)? 1 : 0 ;    
                             uint32_t cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / (float)NCHIPS_OT : cHitMapS1->GetXaxis()->GetNbins() / (float)NCHIPS_OT;
-                            
-                            uint16_t cLocalX;
-                            float cLocalY;
-                            if(isCBC)
-                            {
-                                uint16_t cCol = col/cDivider;
-                                if(hybrid->getId() %2 == 0)
-                                {
-                                    cLocalX = (NCHANNELS/2 - cCol) + (NCHIPS_OT - chip->getId() -1)*NCHANNELS/2;
-                                }
-                                else
-                                {
-                                    cLocalX = cCol +  chip->getId()*NCHANNELS/2;
-                                }  
-
-                                cLocalY = (hybrid->getId() % 2 == 0) ? 0 : 1;
-                            }
-                            else
-                            {
-                                cLocalY = (hybrid->getId() % 2 ==0) ? row+1 : 2*NMPAROWS - (row+1);
-                                cLocalY = cLocalY/ (float)NMPAROWS;
-                                if(isSSA) cLocalY = (hybrid->getId() % 2 ==0) ? 0 : 1;
-                                if(hybrid->getId() %2 == 0)
-                                {
-                                    if(isSSA) cLocalX = (NSSACHANNELS - col) + ( NCHIPS_OT - chip->getId() -1)*NSSACHANNELS;
-                                    else cLocalX = (NSSACHANNELS - col) + ( NCHIPS_OT*2 - chip->getId() -1)*NSSACHANNELS;
-                                }
-                                else
-                                {
-                                    if(isSSA) cLocalX = col +  chip->getId()*NSSACHANNELS;
-                                    else cLocalX = col + ( chip->getId()-NCHIPS_OT)*NSSACHANNELS;
-
-                                }
-                            }
+                            std::pair<uint16_t,uint16_t> cGlobalCoordinates = pReadoutChip->getGlobalCoordinates(pReadoutChip, col, row);
+                            uint16_t cLocalX = cGlobalCoordinates.first;
+                            float cLocalY    = (float)cGlobalCoordinates.second/chip->getNumberOfRows();
                             auto cBin  = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
                             if(cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy > 0 )
                             {
