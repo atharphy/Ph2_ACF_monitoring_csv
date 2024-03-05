@@ -68,6 +68,9 @@ class OTverifyCICdataWord : public Tool
     void injectL12S(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
     void injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
     bool matchL1Pattern(std::vector<uint32_t> theWordVector, PatternMatcher thePatternMatcher, uint8_t numberOfBytesInSinglePacket);
+    bool matchStubPattern(std::vector<uint32_t> theWordVector, PatternMatcher thePatternMatcher, uint8_t numberOfBytesInSinglePacket, size_t numberOfLines);
+
+    std::vector<uint32_t> mergeCICStubOuput(const std::vector<std::vector<uint32_t>>& stubLineDataList, uint8_t numberOfBytesInSinglePacket);
 
     size_t fNumberOfIterations{1000};
     // For simplicity, make sure bendind code is always greater than half value (0x7)

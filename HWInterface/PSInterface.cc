@@ -76,7 +76,7 @@ std::vector<std::pair<std::string, uint16_t>> PSInterface::ReadChipMultReg(Ph2_H
 // To generalize
 bool PSInterface::WriteChipReg(Chip* pPS, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDMAGENTA << " PSInterface::WriteChipReg writing to " << pRegName << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << " PSInterface::WriteChipReg writing to " << pRegName << RESET;
     return getInterface(pPS)->WriteChipReg(pPS, pRegName, pValue, pVerifLoop);
 }
 

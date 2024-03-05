@@ -215,7 +215,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
             case SearchPatternStatus::Error: // error case
             {
                 LOG(DEBUG) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, expected pattern not found" << RESET;
-                LOG(DEBUG) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket) << RESET;
+                LOG(DEBUG) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket, true) << RESET;
                 return false;
             }
 
@@ -278,7 +278,9 @@ bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWord
 {
     uint32_t                header          = 0x0ffffffe;
     uint32_t                headerMask      = 0xffffffff;
-    std::pair<bool, size_t> isFoundAndWhere = matchPattern(theWordVector, numberOfBytesInSinglePacket, header, headerMask);
+    auto orderedLineOutputVector = reorderPattern(theWordVector, numberOfBytesInSinglePacket);
+
+    std::pair<bool, size_t> isFoundAndWhere = matchPattern(orderedLineOutputVector, numberOfBytesInSinglePacket, header, headerMask);
     return isFoundAndWhere.first;
 }
 

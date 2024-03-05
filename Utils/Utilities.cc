@@ -336,7 +336,7 @@ std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,
     uint16_t mask = 0xFF;
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
 
-    int                   maxWritePatternShift = sizeof(uint32_t) / numberOfBytesInSinglePacket - 1;
+    int                   maxWritePatternShift = sizeof(uint32_t) / numberOfBytesInSinglePacket - numberOfBytesInSinglePacket;
     std::vector<uint32_t> longIntWordVector;
 
     uint32_t longIntWord             = 0;
@@ -344,7 +344,7 @@ std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,
     for(auto theWord: theWordVector)
     {
         uint32_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
-        for(uint8_t readSinglePatterShift = 0; readSinglePatterShift < (sizeof(uint32_t) / numberOfBytesInSinglePacket); ++readSinglePatterShift)
+        for(int8_t readSinglePatterShift = (sizeof(uint32_t) / numberOfBytesInSinglePacket - numberOfBytesInSinglePacket); readSinglePatterShift >= 0 ; --readSinglePatterShift)
         {
             if(numberOfBytesToSkip > 0)
             {
@@ -368,21 +368,82 @@ std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,
     return longIntWordVector;
 }
 
+std::vector<uint32_t> reorderPattern(const std::vector<uint32_t>& theWordVector, uint8_t wordSize)
+{
+    if(wordSize != 1 && wordSize != 2)
+    {
+        std::cerr << "reorderPattern wordSize can be only 1 or 2" << std::endl;
+        abort();
+    }
+    
+    uint16_t mask = 0xFF;
+    if(wordSize == 2) mask = 0xFFFF;
+
+    size_t wordVectorSize = theWordVector.size();
+    std::vector<uint32_t> theOrderedWordVector(wordVectorSize, 0);
+
+    for(size_t wordIndex = 0; wordIndex < wordVectorSize; ++wordIndex)
+    {
+        for(uint8_t theByteShift = 0; theByteShift < sizeof(uint32_t); theByteShift += wordSize)
+        {
+            uint32_t byteValue = ((theWordVector[wordIndex] >> (theByteShift * 8)) & mask);
+            // std::cout << std::hex << "full word " << theWordVector[wordIndex] << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;
+            theOrderedWordVector[wordIndex] |= byteValue << ((sizeof(uint32_t) - 1 - theByteShift) * 8);
+        }
+    }
+
+    return theOrderedWordVector;
+}
+
+std::string getPatternPrintout(const std::vector<uint32_t>& theWordVector, uint8_t wordSize, bool reorderWords)
+{
+    if(wordSize != 1 && wordSize != 2)
+    {
+        std::cerr << "getPatternPrintout wordSize can be only 1 or 2" << std::endl;
+        abort();
+    }
+    std::vector<uint32_t> theLocalWordVector;
+    if(reorderWords) theLocalWordVector = reorderPattern(theWordVector, wordSize);
+    else theLocalWordVector = theWordVector;
+    
+    uint16_t mask = 0xFF;
+    if(wordSize == 2) mask = 0xFFFF;
+
+    std::stringstream thePattern;
+    thePattern << std::hex;
+
+    for(auto theWord: theLocalWordVector)
+    {
+        for(int8_t theByteShift = sizeof(uint32_t) - wordSize; theByteShift  >= 0; theByteShift -= wordSize)
+        {
+            uint32_t byteValue = ((theWord >> (theByteShift * 8)) & mask);
+            // std::cout << std::hex << "full word " << theWord << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;
+            if(byteValue <= 0xF) thePattern << "0";
+            if(wordSize == 2)
+            {
+                if(byteValue <= 0xFF) thePattern << "0";
+                if(byteValue <= 0xFFF) thePattern << "0";
+            }
+            thePattern << +byteValue;
+        }
+        thePattern << " ";
+    }
+    thePattern << std::dec;
+
+    return thePattern.str();
+}
+
 std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask)
 {
     uint8_t numberOfBytesInWord = sizeof(uint32_t);
     for(uint8_t numberOfBytesToSkip = 0; numberOfBytesToSkip < numberOfBytesInWord; ++numberOfBytesToSkip)
     {
         std::vector<uint32_t> longIntWordVector = applyByteShift(theWordVector, numberOfBytesInSinglePacket, numberOfBytesToSkip);
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] byteshift = " << +numberOfBytesToSkip << " pattern : " << getPatternPrintout(longIntWordVector) << std::hex << std::endl;
         for(size_t wordIndex = 0; wordIndex < longIntWordVector.size(); ++wordIndex)
         {
             if((longIntWordVector[wordIndex] & patternMask) == pattern) return {true, wordIndex * numberOfBytesInWord + numberOfBytesToSkip};
         }
     }
-
-    LOG(DEBUG) << BOLDRED << "Error, expected pattern not found" << RESET;
-    LOG(DEBUG) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket) << RESET;
 
     return {false, 0}; // pattern not found
 }

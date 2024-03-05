@@ -424,9 +424,9 @@ LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* p
                 } while(cContinue && cIter < cMaxIters);
                 if(cLock) alignmentSuccessRate += 1;
                 WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-                std::this_thread::sleep_for(std::chrono::microseconds(10));
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
                 cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-                LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
+                // LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
                 bestPhaseHistogram[cCurrPhase]++;
             }
 

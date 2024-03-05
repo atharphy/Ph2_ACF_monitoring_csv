@@ -1027,7 +1027,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 {
     pData.clear();
     uint32_t cNEvents = 0;
-    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if(fL1ReadoutInterface == nullptr)
     {
         LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
@@ -1059,7 +1059,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
     pData.clear();
-    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if(fL1ReadoutInterface == nullptr) LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
 
     auto cTriggerRate = ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
@@ -1080,7 +1080,7 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
 {
     uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
     fFirmwareFrontEndType      = getFrontEndType(cFrontEndTypeCode);
-    uint32_t cNHybrid          = pBoard->getNHybrid();
+    // uint32_t cNHybrid          = pBoard->getNHybrid();
     uint32_t cNChips           = 0;
 
     uint32_t cNEventSize32 = 0;
@@ -1088,18 +1088,18 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalGroup) { cNChips += cHybrid->size(); }
     }
-    if(fNCic != 0)
-    {
-        uint32_t cSparsified = ReadReg("fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable");
-        LOG(DEBUG) << BOLDBLUE << "CIC sparsification expected to be : " << +cSparsified << RESET;
-    }
-    else
-    {
-        if(fFirmwareFrontEndType == FrontEndType::CBC3) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChips * D19C_EVENT_SIZE_32_CBC3;
-        if(fFirmwareFrontEndType == FrontEndType::MPA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_MPA;
-        if(fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
-    }
-    if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
+    // if(fNCic != 0)
+    // {
+    //     uint32_t cSparsified = ReadReg("fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable");
+    //     LOG(DEBUG) << BOLDBLUE << "CIC sparsification expected to be : " << +cSparsified << RESET;
+    // }
+    // else
+    // {
+    //     if(fFirmwareFrontEndType == FrontEndType::CBC3) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChips * D19C_EVENT_SIZE_32_CBC3;
+    //     if(fFirmwareFrontEndType == FrontEndType::MPA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_MPA;
+    //     if(fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
+    // }
+    // if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
     {
         uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
         if(!(cNEventSize32_divided_by_8 == cNEventSize32)) { cNEventSize32 = cNEventSize32_divided_by_8 + 8; }
@@ -1112,11 +1112,11 @@ std::vector<uint32_t> D19cFWInterface::ReadBlockRegValue(const std::string& pReg
 std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue(const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset)
 {
     std::vector<uint32_t> vBlock = ReadBlockRegOffset(pRegNode, pBlocksize, pBlockOffset);
-    LOG(DEBUG) << BOLDGREEN << +pBlocksize << " words read back from memory " << RESET;
+    // LOG(DEBUG) << BOLDGREEN << +pBlocksize << " words read back from memory " << RESET;
     if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
     {
         fDDR3Offset += pBlocksize;
-        LOG(DEBUG) << BOLDGREEN << "\t... " << +fDDR3Offset << " current offset in DDR3 " << RESET;
+        // LOG(DEBUG) << BOLDGREEN << "\t... " << +fDDR3Offset << " current offset in DDR3 " << RESET;
     }
     return vBlock;
 }
@@ -1486,11 +1486,11 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
         auto cIterator    = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
         if(cIterator != cRegisterMap.end())
         {
-            auto cPreviousValue = cIterator->second.fValue;
+            // auto cPreviousValue = cIterator->second.fValue;
             pChip->setReg(cIterator->first, pItem.fValue);
             pItem = pChip->getRegItem(cIterator->first);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterRead successful read from 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
-                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterRead successful read from 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
+            //            << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
         }
         else if(pItem.fStatusReg == 0x00)
             LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << std::dec << RESET;
@@ -1541,13 +1541,13 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
         if(success)
         {
             // update map
-            auto cPreviousValue = cIterator->second.fValue;
+            // auto cPreviousValue = cIterator->second.fValue;
             pChip->setReg(cIterator->first, pItem.fValue);
-            uint16_t readBackVal = pChip->getReg(cIterator->first);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite Succesful write of 0x" << std::hex << +pItem.fValue << " to " << cIterator->first << "\t.. Memory is now 0x"
-                       << +readBackVal << " it was 0x" << +cPreviousValue << std::dec << RESET;
+            // uint16_t readBackVal = pChip->getReg(cIterator->first);
+            // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite Succesful write of 0x" << std::hex << +pItem.fValue << " to " << cIterator->first << "\t.. Memory is now 0x"
+            //            << +readBackVal << " it was 0x" << +cPreviousValue << std::dec << RESET;
             pItem = pChip->getRegItem(cIterator->first);
-            LOG(DEBUG) << BOLDGREEN << " DONE D19cFWInterface::SingleRegisterWrite" << RESET;
+            // LOG(DEBUG) << BOLDGREEN << " DONE D19cFWInterface::SingleRegisterWrite" << RESET;
         }
         else
             LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILED to write to Register " << cIterator->first << RESET;
@@ -1570,7 +1570,7 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
     auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
     if(cIterator != cRegisterMap.end())
     {
-        auto cPreviousValue = cIterator->second.fValue;
+        // auto cPreviousValue = cIterator->second.fValue;
         bool success        = false;
         try
         {
@@ -1604,8 +1604,8 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
         {
             // update map
             pChip->setReg(cIterator->first, pItem.fValue);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWriteRead successful write of 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
-                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWriteRead successful write of 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
+            //            << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
             pItem = pChip->getRegItem(cIterator->first);
             return true;
         }
@@ -1669,8 +1669,8 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
                 {
                     pChip->setReg(cIterator->first, cItem.fValue);
                     cValues.push_back(pChip->getReg(cIterator->first));
-                    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register " << cIterator->first << " 0x" << std::hex << +cItem.fAddress << std::dec << " set to 0x" << std::hex
-                               << +cValues.at(cValues.size() - 1) << std::dec << RESET;
+                    // LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register " << cIterator->first << " 0x" << std::hex << +cItem.fAddress << std::dec << " set to 0x" << std::hex
+                    //            << +cValues.at(cValues.size() - 1) << std::dec << RESET;
                 }
                 else
                 {
@@ -1722,7 +1722,7 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
 
     if(success)
     {
-        LOG(DEBUG) << BOLDGREEN << "D19cFWInterface::MultiRegisterWrite successful write to " << pItems.size() << " registers" << RESET;
+        // LOG(DEBUG) << BOLDGREEN << "D19cFWInterface::MultiRegisterWrite successful write to " << pItems.size() << " registers" << RESET;
         // update map
         auto cRegisterMap = pChip->getRegMap();
         for(auto& cItem: pItems)
@@ -1730,10 +1730,10 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
             auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) { return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage; });
             if(cIterator != cRegisterMap.end()) // if item is in the map
             {
-                auto cPreviousValue = cIterator->second.fValue;
+                // auto cPreviousValue = cIterator->second.fValue;
                 pChip->setReg(cIterator->first, cItem.fValue);
-                LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWrite successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
-                           << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+                // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWrite successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
+                //            << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
                 cItem = pChip->getRegItem(cIterator->first);
             }
             else
@@ -1789,10 +1789,10 @@ bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegIte
             auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) { return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage; });
             if(cIterator != cRegisterMap.end())
             {
-                auto cPreviousValue = cIterator->second.fValue;
+                // auto cPreviousValue = cIterator->second.fValue;
                 pChip->setReg(cIterator->first, cItem.fValue);
-                LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWriteRead successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
-                           << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+                // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWriteRead successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
+                //            << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
             }
             else
                 LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address in register map " << RESET;

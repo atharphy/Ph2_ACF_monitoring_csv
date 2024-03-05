@@ -130,8 +130,8 @@ bool CbcInterface::maskChannelGroup(ReadoutChip* pCbc, const std::shared_ptr<Cha
     std::bitset<NCHANNELS> tmpBit(255);
     for(uint8_t maskGroup = 0; maskGroup < 32; ++maskGroup)
     {
-        uint16_t cValue = (uint16_t)((originalMask->getBitset() & fActiveChannels) >> (maskGroup << 3) & tmpBit).to_ulong();
-        LOG(DEBUG) << BOLDBLUE << "\t...Group" << +maskGroup << " : " << std::bitset<8>(cValue) << RESET;
+        // uint16_t cValue = (uint16_t)((originalMask->getBitset() & fActiveChannels) >> (maskGroup << 3) & tmpBit).to_ulong();
+        // LOG(DEBUG) << BOLDBLUE << "\t...Group" << +maskGroup << " : " << std::bitset<8>(cValue) << RESET;
         cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)((originalMask->getBitset() & fActiveChannels) >> (maskGroup << 3) & tmpBit).to_ulong()));
     }
     return WriteChipMultReg(pCbc, cRegVec, pVerify);
@@ -377,7 +377,7 @@ bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerify)
 
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerify)
 {
-    LOG(DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipReg " << dacName << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipReg " << dacName << RESET;
     if(dacName == "VCth" || dacName == "Threshold")
     {
         if(pCbc->getFrontEndType() == FrontEndType::CBC3)
@@ -458,7 +458,7 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
     {
         uint8_t cValue    = pCbc->getReg("MiscTestPulseCtrl&AnalogMux");
         uint8_t cRegValue = (cValue & 0xE0) | dacValue;
-        LOG(DEBUG) << BOLDBLUE << "Setting AmuxOutput on Chip" << +pCbc->getId() << " to " << +dacValue << " - register set to : 0x" << std::hex << +cRegValue << std::dec << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Setting AmuxOutput on Chip" << +pCbc->getId() << " to " << +dacValue << " - register set to : 0x" << std::hex << +cRegValue << std::dec << RESET;
         bool cSuccess = WriteChipSingleReg(pCbc, "MiscTestPulseCtrl&AnalogMux", cRegValue, pVerify);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         return cSuccess;
@@ -558,15 +558,15 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
     pCbc->setRegisterTracking(0); // don't keep track of page register
     if(cIter == fPageMap.end())
     {
-        auto        cValue = pCbc->getReg("FeCtrl&TrgLat2");
+        // auto        cValue = pCbc->getReg("FeCtrl&TrgLat2");
         ChipRegMask cMask;
         cMask.fBitShift      = 7;
         cMask.fNbits         = 1;
         uint8_t cDefaultPage = pCbc->getRegBits("FeCtrl&TrgLat2", cMask);
-        LOG(DEBUG) << BOLDYELLOW << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
-                   << std::dec << RESET;
+        // LOG(DEBUG) << BOLDYELLOW << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
+        //            << std::dec << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
-        LOG(DEBUG) << BOLDYELLOW << "Page was not explicitly selected on CBC#" << +pCbc->getId() << " setting to default value." << RESET;
+        // LOG(DEBUG) << BOLDYELLOW << "Page was not explicitly selected on CBC#" << +pCbc->getId() << " setting to default value." << RESET;
         cSuccess = fBoardFW->SingleRegisterWrite(pCbc, cCbcRegMap[cRegName], pVerify);
     }
     if(!cSuccess)
@@ -581,8 +581,8 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
     if(cPage == pPage)
     {
         // don't need to change page
-        LOG(DEBUG) << BOLDBLUE << "\t...No need to switch page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " current page " << +cPage << " page to write to is " << +pPage
-                   << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "\t...No need to switch page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " current page " << +cPage << " page to write to is " << +pPage
+        //            << RESET;
         pCbc->setRegisterTracking(cTrack);
         return true;
     } // don't need to do anything
@@ -590,8 +590,8 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
     // switch page
     ChipRegItem cPageReg = pCbc->getRegItem("FeCtrl&TrgLat2");
     cPageReg.fValue      = (cPageReg.fValue & 0x7F) | (pPage << 7);
-    LOG(DEBUG) << BOLDBLUE << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " from page " << +cPage << " to page " << +pPage << "\t...Current page is "
-               << cPage << " want to write to page " << +pPage << " need to update page register on the CBC" << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " from page " << +cPage << " to page " << +pPage << "\t...Current page is "
+    //            << cPage << " want to write to page " << +pPage << " need to update page register on the CBC" << RESET;
     // update page in map
     cIter->second = pPage;
     // write to page register in the CBC
@@ -615,13 +615,13 @@ uint8_t CbcInterface::GetLastPage(Chip* pCbc)
     auto     cIter    = fPageMap.find(cAddress);
     if(cIter == fPageMap.end())
     {
-        auto        cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        // auto        cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
         ChipRegMask cMask;
         cMask.fBitShift      = 7;
         cMask.fNbits         = 1;
         uint8_t cDefaultPage = pCbc->getRegBits("FeCtrl&TrgLat2", cMask);
-        LOG(DEBUG) << BOLDMAGENTA << "\t...Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
-                   << std::dec << RESET;
+        // LOG(DEBUG) << BOLDMAGENTA << "\t...Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
+        //            << std::dec << RESET;
         return cDefaultPage;
     }
     else
@@ -816,7 +816,7 @@ void CbcInterface::produceStubLine0PhaseAlignmentPattern(ReadoutChip* pChip)
     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
     WriteChipMultReg(pChip, theRegisterVector);
     // Also lines 1 and 2 are injected automatically
-    LOG(DEBUG) << BOLDBLUE << "Injecting on stub line 0 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "Injecting on stub line 0 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
     std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{0x55, 0}, {0xAA, 0}};
     injectStubs(pChip, stubSeedAndBend);
 }
@@ -837,14 +837,14 @@ void CbcInterface::produceStubLines1To4PhaseAlignmentPattern(ReadoutChip* pChip)
     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
     WriteChipMultReg(pChip, theRegisterVector);
 
-    LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
     std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{0x2A, 0}, {0x55, 0}, {0xAA, 0}};
     injectStubs(pChip, stubSeedAndBend);
 }
 
 void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
-    LOG(DEBUG) << BOLDMAGENTA << "Producing phase alignment pattern on CBC#" << +pChip->getId() << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "Producing phase alignment pattern on CBC#" << +pChip->getId() << RESET;
     // mask for L1A alignment
     auto cChannelMask = std::make_shared<ChannelGroup<1, NCHANNELS>>();
     cChannelMask->disableAllChannels();
@@ -872,7 +872,7 @@ void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
         // first pattern - stubs lines 0, 1 , 3
         // seeds on stub line 0 , stub line 1
         // bends on stub line 2
-        LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 0,1 and 2 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 0,1 and 2 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
         int                                  theBendValue = static_cast<int>(cBend_strips * 2);
         std::vector<std::pair<uint8_t, int>> stubBendAndValueFirstStep{{0x55, theBendValue}, {0xAA, theBendValue}};
         injectStubs(static_cast<ReadoutChip*>(pChip), stubBendAndValueFirstStep);
@@ -881,7 +881,7 @@ void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
         // second pattern - 1, 2, 3 , 4
         // whatever on stub line 0
         // then alignment pattern on stub lines 1 + 2
-        LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
         std::vector<std::pair<uint8_t, int>> stubBendAndValueSecondStep{{42, theBendValue}, {0x55, theBendValue}, {0xAA, theBendValue}};
         injectStubs(static_cast<ReadoutChip*>(pChip), stubBendAndValueSecondStep);
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));

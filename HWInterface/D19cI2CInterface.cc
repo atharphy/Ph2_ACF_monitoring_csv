@@ -226,9 +226,9 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
                             LOG(INFO) << BOLDRED << "D19cI2CInterface::MultiWriteRead"
                                       << " mismatch in readback register " << std::hex << +cIterator->fAddress << " NO MATCH!"
                                       << " expected " << cIterator->fValue << " read back " << cReadBackReg.fValue << std::dec << RESET;
-                        else
-                            LOG(DEBUG) << BOLDGREEN << "D19cI2CInterface::MultiWriteRead"
-                                       << " match in readback register " << std::hex << +cIterator->fAddress << " MATCH!" << std::dec << RESET;
+                        // else
+                        //     LOG(DEBUG) << BOLDGREEN << "D19cI2CInterface::MultiWriteRead"
+                        //                << " match in readback register " << std::hex << +cIterator->fAddress << " MATCH!" << std::dec << RESET;
 
                         cSuccess = (cReadBackReg.fValue == cIterator->fValue);
                     }
