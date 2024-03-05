@@ -83,7 +83,7 @@ export EUDAQLIB=$EUDAQDIR/lib
 ############
 # Pybind11 #
 ############
-export PYTHONINCLUDE=/usr/include/python3.6m/:${PYTHONINCLUDE}
+export PYTHONINCLUDE=/usr/include/python3.8/:${PYTHONINCLUDE}
 if [ -d "$PH2ACF_BASE_DIR/../pybind11-${PYBIND11_REF}" ]; then
   export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-${PYBIND11_REF}/
   export PYBIND11INCLUDE=$PYBIND11/include
