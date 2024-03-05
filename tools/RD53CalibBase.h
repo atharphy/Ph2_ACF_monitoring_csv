@@ -15,7 +15,7 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/RD53ChannelGroupHandler.h"
-#include "tools/MetadataHandlerIT.h"
+#include "MetadataHandlerIT.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"

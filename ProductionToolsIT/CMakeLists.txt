@@ -98,6 +98,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     foreach(sourcefile ${BINARIES})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
+        #add_executable(${name} ${sourcefile})
+        #target_link_libraries(${name} ${LIBS})
     endforeach(sourcefile ${BINARIES})
 
     TARGET_LINK_LIBRARIES(Ph2_ProductionToolsIT ${LIBS})

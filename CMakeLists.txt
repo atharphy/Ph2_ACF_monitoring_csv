@@ -114,7 +114,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
       elseif(GCC_VERSION VERSION_LESS 13)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_12_NOERROR_FLAGS}")
       endif()
-      
+
       if(GCC_VERSION VERSION_LESS 10.3)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} -Wno-error=deprecated-copy")
       endif ()

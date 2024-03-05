@@ -119,8 +119,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         set(LIBS ${LIBS} Ph2_Interface Ph2_System Ph2_Tools Ph2_MonitorUtils Ph2_ProductionToolsIT Ph2_miniDAQ)
     endif()
 
-    message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
-
     foreach(sourcefile ${BINARIES})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
