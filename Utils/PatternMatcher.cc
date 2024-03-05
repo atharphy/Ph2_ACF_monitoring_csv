@@ -41,11 +41,11 @@ void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, 
 bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
 {
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Incoming -> ";
-    // for(const auto word : theWordVector) std::cout << std::hex << word << std::dec << " ";
+    // for(const auto& word : theWordVector) std::cout << std::hex << word << std::dec << " ";
     // std::cout << std::endl;
 
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Pattern  -> ";
-    // for(const auto word : fPatternAndMaskVector) std::cout << std::hex << word.first << std::dec << " ";
+    // for(const auto& word : fPatternAndMaskVector) std::cout << std::hex << word.first << std::dec << " ";
     // std::cout << std::endl;
 
     for(size_t patternIndex = 0; patternIndex < fPatternAndMaskVector.size(); ++patternIndex)
@@ -57,4 +57,18 @@ bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
     }
 
     return true;
+}
+
+std::vector<uint32_t> PatternMatcher::getPattern() const
+{
+    std::vector<uint32_t> thePatternVector;
+    for(const auto& thePatternAndMaskWord: fPatternAndMaskVector) thePatternVector.push_back(thePatternAndMaskWord.first);
+    return thePatternVector;
+}
+
+std::vector<uint32_t> PatternMatcher::getMask() const
+{
+    std::vector<uint32_t> theMaskVector;
+    for(const auto& thePatternAndMaskWord: fPatternAndMaskVector) theMaskVector.push_back(thePatternAndMaskWord.second);
+    return theMaskVector;
 }

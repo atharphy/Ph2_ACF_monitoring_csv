@@ -1301,8 +1301,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                 previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() &
                                 (0xFFFF - (1 << iBit));
 
-                        LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
-                                   << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET;
+                        // LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
+                        //            << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET;
                     }
                 }
             }
@@ -1337,8 +1337,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                             cHandler = new MPAChannelGroupHandler();
                         else
                             cHandler = new SSAChannelGroupHandler();
-                        LOG(DEBUG) << BOLDYELLOW << " Normalizing assuming " << fNReadbackEvents << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels."
-                                   << RESET;
+                        // LOG(DEBUG) << BOLDYELLOW << " Normalizing assuming " << fNReadbackEvents << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels."
+                        //            << RESET;
                         float  cGlobalOcc = 0;
                         size_t cNenabled  = 0;
                         for(uint16_t cChnl = 0; cChnl < cDataContainerThisChip->size(); cChnl++)
@@ -1354,8 +1354,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                 cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy /= fNReadbackEvents;
                                 cGlobalOcc += cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy;
                                 cNenabled++;
-                                if(cChnl < 10 || cChnl > 15 * 120 + 110)
-                                    LOG(DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
+                                // if(cChnl < 10 || cChnl > 15 * 120 + 110)
+                                //     LOG(DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
                             }
                         }
                         cGlobalOcc /= cNenabled;
@@ -1446,7 +1446,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                                   .fOccupancy;
                         }
                     }
-                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                    // LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }
@@ -1552,9 +1552,9 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                         if(not currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>())
                         {
                             currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = threshToSet;
-                            LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
-                                       << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()
-                                       << RESET;
+                            // LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
+                            //            << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()
+                            //            << RESET;
                         }
                     }
                 }
@@ -1826,7 +1826,7 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                             }
                         }
                     }
-                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                    // LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }
@@ -2130,7 +2130,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             }
             else
             {
-                LOG(DEBUG) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
+                // LOG(DEBUG) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
                 for(auto cOpticalGroup: *fDetectorDataContainer->getObject(fBoardId))
                 {
                     for(const auto cHybrid: *cOpticalGroup)
