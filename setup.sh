@@ -56,7 +56,7 @@ export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 ##############################################################################################
 export PH2_TCUSB_REF=889b673e9d9582dab64cfeb60990800970ee47af
 export EUDAQ_REF=fa186e2fc893db41b56d4eff390ba9355ebc9be2
-export PYBIND11_REF=v2.9.2
+export PYBIND11_REF=2.9.2
 
 #######
 # ZMQ #
@@ -83,9 +83,11 @@ export EUDAQLIB=$EUDAQDIR/lib
 ############
 # Pybind11 #
 ############
-#export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
-#export PYBIND11INCLUDE=$PYBIND11/include
-export PYTHONINCLUDE=/usr/include/python3.6m/
+export PYTHONINCLUDE=/usr/include/python3.8/:${PYTHONINCLUDE}
+if [ -d "$PH2ACF_BASE_DIR/../pybind11-${PYBIND11_REF}" ]; then
+  export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-${PYBIND11_REF}/
+  export PYBIND11INCLUDE=$PYBIND11/include
+fi
 
 ##########
 # System #
