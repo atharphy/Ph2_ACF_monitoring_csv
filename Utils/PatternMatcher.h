@@ -55,6 +55,10 @@ class PatternMatcher
     */
     std::vector<uint32_t> getMask() const;
 
+    /*!
+    * \brief temporary function to ignore bug on stub line 4 for 2S kickoff FEHR
+    */
+    void maskStubFor2Skickoff();
 
   private:
     size_t                                     fPatternNumberOfBits{0};

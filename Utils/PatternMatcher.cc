@@ -72,3 +72,29 @@ std::vector<uint32_t> PatternMatcher::getMask() const
     for(const auto& thePatternAndMaskWord: fPatternAndMaskVector) theMaskVector.push_back(thePatternAndMaskWord.second);
     return theMaskVector;
 }
+
+void PatternMatcher::maskStubFor2Skickoff()
+{
+    std::vector<uint32_t> theMaskVector(fPatternAndMaskVector.size(), 0);
+
+    size_t lineCounter = 0;
+    for(auto& theMask: theMaskVector)
+    {
+        for(int8_t bitCounter = sizeof(uint32_t)*8 - 1; bitCounter>=0; --bitCounter)
+        {
+            if(lineCounter == 4)
+            {
+                lineCounter = 0;
+                continue;
+            }
+            theMask |= 0x1 << bitCounter;
+            ++lineCounter;
+        }
+    }
+
+    for(uint8_t patternIndex = 0; patternIndex < fPatternAndMaskVector.size(); ++patternIndex)
+    {
+        fPatternAndMaskVector[patternIndex].second &= theMaskVector[patternIndex];
+    }
+
+}
