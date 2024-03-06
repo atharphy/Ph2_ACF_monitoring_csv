@@ -87,10 +87,10 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
 ### =x= End of Inner-Tracker section =x=
+
+
 ##
-
-
-### The Ph2_ACF software
+### The `Ph2_ACF` software
 Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal, etc...):
 
 1. Clone the GitHub repo and run cmake
@@ -134,8 +134,8 @@ Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (
 ##
 ### Gitlab CI setup for Developers (required to submit merge requests)
 Enable shared Runners (if not enabled)
-- from `settings > CI/CD` expand the `Runners` section
-- click the `Allow shared Runners` button
+- From `settings > CI/CD` expand the `Runners` section
+- Click the `Allow shared Runners` button
 
 
 ##
@@ -154,7 +154,7 @@ sudo yum install -y boost-devel pugixml-devel json-devel
 3. Install uHAL. SW tested with uHAL version up to 2.7.1
 Follow instructions from `https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html`
 
-4. Install CERN ROOT
+4. Install ROOT
 ```bash
 sudo yum install -y root
 sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
@@ -182,7 +182,7 @@ tar zxvf v2.9.2.tar.gz
 
 ##
 ### Setup on CentOs8 (deprecated)
-1. Libraries needed by Ph2_ACF
+1. Libraries needed by `Ph2_ACF`
 ```bash
 sudo yum install -y boost-devel pugixml-devel json-devel
 ```
@@ -320,13 +320,13 @@ formatAll
 
 
 ##
-### To pull the large files
-Install git lfs
+### To pull large files
+Install `git lfs`
 ```bash
 sudo yum install git-lfs
 git lfs install
 ```
-go to your main Ph2_ACF folder and run
+Go to your main `Ph2_ACF` folder and run
 ```bash
 git config lfs.https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git/info/lfs.locksverify true # or your username instead of cms_tk_ph2
 ```
@@ -338,22 +338,6 @@ git fetch cms_tk_ph2
 git lfs fetch cms_tk_ph2
 git lfs pull cms_tk_ph2
 ```
-
-
-##
-### Nota Bene
-When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
-
-Register values are:
-- 8-bit unsigend integers for the CBCs that should be edited in hex notation, i.e. `0xFF`
-- 32-bit unsigned integers for the GLIB: decimal values
-
-For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefile and also activate the uHal log in `RegManager.cc`
-
-
-##
-### External clock and trigger
-Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/Middleware_Short_Guide.md) for instructions on how to use external clock and trigger with the various FMCs (DIO5 and CBC3 FMC)
 
 
 ##
