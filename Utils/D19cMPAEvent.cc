@@ -246,10 +246,7 @@ uint8_t D19cMPAEvent::GetNPixelClusters(uint8_t pHybridId, uint8_t pMPAId) const
         uint8_t Npix = (lvec.at(2) & 0x0000001F);
         return Npix;
     }
-    else
-    {
-        return 0;
-    }
+    else { return 0; }
 }
 
 uint32_t D19cMPAEvent::DivideBy2RoundUp(uint32_t value) const { return (value + value % 2) / 2; }

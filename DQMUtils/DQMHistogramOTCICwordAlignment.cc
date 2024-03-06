@@ -35,7 +35,8 @@ void DQMHistogramOTCICwordAlignment::book(TFile* theOutputFile, DetectorContaine
         idOffset   = 8;
     }
 
-    auto setLineBinLabels = [](TAxis* theHistogramAxis) {
+    auto setLineBinLabels = [](TAxis* theHistogramAxis)
+    {
         for(int line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line) { theHistogramAxis->SetBinLabel(line + 1, Form("Stub%d", line)); }
     };
 
@@ -90,7 +91,9 @@ void DQMHistogramOTCICwordAlignment::fillWordAlignmentDelay(DetectorDataContaine
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
                     for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
-                    { wordAlignmentDelaPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, theWordAlignmentDelayVector[chipId][cLineId]); }
+                    {
+                        wordAlignmentDelaPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, theWordAlignmentDelayVector[chipId][cLineId]);
+                    }
                 }
             }
         }

@@ -81,7 +81,7 @@ void PatternMatcher::maskStubFor2Skickoff()
     size_t lineCounter = 0;
     for(auto& theMask: theMaskVector)
     {
-        for(int8_t bitCounter = sizeof(uint32_t)*8 - 1; bitCounter>=0; --bitCounter)
+        for(int8_t bitCounter = sizeof(uint32_t) * 8 - 1; bitCounter >= 0; --bitCounter)
         {
             if(lineCounter == 4)
             {
@@ -93,9 +93,5 @@ void PatternMatcher::maskStubFor2Skickoff()
         }
     }
 
-    for(uint8_t patternIndex = 0; patternIndex < fPatternAndMaskVector.size(); ++patternIndex)
-    {
-        fPatternAndMaskVector[patternIndex].second &= theMaskVector[patternIndex];
-    }
-
+    for(uint8_t patternIndex = 0; patternIndex < fPatternAndMaskVector.size(); ++patternIndex) { fPatternAndMaskVector[patternIndex].second &= theMaskVector[patternIndex]; }
 }

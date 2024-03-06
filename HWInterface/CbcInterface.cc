@@ -620,7 +620,8 @@ uint8_t CbcInterface::GetLastPage(Chip* pCbc)
         cMask.fBitShift      = 7;
         cMask.fNbits         = 1;
         uint8_t cDefaultPage = pCbc->getRegBits("FeCtrl&TrgLat2", cMask);
-        // LOG(DEBUG) << BOLDMAGENTA << "\t...Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
+        // LOG(DEBUG) << BOLDMAGENTA << "\t...Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex <<
+        // +cValue
         //            << std::dec << RESET;
         return cDefaultPage;
     }
@@ -778,10 +779,7 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         uint16_t cRegValue = ReadChipSingleReg(pCbc, "MiscTestPulseCtrl&AnalogMux");
         return (cRegValue & 0x40) >> 6;
     }
-    else
-    {
-        return ReadChipSingleReg(pCbc, pRegNode) & 0xFF;
-    }
+    else { return ReadChipSingleReg(pCbc, pRegNode) & 0xFF; }
 }
 
 void CbcInterface::produceL1phaseAlignmentPattern(ReadoutChip* pChip)

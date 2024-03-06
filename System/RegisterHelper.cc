@@ -183,7 +183,8 @@ void RegisterHelper::dumpBeBoardRegisterIntoXml(std::string outputFileName)
                                                BeBoardInterface*        theBeBoardInterface,
                                                const std::string&       theNodeName,
                                                const uhal::HwInterface* hwInterface,
-                                               const std::string&       motherNodeName) {
+                                               const std::string&       motherNodeName)
+    {
         std::string fullNodeName;
         if(motherNodeName != "")
             fullNodeName = motherNodeName + "." + theNodeName;
@@ -241,9 +242,6 @@ void RegisterHelper::dumpBeBoardRegisterIntoXml(std::string outputFileName)
         outputFileName.append(fileNameAppend);
 
         if(doc.save_file(outputFileName.c_str())) { std::cout << "XML file " << outputFileName << " created successfully." << std::endl; }
-        else
-        {
-            std::cerr << "Error saving XML file." << std::endl;
-        }
+        else { std::cerr << "Error saving XML file." << std::endl; }
     }
 }
