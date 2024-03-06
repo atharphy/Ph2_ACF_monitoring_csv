@@ -99,7 +99,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
 
-
     # Initial set of libraries
     set(LIBS ${LIBS} Ph2_Description Ph2_Utils Ph2_Parser Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM NetworkUtils MessageUtils CACTUS::uhal)
 
