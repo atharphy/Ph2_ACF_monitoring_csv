@@ -252,7 +252,8 @@ void OTverifyCICdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, 
     thePatternMatcher.addToPattern(0x0, ~(~0u << numberOfPaddingZeros), numberOfPaddingZeros);
 
     // add CIC trailing 0 and idle pattern
-    thePatternMatcher.addToPattern(0x00aaaaaa, 0x00ffffff, 32);
+    if(numberOfStripClusters == 1) thePatternMatcher.addToPattern(0x00aaaaaa, 0x00ffffff, 32);
+    else thePatternMatcher.addToPattern(0x00a, 0x00f, 12); //10G debug output is very often cut
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
         auto lineOutputVector = theDebugInterface->L1ADebug(1, false);
@@ -265,7 +266,7 @@ void OTverifyCICdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, 
         }
         else
         {
-            LOG(DEBUG) << BOLDRED << "OTverifyCICdataWord::injectL12S - Error, expected L1 pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup " << +theMPA->getOpticalGroupId()
+            LOG(DEBUG) << BOLDRED << "OTverifyCICdataWord::injectL1PS - Error, expected L1 pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup " << +theMPA->getOpticalGroupId()
                        << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
             LOG(DEBUG) << BOLDRED << "L1 data received    " << getPatternPrintout(orderedLineOutputVector, numberOfBytesInSinglePacket) << RESET;
             LOG(DEBUG) << BOLDRED << "L1 pattern expected " << getPatternPrintout(thePatternMatcher.getPattern(), numberOfBytesInSinglePacket) << RESET;
@@ -490,26 +491,35 @@ void OTverifyCICdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCI
     thePattern.addToPattern(0x000, 0x000, 12); // Bx ID
     thePattern.addToPattern(numberOfStubs, 0x3F, 6);
 
+    uint8_t stubSize = 21; 
+    // reading 120 bytes from the FPGA FIFO, stub packet is 48 (96) bytes for 5G (10G), but not possible to know when the packet will be recorded
+    // -> 5G packet will always fit, 10G packet can contain only 120 - 96 = 34 relevant bytes
+    size_t maximumNumberOfBitsToMatch = (120 - 48 * numberOfBytesInSinglePacket)*8; // 120 bytes is the maximum read from the register, max allowed matching = 120/2
     for(uint8_t bxOffset=0; bxOffset<8; ++bxOffset)
     {
         for(auto theStub : stubInformationList)
         {
+            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break; 
             thePattern.addToPattern(0x0, 0x0, 3); // BX offset
+            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break; 
             thePattern.addToPattern(chipIdForCIC, 0x7, 3); // Chip ID
+            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 8) break; 
             thePattern.addToPattern(std::get<0>(theStub), 0xFF, 8); // seed
+            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break; 
             thePattern.addToPattern(std::get<1>(theStub), 0x7, 3); // bending
+            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 4) break; 
             thePattern.addToPattern(std::get<2>(theStub), 0xF, 4); // z
         }
     }
 
     for(uint8_t emptyStubCounter = 0; emptyStubCounter < maximumStubNumber-numberOfStubs; ++emptyStubCounter)
     {
-        thePattern.addToPattern(0x0, 0x1FFFFF, 21); // empty stubs
+        if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - stubSize) break;
+        thePattern.addToPattern(0x0, 0x1FFFFF, stubSize); // empty stubs
     }
 
     // padding 0s
-    if(numberOfBytesInSinglePacket == 1) thePattern.addToPattern(0x0, 0xFFFFF, 20); // 5G case
-    else thePattern.addToPattern(0x0, 0x1F, 5); // 10G case
+    if(numberOfBytesInSinglePacket == 1) thePattern.addToPattern(0x0, 0xFFFFF, 20); // 5G case only
 
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
@@ -537,9 +547,9 @@ void OTverifyCICdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCI
 
 bool OTverifyCICdataWord::matchStubPattern(std::vector<uint32_t> theWordVector, PatternMatcher thePatternMatcher, uint8_t numberOfBytesInSinglePacket, size_t numberOfLines)
 {
-    for(uint8_t numberOfBytesToSkip = 0; numberOfBytesToSkip < numberOfLines * 8; ++numberOfBytesToSkip)
+    for(uint8_t numberOfPacketsToSkip = 0; numberOfPacketsToSkip < numberOfLines * 8; ++numberOfPacketsToSkip)
     {
-        std::vector<uint32_t> theShiftedWordVector = applyByteShift(theWordVector, numberOfBytesInSinglePacket, numberOfBytesToSkip);
+        std::vector<uint32_t> theShiftedWordVector = applyByteShift(theWordVector, numberOfBytesInSinglePacket, numberOfPacketsToSkip);
         if(thePatternMatcher.isMatched(theShiftedWordVector)) return true;
     }
     return false;

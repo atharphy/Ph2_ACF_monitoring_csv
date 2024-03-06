@@ -230,7 +230,7 @@ std::vector<uint32_t> reorderPattern(const std::vector<uint32_t>& theWordVector,
 
 std::string getPatternPrintout(const std::vector<uint32_t>& theWordVector, uint8_t wordSize, bool reorderWords = false);
 
-std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfBytesToSkip);
+std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfPacketsToSkip);
 
 std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask);
 
