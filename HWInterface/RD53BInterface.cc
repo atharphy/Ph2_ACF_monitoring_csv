@@ -815,6 +815,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
 	{    "POLY_TEMPSENS_TOP", "TEMPSENS_OFFSET_TOP"       },
 	{ "POLY_TEMPSENS_BOTTOM", "TEMPSENS_OFFSET_BOTTOM"    },
 	{    "INTERNAL_NTC_VOLT", ""                          },
+	{         "INTERNAL_NTC", ""                          },
     };
 
     const auto iterator = observableToCalibrationConstant.find(type);
