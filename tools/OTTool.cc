@@ -884,7 +884,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                             auto cPxl = cInjection.fColumn * NSSACHANNELS + (uint32_t)cInjection.fRow;
                             LOG(INFO) << BOLDBLUE << " Injecting in pixel " << +cPxl << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET;
                             std::stringstream cRegName;
-                            cRegName << "ENFLAGS_C" << cInjection.fColumn << "_R" << +cInjection.fRow;
+                            cRegName << "ENFLAGS_C" << +cInjection.fColumn << "_R" << +cInjection.fRow;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x4F, false);
 
                             /* Multi strips injection*/
@@ -942,7 +942,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                     {
                         for(auto cInjection: pInjections)
                         {
-                            uint8_t stripInj = cInjection.fRow;
+                            uint8_t stripInj = cInjection.fColumn +1;
                             LOG(DEBUG) << BOLDRED << __LINE__ << "] INJECTING STRIP: " << +stripInj << " with ENFLAGS Memory ALL=0x " << std::hex << enflags << std::dec << RESET;
 
                             // Inject in one strip

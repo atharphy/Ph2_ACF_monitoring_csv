@@ -67,6 +67,7 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     void fillCountPlots(DetectorDataContainer& theEventCount, DetectorDataContainer& theStubCount);
 
   private:
+    DetectorContainer*    fDetectorContainer;
     void parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap);
 
     DetectorDataContainer fDetectorData;

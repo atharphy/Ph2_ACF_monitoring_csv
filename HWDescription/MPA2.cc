@@ -173,4 +173,29 @@ bool MPA2RegItemComparer::operator()(const MPARegPair& pRegItem1, const MPARegPa
         return pRegItem1.second.fAddress < pRegItem2.second.fAddress;
 }
 
+bool MPA2::isTopSensor(ReadoutChip* pChip, uint16_t pLocalColumn)
+{
+    return false;
+}    
+std::pair< uint16_t, uint16_t > MPA2::getGlobalCoordinates(ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow)
+{
+    if(pLocalColumn > pChip->getNumberOfCols()) { throw std::runtime_error("The given column "+std::to_string(pLocalColumn)+" does not exist in an "+ pChip->getFrontEndName(pChip->getFrontEndType()) + ". Acceptable values are between 0 and "+std::to_string( pChip->getNumberOfCols())); }
+    if(pLocalRow > pChip->getNumberOfRows()) { throw std::runtime_error("The given row "+std::to_string(pLocalRow)+" does not exist in an "+ pChip->getFrontEndName(pChip->getFrontEndType()) + ". Acceptable values are between 0 and "+std::to_string( pChip->getNumberOfRows())); }
+
+    uint16_t cGlobalY =0; 
+    uint16_t cGlobalX = 0;
+    cGlobalY = (pChip->getHybridId() % 2 ==0) ? pLocalRow+1 : 2*pChip->getNumberOfRows() - (pLocalRow+1);
+
+    if(pChip->getHybridId() %2 == 0)
+    {
+        cGlobalX = (pChip->getNumberOfCols() - pLocalColumn) + ( NCHIPS_OT*2 - pChip->getId() -1)*pChip->getNumberOfCols();
+    }
+    else
+    {
+        cGlobalX = pLocalColumn + ( pChip->getId()-NCHIPS_OT)*pChip->getNumberOfCols();
+    }
+
+    return std::make_pair(cGlobalX,cGlobalY);
+}
+
 } // namespace Ph2_HwDescription
