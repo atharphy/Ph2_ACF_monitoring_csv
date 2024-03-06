@@ -663,7 +663,7 @@ void PedeNoise::extractPedeNoise()
     uint16_t counter = 0;
 
     for(std::map<uint16_t, DetectorDataContainer*>::reverse_iterator mStripIt = fSCurveStripOccupancyMap.rbegin(), mPixelIt = fSCurvePixelOccupancyMap.rbegin();
-        mStripIt != fSCurveStripOccupancyMap.rend(), mPixelIt != fSCurvePixelOccupancyMap.rend();
+        mStripIt != fSCurveStripOccupancyMap.rend() && mPixelIt != fSCurvePixelOccupancyMap.rend();
         ++mStripIt, ++mPixelIt)
     {
         if(fWithCBC || (!fWithMPA && fWithSSA))
