@@ -307,10 +307,9 @@ tar zxvf v2.9.2.tar.gz
 
 ##
 ### clang-format (required to submit merge requests)
-1. Install 7.0 llvm toolset
+1. Install clang
 ```bash
-yum install centos-release-scl
-yum install llvm-toolset-7.0
+dnf install clang
 ```
 
 2. If you already sourced the environment, you should be able to run the command to format the `Ph2_ACF` (to be done before each merge request):
