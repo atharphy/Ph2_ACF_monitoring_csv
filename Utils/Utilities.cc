@@ -331,12 +331,12 @@ std::string getTimeStampString()
     return time_str;
 }
 
-std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfBytesToSkip)
+std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfPackets)
 {
     uint16_t mask = 0xFF;
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
 
-    int                   maxWritePatternShift = sizeof(uint32_t) / numberOfBytesInSinglePacket - numberOfBytesInSinglePacket;
+    int                   maxWritePatternShift = sizeof(uint32_t) / numberOfBytesInSinglePacket - 1;
     std::vector<uint32_t> longIntWordVector;
 
     uint32_t longIntWord             = 0;
@@ -344,16 +344,16 @@ std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,
     for(auto theWord: theWordVector)
     {
         uint32_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
-        for(int8_t readSinglePatterShift = (sizeof(uint32_t) / numberOfBytesInSinglePacket - numberOfBytesInSinglePacket); readSinglePatterShift >= 0 ; --readSinglePatterShift)
+        for(int8_t readSinglePatterShift = (sizeof(uint32_t) / numberOfBytesInSinglePacket - 1); readSinglePatterShift >= 0 ; --readSinglePatterShift)
         {
-            if(numberOfBytesToSkip > 0)
+            if(numberOfPackets > 0)
             {
-                --numberOfBytesToSkip;
+                --numberOfPackets;
                 continue;
             }
             longIntWord = longIntWord | (((tmpLongIntWord >> (readSinglePatterShift * 8 * numberOfBytesInSinglePacket)) & mask) << (writeSinglePatternShift * numberOfBytesInSinglePacket * 8));
-            // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is
-            // " << std::hex <<
+            // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is "
+            // << std::hex <<
             // (((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << (writeSinglePatternShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
             --writeSinglePatternShift;
             if(writeSinglePatternShift < 0)
@@ -388,7 +388,7 @@ std::vector<uint32_t> reorderPattern(const std::vector<uint32_t>& theWordVector,
         {
             uint32_t byteValue = ((theWordVector[wordIndex] >> (theByteShift * 8)) & mask);
             // std::cout << std::hex << "full word " << theWordVector[wordIndex] << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;
-            theOrderedWordVector[wordIndex] |= byteValue << ((sizeof(uint32_t) - 1 - theByteShift) * 8);
+            theOrderedWordVector[wordIndex] |= byteValue << ((sizeof(uint32_t) - wordSize - theByteShift) * 8);
         }
     }
 

@@ -40,6 +40,7 @@ void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, 
 
 bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
 {
+    if(theWordVector.size() < fPatternAndMaskVector.size()) return false;
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Incoming -> ";
     // for(const auto& word : theWordVector) std::cout << std::hex << word << std::dec << " ";
     // std::cout << std::endl;
