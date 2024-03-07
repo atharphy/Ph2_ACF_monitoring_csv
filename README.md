@@ -283,7 +283,7 @@ sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-ph
 sudo yum install -y cmake3 clang-tools-extra git-extras
 ```
 
-**devtoolset 12**
+**gcc-toolset-12**
 ```bash
 sudo yum makecache --refresh
 sudo yum -y install gcc-toolset-12
