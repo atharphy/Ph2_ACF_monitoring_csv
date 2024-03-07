@@ -66,22 +66,22 @@ void D19cTriggerInterface::TriggerConfiguration()
     {
         fTriggerConfiguration.fTriggerRate       = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
         fTriggerConfiguration.fNtriggersToAccept = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
-        LOG(DEBUG) << BOLDGREEN << "Trigger source is : " << +cSource << " matches configured source " << +fTriggerConfiguration.fTriggerSource << " number of triggers to accept is "
-                   << +fTriggerConfiguration.fNtriggersToAccept << RESET;
+        // LOG(DEBUG) << BOLDGREEN << "Trigger source is : " << +cSource << " matches configured source " << +fTriggerConfiguration.fTriggerSource << " number of triggers to accept is "
+        //            << +fTriggerConfiguration.fNtriggersToAccept << RESET;
     }
 }
 
 uint32_t D19cTriggerInterface::GetTriggerState()
 {
     int cState = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
-    if(cState == 0)
-        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Idle" << RESET;
-    else if(cState == 1)
-        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
-    else if(cState == 2)
-        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Paused. Waiting for readout" << RESET;
-    else
-        LOG(WARNING) << " Trigger State: " << BOLDRED << "Unknown" << RESET;
+    // if(cState == 0)
+    //     LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Idle" << RESET;
+    // else if(cState == 1)
+    //     LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+    // else if(cState == 2)
+    //     LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Paused. Waiting for readout" << RESET;
+    // else
+    //     LOG(WARNING) << " Trigger State: " << BOLDRED << "Unknown" << RESET;
     return cState;
 }
 bool D19cTriggerInterface::Stop()
@@ -92,9 +92,8 @@ bool D19cTriggerInterface::Stop()
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
     auto cTriggerState = GetTriggerState();
-    do
-    {
-        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Stop Trigger state is " << cTriggerState << RESET;
+    do {
+        // LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Stop Trigger state is " << cTriggerState << RESET;
         fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
         cTriggerState = GetTriggerState();
@@ -105,7 +104,7 @@ bool D19cTriggerInterface::Stop()
 // reconfigure trigger
 void D19cTriggerInterface::ResetTriggerFSM()
 {
-    LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::ResetTriggerFSM" << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::ResetTriggerFSM" << RESET;
     this->Stop();
 
     // reset trigger
@@ -134,9 +133,9 @@ void D19cTriggerInterface::Resume()
 
 bool D19cTriggerInterface::Start()
 {
-    LOG(DEBUG) << BOLDYELLOW << "................................Starting triggers  ... " << RESET;
-    auto cTriggerState = GetTriggerState();
-    LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << "................................Starting triggers  ... " << RESET;
+    // auto cTriggerState = GetTriggerState();
+    // LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET;
     // this stops triggers  + resets
     this->ResetTriggerFSM();
 
@@ -179,14 +178,12 @@ bool D19cTriggerInterface::SendNTriggers(uint32_t pNTriggers)
     size_t cAttempt         = 0;
     size_t cMaxAttempts     = 10;
     this->ResetTriggerFSM();
-    do
-    {
+    do {
         this->Start();
         auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
         auto cDuration      = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         auto cNTriggersSent = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cNTriggersSent   = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
             cAllTriggersSent = (cNTriggersSent >= pNTriggers);
@@ -209,15 +206,14 @@ bool D19cTriggerInterface::WaitForNTriggers(uint32_t pNTriggers)
     // wait until all triggers received
     uint32_t cNtriggersPrev = cNtriggers;
     size_t   cFoundSame     = 0;
-    size_t   cCounter       = 0;
-    do
-    {
+    // size_t   cCounter       = 0;
+    do {
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
         cNtriggers = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0;
         cNtriggersPrev = cNtriggers;
-        if(cCounter % 100 == 0) LOG(DEBUG) << BOLDRED << "D19cL1ReadoutInterface::WaitForReadout Number of triggers received is " << +cNtriggers << RESET;
-        cCounter++;
+        // if(cCounter % 100 == 0) LOG(DEBUG) << BOLDRED << "D19cL1ReadoutInterface::WaitForReadout Number of triggers received is " << +cNtriggers << RESET;
+        // cCounter++;
     } while(cNtriggers < pNTriggers && cFoundSame < cTimeoutValue);
     cFailed = !(cNtriggers >= pNTriggers);
     if(cFailed)
@@ -235,8 +231,7 @@ bool D19cTriggerInterface::RunTriggerFSM()
     // check if trigger state machine is running
     if(cCheckRunningTime)
     {
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cRunningTime = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.running_time");
             if(cRunningTime == 0)
@@ -245,8 +240,8 @@ bool D19cTriggerInterface::RunTriggerFSM()
                 this->Start();
                 std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             }
-            else
-                LOG(DEBUG) << BOLDGREEN << " Trigger FSM (running time == " << cRunningTime << " ) " << RESET;
+            // else
+            //     LOG(DEBUG) << BOLDGREEN << " Trigger FSM (running time == " << cRunningTime << " ) " << RESET;
         } while(cRunningTime == 0);
     }
 

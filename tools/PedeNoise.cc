@@ -499,8 +499,7 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
         bool cStripFirstLim = false, cPixelFirstLim = false;
         bool cLimitFound = false, cStripLimitFound = false, cPixelLimitFound = false;
         int  cStripLimitCounter = 0, cPixelLimitCounter = 0;
-        do
-        {
+        do {
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
             fSCurvePixelOccupancyMap[cPixelValue]        = theOccupancyContainer;
@@ -664,7 +663,7 @@ void PedeNoise::extractPedeNoise()
     uint16_t counter = 0;
 
     for(std::map<uint16_t, DetectorDataContainer*>::reverse_iterator mStripIt = fSCurveStripOccupancyMap.rbegin(), mPixelIt = fSCurvePixelOccupancyMap.rbegin();
-        mStripIt != fSCurveStripOccupancyMap.rend(), mPixelIt != fSCurvePixelOccupancyMap.rend();
+        mStripIt != fSCurveStripOccupancyMap.rend() && mPixelIt != fSCurvePixelOccupancyMap.rend();
         ++mStripIt, ++mPixelIt)
     {
         if(fWithCBC || (!fWithMPA && fWithSSA))

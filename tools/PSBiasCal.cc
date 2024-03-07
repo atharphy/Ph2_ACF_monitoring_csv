@@ -47,10 +47,7 @@ void PSBiasCal::Reset()
                         {
                             if(false) { LOG(INFO) << BOLDMAGENTA << "\t...Will NOT set " << cReg.first << " back to original value. " << RESET; }
                         }
-                        else
-                        {
-                            cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
-                        }
+                        else { cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue)); }
                     }
                     fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
@@ -584,10 +581,7 @@ float PSBiasCal::MeasureGnd(Chip* cChip, Chip* clpGBT, std::string dac_str)
         fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB", (1 << 11) >> 8);
         gnd_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
     }
-    else if(cChip->getFrontEndType() == FrontEndType::SSA2)
-    {
-        gnd_val = static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->MeasureGND(cChip);
-    }
+    else if(cChip->getFrontEndType() == FrontEndType::SSA2) { gnd_val = static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->MeasureGND(cChip); }
     LOG(DEBUG) << BOLDRED << "gndval " << gnd_val << RESET;
     return gnd_val;
 }

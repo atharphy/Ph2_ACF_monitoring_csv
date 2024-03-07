@@ -125,7 +125,7 @@ void Eudaq2Producer::DoInitialise()
         }
 
         // Update critical registers to correct value
-        //#FIXME some registers like threshold might be overwritten later on (ie: in the DoConfigure function)
+        // #FIXME some registers like threshold might be overwritten later on (ie: in the DoConfigure function)
     }
 
     fInitialised = true;
@@ -512,8 +512,8 @@ void Eudaq2Producer::ReadoutLoop()
                         cEudaqEvent->AddSubEvent(cEudaqSubEvent);
                     }
                     cPh2Events.erase(cPh2Events.begin(), cPh2Events.begin() + fTriggerMultiplicity + 1);
-                    //#FIXME check if you want to keep the lines bellow
-                    // skip first event
+                    // #FIXME check if you want to keep the lines bellow
+                    //  skip first event
                     if(!fSkipFirstEvent) SendEvent(std::move(cEudaqEvent));
                     fSkipFirstEvent = false;
                 }
@@ -569,8 +569,8 @@ void Eudaq2Producer::ReadoutLoop()
                         cEudaqEvent->AddSubEvent(cEudaqSubEvent);
                     }
                     cPh2Events.erase(cPh2Events.begin(), cPh2Events.begin() + fTriggerMultiplicity + 1);
-                    //#FIXME check if you want to keep the lines bellow
-                    // skip first event
+                    // #FIXME check if you want to keep the lines bellow
+                    //  skip first event
                     if(!fSkipFirstEvent) SendEvent(std::move(cEudaqEvent));
                     fSkipFirstEvent = false;
                 }
@@ -622,7 +622,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     // Get pixel clusters
                     std::vector<PCluster> cPClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetPixelClusters(cHybridId, cChipId);
                     // Extract pixel hit information
-                    //#FIXME not using GetHits for a more readable code
+                    // #FIXME not using GetHits for a more readable code
                     for(auto cCluster: cPClusters)
                     {
                         for(uint16_t cHitId = 0; cHitId < 1 + cCluster.fWidth; cHitId++)
@@ -868,7 +868,9 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 // Extract Stubs
                 uint32_t cStubId = 0;
                 if(pPh2Event->StubVector(cHybridId, cChipId).size() > 0)
-                { LOG(INFO) << BOLDMAGENTA << "\tFound  " << +pPh2Event->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET; }
+                {
+                    LOG(INFO) << BOLDMAGENTA << "\tFound  " << +pPh2Event->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET;
+                }
                 for(auto cStub: pPh2Event->StubVector(cHybridId, cChipId))
                 {
                     // LOG(INFO) << BLUE << "\t\tPosition " << +cStub.getPosition() << " , Row " << +cStub.getRow() << ", Bend " << +cStub.getBend() << RESET;

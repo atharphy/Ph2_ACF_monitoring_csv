@@ -26,7 +26,7 @@ class SSA2Interface : public ReadoutChipInterface
   public:
     SSA2Interface(const BeBoardFWMap& pBoardMap);
     ~SSA2Interface();
-    SSA2Interface(const SSA2Interface&) = delete;
+    SSA2Interface(const SSA2Interface&)            = delete;
     SSA2Interface& operator=(const SSA2Interface&) = delete;
     bool           ConfigureChip(Ph2_HwDescription::Chip* pSSA2, bool pVerify = false, uint32_t pBlockSize = 310) override; // FIXME
     void           DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                 // FIXME

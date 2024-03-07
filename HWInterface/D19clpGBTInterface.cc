@@ -34,8 +34,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     uint16_t cIter = 0, cMaxIter = 200;
     for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
     uint8_t cPUSMState = 0;
-    do
-    {
+    do {
         cPUSMState = GetPUSMStatus(pChip);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
@@ -67,10 +66,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cIter++;
     }
     if(cReady) { LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET; }
-    else
-    {
-        throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
-    }
+    else { throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE")); }
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // LoadCalibrationData(pChip, 0x00244200);
@@ -276,7 +272,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties()) { lpGBTInterface::ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, cTxDataRate); }
 
     for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
-    { ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity); }
+    {
+        ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity);
+    }
 
     // Rx configuration and Phase Align
     // Configure Rx Groups
@@ -287,7 +285,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 5;
     for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
-    { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
+    {
+        ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase);
+    }
     // Configuring I2C Master pull-ups for VTRx+
     WriteChipReg(pChip, "I2CM1Config", 1 << 4 | 1 << 6);
     // Reset I2C Masters
@@ -415,8 +415,7 @@ LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* p
                 bool        cContinue    = true;
                 uint8_t     cMaxIters    = 10;
                 uint8_t     cIter        = 0;
-                do
-                {
+                do {
                     std::this_thread::sleep_for(std::chrono::microseconds(10));
                     cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
                     cContinue = cLock == 0;
@@ -424,9 +423,9 @@ LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* p
                 } while(cContinue && cIter < cMaxIters);
                 if(cLock) alignmentSuccessRate += 1;
                 WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-                std::this_thread::sleep_for(std::chrono::microseconds(10));
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
                 cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-                LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
+                // LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
                 bestPhaseHistogram[cCurrPhase]++;
             }
 
@@ -523,7 +522,9 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties()) { lpGBTInterface::ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, cTxDataRate); }
 
     for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
-    { ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity); }
+    {
+        ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity);
+    }
 
     // Rx configuration and Phase Align
     // Configure Rx Groups
@@ -532,7 +533,9 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9;
     for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
-    { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
+    {
+        ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase);
+    }
 
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
@@ -606,7 +609,8 @@ void D19clpGBTInterface::updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chi
         throw std::runtime_error(errorMessage);
     }
 
-    auto updateClockFunction = [this, theChipRate, pChip, expectedCicClockSetting](std::string registerName) {
+    auto updateClockFunction = [this, theChipRate, pChip, expectedCicClockSetting](std::string registerName)
+    {
         auto theCurrentRegisterValue = this->ReadChipReg(pChip, registerName);
         if((theCurrentRegisterValue & 0x7) != expectedCicClockSetting)
         {

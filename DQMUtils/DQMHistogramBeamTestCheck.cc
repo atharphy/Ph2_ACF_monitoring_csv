@@ -8,8 +8,8 @@
  */
 
 #include "DQMUtils/DQMHistogramBeamTestCheck.h"
-#include "RootUtils/RootContainerFactory.h"
 #include "HWDescription/ReadoutChip.h"
+#include "RootUtils/RootContainerFactory.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
@@ -839,24 +839,24 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                 LOG(INFO) << BOLDYELLOW << "Stub map [S1] has " << cStubMapS1->GetXaxis()->GetNbins() << " in X  and " << cStubMapS1->GetYaxis()->GetNbins() << " in Y." << RESET;
                 for(auto chip: *hybrid)
                 {
-                    auto pReadoutChip = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
-                    auto&    cChipStubOCc = theStubMap.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
+                    auto  pReadoutChip = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
+                    auto& cChipStubOCc = theStubMap.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                     if(cChipStubOCc->hasChannelContainer() == false) continue;
                     for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
-                            uint8_t cSensorId = pReadoutChip->isTopSensor(pReadoutChip, col)? 1 : 0 ;    
-                            uint32_t cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / (float)NCHIPS_OT : cHitMapS1->GetXaxis()->GetNbins() / (float)NCHIPS_OT;
-                            std::pair<uint16_t,uint16_t> cGlobalCoordinates = pReadoutChip->getGlobalCoordinates(pReadoutChip, col, row);
-                            uint16_t cLocalX = cGlobalCoordinates.first;
-                            float cLocalY    = (float)cGlobalCoordinates.second/chip->getNumberOfRows();
-                            auto cBin  = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
-                            if(cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy > 0 )
+                            uint8_t                       cSensorId  = pReadoutChip->isTopSensor(pReadoutChip, col) ? 1 : 0;
+                            uint32_t                      cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / (float)NCHIPS_OT : cHitMapS1->GetXaxis()->GetNbins() / (float)NCHIPS_OT;
+                            std::pair<uint16_t, uint16_t> cGlobalCoordinates = pReadoutChip->getGlobalCoordinates(pReadoutChip, col, row);
+                            uint16_t                      cLocalX            = cGlobalCoordinates.first;
+                            float                         cLocalY            = (float)cGlobalCoordinates.second / chip->getNumberOfRows();
+                            auto                          cBin = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
+                            if(cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy > 0)
                             {
                                 LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " [" << cNChannels << " channels]"
-                                       << " Row " << +row << " Column " << +col  << " Local x coordinate " << cLocalX << " Local y coordinate "
-                                       << cLocalY << " bin# " << cBin << " - have found " << cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy << " hits " << RESET;
+                                           << " Row " << +row << " Column " << +col << " Local x coordinate " << cLocalX << " Local y coordinate " << cLocalY << " bin# " << cBin << " - have found "
+                                           << cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy << " hits " << RESET;
                             }
                             if(cSensorId == 0)
                             {
@@ -868,8 +868,8 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                                 cStubMapS1->SetBinContent(cBin, cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancy);
                                 cStubMapS1->SetBinError(cBin, cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancyError);
                             }
-                        }// col        
-                    }// row
+                        } // col
+                    }     // row
 
                     auto& cChipHitOCc = theHitMap.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                     if(cChipHitOCc->hasChannelContainer() == false) continue;
@@ -877,17 +877,17 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
-                            uint8_t cSensorId = pReadoutChip->isTopSensor(pReadoutChip, col)? 1 : 0 ;    
-                            uint32_t cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / (float)NCHIPS_OT : cHitMapS1->GetXaxis()->GetNbins() / (float)NCHIPS_OT;
-                            std::pair<uint16_t,uint16_t> cGlobalCoordinates = pReadoutChip->getGlobalCoordinates(pReadoutChip, col, row);
-                            uint16_t cLocalX = cGlobalCoordinates.first;
-                            float cLocalY    = (float)cGlobalCoordinates.second/chip->getNumberOfRows();
-                            auto cBin  = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
-                            if(cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy > 0 )
+                            uint8_t                       cSensorId  = pReadoutChip->isTopSensor(pReadoutChip, col) ? 1 : 0;
+                            uint32_t                      cNChannels = (cSensorId == 0) ? cHitMapS0->GetXaxis()->GetNbins() / (float)NCHIPS_OT : cHitMapS1->GetXaxis()->GetNbins() / (float)NCHIPS_OT;
+                            std::pair<uint16_t, uint16_t> cGlobalCoordinates = pReadoutChip->getGlobalCoordinates(pReadoutChip, col, row);
+                            uint16_t                      cLocalX            = cGlobalCoordinates.first;
+                            float                         cLocalY            = (float)cGlobalCoordinates.second / chip->getNumberOfRows();
+                            auto                          cBin = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
+                            if(cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy > 0)
                             {
                                 LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " [" << cNChannels << " channels]"
-                                       << " Row " << +row << " Column " << +col  << " Local x coordinate " << cLocalX << " Local y coordinate "
-                                       << cLocalY << " bin# " << cBin << " - have found " << cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy << " hits " << RESET;
+                                           << " Row " << +row << " Column " << +col << " Local x coordinate " << cLocalX << " Local y coordinate " << cLocalY << " bin# " << cBin << " - have found "
+                                           << cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy << " hits " << RESET;
                             }
                             if(cSensorId == 0)
                             {
@@ -899,10 +899,8 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                                 cHitMapS1->SetBinContent(cBin, cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancy);
                                 cHitMapS1->SetBinError(cBin, cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancyError);
                             }
-                        }// col        
-                    }// row    
-
-
+                        } // col
+                    }     // row
 
                     // TDC hit map
                     TH2F* cLatencyTDC = fLatencyTDCHistograms.getObject(board->getId())

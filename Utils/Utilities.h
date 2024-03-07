@@ -226,43 +226,11 @@ std::bitset<N> reorderBytes(const std::vector<uint32_t> theWordVector, uint8_t w
     return reorderedByteVector;
 }
 
-template <typename T>
-std::string getPatternPrintout(const std::vector<T> theWordVector, uint8_t wordSize = 1)
-{
-    if(wordSize != 1 && wordSize != 2)
-    {
-        std::cerr << "getPatternPrintout wordSize can be only 1 or 2" << std::endl;
-        abort();
-    }
-    std::stringstream thePattern;
-    // create a mask that is 0xFF for 5G and 0xFFFF for 10G modules
-    uint16_t mask = 0xFF;
-    if(wordSize == 2) mask = 0xFFFF;
+std::vector<uint32_t> reorderPattern(const std::vector<uint32_t>& theWordVector, uint8_t wordSize);
 
-    thePattern << "Received pattern: " << std::hex;
+std::string getPatternPrintout(const std::vector<uint32_t>& theWordVector, uint8_t wordSize, bool reorderWords = false);
 
-    for(auto theWord: theWordVector)
-    {
-        for(uint8_t theByteShift = 0; theByteShift < sizeof(T); theByteShift += wordSize)
-        {
-            uint32_t byteValue = ((theWord >> (theByteShift * 8)) & mask);
-            // std::cout << std::hex << "full word " << theWord << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;
-            if(byteValue <= 0xF) thePattern << "0";
-            if(wordSize == 2)
-            {
-                if(byteValue <= 0xFF) thePattern << "0";
-                if(byteValue <= 0xFFF) thePattern << "0";
-            }
-            thePattern << +byteValue;
-        }
-        thePattern << " ";
-    }
-    thePattern << std::dec;
-
-    return thePattern.str();
-}
-
-std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfBytesToSkip);
+std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfPacketsToSkip);
 
 std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask);
 

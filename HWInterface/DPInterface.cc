@@ -417,8 +417,8 @@ uint16_t DPInterface::SendTriggers(BeBoardFWInterface* pInterface)
 
         // write enable
         pInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.wr_en_generic", 0x1);
-        auto cDebug = pInterface->ReadReg("fc7_daq_stat.fast_command_block.generic_fcmd_debug");
-        LOG(DEBUG) << BOLDBLUE << "Bx" << +cBx << " -- fast command code " << std::bitset<4>(cCode) << " BRAM debug contains " << std::bitset<32>(cDebug) << RESET;
+        // auto cDebug = pInterface->ReadReg("fc7_daq_stat.fast_command_block.generic_fcmd_debug");
+        // LOG(DEBUG) << BOLDBLUE << "Bx" << +cBx << " -- fast command code " << std::bitset<4>(cCode) << " BRAM debug contains " << std::bitset<32>(cDebug) << RESET;
 
         // back to 0
         cRegs.push_back({"fc7_daq_cnfg.fast_command_block.generic_fcmd_data", 0x00});
@@ -603,10 +603,7 @@ void DPInterface::Start(BeBoardFWInterface* pInterface, uint8_t pType)
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     bool cIsRunning = this->IsRunning(pInterface, pType);
     if(cIsRunning) { LOG(INFO) << BOLDGREEN << " Data Player [STARTED]" << RESET; }
-    else
-    {
-        LOG(INFO) << BOLDRED << " Data Player [START ERROR]" << RESET;
-    }
+    else { LOG(INFO) << BOLDRED << " Data Player [START ERROR]" << RESET; }
 }
 
 bool DPInterface::IsRunning(BeBoardFWInterface* pInterface, uint8_t pType)

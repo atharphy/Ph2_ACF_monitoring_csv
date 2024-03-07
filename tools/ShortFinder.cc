@@ -573,10 +573,7 @@ void ShortFinder::FindShorts()
 
     // configure test pulse trigger
     if(fWithSSA) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(fEventsPerPoint, 10000, 6, 0, 0); }
-    else
-    {
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay, cFirmwareTriggerDelay, 1000);
-    }
+    else { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay, cFirmwareTriggerDelay, 1000); }
     for(auto cBoard: *fDetectorContainer)
     {
         LOG(INFO) << BOLDBLUE << "Starting short finding procedure on BeBoard#" << +cBoard->getId() << RESET;

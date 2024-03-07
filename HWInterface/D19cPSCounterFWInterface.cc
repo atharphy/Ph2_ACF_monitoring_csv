@@ -81,7 +81,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
                 std::stringstream cChipType;
                 cChip->printChipType(cChipType);
 
-                LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from Chip#" << +cChip->getId() << RESET;
+                // LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from Chip#" << +cChip->getId() << RESET;
                 std::vector<ChipRegItem> cRegItems;
                 auto                     cId       = Compose_Id(pBoard, cOpticalGroup, cHybrid, cChip);
                 auto                     cIterator = fPSCounterData.find(cId);
@@ -129,14 +129,14 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
                     cRegItems.push_back(cReg_Counters_LSB);
                 }
                 if(!fFEConfigurationInterface->MultiRead(cChip, cRegItems)) continue;
-                LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << "#" << +cId << RESET;
+                // LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << "#" << +cId << RESET;
                 // fill counter information
                 for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter += 2)
                 {
                     auto cMSB = (*cIter).fValue;
                     auto cLSB = (*(cIter + 1)).fValue;
-                    if(fPSCounterData[cId].size() < 10)
-                        LOG(DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size() << " MSBs " << +cMSB << " LSBs " << +cLSB << " : " << ((cMSB << 8) | cLSB) << RESET;
+                    // if(fPSCounterData[cId].size() < 10)
+                    //     LOG(DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size() << " MSBs " << +cMSB << " LSBs " << +cLSB << " : " << ((cMSB << 8) | cLSB) << RESET;
 
                     fPSCounterData[cId].push_back((cMSB << 8) | cLSB);
                 }
@@ -152,13 +152,12 @@ bool D19cPSCounterFWInterface::ReadPSCountersFast(uint8_t pRawMode, size_t pChip
     uint32_t                                      cIteration    = 0;
     auto                                          cDecoderState = this->fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state");
     // wait until fifo is ready to start readout of counters
-    do
-    {
-        LOG(DEBUG) << BOLDMAGENTA << "\t\t..D19cFWInterface::WaitForData DECODER State: " << +cDecoderState << "Running.. .Iteration#" << +cIteration << RESET;
+    do {
+        // LOG(DEBUG) << BOLDMAGENTA << "\t\t..D19cFWInterface::WaitForData DECODER State: " << +cDecoderState << "Running.. .Iteration#" << +cIteration << RESET;
         cDecoderState = this->fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state");
         cIteration++;
     } while(cDecoderState != 0); // idle state is 0
-    LOG(DEBUG) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "Decoder in IDLE state after " << +cIteration << " iterations." << RESET;
 
     std::this_thread::sleep_for(std::chrono::microseconds(1500));
     size_t      cNbits    = 200e3 * 8 * 6;
@@ -170,8 +169,7 @@ bool D19cPSCounterFWInterface::ReadPSCountersFast(uint8_t pRawMode, size_t pChip
     uint16_t    cBxId     = 0;
     if(pRawMode == 0)
     {
-        do
-        {
+        do {
             uint8_t cHeader = ((*cIter) & (0xF << 28)) >> 28;
             if(cHeader == 0x5)
             {
@@ -195,8 +193,7 @@ bool D19cPSCounterFWInterface::ReadPSCountersFast(uint8_t pRawMode, size_t pChip
         cIndx = 0;
         cIter += 4;
         std::vector<uint32_t> cBxCounter;
-        do
-        {
+        do {
             std::stringstream cPacket512;
             for(uint8_t cFrag = 0; cFrag < 256 / 32; cFrag++)
             {
@@ -241,17 +238,16 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
 
                 this->fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
                 auto cStatus = this->fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
-                LOG(DEBUG) << BOLDBLUE << "Fast SSA counter readback... Chip#" << +cChip->getId() << " PS counters status [pre-start] is " << +cStatus << " [ offset is " << +fPSCounterDelay << "]"
-                           << RESET;
+                // LOG(DEBUG) << BOLDBLUE << "Fast SSA counter readback... Chip#" << +cChip->getId() << " PS counters status [pre-start] is " << +cStatus << " [ offset is " << +fPSCounterDelay << "]"
+                //            << RESET;
                 PS_Start_counters_read();
-                do
-                {
-                    LOG(DEBUG) << BOLDBLUE << "PS counters status is " << +cStatus << RESET;
+                do {
+                    // LOG(DEBUG) << BOLDBLUE << "PS counters status is " << +cStatus << RESET;
                     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
                     cStatus = this->fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
                 } while(cStatus == 0);
 
-                LOG(DEBUG) << BOLDBLUE << "PS counters " << BOLDGREEN << " READY " << RESET;
+                // LOG(DEBUG) << BOLDBLUE << "PS counters " << BOLDGREEN << " READY " << RESET;
                 uint32_t cDataWord    = 0x0000;
                 uint32_t cWordCounter = 0;
                 for(int cChannelId = 0; cChannelId < (int)cChip->size(); cChannelId++)
@@ -312,11 +308,13 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
 
 void D19cPSCounterFWInterface::GetCounterData(const BeBoard* pBoard)
 {
-    LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;
     auto cFrontEndTypes = pBoard->connectedFrontEndTypes();
-    LOG(DEBUG) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
     if(fPSCounterFast == 0) // readout over registers
-    { SlowRead(pBoard); }
+    {
+        SlowRead(pBoard);
+    }
     else // readout over fast interface
     {
     }
@@ -335,7 +333,7 @@ void D19cPSCounterFWInterface::FillData()
     // by the hybrid node in the xml
     for(auto cCountersFromFE: fPSCounterData)
     {
-        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::FillData Filling data vector with counter information from Id" << cCountersFromFE.first << RESET;
+        // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::FillData Filling data vector with counter information from Id" << cCountersFromFE.first << RESET;
         for(auto cIter = cCountersFromFE.second.begin(); cIter < cCountersFromFE.second.end(); cIter += 2)
         {
             uint32_t cValue = (cCountersFromFE.first << 31) | (*(cIter + 1) << 15) | (*cIter);
@@ -366,11 +364,11 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
 
     // // wait for trigger state machine to send all triggers
     auto cTriggerSource = this->fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
-    LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
 
     if(cTriggerSource == 10 || cTriggerSource == 12)
     {
-        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
+        // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
         return fTriggerInterface->RunTriggerFSM();
     }
     else
@@ -514,11 +512,10 @@ bool D19cPSCounterFWInterface::CheckStartPattern()
     size_t cStubCounter = 0;
     bool   cStartFound  = false;
     // find first packet with more than 0 stubs
-    do
-    {
+    do {
         for(size_t cClk = 0; cClk < 8; cClk++)
         {
-            LOG(DEBUG) << BOLDMAGENTA << "Bx" << +cBxId << " : " << std::bitset<6>(*cStubBufferIter & 0x3F) << RESET;
+            // LOG(DEBUG) << BOLDMAGENTA << "Bx" << +cBxId << " : " << std::bitset<6>(*cStubBufferIter & 0x3F) << RESET;
             if(((*cStubBufferIter & 0x3F) >> 5) == 1 || cPktLength > 0) // configuration bit is 1
             {
                 std::stringstream cStream;
@@ -577,11 +574,12 @@ bool D19cPSCounterFWInterface::CheckStartPattern()
                         }
                         cShft += cFld.second;
                     }
-                    if(cStartPatternFound)
-                        LOG(DEBUG) << BOLDGREEN << "D19cPSCounterFWInterface::CheckStartPattern CheckForStartPattern from PS counters - Bx " << std::stoi(cHdrVals[2], 0, 2) << "\t stub#" << +cStubId
-                                   << " : " << cStubOutput.str() << RESET;
-                    else
-                        LOG(DEBUG) << BOLDRED << "Bx " << std::stoi(cHdrVals[2], 0, 2) << "\t stub#" << +cStubId << " : " << cStubOutput.str() << RESET;
+                    // if(cStartPatternFound)
+                    //     LOG(DEBUG) << BOLDGREEN << "D19cPSCounterFWInterface::CheckStartPattern CheckForStartPattern from PS counters - Bx " << std::stoi(cHdrVals[2], 0, 2) << "\t stub#" <<
+                    //     +cStubId
+                    //                << " : " << cStubOutput.str() << RESET;
+                    // else
+                    //     LOG(DEBUG) << BOLDRED << "Bx " << std::stoi(cHdrVals[2], 0, 2) << "\t stub#" << +cStubId << " : " << cStubOutput.str() << RESET;
                     cStartFound = cStartPatternFound;
                     cStubCounter++;
                 }
