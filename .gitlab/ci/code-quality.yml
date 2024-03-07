@@ -60,6 +60,8 @@ quality:clang-format:
         git commit -am "Apply clang-format for ${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}"
         git format-patch ${CI_COMMIT_SHORT_SHA} --stdout > ${ARTIFACTS_DIR}/${PATCHFILE}
     - NUMBER_OF_LINES=$(sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE})
+    - cat ${ARTIFACTS_DIR}/${PATCHFILE}
+    - echo ${NUMBER_OF_LINES}
     - if [ ${NUMBER_OF_LINES} = 0 ]; then
     -   echo "No changes to be made!"
     - else
