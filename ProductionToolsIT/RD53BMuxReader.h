@@ -1,9 +1,9 @@
 /*!
   \file                  RD53BMuxReader.h
-  \brief                 
-  \author                
+  \brief
+  \author
   \version               1.0
-  \date                  
+  \date
   Support:               none
 */
 
@@ -16,18 +16,17 @@
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
 #endif
 
-
 // #############################
 // # #
 // #############################
-class RD53BMuxReader: public CalibBase
+class RD53BMuxReader : public CalibBase
 {
   public:
     ~RD53BMuxReader()
     {
-      //this->WriteRootFile();
-      // this->CloseResultFile();
-      //  delete histos;
+        // this->WriteRootFile();
+        //  this->CloseResultFile();
+        //   delete histos;
     }
 
     void Running() override;
@@ -40,7 +39,6 @@ class RD53BMuxReader: public CalibBase
     void draw(bool saveData = true) override;
 
     void analyze();
-
 
   private:
     void fillHisto() override;
