@@ -7,9 +7,9 @@
   Support:               none
 */
 
-#include <vector>
 #include "RD53BMuxReader.h"
 #include "TEPXQuadNTC.h"
+#include <vector>
 
 #include "HWInterface/RD53FWInterface.h"
 #include "HWInterface/RegManager.h"
@@ -17,7 +17,6 @@
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
-
 
 // ##################
 // # Default values #
@@ -32,7 +31,6 @@ INITIALIZE_EASYLOGGINGPP
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
-
 
 int main(int argc, char** argv)
 {
@@ -51,14 +49,10 @@ int main(int argc, char** argv)
     cmd.defineOption("calibSettingsFile", "Calibration settings override file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calibSettingsFile", "s");
 
-    cmd.defineOption("calib",
-                     "Which calibration to run [muxreader ntc]",
-                     CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("calib", "Which calibration to run [muxreader ntc]", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
-    cmd.defineOption("comment",
-                     "Operator comment to be printed to log",
-                     CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("comment", "Operator comment to be printed to log", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("comment", "m");
 
     cmd.defineOption("prog", "Just program the system components", CommandLineProcessing::ArgvParser::NoOptionAttribute);
@@ -121,8 +115,7 @@ int main(int argc, char** argv)
     conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
     el::Loggers::reconfigureAllLoggers(conf);
 
-    if (operatorComment != "")
-        LOG(INFO) << "Operator comment:" << operatorComment << RESET;
+    if(operatorComment != "") LOG(INFO) << "Operator comment:" << operatorComment << RESET;
 
     SystemController mySysCntr;
 
@@ -181,12 +174,11 @@ int main(int argc, char** argv)
         // ####################
         LOG(INFO) << BOLDMAGENTA << "@@@ Reading out multiplexers @@@" << RESET;
 
-        std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_MuxReader");
+        std::string    fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_MuxReader");
         RD53BMuxReader mux;
         mux.Inherit(&mySysCntr);
         mux.localConfigure(fileName, runNumber);
         mux.run();
-
     }
     else if(whichCalib == "ntc")
     {
@@ -200,7 +192,6 @@ int main(int argc, char** argv)
         ntc.Inherit(&mySysCntr);
         ntc.localConfigure(fileName, runNumber);
         ntc.run();
-
     }
     else if((program == false) && (dumpRegs == false))
     {
@@ -216,7 +207,8 @@ int main(int argc, char** argv)
     // ###########################
     // # Copy configuration file #
     // ###########################
-    auto copyConfigFile = [&](const std::string& fileName) {
+    auto copyConfigFile = [&](const std::string& fileName)
+    {
         const auto fileBasename = fileName.substr(fileName.find_last_of("/\\") + 1);
         const auto outputFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + fileBasename;
         system(("cp " + fileName + " " + outputFile).c_str());
