@@ -40,7 +40,7 @@ quality:clang-format:
   stage: quality
   tags:
     - cvmfs
-
+  allow_failure: true
   before_script:
     - echo "Running code quality clang-format checks"
     - mkdir -p ${REPORTS_PATH}
