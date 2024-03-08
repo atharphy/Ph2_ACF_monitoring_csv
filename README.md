@@ -255,6 +255,7 @@ sudo dnf --repofrompath=cern9el,http://linuxsoft.cern.ch/cern/alma/9/CERN/x86_64
 
 #### Libraries needed by Ph2_ACF
 ```bash
+sudo yum install epel-release
 sudo yum install -y boost-devel pugixml-devel json-devel
 ```
 
