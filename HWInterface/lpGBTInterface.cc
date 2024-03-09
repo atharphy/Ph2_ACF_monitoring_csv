@@ -981,8 +981,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     // ###########################
     uint8_t cIter    = 0;
     bool    cSuccess = false;
-    do
-    {
+    do {
         LOG(DEBUG) << GREEN << "Waiting for ADC conversion to end" << RESET;
         usleep(10000);
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
@@ -1293,8 +1292,7 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
 
     // Wait until the transaction is done
     uint8_t cIter = 0;
-    do
-    {
+    do {
         // LOG(DEBUG) << GREEN << "Waiting for I2C Write transaction to finisih" << RESET;
         cIter++;
     } while(cIter < lpGBTconstants::MAXATTEMPTS && !IsI2CSuccess(pChip, pMaster));
@@ -1337,8 +1335,7 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
 
     // Wait until the transaction is done
     uint8_t cIter = 0;
-    do
-    {
+    do {
         // LOG(DEBUG) << GREEN << "Waiting for I2C Read transaction to finisih" << RESET;
         cIter++;
     } while(cIter < lpGBTconstants::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));
@@ -1799,10 +1796,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
     {
         for(uint8_t i = (uint8_t)cCdacCode * 0.9; i < (uint8_t)cCdacCode * 1.1; i++) { cCdacCodesVec.push_back(i); }
     }
-    else
-    {
-        cCdacCodesVec.push_back(cCdacCode);
-    }
+    else { cCdacCodesVec.push_back(cCdacCode); }
 
     for(auto cdac_code: cCdacCodesVec)
     {

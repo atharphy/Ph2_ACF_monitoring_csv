@@ -344,7 +344,7 @@ std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,
     for(auto theWord: theWordVector)
     {
         uint32_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
-        for(int8_t readSinglePatterShift = (sizeof(uint32_t) / numberOfBytesInSinglePacket - 1); readSinglePatterShift >= 0 ; --readSinglePatterShift)
+        for(int8_t readSinglePatterShift = (sizeof(uint32_t) / numberOfBytesInSinglePacket - 1); readSinglePatterShift >= 0; --readSinglePatterShift)
         {
             if(numberOfPackets > 0)
             {
@@ -375,11 +375,11 @@ std::vector<uint32_t> reorderPattern(const std::vector<uint32_t>& theWordVector,
         std::cerr << "reorderPattern wordSize can be only 1 or 2" << std::endl;
         abort();
     }
-    
+
     uint16_t mask = 0xFF;
     if(wordSize == 2) mask = 0xFFFF;
 
-    size_t wordVectorSize = theWordVector.size();
+    size_t                wordVectorSize = theWordVector.size();
     std::vector<uint32_t> theOrderedWordVector(wordVectorSize, 0);
 
     for(size_t wordIndex = 0; wordIndex < wordVectorSize; ++wordIndex)
@@ -403,9 +403,11 @@ std::string getPatternPrintout(const std::vector<uint32_t>& theWordVector, uint8
         abort();
     }
     std::vector<uint32_t> theLocalWordVector;
-    if(reorderWords) theLocalWordVector = reorderPattern(theWordVector, wordSize);
-    else theLocalWordVector = theWordVector;
-    
+    if(reorderWords)
+        theLocalWordVector = reorderPattern(theWordVector, wordSize);
+    else
+        theLocalWordVector = theWordVector;
+
     uint16_t mask = 0xFF;
     if(wordSize == 2) mask = 0xFFFF;
 
@@ -414,7 +416,7 @@ std::string getPatternPrintout(const std::vector<uint32_t>& theWordVector, uint8
 
     for(auto theWord: theLocalWordVector)
     {
-        for(int8_t theByteShift = sizeof(uint32_t) - wordSize; theByteShift  >= 0; theByteShift -= wordSize)
+        for(int8_t theByteShift = sizeof(uint32_t) - wordSize; theByteShift >= 0; theByteShift -= wordSize)
         {
             uint32_t byteValue = ((theWord >> (theByteShift * 8)) & mask);
             // std::cout << std::hex << "full word " << theWord << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;

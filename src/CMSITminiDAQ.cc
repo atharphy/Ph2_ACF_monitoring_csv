@@ -304,8 +304,7 @@ int main(int argc, char** argv)
         // #############################################
         int  evenORodd = 0;
         bool doTwice   = false;
-        do
-        {
+        do {
             if(TESTSUBDETECTOR == true)
             {
                 if(pa.fDetectorContainer->size() != 1)
@@ -545,8 +544,7 @@ int main(int argc, char** argv)
             ph.Start(theStartInfo);
             if(runtime == -1)
             {
-                do
-                {
+                do {
                     LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop the run ..." << RESET;
                 } while(std::cin.get() != '\n');
             }
@@ -618,7 +616,8 @@ int main(int argc, char** argv)
     // ###########################
     // # Copy configuration file #
     // ###########################
-    auto copyConfigFile = [&](const std::string& fileName) {
+    auto copyConfigFile = [&](const std::string& fileName)
+    {
         const auto fileBasename = fileName.substr(fileName.find_last_of("/\\") + 1);
         const auto outputFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + fileBasename;
         system(("cp " + fileName + " " + outputFile).c_str());

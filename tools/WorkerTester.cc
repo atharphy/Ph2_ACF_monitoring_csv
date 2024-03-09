@@ -66,10 +66,7 @@ bool WorkerTester::TestICWrite(OpticalGroup* cOpticalGroup)
         }
     }
     if(cSuccess) { LOG(INFO) << GREEN << "Successfully written and checked all values" << RESET; }
-    else
-    {
-        LOG(INFO) << RED << "Failed on at least one write and check" << RESET;
-    }
+    else { LOG(INFO) << RED << "Failed on at least one write and check" << RESET; }
     return cSuccess;
 }
 
@@ -338,10 +335,7 @@ bool WorkerTester::TestI2CWrite(OpticalGroup* cOpticalGroup)
 
         cSuccess = cFEInterface->MultiMultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
         if(cSuccess) { LOG(INFO) << GREEN << "I2C Write status is SUCCESS" << RESET; }
-        else
-        {
-            LOG(INFO) << RED << "I2C Write status is FAILURE" << RESET;
-        }
+        else { LOG(INFO) << RED << "I2C Write status is FAILURE" << RESET; }
     }
     return cSuccess;
 }
@@ -379,10 +373,7 @@ bool WorkerTester::TestFERead(OpticalGroup* cOpticalGroup)
             uint8_t cReadBack      = cFWInterface->SingleRegisterRead(cCic, cRegItem);
             bool    cReadSuccess   = (cReadBack == cRegisterValue);
             if(cReadSuccess) { LOG(INFO) << GREEN << "FE Read on CIC is SUCCESS " << RESET; }
-            else
-            {
-                LOG(INFO) << RED << "FE Read on CIC is FAILURE" << RESET;
-            }
+            else { LOG(INFO) << RED << "FE Read on CIC is FAILURE" << RESET; }
             cGlobalSuccess = cGlobalSuccess & cWriteSuccess & cReadSuccess;
         }
         for(auto cChip: *cHybrid)
@@ -399,10 +390,7 @@ bool WorkerTester::TestFERead(OpticalGroup* cOpticalGroup)
                 uint8_t cReadBack      = cFWInterface->SingleRegisterRead(cChip, cRegItem);
                 bool    cReadSuccess   = (cReadBack == cRegisterValue);
                 if(cReadSuccess) { LOG(INFO) << GREEN << "FE Read on SSA is SUCCESS " << RESET; }
-                else
-                {
-                    LOG(INFO) << RED << "FE Write on SSA is FAILURE" << RESET;
-                }
+                else { LOG(INFO) << RED << "FE Write on SSA is FAILURE" << RESET; }
                 cGlobalSuccess = cGlobalSuccess & cWriteSuccess & cReadSuccess;
             }
             else if(cChip->getFrontEndType() == FrontEndType::MPA)
@@ -414,10 +402,7 @@ bool WorkerTester::TestFERead(OpticalGroup* cOpticalGroup)
                 uint8_t cReadBack      = cFWInterface->SingleRegisterRead(cChip, cRegItem);
                 bool    cReadSuccess   = (cReadBack == cRegisterValue);
                 if(cReadSuccess) { LOG(INFO) << GREEN << "FE Read on MPA is SUCCESS " << RESET; }
-                else
-                {
-                    LOG(INFO) << RED << "FE Write on MPA is FAILURE" << RESET;
-                }
+                else { LOG(INFO) << RED << "FE Write on MPA is FAILURE" << RESET; }
                 cGlobalSuccess = cGlobalSuccess & cWriteSuccess & cReadSuccess;
             }
         }
@@ -455,10 +440,7 @@ bool WorkerTester::TestFEWrite(OpticalGroup* cOpticalGroup)
             cRegItem.fValue        = 0x55;
             bool cSuccess          = cFWInterface->SingleRegisterWriteRead(cCic, cRegItem);
             if(cSuccess) { LOG(INFO) << GREEN << "FE Write with verify on CIC is SUCCESS " << RESET; }
-            else
-            {
-                LOG(INFO) << RED << "FE Write with verify on CIC is FAILURE" << RESET;
-            }
+            else { LOG(INFO) << RED << "FE Write with verify on CIC is FAILURE" << RESET; }
             cGlobalSuccess &= cSuccess;
         }
         for(auto cChip: *cHybrid)
@@ -472,10 +454,7 @@ bool WorkerTester::TestFEWrite(OpticalGroup* cOpticalGroup)
                 cRegItem.fValue = 0x66;
                 bool cSuccess   = cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
                 if(cSuccess) { LOG(INFO) << GREEN << "FE Write with verify on SSA is SUCCESS " << RESET; }
-                else
-                {
-                    LOG(INFO) << RED << "FE Write with verify on SSA is FAILURE" << RESET;
-                }
+                else { LOG(INFO) << RED << "FE Write with verify on SSA is FAILURE" << RESET; }
                 cGlobalSuccess &= cSuccess;
             }
             else if(cChip->getFrontEndType() == FrontEndType::MPA)
@@ -484,10 +463,7 @@ bool WorkerTester::TestFEWrite(OpticalGroup* cOpticalGroup)
                 cRegItem.fValue = 0x77;
                 bool cSuccess   = cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
                 if(cSuccess) { LOG(INFO) << GREEN << "FE Write with verify on MPA is SUCCESS " << RESET; }
-                else
-                {
-                    LOG(INFO) << RED << "FE Write with verify on MPA is FAILURE" << RESET;
-                }
+                else { LOG(INFO) << RED << "FE Write with verify on MPA is FAILURE" << RESET; }
                 cGlobalSuccess &= cSuccess;
             }
         }

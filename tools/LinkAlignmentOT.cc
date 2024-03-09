@@ -8,7 +8,7 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/LpGBTalignmentResult.h"
 
-//#include "boost/format.hpp"
+// #include "boost/format.hpp"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -283,7 +283,9 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
             if(!cAligned)
             {
                 if(((cHybrid->getId() % 2) == 0) & ((cLineId - 1) == 4) & (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
-                { continue; } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
+                {
+                    continue;
+                } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                 LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id"
                           << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
@@ -293,8 +295,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
             {
                 size_t cMaxAttempts = 10;
                 size_t cIter        = 0;
-                do
-                {
+                do {
                     cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
                     cAligned                = cAlignerInterface->IsLineWordAligned();
                     cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
@@ -539,8 +540,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
     {
         size_t cMaxAttempts = 10;
         size_t cIter        = 0;
-        do
-        {
+        do {
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
             cLineStatus.first  = cAlignerInterface->IsLineWordAligned();
             cLineStatus.second = cAlignerInterface->GetLineConfiguration().fBitslip;
@@ -655,8 +655,7 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
     bool                     cSuccess  = false;
     unsigned int             cAttempts = 0;
     std::pair<bool, uint8_t> cPhaseAlignmentStatus, cWordAlignmentStatus;
-    do
-    {
+    do {
         try
         {
             cPhaseAlignmentStatus = PhaseTuneLine(pChip, pLineId);
@@ -792,8 +791,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
             LOG(INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET;
             const uint8_t cMaxIters  = 10;
             uint8_t       cIterCount = 0;
-            do
-            {
+            do {
                 LOG(INFO) << BOLDBLUE << "\t\t Alignment attempt#" << +cIterCount << RESET;
                 for(uint8_t cBitslip = 0; cBitslip < 8; cBitslip++)
                 {
@@ -958,8 +956,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
         LOG(DEBUG) << cMaxBxCounter << RESET;
         size_t cAttempt = 0;
-        do
-        {
+        do {
             LOG(INFO) << BOLDMAGENTA << "Package delay alignment attempt#" << +cAttempt << RESET;
             for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
             {
@@ -1029,7 +1026,9 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
 
                             uint8_t cMatchFound = (cBxIds[cIdFirst] == cBxIds[cIdSecond]);
                             if(cMatchFound)
-                            { LOG(INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET; }
+                            {
+                                LOG(INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET;
+                            }
                             else
                                 LOG(INFO) << BOLDRED << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " DO NOT match.. " << RESET;
                             cMatchesFound.push_back(cMatchFound);
@@ -1073,7 +1072,9 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                                     cNRollOvers += ((cPreviousBxId >= 2500) && (cPreviousBxId < cMaxBxCounter)) && (cBxId < cPreviousBxId) ? 1 : 0;
                                     cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxId % cMaxBxCounter) - cBxDifference;
                                     if(cBxId > (int)cDelayAfterTP)
-                                    { LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET; }
+                                    {
+                                        LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
+                                    }
                                     else
                                         LOG(INFO) << BOLDRED << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
                                     cBxDifferences.push_back(cBxDifference);

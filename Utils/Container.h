@@ -478,9 +478,8 @@ class HWDescriptionContainer : public Container<T>
                 if(fQueryFunction.fQueryFunction != 0)
                 {
                     auto theCurrentQueryFunction  = fQueryFunction.fQueryFunction;
-                    fQueryFunction.fQueryFunction = [theCurrentQueryFunction, nameAndFunction](const T* container) {
-                        return (theCurrentQueryFunction(container) && nameAndFunction.second(container));
-                    };
+                    fQueryFunction.fQueryFunction = [theCurrentQueryFunction, nameAndFunction](const T* container)
+                    { return (theCurrentQueryFunction(container) && nameAndFunction.second(container)); };
                 }
                 else
                     fQueryFunction.fQueryFunction = nameAndFunction.second;

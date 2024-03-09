@@ -91,8 +91,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     uint32_t       cNEvents            = 0;
     // for(auto cWord: pData) LOG(DEBUG) << BOLDYELLOW << std::bitset<32>(cWord) << RESET;
     auto cEventIterator = pData.begin();
-    do
-    {
+    do {
         uint32_t cHeader    = (0xFFFF0000 & (*cEventIterator)) >> 16;
         uint32_t cEventSize = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
         // retrieve chunck of data vector belonging to this event
@@ -385,7 +384,9 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     for(auto cHit: cHits)
     {
         if(testChannelGroup->isChannelEnabled(0, cHit)) // This cannot work for PS since hits are not returned as expected
-        { chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
+        {
+            chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+        }
     }
 }
 
@@ -442,8 +443,7 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
 
     auto cIterator = list.begin() + EVENT_HEADER_SIZE;
     // LOG(DEBUG) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
-    do
-    {
+    do {
         // L1
         size_t   cOffset   = std::distance(list.begin(), cIterator);
         uint32_t cL1Header = *cIterator;
@@ -1126,7 +1126,7 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadout
                     if(cCluster.fWidth > 0)
                         // LOG(DEBUG) << BOLDBLUE << "Pixel cluster " << +cCluster.fZpos << " [z-pos]; " << +cCluster.fAddress << " [address] " << +cId << " [in cluster]"
                         //            << " hit is " << +cHit << RESET;
-                    cHits.push_back(cHit);
+                        cHits.push_back(cHit);
                 }
             }
             for(auto cCluster: GetStripClusters(pHybridId, pReadoutChipId))
@@ -1137,7 +1137,7 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadout
                     if(cCluster.fWidth > 0)
                         // LOG(DEBUG) << BOLDGREEN << "Strip cluster " << +cCluster.fAddress << " [address] " << +cId << " [in cluster]"
                         //            << " hit is " << +cHit << RESET;
-                    cHits.push_back(cHit);
+                        cHits.push_back(cHit);
                 }
             }
         }
@@ -1283,9 +1283,9 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pHybridId, uint8_t pRead
         // LOG(DEBUG) << BOLDYELLOW << "Cluster in Chip#" << +pReadoutChipId << " which is " << +cChipIdMapped << RESET;
         if(cChipIdMapped != pReadoutChipId) continue;
 
-        uint8_t cLayerId      = ((cClusterWord & (0xFF << 3)) >> 3) & 0x01;        // LSB is the layer
-        uint8_t cStrip        = (((cClusterWord & (0xFF << 3)) >> 3) & 0xFE) >> 1; // strip id
-        uint8_t cWidth        = 1 + (cClusterWord & 0x7);
+        uint8_t cLayerId = ((cClusterWord & (0xFF << 3)) >> 3) & 0x01;        // LSB is the layer
+        uint8_t cStrip   = (((cClusterWord & (0xFF << 3)) >> 3) & 0xFE) >> 1; // strip id
+        uint8_t cWidth   = 1 + (cClusterWord & 0x7);
         // uint8_t cFirstChannel = 2 * cStrip + cLayerId;
 
         // LOG(DEBUG) << BOLDBLUE << "Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cStrip << " in layer "

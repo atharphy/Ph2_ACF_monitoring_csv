@@ -40,7 +40,8 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         }
     }
 
-    auto setBinLabels = [this](TAxis* theHistogram, auto theHybridGroupsAndChannels) {
+    auto setBinLabels = [this](TAxis* theHistogram, auto theHybridGroupsAndChannels)
+    {
         for(const auto& group: this->fGroupAndChannelToBinNumber)
         {
             for(const auto& channelAndBin: group.second)

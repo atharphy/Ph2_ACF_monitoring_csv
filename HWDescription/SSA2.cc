@@ -174,29 +174,28 @@ std::stringstream SSA2::getRegMapStream()
     return theStream;
 }
 
-bool SSA2::isTopSensor(ReadoutChip* pChip, uint16_t pLocalColumn)
+bool                          SSA2::isTopSensor(ReadoutChip* pChip, uint16_t pLocalColumn) { return true; }
+std::pair<uint16_t, uint16_t> SSA2::getGlobalCoordinates(ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow)
 {
-    return true;
-}    
-std::pair< uint16_t, uint16_t > SSA2::getGlobalCoordinates(ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow)
-{
-    if(pLocalColumn > pChip->getNumberOfCols()) { throw std::runtime_error("The given column "+std::to_string(pLocalColumn)+" does not exist in an "+ pChip->getFrontEndName(pChip->getFrontEndType()) + ". Acceptable values are between 0 and "+std::to_string( pChip->getNumberOfCols())); }
-    if(pLocalRow > pChip->getNumberOfRows()) { throw std::runtime_error("The given row "+std::to_string(pLocalRow)+" does not exist in an "+ pChip->getFrontEndName(pChip->getFrontEndType()) + ". Acceptable values are between 0 and "+std::to_string( pChip->getNumberOfRows())); }
+    if(pLocalColumn > pChip->getNumberOfCols())
+    {
+        throw std::runtime_error("The given column " + std::to_string(pLocalColumn) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) +
+                                 ". Acceptable values are between 0 and " + std::to_string(pChip->getNumberOfCols()));
+    }
+    if(pLocalRow > pChip->getNumberOfRows())
+    {
+        throw std::runtime_error("The given row " + std::to_string(pLocalRow) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) + ". Acceptable values are between 0 and " +
+                                 std::to_string(pChip->getNumberOfRows()));
+    }
 
-    uint16_t cGlobalY =0; 
+    uint16_t cGlobalY = 0;
     uint16_t cGlobalX = 0;
-    cGlobalY = (pChip->getHybridId() % 2 ==0) ? 0 : 1;
+    cGlobalY          = (pChip->getHybridId() % 2 == 0) ? 0 : 1;
 
-    if(pChip->getHybridId() %2 == 0)
-    {
-        cGlobalX = (pChip->getNumberOfCols() - pLocalColumn) + ( NCHIPS_OT - pChip->getId() -1)*pChip->getNumberOfCols();
-    }
-    else
-    {
-        cGlobalX = pLocalColumn +  pChip->getId()*pChip->getNumberOfCols();
-    }
+    if(pChip->getHybridId() % 2 == 0) { cGlobalX = (pChip->getNumberOfCols() - pLocalColumn) + (NCHIPS_OT - pChip->getId() - 1) * pChip->getNumberOfCols(); }
+    else { cGlobalX = pLocalColumn + pChip->getId() * pChip->getNumberOfCols(); }
 
-    return std::make_pair(cGlobalX,cGlobalY);
+    return std::make_pair(cGlobalX, cGlobalY);
 }
 
 } // namespace Ph2_HwDescription

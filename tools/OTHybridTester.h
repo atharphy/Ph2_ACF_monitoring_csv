@@ -146,18 +146,18 @@ class OTHybridTester : public Tool
     std::map<std::string, std::string> f2SSEHADCInputMap =
         {{"AMUX_L", "ADC0"}, {"VMON_P1V25_L", "ADC1"}, {"VMIN", "ADC2"}, {"AMUX_R", "ADC3"}, {"TEMPP", "ADC4"}, {"VTRX+_RSSI_ADC", "ADC5"}, {"PTAT_BPOL2V5", "ADC6"}, {"PTAT_BPOL12V", "ADC7"}};
     std::map<std::string, std::string> fPSROHADCInputMap            = {{"L_AMUX_OUT", "ADC0"},
-                                                            {"1V_MONITOR", "ADC1"},
-                                                            {"12V_MONITOR_VD", "ADC2"},
-                                                            {"R_AMUX_OUT", "ADC3"},
-                                                            {"TEMP", "ADC4"},
-                                                            {"VTRX+.RSSI_ADC", "ADC5"},
-                                                            {"1V25_MONITOR", "ADC6"},
-                                                            {"2V55_MONITOR", "ADC7"}};
+                                                                       {"1V_MONITOR", "ADC1"},
+                                                                       {"12V_MONITOR_VD", "ADC2"},
+                                                                       {"R_AMUX_OUT", "ADC3"},
+                                                                       {"TEMP", "ADC4"},
+                                                                       {"VTRX+.RSSI_ADC", "ADC5"},
+                                                                       {"1V25_MONITOR", "ADC6"},
+                                                                       {"2V55_MONITOR", "ADC7"}};
     std::map<std::string, float>       fPSROHDefaultParameters      = {{"12V_MONITOR_VD_Nominal", 0.21},
-                                                            {"TEMP_Nominal", 0.6},
-                                                            {"VTRX+.RSSI_ADC_Nominal", 0.6},
-                                                            {"1V25_MONITOR_Nominal", 0.806},
-                                                            {"2V55_MONITOR_Nominal", 0.808}};
+                                                                       {"TEMP_Nominal", 0.6},
+                                                                       {"VTRX+.RSSI_ADC_Nominal", 0.6},
+                                                                       {"1V25_MONITOR_Nominal", 0.806},
+                                                                       {"2V55_MONITOR_Nominal", 0.808}};
     std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegisters    = {{0x00, 0x0f}, {0x01, 0x01}, {0x04, 0x0f}, {0x05, 0x2f}, {0x06, 0x26}, {0x07, 0x00}};
     std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegistersV13 = {{0x00, 0x01}, {0x02, 0x01}, {0x03, 0x30}, {0x04, 0xa0}, {0x05, 0x00}, {0x11, 0x07}};
     std::map<uint8_t, std::string>     fI2CStatusMap                = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
