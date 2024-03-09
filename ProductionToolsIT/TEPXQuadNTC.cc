@@ -7,8 +7,8 @@
   Support:               none
 */
 
-#include <vector>
 #include "TEPXQuadNTC.h"
+#include <vector>
 
 #include "HWInterface/RD53FWInterface.h"
 #include "HWInterface/RegManager.h"
@@ -17,7 +17,6 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
-
 
 // ##################
 // # Default values #
@@ -33,10 +32,8 @@ using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-
 int main(int argc, char** argv)
 {
-
     // #############################
     // # Initialize command parser #
     // #############################
@@ -59,7 +56,7 @@ int main(int argc, char** argv)
     // ####################
     // # Retrieve options #
     // ####################
-    std::string configFile        = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
+    std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
 
     // ########################
     // # Configure the logger #
@@ -73,7 +70,7 @@ int main(int argc, char** argv)
     // ##################################
     // # Configure the SystemController #
     // ##################################
-    
+
     // #######################
     // # Initialize Hardware #
     // #######################
@@ -97,13 +94,11 @@ int main(int argc, char** argv)
     //     mySysCntr.Destroy();
     //     exit(EXIT_FAILURE);
     // }
-        std::string fileName("Run_TEPXNTC");
-        TEPXQuadNTC yo;
-        yo.Inherit(&mySysCntr);
-        yo.localConfigure(fileName, 0);
-        yo.run();
-
-
+    std::string fileName("Run_TEPXNTC");
+    TEPXQuadNTC yo;
+    yo.Inherit(&mySysCntr);
+    yo.localConfigure(fileName, 0);
+    yo.run();
 
     // ######################################################
     // # Disable all channels and destroy System Controller #
@@ -239,10 +234,7 @@ void TEPXQuadNTC::run()
                                           << std::fixed << std::setw(12) << std::setprecision(3) << R_ntc << std::fixed << std::setw(12) << std::setprecision(1) << TfromR(R_ntc);
                             }
                         }
-                        else
-                        {
-                            LOG(INFO) << RED << "ERROR reading ntc" << RESET;
-                        }
+                        else { LOG(INFO) << RED << "ERROR reading ntc" << RESET; }
                     }
 
                     // for each chip calculate temperature  from slopes of ntc_adc/r_ref_adc values
@@ -286,4 +278,3 @@ void TEPXQuadNTC::draw(bool saveData) { LOG(INFO) << GREEN << "[TEPXQuadNTC::dra
 void TEPXQuadNTC::analyze() { LOG(INFO) << GREEN << "[TEPXQuadNTC::analyze]" << RESET; }
 
 void TEPXQuadNTC::fillHisto() { LOG(INFO) << GREEN << "[TEPXQuadNTC::fillHisto]" << RESET; }
-
