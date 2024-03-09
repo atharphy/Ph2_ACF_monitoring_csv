@@ -85,7 +85,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     set(LIBS ${LIBS} CACTUS::uhal)
 
-    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionToolsIT TEPXTools.cc)
+    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionToolsIT TEPXQuadNTC.cc)
 
     ####################################
     ## EXECUTABLES
@@ -100,7 +100,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
         add_executable(${name} ${sourcefile})
-        target_link_libraries(${name} ${LIBS} Ph2_ProductionToolsIT Ph2_Interface Ph2_System Ph2_Tools)
+        target_link_libraries(${name} ${LIBS} Ph2_Interface Ph2_System Ph2_Tools)
     endforeach(sourcefile ${BINARIES})
 
     include_directories(${CACTUS_INCLUDEDIR})
