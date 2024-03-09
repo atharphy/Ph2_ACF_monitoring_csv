@@ -55,8 +55,7 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
 
     int  nAttempts = 0;
     bool status;
-    do
-    {
+    do {
         status = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerify);
         nAttempts++;
     } while((pVerify == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
@@ -261,8 +260,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
         // # Wait until channels lock #
         // ############################
         LOG(INFO) << GREEN << "Phase aligning Rx Group: " << BOLDYELLOW << +RxProperty.Group << RESET;
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         } while(this->IsRxLocked(pChip, RxProperty.Group) == false);
         LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +RxProperty.Group << BOLDBLUE << " LOCKED" << RESET;

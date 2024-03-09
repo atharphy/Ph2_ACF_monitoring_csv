@@ -128,7 +128,9 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWI
                 for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
                 {
                     if(isKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
-                    { continue; } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
+                    {
+                        continue;
+                    } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                     if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket))
                         ++theHybridPatternMatchingEfficiency[lineIndex + 1];
                     else
@@ -177,12 +179,16 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
                 {
                     ++numberOfConsecutiveIdleCharacters;
                     if(numberOfConsecutiveIdleCharacters > numberOfIdleCharacters) // too many Idle characters!!!
-                    { status = SearchPatternStatus::Error; }
+                    {
+                        status = SearchPatternStatus::Error;
+                    }
                 }
                 else if(currentByte == flagCharacter)
                 {
                     if(firstFlagCharacterFound && numberOfConsecutiveIdleCharacters != numberOfIdleCharacters) // not enough idle characters!!!
-                    { status = SearchPatternStatus::Error; }
+                    {
+                        status = SearchPatternStatus::Error;
+                    }
                     else
                     {
                         firstFlagCharacterFound = true;
@@ -215,7 +221,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
             case SearchPatternStatus::Error: // error case
             {
                 LOG(DEBUG) << BOLDRED << "OTverifyBoardDataWord::isStubPatternMatched - Error, expected pattern not found" << RESET;
-                LOG(DEBUG) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket) << RESET;
+                LOG(DEBUG) << BOLDRED << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket, true) << RESET;
                 return false;
             }
 
@@ -276,9 +282,11 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
 
 bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
 {
-    uint32_t                header          = 0x0ffffffe;
-    uint32_t                headerMask      = 0xffffffff;
-    std::pair<bool, size_t> isFoundAndWhere = matchPattern(theWordVector, numberOfBytesInSinglePacket, header, headerMask);
+    uint32_t header                  = 0x0ffffffe;
+    uint32_t headerMask              = 0xffffffff;
+    auto     orderedLineOutputVector = reorderPattern(theWordVector, numberOfBytesInSinglePacket);
+
+    std::pair<bool, size_t> isFoundAndWhere = matchPattern(orderedLineOutputVector, numberOfBytesInSinglePacket, header, headerMask);
     return isFoundAndWhere.first;
 }
 

@@ -51,12 +51,10 @@ void DQMHistogramPSBiasCal::book(TFile* theOutputFile, DetectorContainer& theDet
 
     std::vector<FrontEndType> cStripTypes             = {FrontEndType::SSA, FrontEndType::SSA2};
     std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA, FrontEndType::MPA2};
-    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip) {
-        return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end());
-    };
-    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip) {
-        return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end());
-    };
+    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
+    { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
+    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip)
+    { return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end()); };
 
     std::string queryFunctionName = "ChipType";
     if(fWithSSA)

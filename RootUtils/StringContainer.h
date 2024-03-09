@@ -16,7 +16,7 @@ class StringContainer : public PlotContainer
         fTObjString = nullptr;
     }
 
-    StringContainer(const StringContainer& container) = delete;
+    StringContainer(const StringContainer& container)            = delete;
     StringContainer& operator=(const StringContainer& container) = delete;
 
     StringContainer(StringContainer&& container)

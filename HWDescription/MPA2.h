@@ -75,6 +75,9 @@ class MPA2 : public ReadoutChip
 
     uint32_t getNumberOfChannels() const override { return NMPAROWS * NSSACHANNELS; }
 
+    bool                          isTopSensor(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn = 0) override;
+    std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow) override;
+
     // uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
 };
 

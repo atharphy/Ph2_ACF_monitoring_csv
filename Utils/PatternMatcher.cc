@@ -40,12 +40,13 @@ void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, 
 
 bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
 {
+    if(theWordVector.size() < fPatternAndMaskVector.size()) return false;
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Incoming -> ";
-    // for(const auto word : theWordVector) std::cout << std::hex << word << std::dec << " ";
+    // for(const auto& word : theWordVector) std::cout << std::hex << word << std::dec << " ";
     // std::cout << std::endl;
 
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Pattern  -> ";
-    // for(const auto word : fPatternAndMaskVector) std::cout << std::hex << word.first << std::dec << " ";
+    // for(const auto& word : fPatternAndMaskVector) std::cout << std::hex << word.first << std::dec << " ";
     // std::cout << std::endl;
 
     for(size_t patternIndex = 0; patternIndex < fPatternAndMaskVector.size(); ++patternIndex)
@@ -57,4 +58,40 @@ bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
     }
 
     return true;
+}
+
+std::vector<uint32_t> PatternMatcher::getPattern() const
+{
+    std::vector<uint32_t> thePatternVector;
+    for(const auto& thePatternAndMaskWord: fPatternAndMaskVector) thePatternVector.push_back(thePatternAndMaskWord.first);
+    return thePatternVector;
+}
+
+std::vector<uint32_t> PatternMatcher::getMask() const
+{
+    std::vector<uint32_t> theMaskVector;
+    for(const auto& thePatternAndMaskWord: fPatternAndMaskVector) theMaskVector.push_back(thePatternAndMaskWord.second);
+    return theMaskVector;
+}
+
+void PatternMatcher::maskStubFor2Skickoff()
+{
+    std::vector<uint32_t> theMaskVector(fPatternAndMaskVector.size(), 0);
+
+    size_t lineCounter = 0;
+    for(auto& theMask: theMaskVector)
+    {
+        for(int8_t bitCounter = sizeof(uint32_t) * 8 - 1; bitCounter >= 0; --bitCounter)
+        {
+            if(lineCounter == 4)
+            {
+                lineCounter = 0;
+                continue;
+            }
+            theMask |= 0x1 << bitCounter;
+            ++lineCounter;
+        }
+    }
+
+    for(uint8_t patternIndex = 0; patternIndex < fPatternAndMaskVector.size(); ++patternIndex) { fPatternAndMaskVector[patternIndex].second &= theMaskVector[patternIndex]; }
 }

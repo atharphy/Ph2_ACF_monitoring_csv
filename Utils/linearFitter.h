@@ -58,10 +58,7 @@ void estimate_coef(std::vector<T> indep_var, std::vector<T> dep_var, std::vector
     for(size_t index = 0; index < errors.size(); ++index)
     {
         if(errors[index] == 0) { weights.push_back(0); }
-        else
-        {
-            weights.push_back(1. / pow(errors[index], 2));
-        }
+        else { weights.push_back(1. / pow(errors[index], 2)); }
     }
     double sum_weights = std::accumulate(weights.begin(), weights.end(), 0.0);
     double mean_x      = std::inner_product(indep_var.begin(), indep_var.end(), weights.begin(), 0.0) / sum_weights;

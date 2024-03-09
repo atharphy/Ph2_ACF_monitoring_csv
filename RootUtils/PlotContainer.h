@@ -18,10 +18,10 @@ class PlotContainer //: public streammable
 {
   public:
     PlotContainer() { ; }
-    PlotContainer(const PlotContainer& container) = delete;
+    PlotContainer(const PlotContainer& container)            = delete;
     PlotContainer& operator=(const PlotContainer& container) = delete;
     PlotContainer(PlotContainer&& container)                 = default;
-    PlotContainer& operator=(PlotContainer&& container) = default;
+    PlotContainer& operator=(PlotContainer&& container)      = default;
 
     virtual ~PlotContainer() { ; }
 

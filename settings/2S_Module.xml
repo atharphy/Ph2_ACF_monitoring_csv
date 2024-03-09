@@ -89,8 +89,8 @@
     <Setting name="TriggerRate">10</Setting>
     <Setting name="StubAlignmentThreshold">550</Setting>
     <Setting name="StubAlignmentScanStart">67</Setting>
-    <Setting name="StartLatency">90</Setting>
-    <Setting name="LatencyRange">5</Setting>
+    <Setting name="StartLatency">190</Setting>
+    <Setting name="LatencyRange">20</Setting>
 
 
     <Setting name="TargetVcth">0x78</Setting>

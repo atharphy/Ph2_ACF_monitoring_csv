@@ -35,8 +35,7 @@ std::vector<uint32_t> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPri
     auto cNTriggersRxd = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
     auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
-    do
-    {
+    do {
         cEndTime      = std::chrono::high_resolution_clock::now();
         cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cNTriggersRxd = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -45,7 +44,7 @@ std::vector<uint32_t> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPri
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
     fTotalNumberOfTriggers += fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
 
-    LOG(DEBUG) << BOLDMAGENTA << "First header found after " << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "First header found after " << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
     auto cWords = fTheRegManager->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
     if(pPrint)
     {
@@ -72,7 +71,7 @@ std::vector<uint32_t> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPri
 
 std::vector<std::vector<uint32_t>> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
 {
-    LOG(DEBUG) << BOLDBLUE << "D19cDebugFWInterface::StubDebug ...." << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "D19cDebugFWInterface::StubDebug ...." << RESET;
 
     uint8_t cReSync   = 0;
     uint8_t cCalPulse = 0;
@@ -92,14 +91,13 @@ std::vector<std::vector<uint32_t>> D19cDebugFWInterface::StubDebug(bool pWithTes
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control", final_command);
 
     auto cWords = fTheRegManager->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
-    LOG(DEBUG) << BOLDBLUE << "Captured stub debug  ...." << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "Captured stub debug  ...." << RESET;
 
     std::vector<std::vector<uint32_t>> lineWordVector(pNlines);
 
     std::vector<std::string> cLines(0);
     size_t                   cLine = 0;
-    do
-    {
+    do {
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Line " << cLine << " words " << std::hex;
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < 5; cIndex++)
@@ -135,10 +133,7 @@ std::vector<std::string> D19cDebugFWInterface::ScopeStubLines(bool pWithTestPuls
     uint8_t cBC0      = 0;
     uint8_t cDuration = 0;
     if(pWithTestPulse) { cCalPulse = 1; }
-    else
-    {
-        cL1A = 1;
-    }
+    else { cL1A = 1; }
     uint32_t encode_resync    = cReSync << 16;
     uint32_t encode_cal_pulse = cCalPulse << 17;
     uint32_t encode_l1a       = cL1A << 18;
@@ -152,8 +147,7 @@ std::vector<std::string> D19cDebugFWInterface::ScopeStubLines(bool pWithTestPuls
     size_t                   cLine   = 0;
     size_t                   cNlines = 6;
     // int cStrLength=0;
-    do
-    {
+    do {
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < cNlines; cIndex++)
         {
@@ -169,7 +163,7 @@ std::vector<std::string> D19cDebugFWInterface::ScopeStubLines(bool pWithTestPuls
             cOutput_wSpace += *cIt + " ";
             cOutput += *cIt;
         }
-        LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
         cLines.push_back(cOutput);
         cLine++;
     } while(cLine < cNlines);
