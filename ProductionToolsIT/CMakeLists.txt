@@ -100,7 +100,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         message(STATUS "    ${name}")
     endforeach(sourcefile ${BINARIES})
 
-    TARGET_LINK_LIBRARIES(Ph2_ProductionToolsIT ${LIBS})
+    target_link_libraries(Ph2_ProductionToolsIT ${LIBS})
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 

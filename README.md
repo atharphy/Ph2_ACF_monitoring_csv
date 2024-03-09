@@ -52,8 +52,8 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7-1` and in `/etc/hosts` put `192.168.1.80 fc7-1` (increase these numbers for additional FC7 boards)
 3. Restart the network: `sudo /etc/init.d/network restart`
-4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from [here](https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm)
-5. Start the rarpd daemon: `sudo systemctl start rarpd` or `sudo rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
+4. Install the rarpd daemon: `sudo yum install rarp_file_name.rpm`
+5. Start the rarpd daemon: `sudo systemctl start rarpd` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
 More details on the hardware needed to setup the system can be found [here](https://indico.cern.ch/event/1014295/contributions/4257334/attachments/2200045/3728440/Low-resoution%202021_02%20DAQ%20School.pdf)
 
@@ -87,10 +87,10 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 - Run the command: `fpgaconfig -c CMSIT_RD53A/B.xml -i firmware_file_name_on_the_microSD` to load a new firmware from the microSD card to the FPGA
 - Run the command: `fpgaconfig --help` for help
 ### =x= End of Inner-Tracker section =x=
+
+
 ##
-
-
-### The Ph2_ACF software
+### The `Ph2_ACF` software
 Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal, etc...):
 
 1. Clone the GitHub repo and run cmake
@@ -134,8 +134,8 @@ Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (
 ##
 ### Gitlab CI setup for Developers (required to submit merge requests)
 Enable shared Runners (if not enabled)
-- from `settings > CI/CD` expand the `Runners` section
-- click the `Allow shared Runners` button
+- From `settings > CI/CD` expand the `Runners` section
+- Click the `Allow shared Runners` button
 
 
 ##
@@ -154,7 +154,7 @@ sudo yum install -y boost-devel pugixml-devel json-devel
 3. Install uHAL. SW tested with uHAL version up to 2.7.1
 Follow instructions from `https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html`
 
-4. Install CERN ROOT
+4. Install ROOT
 ```bash
 sudo yum install -y root
 sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
@@ -182,7 +182,7 @@ tar zxvf v2.9.2.tar.gz
 
 ##
 ### Setup on CentOs8 (deprecated)
-1. Libraries needed by Ph2_ACF
+1. Libraries needed by `Ph2_ACF`
 ```bash
 sudo yum install -y boost-devel pugixml-devel json-devel
 ```
@@ -242,7 +242,7 @@ The following procedure will install (in order):
 5. the `cactus` libraries for `IPbus` (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
 6. `root` with all its needed libraries
 7. `cmake`, tools for clang, including `clang-format` and `git-extras`
-8. `devtoolset 12`
+8. `gcc-toolset-12`
 9. `python3`
 10. `protobuf`
 11. `pybind11`
@@ -255,6 +255,7 @@ sudo dnf --repofrompath=cern9el,http://linuxsoft.cern.ch/cern/alma/9/CERN/x86_64
 
 #### Libraries needed by Ph2_ACF
 ```bash
+sudo yum install epel-release
 sudo yum install -y boost-devel pugixml-devel json-devel
 ```
 
@@ -283,7 +284,7 @@ sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-ph
 sudo yum install -y cmake3 clang-tools-extra git-extras
 ```
 
-**devtoolset 12**
+**gcc-toolset-12**
 ```bash
 sudo yum makecache --refresh
 sudo yum -y install gcc-toolset-12
@@ -307,10 +308,9 @@ tar zxvf v2.9.2.tar.gz
 
 ##
 ### clang-format (required to submit merge requests)
-1. Install 7.0 llvm toolset
+1. Install clang
 ```bash
-yum install centos-release-scl
-yum install llvm-toolset-7.0
+dnf install clang
 ```
 
 2. If you already sourced the environment, you should be able to run the command to format the `Ph2_ACF` (to be done before each merge request):
@@ -320,13 +320,13 @@ formatAll
 
 
 ##
-### To pull the large files
-Install git lfs
+### To pull large files
+Install `git lfs`
 ```bash
 sudo yum install git-lfs
 git lfs install
 ```
-go to your main Ph2_ACF folder and run
+Go to your main `Ph2_ACF` folder and run
 ```bash
 git config lfs.https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git/info/lfs.locksverify true # or your username instead of cms_tk_ph2
 ```
@@ -338,22 +338,6 @@ git fetch cms_tk_ph2
 git lfs fetch cms_tk_ph2
 git lfs pull cms_tk_ph2
 ```
-
-
-##
-### Nota Bene
-When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
-
-Register values are:
-- 8-bit unsigend integers for the CBCs that should be edited in hex notation, i.e. `0xFF`
-- 32-bit unsigned integers for the GLIB: decimal values
-
-For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefile and also activate the uHal log in `RegManager.cc`
-
-
-##
-### External clock and trigger
-Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/Middleware_Short_Guide.md) for instructions on how to use external clock and trigger with the various FMCs (DIO5 and CBC3 FMC)
 
 
 ##
