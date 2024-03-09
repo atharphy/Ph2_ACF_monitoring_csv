@@ -100,20 +100,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
         add_executable(${name} ${sourcefile})
-<<<<<<< HEAD
         target_link_libraries(${name} ${LIBS} Ph2_ProductionToolsIT Ph2_Interface Ph2_System Ph2_Tools)
     endforeach(sourcefile ${BINARIES})
 
     include_directories(${CACTUS_INCLUDEDIR})
     target_link_libraries(Ph2_ProductionToolsIT ${LIBS})
-=======
-        target_link_libraries(${name} ${LIBS} Ph2_Interface Ph2_System Ph2_Tools)
-    endforeach(sourcefile ${BINARIES})
-
-    include_directories(${CACTUS_INCLUDEDIR})
-
-    TARGET_LINK_LIBRARIES(Ph2_ProductionToolsIT ${LIBS})
->>>>>>> e7d0b237d (Add first compiling version of TEPXQuadNTC)
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
