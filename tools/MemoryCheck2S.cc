@@ -1351,7 +1351,7 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
                         uint8_t                              cSeed = 10 + 2 * (cChip->getId() + 1);
                         std::vector<std::pair<uint8_t, int>> cSeeds{{cSeed, 0}};
 
-                        for(const auto theSeedAndBend: cSeeds)
+                        for(const auto& theSeedAndBend: cSeeds)
                         {
                             auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, theSeedAndBend.first, theSeedAndBend.second);
                             // LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;

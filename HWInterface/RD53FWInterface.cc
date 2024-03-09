@@ -445,7 +445,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
     uint32_t              channel_up;
     int                   nAttempts = 0;
-    std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
+    std::vector<uint16_t> initSequence(RD53Shared::firstChip->getLaneUpInitSequence());
     do
     {
         // ###############################################
