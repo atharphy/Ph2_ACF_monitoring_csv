@@ -12,7 +12,7 @@ if [[ $OS_release == "rh_7" ]]; then
 elif [[ $OS_release == "rh_8" ]]; then
   source scl_source enable gcc-toolset-10
 elif [[ $OS_release == "rh_9" ]]; then
-  source scl_source enable gcc-toolset-12 gcc-toolset-13
+  source scl_source enable gcc-toolset-13
 else
   echo OS Release not supported
 fi
