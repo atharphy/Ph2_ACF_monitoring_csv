@@ -1,18 +1,115 @@
 /*!
   \file                  TEPXQuadNTC.cc
   \brief                 Read out TEPX Quad NTC
-  \author                PSI
+  \author                PSI team
   \version               1.0
-  \date                  04/03/24
+  \date                  04/03/2024
   Support:               none
 */
 
 #include "TEPXQuadNTC.h"
-#include "Utils/ContainerSerialization.h"
 #include <vector>
 
+#include "HWInterface/RD53FWInterface.h"
+#include "HWInterface/RegManager.h"
+#include "System/SystemController.h"
+#include "Utils/ConfigureInfo.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/StartInfo.h"
+#include "Utils/argvparser.h"
+
+// ##################
+// # Default values #
+// ##################
+#define RUNNUMBER 0
+#define FILERUNNUMBER "./RunNumber.txt"
+#define BASEDIR "PH2ACF_BASE_DIR"
+#define TESTSUBDETECTOR false
+
+INITIALIZE_EASYLOGGINGPP
+
+using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+
+int main(int argc, char** argv)
+{
+    // #############################
+    // # Initialize command parser #
+    // #############################
+    CommandLineProcessing::ArgvParser cmd;
+
+    cmd.setIntroductoryDescription("@@@ TEPXQuadNTC @@@");
+
+    cmd.setHelpOption("h", "help", "Print this help page");
+
+    cmd.defineOption("file", "Hardware description file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("file", "f");
+
+    int result = cmd.parse(argc, argv);
+    if(result != CommandLineProcessing::ArgvParser::NoParserError)
+    {
+        LOG(INFO) << cmd.parseErrorDescription(result);
+        exit(EXIT_FAILURE);
+    }
+
+    // ####################
+    // # Retrieve options #
+    // ####################
+    std::string configFile = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
+
+    // ########################
+    // # Configure the logger #
+    // ########################
+    el::Configurations conf(std::string(std::getenv(BASEDIR)) + "/settings/logger.conf");
+    conf.set(el::Level::Global, el::ConfigurationType::Format, "|%datetime{%h:%m:%s}|%levshort|%msg");
+    el::Loggers::reconfigureAllLoggers(conf);
+
+    SystemController mySysCntr;
+
+    // ##################################
+    // # Configure the SystemController #
+    // ##################################
+
+    // #######################
+    // # Initialize Hardware #
+    // #######################
+    // LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
+    // ConfigureInfo theConfigureInfo;
+    // theConfigureInfo.setConfigurationFiles(configFile, calibSettingsFile);
+    // mySysCntr.Configure(theConfigureInfo, !skipcfg);
+    // LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
+    // LOG(INFO) << RESET;
+
+    // ###################
+    // # Run Calibration #
+    // ###################
+    // if((program == false) && (dumpRegs == false))
+    // {
+    //     if(whichCalib == "")
+    //         LOG(ERROR) << BOLDRED << "Error: calibration not specified" << RESET;
+    //     else
+    //         LOG(ERROR) << BOLDRED << "Error: option not recognized (" << BOLDYELLOW << whichCalib << BOLDRED << ")" << RESET;
+
+    //     mySysCntr.Destroy();
+    //     exit(EXIT_FAILURE);
+    // }
+    std::string fileName("Run_TEPXNTC");
+    TEPXQuadNTC yo;
+    yo.Inherit(&mySysCntr);
+    yo.localConfigure(fileName, 0);
+    yo.run();
+
+    // ######################################################
+    // # Disable all channels and destroy System Controller #
+    // ######################################################
+    mySysCntr.disableAllChannels();
+    mySysCntr.Destroy();
+
+    LOG(INFO) << BOLDMAGENTA << "@@@ End of TEPXQuadNTC @@@" << RESET;
+
+    return EXIT_SUCCESS;
+}
 
 // define function for Linear Regression with least mean squares method
 std::pair<double, double> LinReg(const std::vector<double>& x, const std::vector<double>& y, bool verbose = false)

@@ -49,73 +49,127 @@ void RD53BMuxReader::run()
     auto chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
     CalibBase::prepareChipQueryForEnDis("chipSubset"); //  ??
-    std::vector<std::string> muxlist = {"Iref",
-                                        "NTC_VOLT",
-                                        "ANA_IN_CURR",
-                                        "ANA_SHUNT_CURR",
-                                        "DIG_IN_CURR",
-                                        "DIG_SHUNT_CURR",
-                                        "VIND",
-                                        "VINA",
-                                        "VDDD",
-                                        "VDDA",
-                                        "VOFS",
-                                        "Vref_ADC",
-                                        "VrefA",
-                                        "Vref_CORE",
-                                        "Vref_PRE",
-                                        "ANA_GND_0",
-                                        "ANA_GND_1",
-                                        "ANA_GND_2",
-                                        "ANA_GND_3"};
+    std::vector<std::string> muxlist = {
+        "Iref", "NTC_VOLT", "ANA_IN_CURR", "ANA_SHUNT_CURR", "DIG_IN_CURR", "DIG_SHUNT_CURR", "VIND", "VINA", "VDDD", "VDDA", "VOFS", "VrefA", "VrefD", "Vref_CORE", "Vref_PRE"};
+    const float R_IMUX = 4.99;  // kOhm, R17(ABCD) on TEPX hdis
+    const float V_REF  = 0.845; // nominal according to RD53B manual
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
+            {
+                std::vector<unsigned int>                                         chip_ids;
+                std::vector<float>                                                chip_currents;
+                std::map<std::string, std::vector<std::pair<float, std::string>>> summary;
                 for(const auto cChip: *cHybrid)
                 {
                     LOG(INFO) << GREEN << "[RD53BMuxReader::run]  board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET;
+                    chip_ids.push_back(cChip->getId());
+                    float Icroc = 0;
 
-                    /* too verbose, spits out an extra message that can't be silenced
-                    float vddd = chipInterface->ReadChipMonitor(cChip, "VDDD") * 2;
-                    LOG(INFO) << BOLDBLUE << "VDDD = " << std::setprecision(3) << BOLDYELLOW << vddd << " V" << RESET;
-                    */
-
-                    chipInterface->WriteChipReg(cChip, "DAC_NTC", 500);
+                    // "calibrate" the current measurement, assuming the ntc dac has no offset (circular?)
+                    float        x_sum = 0, y_sum = 0, x2_sum = 0, xy_sum = 0;
+                    unsigned int n = 0;
+                    for(unsigned int idac = 10; idac < 100; idac += 10)
+                    {
+                        chipInterface->WriteChipReg(cChip, "DAC_NTC", idac);
+                        const auto adc = chipInterface->ReadChipADC(cChip, "NTC_CURR");
+                        // float inom = adc * V_REF / 4096 / R_IMUX * 1e3;
+                        // std::cout << "dac_ntc " << idac << "   adc=" << adc << "   inom=" << inom<< std::endl;
+                        if(adc > 0)
+                        {
+                            n += 1;
+                            x_sum += idac;
+                            y_sum += adc;
+                            x2_sum += idac * idac;
+                            xy_sum += adc * idac;
+                        }
+                    }
+                    float offset = (x2_sum * y_sum - x_sum * xy_sum) / (x2_sum * n - x_sum * x_sum);
+                    chipInterface->WriteChipReg(cChip, "DAC_NTC", 100); // back to the default value
 
                     // raw ADC: for a list of "observables" see RD53BInterface::getADCobservable  in HWInterface/RD53BInterface.cc
                     for(const auto& mux: muxlist)
                     {
-                        std::vector<uint32_t> adc;
-                        for(unsigned int n = 0; n < 20; n++) { adc.emplace_back(chipInterface->ReadChipADC(cChip, mux)); }
-                        LOG(INFO) << BOLDBLUE << std::setw(20) << mux << " ADC = " << BOLDYELLOW << std::fixed << std::setw(5) << adc[0] << std::fixed << std::setw(5) << adc[1] << std::fixed
-                                  << std::setw(5) << adc[2] << std::fixed << std::setw(5) << adc[3] << std::fixed << std::setw(5) << adc[4] << std::fixed << std::setw(5) << adc[5] << std::fixed
-                                  << std::setw(5) << adc[6] << std::fixed << std::setw(5) << adc[7] << std::fixed << std::setw(5) << adc[8] << std::fixed << std::setw(5) << adc[9] << std::fixed
-                                  << std::setw(5) << adc[10] << std::fixed << std::setw(5) << adc[11] << std::fixed << std::setw(5) << adc[12] << std::fixed << std::setw(5) << adc[13] << std::fixed
-                                  << std::setw(5) << adc[14] << std::fixed << std::setw(5) << adc[15] << std::fixed << std::setw(5) << adc[16] << std::fixed << std::setw(5) << adc[17] << std::fixed
-                                  << std::setw(5) << adc[18] << std::fixed << std::setw(5) << adc[19] << RESET;
+                        uint32_t           adc_sum       = 0;
+                        const unsigned int n_measurement = 10; // TODO configurable
+                        unsigned int       n_valid       = 0;
+                        std::stringstream  line;
+                        for(unsigned int n = 0; n < n_measurement; n++)
+                        {
+                            const auto value = chipInterface->ReadChipADC(cChip, mux);
+                            if(value < 4096)
+                            {
+                                line << std::fixed << std::setw(5) << value;
+                                adc_sum += value;
+                                n_valid += 1;
+                            }
+                            else { line << RED << std::fixed << std::setw(5) << value << YELLOW; }
+                        }
+                        float adc_mean = float(adc_sum) / n_valid;
+                        float value    = adc_mean * V_REF / 4096; // nominal 12 bit ADC
+
+                        std::string unit = "  ";
+                        if(mux == "Iref")
+                        {
+                            value = (adc_mean - offset) * V_REF / 4096 / R_IMUX * 1e3;
+                            unit  = "uA";
+                        }
+                        else if((mux == "ANA_IN_CURR") || (mux == "DIG_IN_CURR"))
+                        {
+                            value = 21.0 * (adc_mean - offset) * V_REF / 4096 / R_IMUX; // scale factor from RD53B manual, table 27
+                            unit  = "A ";
+                            Icroc += value;
+                        }
+                        else if((mux == "ANA_SHUNT_CURR") || (mux == "DIG_SHUNT_CURR"))
+                        {
+                            value = 21.52 * (adc_mean - offset) * V_REF / 4096 / R_IMUX; // scale factor from RD53B manual, table 27
+                            unit  = "A ";
+                            Icroc += value;
+                        }
+                        else if((mux == "VINA") || (mux == "VIND") || (mux == "VOFS"))
+                        {
+                            value = 4 * adc_mean * V_REF / 4096;
+                            unit  = "V ";
+                        }
+                        else if((mux == "VDDA") || (mux == "VDDD"))
+                        {
+                            value = 2 * adc_mean * V_REF / 4096;
+                            unit  = "V ";
+                        }
+                        else
+                        {
+                            value = adc_mean * V_REF / 4096;
+                            unit  = "V ";
+                        }
+
+                        LOG(INFO) << BOLDBLUE << std::setw(20) << mux << " ADC = " << BOLDYELLOW << line.str() << "  |   " << std::setw(7) << std::setprecision(1) << adc_mean << "   " << std::setw(9)
+                                  << std::setprecision(2) << value << " " << unit << RESET;
+                        summary[mux].push_back(make_pair(value, unit));
                     }
-
-                    /* cant't do the following, all private, thank you, no simple way to loop over all of them */
-                    // uint32_t VMUXcode = 38;
-                    // auto const alue = RD53Interface::measureVoltageCurrent(pChip, observable, isCurrentNotVoltage);
-                    // auto const adc = chipInterface->measureADC(cChip, 0x1000 + VMUXcode); //13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
-                    // LOG(INFO) << BOLDBLUE << "VMUX " << BOLDYELLOW << "[" << VMUXcode << "]"
-                    //           << BOLDBLUE << " = " << adc << RESET;
-
-                    // Marino Style
-                    /*
-                    int VMUXcode = 38; // VDDD table 28 (p58)
-                    chipInterface->WriteChipReg(cChip, "MonitorEnable", 1); //Choose MUX entry
-                    chipInterface->WriteChipReg(cChip, "VMonitor", VMUXcode);
-                    chipInterface->SendGlobalPulse(cChip, {"ADCStartOfConversion"}); //ADC start conversion
-                    auto const adc = chipInterface->ReadChipReg(cChip, "MonitoringDataADC");
-                    //auto const adc = measureADC(cChip, 38);
-                    LOG(INFO) << BOLDBLUE << "VMUX " << BOLDYELLOW << "[" << VMUXcode << "]"
-                              << BOLDBLUE << " = " << adc << RESET;
-                    */
+                    chip_currents.push_back(Icroc);
                 }
+
+                std::stringstream header, current;
+                float             module_current = 0;
+                for(unsigned int c = 0; c < chip_ids.size(); c++)
+                {
+                    header << std::setw(9) << chip_ids[c] << "   ";
+                    current << std::setw(9) << std::setprecision(2) << chip_currents[c] << " A ";
+                    module_current += chip_currents[c];
+                }
+                LOG(INFO) << BOLDBLUE << std::setw(20) << "chip id"
+                          << "  | " << header.str() << RESET;
+                LOG(INFO) << BOLDBLUE << std::setw(20) << "chip current"
+                          << "  | " << current.str() << "  sum = " << std::setw(9) << std::setprecision(3) << module_current << " A" << RESET;
+                for(const auto& mux: muxlist)
+                {
+                    std::stringstream line;
+                    for(const auto& result: summary[mux]) { line << std::setw(9) << std::setprecision(3) << result.first << " " << std::setw(2) << result.second; }
+                    LOG(INFO) << BOLDBLUE << std::setw(20) << mux << "  | " << line.str() << RESET;
+                }
+            }
 
     // ##################
     // # Reset sequence #
