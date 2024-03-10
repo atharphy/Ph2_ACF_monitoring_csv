@@ -57,7 +57,7 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
     auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 
-    auto hThrNoise2D = CanvasContainer<TH2F>("ThrNoise2D", "Noise vs Threshold scatter plot", 1000, startValue - offset, stopValue - offset, 200, 0, 200);
+    auto hThrNoise2D = CanvasContainer<TH2F>("ThrNoise2D", "Noise vs Threshold scatter plot", stopValue - startValue, startValue - offset, stopValue - offset, 200, 0, 200);
     bookImplementer(theOutputFile, theDetectorStructure, ThrNoise2D, hThrNoise2D, "Threshold (#DeltaVCal)", "Noise (#DeltaVCal)");
 
     AreHistoBooked = true;
