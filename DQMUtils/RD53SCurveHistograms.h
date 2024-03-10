@@ -45,6 +45,7 @@ class SCurveHistograms : public DQMHistogramBase
     DetectorDataContainer Threshold2D;
     DetectorDataContainer Noise2D;
     DetectorDataContainer ToT2D;
+    DetectorDataContainer ThrNoise2D;
 
     size_t nEvents;
     size_t nSteps;
