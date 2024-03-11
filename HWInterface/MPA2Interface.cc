@@ -816,36 +816,20 @@ bool MPA2Interface::MaskAllChannels(ReadoutChip* pMPA, bool mask, bool pVerify) 
 
 bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
-    // This only works with synchronous counters by construction
-    // bool success = true;
-    // success &= WriteChipReg(pMPA, "ENFLAGS_ALL", 0xa); // masking all MPA and make sure polarity is 1
-    // success &= WriteChipReg(pMPA, "Control_1", 0x00);
-    // success &= WriteChipReg(pMPA, "PixelControl_ALL", 0x1E);
-
-    // success &= WriteChipReg(pMPA, "Mask_ALL", 0x02);
-
-    // for(const auto& theCluster: theClusterList)
-    // {
-    //     for(uint8_t rowIndex = 0; rowIndex < std::get<2>(theCluster); ++rowIndex)
-    //     {
-    //         success &= WriteChipReg(pMPA, getPixelRegisterName("ENFLAGS", std::get<0>(theCluster) + rowIndex, std::get<1>(theCluster)), 0x0); // inverting polarity for the pixels to inject
-    //     }
-    // }
-
-    // success &= WriteChipReg(pMPA, "Mask_ALL", 0xFF);
-
     std::vector<std::pair<std::string, uint16_t>> listOfRegisters;
 
     listOfRegisters.push_back({"ENFLAGS_ALL", 0xa}); // masking all MPA and make sure polarity is 1
-    listOfRegisters.push_back({"Control_1", 0x0});
-    listOfRegisters.push_back({"PixelControl_ALL", 0x1E});
+    listOfRegisters.push_back({"Mask", 0x03});
+    listOfRegisters.push_back({"Control_1", 0x0}); // set Readout mode to normal
+    listOfRegisters.push_back({"Mask", 0x00});
+    listOfRegisters.push_back({"PixelControl_ALL", 0x1E}); // disable Hip cut, cluster cut to the maximum, mode select to or
     listOfRegisters.push_back({"Mask_ALL", 0x02});
 
     for(const auto& theCluster: theClusterList)
     {
-        for(uint8_t rowIndex = 0; rowIndex < std::get<2>(theCluster); ++rowIndex)
+        for(uint8_t colIndex = 0; colIndex < std::get<2>(theCluster); ++colIndex)
         {
-            listOfRegisters.push_back({getPixelRegisterName("ENFLAGS", std::get<0>(theCluster) + rowIndex, std::get<1>(theCluster)), 0x0}); // inverting polarity for the pixels to inject
+            listOfRegisters.push_back({getPixelRegisterName("ENFLAGS", std::get<0>(theCluster), std::get<1>(theCluster) + colIndex), 0x0}); // inverting polarity for the pixels to inject
         }
     }
 

@@ -304,6 +304,7 @@
     <Setting name="OTCICphaseAlignmentNumberOfAlignmentIterations">100</Setting>
     <Setting name="OTCICphaseAlignmentMinLockingSuccessRate">0.95</Setting>
     <Setting name="OTverifyCICdataWordNumberOfIterations">1000</Setting>
+    <Setting name="OTverifyMPASSAdataWordNumberOfIterations">1000</Setting>
     
 </Settings>
 

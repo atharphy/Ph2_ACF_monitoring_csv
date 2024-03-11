@@ -41,6 +41,7 @@ void OTverifyCICdataWord::Running()
     LOG(INFO) << "Starting OTverifyCICdataWord measurement.";
     Initialise();
     runIntegrityTest();
+    fillHistograms();
     LOG(INFO) << "Done with OTverifyCICdataWord.";
     Reset();
 }
@@ -77,7 +78,10 @@ void OTverifyCICdataWord::runIntegrityTest()
         runStubIntegrityTest(theBoard, theDebugInterface);
         runL1IntegrityTest(theBoard, theDebugInterface);
     }
+}
 
+void OTverifyCICdataWord::fillHistograms()
+{
 #ifdef __USE_ROOT__
     fDQMHistogramOTverifyCICdataWord.fillPatternMatchingEfficiencyResults(fPatternMatchingEfficiencyContainer);
 #else
@@ -88,6 +92,7 @@ void OTverifyCICdataWord::runIntegrityTest()
     }
 #endif
 }
+
 
 void OTverifyCICdataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
 {
@@ -218,7 +223,7 @@ void OTverifyCICdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, 
                                 ->getObject(theMPA->getHybridId())
                                 ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()[theMPA->getId() % 8][0];
 
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 2)};
 
     static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, theClusterList);
 
