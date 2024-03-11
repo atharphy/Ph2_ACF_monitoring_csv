@@ -23,7 +23,7 @@ void FileParser::parseHW(const std::string& pFilename, DetectorContainer* pDetec
     pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
-    os << RESET << "\n\n";
+    os << RESET << "\n";
 
     for(i = 0; i < 80; i++) os << "*";
     os << "\n";
