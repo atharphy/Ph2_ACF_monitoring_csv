@@ -63,6 +63,7 @@ else()
 
     cet_make(LIBRARY_NAME Ph2_DQMUtils
             LIBRARIES
+            ROOT::Core
     )
 
     install_headers()
