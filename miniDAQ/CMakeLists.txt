@@ -72,7 +72,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Find source files
     file(GLOB SOURCES *.cc)
     add_library(Ph2_miniDAQ STATIC ${SOURCES})
-    target_link_libraries(Ph2_miniDAQ CACTUS::headers)
+    target_link_libraries(Ph2_miniDAQ Ph2_Tools CACTUS::headers)
 
     ###############
     # EXECUTABLES #

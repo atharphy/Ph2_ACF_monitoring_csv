@@ -11,10 +11,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Boost also needs to be linked
     #include_directories(${Boost_INCLUDE_DIRS})
     #link_directories(${Boost_LIBRARY_DIRS})
-    set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
-
+    set(LIBS ${LIBS} ${Boost_DATE_TIME_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE})
+    
     # Library dirs
     # none
+    link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Find source files
     file(GLOB HEADERS *.h)
@@ -82,9 +83,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif()
     endif()
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_DQMUtils Ph2_Tools NetworkUtils)
+    set(LIBS ${LIBS} CACTUS::uhal)
 
-    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionToolsIT *.cc)
+    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionToolsIT TEPXQuadNTC.cc)
 
     ####################################
     ## EXECUTABLES
@@ -98,9 +99,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     foreach(sourcefile ${BINARIES})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
+        add_executable(${name} ${sourcefile})
+        target_link_libraries(${name} ${LIBS} Ph2_Interface Ph2_System Ph2_Tools)
     endforeach(sourcefile ${BINARIES})
 
-    TARGET_LINK_LIBRARIES(Ph2_ProductionToolsIT ${LIBS})
+    include_directories(${CACTUS_INCLUDEDIR})
+    target_link_libraries(Ph2_ProductionToolsIT ${LIBS})
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
@@ -115,10 +119,6 @@ else()
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS "    ${BoldYellow}PRODUCTION TOOLS IT${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
-
-    include_directories(${UHAL_DIR}/uhal/include)
-    include_directories(${UHAL_DIR}/log/include)
-    include_directories(${UHAL_DIR}/grammars/include)
 
     include_directories(${Protobuf_INCLUDE_DIRS})
 

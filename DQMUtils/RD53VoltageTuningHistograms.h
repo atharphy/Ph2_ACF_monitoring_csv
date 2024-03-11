@@ -15,6 +15,11 @@
 
 #include <TH1F.h>
 
+// #############
+// # CONSTANTS #
+// #############
+#define NBINS_V 32
+
 class VoltageTuningHistograms : public DQMHistogramBase
 {
   public:

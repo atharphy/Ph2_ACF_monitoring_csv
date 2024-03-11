@@ -45,19 +45,19 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorFit2D, hErrorFit2D, "Columns", "Rows");
 
-    auto hInterceptHighQ1D = CanvasContainer<TH1F>("InterceptHighQ1D", "Intercept high Q 1D", NBINS, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
+    auto hInterceptHighQ1D = CanvasContainer<TH1F>("InterceptHighQ1D", "Intercept high Q 1D", NBINS_G, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
     bookImplementer(theOutputFile, theDetectorStructure, InterceptHighQ1D, hInterceptHighQ1D, "Intercept for high charge range (ToT)", "Entries");
 
-    auto hSlopeHighQ1D = CanvasContainer<TH1F>("SlopeHighQ1D", "Slope high Q 1D", NBINS, 0, SLOPE_RANGE);
+    auto hSlopeHighQ1D = CanvasContainer<TH1F>("SlopeHighQ1D", "Slope high Q 1D", NBINS_G, 0, SLOPE_RANGE);
     bookImplementer(theOutputFile, theDetectorStructure, SlopeHighQ1D, hSlopeHighQ1D, "Slope for high charge range (ToT/VCal)", "Entries");
 
-    auto hInterceptLowQ1D = CanvasContainer<TH1F>("InterceptLowQ1D", "Intercept low Q 1D", NBINS, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
+    auto hInterceptLowQ1D = CanvasContainer<TH1F>("InterceptLowQ1D", "Intercept low Q 1D", NBINS_G, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
     bookImplementer(theOutputFile, theDetectorStructure, InterceptLowQ1D, hInterceptLowQ1D, "Intercept for low charge range (ToT)", "Entries");
 
-    auto hSlopeLowQ1D = CanvasContainer<TH1F>("SlopeLowQ1D", "Slope low Q 1D", NBINS, 0, SLOPE_RANGE);
+    auto hSlopeLowQ1D = CanvasContainer<TH1F>("SlopeLowQ1D", "Slope low Q 1D", NBINS_G, 0, SLOPE_RANGE);
     bookImplementer(theOutputFile, theDetectorStructure, SlopeLowQ1D, hSlopeLowQ1D, "Slope for low charge range (ToT/VCal)", "Entries");
 
-    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", NBINS, 0, MAXCHI2);
+    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", NBINS_G, 0, MAXCHI2);
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF1D, hChi2DoF1D, "#chi^{2}/D.o.F.", "Entries");
 
     auto hInterceptHighQ2D = CanvasContainer<TH2F>("InterceptHighQ2D", "Intercept high Q Map", nCols, 0, nCols, nRows, 0, nRows);

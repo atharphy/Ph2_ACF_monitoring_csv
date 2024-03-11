@@ -99,7 +99,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
 
-
     # Initial set of libraries
     set(LIBS ${LIBS} Ph2_Description Ph2_Utils Ph2_Parser Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM NetworkUtils MessageUtils CACTUS::uhal)
 
@@ -118,8 +117,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         list(REMOVE_ITEM BINARIES supervisor.cc testShep.cc)
         set(LIBS ${LIBS} Ph2_Interface Ph2_System Ph2_Tools Ph2_MonitorUtils Ph2_ProductionToolsIT Ph2_miniDAQ)
     endif()
-
-    message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
     foreach(sourcefile ${BINARIES})
         string(REPLACE ".cc" "" name ${sourcefile})
