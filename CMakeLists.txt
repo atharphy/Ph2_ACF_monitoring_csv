@@ -271,8 +271,8 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
-    include_directories($ENV{PH2ACF_BASE_DIR})
-
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+    
     set(CompileForShep true)
     set(CompileForHerd false)
     set(NoDataShipping false)
