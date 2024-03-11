@@ -17,8 +17,8 @@ void VoltageTuningHistograms::book(TFile* theOutputFile, DetectorContainer& theD
     fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
-    auto hVoltageDig = CanvasContainer<TH1F>("VoltageDig", "Digital Voltage", 32, 0, 32);
-    auto hVoltageAna = CanvasContainer<TH1F>("VoltageAna", "Analog Voltage", 32, 0, 32);
+    auto hVoltageDig = CanvasContainer<TH1F>("VoltageDig", "Digital Voltage", NBINS_V, 0, NBINS_V);
+    auto hVoltageAna = CanvasContainer<TH1F>("VoltageAna", "Analog Voltage", NBINS_V, 0, NBINS_V);
 
     bookImplementer(theOutputFile, theDetectorStructure, VoltageDig, hVoltageDig, "VoltageDig", "Entries");
     bookImplementer(theOutputFile, theDetectorStructure, VoltageAna, hVoltageAna, "VoltageAna", "Entries");
