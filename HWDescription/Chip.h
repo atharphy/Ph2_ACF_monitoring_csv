@@ -228,7 +228,8 @@ class Chip : public FrontEndDescription
     {
         ReadOnly,
         Utility,
-        User
+        User,
+        Global
     };
 
     void                                             takeSnapshot();

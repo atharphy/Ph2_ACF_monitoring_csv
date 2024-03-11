@@ -84,11 +84,11 @@ void SSA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^mask_peri_[AD]$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Fuse_Prog_b[0-3]$"), RegisterType::Utility));
     // Brodcast registers cannot be reset to avoid overriding local changes
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ENFLAGS$"), RegisterType::Utility));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^StripControl2$"), RegisterType::Utility));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^THTRIMMING$"), RegisterType::Utility));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Utility));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter[LM]SB$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ENFLAGS$"), RegisterType::Global));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^StripControl2$"), RegisterType::Global));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^THTRIMMING$"), RegisterType::Global));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Global));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter[LM]SB$"), RegisterType::ReadOnly));
 }
 
 void SSA2::loadfRegMap(const std::string& filename)

@@ -105,6 +105,10 @@ void RegisterHelper::restoreSnapshot()
                 for(auto theChip: *theHybrid)
                 {
                     const auto modifiedChipRegisters = theChip->getSnapshot();
+                    for(const auto& theRegister: modifiedChipRegisters)
+                    {
+                        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] setting back register " << theRegister.first << " to 0x" << std::hex << theRegister.second << std::dec << std::endl;
+                    }
                     fReadoutChipInterface->WriteChipMultReg(theChip, modifiedChipRegisters);
                 }
             }

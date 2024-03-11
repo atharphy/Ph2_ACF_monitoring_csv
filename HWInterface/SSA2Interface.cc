@@ -1050,21 +1050,17 @@ bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerify)
 
 bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
+    WriteChipReg(pSSA2, "ENFLAGS", 0x20); // masking all MPA and setting readout mode to OR
+    WriteChipReg(pSSA2, "THTRIMMING", 0x1F); // setting trimming to the lowest (higher value = lower threshold)
+    WriteChipReg(pSSA2, "StripControl2", 0x0F); // disable HIP cut
     // it looks like the trick of masking and invert polarity does not work
     std::vector<std::pair<std::string, uint16_t>> listOfRegisters;
 
     // This only works with synchronous counters by construction
-    listOfRegisters.push_back({"ENFLAGS", 0x20}); // masking all MPA and setting readout mode to OR
-    listOfRegisters.push_back({"THTRIMMING", 0x1F}); // setting trimming to the lowest (higher value = lower threshold)
     listOfRegisters.push_back({"Bias_THDAC", 0x00}); // set threshold to 0
     listOfRegisters.push_back({"Bias_THDACHIGH", 0x0}); // set hip threshold to 0
-    listOfRegisters.push_back({"StripControl2", 0x0F}); // disable HIP cut
-    listOfRegisters.push_back({"mask_peri_D", 0x03});
     listOfRegisters.push_back({"control_1", 0x00}); // normal readout mode
-    listOfRegisters.push_back({"mask_peri_D", 0xFF});
     listOfRegisters.push_back({"control_2", 0x0F}); // maximize cluster cut
-    listOfRegisters.push_back({"mask_strip", 0x01});
-
 
     for(const auto& theCluster: theClusterList)
     {
@@ -1072,10 +1068,10 @@ bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tup
         {
             std::string registerName = "ENFLAGS_S" + std::to_string(std::get<1>(theCluster) + stripIndex + 1);
             std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] registerName = " << registerName << std::endl;
-            listOfRegisters.push_back({registerName, 0x1});
+            listOfRegisters.push_back({registerName, 0x21});
         }
     }
-    listOfRegisters.push_back({"mask_strip", 0xFF});
+    // listOfRegisters.push_back({"mask_strip", 0xFF});
 
     return WriteChipMultReg(pSSA2, listOfRegisters);
 }
