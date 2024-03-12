@@ -30,16 +30,16 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
     const size_t BCIDsize  = RD53Shared::firstChip->getMaxBCIDvalue() + 1;
     const size_t TrgIDsize = RD53Shared::firstChip->getMaxTRIGIDvalue() + 1;
 
-    auto hToT1D = CanvasContainer<TH1F>("ToT1D", "<ToT> Distribution", ToTsize, 0, ToTsize);
+    auto hToT1D = CanvasContainer<TH1F>("ToT1D", "<ToT> distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
 
-    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "<ToT> Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "<ToT> map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 
     auto hOcc2D = CanvasContainer<TH2F>("Occ2D", "Occupancy", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "Columns", "Rows");
 
-    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", nCols, 0, nCols, nRows, 0, nRows);
+    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout errors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
 
     auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 1, BCIDsize + 1);
@@ -115,7 +115,7 @@ void PhysicsHistograms::fill(const DetectorDataContainer& DataContainer)
                                 ToT2DHist->SetBinError(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPhError);
                             }
 
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col, row);
                         }
                 }
 }
