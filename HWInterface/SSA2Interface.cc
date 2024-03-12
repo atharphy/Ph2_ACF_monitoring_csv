@@ -9,6 +9,7 @@
 
  */
 
+#include "HWDescription/SSA2.h"
 #include "HWInterface/SSA2Interface.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
@@ -1066,8 +1067,7 @@ bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tup
     {
         for(uint8_t stripIndex = 0; stripIndex < std::get<2>(theCluster); ++stripIndex)
         {
-            std::string registerName = "ENFLAGS_S" + std::to_string(std::get<1>(theCluster) + stripIndex + 1);
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] registerName = " << registerName << std::endl;
+            std::string registerName = SSA2::getStripRegisterName("ENFLAGS", std::get<1>(theCluster) + stripIndex);
             listOfRegisters.push_back({registerName, 0x21});
         }
     }

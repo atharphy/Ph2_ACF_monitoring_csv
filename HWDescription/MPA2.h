@@ -46,6 +46,8 @@ class MPA2 : public ReadoutChip
 
     MPA2(const MPA2&) = delete;
 
+    void setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg) override;
+
     void initializeFreeRegisters() override;
 
     using MPARegPair = std::pair<std::string, ChipRegItem>;
@@ -79,7 +81,14 @@ class MPA2 : public ReadoutChip
     std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow) override;
 
     // uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
+    static std::string getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col);
+    static std::string getRowRegisterName  (const std::string& theRegisterName, uint16_t row);
+
+  protected:
+    static std::vector<std::string> fListOfGlobalPixelRegisters;
+    static std::vector<std::string> fListOfGlobalRowRegisters;
 };
+
 
 struct MPA2RegItemComparer // Irene
 {

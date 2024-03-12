@@ -166,9 +166,6 @@ bool PSInterface::injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwD
         uint8_t correlationCol = correlationHit / 2;
         uint8_t correlationClusterSize = 1 + correlationHit % 2;
 
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pixel seed (row, col, clusterSize) = " << +seedRow << "  " << +seedCol << " " << +seedClusterSize << std::endl;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] strip seed (col, clusterSize) = " << +correlationCol << " " << +correlationClusterSize << std::endl;
-
         pixelClusterList.push_back({seedRow, seedCol, seedClusterSize});
         stripClusterList.push_back({0, correlationCol, correlationClusterSize});
     }
