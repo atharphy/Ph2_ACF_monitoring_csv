@@ -69,8 +69,6 @@ build:StandAlone_woDS_c7:
   extends: .build
   # artifacts:
   #   paths:
-  #     - bin/ot_module_test
-  #     - bin/commission
   #     - bin/CMSITminiDAQ
   #   expire_in: 1 week
 
@@ -260,8 +258,6 @@ run:IT:
     - cp Results/Run000000_PixelAlive.root .
     - cp Results/Run000001_ThrEqualization.root .
     - cp Results/Run000002_SCurve.root .
-    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysisRD53.log
-    - cp coreAnalysisRD53.log .
   artifacts:
     paths:
       - Run000000_PixelAlive.root
@@ -276,11 +272,9 @@ run:2S:
   script:
     - source ./setup.sh ci
     - fpgaconfig -c settings/CMS2S_CI.xml -i 2s_cic1_18Aug
-    - ot_module_test -f settings/CMS2S_CI.xml -t -m -a -b --reconfigure
+    - runCalibration -f settings/CMS2S_CI.xml -c calibrationandpedenoise
   after_script:
     - cp Results/*/Hybrid.root .
-    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysis2S.log
-    - cp coreAnalysis2S.log .
   artifacts:
     paths:
       - Hybrid.root
@@ -330,11 +324,9 @@ run:PS:
   script:
     - source ./setup.sh ci
     - fpgaconfig -c settings/CMSPS_CI.xml -i ps_8m_5g_cic1_l12octa_l8dio5
-    - ot_module_test -f settings/CMSPS_CI.xml -t -m -a -b --reconfigure
+    - runCalibration -f settings/CMSPS_CI.xml -c calibrationandpedenoise
   after_script:
     - cp Results/*/Hybrid.root .
-    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysisPS.log
-    - cp coreAnalysisPS.log .
   artifacts:
     paths:
       - Hybrid.root

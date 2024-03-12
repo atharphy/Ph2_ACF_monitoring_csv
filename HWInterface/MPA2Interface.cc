@@ -10,6 +10,7 @@
  */
 
 #include "HWInterface/MPA2Interface.h"
+#include "HWDescription/MPA2.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Utilities.h"
@@ -144,10 +145,10 @@ std::vector<uint8_t> MPA2Interface::readLUT(ReadoutChip* pChip, uint8_t pMode) /
 
 bool MPA2Interface::configPixel(Chip* pChip, std::string cReg, uint16_t row, uint16_t col, uint8_t pValue, bool pVerify)
 {
-    return WriteChipReg(pChip, getPixelRegisterName(cReg, row, col), pValue, pVerify);
+    return WriteChipReg(pChip, MPA2::getPixelRegisterName(cReg, row, col), pValue, pVerify);
 }
 
-uint16_t MPA2Interface::readPixel(Chip* pChip, std::string cReg, uint16_t row, uint16_t col) { return ReadChipReg(pChip, getPixelRegisterName(cReg, row, col)); }
+uint16_t MPA2Interface::readPixel(Chip* pChip, std::string cReg, uint16_t row, uint16_t col) { return ReadChipReg(pChip, MPA2::getPixelRegisterName(cReg, row, col)); }
 bool     MPA2Interface::maskPixel(Chip* pChip, uint16_t row, uint16_t col, bool doMask, bool pVerify)
 {
     auto    cRegValue = readPixel(pChip, "ENFLAGS", row, col);
@@ -382,8 +383,8 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         if(pRegName.find("_P") != std::string::npos) // single pixel
         {
             auto pixelAddress   = extractMaskedPixelAddress(pRegName);
-            enableRegisterName  = getPixelRegisterName("ENFLAGS", pixelAddress.first, pixelAddress.second);
-            patternRegisterName = getPixelRegisterName("DigPattern", pixelAddress.first, pixelAddress.second);
+            enableRegisterName  = MPA2::getPixelRegisterName("ENFLAGS", pixelAddress.first, pixelAddress.second);
+            patternRegisterName = MPA2::getPixelRegisterName("DigPattern", pixelAddress.first, pixelAddress.second);
         }
         else
         {
@@ -574,7 +575,10 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
 
     for(uint16_t row = 0; row < pMPA2->getNumberOfRows(); ++row)
     {
-        for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col) { registerList.push_back({getPixelRegisterName("TrimDAC", row, col), localRegValues.getChannel<uint16_t>(row, col) & 0x1F}); }
+        for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col)
+        {
+            registerList.push_back({MPA2::getPixelRegisterName("TrimDAC", row, col), localRegValues.getChannel<uint16_t>(row, col) & 0x1F});
+        }
     }
     cSuccess &= WriteChipMultReg(pMPA2, registerList, pVerify);
     return cSuccess;
@@ -816,48 +820,26 @@ bool MPA2Interface::MaskAllChannels(ReadoutChip* pMPA, bool mask, bool pVerify) 
 
 bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
-    // This only works with synchronous counters by construction
-    // bool success = true;
-    // success &= WriteChipReg(pMPA, "ENFLAGS_ALL", 0xa); // masking all MPA and make sure polarity is 1
-    // success &= WriteChipReg(pMPA, "Control_1", 0x00);
-    // success &= WriteChipReg(pMPA, "PixelControl_ALL", 0x1E);
-
-    // success &= WriteChipReg(pMPA, "Mask_ALL", 0x02);
-
-    // for(const auto& theCluster: theClusterList)
-    // {
-    //     for(uint8_t rowIndex = 0; rowIndex < std::get<2>(theCluster); ++rowIndex)
-    //     {
-    //         success &= WriteChipReg(pMPA, getPixelRegisterName("ENFLAGS", std::get<0>(theCluster) + rowIndex, std::get<1>(theCluster)), 0x0); // inverting polarity for the pixels to inject
-    //     }
-    // }
-
-    // success &= WriteChipReg(pMPA, "Mask_ALL", 0xFF);
-
     std::vector<std::pair<std::string, uint16_t>> listOfRegisters;
 
     listOfRegisters.push_back({"ENFLAGS_ALL", 0xa}); // masking all MPA and make sure polarity is 1
-    listOfRegisters.push_back({"Control_1", 0x0});
-    listOfRegisters.push_back({"PixelControl_ALL", 0x1E});
+    listOfRegisters.push_back({"Mask", 0x03});
+    listOfRegisters.push_back({"Control_1", 0x0}); // set Readout mode to normal
+    listOfRegisters.push_back({"Mask", 0xFF});
+    listOfRegisters.push_back({"PixelControl_ALL", 0x1E}); // disable Hip cut, cluster cut to the maximum, mode select to or
     listOfRegisters.push_back({"Mask_ALL", 0x02});
 
     for(const auto& theCluster: theClusterList)
     {
-        for(uint8_t rowIndex = 0; rowIndex < std::get<2>(theCluster); ++rowIndex)
+        for(uint8_t colIndex = 0; colIndex < std::get<2>(theCluster); ++colIndex)
         {
-            listOfRegisters.push_back({getPixelRegisterName("ENFLAGS", std::get<0>(theCluster) + rowIndex, std::get<1>(theCluster)), 0x0}); // inverting polarity for the pixels to inject
+            listOfRegisters.push_back({MPA2::getPixelRegisterName("ENFLAGS", std::get<0>(theCluster), std::get<1>(theCluster) + colIndex), 0x0}); // inverting polarity for the pixels to inject
         }
     }
 
     listOfRegisters.push_back({"Mask_ALL", 0xFF});
 
     return WriteChipMultReg(pMPA, listOfRegisters);
-}
-
-std::string MPA2Interface::getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col) const
-{
-    std::string pixelRegisterName = theRegisterName + "_C" + std::to_string(col) + "_R" + std::to_string(row);
-    return pixelRegisterName;
 }
 
 std::pair<int, int> MPA2Interface::extractMaskedPixelAddress(const std::string& registerName) const

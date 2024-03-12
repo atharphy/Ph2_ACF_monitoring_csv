@@ -146,4 +146,31 @@ bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<std::tuple<u
     else { return theSSA2Interface->injectNoiseClusters(pPS, theClusterList); }
 }
 
+bool PSInterface::injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwDescription::ReadoutChip* pSSA, std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector)
+{
+    if(pMPA->getFrontEndType() != FrontEndType::MPA2 || pSSA->getFrontEndType() != FrontEndType::SSA2)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " MPA2 and SSA2 must be provided in the correct order! Aborting..." << std::endl;
+        abort();
+    }
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> pixelClusterList;
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> stripClusterList;
+
+    for(const auto& theStub: theStubVector)
+    {
+        uint8_t seedRow         = std::get<0>(theStub);
+        uint8_t seedCol         = std::get<1>(theStub) / 2;
+        uint8_t seedClusterSize = 1 + std::get<1>(theStub) % 2;
+
+        uint8_t correlationHit         = std::get<1>(theStub) + std::get<2>(theStub);
+        uint8_t correlationCol         = correlationHit / 2;
+        uint8_t correlationClusterSize = 1 + correlationHit % 2;
+
+        pixelClusterList.push_back({seedRow, seedCol, seedClusterSize});
+        stripClusterList.push_back({0, correlationCol, correlationClusterSize});
+    }
+
+    return theMPA2Interface->injectNoiseClusters(pMPA, pixelClusterList) && theSSA2Interface->injectNoiseClusters(pSSA, stripClusterList);
+}
+
 } // namespace Ph2_HwInterface

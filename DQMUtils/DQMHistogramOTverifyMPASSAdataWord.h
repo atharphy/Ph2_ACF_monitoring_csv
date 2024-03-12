@@ -1,34 +1,34 @@
 /*!
-        \file                DQMHistogramOTverifyCICdataWord.h
-        \brief               DQM class for OTverifyCICdataWord
+        \file                DQMHistogramOTverifyMPASSAdataWord.h
+        \brief               DQM class for OTverifyMPASSAdataWord
         \author              Fabio Ravera
-        \date                14/02/24
+        \date                07/03/24
 */
 
-#ifndef DQMHistogramOTverifyCICdataWord_h_
-#define DQMHistogramOTverifyCICdataWord_h_
-#include "DQMUtils/DQMHistogramBase.h"
+#ifndef DQMHistogramOTverifyMPASSAdataWord_h_
+#define DQMHistogramOTverifyMPASSAdataWord_h_
+#include "DQMUtils/DQMHistogramOTverifyCICdataWord.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
 
 class TFile;
 
 /*!
- * \class DQMHistogramOTverifyCICdataWord
- * \brief Class for OTverifyCICdataWord monitoring histograms
+ * \class DQMHistogramOTverifyMPASSAdataWord
+ * \brief Class for OTverifyMPASSAdataWord monitoring histograms
  */
-class DQMHistogramOTverifyCICdataWord : public DQMHistogramBase
+class DQMHistogramOTverifyMPASSAdataWord : public DQMHistogramOTverifyCICdataWord
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTverifyCICdataWord();
+    DQMHistogramOTverifyMPASSAdataWord();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTverifyCICdataWord();
+    ~DQMHistogramOTverifyMPASSAdataWord();
 
     /*!
      * \brief Book histograms
@@ -44,21 +44,5 @@ class DQMHistogramOTverifyCICdataWord : public DQMHistogramBase
      * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
     bool fill(std::string& inputStream) override;
-
-    /*!
-     * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
-     */
-    void process() override;
-
-    /*!
-     * \brief Reset histogram
-     */
-    void reset(void) override;
-
-    void fillPatternMatchingEfficiencyResults(DetectorDataContainer& thePatternMatchingEfficiencyContainer);
-
-  protected:
-    DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fPatternMatchingEfficiencyHistogramContainer;
 };
 #endif
