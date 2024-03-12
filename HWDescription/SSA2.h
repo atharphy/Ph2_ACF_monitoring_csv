@@ -70,7 +70,7 @@ class SSA2 : public ReadoutChip
 
     bool                          isTopSensor(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn = 0) override;
     std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow) override;
-    static std::string getStripRegisterName(const std::string& theRegisterName, uint16_t strip);
+    static std::string            getStripRegisterName(const std::string& theRegisterName, uint16_t strip);
 
   protected:
     static std::vector<std::string> fListOfGlobalRegisters;

@@ -93,7 +93,6 @@ void OTverifyCICdataWord::fillHistograms()
 #endif
 }
 
-
 void OTverifyCICdataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
 {
     bool isA2Smodule = theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S; // only 1 module type per board

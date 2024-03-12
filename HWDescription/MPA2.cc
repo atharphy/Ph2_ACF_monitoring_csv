@@ -21,8 +21,8 @@
 
 namespace Ph2_HwDescription
 {
-std::vector<std::string> MPA2::fListOfGlobalPixelRegisters {"ENFLAGS_ALL", "TrimDAC_ALL", "DigPattern_ALL"};
-std::vector<std::string> MPA2::fListOfGlobalRowRegisters   {"PixelControl_ALL", "MemoryControl_1_ALL", "MemoryControl_2_ALL"};
+std::vector<std::string> MPA2::fListOfGlobalPixelRegisters{"ENFLAGS_ALL", "TrimDAC_ALL", "DigPattern_ALL"};
+std::vector<std::string> MPA2::fListOfGlobalRowRegisters{"PixelControl_ALL", "MemoryControl_1_ALL", "MemoryControl_2_ALL"};
 
 // C'tors which take BeBoardId, FMCId, HybridId, ChipId
 MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename)
@@ -85,20 +85,14 @@ void MPA2::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
         std::string registerName = pReg.substr(0, pReg.length() - 4);
         for(uint8_t col = 0; col < getNumberOfCols(); ++col)
         {
-            for(uint8_t row = 0; row < getNumberOfRows(); ++row)
-            {
-                Chip::setReg(getPixelRegisterName(registerName, row, col), psetValue, pPrmptCfg, pStatusReg);
-            }
+            for(uint8_t row = 0; row < getNumberOfRows(); ++row) { Chip::setReg(getPixelRegisterName(registerName, row, col), psetValue, pPrmptCfg, pStatusReg); }
         }
     }
 
     if(std::find(fListOfGlobalRowRegisters.begin(), fListOfGlobalRowRegisters.end(), pReg) != fListOfGlobalRowRegisters.end())
     {
         std::string registerName = pReg.substr(0, pReg.length() - 4);
-        for(uint8_t row = 0; row < getNumberOfRows(); ++row)
-        {
-            Chip::setReg(getRowRegisterName(registerName, row), psetValue, pPrmptCfg, pStatusReg);
-        }
+        for(uint8_t row = 0; row < getNumberOfRows(); ++row) { Chip::setReg(getRowRegisterName(registerName, row), psetValue, pPrmptCfg, pStatusReg); }
     }
 
     Chip::setReg(pReg, psetValue, pPrmptCfg, pStatusReg);

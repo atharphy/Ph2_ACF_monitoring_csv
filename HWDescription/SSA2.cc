@@ -22,7 +22,7 @@
 namespace Ph2_HwDescription
 { // open namespace
 
-std::vector<std::string> SSA2::fListOfGlobalRegisters {"ENFLAGS", "StripControl2", "THTRIMMING", "DigCalibPattern_L", "DigCalibPattern_H"};
+std::vector<std::string> SSA2::fListOfGlobalRegisters{"ENFLAGS", "StripControl2", "THTRIMMING", "DigCalibPattern_L", "DigCalibPattern_H"};
 
 SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
 {

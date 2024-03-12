@@ -158,12 +158,12 @@ bool PSInterface::injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwD
 
     for(const auto& theStub: theStubVector)
     {
-        uint8_t seedRow = std::get<0>(theStub);
-        uint8_t seedCol = std::get<1>(theStub)/2;
+        uint8_t seedRow         = std::get<0>(theStub);
+        uint8_t seedCol         = std::get<1>(theStub) / 2;
         uint8_t seedClusterSize = 1 + std::get<1>(theStub) % 2;
 
-        uint8_t correlationHit = std::get<1>(theStub) + std::get<2>(theStub);
-        uint8_t correlationCol = correlationHit / 2;
+        uint8_t correlationHit         = std::get<1>(theStub) + std::get<2>(theStub);
+        uint8_t correlationCol         = correlationHit / 2;
         uint8_t correlationClusterSize = 1 + correlationHit % 2;
 
         pixelClusterList.push_back({seedRow, seedCol, seedClusterSize});
@@ -172,6 +172,5 @@ bool PSInterface::injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwD
 
     return theMPA2Interface->injectNoiseClusters(pMPA, pixelClusterList) && theSSA2Interface->injectNoiseClusters(pSSA, stripClusterList);
 }
-
 
 } // namespace Ph2_HwInterface

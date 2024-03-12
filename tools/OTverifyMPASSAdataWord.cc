@@ -1,9 +1,9 @@
 #include "tools/OTverifyMPASSAdataWord.h"
+#include "HWInterface/D19cDebugFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/PatternMatcher.h"
-#include "HWInterface/D19cDebugFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -27,10 +27,7 @@ void OTverifyMPASSAdataWord::Initialise(void)
 #endif
 }
 
-void OTverifyMPASSAdataWord::ConfigureCalibration()
-{
-
-}
+void OTverifyMPASSAdataWord::ConfigureCalibration() {}
 
 void OTverifyMPASSAdataWord::Running()
 {
@@ -46,29 +43,20 @@ void OTverifyMPASSAdataWord::Running()
 void OTverifyMPASSAdataWord::Stop(void)
 {
     LOG(INFO) << "Stopping OTverifyMPASSAdataWord measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTverifyMPASSAdataWord.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTverifyMPASSAdataWord.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTverifyMPASSAdataWord stopped.";
 }
 
-void OTverifyMPASSAdataWord::Pause()
-{
+void OTverifyMPASSAdataWord::Pause() {}
 
-}
+void OTverifyMPASSAdataWord::Resume() {}
 
-void OTverifyMPASSAdataWord::Resume()
-{
-
-}
-
-void OTverifyMPASSAdataWord::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTverifyMPASSAdataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTverifyMPASSAdataWord::fillHistograms()
 {
@@ -88,14 +76,14 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
     ReadoutChip* theSSA = nullptr;
     try
     {
-        theSSA = fDetectorContainer->getObject(theMPA->getBeBoardId())->getObject(theMPA->getOpticalGroupId())->getObject(theMPA->getHybridId())->getObject(theMPA->getId()%8);
+        theSSA = fDetectorContainer->getObject(theMPA->getBeBoardId())->getObject(theMPA->getOpticalGroupId())->getObject(theMPA->getHybridId())->getObject(theMPA->getId() % 8);
     }
     catch(const std::exception& e)
     {
         LOG(INFO) << YELLOW << "            skipping MPA Id " << +theMPA->getId() << " since corresponding SSA is not enabled" << RESET;
         return;
     }
-    
+
     LOG(INFO) << BOLDBLUE << "            injecting clusters on MPA Id " << +theMPA->getId() << " and SSA " << +theSSA->getId() << RESET;
 
     auto& theL1Efficiency = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
@@ -168,8 +156,8 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
         }
         else
         {
-            LOG(DEBUG) << BOLDRED << "OTverifyMPASSAdataWord::injectL1PS - Error, expected L1 pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup " << +theMPA->getOpticalGroupId()
-                       << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
+            LOG(DEBUG) << BOLDRED << "OTverifyMPASSAdataWord::injectL1PS - Error, expected L1 pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup "
+                       << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
             LOG(DEBUG) << BOLDRED << "L1 data received    " << getPatternPrintout(orderedLineOutputVector, numberOfBytesInSinglePacket) << RESET;
             LOG(DEBUG) << BOLDRED << "L1 pattern expected " << getPatternPrintout(thePatternMatcher.getPattern(), numberOfBytesInSinglePacket) << RESET;
             LOG(DEBUG) << BOLDRED << "L1 pattern mask     " << getPatternPrintout(thePatternMatcher.getMask(), numberOfBytesInSinglePacket) << RESET;
@@ -184,14 +172,14 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
     ReadoutChip* theSSA = nullptr;
     try
     {
-        theSSA = fDetectorContainer->getObject(theMPA->getBeBoardId())->getObject(theMPA->getOpticalGroupId())->getObject(theMPA->getHybridId())->getObject(theMPA->getId()%8);
+        theSSA = fDetectorContainer->getObject(theMPA->getBeBoardId())->getObject(theMPA->getOpticalGroupId())->getObject(theMPA->getHybridId())->getObject(theMPA->getId() % 8);
     }
     catch(const std::exception& e)
     {
         LOG(INFO) << YELLOW << "            skipping MPA Id " << +theMPA->getId() << " since corresponding SSA is not enabled" << RESET;
         return;
     }
-    
+
     LOG(INFO) << BOLDBLUE << "            injecting stubs on MPA Id " << +theMPA->getId() << " and SSA " << +theSSA->getId() << RESET;
 
     size_t numberOfLines = 6;
@@ -201,7 +189,7 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
                                   ->getObject(theMPA->getHybridId())
                                   ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()[theMPA->getId() % 8][1];
 
-    uint8_t bendingCode = 0x05; 
+    uint8_t bendingCode = 0x05;
     fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0); // Use normal stub mode
     fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 32);
     fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", bendingCode); // bendind = 0 will ouput 101

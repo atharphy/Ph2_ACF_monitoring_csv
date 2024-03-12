@@ -82,13 +82,12 @@ class MPA2 : public ReadoutChip
 
     // uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
     static std::string getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col);
-    static std::string getRowRegisterName  (const std::string& theRegisterName, uint16_t row);
+    static std::string getRowRegisterName(const std::string& theRegisterName, uint16_t row);
 
   protected:
     static std::vector<std::string> fListOfGlobalPixelRegisters;
     static std::vector<std::string> fListOfGlobalRowRegisters;
 };
-
 
 struct MPA2RegItemComparer // Irene
 {

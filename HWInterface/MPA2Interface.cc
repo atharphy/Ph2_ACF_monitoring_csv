@@ -9,8 +9,8 @@
 
  */
 
-#include "HWDescription/MPA2.h"
 #include "HWInterface/MPA2Interface.h"
+#include "HWDescription/MPA2.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Utilities.h"
@@ -575,7 +575,10 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
 
     for(uint16_t row = 0; row < pMPA2->getNumberOfRows(); ++row)
     {
-        for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col) { registerList.push_back({MPA2::getPixelRegisterName("TrimDAC", row, col), localRegValues.getChannel<uint16_t>(row, col) & 0x1F}); }
+        for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col)
+        {
+            registerList.push_back({MPA2::getPixelRegisterName("TrimDAC", row, col), localRegValues.getChannel<uint16_t>(row, col) & 0x1F});
+        }
     }
     cSuccess &= WriteChipMultReg(pMPA2, registerList, pVerify);
     return cSuccess;
