@@ -200,30 +200,21 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
                                   ->getObject(theMPA->getHybridId())
                                   ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()[theMPA->getId() % 8][1];
 
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
-    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, theClusterList);
-
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theStripClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0x0, 0x55, 1)};
-    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theSSA, theStripClusterList);
-
+    uint8_t bendingCode = 0x05; 
     fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0); // Use normal stub mode
     fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 32);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", 0x0); // bendind = 0 will ouput 0
-    size_t numberOfStubs     = 8 * theClusterList.size();
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", bendingCode); // bendind = 0 will ouput 101
+
+    // stubs need to be ordered by bending code (remember that the CIC orders them based on the Code[MP]XX values)
+    std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector{{0x0A, 0xAA, 0}};
+    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseStubs(theMPA, theSSA, theStubVector);
+
+    size_t numberOfStubs     = 8 * theStubVector.size();
     size_t maximumStubNumber = (numberOfBytesInSinglePacket == 1) ? 16 : 35; // 16 if a 5G, 35 if a 10G
     if(numberOfStubs > maximumStubNumber)                                    // CIC aligns stubs by bending, but in pixel-pixel mode bending is 0 and it is not possible to know what the CIC will drop
     {
         std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PS stube injected using pixel-pixel mode, more stubs than the maximum allowed!" << std::endl;
         abort();
-    }
-
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> stubInformationList;
-    for(const auto& theCluster: theClusterList)
-    {
-        uint8_t seedColumn = std::get<1>(theCluster) * 2 + 1 + std::get<2>(theCluster) % 2;
-        uint8_t bending    = 0;
-        uint8_t zPosition  = std::get<0>(theCluster);
-        stubInformationList.push_back({seedColumn, bending, zPosition});
     }
 
     PatternMatcher thePattern;
@@ -238,18 +229,18 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
     size_t maximumNumberOfBitsToMatch = (120 - 48 * numberOfBytesInSinglePacket) * 8; // 120 bytes is the maximum read from the register, max allowed matching = 120/2
     for(uint8_t bxOffset = 0; bxOffset < 8; ++bxOffset)
     {
-        for(auto theStub: stubInformationList)
+        for(auto theStub: theStubVector)
         {
             if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break;
             thePattern.addToPattern(0x0, 0x0, 3); // BX offset
             if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break;
             thePattern.addToPattern(chipIdForCIC, 0x7, 3); // Chip ID
             if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 8) break;
-            thePattern.addToPattern(std::get<0>(theStub), 0xFF, 8); // seed
+            thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8); // seed
             if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break;
-            thePattern.addToPattern(std::get<1>(theStub), 0x7, 3); // bending
+            thePattern.addToPattern(bendingCode, 0x7, 3); // bending
             if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 4) break;
-            thePattern.addToPattern(std::get<2>(theStub), 0xF, 4); // z
+            thePattern.addToPattern(std::get<0>(theStub), 0xF, 4); // z
         }
     }
 
