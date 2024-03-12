@@ -142,7 +142,10 @@ else()
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
-            $ENV{ROOTSYS}/lib/libCore.so
+            ROOT::Core
+            ROOT::Net
+            ROOT::Gui
+            ROOT::RIO
             EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
             EXCLUDE Eudaq2Producer.h Eudaq2Producer.cc
             EXCLUDE SSAPhysics.h SSAPhysics.cc
