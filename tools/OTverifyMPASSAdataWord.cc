@@ -34,6 +34,7 @@ void OTverifyMPASSAdataWord::ConfigureCalibration()
 
 void OTverifyMPASSAdataWord::Running()
 {
+    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) return;
     LOG(INFO) << "Starting OTverifyMPASSAdataWord measurement.";
     Initialise();
     runIntegrityTest();
