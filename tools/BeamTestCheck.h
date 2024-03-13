@@ -76,8 +76,8 @@ class BeamTestCheck : public OTTool
         Ph2_HwInterface::Injection cInjection;
         // inject one cluster into each MPA-SSA pair
         fInjections.clear();
-        cInjection.fRow    = 98;
-        cInjection.fColumn = 12;
+        cInjection.fRow    = 12;
+        cInjection.fColumn = 98;
         fInjections.push_back(cInjection);
     }
 

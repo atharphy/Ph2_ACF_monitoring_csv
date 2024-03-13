@@ -21,8 +21,10 @@
 
 namespace Ph2_HwDescription
 {
-// C'tors which take BeBoardId, FMCId, HybridId, ChipId
+std::vector<std::string> MPA2::fListOfGlobalPixelRegisters{"ENFLAGS_ALL", "TrimDAC_ALL", "DigPattern_ALL"};
+std::vector<std::string> MPA2::fListOfGlobalRowRegisters{"PixelControl_ALL", "MemoryControl_1_ALL", "MemoryControl_2_ALL"};
 
+// C'tors which take BeBoardId, FMCId, HybridId, ChipId
 MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename)
     : ReadoutChip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId)
 {
@@ -74,6 +76,27 @@ void MPA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Mask$"), RegisterType::Utility));
     // Brodcast registers cannot be reset to avoid overriding local changes
     fListOfFreeRegisters.push_back(std::make_pair(std::regex(".*_ALL"), RegisterType::Utility));
+}
+
+void MPA2::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)
+{
+    if(std::find(fListOfGlobalPixelRegisters.begin(), fListOfGlobalPixelRegisters.end(), pReg) != fListOfGlobalPixelRegisters.end())
+    {
+        std::string registerName = pReg.substr(0, pReg.length() - 4);
+        for(uint8_t col = 0; col < getNumberOfCols(); ++col)
+        {
+            for(uint8_t row = 0; row < getNumberOfRows(); ++row) { Chip::setReg(getPixelRegisterName(registerName, row, col), psetValue, pPrmptCfg, pStatusReg); }
+        }
+    }
+
+    if(std::find(fListOfGlobalRowRegisters.begin(), fListOfGlobalRowRegisters.end(), pReg) != fListOfGlobalRowRegisters.end())
+    {
+        std::string registerName = pReg.substr(0, pReg.length() - 4);
+        for(uint8_t row = 0; row < getNumberOfRows(); ++row) { Chip::setReg(getRowRegisterName(registerName, row), psetValue, pPrmptCfg, pStatusReg); }
+    }
+
+    Chip::setReg(pReg, psetValue, pPrmptCfg, pStatusReg);
+    return;
 }
 
 void MPA2::loadfRegMap(const std::string& filename)
@@ -171,6 +194,42 @@ bool MPA2RegItemComparer::operator()(const MPARegPair& pRegItem1, const MPARegPa
         return pRegItem1.second.fPage < pRegItem2.second.fPage;
     else
         return pRegItem1.second.fAddress < pRegItem2.second.fAddress;
+}
+
+bool                          MPA2::isTopSensor(ReadoutChip* pChip, uint16_t pLocalColumn) { return false; }
+std::pair<uint16_t, uint16_t> MPA2::getGlobalCoordinates(ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow)
+{
+    if(pLocalColumn > pChip->getNumberOfCols())
+    {
+        throw std::runtime_error("The given column " + std::to_string(pLocalColumn) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) +
+                                 ". Acceptable values are between 0 and " + std::to_string(pChip->getNumberOfCols()));
+    }
+    if(pLocalRow > pChip->getNumberOfRows())
+    {
+        throw std::runtime_error("The given row " + std::to_string(pLocalRow) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) + ". Acceptable values are between 0 and " +
+                                 std::to_string(pChip->getNumberOfRows()));
+    }
+
+    uint16_t cGlobalY = 0;
+    uint16_t cGlobalX = 0;
+    cGlobalY          = (pChip->getHybridId() % 2 == 0) ? pLocalRow + 1 : 2 * pChip->getNumberOfRows() - (pLocalRow + 1);
+
+    if(pChip->getHybridId() % 2 == 0) { cGlobalX = (pChip->getNumberOfCols() - pLocalColumn) + (NCHIPS_OT * 2 - pChip->getId() - 1) * pChip->getNumberOfCols(); }
+    else { cGlobalX = pLocalColumn + (pChip->getId() - NCHIPS_OT) * pChip->getNumberOfCols(); }
+
+    return std::make_pair(cGlobalX, cGlobalY);
+}
+
+std::string MPA2::getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col)
+{
+    std::string pixelRegisterName = theRegisterName + "_C" + std::to_string(col) + "_R" + std::to_string(row);
+    return pixelRegisterName;
+}
+
+std::string MPA2::getRowRegisterName(const std::string& theRegisterName, uint16_t row)
+{
+    std::string rowRegisterName = theRegisterName + "_R" + std::to_string(row);
+    return rowRegisterName;
 }
 
 } // namespace Ph2_HwDescription

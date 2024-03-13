@@ -157,7 +157,6 @@ class MPA2Interface : public ReadoutChipInterface
     bool                maskPixel(Ph2_HwDescription::Chip* pChip, uint16_t row, uint16_t col, bool doMask, bool pVerify = false);
     bool                enablePixelInjection(Ph2_HwDescription::Chip* pChip, uint16_t row, uint16_t col, bool inject, bool pVerify);
     void                readAllBias(Ph2_HwDescription::Chip* pMPA);
-    std::string         getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col) const;
     std::pair<int, int> extractMaskedPixelAddress(const std::string& registerName) const;
 };
 } // namespace Ph2_HwInterface

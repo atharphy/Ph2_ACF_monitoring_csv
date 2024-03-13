@@ -21,7 +21,9 @@ void D19cSSAEvent::fillChipDataContainer(ChipDataContainer* chipContainer, const
     for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
         if(testChannelGroup->isChannelEnabled(0, i)) // SSA only support dropped
-        { channel->fOccupancy += (float)privateDataBit(hybridId, chipContainer->getId(), i); }
+        {
+            channel->fOccupancy += (float)privateDataBit(hybridId, chipContainer->getId(), i);
+        }
     }
 }
 

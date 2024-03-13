@@ -445,9 +445,8 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
     uint32_t              channel_up;
     int                   nAttempts = 0;
-    std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
-    do
-    {
+    std::vector<uint16_t> initSequence(RD53Shared::firstChip->getLaneUpInitSequence());
+    do {
         // ###############################################
         // # Send sequence to help frontend chip to lock #
         // ###############################################
@@ -622,8 +621,7 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // # Wait for a stable number of words to read #
     // #############################################
     nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read");
-    do
-    {
+    do {
         nWordsInMemoryOld = nWordsInMemory;
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     } while(((nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read")) != nWordsInMemoryOld) && (pWait == true));
@@ -676,8 +674,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
-    do
-    {
+    do {
         retry = false;
         nAttempts++;
         pData.clear();

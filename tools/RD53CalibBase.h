@@ -11,11 +11,11 @@
 #define RD53CalibBase_H
 
 #include "HWDescription/RD53.h"
+#include "MetadataHandlerIT.h"
 #include "Tool.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/RD53ChannelGroupHandler.h"
-#include "tools/MetadataHandlerIT.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"

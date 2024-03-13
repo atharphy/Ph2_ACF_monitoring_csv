@@ -543,7 +543,9 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
                 bool  cLocked = fCicInterface->CheckPhaseAlignerLock(cCic);
                 // if locked .. switch to automatic phase aligner mode with best values
                 if(cLocked)
-                { LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET; }
+                {
+                    LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() << BOLDGREEN << " LOCKED " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
+                }
                 else
                     LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() << BOLDRED << " FAILED to LOCK " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
                 cAligned = cAligned && cLocked;
@@ -613,10 +615,7 @@ bool CicFEAlignment::WordAlignment(uint32_t pWait_us)
                 fCicInterface->SetStaticWordAlignment(cCic);
                 // check status
                 if(cWordAligned[cIndx]) { LOG(INFO) << BOLDBLUE << "Automated word alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
-                else
-                {
-                    LOG(INFO) << BOLDRED << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
-                }
+                else { LOG(INFO) << BOLDRED << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET; }
                 cIndx++;
             }
         }

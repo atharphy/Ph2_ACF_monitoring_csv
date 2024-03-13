@@ -23,7 +23,7 @@ void FileParser::parseHW(const std::string& pFilename, DetectorContainer* pDetec
     pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
-    os << RESET << "\n\n";
+    os << RESET << "\n";
 
     for(i = 0; i < 80; i++) os << "*";
     os << "\n";
@@ -1457,10 +1457,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                     std::cerr << "Masking MPA from xml not implemented!" << std::endl;
                     abort();
                 }
-                else
-                {
-                    cRegName << cChnlId;
-                }
+                else { cRegName << cChnlId; }
                 // get the original value of the register
                 os << GREEN << "|\t|\t|\t|\t|\t|  ---- Preparing registers to mask channel " << +cChnlId << " - controled by register " << cRegName.str() << " \n";
                 for(auto cChip: *pHybrid)
@@ -2017,7 +2014,8 @@ void FileParser::parseCommunicationSettings(const std::string& pFilename, Commun
     auto theCommunicationSettingsNode = doc.child(HW_DESCRIPTION_NODE_NAME).child(COMMUNICATIONSETTINGS_NODE_NAME);
     if(bool(theCommunicationSettingsNode))
     {
-        auto retrieveMonitorParameters = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting& theCommunicationSetting, const std::string& theNodeName) {
+        auto retrieveMonitorParameters = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting& theCommunicationSetting, const std::string& theNodeName)
+        {
             auto theMonitorNode = theCommunicationSettingsNode.child(theNodeName.c_str());
             if(bool(theMonitorNode))
             {

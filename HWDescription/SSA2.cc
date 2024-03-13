@@ -22,6 +22,8 @@
 namespace Ph2_HwDescription
 { // open namespace
 
+std::vector<std::string> SSA2::fListOfGlobalRegisters{"ENFLAGS", "StripControl2", "THTRIMMING", "DigCalibPattern_L", "DigCalibPattern_H"};
+
 SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
 {
     fChipCode         = 3;
@@ -32,10 +34,9 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
     configFileName    = filename;
     loadfRegMap(filename);
     // select control regs
-    std::vector<std::string> cCntrlRegs{"THTRIMMING", "StripControl2", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L"};
     for(auto& cMapItem: fRegMap)
     {
-        if(std::find(cCntrlRegs.begin(), cCntrlRegs.end(), cMapItem.first) == cCntrlRegs.end()) continue;
+        if(std::find(fListOfGlobalRegisters.begin(), fListOfGlobalRegisters.end(), cMapItem.first) == fListOfGlobalRegisters.end()) continue;
         LOG(INFO) << BOLDYELLOW << cMapItem.first << " is a CtrlReg" << RESET;
         cMapItem.second.fControlReg = 1;
     }
@@ -88,7 +89,18 @@ void SSA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^StripControl2$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^THTRIMMING$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Utility));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter[LM]SB$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter[LM]SB$"), RegisterType::ReadOnly));
+}
+
+void SSA2::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)
+{
+    if(std::find(fListOfGlobalRegisters.begin(), fListOfGlobalRegisters.end(), pReg) != fListOfGlobalRegisters.end())
+    {
+        for(uint8_t strip = 0; strip < getNumberOfCols(); ++strip) Chip::setReg(getStripRegisterName(pReg, strip), psetValue, pPrmptCfg, pStatusReg);
+    }
+
+    Chip::setReg(pReg, psetValue, pPrmptCfg, pStatusReg);
+    return;
 }
 
 void SSA2::loadfRegMap(const std::string& filename)
@@ -172,6 +184,36 @@ std::stringstream SSA2::getRegMapStream()
     }
 
     return theStream;
+}
+
+bool                          SSA2::isTopSensor(ReadoutChip* pChip, uint16_t pLocalColumn) { return true; }
+std::pair<uint16_t, uint16_t> SSA2::getGlobalCoordinates(ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow)
+{
+    if(pLocalColumn > pChip->getNumberOfCols())
+    {
+        throw std::runtime_error("The given column " + std::to_string(pLocalColumn) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) +
+                                 ". Acceptable values are between 0 and " + std::to_string(pChip->getNumberOfCols()));
+    }
+    if(pLocalRow > pChip->getNumberOfRows())
+    {
+        throw std::runtime_error("The given row " + std::to_string(pLocalRow) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) + ". Acceptable values are between 0 and " +
+                                 std::to_string(pChip->getNumberOfRows()));
+    }
+
+    uint16_t cGlobalY = 0;
+    uint16_t cGlobalX = 0;
+    cGlobalY          = (pChip->getHybridId() % 2 == 0) ? 0 : 1;
+
+    if(pChip->getHybridId() % 2 == 0) { cGlobalX = (pChip->getNumberOfCols() - pLocalColumn) + (NCHIPS_OT - pChip->getId() - 1) * pChip->getNumberOfCols(); }
+    else { cGlobalX = pLocalColumn + pChip->getId() * pChip->getNumberOfCols(); }
+
+    return std::make_pair(cGlobalX, cGlobalY);
+}
+
+std::string SSA2::getStripRegisterName(const std::string& theRegisterName, uint16_t strip)
+{
+    std::string stripRegisterName = theRegisterName + "_S" + std::to_string(strip + 1);
+    return stripRegisterName;
 }
 
 } // namespace Ph2_HwDescription

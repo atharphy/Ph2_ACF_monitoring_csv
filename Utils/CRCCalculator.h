@@ -23,7 +23,7 @@
 #include <cassert>
 #include <stddef.h>
 #include <stdint.h>
-//#include "crc32c.cc"
+// #include "crc32c.cc"
 
 extern const uint16_t crcTable[1024];
 

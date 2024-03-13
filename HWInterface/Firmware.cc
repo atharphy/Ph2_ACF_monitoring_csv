@@ -132,10 +132,7 @@ XilinxBinFile::XilinxBinFile(const std::string& aFileName) : Firmware(aFileName)
     mBitStream = lFileMemory;
 
     if(lUint == 0x5599aa66) { mBitSwapped = true; }
-    else
-    {
-        mBitSwapped = false;
-    }
+    else { mBitSwapped = false; }
 }
 
 //! Default Destructor

@@ -148,10 +148,7 @@ void MmcPipeInterface::EnterSecureMode(const std::string& aPassword)
         // Result of c_str remains valid unless a non-const member function is called on the string object
         Send(0x00000000, aPassword.size() + 1, aPassword.c_str()); // Size in bytes
     }
-    else
-    {
-        Send(0x00000001, 0, (const char*)(NULL));
-    }
+    else { Send(0x00000001, 0, (const char*)(NULL)); }
 
     Receive();
 }
@@ -165,10 +162,7 @@ void MmcPipeInterface::SetTextSpace(const std::string& aStr)
         // Result of c_str remains valid unless a non-const member function is called on the string object
         Send(0x00000001, aStr.size() + 1, aStr.c_str()); // Size in bytes
     }
-    else
-    {
-        Send(0x00000001, 0, (const char*)(NULL));
-    }
+    else { Send(0x00000001, 0, (const char*)(NULL)); }
 
     Receive();
 }
@@ -234,10 +228,7 @@ void MmcPipeInterface::FileToSD(const std::string& aFilename, Firmware& aFirmwar
         if(FPGAtoMMCSpaceAvailable())
         {
             if(lBegin + FPGAtoMMCSpaceAvailable() < lSrcData.end()) { lEnd = lBegin + FPGAtoMMCSpaceAvailable(); }
-            else
-            {
-                lEnd = lSrcData.end();
-            }
+            else { lEnd = lSrcData.end(); }
 
             // std::cout<<"begin: "<<std::dec<<distance(lSrcData.begin(),lBegin)<<", end:
             // "<<distance(lSrcData.begin(),lEnd)<<" ("<<distance(lBegin, lEnd)<<")"<<std::endl;

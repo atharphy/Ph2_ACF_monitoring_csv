@@ -665,10 +665,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
         LOG(INFO) << "OT Module GUI (GIPHT) result directory environmental variable set: " << std::getenv("GIPHT_RESULT_FOLDER");
         nDirname = std::getenv("GIPHT_RESULT_FOLDER");
     }
-    else
-    {
-        nDirname = pDirname;
-    }
+    else { nDirname = pDirname; }
     if(pDate) nDirname += currentDateTime();
 
     std::string cCommand = "mkdir -p " + nDirname;
@@ -1069,7 +1066,9 @@ std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vecto
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     // replace negative entries with 0s
-    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative)
+        std::replace_if(
+            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
     pValues.erase(pValues.begin(), pValues.begin() + 1);
     return std::make_pair(cWeights, pValues);
@@ -1080,7 +1079,9 @@ std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<fl
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
-    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative)
+        std::replace_if(
+            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     float cN            = static_cast<float>(cWeights.size() - std::count(cWeights.begin(), cWeights.end(), 0.));
     float cSumOfWeights = std::accumulate(cWeights.begin(), cWeights.end(), 0.);
     // Weighted sum of scan values to get pedestal
@@ -1332,8 +1333,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                 previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() &
                                 (0xFFFF - (1 << iBit));
 
-                        LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
-                                   << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET;
+                        // LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
+                        //            << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET;
                     }
                 }
             }
@@ -1368,8 +1369,9 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                             cHandler = new MPAChannelGroupHandler();
                         else
                             cHandler = new SSAChannelGroupHandler();
-                        LOG(DEBUG) << BOLDYELLOW << " Normalizing assuming " << fNReadbackEvents << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled channels."
-                                   << RESET;
+                        // LOG(DEBUG) << BOLDYELLOW << " Normalizing assuming " << fNReadbackEvents << " events and " << cHandler->allChannelGroup()->getNumberOfEnabledChannels() << " enabled
+                        // channels."
+                        //            << RESET;
                         float  cGlobalOcc = 0;
                         size_t cNenabled  = 0;
                         for(uint16_t cChnl = 0; cChnl < cDataContainerThisChip->size(); cChnl++)
@@ -1385,8 +1387,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                 cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy /= fNReadbackEvents;
                                 cGlobalOcc += cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy;
                                 cNenabled++;
-                                if(cChnl < 10 || cChnl > 15 * 120 + 110)
-                                    LOG(DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
+                                // if(cChnl < 10 || cChnl > 15 * 120 + 110)
+                                //     LOG(DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
                             }
                         }
                         cGlobalOcc /= cNenabled;
@@ -1477,7 +1479,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                                   .fOccupancy;
                         }
                     }
-                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                    // LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }
@@ -1583,9 +1585,9 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                         if(not currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>())
                         {
                             currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = threshToSet;
-                            LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
-                                       << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()
-                                       << RESET;
+                            // LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
+                            //            << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()
+                            //            << RESET;
                         }
                     }
                 }
@@ -1819,7 +1821,9 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                                                                   ->getSummary<Occupancy, Occupancy>()
                                                                   .fOccupancy -
                                                               0.5))
-                                { currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() += 1; }
+                                {
+                                    currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() += 1;
+                                }
                                 currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = 1;
                             }
                             else
@@ -1857,7 +1861,7 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                             }
                         }
                     }
-                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                    // LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }
@@ -2161,7 +2165,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             }
             else
             {
-                LOG(DEBUG) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
+                // LOG(DEBUG) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
                 for(auto cOpticalGroup: *fDetectorDataContainer->getObject(fBoardId))
                 {
                     for(const auto cHybrid: *cOpticalGroup)
@@ -2276,7 +2280,9 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
 
         doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
         if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
-        { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
+        {
+            numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
+        }
         for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
     }
 }
@@ -2324,15 +2330,9 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
                 {
                     for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue); }
                 }
-                else
-                {
-                    fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
-                }
+                else { fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue); }
     }
-    else
-    {
-        fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
-    }
+    else { fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue); }
 }
 
 // Set same local dac for all BeBoard
@@ -2367,10 +2367,7 @@ void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const 
 {
     // Assumption: 1 BeBoard has only 1 chip flavor
     if(static_cast<ReadoutChip*>(pBoard->getFirstObject()->getFirstObject()->getFirstObject())->isDACLocal(dacName)) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
-    else
-    {
-        setSameGlobalDacBeBoard(pBoard, dacName, dacValue);
-    }
+    else { setSameGlobalDacBeBoard(pBoard, dacName, dacValue); }
 }
 
 void Tool::setSameDac(const std::string& dacName, const uint16_t dacValue)

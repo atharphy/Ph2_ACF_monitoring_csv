@@ -73,6 +73,7 @@ else()
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
+	    ROOT::Core
     )
 
     install_headers()

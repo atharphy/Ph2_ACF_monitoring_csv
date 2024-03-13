@@ -264,10 +264,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
             cSyncLoss += 1;
             LOG(INFO) << BOLDRED << "Sync loss in event " << +cEventCount << RESET;
         }
-        else
-        {
-            cBxHisto->Fill(0);
-        }
+        else { cBxHisto->Fill(0); }
     }
     LOG(INFO) << BOLDBLUE << "Found " << cNstubs << " stubs in " << +cNevents << " events with a stub and a hit in the same CBC. " << cSyncLoss << " events with a sync loss between CICs." << RESET;
 }

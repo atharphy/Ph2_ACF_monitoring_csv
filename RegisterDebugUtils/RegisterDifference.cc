@@ -213,10 +213,7 @@ int main(int argc, char* argv[])
                     std::cout << std::hex << "Modified register: " << name << " 0x" << +registerMap[name] << " -> 0x" << +value << std::dec << std::endl;
                 }
             }
-            else
-            {
-                std::cerr << "Register " << name << " not found in file1." << std::endl;
-            }
+            else { std::cerr << "Register " << name << " not found in file1." << std::endl; }
         }
     }
 

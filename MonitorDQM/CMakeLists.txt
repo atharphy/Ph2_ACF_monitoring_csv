@@ -64,6 +64,7 @@ else()
 
     cet_make(LIBRARY_NAME Ph2_MonitorDQM
             LIBRARIES
+	    ROOT::Core
     )
 
     install_headers()

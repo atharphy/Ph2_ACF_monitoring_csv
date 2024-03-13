@@ -76,7 +76,7 @@ std::vector<std::pair<std::string, uint16_t>> PSInterface::ReadChipMultReg(Ph2_H
 // To generalize
 bool PSInterface::WriteChipReg(Chip* pPS, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
-    LOG(DEBUG) << BOLDMAGENTA << " PSInterface::WriteChipReg writing to " << pRegName << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << " PSInterface::WriteChipReg writing to " << pRegName << RESET;
     return getInterface(pPS)->WriteChipReg(pPS, pRegName, pValue, pVerifLoop);
 }
 
@@ -94,10 +94,7 @@ bool PSInterface::ConfigureChip(Chip* pPS, bool pVerifLoop, uint32_t pBlockSize)
 void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->producePhaseAlignmentPattern(pChip, pWait_ms); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-    {
-        theMPA2Interface->producePhaseAlignmentPattern(pChip, pWait_ms);
-    }
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->producePhaseAlignmentPattern(pChip, pWait_ms); }
     else if(pChip->getFrontEndType() == FrontEndType::SSA or pChip->getFrontEndType() == FrontEndType::SSA2)
     {
         LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
@@ -106,10 +103,7 @@ void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait
 void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->produceWordAlignmentPattern(pChip); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-    {
-        theMPA2Interface->produceWordAlignmentPattern(pChip);
-    }
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->produceWordAlignmentPattern(pChip); }
     else if(pChip->getFrontEndType() == FrontEndType::SSA or pChip->getFrontEndType() == FrontEndType::SSA2)
     {
         LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
@@ -119,18 +113,9 @@ void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop)
 {
     if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->enableInjection(pPS, inject, pVerifLoop); }
-    else if(pPS->getFrontEndType() == FrontEndType::MPA2)
-    {
-        return theMPA2Interface->enableInjection(pPS, inject, pVerifLoop);
-    }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA)
-    {
-        return theSSAInterface->enableInjection(pPS, inject, pVerifLoop);
-    }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA2)
-    {
-        return theSSA2Interface->enableInjection(pPS, inject, pVerifLoop);
-    }
+    else if(pPS->getFrontEndType() == FrontEndType::MPA2) { return theMPA2Interface->enableInjection(pPS, inject, pVerifLoop); }
+    else if(pPS->getFrontEndType() == FrontEndType::SSA) { return theSSAInterface->enableInjection(pPS, inject, pVerifLoop); }
+    else if(pPS->getFrontEndType() == FrontEndType::SSA2) { return theSSA2Interface->enableInjection(pPS, inject, pVerifLoop); }
     else
         LOG(ERROR) << "Bad chip for PS interface";
     return false;
@@ -140,20 +125,14 @@ bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop
 std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->decodeBendCode(pChip, pBendCode); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-    {
-        return theMPA2Interface->decodeBendCode(pChip, pBendCode);
-    }
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { return theMPA2Interface->decodeBendCode(pChip, pBendCode); }
     return std::vector<int>(0);
 }
 //
 void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections, pPattern); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-    {
-        theMPA2Interface->digiInjection(pChip, pInjections, pPattern);
-    }
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->digiInjection(pChip, pInjections, pPattern); }
     else if(pChip->getFrontEndType() == FrontEndType::SSA2 or pChip->getFrontEndType() == FrontEndType::SSA)
     {
         LOG(ERROR) << BOLDRED << "No digiInjection implemented for SSA for some reason " << RESET;
@@ -164,10 +143,34 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
 bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
     if(pPS->getFrontEndType() == FrontEndType::MPA2) { return theMPA2Interface->injectNoiseClusters(pPS, theClusterList); }
-    else
+    else { return theSSA2Interface->injectNoiseClusters(pPS, theClusterList); }
+}
+
+bool PSInterface::injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwDescription::ReadoutChip* pSSA, std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector)
+{
+    if(pMPA->getFrontEndType() != FrontEndType::MPA2 || pSSA->getFrontEndType() != FrontEndType::SSA2)
     {
-        return theSSA2Interface->injectNoiseClusters(pPS, theClusterList);
+        std::cerr << __PRETTY_FUNCTION__ << " MPA2 and SSA2 must be provided in the correct order! Aborting..." << std::endl;
+        abort();
     }
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> pixelClusterList;
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> stripClusterList;
+
+    for(const auto& theStub: theStubVector)
+    {
+        uint8_t seedRow         = std::get<0>(theStub);
+        uint8_t seedCol         = std::get<1>(theStub) / 2;
+        uint8_t seedClusterSize = 1 + std::get<1>(theStub) % 2;
+
+        uint8_t correlationHit         = std::get<1>(theStub) + std::get<2>(theStub);
+        uint8_t correlationCol         = correlationHit / 2;
+        uint8_t correlationClusterSize = 1 + correlationHit % 2;
+
+        pixelClusterList.push_back({seedRow, seedCol, seedClusterSize});
+        stripClusterList.push_back({0, correlationCol, correlationClusterSize});
+    }
+
+    return theMPA2Interface->injectNoiseClusters(pMPA, pixelClusterList) && theSSA2Interface->injectNoiseClusters(pSSA, stripClusterList);
 }
 
 } // namespace Ph2_HwInterface

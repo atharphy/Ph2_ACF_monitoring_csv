@@ -8,11 +8,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # pybind11
     if (NOT DEFINED ENV{PYBIND11}) # No external PYBIND11
         message(STATUS "    No pybind11 found. Installing.")
-        message(STATUS "    Obtaining from github ref $ENV{PYBIND11_REF}")
+        message(STATUS "    Obtaining from github ref v$ENV{PYBIND11_REF}")
 
         FetchContent_Declare(ext_pybind                          # name of the content
         GIT_REPOSITORY https://github.com/pybind/pybind11.git  # the repository
-        GIT_TAG        $ENV{PYBIND11_REF}
+        GIT_TAG        v$ENV{PYBIND11_REF}
         )
         FetchContent_MakeAvailable(ext_pybind)
 

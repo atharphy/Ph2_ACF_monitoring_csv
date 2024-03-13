@@ -42,10 +42,10 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
     auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorFit2D, hErrorFit2D, "Columns", "Rows");
 
-    auto hThreshold1D = CanvasContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue - offset, stopValue - offset);
+    auto hThreshold1D = CanvasContainer<TH1F>("Threshold1D", "Threshold Distribution", NBINS_THR, startValue - offset, stopValue - offset);
     bookImplementer(theOutputFile, theDetectorStructure, Threshold1D, hThreshold1D, "Threshold (#DeltaVCal)", "Entries");
 
-    auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", 200, 0, 200);
+    auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", NBINS_NOISE, 0, NBINS_NOISE);
     bookImplementer(theOutputFile, theDetectorStructure, Noise1D, hNoise1D, "Noise (#DeltaVCal)", "Entries");
 
     auto hThreshold2D = CanvasContainer<TH2F>("Threshold2D", "Threshold Map", nCols, 0, nCols, nRows, 0, nRows);
@@ -56,6 +56,9 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
 
     auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
+
+    auto hThrNoise2D = CanvasContainer<TH2F>("ThrNoise2D", "Noise vs Threshold scatter plot", stopValue - startValue, startValue - offset, stopValue - offset, NBINS_NOISE, 0, NBINS_NOISE);
+    bookImplementer(theOutputFile, theDetectorStructure, ThrNoise2D, hThrNoise2D, "Threshold (#DeltaVCal)", "Noise (#DeltaVCal)");
 
     AreHistoBooked = true;
 }
@@ -172,6 +175,12 @@ void SCurveHistograms::fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseC
                                                ->getObject(cChip->getId())
                                                ->getSummary<CanvasContainer<TH2F>>()
                                                .fTheHistogram;
+                    auto* ThrNoise2DHist = ThrNoise2D.getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
+                                               ->getSummary<CanvasContainer<TH2F>>()
+                                               .fTheHistogram;
 
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
@@ -192,6 +201,7 @@ void SCurveHistograms::fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseC
                                 Threshold2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fThresholdError);
                                 Noise2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
                                 Noise2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<ThresholdAndNoise>(row, col).fNoiseError);
+                                ThrNoise2DHist->Fill(cChip->getChannel<ThresholdAndNoise>(row, col).fThreshold, cChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
                             }
                 }
 }
@@ -207,4 +217,5 @@ void SCurveHistograms::process()
     draw<TH2F>(Threshold2D, "gcolz");
     draw<TH2F>(Noise2D, "gcolz");
     draw<TH2F>(ToT2D, "gcolz");
+    draw<TH2F>(ThrNoise2D, "gcolz");
 }

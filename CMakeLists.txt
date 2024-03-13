@@ -43,7 +43,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     cmake_minimum_required(VERSION 3.17)
     project(Ph2_ACF)
 
-# Set the output directory
+    # Set the output directory
     if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
        MESSAGE( STATUS "${BoldRed}" )
        MESSAGE( FATAL_ERROR "${Reset}In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
@@ -111,10 +111,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
       elseif(GCC_VERSION VERSION_LESS 11)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_10_NOERROR_FLAGS}")
-      elseif(GCC_VERSION VERSION_LESS 13)
+      elseif(GCC_VERSION VERSION_LESS 14)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_12_NOERROR_FLAGS}")
       endif()
-      
+
       if(GCC_VERSION VERSION_LESS 10.3)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} -Wno-error=deprecated-copy")
       endif ()
@@ -271,8 +271,8 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
-    include_directories($ENV{PH2ACF_BASE_DIR})
-
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+    
     set(CompileForShep true)
     set(CompileForHerd false)
     set(NoDataShipping false)
