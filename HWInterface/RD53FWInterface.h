@@ -84,6 +84,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void SetOptoLinkVersion(uint8_t version) override;
     // #############################
 
+    bool silentRunning = {false};
     void SelectBERcheckBitORFrame(const uint8_t bitORframe);
     void WriteArbitraryRegister(const std::string&                regName,
                                 const uint32_t                    value,
