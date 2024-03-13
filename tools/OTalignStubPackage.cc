@@ -70,7 +70,6 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
     LOG(INFO) << GREEN << "Trying to align CIC stub decoder in the back-end" << RESET;
     // sparsification of
     bool                 cSparsified = pBoard->getSparsification();
-    std::vector<uint8_t> cFeEnableRegs(0);
     // disable FEs for all hybrids
     if(cSparsified)
         LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::AlignStubPackage Sparsification on " << RESET;
@@ -82,7 +81,6 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
             // disable all FEs. . not needed here
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
         }
@@ -334,17 +332,6 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
     // reconfigure sparsification + FEs enabled in this CIC
     LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::FindPackageDelay Resetting Sparsification" << RESET;
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
-    size_t cIndx = 0;
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, cSparsified);
-            fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
-            cIndx++;
-        }
-    }
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.global.hybrid_enable", cEnableMask);
     // and check
     // make sure you do this with internal triggers
