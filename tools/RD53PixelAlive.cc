@@ -142,6 +142,8 @@ void PixelAlive::run()
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
             {
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = true;
+
                 // ############################
                 // # Disable all core columns #
                 // ############################
@@ -290,6 +292,8 @@ void PixelAlive::run()
 
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                     }
+
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = false;
             }
 
         // ############################
