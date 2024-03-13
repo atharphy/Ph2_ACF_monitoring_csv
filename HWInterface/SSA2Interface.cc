@@ -1053,7 +1053,7 @@ bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tup
 {
     WriteChipReg(pSSA2, "ENFLAGS", 0x20);       // masking all MPA and setting readout mode to OR
     WriteChipReg(pSSA2, "THTRIMMING", 0x1F);    // setting trimming to the lowest (higher value = lower threshold)
-    WriteChipReg(pSSA2, "StripControl2", 0x0F); // disable HIP cut
+    WriteChipReg(pSSA2, "StripControl2", 0x07); // disable HIP cut
     // it looks like the trick of masking and invert polarity does not work
     std::vector<std::pair<std::string, uint16_t>> listOfRegisters;
 
