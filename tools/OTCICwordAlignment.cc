@@ -57,6 +57,7 @@ void OTCICwordAlignment::Reset()
     fRegisterHelper->restoreSnapshot(); 
 
     //TODO: this is a temporary test to read events at end of the alignment procedure.
+    fRegisterHelper->takeSnapshot();
     LOG(INFO) << BOLDMAGENTA << " Trying to read events at the end of the alignment procedure" << RESET;
     for(auto theBoard: *fDetectorContainer)
     {   
@@ -107,6 +108,7 @@ void OTCICwordAlignment::Reset()
         }
         LOG(INFO) << BOLDMAGENTA << "Done reading events" << RESET;
     }
+    fRegisterHelper->restoreSnapshot(); 
 }
 
 void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
