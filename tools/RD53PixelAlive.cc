@@ -118,7 +118,7 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
 
 void PixelAlive::run()
 {
-    if((doDataIntegrity == true) && (strcmp(frontEnd->name, "RD53B") == 0))
+    if((doDataIntegrity != 0) && (strcmp(frontEnd->name, "RD53B") == 0))
     {
         RD53RunProgress::turnOFF();
 
@@ -181,18 +181,20 @@ void PixelAlive::run()
                                         statusGood = false;
                                         break;
                                     }
-                                if((statusGood == false) || (RD53Event::decodedEvents.size() == 0))
+                                size_t badPixelsCounter = 0;
+                                if((doDataIntegrity == 2) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
                                 {
-                                    size_t badPixelsCounter = 0;
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->MaskAllChannels(cChip, true);
+                                    const auto& ele     = std::find(suffix.begin(), suffix.end(), su);
+                                    const auto  coreCol = (ele - suffix.begin()) * numberOfBits + i;
 
-                                    LOG(WARNING) << BOLDBLUE << "\t--> Found a problematic Core-Column --> I'll try to nail down the problem at pixel level" << RESET;
+                                    LOG(WARNING) << BOLDBLUE << "\t--> Found problematic Core-Column " << BOLDYELLOW << coreCol << BOLDBLUE << " --> I'll try to nail down the problem at pixel level"
+                                                 << RESET;
 
                                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                                     {
-                                        const auto& ele      = std::find(suffix.begin(), suffix.end(), su);
-                                        const auto  colStart = ((ele - suffix.begin()) * numberOfBits + i) * RD53Constants::NROW_CORE;
+                                        const auto colStart = coreCol * RD53Constants::NROW_CORE;
                                         for(auto col = colStart; col < colStart + RD53Constants::NROW_CORE; col++)
                                         {
                                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col)) continue;
@@ -229,9 +231,12 @@ void PixelAlive::run()
                                     }
 
                                     static_cast<RD53*>(cChip)->copyMaskFromDefault("en");
-                                    if(badPixelsCounter == (RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE)) regValueMap[su] ^= 1 << i;
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                 }
+
+                                if(((doDataIntegrity == 1) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0))) ||
+                                   (badPixelsCounter == (RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE)))
+                                    regValueMap[su] ^= 1 << i;
                             }
                         }
 
@@ -252,7 +257,7 @@ void PixelAlive::run()
                             LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + su << (problems ? BOLDRED : BOLDBLUE) << " = 0b" << BOLDYELLOW << value
                                       << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)" << RESET;
 
-                            if(problems == false)
+                            if((doDataIntegrity == 2) && (problems == false))
                             {
                                 size_t badPixelsCounter = 0;
                                 for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
