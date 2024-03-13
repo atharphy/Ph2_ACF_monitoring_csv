@@ -34,8 +34,10 @@ class OTCICwordAlignment : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
+    std::vector<uint8_t> fFeEnableRegs = {0};
+    uint32_t fEnableMask;
 
-  private:
+  private:    
     void WordAlignment(uint32_t pWait_us = 10);
 
 #ifdef __USE_ROOT__

@@ -52,7 +52,64 @@ void OTCICwordAlignment::Pause() {}
 
 void OTCICwordAlignment::Resume() {}
 
-void OTCICwordAlignment::Reset() { fRegisterHelper->restoreSnapshot(); }
+void OTCICwordAlignment::Reset() 
+{ 
+    fRegisterHelper->restoreSnapshot(); 
+
+    //TODO: this is a temporary test to read events at end of the alignment procedure.
+    fRegisterHelper->takeSnapshot();
+    LOG(INFO) << BOLDMAGENTA << " Trying to read events at the end of the alignment procedure" << RESET;
+    for(auto theBoard: *fDetectorContainer)
+    {   
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.global.hybrid_enable", fEnableMask);     
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        cRegVec.clear();
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 300});
+        cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", 217});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 1});
+        cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0});
+        fBeBoardInterface->WriteBoardMultReg(theBoard, cRegVec);
+        // first lets figure out how many hybrids are enabled
+        auto cEnableMask = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.global.hybrid_enable");
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.global.hybrid_enable", cEnableMask);
+        // reconfigure sparsification + FEs enabled in this CIC
+        bool                 cSparsified = theBoard->getSparsification();
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+
+        size_t cIndx = 0;
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;       
+                fCicInterface->WriteChipReg(cCic, "FE_ENABLE", fFeEnableRegs[cIndx]);
+                cIndx++;
+            }
+        }
+            
+        // and check
+
+        // auto cPackageDelay = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+        ReadNEvents(theBoard, 10);
+        const std::vector<Event*>& cEvents = this->GetEvents();
+        for(auto& cEvent: cEvents)
+        {
+            for(auto cOpticalGroup: *theBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    auto cBx = (int)cEvent->BxId(cHybrid->getId());
+                    LOG(DEBUG) << BOLDGREEN << "Link#" << +cOpticalGroup->getId() << " Hybrid#" << +cHybrid->getId() << " BxId " << cBx << RESET;
+                }
+            }
+        }
+        LOG(INFO) << BOLDMAGENTA << "Done reading events" << RESET;
+    }
+    fRegisterHelper->restoreSnapshot(); 
+}
 
 void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
 {
@@ -70,13 +127,14 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
 
     for(auto theBoard: *fDetectorContainer)
     {
+        fEnableMask = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.global.hybrid_enable");
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-
-                // configure word alignment pattern on CBCs
+                fFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
+                // configure word alignment pattern on FEs
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getWordAlignmentPatterns();
                 for(auto cChip: *theHybrid) { fReadoutChipInterface->produceWordAlignmentPattern(cChip); }
                 bool  cSuccessAlign          = fCicInterface->AutomatedWordAlignment(cCic, cAlignmentPatterns);
