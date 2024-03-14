@@ -36,13 +36,13 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue - offset, stopValue - offset, nEvents, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "ToT");
 
-    auto hOcc3D = CanvasContainer<TH3F>("GainMap", "Gain Map", nCols, 0, nCols, nRows, 0, nRows, nSteps, startValue - offset, stopValue - offset);
+    auto hOcc3D = CanvasContainer<TH3F>("GainMap", "Gain map", nCols, 0, nCols, nRows, 0, nRows, nSteps, startValue - offset, stopValue - offset);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy3D, hOcc3D, "Column", "Row", "#DeltaVCal");
 
-    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", nCols, 0, nCols, nRows, 0, nRows);
+    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout errors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
 
-    auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", nCols, 0, nCols, nRows, 0, nRows);
+    auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit errors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorFit2D, hErrorFit2D, "Columns", "Rows");
 
     auto hInterceptHighQ1D = CanvasContainer<TH1F>("InterceptHighQ1D", "Intercept high Q 1D", NBINS_G, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
@@ -57,22 +57,22 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     auto hSlopeLowQ1D = CanvasContainer<TH1F>("SlopeLowQ1D", "Slope low Q 1D", NBINS_G, 0, SLOPE_RANGE);
     bookImplementer(theOutputFile, theDetectorStructure, SlopeLowQ1D, hSlopeLowQ1D, "Slope for low charge range (ToT/VCal)", "Entries");
 
-    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", NBINS_G, 0, MAXCHI2);
+    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2/DoF", NBINS_G, 0, MAXCHI2);
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF1D, hChi2DoF1D, "#chi^{2}/D.o.F.", "Entries");
 
-    auto hInterceptHighQ2D = CanvasContainer<TH2F>("InterceptHighQ2D", "Intercept high Q Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hInterceptHighQ2D = CanvasContainer<TH2F>("InterceptHighQ2D", "Intercept high Q map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, InterceptHighQ2D, hInterceptHighQ2D, "Column", "Row");
 
-    auto hSlopeHighQ2D = CanvasContainer<TH2F>("SlopeHighQ2D", "Slope high Q Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hSlopeHighQ2D = CanvasContainer<TH2F>("SlopeHighQ2D", "Slope high Q map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, SlopeHighQ2D, hSlopeHighQ2D, "Column", "Row");
 
-    auto hInterceptLowQ2D = CanvasContainer<TH2F>("InterceptLowQ2D", "Intercept low Q Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hInterceptLowQ2D = CanvasContainer<TH2F>("InterceptLowQ2D", "Intercept low Q map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, InterceptLowQ2D, hInterceptLowQ2D, "Column", "Row");
 
-    auto hSlopeLowQ2D = CanvasContainer<TH2F>("SlopeLowQ2D", "Slope low Q Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hSlopeLowQ2D = CanvasContainer<TH2F>("SlopeLowQ2D", "Slope low Q map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, SlopeLowQ2D, hSlopeLowQ2D, "Column", "Row");
 
-    auto hChi2DoF2D = CanvasContainer<TH2F>("Chi2DoF2D", "Chi2DoF Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hChi2DoF2D = CanvasContainer<TH2F>("Chi2DoF2D", "Chi2/DoF map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF2D, hChi2DoF2D, "Column", "Row");
 
     AreHistoBooked = true;
@@ -136,7 +136,7 @@ void GainHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContain
                                 hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                                 hOcc3D->SetBinContent(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                             }
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col, row);
                         }
                 }
 }
@@ -223,7 +223,7 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
                             if(cChip->getChannel<GainFit>(row, col).fChi2 == RD53Shared::ISFITERROR)
-                                ErrorFit2DHist->Fill(col + 1, row + 1);
+                                ErrorFit2DHist->Fill(col, row);
                             else if(cChip->getChannel<GainFit>(row, col).fChi2 != 0)
                             {
                                 // #################

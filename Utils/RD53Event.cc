@@ -128,6 +128,7 @@ std::vector<uint32_t>*              RD53Event::theData;
 
 std::condition_variable RD53Event::thereIsWork2Do;
 std::atomic<bool>       RD53Event::keepDecodersRunning(false);
+std::atomic<bool>       RD53Event::silentRunning(false);
 std::mutex              RD53Event::theMtx;
 
 void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData)
@@ -351,7 +352,7 @@ bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<s
     return true;
 }
 
-void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint32_t& eventStatus)
+void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint32_t& eventStatus, bool doSilentRunning)
 {
     std::vector<size_t> eventStartLocal;
     eventStatus = RD53FWEvtEncoder::GOOD;
@@ -383,7 +384,7 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
         }
         catch(std::runtime_error& e)
         {
-            LOG(ERROR) << BOLDRED << "Error while decoding this datastream: " << BOLDYELLOW << e.what() << RESET;
+            if(doSilentRunning == false) LOG(ERROR) << BOLDRED << "Error while decoding this datastream: " << BOLDYELLOW << e.what() << RESET;
             events.clear();
             eventStatus = RD53FWEvtEncoder::CORRUPTED;
         }
@@ -396,7 +397,7 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
         }
         catch(std::runtime_error& e)
         {
-            LOG(ERROR) << BOLDRED << "Error while decoding this datastream: " << BOLDYELLOW << e.what() << RESET;
+            if(doSilentRunning == false) LOG(ERROR) << BOLDRED << "Error while decoding this datastream: " << BOLDYELLOW << e.what() << RESET;
             events.clear();
             eventStatus = RD53FWEvtEncoder::CORRUPTED;
         }
@@ -443,14 +444,15 @@ void RD53Event::decoderThread(std::vector<uint32_t>*& data, std::vector<RD53Even
         std::unique_lock<std::mutex> theGuard(RD53Event::theMtx);
         RD53Event::thereIsWork2Do.wait(theGuard, [&workDone]() { return !workDone; });
         theGuard.unlock();
-        if(eventStart.size() != 0) RD53Event::DecodeEvents(*data, events, eventStart, eventStatus);
+        if(eventStart.size() != 0) RD53Event::DecodeEvents(*data, events, eventStart, eventStatus, silentRunning);
         workDone = true;
     }
 }
 
-void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus)
+void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus, bool doSilentRunning)
 {
     std::vector<size_t> eventStart;
+    silentRunning = doSilentRunning;
 
     // #####################
     // # Consistency check #
@@ -514,9 +516,10 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
 // # Use of OpenMP (compiler flag -fopenmp) #
 // ##########################################
 /*
-void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus)
+void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus, bool doSilentRunning)
 {
     std::vector<size_t> eventStart;
+    silentRunning = doSilentRunning;
     eventStatus |= RD53FWEvtEncoder::GOOD;
 
     // #####################
@@ -927,7 +930,7 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     theTree.Write();
     theFile.Close();
 #else
-    LOG(WARNING) << BOLDBLUE << "[RD53Event::MakeNtuple] Function to translate raw data into ROOT ntuple was not compilded" << RESET;
+    LOG(WARNING) << BOLDBLUE << "[RD53Event::MakeNtuple] The function to translate raw data into ROOT ntuple was not compiled" << RESET;
 #endif
 }
 

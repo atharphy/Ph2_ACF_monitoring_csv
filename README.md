@@ -42,7 +42,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 #### Important webpages and information:
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
-- Detailed description of the various calibrations: https://cernbox.cern.ch/s/yFByejNP8Tp7VFq
+- Detailed description of the various calibrations: https://cernbox.cern.ch/s/uSezc8ErG7F4tJ0
 - ROC tuning sequence: https://www.overleaf.com/read/ffpkqnjjjscd
 - Latest IT-DAQ school: https://indico.cern.ch/event/1374747/
 - Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
