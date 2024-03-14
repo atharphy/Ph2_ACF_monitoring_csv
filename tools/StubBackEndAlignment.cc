@@ -284,7 +284,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             // for PS - first digital injection in MPAs
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                 std::vector<Injection> cInjections(0);
                 for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
@@ -386,7 +386,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cChip->getHybridId(), cChip->getId());
                                 auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cChip->getHybridId(), cChip->getId());

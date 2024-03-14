@@ -44,12 +44,11 @@ void DQMHistogramPSPixelAlive::book(TFile* theOutputFile, DetectorContainer& the
         fWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
         fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
                    std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
+        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
     }
 
     std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA, FrontEndType::SSA2};
-    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA, FrontEndType::MPA2};
+    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA2};
     auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
     { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
     auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip)
@@ -68,7 +67,7 @@ void DQMHistogramPSPixelAlive::book(TFile* theOutputFile, DetectorContainer& the
                     auto cNChannels = theDetectorStructure.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->size();
                     auto cType      = cChip->getFrontEndType();
                     if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) { cNPixelChannels.push_back(cNChannels); }
+                    else if(cType == FrontEndType::MPA2) { cNPixelChannels.push_back(cNChannels); }
                 }
             }
         }
@@ -143,7 +142,7 @@ void DQMHistogramPSPixelAlive::process()
                         occupancyHistogram->GetYaxis()->SetTitle("Occupancy");
                         occupancyHistogram->DrawCopy();
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         occupancyCanvas->cd(chip->getId() + 1 + hybrid->size() * 0);
                         occupancyHistogram = fDetectorPixelOccupancyHistograms.getObject(board->getId())
@@ -208,7 +207,7 @@ void DQMHistogramPSPixelAlive::fillOccupancyPlots(DetectorDataContainer& theOccu
                             }
                         }
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         chipOccupancyHistogram = fDetectorPixelOccupancyHistograms.getObject(board->getId())
                                                      ->getObject(opticalGroup->getId())

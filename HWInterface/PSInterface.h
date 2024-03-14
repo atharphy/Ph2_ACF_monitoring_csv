@@ -14,7 +14,6 @@
 
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/MPA2Interface.h"
-#include "HWInterface/MPAInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
 #include "HWInterface/SSA2Interface.h"
 #include "HWInterface/SSAInterface.h"
@@ -34,8 +33,7 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  * \class PSInterface
  * \brief Class representing the User Interface to the PS on different boards
  */
-// const std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE
-// ={{FrontEndType::SSA,Ph2_HwInterface::SSAInterface*},{FrontEndType::SSA2,Ph2_HwInterface::SSA2Interface*},{FrontEndType::MPA,Ph2_HwInterface::MPAInterface*},{FrontEndType::MPA2,Ph2_HwInterface::MPA2Interface*}};
+
 class PSInterface : public ReadoutChipInterface
 { // begin class
   private:
@@ -49,9 +47,8 @@ class PSInterface : public ReadoutChipInterface
     ~PSInterface();
 
     Ph2_HwInterface::SSAInterface*  theSSAInterface;
-    Ph2_HwInterface::MPAInterface*  theMPAInterface;
-    Ph2_HwInterface::SSA2Interface* theSSA2Interface;
-    Ph2_HwInterface::MPA2Interface* theMPA2Interface;
+    Ph2_HwInterface::SSA2Interface* fTheSSA2Interface;
+    Ph2_HwInterface::MPA2Interface* fTheMPA2Interface;
 
     std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE;
     ReadoutChipInterface*                         getInterface(Ph2_HwDescription::Chip* pPS);
@@ -99,8 +96,8 @@ class PSInterface : public ReadoutChipInterface
     void SetOptical()
     {
         bool cFoundLpgbt = this->lpGBTFound();
-        theSSAInterface->setWithLpGBT(cFoundLpgbt);
-        theMPAInterface->setWithLpGBT(cFoundLpgbt);
+        fTheSSA2Interface->setWithLpGBT(cFoundLpgbt);
+        fTheMPA2Interface->setWithLpGBT(cFoundLpgbt);
     }
     std::pair<uint16_t, uint16_t> getSsaRetrySummary() { return theSSAInterface->getRetrySummary(); };
     std::pair<int, float>         getSsaWRattempts() { return theSSAInterface->getWRattempts(); };

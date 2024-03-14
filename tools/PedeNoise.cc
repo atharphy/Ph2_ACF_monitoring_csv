@@ -81,8 +81,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         fWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
         fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
                    std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
+        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
         for(auto cFrontEndType: cFrontEndTypes)
         {
             if(std::find(cAllFrontEndTypes.begin(), cAllFrontEndTypes.end(), cFrontEndType) == cAllFrontEndTypes.end()) cAllFrontEndTypes.push_back(cFrontEndType);
@@ -107,7 +106,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
             theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
-        else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
+        else if(cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
             theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
@@ -257,7 +256,7 @@ void PedeNoise::sweepSCurves()
                     {
                         auto cType = cChip->getFrontEndType();
 
-                        if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        if(cType == FrontEndType::MPA2)
                         {
                             std::cout << __LINE__ << " ------------- MPA fPulseAmplitudePix " << +fPulseAmplitudePix << std::endl;
                             fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitudePix);
@@ -396,7 +395,7 @@ void PedeNoise::Validate()
                                         std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
                                         cRegVec.push_back({cRegName, 0x1F});
                                     }
-                                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                                     {
                                         std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
                                         cRegVec.push_back({cRegName, 0x1F});
@@ -457,7 +456,7 @@ void PedeNoise::findPedestal(bool forceAllChannels)
                         fMeanStrips += tmpVthr;
                         cNStripChips++;
                     }
-                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("ThDAC0");
                         fMeanPixels += tmpVthr;
@@ -516,7 +515,7 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
                             auto cType = cChip->getFrontEndType();
                             if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cStripValue);
-                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                            else if(cType == FrontEndType::MPA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cPixelValue);
                         }
                     }
@@ -556,7 +555,7 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
                                 cNStripChips++;
                                 cStripGlobalOccupancy += cChipOccupancy;
                             }
-                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                            else if(cType == FrontEndType::MPA2)
                             {
                                 cNPixelChips++;
                                 cPixelGlobalOccupancy += cChipOccupancy;
@@ -741,7 +740,7 @@ void PedeNoise::extractPedeNoise()
                                                            .fOccupancy;
                                     binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
                                 }
-                                else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                                else if(cType == FrontEndType::MPA2)
                                 {
                                     if(mPixelIt == fSCurvePixelOccupancyMap.rend())
                                     {
@@ -947,11 +946,11 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                 //   NCH = NCHANNELS;
                 // else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                 //  NCH = NSSACHANNELS;
-                // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                // else if(cType == FrontEndType::MPA2)
                 //  NCH = NMPAROWS * NSSACHANNELS;
 
                 /*float fMean=1.0;
-                        if(cType == FrontEndType::MPA or  cType == FrontEndType::MPA2)
+                        if(cType == FrontEndType::MPA2)
                      fMean=2.7;
                         if(cType == FrontEndType::SSA or  cType == FrontEndType::SSA2)
                      fMean=4.2;*/

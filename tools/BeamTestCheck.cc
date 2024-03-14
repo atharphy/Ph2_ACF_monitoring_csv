@@ -743,7 +743,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                         std::vector<uint8_t> cSSAIds(0);
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType ::CBC3)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType ::CBC3)
                                 cIndices.push_back(cChip->getId());
                             else
                                 cSSAIds.push_back(cChip->getId());
@@ -751,7 +751,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
 
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::CBC3 || cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                            if(cChip->getFrontEndType() == FrontEndType::CBC3 || cChip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 auto& cHitsS0 = cHitContainerS0->getObject(cChip->getId())->getSummary<uint32_t>();
                                 auto& cCoHits = cCoHitCointainer->getObject(cChip->getId())->getSummary<uint32_t>();
@@ -851,7 +851,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                 } // chip
                 // for( auto cChip : *cHybrid )
                 // {
-                //     if( cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::CBC3  ) continue;
+                //     if( cChip->getFrontEndType() == FrontEndType::CBC3  ) continue;
                 //     LOG(INFO) << BOLDMAGENTA << "Will set SSA L1 Latency for Chip#" << +cChip->getId() << " to be " << cLatencies[cChip->getId()%8] << " - 1 " <<  RESET;
                 //     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatencies[cChip->getId()%8]-1);
                 // }
@@ -905,7 +905,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         }
                         else
                         {
-                            uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
+                            uint8_t cBitShift = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface->ECM_TABLE.find("StubMode")->second;
                             auto    cReg      = cChip->getReg("ECM");
                             uint8_t cRegMask  = (0x3 << cBitShift); //
                             uint8_t cValue    = (cReg & cRegMask) >> cBitShift;
@@ -1066,7 +1066,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                     std::vector<uint8_t> cSSAIds(0);
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType ::CBC3)
+                        if(cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType ::CBC3)
                             cIndices.push_back(cChip->getId());
                         else
                             cSSAIds.push_back(cChip->getId());
@@ -1114,7 +1114,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         auto  cStubs   = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                         auto& cLyrSwap = cLyrSwp.getObject(cBrdIndx)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint8_t>();
                         // if its a CBC .. look for events with exactly 2 clusters
-                        if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                        if(cChip->getFrontEndType() == FrontEndType::MPA2)
                         {
                             auto cStripClusters = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
                             auto cPxlClusters   = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
@@ -1236,7 +1236,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             // if(pPrint)
 
                             uint16_t cMaxRows     = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : NMPAROWS;
-                            uint16_t cMaxCols     = (cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) ? NSSACHANNELS : 1;
+                            uint16_t cMaxCols     = (cChip->getFrontEndType() == FrontEndType::MPA2) ? NSSACHANNELS : 1;
                             bool     cValidCoords = (cRow < cMaxRows && cCol < cMaxCols);
 
                             if(!cValidCoords)
@@ -1283,9 +1283,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             // sensor iD - 0 -- bottoml; 1 -- top
                             uint8_t cSensorID = (cChip->getFrontEndType() == FrontEndType::CBC3) ? (cHit % 2 != 0) : (cRow != 0);
                             // uint16_t cMaxRows  = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : 0;
-                            // if(cChip->getFrontEndType() == FrontEndType::MPA) cMaxRows = NSSACHANNELS;
                             uint16_t cMaxRows = 1;
-                            if((cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) && cSensorID == 0) cMaxRows = NMPAROWS;
+                            if((cChip->getFrontEndType() == FrontEndType::MPA2) && cSensorID == 0) cMaxRows = NMPAROWS;
 
                             if(cChip->getFrontEndType() != FrontEndType::CBC3)
                             {
@@ -1482,30 +1481,12 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
 
                 for(auto cChip: *cHybrid)
                 {
-                    // if(cChip->getFrontEndType() == FrontEndType::MPA )
-                    // {
-                    //     auto& cEventsWithSingles =
-                    //     fEventsWithSingleClusters.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<BENDBINS,
-                    //     uint16_t>>(); auto& cEventsWithStubs  =
-                    //     fEventsWithStubs.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, BENDBINS>>(); float
-                    //     cNevents=0; float cNstubs=0; for( size_t cIndx=0; cIndx < BENDBINS ; cIndx++) cNevents+= cEventsWithSingles[cIndx]; for( size_t cIndx=0; cIndx < BENDBINS ; cIndx++)
-                    //     cNstubs+= cEventsWithStubs[cIndx];
-
-                    //     LOG(INFO) << BOLDMAGENTA << "Counting step... Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " Chip#" << +(cChip->getId())
-                    //         << " " << cNevents
-                    //         << " events with exactly one cluster of size 1 in each layer "
-                    //         << " and " << +cNstubs
-                    //         << " stubs found "
-                    //         << " stub matching efficiecny is " << (float)cNstubs/cNevents
-                    //         << RESET;
-                    // }
-
                     if(cChip->getFrontEndType() == FrontEndType::CBC3 && cHitContainerS0->getObject(cChip->getId())->getSummary<uint32_t>() > 0)
                         LOG(INFO) << BOLDBLUE << "Counting step...Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " Chip#" << +(cChip->getId())
                                   << " Stubs   : " << cStubContainer->getObject(cChip->getId())->getSummary<uint32_t>() << " stubs."
                                   << " Hits S0 : " << cHitContainerS0->getObject(cChip->getId())->getSummary<uint32_t>() << " hits."
                                   << " Hits S1 : " << cHitContainerS1->getObject(cChip->getId())->getSummary<uint32_t>() << " hits." << RESET;
-                    else if((cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) && cHitContainerS0->getObject(cChip->getId())->getSummary<uint32_t>() > 0)
+                    else if((cChip->getFrontEndType() == FrontEndType::MPA2) && cHitContainerS0->getObject(cChip->getId())->getSummary<uint32_t>() > 0)
                         LOG(INFO) << BOLDMAGENTA << "Counting step... Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " Chip#" << +(cChip->getId())
                                   << " Stubs   : " << cStubContainer->getObject(cChip->getId())->getSummary<uint32_t>() << " stubs."
                                   << " Hits S0 : " << cHitContainerS0->getObject(cChip->getId())->getSummary<uint32_t>() << " hits."

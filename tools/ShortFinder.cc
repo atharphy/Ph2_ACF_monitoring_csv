@@ -101,7 +101,6 @@ void ShortFinder::Initialise()
     // {
     //     MPAChannelGroupHandler theChannelGroupHandler;
     //     theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
-    //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
     //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
     // }
 

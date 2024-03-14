@@ -45,12 +45,11 @@ void DQMHistogramPSBiasCal::book(TFile* theOutputFile, DetectorContainer& theDet
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
         fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
                    std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
+        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
     }
 
     std::vector<FrontEndType> cStripTypes             = {FrontEndType::SSA, FrontEndType::SSA2};
-    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA, FrontEndType::MPA2};
+    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA2};
     auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
     { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
     auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip)
@@ -201,7 +200,7 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                         fStripVrefHistograms->GetXaxis()->SetTitle("ADC_VREF register");
                         fStripVrefHistograms->GetYaxis()->SetTitle("VREF [V]");
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         fPixelVrefHistograms = fChipPixelVrefHistograms.getObject(cBoard->getId())
                                                    ->getObject(cOpticalGroup->getId())
@@ -315,7 +314,7 @@ void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isA
                         fStripVDDHistograms->GetYaxis()->SetTitle("VDD [V]");
                         fStripVDDHistograms->SetMarkerStyle(20);
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         if(isAVDD)
                         {
@@ -424,7 +423,7 @@ void DQMHistogramPSBiasCal::fillSlopePlots(DetectorDataContainer& theSlope)
                         fPol1->SetLineColor(kRed + 1);
                         fPol1->SetLineStyle(2);
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         fPixelADCSlopeGraphs = fChipPixelSlopeGraphs.getObject(cBoard->getId())
                                                    ->getObject(cOpticalGroup->getId())

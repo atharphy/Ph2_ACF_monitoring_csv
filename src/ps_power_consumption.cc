@@ -646,7 +646,7 @@ int main(int argc, char* argv[])
                                     {
                                         for(auto cReadoutChip: *cHybrid)
                                         {
-                                            if(cReadoutChip->getFrontEndType() == FrontEndType::MPA && cReadoutChip->getId() == cId)
+                                            if(cReadoutChip->getFrontEndType() == FrontEndType::MPA2 && cReadoutChip->getId() == cId)
                                             {
                                                 LOG(INFO) << BOLDBLUE << "Configuring MPA#" << +cReadoutChip->getId() << RESET;
                                                 cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
@@ -843,7 +843,7 @@ int main(int argc, char* argv[])
                                 // then .. configure that MPA
                                 for(auto cReadoutChip: *cHybrid)
                                 {
-                                    if(cReadoutChip->getFrontEndType() == FrontEndType::MPA && cReadoutChip->getId() == cId)
+                                    if(cReadoutChip->getFrontEndType() == FrontEndType::MPA2 && cReadoutChip->getId() == cId)
                                     {
                                         if(std::find(cMPAsToEnable.begin(), cMPAsToEnable.end(), cId) != cMPAsToEnable.end())
                                         {

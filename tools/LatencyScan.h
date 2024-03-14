@@ -47,7 +47,6 @@ class LatencyScan : public Tool
     // this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
     std::map<HybridContainer*, uint8_t> ScanStubLatency(uint8_t pStartLatency = 0, uint8_t pLatencyRange = 20);
     // this is used by MPALatency -- only defined if USE_ROOT -- ideally should be replaced to avoid duplication
-    std::map<HybridContainer*, uint8_t> ScanLatency_root(uint16_t pStartLatency = 0, uint16_t pLatencyRange = 20);
     void                                MeasureTriggerTDC();
     void                                ScanLatency2D();
     void                                StubLatencyScan();
@@ -69,10 +68,8 @@ class LatencyScan : public Tool
 
   private:
     int  countStubs(Ph2_HwDescription::Hybrid* pFe, const Ph2_HwInterface::Event* pEvent, std::string pHistName, uint8_t pParameter);
-    int  countHitsLat(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Event*> pEventVec, std::string pHistName, uint16_t pParameter, uint32_t pStartLatency);
     void updateHists(std::string pHistName, bool pFinal);
-    void parseSettings();
-
+    
     //  Members
     uint32_t fNevents;
     // uint32_t fInitialThreshold;

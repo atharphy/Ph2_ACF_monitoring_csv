@@ -204,7 +204,7 @@ void Eudaq2Producer::DoStartRun()
                     // Fill chip threshold with current value
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         cRegister = cChip->getReg("VCth2") << 8 | cChip->getReg("VCth1");
-                    else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                    else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                         cRegister = cChip->getReg("ThDAC0");
                     else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                         cRegister = cChip->getReg("Bias_THDAC");
@@ -229,7 +229,7 @@ void Eudaq2Producer::DoStartRun()
                     {
                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                             this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdCBC);
-                        else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                        else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdMPA);
                         else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdSSA);
@@ -618,7 +618,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 {
                     uint8_t cChipId = cChip->getId();
                     // skip if not MPA. MPA holds cluster information for both pixel and strip
-                    if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                     // Get pixel clusters
                     std::vector<PCluster> cPClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetPixelClusters(cHybridId, cChipId);
                     // Extract pixel hit information
@@ -952,7 +952,7 @@ void Eudaq2Producer::EnableDigitalInjection(uint8_t pPulseAmplitude, uint8_t pTh
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", 0x00);
                         // make sure L1 latency is configured

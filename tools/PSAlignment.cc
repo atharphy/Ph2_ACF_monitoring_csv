@@ -36,7 +36,6 @@ void PSAlignment::Initialise()
     cRegsMod.push_back("MemoryControl_2_ALL");
     cRegsMod.push_back("EdgeSelT1Raw");
     cRegsMod.push_back("EdgeSelTrig");
-    // SetChipRegstoPerserve(FrontEndType::MPA, cRegsMod);
     SetChipRegstoPerserve(FrontEndType::MPA2, cRegsMod);
     cRegsMod.clear();
     cRegsMod.push_back("ReadoutMode");
@@ -67,9 +66,9 @@ void PSAlignment::Initialise()
                 auto& cStubAlParsThisHybrd = cStubAlParsThisOG->getObject(cHybrid->getId());
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA2) PSv2 = true;
-                    if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
+                        PSv2 = true;
                         auto& cAlParsThisChip = cAlParsThisHybrd->getObject(cChip->getId());
                         cAlParsThisChip->getSummary<std::vector<MPAInputAlignment>>().clear();
                         auto& cL1AlParsThisChip = cL1AlParsThisHybrd->getObject(cChip->getId());
@@ -120,7 +119,7 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
                 // map MPA outputs
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                     // mapping for PS module
                     // mapping for probe station/etc. can be different
@@ -151,7 +150,7 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
                 // map MPA outputs
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                     // mapping for PS module
                     // mapping for probe station/etc. can be different
@@ -179,10 +178,10 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
         cRegsMod.push_back(cRegName.str());
     }
     cRegsMod.push_back("ReadoutMode");
-    SetChipRegstoPerserve(FrontEndType::MPA, cRegsMod);
+    SetChipRegstoPerserve(FrontEndType::MPA2, cRegsMod);
     cRegsMod.clear();
     cRegsMod.push_back("ReadoutMode");
-    SetChipRegstoPerserve(FrontEndType::SSA, cRegsMod);
+    SetChipRegstoPerserve(FrontEndType::SSA2, cRegsMod);
 }
 
 bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
@@ -215,7 +214,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
             // configure SSA to inject digitally
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
@@ -244,7 +243,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                 // uint8_t  cMode = 3;
                 uint8_t cStubWindow = 8;
@@ -268,7 +267,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
             // configure SSA to inject digitally
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                 uint8_t cChipId = cChip->getId();
                 if(!cCurPhaseFound) cPhaseFound = false; // all chips need to be tuned
@@ -286,7 +285,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                                 // configure SSA to inject digitally
                                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                                 {
-                                    if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                                     if(cChip->getId() != cChipId) continue;
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubInputPhase", cPhase);
                                     fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", cRetime);
@@ -313,7 +312,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                                 {
                                     for(auto cChip: *cHybrid)
                                     {
-                                        if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                                        if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                                         if(cChip->getId() != cChipId) continue;
                                         std::vector<Stub> stubs = static_cast<D19cCic2Event*>(ev)->StubVector(cHybrid->getId(), cChip->getId());
                                         for(auto& st: stubs)
@@ -376,7 +375,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
             for(auto cChip: *cHybrid)
             {
                 // make sure L1 latency is configured
-                if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 0x0);
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
@@ -410,7 +409,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
             // configure SSA to inject digitally
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                 uint8_t cChipId = cChip->getId();
 
@@ -431,7 +430,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                 {
                                     for(auto cChip: *cHybrid)
                                     {
-                                        if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                                        if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                                         if(cChip->getId() != cChipId) continue;
                                         fReadoutChipInterface->WriteChipReg(cChip, "L1InputPhase", cPhase);
                                         fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", cWord);
@@ -455,7 +454,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                     {
                                         for(auto cChip: *cHybrid)
                                         {
-                                            if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                                            if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                                             if(cChip->getId() != cChipId) continue;
 
                                             std::vector<PCluster> Pclus = static_cast<D19cCic2Event*>(ev)->GetPixelClusters(cHybrid->getId(), cChip->getId());
@@ -1209,7 +1208,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
                     auto& cL1AlParsThisHybrid = cL1AlParsThisOG->getObject(cHybrid->getId());
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                        if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                         if(cChip->getId() % 8 != pChipId) continue;
 
                         auto cL1AlignmentPars = this->AlignL1(cChip, cInjections, cEdgeSelRaw);
@@ -1251,7 +1250,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
             auto& cL1AlParsThisHybrid = cL1AlParsThisOG->getObject(cHybrid->getId());
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 if(cChip->getId() % 8 != pChipId) continue;
 
                 auto& cL1AlParsThisChip = cL1AlParsThisHybrid->getObject(cChip->getId());
@@ -1360,7 +1359,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
             auto& cAlParsThisHybrid = cAlParsThisOG->getObject(cHybrid->getId());
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 if(cChip->getId() % 8 != pChipId) continue;
 
                 auto& cAlParsThisChip = cAlParsThisHybrid->getObject(cChip->getId());
@@ -1386,7 +1385,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
             auto& cAlParsThisHybrid     = cAlParsThisOG->getObject(cHybrid->getId());
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 if(cChip->getId() % 8 != pChipId) continue;
 
                 auto& cL1lParsThisChip = cL1AlParsThisHybrid->getObject(cChip->getId());
@@ -1558,7 +1557,7 @@ void PSAlignment::Validate(BeBoard* pBoard, std::vector<Injection> pInjections, 
                 {
                     for(auto cChip: *cHybrid) // for each chip (makes sense)
                     {
-                        if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                        if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                         cAllMatched = cAllMatched && CheckFullMatch(cChip, cEvents, pInjections, cTriggerId, cTriggerMult);
                     }
                 }
@@ -1580,7 +1579,7 @@ void PSAlignment::Validate(BeBoard* pBoard, std::vector<Injection> pInjections, 
 }
 bool PSAlignment::CheckFullMatch(ReadoutChip* pChip, const std::vector<Event*>& pEvents, std::vector<Injection> pInjections, uint8_t pTriggerId, size_t pTriggerMult)
 {
-    if(pChip->getFrontEndType() != FrontEndType::MPA and pChip->getFrontEndType() != FrontEndType::MPA2) return true;
+    if(pChip->getFrontEndType() != FrontEndType::MPA2) return true;
 
     bool cCheckL1 = true;
     struct
@@ -1712,7 +1711,7 @@ bool PSAlignment::Align()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    cWithMPA = cWithMPA || (cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2);
+                    cWithMPA = cWithMPA || (cChip->getFrontEndType() == FrontEndType::MPA2);
                     cWithSSA = cWithMPA || (cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2);
                 }
             }
@@ -1743,7 +1742,7 @@ bool PSAlignment::Align()
                     for(auto cChip: *cHybrid)
                     {
                         if(cChipFound) break;
-                        if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                        if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                         if(cChip->getId() % cMaxChips == cChipId) cChipFound = true;
                     }
                 }
@@ -1770,7 +1769,7 @@ bool PSAlignment::Align()
                 auto& cAlParsThisHybrid = cAlParsThisOG->getObject(cHybrid->getId());
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                     auto& cParsThisChip = cAlParsThisHybrid->getObject(cChip->getId());
                     auto& cPars         = cParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
                     if(cPars.size() == 0)
@@ -1801,7 +1800,6 @@ bool PSAlignment::Align()
             cRegsMod.push_back(cRegName.str());
         }
         cRegsMod.push_back("ReadoutMode");
-        // SetChipRegstoPerserve(FrontEndType::MPA, cRegsMod);
         SetChipRegstoPerserve(FrontEndType::MPA2, cRegsMod);
         cRegsMod.clear();
         cRegsMod.push_back("ReadoutMode");

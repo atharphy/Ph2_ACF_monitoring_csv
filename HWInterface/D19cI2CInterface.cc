@@ -68,7 +68,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA ||
+                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA ||
                                    cChip->getFrontEndType() == FrontEndType::MPA2)
                                                  ? 2
                                                  : 1;
@@ -93,7 +93,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA ||
+                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA ||
                                    cChip->getFrontEndType() == FrontEndType::MPA2)
                                                  ? 2
                                                  : 1;
