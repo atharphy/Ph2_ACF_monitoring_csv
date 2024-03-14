@@ -1056,7 +1056,7 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     if(fL1ReadoutInterface->ReadEvents(pBoard)) { pData = fL1ReadoutInterface->getData(); }
     else
     {
-        LOG(INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
+        LOG(INFO) << BOLDRED << "Failed to ReadNEvents. Contact Fabio Ravera and/or Irene Zoi." << RESET;
         // throw Exception("Failed to ReadNEvents....");
     }
     if(fSaveToFile) fFileHandler->setData(pData);
