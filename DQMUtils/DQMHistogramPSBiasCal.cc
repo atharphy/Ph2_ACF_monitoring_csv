@@ -44,7 +44,7 @@ void DQMHistogramPSBiasCal::book(TFile* theOutputFile, DetectorContainer& theDet
     {
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
         fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
+        fWithMPA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
     }
 
     std::vector<FrontEndType> cStripTypes             = {FrontEndType::SSA2};

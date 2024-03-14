@@ -81,7 +81,7 @@ void FileDumper::dumpBoardConfigurationFile(pugi::xml_node theMotherNode, BeBoar
         theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_ZS_VALUE;
     else if(theBoard->getEventType() == EventType::PSAS)
         theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_VR_VALUE; // forcing it back to EventType::VR
-        // theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_PSAS_VALUE;
+    // theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_PSAS_VALUE;
     else if(theBoard->getEventType() == EventType::VR2S)
         theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_VR2S_VALUE;
     else if(theBoard->getEventType() == EventType::VR)
@@ -189,12 +189,8 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
     }
 
     bool cWithCBC = (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::CBC3; }) != theHybrid->end());
-    bool cWithMPA =
-        (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return (x->getFrontEndType() == FrontEndType::MPA2); }) !=
-         theHybrid->end());
-    bool cWithSSA =
-        (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return (x->getFrontEndType() == FrontEndType::SSA2); }) !=
-         theHybrid->end());
+    bool cWithMPA = (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return (x->getFrontEndType() == FrontEndType::MPA2); }) != theHybrid->end());
+    bool cWithSSA = (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return (x->getFrontEndType() == FrontEndType::SSA2); }) != theHybrid->end());
 
     auto appendReadoutChipConfigFilePath = [this, &theHybridNode](std::string theChipString)
     {

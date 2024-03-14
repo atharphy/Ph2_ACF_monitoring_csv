@@ -870,7 +870,6 @@ void RegisterTester::RegisterTest()
         }             // board loop to run test
     }
     cTestFlavor++;
-
 }
 void RegisterTester::TestRegisters()
 {

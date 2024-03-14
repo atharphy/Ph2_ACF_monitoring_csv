@@ -1247,8 +1247,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                         previousStepOccupancyContainer->getObject(boardId)->getSummary<Occupancy, Occupancy>().fOccupancy;
 
     // Hacked solution for PS
-    if((cReadoutChip->getFrontEndType() == FrontEndType::MPA2) or
-       (cReadoutChip->getFrontEndType() == FrontEndType::SSA2))
+    if((cReadoutChip->getFrontEndType() == FrontEndType::MPA2) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA2))
     {
         if(localDAC)
             occupanyDirectlyProportionalToDAC = true;

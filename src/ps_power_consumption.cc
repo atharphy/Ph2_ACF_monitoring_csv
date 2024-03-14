@@ -468,13 +468,10 @@ int main(int argc, char* argv[])
                     for(auto cReadoutChip: *cHybrid)
                     {
                         LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                        if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
-                        {
-                            cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
-                        } // SSAs
-                    }     // Chips
-                }         // OG
-            }             // configure SSA
+                        if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2) { cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip); } // SSAs
+                    }                                                                                                                           // Chips
+                }                                                                                                                               // OG
+            }                                                                                                                                   // configure SSA
         }
     }
 
@@ -802,7 +799,7 @@ int main(int argc, char* argv[])
                             for(auto cChip: *cHybrid)
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA2) { pIds.push_back(cChip->getId()); } // SSAs
-                            }                                                                                                                                           // Chips
+                            }                                                                                          // Chips
 
                             // reset MPA
                             // reset chips

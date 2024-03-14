@@ -86,8 +86,8 @@ class PSInterface : public ReadoutChipInterface
         fTheSSA2Interface->setWithLpGBT(cFoundLpgbt);
         fTheMPA2Interface->setWithLpGBT(cFoundLpgbt);
     }
-    bool                          injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
-    bool                          injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwDescription::ReadoutChip* pSSA, std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector);
+    bool injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
+    bool injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwDescription::ReadoutChip* pSSA, std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector);
     // void                              printErrorSummary();
 };
 } // namespace Ph2_HwInterface

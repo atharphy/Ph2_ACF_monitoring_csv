@@ -19,11 +19,10 @@ namespace Ph2_HwInterface
 {
 PSInterface::PSInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap)
 {
-    fTheSSA2Interface                                                    = static_cast<SSA2Interface*>(new SSA2Interface(pBoardMap));
-    fTheMPA2Interface                                                    = static_cast<MPA2Interface*>(new MPA2Interface(pBoardMap));
-    const std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE1 = {
-        {FrontEndType::SSA2, fTheSSA2Interface}, {FrontEndType::MPA2, fTheMPA2Interface}};
-    CHIP_INTERFACE = CHIP_INTERFACE1;
+    fTheSSA2Interface                                                   = static_cast<SSA2Interface*>(new SSA2Interface(pBoardMap));
+    fTheMPA2Interface                                                   = static_cast<MPA2Interface*>(new MPA2Interface(pBoardMap));
+    const std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE1 = {{FrontEndType::SSA2, fTheSSA2Interface}, {FrontEndType::MPA2, fTheMPA2Interface}};
+    CHIP_INTERFACE                                                      = CHIP_INTERFACE1;
 }
 PSInterface::~PSInterface() {}
 
@@ -87,18 +86,12 @@ bool PSInterface::ConfigureChip(Chip* pPS, bool pVerifLoop, uint32_t pBlockSize)
 void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA2) { fTheMPA2Interface->producePhaseAlignmentPattern(pChip, pWait_ms); }
-    else
-    {
-        LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
-    }
+    else { LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET; }
 }
 void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA2) { fTheMPA2Interface->produceWordAlignmentPattern(pChip); }
-    else
-    {
-        LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
-    }
+    else { LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET; }
 }
 
 bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop)

@@ -67,7 +67,7 @@ void PSAlignment::Initialise()
                 {
                     if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
-                        PSv2 = true;
+                        PSv2                  = true;
                         auto& cAlParsThisChip = cAlParsThisHybrd->getObject(cChip->getId());
                         cAlParsThisChip->getSummary<std::vector<MPAInputAlignment>>().clear();
                         auto& cL1AlParsThisChip = cL1AlParsThisHybrd->getObject(cChip->getId());

@@ -41,10 +41,7 @@ void PSBiasCal::Reset()
                     auto&                                         cRegMapThisChip = cRegMapThisHybrid->getObject(cChip->getId())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
-                    for(auto cReg: cRegMapThisChip)
-                    {
-                        cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
-                    }
+                    for(auto cReg: cRegMapThisChip) { cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue)); }
                     fReadoutChipInterface->WriteChipMultReg(static_cast<ReadoutChip*>(cChip), cVecRegisters);
                 }
             }

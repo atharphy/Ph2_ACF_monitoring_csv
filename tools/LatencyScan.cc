@@ -66,8 +66,7 @@ void LatencyScan::Initialize()
     // configure TP amplitude
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cWithPSv2)
-            setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
+        if(cWithPSv2) setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fPulseAmplitude);
     }
 
     if(fPulseAmplitude != 0)

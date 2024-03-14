@@ -1782,8 +1782,7 @@ void DataChecker::AsyncTest()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
-                        cBoard->setEventType(EventType::PSAS);
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2) cBoard->setEventType(EventType::PSAS);
                 }
             }
         }

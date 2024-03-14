@@ -185,9 +185,9 @@ void OTTool::Prepare()
     for(auto cBoard: *fDetectorContainer)
     {
         auto cConnectedFEs = cBoard->connectedFrontEndTypes();
-        fWithSSA = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::SSA2); }) != cConnectedFEs.end()) ? 1 : 0;
-        fWithMPA = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::MPA2); }) != cConnectedFEs.end()) ? 1 : 0;
-        fWithCBC = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithSSA           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::SSA2); }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithMPA           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::MPA2); }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithCBC           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFEs.end()) ? 1 : 0;
         for(auto cOpticalGroup: *cBoard)
         {
             fWithLpGBT = (cOpticalGroup->flpGBT != nullptr) ? 1 : 0;
@@ -1148,8 +1148,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 uint16_t cValueInMemory = cChip->getReg(cRegName);
                 if(cChip->getFrontEndType() == FrontEndType::CBC3) { cValueInMemory = (cValueInMemory >> 6) & 0x3F; }
 
-                if(cChip->getFrontEndType() == FrontEndType::SSA2 ||
-                   cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType::CBC3)
+                if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", cValueInMemory);
                     uint16_t cValueInChip = fReadoutChipInterface->ReadChipReg(cChip, "InjectedCharge");
@@ -1177,8 +1176,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                     auto cRegValueSecond = cChip->getReg("TriggerLatency1");
                     cValueInMemory       = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
                 }
-                if(cChip->getFrontEndType() == FrontEndType::SSA2 ||
-                   cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType::CBC3)
+                if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType::CBC3)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cValueInMemory);
                     uint16_t cValueInChip = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
@@ -1212,8 +1210,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                     continue; // it is done above!
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::CBC3) { cRegName = "HIP&TestMode"; }
-                if(cChip->getFrontEndType() == FrontEndType::SSA2 ||
-                   cChip->getFrontEndType() == FrontEndType::MPA2)
+                if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     uint16_t cValueInMemory = cChip->getReg(cRegName);
                     fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
@@ -1236,8 +1233,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 std::vector<std::string> cRegNames;
                 if(cChip->getFrontEndType() == FrontEndType::SSA2) { cRegNames = {"ClockDeskewing_coarse", "ClockDeskewing_fine"}; }
                 else if(cChip->getFrontEndType() == FrontEndType::MPA2) { cRegNames = {"Control_1", "ConfDLL"}; }
-                if(cChip->getFrontEndType() == FrontEndType::SSA2 ||
-                   cChip->getFrontEndType() == FrontEndType::MPA2)
+                if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     for(auto cRegName: cRegNames)
                     {
