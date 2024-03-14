@@ -278,7 +278,7 @@ class D19cFWInterface : public BeBoardFWInterface
 
     std::map<uint32_t, std::string> fChipNamesMap = {{0, "CBC2"}, {1, "CBC3"}, {2, "MPA"}, {3, "SSA"}, {4, "CIC"}, {5, "CIC2"}};
 
-    std::map<uint32_t, FrontEndType> fFETypesMap = {{1, FrontEndType::CBC3}, {2, FrontEndType::MPA}, {3, FrontEndType::SSA}, {4, FrontEndType::CIC}, {5, FrontEndType::CIC2}};
+    std::map<uint32_t, FrontEndType> fFETypesMap = {{1, FrontEndType::CBC3}, {2, FrontEndType::MPA}, {3, FrontEndType::SSA}, {5, FrontEndType::CIC2}};
 
     // template to copy every nth element out of a vector to another vector
     template <class in_it, class out_it>

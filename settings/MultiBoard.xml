@@ -36,7 +36,7 @@
             <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
             <CBC Id="7" enable="1" configFile="CBC3_default.txt" /> 
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
             </Hybrid>
             </OpticalGroup>
@@ -210,7 +210,7 @@
                 <CBC Id="6" enable="1" configFile="BE0_OG0_FE0_Chip6.txt" />
                 <CBC Id="7" enable="1" configFile="BE0_OG0_FE0_Chip7.txt" /> 
         
-                <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
+                <CIC2_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
                 <CIC2 Id="8" enable="1" configFile="BE0_OG0_FE0.txt" />
             </Hybrid>
             <Hybrid Id="1" enable="1" reset="1" >
@@ -233,7 +233,7 @@
                 <CBC Id="6" enable="1" configFile="BE0_OG0_FE1_Chip6.txt" />
                 <CBC Id="7" enable="1" configFile="BE0_OG0_FE1_Chip7.txt" /> 
 
-                <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
+                <CIC2_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
                 <CIC2 Id="8" enable="1" configFile="BE0_OG0_FE1.txt" />
             </Hybrid>
         </OpticalGroup>

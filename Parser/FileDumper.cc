@@ -180,7 +180,7 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
     auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
     if(cCic != NULL)
     {
-        std::string theCICFilePathNodeName                              = std::string(CIC_NODE_NAME) + CHIP_FILES_APPEND_NODE_NAME;
+        std::string theCICFilePathNodeName                              = std::string(CIC2_NODE_NAME) + CHIP_FILES_APPEND_NODE_NAME;
         auto        theCICFilePathNode                                  = theHybridNode.append_child(theCICFilePathNodeName.c_str());
         theCICFilePathNode.append_attribute(COMMON_PATH_ATTRIBUTE_NAME) = fOutputDirectory.c_str();
 
@@ -190,15 +190,10 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
         LOG(DEBUG) << BOLDBLUE << "Dumping CIC configuration to " << theFullFileName << RESET;
         cCic->saveRegMap(theFullFileName);
 
-        std::string CicNodeName;
-        if(cCic->getFrontEndType() == FrontEndType::CIC)
-            CicNodeName = CIC_NODE_NAME;
-        else if(cCic->getFrontEndType() == FrontEndType::CIC2)
-            CicNodeName = CIC2_NODE_NAME;
-        else
-            throw std::runtime_error("FileDumper error: CIC version not recognized");
-        auto theCICnode                                               = theHybridNode.append_child(CicNodeName.c_str());
+        std::string CicNodeName                                       = CIC2_NODE_NAME;
+        auto        theCICnode                                        = theHybridNode.append_child(CicNodeName.c_str());
         theCICnode.append_attribute(COMMON_ID_ATTRIBUTE_NAME)         = std::to_string(cCic->getId()).c_str();
+        theCICnode.append_attribute(COMMON_ENABLE_ATTRIBUTE_NAME)     = "1";
         theCICnode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
     }
 

@@ -1204,7 +1204,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find(SSA_NODE_NAME) != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find(SSA2_NODE_NAME) != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find(MPA_NODE_NAME) != std::string::npos;
-            cIsTrackerASIC             = cIsTrackerASIC || cName.find(CIC_NODE_NAME) != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find(CIC2_NODE_NAME) != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find(RD53_NODE_NAME) != std::string::npos;
 
             if(cIsTrackerASIC)
@@ -1230,11 +1230,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         parseCbcContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseGlobalCbcSettings(pHybridNode, cHybrid, os);
                     }
-                    else if(cName.find(CIC_NODE_NAME) != std::string::npos)
+                    else if(cName.find(CIC2_NODE_NAME) != std::string::npos)
                     {
-                        bool         cCIC1 = (cName.find(CIC2_NODE_NAME) == std::string::npos);
-                        FrontEndType cType = cCIC1 ? FrontEndType::CIC : FrontEndType::CIC2;
-                        pBoard->setFrontEndType(cType);
+                        pBoard->setFrontEndType(FrontEndType::CIC2);
                         if(!cConfigFileDirectory.empty())
                         {
                             if(cConfigFileDirectory.at(cConfigFileDirectory.length() - 1) != '/') cConfigFileDirectory.append("/");
@@ -1250,23 +1248,17 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                            << "----" << cName << "  " << COMMON_ID_ATTRIBUTE_NAME << cChipId << " , File: " << cFileName << RESET << std::endl;
                         Cic* cCic = new Cic(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cChipId, cFileName);
                         static_cast<OuterTrackerHybrid*>(cHybrid)->addCic(cCic);
-                        cCic->setFrontEndType(cType);
                         cCic->setOptical(cHybrid->isOptical());
                         cCic->setMasterId(cHybrid->getMasterId());
 
-                        os << GREEN << "|\t|\t|\t|----FrontEndType: ";
-                        if(cType == FrontEndType::CIC)
-                            os << RED << CIC_NODE_NAME;
-                        else
-                            os << RED << CIC2_NODE_NAME;
+                        os << GREEN << "|\t|\t|\t|----FrontEndType: " << RED << CIC2_NODE_NAME << RESET << std::endl;
 
-                        os << RESET << std::endl;
                         // Now global settings
                         pugi::xml_node cGlobalSettingsNode = pHybridNode.child("Global");
                         for(pugi::xml_node cChildGlobal: cGlobalSettingsNode.children())
                         {
                             std::string cNameGlobal = cChildGlobal.name();
-                            if(cNameGlobal.find(CIC_NODE_NAME) != std::string::npos || cNameGlobal.find(CIC2_NODE_NAME) != std::string::npos)
+                            if(cNameGlobal.find(CIC2_NODE_NAME) != std::string::npos)
                             {
                                 if(cChildGlobal.attribute("driveStrength"))
                                 {
@@ -1294,7 +1286,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                     uint16_t cMask        = (~(1 << cBitPosition)) & 0xFF;
 
                                     uint16_t cValueFromFile = cChildGlobal.attribute(cAttribute.c_str()).as_uint();
-                                    if(cAttribute == "clockFrequency" && cCIC1) continue;
                                     if(cAttribute == "enableSparsification")
                                     {
                                         pBoard->setSparsification(bool(cValueFromFile));
@@ -1304,9 +1295,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                     os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
                                     LOG(DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile << RESET;
 
-                                    std::string cRegName  = cCIC1 ? std::string(*it) : "FE_CONFIG";
+                                    std::string cRegName  = "FE_CONFIG";
                                     auto        cRegValue = cCic->getReg(cRegName);
-                                    uint16_t    cNewValue = cCIC1 ? cValueFromFile : ((cRegValue & cMask) | (cValueFromFile << cBitPosition));
+                                    uint16_t    cNewValue = ((cRegValue & cMask) | (cValueFromFile << cBitPosition));
 
                                     LOG(INFO) << BOLDBLUE << "  Setting [ " << cRegName << " " << *it << " == " << +cValueFromFile << "]-- set to. Mask " << std::bitset<5>(cMask) << " -- old value "
                                               << std::bitset<5>(cRegValue) << " -- new value " << std::bitset<5>(cNewValue) << RESET;

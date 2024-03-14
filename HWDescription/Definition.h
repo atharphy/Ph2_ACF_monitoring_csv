@@ -192,7 +192,6 @@ enum class FrontEndType
     SSA2,
     RD53A,
     RD53B,
-    CIC,
     CIC2,
     OuterTracker2S,
     OuterTrackerPS,

@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTalignBoardDataWord::fCalibrationDescription = "Align triggered data on to decode events";
+std::string OTalignBoardDataWord::fCalibrationDescription = "Find bitslips in the FPGA to decode triggered data on to decode words";
 
 OTalignBoardDataWord::OTalignBoardDataWord() : Tool() {}
 

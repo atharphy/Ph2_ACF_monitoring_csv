@@ -763,7 +763,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
 
     // resetting hard
-    if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
+    if(fFirmwareFrontEndType == FrontEndType::CIC2)
     {
         for(auto cOpticalGroup: *pBoard)
         {
@@ -776,7 +776,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // modifying FC7 configuration based on CIC
     // TODO: avoid hardcoding sparsification and stubs?
     cVecReg.clear();
-    if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
+    if(fFirmwareFrontEndType == FrontEndType::CIC2)
     {
         // assuming only one type of CIC per board ...
         for(auto cOpticalGroup: *pBoard)
@@ -792,11 +792,11 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // disable stub debug
                 cVecReg.push_back({"fc7_daq_cnfg.ddr3_debug.stub_enable", 0});
                 std::string cFwRegName = "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable";
-                std::string cRegName   = (cCic->getFrontEndType() == FrontEndType::CIC) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
+                std::string cRegName   = "FE_CONFIG";
                 ChipRegItem cRegItem   = static_cast<const OuterTrackerHybrid*>(pBoard->getFirstObject()->getFirstObject())->fCic->getRegItem(cRegName);
-                uint8_t     cRegValue  = (cCic->getFrontEndType() == FrontEndType::CIC) ? cRegItem.fValue : (cRegItem.fValue & 0x10) >> 4;
+                uint8_t     cRegValue  = (cRegItem.fValue & 0x10) >> 4;
                 LOG(INFO) << BOLDBLUE << "Sparsification set to " << +cRegValue << RESET;
-                cVecReg.push_back({cFwRegName, (cCic->getFrontEndType() == FrontEndType::CIC) ? cRegItem.fValue : (cRegItem.fValue & 0x10) >> 4});
+                cVecReg.push_back({cFwRegName, (cRegItem.fValue & 0x10) >> 4});
                 for(auto cReg: cVecReg) LOG(INFO) << BOLDBLUE << "Setting firmware register " << cReg.first << " to " << +cReg.second << RESET;
                 this->WriteStackReg(cVecReg);
                 cVecReg.clear();
@@ -1144,7 +1144,7 @@ void D19cFWInterface::ChipReSync()
     FastCommand              cFastCmd;
     cFastCmd.resync_en     = 1;
     auto cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
-    bool cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
+    bool cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
     cFastCmd.bc0_en        = (cWithCIC) ? 1 : 0;
     cFastCmds.push_back(cFastCmd);
     fFastCommandInterface->SendGlobalCustomFastCommands(cFastCmds);
@@ -1452,7 +1452,7 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return 0;
         }
-        if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+        if(chipType == FrontEndType::CIC2)
         {
             LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                       << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1512,7 +1512,7 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
                 ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
                 return false;
             }
-            if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+            if(chipType == FrontEndType::CIC2)
             {
                 LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                           << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1574,7 +1574,7 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
                 ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
                 return false;
             }
-            if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+            if(chipType == FrontEndType::CIC2)
             {
                 LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                           << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1624,7 +1624,7 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return {};
         }
-        if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+        if(chipType == FrontEndType::CIC2)
         {
             LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                       << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1688,7 +1688,7 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return false;
         }
-        if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+        if(chipType == FrontEndType::CIC2)
         {
             LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                       << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1749,7 +1749,7 @@ bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegIte
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return false;
         }
-        if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+        if(chipType == FrontEndType::CIC2)
         {
             LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                       << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;

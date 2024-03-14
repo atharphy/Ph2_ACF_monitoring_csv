@@ -9,7 +9,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTverifyMPASSAdataWord::fCalibrationDescription = "Insert brief calibration description here";
+std::string OTverifyMPASSAdataWord::fCalibrationDescription = "Inject L1 and stubs for each MPA + SSA and verify that CIC output corresponds to the expected pattern (calibration skipped for 2S)";
 
 OTverifyMPASSAdataWord::OTverifyMPASSAdataWord() : OTverifyCICdataWord() {}
 
@@ -31,6 +31,7 @@ void OTverifyMPASSAdataWord::ConfigureCalibration() {}
 
 void OTverifyMPASSAdataWord::Running()
 {
+    // Assumes 1 board per Ph2_ACF instance
     if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) return;
     LOG(INFO) << "Starting OTverifyMPASSAdataWord measurement.";
     Initialise();
