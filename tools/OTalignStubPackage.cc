@@ -69,7 +69,7 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
     // make sure you're only sending one trigger at a time here
     LOG(INFO) << GREEN << "Trying to align CIC stub decoder in the back-end" << RESET;
     // sparsification of
-    bool                 cSparsified = pBoard->getSparsification();
+    bool cSparsified = pBoard->getSparsification();
     // disable FEs for all hybrids
     if(cSparsified)
         LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::AlignStubPackage Sparsification on " << RESET;

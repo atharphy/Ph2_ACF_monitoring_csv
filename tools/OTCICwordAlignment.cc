@@ -52,16 +52,16 @@ void OTCICwordAlignment::Pause() {}
 
 void OTCICwordAlignment::Resume() {}
 
-void OTCICwordAlignment::Reset() 
-{ 
-    fRegisterHelper->restoreSnapshot(); 
+void OTCICwordAlignment::Reset()
+{
+    fRegisterHelper->restoreSnapshot();
 
-    //TODO: this is a temporary test to read events at end of the alignment procedure.
+    // TODO: this is a temporary test to read events at end of the alignment procedure.
     fRegisterHelper->takeSnapshot();
     LOG(INFO) << BOLDMAGENTA << " Trying to read events at the end of the alignment procedure" << RESET;
     for(auto theBoard: *fDetectorContainer)
-    {   
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.global.hybrid_enable", fEnableMask);     
+    {
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.global.hybrid_enable", fEnableMask);
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
         cRegVec.clear();
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
@@ -76,7 +76,7 @@ void OTCICwordAlignment::Reset()
         auto cEnableMask = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.global.hybrid_enable");
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.global.hybrid_enable", cEnableMask);
         // reconfigure sparsification + FEs enabled in this CIC
-        bool                 cSparsified = theBoard->getSparsification();
+        bool cSparsified = theBoard->getSparsification();
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
 
         size_t cIndx = 0;
@@ -84,12 +84,12 @@ void OTCICwordAlignment::Reset()
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;       
+                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                 fCicInterface->WriteChipReg(cCic, "FE_ENABLE", fFeEnableRegs[cIndx]);
                 cIndx++;
             }
         }
-            
+
         // and check
 
         // auto cPackageDelay = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
@@ -108,7 +108,7 @@ void OTCICwordAlignment::Reset()
         }
         LOG(INFO) << BOLDMAGENTA << "Done reading events" << RESET;
     }
-    fRegisterHelper->restoreSnapshot(); 
+    fRegisterHelper->restoreSnapshot();
 }
 
 void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)

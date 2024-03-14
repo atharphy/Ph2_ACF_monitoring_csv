@@ -190,8 +190,8 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
         LOG(DEBUG) << BOLDBLUE << "Dumping CIC configuration to " << theFullFileName << RESET;
         cCic->saveRegMap(theFullFileName);
 
-        std::string CicNodeName = CIC2_NODE_NAME;
-        auto theCICnode                                               = theHybridNode.append_child(CicNodeName.c_str());
+        std::string CicNodeName                                       = CIC2_NODE_NAME;
+        auto        theCICnode                                        = theHybridNode.append_child(CicNodeName.c_str());
         theCICnode.append_attribute(COMMON_ID_ATTRIBUTE_NAME)         = std::to_string(cCic->getId()).c_str();
         theCICnode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
     }
