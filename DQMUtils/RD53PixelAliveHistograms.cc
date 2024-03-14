@@ -158,11 +158,13 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                                        sqrt(ToT2DHist->GetBinError(col + 1, row + 1) * ToT2DHist->GetBinError(col + 1, row + 1) +
                                                             cChip->getChannel<OccupancyAndPh>(row, col).fPhError * cChip->getChannel<OccupancyAndPh>(row, col).fPhError));
                             }
-                            else if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED)
+
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED)
                             {
                                 Mask1DrowHist->Fill(row);
                                 Masked2DHist->Fill(row, col);
                             }
+
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col, row);
                         }
 
