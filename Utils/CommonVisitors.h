@@ -283,7 +283,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
                 LOG(ERROR) << "Unknown option " << fOption;
         }
         else
-            LOG(ERROR) << "Not a valid chip type!";
+            LOG(ERROR) << __PRETTY_FUNCTION__ << " Not a valid chip type!";
     }
 };
 
@@ -347,7 +347,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
             else { fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB") | (fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB") << 8); }
         }
         else
-            LOG(ERROR) << "Not a valid chip type!";
+            LOG(ERROR) << __PRETTY_FUNCTION__ << " Not a valid chip type!";
     }
 };
 

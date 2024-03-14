@@ -80,7 +80,8 @@ void FileDumper::dumpBoardConfigurationFile(pugi::xml_node theMotherNode, BeBoar
     if(theBoard->getEventType() == EventType::ZS)
         theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_ZS_VALUE;
     else if(theBoard->getEventType() == EventType::PSAS)
-        theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_PSAS_VALUE;
+        theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_VR_VALUE; // forcing it back to EventType::VR
+        // theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_PSAS_VALUE;
     else if(theBoard->getEventType() == EventType::VR2S)
         theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_VR2S_VALUE;
     else if(theBoard->getEventType() == EventType::VR)

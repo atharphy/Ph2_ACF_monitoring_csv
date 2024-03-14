@@ -1153,14 +1153,9 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         // some useful debug information
                         // LOG(DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
                         //            << +cEventSize << " 32 bit words..." << RESET;
-                        if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
-                        else if(pBoard->getFrontEndType() == FrontEndType::CIC2)
+                        if(pBoard->getFrontEndType() == FrontEndType::CIC2)
                         {
                             bool cWithCBC3 = !(fEventType == EventType::VR2S);
-                            // if(cWithCBC3)
-                            //     LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 8CBC3 " << RESET;
-                            // else
-                            //     LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 2S-FEH  " << RESET;
                             fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3, cTLUconfig));
                         }
                         cEventIndex++;

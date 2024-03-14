@@ -21,7 +21,6 @@
 #define CHIP_FILES_APPEND_NODE_NAME "_Files"
 #define CIC2_NODE_NAME "CIC2"
 #define CBC_NODE_NAME "CBC"
-#define MPA_NODE_NAME "MPA"
 #define MPA2_NODE_NAME "MPA2"
 #define SSA2_NODE_NAME "SSA2"
 #define RD53_NODE_NAME "RD53"

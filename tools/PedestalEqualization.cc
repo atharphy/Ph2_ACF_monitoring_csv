@@ -25,8 +25,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^Channel\\d{3}$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^TrimDAC_C\\d+_R\\d+$");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^TrimDAC_ALL$");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^THTRIMMING_S\\d+$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^THTRIMMING_S\\d+$");
 
     fDisableStubLogic = pDisableStubLogic;

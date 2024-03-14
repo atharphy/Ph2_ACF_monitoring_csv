@@ -919,9 +919,6 @@ void PedeNoise::setThresholdtoNSigma(BoardContainer* board, float pNSigma)
                     cThresholdWorkingPoint = cPedestal;
                 }
                 fReadoutChipInterface->WriteChipReg(chip, "Threshold", cThresholdWorkingPoint);
-
-                ThresholdVisitor cThresholdVisitor(fReadoutChipInterface, cThresholdWorkingPoint);
-                static_cast<ReadoutChip*>(chip)->accept(cThresholdVisitor);
             }
         }
     }
@@ -935,7 +932,6 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
         {
             for(auto chip: *hybrid)
             {
-                LOG(INFO) << BOLDYELLOW << chip->getId() << RESET;
                 auto chipDC = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                 // auto cType = chipDC->getFrontEndType();
 
