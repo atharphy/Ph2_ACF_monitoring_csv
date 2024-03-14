@@ -697,10 +697,10 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ###################
         // # Decoding events #
         // ###################
-        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
-        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status); // Decode events with a single thread
+        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status, RD53FWInterface::silentRunning); // Decode events with multiple threads
+        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status, RD53FWInterface::silentRunning); // Decode events with a single thread
 
-        if((silentRunning == false) && (RD53Event::EvtErrorHandler(status) == false))
+        if((RD53FWInterface::silentRunning == false) && (RD53Event::EvtErrorHandler(status) == false))
         {
             NtrialsNevents++;
             retry = true;
@@ -710,7 +710,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         if(RD53Event::decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
         {
             NtrialsNevents++;
-            if(silentRunning == false)
+            if(RD53FWInterface::silentRunning == false)
                 LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
                            << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
@@ -721,7 +721,8 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     if(retry == true)
     {
-        if(silentRunning == false) LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
+        if(RD53FWInterface::silentRunning == false)
+            LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
         NcorruptedNevents++;
     }
