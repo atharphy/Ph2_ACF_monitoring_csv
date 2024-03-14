@@ -42,7 +42,7 @@
             <MPA2 Id="14" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="15" enable="1" configFile="MPA2.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" enable="1" configFile="CIC2_PS.txt" />
         </Hybrid>
         
@@ -79,7 +79,7 @@
             <MPA2 Id="14" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="15" enable="1" configFile="MPA2.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" enable="1" configFile="CIC2_PS.txt" />
         </Hybrid>
     </OpticalGroup>

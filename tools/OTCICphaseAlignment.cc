@@ -13,7 +13,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTCICphaseAlignment::fCalibrationDescription = "Insert brief calibration description here";
+std::string OTCICphaseAlignment::fCalibrationDescription = "Run the CIC automatic procedure to find the sampling phase for CBC/MPA stub and L1 lines";
 
 OTCICphaseAlignment::OTCICphaseAlignment() : Tool() {}
 

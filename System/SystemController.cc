@@ -1162,7 +1162,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         // LOG(DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
                         //            << +cEventSize << " 32 bit words..." << RESET;
                         if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
-                        else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
+                        else if(pBoard->getFrontEndType() == FrontEndType::CIC2)
                         {
                             bool cWithCBC3 = !(fEventType == EventType::VR2S);
                             // if(cWithCBC3)

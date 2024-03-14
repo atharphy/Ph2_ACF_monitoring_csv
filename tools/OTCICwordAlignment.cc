@@ -8,7 +8,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTCICwordAlignment::fCalibrationDescription = "Insert brief calibration description here";
+std::string OTCICwordAlignment::fCalibrationDescription = "Run the CIC automatic word alignment procedure to properly decode CBC/MPA stub lines";
 
 OTCICwordAlignment::OTCICwordAlignment() : Tool() {}
 

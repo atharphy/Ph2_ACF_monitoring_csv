@@ -19,7 +19,6 @@
 
 #define HYBRID_NODE_NAME "Hybrid"
 #define CHIP_FILES_APPEND_NODE_NAME "_Files"
-#define CIC_NODE_NAME "CIC"
 #define CIC2_NODE_NAME "CIC2"
 #define CBC_NODE_NAME "CBC"
 #define MPA_NODE_NAME "MPA"
