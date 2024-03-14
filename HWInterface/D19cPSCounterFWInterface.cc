@@ -104,11 +104,6 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
                             cBaseRegisterMSB -= 0x280;
                         }
                     }
-                    if(cChip->getFrontEndType() == FrontEndType::SSA)
-                    {
-                        cBaseRegisterLSB = 0x0901 + cChnl;
-                        cBaseRegisterMSB = 0x0801 + cChnl;
-                    }
                     if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         cBaseRegisterLSB = 0x0580 + cChnl;

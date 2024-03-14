@@ -12,6 +12,7 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/Occupancy.h"
 #include "Utils/StartInfo.h"
+#include "Utils/SSAChannelGroupHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -29,7 +30,7 @@ void SSAPhysics::ConfigureCalibration()
     // ###########################################
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, fOccContainer);
 
-    SSA2ChannelGroupHandler theChannelGroupHandler;
+    SSAChannelGroupHandler theChannelGroupHandler;
     theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
     // fChannelGroupHandler = new SSA2ChannelGroupHandler();

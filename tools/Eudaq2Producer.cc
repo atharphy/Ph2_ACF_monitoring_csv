@@ -206,7 +206,7 @@ void Eudaq2Producer::DoStartRun()
                         cRegister = cChip->getReg("VCth2") << 8 | cChip->getReg("VCth1");
                     else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                         cRegister = cChip->getReg("ThDAC0");
-                    else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                    else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                         cRegister = cChip->getReg("Bias_THDAC");
                 }
             }
@@ -231,7 +231,7 @@ void Eudaq2Producer::DoStartRun()
                             this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdCBC);
                         else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdMPA);
-                        else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                        else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                             this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdSSA);
                     }
                 }
@@ -856,7 +856,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             // Loop over chips
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                 uint32_t cChipId = cChip->getId();
                 // Extract pipeline address
                 char cTagName[100];
@@ -961,7 +961,7 @@ void Eudaq2Producer::EnableDigitalInjection(uint8_t pPulseAmplitude, uint8_t pTh
                         (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01);
                     }
 
-                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         // make sure L1 latency is configured
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);

@@ -274,19 +274,16 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     auto cFirstHybrid = cFirstOpticalGroup->getFirstObject();
                     auto cType        = FrontEndType::CBC3;
                     bool cWithCBC  = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
-                    cType          = FrontEndType::SSA;
-                    bool cWithSSA  = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     cType          = FrontEndType::SSA2;
                     bool cWithSSA2 = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     cType          = FrontEndType::MPA2;
                     bool cWithMPA2 = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
-                    bool cSSAtype  = cWithSSA2 | cWithSSA;
                     if(cWithCBC)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
                         fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
                     }
-                    if((cWithMPA2 || cSSAtype) && cWithLpGBT)
+                    if((cWithMPA2 || cWithSSA2) && cWithLpGBT)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS module(s)" << RESET;
                         fReadoutChipInterface = new PSInterface(fBeBoardFWMap);
@@ -370,7 +367,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         bool cMPAfound =
             (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::MPA2); }) != cConnectedFeTypes.end());
         bool cSSAfound =
-            (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::SSA || x == FrontEndType::SSA2); }) != cConnectedFeTypes.end());
+            (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::SSA2); }) != cConnectedFeTypes.end());
         bool cCBCfound = (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFeTypes.end());
         for(auto cOpticalGroup: *cBoard)
         {
@@ -814,7 +811,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         for(auto cReadoutChip: *cHybrid)
         {
             // Only consider MPAs and CBCs
-            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
+            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
             cChipIds.push_back(cReadoutChip->getId() % 8);
             enabledFEsPrintout << +cReadoutChip->getId() << " ";
         }
@@ -1117,7 +1114,6 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         fEventList.clear();
 
         EventType fEventType = pBoard->getEventType();
-        uint32_t  fNHybrid   = pBoard->getNHybrid();
         // uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
         // LOG(INFO) << BOLDBLUE << "Reading events from " << +fNHybrid << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
         fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
@@ -1167,8 +1163,6 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                             //     LOG(DEBUG) << BOLDBLUE << "Decoding CIC data : with 2S-FEH  " << RESET;
                             fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3, cTLUconfig));
                         }
-                        else if(pBoard->getFrontEndType() == FrontEndType::SSA) { fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNHybrid, cEvent)); }
-                        else if(pBoard->getFrontEndType() == FrontEndType::SSA2) { fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNHybrid, cEvent)); }
                         cEventIndex++;
                     }
                     cEventIterator += cEventSize;

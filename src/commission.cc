@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
                 for(auto chip: *hybrid)
                 {
                     cTool.fReadoutChipInterface->WriteChipReg(chip, "InjectedCharge", 77);
-                    if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
+                    if(chip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "AnalogueSync", 1);
                         // cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 1);

@@ -33,7 +33,7 @@
             <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
 
             <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" enable="1" configFile="CIC2_2S.txt" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
         </Hybrid>
     </OpticalGroup>
   </BeBoard>

@@ -15,7 +15,6 @@
 #include "Cic.h"
 #include "FrontEndDescription.h"
 #include "Hybrid.h"
-#include "SSA.h"
 #include "SSA2.h"
 #include "Utils/Container.h"
 #include "Utils/Visitor.h"

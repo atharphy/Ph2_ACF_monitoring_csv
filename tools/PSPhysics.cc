@@ -105,7 +105,6 @@ void PSPhysics::ConfigureCalibration()
 
     SSAChannelGroupHandler theSSAChannelGroupHandler;
     theSSAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-    setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA);
     setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
 
     MPAChannelGroupHandler theMPAChannelGroupHandler;
@@ -346,7 +345,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     uint16_t theCorrespondingSSAId = 9999;
                     for(auto theCorrespondingSSA: *fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId()))
                     {
-                        if(theCorrespondingSSA->getFrontEndType() != FrontEndType::SSA) continue;
+                        if(theCorrespondingSSA->getFrontEndType() != FrontEndType::SSA2) continue;
                         if(theCorrespondingSSA->getId() == currentChip->getId())
                         {
                             theCorrespondingSSAId = theCorrespondingSSA->getId();

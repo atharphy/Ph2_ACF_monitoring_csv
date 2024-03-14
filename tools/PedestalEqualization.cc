@@ -43,8 +43,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     {
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
         fWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
-        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
+        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
         fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
         for(auto cFrontEndType: cFrontEndTypes)
         {
@@ -64,7 +63,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
             theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler);
         }
-        else if(cFrontEndType == FrontEndType::SSA || cFrontEndType == FrontEndType::SSA2)
+        else if(cFrontEndType == FrontEndType::SSA2)
         {
             SSAChannelGroupHandler theChannelGroupHandler;
             theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
@@ -286,7 +285,7 @@ void PedestalEqualization::FindVplus()
                     uint16_t tmpVthr = 0;
                     auto     cType   = theChip->getFrontEndType();
                     if(cType == FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
-                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) tmpVthr = theChip->getReg("Bias_THDAC");
+                    if(cType == FrontEndType::SSA2) tmpVthr = theChip->getReg("Bias_THDAC");
                     if(cType == FrontEndType::MPA2) tmpVthr = theChip->getReg("ThDAC0");
                     chip->getSummary<uint16_t>() = tmpVthr;
                     LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Hybrid " << +hybrid->getId() << " Chip " << +chip->getId()
@@ -294,7 +293,7 @@ void PedestalEqualization::FindVplus()
                     uint32_t ENCHAN  = theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
                     uint32_t TOTCHAN = chip->size();
                     LOG(DEBUG) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
-                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2 || cType == FrontEndType::CBC3)
+                    if(cType == FrontEndType::SSA2 || cType == FrontEndType::CBC3)
                     {
                         cNStripChips += float(ENCHAN) / float(TOTCHAN);
                         cMeanStripsValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
@@ -337,7 +336,7 @@ void PedestalEqualization::FindVplus()
                     for(auto cChip: *cHybrid)
                     {
                         auto cType = cChip->getFrontEndType();
-                        if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2 || cType == FrontEndType::CBC3) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
+                        if(cType == FrontEndType::SSA2 || cType == FrontEndType::CBC3) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
                         else if(cType == FrontEndType::MPA2) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fPixelTargetVcth); }
                     }
                 }
@@ -373,7 +372,7 @@ void PedestalEqualization::FindOffsets()
                     for(auto cChip: *cHybrid)
                     {
                         auto cType = cChip->getFrontEndType();
-                        if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2 || cType == FrontEndType::CBC3) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
+                        if(cType == FrontEndType::SSA2 || cType == FrontEndType::CBC3) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
                         else if(cType == FrontEndType::MPA2) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fPixelTargetVcth); }
                     }
                 }
@@ -434,7 +433,7 @@ void PedestalEqualization::FindOffsets()
                                 cRegName = sprintf(charRegName, "Channel%03d", col + 1);
                                 cRegName = charRegName;
                             }
-                            if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) cRegName = "THTRIMMING_S" + std::to_string(col + 1);
+                            if(cType == FrontEndType::SSA2) cRegName = "THTRIMMING_S" + std::to_string(col + 1);
                             if(cType == FrontEndType::MPA2) cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
                             auto channel = roc->getReg(cRegName);
                             LOG(DEBUG) << BOLDGREEN << "Offset of channel " << col << " set to " << +channel << RESET;

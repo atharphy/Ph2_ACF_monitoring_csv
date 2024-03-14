@@ -25,7 +25,6 @@ void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
                 for(auto chip: *hybrid)
                 {
                     if(chip->getFrontEndType() == FrontEndType::MPA2) std::cout << "MPA2" << std::endl;
-                    if(chip->getFrontEndType() == FrontEndType::SSA) std::cout << "SSA" << std::endl;
                     if(chip->getFrontEndType() == FrontEndType::SSA2) std::cout << "SSA2" << std::endl;
                 }
 
@@ -41,7 +40,7 @@ void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer, thePClusterTemplateHistogram);
     // theDetectorStructure.resetReadoutChipQueryFunction();
 
-    // auto ssaSelectFunction = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA); };
+    // auto ssaSelectFunction = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     // theDetectorStructure.setReadoutChipQueryFunction(ssaSelectFunction);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fStripOccupancyHistogramContainer, theSClusterTemplateHistogram);
     // theDetectorStructure.resetReadoutChipQueryFunction();

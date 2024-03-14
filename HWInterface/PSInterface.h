@@ -16,7 +16,6 @@
 #include "HWInterface/MPA2Interface.h"
 #include "HWInterface/ReadoutChipInterface.h"
 #include "HWInterface/SSA2Interface.h"
-#include "HWInterface/SSAInterface.h"
 
 #include "pugixml.hpp"
 #include <vector>
@@ -46,7 +45,6 @@ class PSInterface : public ReadoutChipInterface
     PSInterface(const BeBoardFWMap& pBoardMap);
     ~PSInterface();
 
-    Ph2_HwInterface::SSAInterface*  theSSAInterface;
     Ph2_HwInterface::SSA2Interface* fTheSSA2Interface;
     Ph2_HwInterface::MPA2Interface* fTheMPA2Interface;
 
@@ -82,30 +80,12 @@ class PSInterface : public ReadoutChipInterface
     //
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop) { return true; }
 
-    //
-    void setRetryI2C(bool pRetry)
-    {
-        fRetryI2C = pRetry;
-        theSSAInterface->setRetryI2C(fRetryI2C);
-    }
-    void setMaxI2CAttempts(uint8_t pMaxAttempts)
-    {
-        fMaxI2CAttempts = pMaxAttempts;
-        theSSAInterface->setMaxI2CAttempts(fMaxI2CAttempts);
-    }
     void SetOptical()
     {
         bool cFoundLpgbt = this->lpGBTFound();
         fTheSSA2Interface->setWithLpGBT(cFoundLpgbt);
         fTheMPA2Interface->setWithLpGBT(cFoundLpgbt);
     }
-    std::pair<uint16_t, uint16_t> getSsaRetrySummary() { return theSSAInterface->getRetrySummary(); };
-    std::pair<int, float>         getSsaWRattempts() { return theSSAInterface->getWRattempts(); };
-    std::pair<float, float>       getSsaMinMaxWRattempts() { return theSSAInterface->getMinMaxWRattempts(); };
-    std::pair<uint16_t, uint16_t> getSsaReadBackErrorSummary() { return theSSAInterface->getReadBackErrorSummary(); };
-    std::pair<uint16_t, uint16_t> getSsaWriteErrorSummary() { return theSSAInterface->getWriteErrorSummary(); };
-    void                          resetSsaRetrySummary() { theSSAInterface->resetRetrySummary(); };
-    void                          resetSsaErrorSummary() { theSSAInterface->resetErrorSummary(); };
     bool                          injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
     bool                          injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwDescription::ReadoutChip* pSSA, std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector);
     // void                              printErrorSummary();

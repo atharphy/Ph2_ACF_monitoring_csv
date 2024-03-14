@@ -42,12 +42,11 @@ void DQMHistogramPSPixelAlive::book(TFile* theOutputFile, DetectorContainer& the
     {
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
         fWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
-        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
+        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
         fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
     }
 
-    std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA, FrontEndType::SSA2};
+    std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA2};
     std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA2};
     auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
     { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
@@ -66,7 +65,7 @@ void DQMHistogramPSPixelAlive::book(TFile* theOutputFile, DetectorContainer& the
                 {
                     auto cNChannels = theDetectorStructure.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->size();
                     auto cType      = cChip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
                     else if(cType == FrontEndType::MPA2) { cNPixelChannels.push_back(cNChannels); }
                 }
             }
@@ -128,7 +127,7 @@ void DQMHistogramPSPixelAlive::process()
                 {
                     TH1F* occupancyHistogram = nullptr;
                     auto  cType              = chip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                     {
                         occupancyCanvas->cd(chip->getId() + 1 + hybrid->size() * 0);
                         occupancyHistogram = fDetectorStripOccupancyHistograms.getObject(board->getId())
@@ -178,7 +177,7 @@ void DQMHistogramPSPixelAlive::fillOccupancyPlots(DetectorDataContainer& theOccu
                 {
                     TH1F* chipOccupancyHistogram = nullptr;
                     auto  cType                  = chip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                     {
                         chipOccupancyHistogram = fDetectorStripOccupancyHistograms.getObject(board->getId())
                                                      ->getObject(opticalGroup->getId())

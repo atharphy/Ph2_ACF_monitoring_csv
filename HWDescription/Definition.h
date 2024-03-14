@@ -102,7 +102,6 @@ enum class FrontEndType
     HYBRID,
     CBC3,
     MPA2,
-    SSA,
     SSA2,
     RD53A,
     RD53B,
@@ -125,12 +124,8 @@ enum class EventType
 {
     ZS    = 1, // ZeroSuppression
     VR    = 2, // VirginRaw
-    SSA   = 3,
-    SCAS  = 4,
-    SSA2  = 5,
-    SSAAS = 6,
-    PSAS  = 7,
-    VR2S  = 8
+    PSAS  = 3,
+    VR2S  = 4
 };
 
 #define NUMBER_OF_CIC_PORTS 8

@@ -71,9 +71,7 @@ void PhaseScan::ScanPhase()
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA)
-                                fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat - 1);
-                            else if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat + 1);
                             else
                                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat);
@@ -123,7 +121,7 @@ void PhaseScan::ScanPhase()
                                             }
                                         }
                                     }
-                                    if(cChip->getFrontEndType() == FrontEndType::SSA2 or cChip->getFrontEndType() == FrontEndType::SSA)
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                     {
                                         for(auto& cSclstr: cSclstrs)
                                         {

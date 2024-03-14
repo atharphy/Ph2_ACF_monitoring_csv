@@ -220,9 +220,7 @@ void LatencyScan::ScanLatency()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA)
-                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat - 1);
-                        else if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                        if(cChip->getFrontEndType() == FrontEndType::SSA2)
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat + 1);
                         else
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat);
@@ -289,7 +287,7 @@ void LatencyScan::ScanLatency()
 
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
@@ -445,7 +443,7 @@ void LatencyScan::StubLatencyScan()
                 if(cSet) continue;
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     cSet                     = true;
                     auto     cTriggerLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
@@ -593,7 +591,7 @@ void LatencyScan::StubLatencyScan()
                                                   << " of which " << cNStubsThisChip << " stubs match the hits.."
                                                   << " there are " << cHits.size() << " hits in this event... " << RESET;
                                 }
-                                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                                else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                                     cNStubs     = cStubs.size();

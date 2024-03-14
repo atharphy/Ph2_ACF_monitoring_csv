@@ -43,12 +43,11 @@ void DQMHistogramPSBiasCal::book(TFile* theOutputFile, DetectorContainer& theDet
     for(auto cBoard: *fDetectorContainer)
     {
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
-        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
+        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
         fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
     }
 
-    std::vector<FrontEndType> cStripTypes             = {FrontEndType::SSA, FrontEndType::SSA2};
+    std::vector<FrontEndType> cStripTypes             = {FrontEndType::SSA2};
     std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA2};
     auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
     { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
@@ -165,7 +164,7 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                     auto  cType                = cChip->getFrontEndType();
                     TH1F* fStripVrefHistograms = nullptr;
                     TH1F* fPixelVrefHistograms = nullptr;
-                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::SSA2)
                     {
                         fStripVrefHistograms = fChipStripVrefHistograms.getObject(cBoard->getId())
                                                    ->getObject(cOpticalGroup->getId())
@@ -258,7 +257,7 @@ void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isA
                     auto  cType               = cChip->getFrontEndType();
                     TH1F* fStripVDDHistograms = nullptr;
                     TH1F* fPixelVDDHistograms = nullptr;
-                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::SSA2)
                     {
                         if(isAVDD)
                         {
@@ -390,7 +389,7 @@ void DQMHistogramPSBiasCal::fillSlopePlots(DetectorDataContainer& theSlope)
                     auto    cType                = cChip->getFrontEndType();
                     TGraph* fStripADCSlopeGraphs = nullptr;
                     TGraph* fPixelADCSlopeGraphs = nullptr;
-                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::SSA2)
                     {
                         fStripADCSlopeGraphs = fChipStripSlopeGraphs.getObject(cBoard->getId())
                                                    ->getObject(cOpticalGroup->getId())

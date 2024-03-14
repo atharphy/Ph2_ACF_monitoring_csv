@@ -126,7 +126,6 @@ int main(int argc, char* argv[])
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
     bool         fDisableStubLogic = true;
-    if(cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA) fDisableStubLogic = false;
 
     // now create a PedestalEqualization object
     PedestalEqualization cPedestalEqualization;

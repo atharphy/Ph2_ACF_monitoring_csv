@@ -56,7 +56,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             for(auto cChip: *cHybrid)
             {
                 // only count MPAs
-                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                 cChipIds.push_back(cChip->getId() % 8);
                 fIs2S = fIs2S || cChip->getFrontEndType() == FrontEndType::CBC3;
@@ -268,13 +268,6 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                         // LOG(INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
                                         fEventRawList[cHybridIndex].second.push_back(cBitset);
                                     }
-                                    // for( auto cChip : * cHybrid )
-                                    // {
-                                    //     if( cChip->getFrontEndType() == FrontEndType::SSA) continue;
-
-                                    //     auto cHits = GetHits(cHybrid->getId(), cChip->getId() );
-                                    //     //LOG (INFO) << BOLDGREEN << "\t.. Chip#" << +cChip->getId() << " found " << +cHits.size() << " hits." << RESET;
-                                    // }
                                 }
                                 else
                                 {

@@ -145,12 +145,6 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         cEventTypeString = cEventTypeAttribute.value();
         if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_ZS_VALUE)
             cBeBoard->setEventType(EventType::ZS);
-        else if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_SCAS_VALUE)
-            cBeBoard->setEventType(EventType::SCAS);
-        else if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_SSAAS_VALUE)
-            cBeBoard->setEventType(EventType::SSAAS);
-        else if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_SSA_VALUE)
-            cBeBoard->setEventType(EventType::SSA);
         else if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_PSAS_VALUE)
             cBeBoard->setEventType(EventType::PSAS);
         else if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_VR2S_VALUE)
@@ -466,152 +460,6 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
     pBoard->addConditionDataSet(cSet);
 }
 
-void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
-{
-    os << BOLDCYAN << "|"
-       << "  "
-       << "|"
-       << "   "
-       << "|"
-       << "----" << pSSAnode.name() << "  " << pSSAnode.first_attribute().name() << " :" << pSSAnode.attribute(COMMON_ID_ATTRIBUTE_NAME).value()
-       << ", File: " << expandEnvironmentVariables(pSSAnode.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value()) << RESET << std::endl;
-
-    // Get ID of SSA then add to the Hybrid!
-    uint32_t    cChipId    = pSSAnode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
-    uint32_t    cPartnerId = pSSAnode.attribute("partid").as_uint();
-    std::string cFileName;
-    if(!cFilePrefix.empty())
-    {
-        if(cFilePrefix.at(cFilePrefix.length() - 1) != '/') cFilePrefix.append("/");
-
-        cFileName = cFilePrefix + expandEnvironmentVariables(pSSAnode.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
-    }
-    else
-        cFileName = expandEnvironmentVariables(pSSAnode.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
-    ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
-    cSSA->setOptical(pHybrid->isOptical());
-    cSSA->setNumberOfChannels(1, NSSACHANNELS);
-    cSSA->setMasterId(pHybrid->getMasterId());
-
-    os << BOLDCYAN << "|"
-       << "  "
-       << "|"
-       << "   "
-       << "|"
-       << "   "
-       << "|"
-       << "   "
-       << "|"
-       << "---- SSA controlled by I2CMaster " << +cSSA->getMasterId() << RESET << "\n";
-}
-
-void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
-{
-    LOG(INFO) << BOLDBLUE << "Now I'm parsing global PS settings for SSAs " << RESET;
-    pugi::xml_node cGlobalSettingsNode = pHybridNode.child("Global");
-
-    if(cGlobalSettingsNode != nullptr)
-    {
-        os << BOLDCYAN << "|\t|\t|----Global SSA Settings: " << RESET << std::endl;
-        // first.. thresholds
-        pugi::xml_node cThresholdNode = cGlobalSettingsNode.child("Thresholds");
-        if(cThresholdNode != nullptr)
-        {
-            for(auto cChip: *pHybrid)
-            {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
-                unsigned cStripThreshold     = convertAnyInt(cThresholdNode.attribute("stripThreshold").value());
-                unsigned cStripThresholdHigh = convertAnyInt(cThresholdNode.attribute("stripThresholdHigh").value());
-                if(cStripThreshold > 0xFF) { throw std::runtime_error("The stripThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255."); }
-                if(cStripThresholdHigh > 0xFF) { throw std::runtime_error("The cStripThresholdHigh register set in the xml is greater than 255. Acceptable values are between 0 and 255."); }
-
-                cChip->setReg("Bias_THDAC", cStripThreshold);
-                cChip->setReg("Bias_THDACHIGH", cStripThresholdHigh);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA Settings to SSA# " << +cChip->getId() << RESET << std::endl
-                   << GREEN << "|\t|\t|\t|---- Threshold: Strips 0x" << std::hex << +cStripThreshold << std::dec << RESET << std::endl
-                   << GREEN << "|\t|\t|\t|---- And Threshold High: Strips 0x" << std::hex << +cStripThresholdHigh << std::dec << RESET << std::endl;
-            }
-        }
-
-        // then hit logic mode
-        pugi::xml_node cHitLogicNode = cGlobalSettingsNode.child("HitLogic");
-        if(cHitLogicNode != nullptr)
-        {
-            for(auto cChip: *pHybrid)
-            {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
-                uint16_t cMode = convertAnyInt(cHitLogicNode.attribute("stripMode").value());
-                cChip->setReg("SAMPLINGMODE_ALL", cMode);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA hit logic settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
-                   << std::dec << RESET << std::endl;
-            }
-        }
-
-        // then charge injection
-        pugi::xml_node cInjectionNode = cGlobalSettingsNode.child("InjectedCharge");
-        if(cInjectionNode != nullptr)
-        {
-            for(auto cChip: *pHybrid)
-            {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
-                int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()); // / SSA2_ELECTRON_CALDAC; // conversion factor to electron with 1 CalDAC = 0.039 fC
-                if(cInjStrps > 0xFF) { throw std::runtime_error("The maximum strip charge that can be injected is 255. Acceptable values are between 0 and 255."); }
-                cChip->setReg("Bias_CALDAC", cInjStrps);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA injection settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjStrps
-                   << std::dec << RESET << std::endl;
-            }
-        }
-
-        // latencies
-        pugi::xml_node cLatencyNode = cGlobalSettingsNode.child("Latencies");
-        if(cLatencyNode != nullptr)
-        {
-            for(auto cChip: *pHybrid)
-            {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
-                int cLatency = convertAnyInt(cLatencyNode.attribute("stripLatency").value());
-                cChip->setReg("L1-Latency_LSB", cLatency & 0xFF);
-                cChip->setReg("L1-Latency_MSB", (cLatency >> 8) & 0xFF);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA latency settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
-                   << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
-            }
-        }
-
-        // hip cut
-        pugi::xml_node cHIPmode = cGlobalSettingsNode.child("HipLogic");
-        if(cHIPmode != nullptr)
-        {
-            for(auto cChip: *pHybrid)
-            {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
-                int cCut = convertAnyInt(cHIPmode.attribute("stripCut").value());
-                cChip->setReg("HIPCUT_ALL", cCut);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
-                   << RESET << std::endl;
-            }
-        }
-
-        // timing
-        pugi::xml_node cSamplingDelay = cGlobalSettingsNode.child("SamplingDelay");
-        if(cSamplingDelay != nullptr)
-        {
-            for(auto cChip: *pHybrid)
-            {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
-                int cCoarse = convertAnyInt(cSamplingDelay.attribute("stripCoarse").value());
-                int cFine   = convertAnyInt(cSamplingDelay.attribute("stripFine").value());
-                cChip->setReg("PhaseShiftClock", cCoarse);
-                ChipRegMask cMask;
-                cMask.fNbits    = 3;
-                cMask.fBitShift = 0;
-                cChip->setRegBits("ClockDeskewing", cMask, cFine);
-
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
-                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
-            }
-        }
-    }
-}
 void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
 {
     os << BOLDCYAN << "|"
@@ -1022,9 +870,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             std::string cName          = cChild.name();
             std::string cNextName      = cChild.next_sibling().name();
             bool        cIsTrackerASIC = cName.find(CBC_NODE_NAME) != std::string::npos;
-            cIsTrackerASIC             = cIsTrackerASIC || cName.find(SSA_NODE_NAME) != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find(SSA2_NODE_NAME) != std::string::npos;
-            cIsTrackerASIC             = cIsTrackerASIC || cName.find(MPA_NODE_NAME) != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find(MPA2_NODE_NAME) != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find(CIC2_NODE_NAME) != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find(RD53_NODE_NAME) != std::string::npos;
 
@@ -1127,12 +974,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                             }
                         }
                     }
-                    else if(cName == SSA_NODE_NAME)
-                    {
-                        cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
-                        parseSSAContainer(cChild, cHybrid, cConfigFileDirectory, os);
-                        if(cNextName.empty() || cNextName != cName) parseSSASettings(pHybridNode, cHybrid, os);
-                    }
                     else if(cName == SSA2_NODE_NAME)
                     {
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
@@ -1194,7 +1035,6 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                         cMapOfMaks[cItem]  = cMskedChnls;
                         FrontEndType cType = FrontEndType::CBC3;
                         if(cAttrName.find(MPA2_NODE_NAME) != std::string::npos) cType = FrontEndType::MPA2;
-                        if(cAttrName.find(SSA_NODE_NAME) != std::string::npos) cType = FrontEndType::SSA;
                         if(cAttrName.find(SSA2_NODE_NAME) != std::string::npos) cType = FrontEndType::SSA2;
                         if(cAttrName.find("CBCId") != std::string::npos) cType = FrontEndType::CBC3;
                         cMapOfTypes[cItem] = cType;
@@ -1230,7 +1070,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
         {
             auto        cType        = cMapOfTypes[cChipId];
             std::string cRegNameBase = "";
-            if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+            if(cType == FrontEndType::SSA2)
             {
                 os << GREEN << "|\t|\t|\t|\t| ---- ChipId" << +cChipId << " have " << cMapOfMaks[cChipId].size() << " SSA strips to mask..."
                    << "\n";

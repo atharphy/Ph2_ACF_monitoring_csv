@@ -85,7 +85,6 @@ class FrontEndDescription
         if(theFrontEndType == FrontEndType::HYBRID) return "HYBRID";
         if(theFrontEndType == FrontEndType::CBC3) return "CBC3";
         if(theFrontEndType == FrontEndType::MPA2) return "MPA2";
-        if(theFrontEndType == FrontEndType::SSA) return "SSA";
         if(theFrontEndType == FrontEndType::SSA2) return "SSA2";
         if(theFrontEndType == FrontEndType::RD53A) return "RD53A";
         if(theFrontEndType == FrontEndType::RD53B) return "RD53B";

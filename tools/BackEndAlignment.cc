@@ -95,8 +95,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         }
     } // configure PA pattern on all SLVS lines
 
-    uint8_t cFirstLine = (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
-                          std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end())
+    uint8_t cFirstLine = (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end())
                              ? 1
                              : 0;
     for(auto cOpticalReadout: *pBoard)
@@ -259,145 +258,6 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         LOG(INFO) << BOLDRED << "FAILED PS BE-Alignment" << RESET;
     return cTuned;
 }
-/*bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
-{
-    bool cTuned = true;
-    LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
-    fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
-    D19cDebugFWInterface* cDebugInterface        = cInterface->getDebugInterface();
-    uint8_t               cPhaseAlignmentPattern = 0xAA;
-    uint8_t               cWordAlignmentPattern  = 0xEA;
-    for(auto cOpticalReadout: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalReadout)
-        {
-            for(auto cChip: *cHybrid)
-            {
-                ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
-                if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA)
-                {
-                    if(fPairSelect && std::find(fEnabledChips.begin(), fEnabledChips.end(), cChip->getId()) == fEnabledChips.end()) continue;
-                    auto cDriveStrength = fReadoutChipInterface->ReadChipReg(cChip, "SLVS_pad_current_L1");
-                    LOG(INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << " Alignment for L1 and stub lines.. L1 drive set to " << +cDriveStrength << RESET;
-
-                    std::vector<uint8_t> cAlVals(9, 0);
-                    uint8_t              cPairId = (cChip->getId() % 2 == 0) ? 1 : 0;
-                    uint8_t              cChipId = (fPairSelect) ? cPairId : cChip->getId();
-                    // select SSA pair
-                    if(fPairSelect)
-                    {
-                        cWordAlignmentPattern = (cPairId % 2 == 0) ? 0xCA : 0xF0;
-                        LOG(INFO) << BOLDBLUE << "Backend alignment for SSA " << +cPairId << " in pair [ChipId in BE is  " << +cChip->getId() << " ]" << RESET;
-                    }
-                    else
-                    {
-                        cWordAlignmentPattern = 0xF0;
-                        LOG(INFO) << BOLDBLUE << "Backend alignment for SSA#" << +cChipId << RESET;
-                    }
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 0x1);
-                    std::vector<uint8_t> cPhaseTaps(9, 0);
-                    for(uint8_t cLineId = 1; cLineId <= 8; cLineId++) // stub lines - 1 to 8
-                    {
-                        std::stringstream cRegName;
-                        cRegName << "OutPatternStubLine" << +(cLineId - 1);
-                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), cPhaseAlignmentPattern);
-                        auto cLineAlignmentStatus = PhaseTuneLine(cReadoutChip, cLineId);
-                        if(cLineAlignmentStatus.first) cPhaseTaps.push_back(cLineAlignmentStatus.second);
-
-                        // cTuner.TunePhase(cInterface, cChip->getHybridId(), cChipId, cLineId);
-                        // cPhaseTaps.push_back(cTuner.fDelay);
-                        // if( cReadoutChip->getFrontEndType() == FrontEndType::SSA ) continue;
-
-                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), cWordAlignmentPattern);
-                        cLineAlignmentStatus = WordAlignLine(cReadoutChip, cLineId, cWordAlignmentPattern, 8);
-                        cAlVals[cLineId]     = (cLineAlignmentStatus.first) ? 1 : 0;
-                        // cTuner.AlignWord(cInterface, cChip->getHybridId(), cChipId, cLineId, cWordAlignmentPattern, 8, true);
-                        // cAlVals[cLineId] = cTuner.GetLineStatus(cInterface, cHybrid->getHybridId(), cChipId, cLineId);
-                        LOG(DEBUG) << +cAlVals[cLineId] << RESET;
-                    }
-                    for(uint8_t cLineId = 0; cLineId < 1; cLineId++) // L1 line - line 0
-                    {
-                        if(cReadoutChip->getFrontEndType() == FrontEndType::SSA)
-                        {
-                            cAlVals[cLineId] = 1;
-                            ManuallyConfigureLine(cReadoutChip, cLineId, cPhaseTaps[cPhaseTaps.size() - 1], 0);
-                            // uint8_t cMode    = 2;
-                            // cTuner.SetLineMode(cInterface, cHybrid->getHybridId(), cChipId, cLineId, cMode, cPhaseTaps[cPhaseTaps.size() - 1], 0, 0, 0);
-                            continue;
-                        }
-                        std::stringstream cRegName;
-                        cRegName << "OutPatternL1Line";
-                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), cPhaseAlignmentPattern);
-                        auto cLineAlignmentStatus = PhaseTuneLine(cReadoutChip, cLineId);
-                        if(cLineAlignmentStatus.first) cPhaseTaps.push_back(cLineAlignmentStatus.second);
-                        // cTuner.TunePhase(cInterface, cChip->getHybridId(), cChipId, cLineId);
-                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), cWordAlignmentPattern);
-                        cLineAlignmentStatus = WordAlignLine(cReadoutChip, cLineId, cWordAlignmentPattern, 8);
-                        cAlVals[cLineId]     = (cLineAlignmentStatus.first) ? 1 : 0;
-
-                        // cTuner.AlignWord(cInterface, cChip->getHybridId(), cChipId, cLineId, cWordAlignmentPattern, 8, true);
-                        // cAlVals[cLineId] = cTuner.GetLineStatus(cInterface, cHybrid->getHybridId(), cChipId, cLineId);
-
-                        LOG(DEBUG) << +cAlVals[cLineId] << RESET;
-                    }
-
-                    // back to readout mode 0 to look at the L1 data
-                    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-                    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
-                    cDebugInterface->StubDebug(true, 8);
-                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 0x0, false);
-                    cDebugInterface->L1ADebug();
-
-                    // Reset to original values
-                    for(uint8_t cLineId = 0; cLineId < 8; cLineId++) // stub lines
-                    {
-                        std::stringstream cRegName;
-                        cRegName << "OutPatternStubLine" << +cLineId;
-                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), 0x00);
-                    }
-                    for(uint8_t cLineId = 0; cLineId < 1; cLineId++) // L1 line
-                    {
-                        if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
-                        std::stringstream cRegName;
-                        cRegName << "OutPatternL1Line";
-                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), 0x00);
-                    }
-                    cTuned = cTuned && (std::accumulate(cAlVals.begin(), cAlVals.end(), 0) == 9);
-                }
-                else
-                {
-                    LOG(INFO) << GREEN << "MPA Alignment" << RESET;
-                    std::vector<std::string> cRegNames{"ReadoutMode", "ECM", "LFSR_data"};
-                    std::vector<uint8_t>     cOriginalValues;
-                    uint8_t                  cAlignmentPattern = 0xa0;
-                    std::vector<uint8_t>     cRegValues{0x0, 0x08, cAlignmentPattern};
-                    for(size_t cIndex = 0; cIndex < 3; cIndex++)
-                    {
-                        cOriginalValues.push_back(fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegNames[cIndex]));
-                        fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cRegValues[cIndex]);
-                    }
-
-                    for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
-                    {
-                        cTuned = cTuned && LineTuning(cReadoutChip, cLineId, cAlignmentPattern, 8);
-                        // cTuned =
-                        //     cTuned && static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybrid->getId(), cChip->getId(), cLineId, cAlignmentPattern, 8);
-                    }
-
-                    for(size_t cIndex = 0; cIndex < 3; cIndex++) { fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegNames[cIndex], cOriginalValues[cIndex]); };
-                }
-            }
-        }
-    }
-
-    if(cTuned)
-        LOG(INFO) << BOLDGREEN << "PS Phase+Word Alignment succesful" << RESET;
-    else
-        LOG(INFO) << BOLDRED << "FAILED PS BE-Alignment" << RESET;
-    return cTuned;
-}*/
 // re-use function from link alignment
 bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 {
@@ -527,7 +387,6 @@ bool BackEndAlignment::Align()
         // read back register map before you've done anything
         bool cWithCIC  = false;
         bool cWithCBC  = false;
-        bool cWithSSA  = false;
         bool cWithSSA2 = false;
         bool cWithMPA2 = false;
 
@@ -536,13 +395,12 @@ bool BackEndAlignment::Align()
         for(auto cReadoutChip: *cHybrid)
         {
             cWithCBC  = cWithCBC || cReadoutChip->getFrontEndType() == FrontEndType::CBC3;
-            cWithSSA  = cWithSSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA;
             cWithSSA2 = cWithSSA2 || cReadoutChip->getFrontEndType() == FrontEndType::SSA2;
             cWithMPA2 = cWithMPA2 || cReadoutChip->getFrontEndType() == FrontEndType::MPA2;
         } // ROcs
         if(cWithCIC) { cAligned = this->CICAlignment(theBoard); }
         else if(cWithCBC) { cAligned = this->CBCAlignment(theBoard); }
-        else if(cWithSSA || cWithMPA2 || cWithSSA2)
+        else if(cWithMPA2 || cWithSSA2)
             cAligned = this->PSAlignment(theBoard);
 
         // check alignment

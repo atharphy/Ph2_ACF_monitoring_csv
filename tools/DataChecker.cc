@@ -491,7 +491,7 @@ void DataChecker::Initialise()
                         new TProfile(cName, Form("Event Monitor, digi-inject test CIC%d; Total number of clusters; First L1Id with a mismatch", (int)cChip->getId()), 100, 0, 100, "S");
                     bookHistogram(cChip, "MismatchProfile", cProfile);
 
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     cName = Form("h_PInj_FE%d", cChip->getId());
                     cObj  = gROOT->FindObject(cName);
@@ -672,7 +672,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     fReadoutChipInterface->WriteChipReg(cChip, "OutPattern7/FIFOconfig", cFifoDepth);
                 }
@@ -751,7 +751,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                         {
                             auto& cChipLatencyChip = cChipLatencyHybrid->getObject(cChip->getId());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
-                            if(cChip->getFrontEndType() != FrontEndType::SSA)
+                            if(cChip->getFrontEndType() != FrontEndType::SSA2)
                             {
                                 cChipLatencySmry = (cDelay) + cLatencyOffset;
                                 if(cChip->getFrontEndType() == FrontEndType::MPA2 && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
@@ -828,7 +828,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                             std::vector<uint8_t> cIds(0);
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                 cIds.push_back(cChip->getId() % 8);
                             }
 
@@ -847,7 +847,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 }
                                 for(auto cChip: *cHybrid)
                                 {
-                                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                     if(cChip->getId() % 8 != cId) continue;
 
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
@@ -1121,7 +1121,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     fReadoutChipInterface->WriteChipReg(cChip, "OutPattern7/FIFOconfig", cFifoDepth);
                 }
@@ -1200,7 +1200,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                         {
                             auto& cChipLatencyChip = cChipLatencyHybrid->getObject(cChip->getId());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
-                            if(cChip->getFrontEndType() != FrontEndType::SSA)
+                            if(cChip->getFrontEndType() != FrontEndType::SSA2)
                             {
                                 cChipLatencySmry = (cDelay) + cLatencyOffset;
                                 if(cChip->getFrontEndType() == FrontEndType::MPA2 && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
@@ -1289,7 +1289,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                             std::vector<uint8_t> cIds(0);
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                 cIds.push_back(cChip->getId() % 8);
                             }
 
@@ -1306,7 +1306,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 }
                                 for(auto cChip: *cHybrid)
                                 {
-                                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                     if(cChip->getId() % 8 != cId) continue;
 
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
@@ -1783,12 +1783,7 @@ void DataChecker::AsyncTest()
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::MPA2)
-                    {
                         cBoard->setEventType(EventType::PSAS);
-                        // cBoard->setEventType(EventType::MPAAS);
-                    }
-                    else
-                        cBoard->setEventType(EventType::SSAAS);
                 }
             }
         }
@@ -1827,7 +1822,7 @@ void DataChecker::AsyncTest()
                             auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                             for(uint8_t cChnl = 0; cChnl < 5; cChnl++)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                     LOG(INFO) << BOLDBLUE << "Counter value Strip#" << +cChnl << " is " << cHits[cChnl] << RESET;
                                 else
                                     LOG(INFO) << BOLDBLUE << "Counter value Pix#" << +cChnl << " is " << cHits[cChnl] << RESET;
@@ -2044,7 +2039,7 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                     cEventId.first  = cL1Id;
                     cEventId.second = cBxId;
                     cEvntTag.first  = cEventId;
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                     // check if it is in p-p or s-p mode
 
                     auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
@@ -2817,7 +2812,7 @@ void DataChecker::PreparePSInjection(DetectorDataContainer& pInjectionScheme)
                 // mask all channels in all SSAs
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                 } // chip
@@ -2828,7 +2823,7 @@ void DataChecker::PreparePSInjection(DetectorDataContainer& pInjectionScheme)
                     auto cRows = cInjection.second;
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                        if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                         if(cChip->getId() != cInjection.first) continue;
 
@@ -2890,7 +2885,7 @@ void DataChecker::PSTriggerTest()
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     fReadoutChipInterface->WriteChipReg(cChip, "OutPattern7/FIFOconfig", cFifoDepth);
                 }
@@ -2925,7 +2920,7 @@ void DataChecker::PSTriggerTest()
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     if(std::find(cIds.begin(), cIds.end(), cChip->getId()) == cIds.end()) continue;
 
@@ -3004,7 +2999,7 @@ void DataChecker::PSTriggerTest()
                         {
                             auto& cChipLatencyChip = cChipLatencyHybrid->getObject(cChip->getId());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
-                            if(cChip->getFrontEndType() != FrontEndType::SSA)
+                            if(cChip->getFrontEndType() != FrontEndType::SSA2)
                             {
                                 // uint16_t cLatency = cDelay + cLatencyOffset ;
                                 cChipLatencySmry = cDelay + cLatencyOffset;
@@ -3017,7 +3012,7 @@ void DataChecker::PSTriggerTest()
                             }
                             if(cDistributeInj) cChipLatencySmry = cChipLatencySmry + cChip->getId();
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cChipLatencySmry);
-                            std::string cType = (cChip->getFrontEndType() != FrontEndType::SSA) ? "MPA" : "SSA";
+                            std::string cType = (cChip->getFrontEndType() != FrontEndType::SSA2) ? "MPA" : "SSA";
                             // LOG (DEBUG) << BOLDBLUE << "Setting L1 latency in " << cType << "#"
                             //     << +cChip->getId()
                             //     << " to " << +cChipLatencySmry
@@ -3070,70 +3065,6 @@ void DataChecker::PSTriggerTest()
                         }
                     }
                 }
-                // // look at events
-                // for(auto cEvent: cEvents)
-                // {
-                //     for( auto cBoard : *fDetectorContainer )
-                //     {
-                //         for(auto cOpticalGroup: *cBoard)
-                //         {
-                //             for(auto cHybrid: *cOpticalGroup)
-                //             {
-                //                 auto cL1Status = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
-                //                 uint32_t cL1Id = cEvent->L1Id( cHybrid->getId(), 0 );
-                //                 // LOG (INFO) << BOLDRED << "Event#" << +cEvent->GetEventCount()
-                //                 //     << " CIC L1 Status is " << std::bitset<9>(cL1Status)
-                //                 //     << " L1Id from CIC is " << +cL1Id
-                //                 //     << " expect "
-                //                 //     << RESET;
-                //                 // for(auto cChip: *cHybrid)
-                //                 // {
-                //                 //     if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
-
-                //                 //     auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
-                //                 //     auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                //                 //     auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-
-                //                 //     LOG (INFO) << BOLDRED << "\t..MPA#" << +cChip->getId()
-                //                 //         << " found " << +cSClusters.size()
-                //                 //         << " S-clusters, "
-                //                 //         << +cPClusters.size()
-                //                 //         << " P-clusters "
-                //                 //         << " and "
-                //                 //         << +cStubs.size()
-                //                 //         << " stubs."
-                //                 //         << RESET;
-                //                 //     // for( auto cSCluster : cSClusters )
-                //                 //     // {
-                //                 //     //     Injection cInjection;
-                //                 //     //     cInjection.fRow =  cSCluster.fAddress;// - cBend ;
-                //                 //     //     cInjection.fColumn = 0;
-                //                 //     //     cInjection.fChipId = cChip->getId();
-                //                 //     //     LOG (INFO) << BOLDRED << "\t\t.. found S-cluster in SSA#" << +cChip->getId()
-                //                 //     //         << " strip " << +cInjection.fRow
-                //                 //     //         << " in readout."
-                //                 //     //         << RESET ;
-                //                 //     // }
-                //                 //     // for( auto cPCluster : cPClusters )
-                //                 //     // {
-                //                 //     //     Injection cInjection;
-                //                 //     //     cInjection.fRow =  cPCluster.fAddress;
-                //                 //     //     cInjection.fColumn = cPCluster.fZpos;
-                //                 //     //     cInjection.fChipId = cChip->getId();
-                //                 //     //     LOG (DEBUG) << BOLDRED << "\t\t.. found P-cluster in MPA#" << +cChip->getId()
-                //                 //     //         << " strip " << +cInjection.fRow
-                //                 //     //         << " pixel column is " << +cInjection.fColumn
-                //                 //     //         << " in readout."
-                //                 //     //         << RESET ;
-                //                 //     // }
-                //                 // }
-                //             }
-                //         }
-                //     }
-                // }
-
-                // don't attempt to match things
-                // for this run
                 continue;
             }
             // retrieve events
@@ -3268,7 +3199,7 @@ void DataChecker::PSTriggerTest()
 
                                 std::string cClstrType, cChipType;
                                 size_t      cStubsThisFE = 0;
-                                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     cClstrType      = "strip-clusters";
                                     cChipType       = "SSA";
@@ -3317,7 +3248,7 @@ void DataChecker::PSTriggerTest()
                                 }
                                 cNstubsInReadout += cStubsThisFE;
 
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                                 // LOG (DEBUG) << BOLDMAGENTA << "\t\t.."
                                 //     << cChipType << "#" << +cChip->getId()
@@ -3427,7 +3358,7 @@ void DataChecker::PSTriggerTest()
                             uint32_t cNFEsInEror = 0;
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                 int cErrorBit = (cCicL1 & (0x1 << (1 + cChip->getId()))) >> (1 + cChip->getId());
                                 cNFEsInEror += (cErrorBit == 1) ? 1 : 0;
                             }
@@ -3440,7 +3371,7 @@ void DataChecker::PSTriggerTest()
                             //         << RESET;
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                                 auto&   cInjSmryChip = cClusterInjectionHybrid->getObject(cChip->getId());
                                 auto&   cSmry        = cInjSmryChip->getSummary<std::vector<Injection>>();
@@ -3551,9 +3482,9 @@ void DataChecker::PSTriggerTest()
                             // Clusters per FE chip
                             auto&       cChipClusterChip = cChipClustersHybrid->getObject(cChip->getId());
                             auto&       cChipClusterSmry = cChipClusterChip->getSummary<std::vector<Injection>>();
-                            std::string cType            = (cChip->getFrontEndType() == FrontEndType::SSA) ? "SSA" : "MPA";
-                            std::string cClusterType     = (cChip->getFrontEndType() == FrontEndType::SSA) ? "S-cluster" : "P-cluster";
-                            int         cChipOffset      = (cChip->getFrontEndType() == FrontEndType::SSA) ? 0 : 8;
+                            std::string cType            = (cChip->getFrontEndType() == FrontEndType::SSA2) ? "SSA" : "MPA";
+                            std::string cClusterType     = (cChip->getFrontEndType() == FrontEndType::SSA2) ? "S-cluster" : "P-cluster";
+                            int         cChipOffset      = (cChip->getFrontEndType() == FrontEndType::SSA2) ? 0 : 8;
 
                             // LOG (INFO) << BOLDMAGENTA << "Injection in "
                             //     << cType << "#" << +cChip->getId()
@@ -3569,7 +3500,7 @@ void DataChecker::PSTriggerTest()
                                 for(auto cClusterInj: cInjSmry)
                                 {
                                     if(cClusterInj.fChipId != cChip->getId()) continue;
-                                    int cBendOffset  = (cChip->getFrontEndType() == FrontEndType::SSA) ? cBend : 0;
+                                    int cBendOffset  = (cChip->getFrontEndType() == FrontEndType::SSA2) ? cBend : 0;
                                     int cExpectedCol = cClusterInj.fColumn;
                                     int cExpectedRow = cClusterInj.fRow + cBendOffset;
 
@@ -3615,7 +3546,7 @@ void DataChecker::PSTriggerTest()
                                 {
                                     if(cClusterInj.fChipId != cChip->getId()) continue;
 
-                                    int      cBendOffset    = (cChip->getFrontEndType() == FrontEndType::SSA) ? cBend : 0;
+                                    int      cBendOffset    = (cChip->getFrontEndType() == FrontEndType::SSA2) ? cBend : 0;
                                     int      cExpectedPxl   = cClusterInj.fColumn;
                                     int      cExpectedStrip = cClusterInj.fRow + cBendOffset;
                                     uint32_t cPixelId       = (uint32_t)(cExpectedPxl * 120) + (uint32_t)cExpectedStrip;
@@ -3626,7 +3557,7 @@ void DataChecker::PSTriggerTest()
                                     for(auto cChipCluster: cChipClusterSmry)
                                     {
                                         bool cStripMatch = (cExpectedStrip == cChipCluster.fRow);
-                                        bool cPixelMatch = (cChip->getFrontEndType() == FrontEndType::SSA) ? true : (cExpectedPxl == cChipCluster.fColumn);
+                                        bool cPixelMatch = (cChip->getFrontEndType() == FrontEndType::SSA2) ? true : (cExpectedPxl == cChipCluster.fColumn);
                                         bool cMatchFound = cStripMatch && cPixelMatch;
                                         if(cMatchFound) cMatchedL1Ids.push_back(cL1s[cCntr]);
                                         cMatchedMapCic.find(cL1s[cCntr])->second += (cMatchFound) ? 1 : 0;
@@ -3663,7 +3594,7 @@ void DataChecker::PSTriggerTest()
                             size_t cMatchedHits = 0;
                             for(auto cMapItem: cMatchedMapL1)
                             {
-                                int  cExpectedRow  = (cChip->getFrontEndType() == FrontEndType::SSA) ? 0 : (cMapItem.first) / 120;
+                                int  cExpectedRow  = (cChip->getFrontEndType() == FrontEndType::SSA2) ? 0 : (cMapItem.first) / 120;
                                 int  cExpectedStrp = (cMapItem.first) % 120;
                                 int  cNmatches     = cMatchedMap.find(cMapItem.first)->second;
                                 bool cMatch        = (cNmatches == (int)(cNtrials - 1));
@@ -3706,7 +3637,7 @@ void DataChecker::PSTriggerTest()
                                 TH2D* cMismatchedInjMap = static_cast<TH2D*>(getHist(cChip, "MismatchedInjectionMap"));
                                 cMismatchedInjMap->Fill(cExpectedRow, cExpectedStrp, cNmismatches);
                                 // hit latencies
-                                std::string cHistName   = (cChip->getFrontEndType() == FrontEndType::SSA) ? "StripHitLatency" : "PixelHitLatency";
+                                std::string cHistName   = (cChip->getFrontEndType() == FrontEndType::SSA2) ? "StripHitLatency" : "PixelHitLatency";
                                 TH2D*       cHitLatency = static_cast<TProfile2D*>(getHist(cHybrid, cHistName));
                                 cHitLatency->Fill(cChipLatencySmry, cChip->getId(), cNmatches);
                                 // cluster counter
@@ -3758,7 +3689,7 @@ void DataChecker::PSTriggerTest()
                             cStubLatencyHist->Fill(cStubLatency, cChip->getId(), cTotalNstubs);
 #endif
 
-                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
 #ifdef __USE_ROOT__
                             // Injections per FE chip
@@ -3924,7 +3855,7 @@ void DataChecker::PSNominal()
                 // size_t cCounter=0;
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                     std::string cOutput = "";
                     char        cBuffer[80];
                     // first all the stub lines
@@ -3986,7 +3917,7 @@ void DataChecker::PSNominal()
                     // size_t cCounter=0;
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                         std::string cOutput = "";
                         // first all the stub lines
                         // for(uint8_t cInput = 0; cInput < 5; cInput += 1)
@@ -4213,7 +4144,7 @@ void DataChecker::PSNominal()
                             cSummaryBxIds.push_back(cBxId);
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                                 auto& cPClustersChip   = cPClustersHybrid->getObject(cChip->getId());
                                 auto& cPClustersSmry   = cPClustersChip->getSummary<std::vector<Injection>>();
@@ -4329,7 +4260,7 @@ void DataChecker::PSNominal()
                         auto& cReadoutHybrid = cReadoutOG->getObject(cHybrid->getId());
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                             auto& cInjChip = cInjHybrid->getObject(cChip->getId());
                             auto& cExpInjs = cInjChip->getSummary<std::vector<Injection>>();
@@ -4420,7 +4351,7 @@ void DataChecker::PSNominal()
 
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                             auto& cInjChip = cInjHybrid->getObject(cChip->getId());
                             auto& cExpInjs = cInjChip->getSummary<std::vector<Injection>>();
@@ -4523,7 +4454,7 @@ void DataChecker::PSNominal()
             //             }
             //             for(auto cChip: *cHybrid)
             //             {
-            //                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+            //                 if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
             //                 auto& cExpChip = cExpHybrid->getObject(cChip->getId());
             //                 auto& cExpPClusterSmry = cExpChip->getSummary<std::vector<Injection>>();

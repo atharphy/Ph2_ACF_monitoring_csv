@@ -446,7 +446,7 @@ int main(int argc, char* argv[])
                     std::vector<uint8_t> cFeIds(0);
                     for(auto cReadoutChip: *cHybrid)
                     {
-                        if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                        if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
                         cFeIds.push_back(cReadoutChip->getId());
                     }
                     cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
@@ -468,7 +468,7 @@ int main(int argc, char* argv[])
                     for(auto cReadoutChip: *cHybrid)
                     {
                         LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
-                        if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
+                        if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
                         {
                             cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
                         } // SSAs
@@ -617,7 +617,7 @@ int main(int argc, char* argv[])
                             std::vector<uint8_t> pIds(0);
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
                                     LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
@@ -636,7 +636,7 @@ int main(int argc, char* argv[])
                                     // first . . enable clock out to one MPA at a time
                                     for(auto cReadoutChip: *cHybrid)
                                     {
-                                        if((cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) && cReadoutChip->getId() == cId)
+                                        if((cReadoutChip->getFrontEndType() == FrontEndType::SSA2) && cReadoutChip->getId() == cId)
                                         {
                                             LOG(INFO) << BOLDBLUE << "Setting SLVS_pad_current on SSA#" << +cId << " to 0x07" << RESET;
                                             cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current", 0x7);
@@ -659,7 +659,7 @@ int main(int argc, char* argv[])
                             // then only enable clock for those MPAs that I want
                             for(auto cReadoutChip: *cHybrid)
                             {
-                                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
+                                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     if(std::find(cMPAsToEnable.begin(), cMPAsToEnable.end(), cReadoutChip->getId()) != cMPAsToEnable.end())
                                     {
@@ -710,7 +710,7 @@ int main(int argc, char* argv[])
                             // Configure SSAs+MPAs on this hybrid
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                     LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
                                 else
                                     LOG(INFO) << BOLDBLUE << "Configuring MPA [chip id " << +cChip->getId() << " ]" << RESET;
@@ -758,7 +758,7 @@ int main(int argc, char* argv[])
                             std::vector<uint8_t> cFeIds(0);
                             for(auto cReadoutChip: *cHybrid)
                             {
-                                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                 cFeIds.push_back(cReadoutChip->getId());
                             }
                             cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
@@ -801,7 +801,7 @@ int main(int argc, char* argv[])
                             std::vector<uint8_t> pIds(0);
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) { pIds.push_back(cChip->getId()); } // SSAs
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) { pIds.push_back(cChip->getId()); } // SSAs
                             }                                                                                                                                           // Chips
 
                             // reset MPA
@@ -812,7 +812,7 @@ int main(int argc, char* argv[])
                             // Configure SSAs+MPAs on this hybrid
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
                                     cTool.fReadoutChipInterface->ConfigureChip(cChip);
@@ -825,7 +825,7 @@ int main(int argc, char* argv[])
                                 // first . . enable clock out to one MPA at a time
                                 for(auto cReadoutChip: *cHybrid)
                                 {
-                                    if((cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) && cReadoutChip->getId() == cId)
+                                    if((cReadoutChip->getFrontEndType() == FrontEndType::SSA2) && cReadoutChip->getId() == cId)
                                     {
                                         if(std::find(cMPAsToEnable.begin(), cMPAsToEnable.end(), cId) != cMPAsToEnable.end())
                                         {
@@ -889,7 +889,7 @@ int main(int argc, char* argv[])
                                 std::vector<uint8_t> cFeIds(0);
                                 for(auto cReadoutChip: *cHybrid)
                                 {
-                                    if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                                    if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                     cFeIds.push_back(cReadoutChip->getId());
                                 }
                                 cTool.fCicInterface->EnableFEs(cCic, cFeIds, true);
@@ -932,7 +932,7 @@ int main(int argc, char* argv[])
                             // first . . enable clock out MPAs I've asked for
                             for(auto cReadoutChip: *cHybrid)
                             {
-                                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
+                                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     if(std::find(cMPAsToEnable.begin(), cMPAsToEnable.end(), cReadoutChip->getId()) != cMPAsToEnable.end())
                                     {
@@ -977,7 +977,7 @@ int main(int argc, char* argv[])
                             // first . . enable clock out MPAs I've asked for
                             for(auto cReadoutChip: *cHybrid)
                             {
-                                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
+                                if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     if(std::find(cMPAsToEnable.begin(), cMPAsToEnable.end(), cReadoutChip->getId()) != cMPAsToEnable.end())
                                     {
@@ -995,30 +995,6 @@ int main(int argc, char* argv[])
                     }
                 } // OG
 
-                // if( cmd.foundOption("ssaRegisterTest") )
-                // {
-                //     // disable CIC clock
-                //     lpGBTClockConfig cClkCnfg;
-                //     cClkCnfg.fClkFreq = 0;
-                //     for(auto cHybrid: *cOpticalGroup)
-                //     {
-                //         uint8_t cSide=cHybrid->getId()%2;
-                //         LOG(INFO) << BOLDBLUE << "Disabling CIC clock [Side == " << +cSide  << "]" << RESET;
-                //         static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
-                //     }
-                //     // hold CIC reset active
-                //     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, true,cSide);
-
-                //     // Configure SSAs on this hybrid
-                //     for(auto cChip: *cHybrid)
-                //     {
-                //         if(cChip->getFrontEndType() == FrontEndType::SSA)
-                //         {
-                //             LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
-                //             cTool.fReadoutChipInterface->ConfigureChip(cChip);
-                //         }
-                //     }//Chips
-                // }
                 if(cmd.foundOption("registerTest"))
                 {
                     // if this is te first try .. record MPAs active
@@ -1210,9 +1186,6 @@ int main(int argc, char* argv[])
         } while(cConfigAttempt < cConfigurationAttempts); // configuration attempt
         cGlobalTimer.stop();
         cGlobalTimer.show("Total execution time: ");
-
-        // if( cmd.foundOption("configureSSA")&& !cmd.foundOption("configureHybrid"))
-        //     static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->printErrorSummary();
 
         if(cmd.foundOption("monitor"))
         {

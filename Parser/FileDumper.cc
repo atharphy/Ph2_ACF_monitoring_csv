@@ -79,12 +79,6 @@ void FileDumper::dumpBoardConfigurationFile(pugi::xml_node theMotherNode, BeBoar
     auto theEventTypeAttribute = theBoardNode.append_attribute(BEBOARD_EVENT_TYPE_ATTRIBUTE_NAME);
     if(theBoard->getEventType() == EventType::ZS)
         theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_ZS_VALUE;
-    else if(theBoard->getEventType() == EventType::SCAS)
-        theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_SCAS_VALUE;
-    else if(theBoard->getEventType() == EventType::SSAAS)
-        theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_SSAAS_VALUE;
-    else if(theBoard->getEventType() == EventType::SSA)
-        theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_SSA_VALUE;
     else if(theBoard->getEventType() == EventType::PSAS)
         theEventTypeAttribute = BEBOARD_EVENT_TYPE_ATTRIBUTE_PSAS_VALUE;
     else if(theBoard->getEventType() == EventType::VR2S)
@@ -198,7 +192,7 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
         (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return (x->getFrontEndType() == FrontEndType::MPA2); }) !=
          theHybrid->end());
     bool cWithSSA =
-        (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return (x->getFrontEndType() == FrontEndType::SSA) || (x->getFrontEndType() == FrontEndType::SSA2); }) !=
+        (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return (x->getFrontEndType() == FrontEndType::SSA2); }) !=
          theHybrid->end());
 
     auto appendReadoutChipConfigFilePath = [this, &theHybridNode](std::string theChipString)
@@ -209,8 +203,8 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
     };
 
     if(cWithCBC) appendReadoutChipConfigFilePath(CBC_NODE_NAME);
-    if(cWithMPA) appendReadoutChipConfigFilePath(MPA_NODE_NAME);
-    if(cWithSSA) appendReadoutChipConfigFilePath(SSA_NODE_NAME);
+    if(cWithMPA) appendReadoutChipConfigFilePath(MPA2_NODE_NAME);
+    if(cWithSSA) appendReadoutChipConfigFilePath(SSA2_NODE_NAME);
 
     for(auto chip: *theHybrid) { dumpChipConfigurationFile(theHybridNode, chip); }
 }
@@ -222,8 +216,6 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
         theReadoutChipNodeName = CBC_NODE_NAME;
     else if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
         theReadoutChipNodeName = MPA2_NODE_NAME;
-    else if(theReadoutChip->getFrontEndType() == FrontEndType::SSA)
-        theReadoutChipNodeName = SSA_NODE_NAME;
     else if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2)
         theReadoutChipNodeName = SSA2_NODE_NAME;
     else
@@ -231,7 +223,7 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
 
     std::string theFileName = "BE" + std::to_string(theReadoutChip->getBeBoardId()) + "_OG" + std::to_string(theReadoutChip->getOpticalGroupId()) + "_FE" +
                               convertToString(theReadoutChip->getHybridId() % 2) + "_Chip" + convertToString(theReadoutChip->getId());
-    if(theReadoutChip->getFrontEndType() == FrontEndType::SSA || theReadoutChip->getFrontEndType() == FrontEndType::SSA2) theFileName += "SSA";
+    if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2) theFileName += "SSA";
     if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2) theFileName += "MPA";
     theFileName += ".txt";
     std::string theFullFileName = fOutputDirectory + theFileName;
