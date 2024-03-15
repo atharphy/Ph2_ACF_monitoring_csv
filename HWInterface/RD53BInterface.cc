@@ -768,6 +768,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
         // Sending a long pulse breaks readout
         RD53BInterface::SendGlobalPulse(pChip, 1 << 6, 1); // Reset ADC
         RD53BInterface::SendGlobalPulse(pChip, 0x1000, 1); // Trigger Monitor Data to start conversion
+        std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Wait for end of conversion (at least 358.4 us according to manual)
         const uint32_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
         if(val != 0)
         {
