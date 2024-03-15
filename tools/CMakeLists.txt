@@ -149,6 +149,7 @@ else()
             EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
             EXCLUDE Eudaq2Producer.h Eudaq2Producer.cc
             EXCLUDE SSAPhysics.h SSAPhysics.cc
+            EXCLUDE RD53Gain.cc
             )
 
     target_compile_definitions(Ph2_Tools PRIVATE

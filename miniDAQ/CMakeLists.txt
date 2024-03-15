@@ -96,6 +96,12 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "    ${BoldYellow}MINI DAQ${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
+
+    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
+    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
+    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
+    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
+
     include_directories(${UHAL_DIR}/uhal/include)
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
@@ -105,13 +111,13 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     #library dirs
     link_directories(${Protobuf_LIBRARIES})
 
-    cet_make_exec(RunController
+    cet_make_exec(NAME RunController
         SOURCE
         RunController.cc MiddlewareController.cc MiddlewareMessageHandler.cc MiddlewareStateMachine.cc CombinedCalibrationFactory.cc
         LIBRARIES
-        ${Boost_REGEX_LIBRARY}
-        ${Boost_PROGRAM_OPTIONS_LIBRARY}
-        ${Boost_IOSTREAMS_LIBRARY}
+        Boost::regex
+        Boost::program_options
+        Boost::headers
         cactus_uhal_uhal
         cactus_uhal_log
         cactus_uhal_grammars

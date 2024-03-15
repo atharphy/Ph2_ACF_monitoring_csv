@@ -74,7 +74,6 @@ else()
     cet_make(LIBRARY_NAME Ph2_Interface
             LIBRARIES
             Ph2_Description
-            #cactus_uhal_uhal
     )
 
     #file(GLOB HEADERS *.h)
