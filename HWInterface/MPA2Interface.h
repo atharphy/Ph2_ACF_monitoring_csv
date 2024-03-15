@@ -14,7 +14,6 @@
 
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
-#include "HWInterface/MPAInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
 #include "pugixml.hpp"
 #include <vector>
@@ -26,6 +25,13 @@
 namespace Ph2_HwInterface
 {
 using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
+
+struct Injection
+{
+    uint8_t fRow;
+    uint8_t fColumn;
+    uint8_t fChipId;
+};
 
 /*!
  * \class MPA2Interface
@@ -105,14 +111,14 @@ class MPA2Interface : public ReadoutChipInterface
     float                measureBg(Ph2_HwDescription::Chip* pMPA2);
     uint16_t             ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
 
-    float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
-    bool  injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
+    float                                calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
+    bool                                 injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
+    const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
 
   private:
     // pixelEnable bits
     const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE =
         {{"PixelMask", 0}, {"Polarity", 1}, {"EnEdgeBR", 2}, {"EnLvlBR", 3}, {"CounterEnable", 4}, {"DigitalInjection", 5}, {"AnalogueInjection", 6}, {"BrClk", 7}};
-    const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
 
     const std::map<std::string, uint8_t> CONTROL_TABLE = {{"ReadoutMode", 0}, {"RetimePix", 2}, {"PhaseShift", 5}}; // I think the doc should read 3,3,2 for the bits -- to check
 

@@ -1,7 +1,6 @@
 #include "tools/PSPixelAlive.h"
 #include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Cbc.h"
-#include "HWDescription/SSA.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/Container.h"
@@ -57,10 +56,8 @@ void PSPixelAlive::Initialise()
     for(auto cBoard: *fDetectorContainer)
     {
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
-        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
+        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
+        fWithMPA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
         for(auto cFrontEndType: cFrontEndTypes)
         {
             if(std::find(cAllFrontEndTypes.begin(), cAllFrontEndTypes.end(), cFrontEndType) == cAllFrontEndTypes.end()) cAllFrontEndTypes.push_back(cFrontEndType);
@@ -72,13 +69,13 @@ void PSPixelAlive::Initialise()
 
     for(auto cFrontEndType: cAllFrontEndTypes)
     {
-        if(cFrontEndType == FrontEndType::SSA || cFrontEndType == FrontEndType::SSA2)
+        if(cFrontEndType == FrontEndType::SSA2)
         {
             SSAChannelGroupHandler theChannelGroupHandler;
             theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
-        else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
+        else if(cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
             theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
@@ -251,15 +248,15 @@ void PSPixelAlive::maskNoisyChannels(BoardDataContainer* board)
                     // uint32_t       NCH = NCHANNELS;
                     // if(cType == FrontEndType::CBC3)
                     //   NCH = NCHANNELS;
-                    // else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    // else if(cType == FrontEndType::SSA2)
                     //  NCH = NSSACHANNELS;
-                    // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    // else if( cType == FrontEndType::MPA2)
                     //  NCH = NMPAROWS * NSSACHANNELS;
 
     //                float fMean=1.0;
-    //                        if(cType == FrontEndType::MPA or  cType == FrontEndType::MPA2)
+    //                        if(cType == FrontEndType::MPA2)
     //                     fMean=2.7;
-    //                        if(cType == FrontEndType::SSA or  cType == FrontEndType::SSA2)
+    //                        if(cType == FrontEndType::SSA2)
     //                     fMean=4.2;
                     auto     cOriginalMask = chipDC->getChipOriginalMask();
     //                uint32_t nMask         = 0;
@@ -362,7 +359,7 @@ void PSPixelAlive::measureOccupancy()
                     {
                         auto cType = cChip->getFrontEndType();
 
-                        if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        if(cType == FrontEndType::MPA2)
                         {
                             fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitude_MPA);
                             fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fPulseThreshold_MPA);
@@ -454,9 +451,9 @@ void PSPixelAlive::measureOccupancy()
                                 if(fPSPixelAliveMask)
                                 {
                                     cOriginalMask->disableChannel(row, col); // Mask failing pixel
-                                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                                    if(cType == FrontEndType::SSA2)
                                         nMask_SSA++;
-                                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                                    else if(cType == FrontEndType::MPA2)
                                         nMask_MPA++;
                                 }
                             }

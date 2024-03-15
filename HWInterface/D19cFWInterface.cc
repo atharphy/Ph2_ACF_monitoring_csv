@@ -1076,22 +1076,8 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalGroup) { cNChips += cHybrid->size(); }
     }
-    // if(fNCic != 0)
-    // {
-    //     uint32_t cSparsified = ReadReg("fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable");
-    //     LOG(DEBUG) << BOLDBLUE << "CIC sparsification expected to be : " << +cSparsified << RESET;
-    // }
-    // else
-    // {
-    //     if(fFirmwareFrontEndType == FrontEndType::CBC3) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChips * D19C_EVENT_SIZE_32_CBC3;
-    //     if(fFirmwareFrontEndType == FrontEndType::MPA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_MPA;
-    //     if(fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
-    // }
-    // if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
-    {
-        uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
-        if(!(cNEventSize32_divided_by_8 == cNEventSize32)) { cNEventSize32 = cNEventSize32_divided_by_8 + 8; }
-    }
+    uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
+    if(!(cNEventSize32_divided_by_8 == cNEventSize32)) { cNEventSize32 = cNEventSize32_divided_by_8 + 8; }
     return cNEventSize32;
 }
 

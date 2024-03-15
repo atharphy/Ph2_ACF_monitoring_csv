@@ -284,7 +284,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             // for PS - first digital injection in MPAs
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                 std::vector<Injection> cInjections(0);
                 for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
@@ -309,7 +309,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             // for PS - digital injection in SSAs
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if(cChip->getFrontEndType() != FrontEndType::SSA and cChip->getFrontEndType() != FrontEndType::SSA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                 // uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
                 // disable all SSAs when doing this - why?
@@ -351,7 +351,6 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             {
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency - 1);
                     if(cChip->getFrontEndType() == FrontEndType::SSA2)
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency + 1);
                     else
@@ -384,9 +383,9 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         size_t cNHitsPerHybrid = 0;
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cChip->getHybridId(), cChip->getId());
                                 auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cChip->getHybridId(), cChip->getId());
@@ -452,7 +451,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         size_t cNstubsThisHybrd = 0;
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                             if(cEvent->GetHits(cHybrid->getId(), cChip->getId()).size() == 0) continue;
 
                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
@@ -496,7 +495,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
                             auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());

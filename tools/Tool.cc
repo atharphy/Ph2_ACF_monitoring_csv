@@ -594,9 +594,7 @@ void Tool::SaveResults()
         std::string cDescr = "";
         auto        cType  = static_cast<ReadoutChip*>(cChip.first)->getFrontEndType();
         if(cType == FrontEndType::CBC3) cDescr = "CBC";
-        if(cType == FrontEndType::SSA) cDescr = "SSA";
         if(cType == FrontEndType::SSA2) cDescr = "SSA2";
-        if(cType == FrontEndType::MPA) cDescr = "MPA";
         if(cType == FrontEndType::MPA2) cDescr = "MPA2";
 
         // Fabio: CBC specific -> to be moved out from Tool
@@ -1249,8 +1247,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                         previousStepOccupancyContainer->getObject(boardId)->getSummary<Occupancy, Occupancy>().fOccupancy;
 
     // Hacked solution for PS
-    if((cReadoutChip->getFrontEndType() == FrontEndType::MPA) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA) or (cReadoutChip->getFrontEndType() == FrontEndType::MPA2) or
-       (cReadoutChip->getFrontEndType() == FrontEndType::SSA2))
+    if((cReadoutChip->getFrontEndType() == FrontEndType::MPA2) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA2))
     {
         if(localDAC)
             occupanyDirectlyProportionalToDAC = true;
@@ -1334,7 +1331,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                         auto&                cDataContainerThisChip = cDataContainerThisFE->getObject(cChip->getId());
                         auto&                cSummary               = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
                         ChannelGroupHandler* cHandler;
-                        if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                        if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             cHandler = new MPAChannelGroupHandler();
                         else
                             cHandler = new SSAChannelGroupHandler();

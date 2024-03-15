@@ -65,14 +65,14 @@ void PSPhysics::ConfigureCalibration()
             {
                 for(auto chip: *hybrid)
                 {
-                    if(chip->getFrontEndType() == FrontEndType::SSA)
+                    if(chip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         LOG(INFO) << "SSA";
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 80);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "L1-Latency_LSB", 79);
                     }
-                    if(chip->getFrontEndType() == FrontEndType::MPA)
+                    if(chip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0xF);
                         static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ModeSel_ALL", 0x0);
@@ -105,12 +105,10 @@ void PSPhysics::ConfigureCalibration()
 
     SSAChannelGroupHandler theSSAChannelGroupHandler;
     theSSAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-    setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA);
     setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
 
     MPAChannelGroupHandler theMPAChannelGroupHandler;
     theMPAChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
-    setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA);
     setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
 }
 
@@ -294,7 +292,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                 {
                     // std::cout<<__LINE__<<std::endl;
                     auto currentChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    if(currentChip->getFrontEndType() != FrontEndType::MPA) continue;
+                    if(currentChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                     // std::cout<<__LINE__<<std::endl;
                     std::vector<PCluster> pixelClusterList = static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId());
@@ -347,7 +345,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     uint16_t theCorrespondingSSAId = 9999;
                     for(auto theCorrespondingSSA: *fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId()))
                     {
-                        if(theCorrespondingSSA->getFrontEndType() != FrontEndType::SSA) continue;
+                        if(theCorrespondingSSA->getFrontEndType() != FrontEndType::SSA2) continue;
                         if(theCorrespondingSSA->getId() == currentChip->getId())
                         {
                             theCorrespondingSSAId = theCorrespondingSSA->getId();
