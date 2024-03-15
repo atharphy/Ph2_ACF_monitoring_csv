@@ -250,10 +250,6 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
     bool        isCurrentNotVoltage;
     uint32_t    observable = getADCobservable(observableName, isCurrentNotVoltage);
 
-    if(observable == static_cast<uint32_t>(-1))
-    {
-        return ReadChipReg(pChip, observableName);
-    }
     if((observableName.find("TEMPSENS") != std::string::npos) || (observableName.find("RADSENS") != std::string::npos) || (observableName.find("INTERNAL_NTC") != std::string::npos))
     {
         value = measureTemperature(pChip, observable, observableName);
