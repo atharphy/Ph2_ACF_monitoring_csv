@@ -12,6 +12,7 @@
 #include "tools/OTCICphaseAlignment.h"
 #include "tools/OTCICphaseAlignmentForBypass.h"
 #include "tools/OTCICwordAlignment.h"
+#include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
 #include "tools/OTMeasureOccupancy.h"
@@ -67,7 +68,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
     Register<OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
     Register<OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord>("Outer Tracker",
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTverifyCICdataWord, OTverifyMPASSAdataWord>("Outer Tracker",
                                                                                                                                                                                         "alignment");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignmentForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 

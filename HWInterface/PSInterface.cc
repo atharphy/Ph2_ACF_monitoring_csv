@@ -95,6 +95,19 @@ void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
     else { LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET; }
 }
 
+void PSInterface::produceBX0AlignmentPattern(ReadoutChip* pChip)
+{
+    if(pChip->getFrontEndType() == FrontEndType::MPA2)
+    {
+        fTheMPA2Interface->produceBX0AlignmentPattern(pChip);
+    }
+    else if(pChip->getFrontEndType() == FrontEndType::SSA2)
+    {
+        LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
+    }
+
+}
+
 bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop)
 {
     if(pPS->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->enableInjection(pPS, inject, pVerifLoop); }

@@ -81,6 +81,26 @@ void MPA2Interface::produceWordAlignmentPattern(ReadoutChip* pChip)
     for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++) { this->WriteChipReg(pChip, cRegNames[cIndex], cRegValues[cIndex]); } // loop over registers
 }
 
+void MPA2Interface::produceBX0AlignmentPattern(ReadoutChip* pChip)
+{
+    // this->MaskAllChannels(pChip, true, false );
+    // auto masked =     this->ReadChipReg(pChip, "ENFLAGS_ALL");
+    // std::cout << " read back masking MPAs 0x" << std::hex <<  masked << std::dec << std::endl;
+
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
+    this->injectNoiseClusters(pChip, theClusterList);
+    this->WriteChipReg(pChip, "StubMode", 2); // Use pixel mode to exclude possible SSA communication issues
+    this->WriteChipReg(pChip, "StubWindow", 31);
+    this->WriteChipReg(pChip, "CodeM10", 0x0); // bendind = 0 will ouput 0
+    
+
+    LOG(INFO) << GREEN << "Producing BX0 alignment pattern on MPA#" << +pChip->getId() << RESET;
+    std::vector<uint8_t>     cRegValues{0x0}; //, fBX0AlignmentPatterns[0]};
+    std::vector<std::string> cRegNames{"ReadoutMode"}; //, "LFSR_data"};
+    // std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
+    // std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};}
+}
+
 void MPA2Interface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
     // std::vector<uint32_t> cPixelIds(0);

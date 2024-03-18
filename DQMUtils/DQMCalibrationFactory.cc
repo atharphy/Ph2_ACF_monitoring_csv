@@ -17,6 +17,7 @@
 #include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyCICdataWord.h"
+#include "DQMUtils/DQMHistogramOTCICBX0Alignment.h"
 #include "DQMUtils/DQMHistogramOTverifyMPASSAdataWord.h"
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #include "DQMUtils/DQMHistogramPedestalEqualization.h"
@@ -60,6 +61,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTalignStubPackage,
              DQMHistogramOTCICphaseAlignment,
              DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTCICBX0Alignment,
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("alignment");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
