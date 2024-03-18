@@ -228,17 +228,19 @@ void PixelAlive::run()
                                                     ->getObject(cHybrid->getId())
                                                     ->getObject(cChip->getId())
                                                     ->getChannel<uint8_t>(row, col) = true;
+                                                static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                             }
                                         }
                                     }
-
                                     static_cast<RD53*>(cChip)->copyMaskFromDefault("en");
-                                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                 }
 
                                 if(((doDataIntegrity == 1) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0))) ||
                                    (badPixelsCounter == (RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE)))
+                                {
                                     regValueMap[su] ^= 1 << i;
+                                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
+                                }
                             }
                         }
 
