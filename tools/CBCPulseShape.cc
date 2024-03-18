@@ -44,7 +44,7 @@ void CBCPulseShape::Initialise(void)
 
     initializeRecycleBin();
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
     fCBCHistogramPulseShape.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -55,7 +55,6 @@ void CBCPulseShape::runCBCPulseShape(void)
     LOG(INFO) << "Taking Data with " << fEventsPerPoint << " triggers!";
 
     this->enableTestPulse(true);
-    setFWTestPulse();
     disableStubLogic();
 
     setSameDac("TestPulsePotNodeSel", fPulseAmplitude);

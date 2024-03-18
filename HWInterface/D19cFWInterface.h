@@ -85,13 +85,11 @@ class D19cFWInterface : public BeBoardFWInterface
     bool                       fOptical        = false;
     bool                       fUseOpticalLink = false;
     bool                       fConfigureCDCE  = false;
-    std::map<uint8_t, uint8_t> fRxPolarity;
-    std::map<uint8_t, uint8_t> fTxPolarity;
+
     // 2S or PS readout
     bool           fIs2S           = true;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
     // // I'm going to add a variable to hold the stub offset
-    uint32_t fStubOffset = 0xFFFF;
     // event counter
     uint32_t fEventCounter = 0;
 
@@ -225,9 +223,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
     // FMCs
     void InitFMCPower();
-    // set stub offset
-    void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
-    uint32_t getStubOffset() { return fStubOffset; };
 
   private:
     uint32_t fReadoutAttempts = 0;
@@ -321,8 +316,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void configureLinks(const Ph2_HwDescription::BeBoard* pBoard);
     void configureTxRxPolarities(const Ph2_HwDescription::BeBoard* pBoard);
     void configureLpGbtVersions(const Ph2_HwDescription::BeBoard* pBoard);
-    void setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
-    void setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 
     // CDCE
     void configureCDCE_old(uint16_t pClockRate = 120);
@@ -373,6 +366,9 @@ class D19cFWInterface : public BeBoardFWInterface
     void  ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
     float GetSFPParameter_L8(std::string parameter, int channel);
     float GetSFPParameter_L12(std::string parameter, int channel);
+
+    std::vector<uint32_t> L1ADebug(uint8_t pWait_ms, bool pPrint);
+    std::vector<std::vector<uint32_t>> StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint);
 };
 } // namespace Ph2_HwInterface
 

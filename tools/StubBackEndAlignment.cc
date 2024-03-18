@@ -478,8 +478,6 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     {
         LOG(INFO) << BOLDMAGENTA << "Stub offset set to " << cCorrectOffset - cReTime << " clock cycles." << RESET;
         pBoard->setStubOffset(cCorrectOffset - cReTime);
-        // TO-DO .. remove this
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime);
         // verification step
         // print to screen for now
         bool cConfirm = false;

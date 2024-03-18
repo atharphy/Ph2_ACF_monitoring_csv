@@ -173,7 +173,6 @@ class BeBoard : public BoardContainer
     std::string getAddressTable() const { return fAddressTable; }
 
     std::vector<FrontEndType> connectedFrontEndTypes() const;
-    int                       dummyValue_ = 1989;
 
     void dumpRegisters();
 
