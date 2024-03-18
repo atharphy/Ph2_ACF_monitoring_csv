@@ -115,8 +115,7 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
 {
     LOG(INFO) << BOLDBLUE << "Starting CIC automated word alignment procedure .... " << RESET;
     std::string theQueryFunction = "skipSSAQuery";
-    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip)
-    {
+    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
         return true;
     };

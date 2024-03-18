@@ -58,14 +58,12 @@ void DQMHistogramCalibrationExample::fillCalibrationExamplePlots(DetectorDataCon
                     // by chip and not in one shot)
                     if(chip->hasChannelContainer() == false) continue;
                     // Get channel data and fill the histogram
-                    for(auto channel: *chip->getChannelContainer<uint32_t>()) // for on channel - begin
-                    {
-                        chipHitHistogram->SetBinContent(channelBin++, channel);
-                    } // for on channel - end
-                }     // for on chip - end
-            }         // for on hybrid - end
-        }             // for on opticalGroup - end
-    }                 // for on boards - end
+                    for(auto channel: *chip->getChannelContainer<uint32_t>())   // for on channel - begin
+                    { chipHitHistogram->SetBinContent(channelBin++, channel); } // for on channel - end
+                }                                                               // for on chip - end
+            }                                                                   // for on hybrid - end
+        }                                                                       // for on opticalGroup - end
+    }                                                                           // for on boards - end
 }
 
 //========================================================================================================================

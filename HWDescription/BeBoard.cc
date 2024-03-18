@@ -213,8 +213,7 @@ void BeBoard::addFreeRegister(const std::regex& theRegisterName) { fListOfFreeRe
 std::unique_ptr<pugi::xml_document> BeBoard::createRegisterPugiDocument() const
 {
     std::function<void(std::string, std::vector<std::string>&)> splitRegister;
-    splitRegister = [&splitRegister](std::string theFullRegister, std::vector<std::string>& theSplittedRegister)
-    {
+    splitRegister = [&splitRegister](std::string theFullRegister, std::vector<std::string>& theSplittedRegister) {
         auto nextSplitPoint = theFullRegister.find(".");
         if(nextSplitPoint == std::string::npos)
         {
@@ -240,8 +239,7 @@ std::unique_ptr<pugi::xml_document> BeBoard::createRegisterPugiDocument() const
     }
 
     std::function<void(pugi::xml_node&, const std::vector<std::pair<std::vector<std::string>, uint32_t>>&)> groupByRegisterAndDumpIntoFile;
-    groupByRegisterAndDumpIntoFile = [&groupByRegisterAndDumpIntoFile](pugi::xml_node& theMotherNode, const std::vector<std::pair<std::vector<std::string>, uint32_t>>& theRegisterListSplitted)
-    {
+    groupByRegisterAndDumpIntoFile = [&groupByRegisterAndDumpIntoFile](pugi::xml_node& theMotherNode, const std::vector<std::pair<std::vector<std::string>, uint32_t>>& theRegisterListSplitted) {
         std::map<std::string, std::vector<std::pair<std::vector<std::string>, uint32_t>>> theMapOfTheRegisterListSplitted;
         for(const auto& theRegisterSplittedAndValue: theRegisterListSplitted)
         {
@@ -286,7 +284,10 @@ void BeBoard::saveRegMap(const std::string& fileName)
 {
     auto registerPugiDocument = createRegisterPugiDocument();
     if(registerPugiDocument->save_file(fileName.c_str())) { LOG(INFO) << BOLDGREEN << "XML file " << fileName << " created successfully." << RESET; }
-    else { LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET; }
+    else
+    {
+        LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+    }
 }
 
 std::stringstream BeBoard::getRegMapStream() const

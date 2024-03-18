@@ -132,8 +132,7 @@ class BitView
     }
 
     template <class T>
-    union U
-    {
+    union U {
         T                                   val;
         std::array<std::uint8_t, sizeof(T)> raw;
     };
@@ -216,7 +215,10 @@ class BitView
 
         int n_bits;
         if(first_block == last_block) { n_bits = bit_end - bit_start; }
-        else { n_bits = block_size - bit_start; }
+        else
+        {
+            n_bits = block_size - bit_start;
+        }
         _data[first_block] &= ~BitViewDetails::mid_mask<BlockType>(bit_start, bit_start + n_bits);
         BlockType new_value = (value >> (size() - n_bits)) & BitViewDetails::low_mask<T>(n_bits);
         if(bit_start + n_bits < block_size) { new_value <<= block_size - (bit_start + n_bits); }

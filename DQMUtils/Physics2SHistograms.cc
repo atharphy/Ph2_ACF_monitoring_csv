@@ -105,7 +105,10 @@ void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                     for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
                         if((int(channelNumber) % 2) == 0) { bottomSensorHistogram->Fill(int(channelNumber / 2) + 1, channel.fOccupancy); }
-                        else { topSensorHistogram->Fill(int(channelNumber / 2) + 1, channel.fOccupancy); }
+                        else
+                        {
+                            topSensorHistogram->Fill(int(channelNumber / 2) + 1, channel.fOccupancy);
+                        }
                         ++channelNumber;
                     }
                 }

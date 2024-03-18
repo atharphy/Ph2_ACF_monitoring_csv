@@ -160,7 +160,8 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
         LOG(DEBUG) << cMaxBxCounter << RESET;
         size_t cAttempt = 0;
-        do {
+        do
+        {
             LOG(INFO) << BOLDMAGENTA << "Package delay alignment attempt#" << +cAttempt << RESET;
             for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
             {
@@ -230,9 +231,7 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
 
                             uint8_t cMatchFound = (cBxIds[cIdFirst] == cBxIds[cIdSecond]);
                             if(cMatchFound)
-                            {
-                                LOG(INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET;
-                            }
+                            { LOG(INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET; }
                             else
                                 LOG(INFO) << BOLDRED << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " DO NOT match.. " << RESET;
                             cMatchesFound.push_back(cMatchFound);
@@ -276,9 +275,7 @@ bool OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
                                     cNRollOvers += ((cPreviousBxId >= 2500) && (cPreviousBxId < cMaxBxCounter)) && (cBxId < cPreviousBxId) ? 1 : 0;
                                     cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxId % cMaxBxCounter) - cBxDifference;
                                     if(cBxId > (int)cDelayAfterTP)
-                                    {
-                                        LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
-                                    }
+                                    { LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET; }
                                     else
                                         LOG(INFO) << BOLDRED << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
                                     cBxDifferences.push_back(cBxDifference);

@@ -3207,7 +3207,10 @@ void Logger::log_(Level level, int vlevel, const T& log)
             releaseLock();
         }
     }
-    else { base::Writer(level, "FILE", 0, "FUNCTION").construct(this, false) << log; }
+    else
+    {
+        base::Writer(level, "FILE", 0, "FUNCTION").construct(this, false) << log;
+    }
 }
 template <typename T, typename... Args>
 inline void Logger::log(Level level, const char* s, const T& value, const Args&... args)
@@ -3429,9 +3432,7 @@ class DefaultPerformanceTrackingCallback : public PerformanceTrackingCallback
         m_data = data;
         base::type::stringstream_t ss;
         if(m_data->dataType() == PerformanceTrackingData::DataType::Complete)
-        {
-            ss << ELPP_LITERAL("Executed [") << m_data->blockName()->c_str() << ELPP_LITERAL("] in [") << *m_data->formattedTimeTaken() << ELPP_LITERAL("]");
-        }
+        { ss << ELPP_LITERAL("Executed [") << m_data->blockName()->c_str() << ELPP_LITERAL("] in [") << *m_data->formattedTimeTaken() << ELPP_LITERAL("]"); }
         else
         {
             ss << ELPP_LITERAL("Performance checkpoint");
@@ -3441,10 +3442,16 @@ class DefaultPerformanceTrackingCallback : public PerformanceTrackingCallback
             {
                 ss << ELPP_LITERAL(" ([") << *m_data->formattedTimeTaken() << ELPP_LITERAL("] from ");
                 if(m_data->performanceTracker()->m_lastCheckpointId.empty()) { ss << ELPP_LITERAL("last checkpoint"); }
-                else { ss << ELPP_LITERAL("checkpoint '") << m_data->performanceTracker()->m_lastCheckpointId.c_str() << ELPP_LITERAL("'"); }
+                else
+                {
+                    ss << ELPP_LITERAL("checkpoint '") << m_data->performanceTracker()->m_lastCheckpointId.c_str() << ELPP_LITERAL("'");
+                }
                 ss << ELPP_LITERAL(")]");
             }
-            else { ss << ELPP_LITERAL("]"); }
+            else
+            {
+                ss << ELPP_LITERAL("]");
+            }
         }
         el::base::Writer(m_data->performanceTracker()->level(), m_data->file(), m_data->line(), m_data->func()).construct(1, m_data->loggerId().c_str()) << ss.str();
     }

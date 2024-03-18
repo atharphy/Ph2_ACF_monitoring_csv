@@ -88,7 +88,10 @@ void DACScan::run(std::string configFile)
                             }
 
                             if(input > 0) { DNLcode[variable][input] = DACcode[variable][input] - DACcode[variable][input - 1] - 1; }
-                            else { DNLcode[variable][0] = 0; }
+                            else
+                            {
+                                DNLcode[variable][0] = 0;
+                            }
                             INLcode[variable][input] = DACcode[variable][input] - DACcode[variable][0] - input;
                         }
                     }
