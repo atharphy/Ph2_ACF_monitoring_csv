@@ -1211,7 +1211,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             {
                 if(cName.find(CHIP_FILES_APPEND_NODE_NAME) != std::string::npos)
                     cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value()));
-                else if(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true)
+                else if(!(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME)) || (cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true))
                 {
                     int         cChipId   = cChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int();
                     std::string cFileName = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value()));
