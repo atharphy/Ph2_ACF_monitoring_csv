@@ -11,7 +11,7 @@
 ## or when the CI config is changed
 
 workflow:
-  rules:
+    rules:
     - if: $CI_MERGE_REQUEST_ID || $CI_PIPELINE_SOURCE == "web"
       when: always
     - if: '$CI_PIPELINE_SOURCE == "push"'
@@ -39,11 +39,13 @@ stages:
   - check
   - deploy
 
-## QUALITY ##########
 
 include:
+  ## DOCS #############
+  - project: 'authoring/documentation/mkdocs-ci'
+    file: 'mkdocs-gitlab-pages.gitlab-ci.yml'
+  ## QUALITY ##########
   - .gitlab/ci/code-quality.yml
-
 
 ## BUILD C7 ##########
 
