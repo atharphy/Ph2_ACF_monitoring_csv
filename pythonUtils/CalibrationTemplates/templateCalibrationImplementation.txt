@@ -17,7 +17,7 @@ void CLASS_NAME_TEMPLATE::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramCLASS_NAME_TEMPLATE.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

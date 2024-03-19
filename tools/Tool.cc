@@ -978,17 +978,9 @@ void Tool::setFWTestPulse()
             EventType cEventType = cBoard->getEventType();
             bool      cAsync     = (cEventType == EventType::PSAS);
 
-            if(!cAsync)
-            {
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-            }
-            else
-            {
-                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET;
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
-                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-            }
+            if(!cAsync) cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source",  6});
+            else        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
+            cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             break;
         }
 
@@ -1200,7 +1192,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
     ReadoutChip*           cReadoutChip        = fDetectorContainer->getObject(boardId)->getFirstObject()->getFirstObject()->getFirstObject(); // assumption: one BeBoard has only one type of chip;
     bool                   localDAC            = cReadoutChip->isDACLocal(dacName);
     uint8_t                numberOfBits        = cReadoutChip->getNumberOfBits(dacName);
-    LOG(INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
     bool                   occupanyDirectlyProportionalToDAC;
     DetectorDataContainer* previousStepOccupancyContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
@@ -1222,24 +1214,24 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *previousDacList, allZeroRegister);
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *currentDacList, allOneRegister);
     }
-    LOG(INFO) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allZeroRegister << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allZeroRegister << RESET;
     if(localDAC)
         setAllLocalDacBeBoard(boardId, dacName, *previousDacList);
     else
         setAllGlobalDacBeBoard(boardId, dacName, *previousDacList);
 
     fDetectorDataContainer = previousStepOccupancyContainer;
-    LOG(INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
     measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 
-    LOG(INFO) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allOneRegister << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allOneRegister << RESET;
     if(localDAC)
         setAllLocalDacBeBoard(boardId, dacName, *currentDacList);
     else
         setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
     fDetectorDataContainer = currentStepOccupancyContainer;
-    LOG(INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
     measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 
     // This fails sometimes depending on settings, need to make it an option...
@@ -1265,7 +1257,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
 
     for(int iBit = numberOfBits - 1; iBit >= 0; --iBit)
     {
-        LOG(INFO) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Bit number " << +iBit << " of " << dacName << RESET;
         for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -2304,7 +2296,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
 // Set same local dac for all BeBoard
 void Tool::setSameLocalDac(const std::string& dacName, const uint16_t dacValue)
 {
-    LOG(INFO) << BOLDMAGENTA << "Setting local dac [ " << dacName << " ] to " << dacValue << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Setting local dac [ " << dacName << " ] to " << dacValue << RESET;
     for(auto cBoard: *fDetectorContainer) { setSameLocalDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 
     return;
