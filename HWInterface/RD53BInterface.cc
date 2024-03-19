@@ -756,7 +756,11 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t GlbPulseVal  = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", 1 << 12 | data, false);    // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
-    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // The conversion is bad if we changing the mux setting too soon after
+    // After the muxes have been configured, some time has to pass before the voltage is stable (RC circuit)
+    // The amount of time depends on the particular signal and on the capacitance connected to VMUX/IMUX
+    // 100 ms should be enough to properly sample all voltages from VMUX on UZH SCCs and on modules (22 nF)
+    // On Bonn SCCs (100 nF), 100 ms are too short for RADSENS, and should be raised to 500 ms
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // ########################################################
     // # Sample data multiple times for better value estimate #
