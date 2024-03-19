@@ -824,6 +824,15 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // load trigger configuration
     // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     fTriggerInterface->ResetTriggerFSM();
+    uint16_t cAttempts                = 0;
+    uint16_t cMaxAttempts             = 5;
+    bool     cL1ReadoutInterfaceReset = false;
+    while(!cL1ReadoutInterfaceReset && (cAttempts < cMaxAttempts))
+    {
+        cL1ReadoutInterfaceReset = fL1ReadoutInterface->ResetReadout();
+        cAttempts++;
+    }
+    if(!cL1ReadoutInterfaceReset) { LOG(WARNING) << BOLDYELLOW << "Reseting DDR3 failed!" << RESET; }
     fL1ReadoutInterface->ResetReadout();
     // reset trigger
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
