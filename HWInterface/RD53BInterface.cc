@@ -828,7 +828,10 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         LOG(ERROR) << BOLDRED << "Invalid temperature sensor" << RESET;
         return -HUGE_VALF; // unphysically low temperature as error
     }
-    const float idealityFactor = pChip->getRegItem(iterator->second).fValue / 1e3;
+    float idealityFactor = 0;
+    if (iterator->second != "") {
+        idealityFactor = pChip->getRegItem(iterator->second).fValue / 1e3;
+    }
 
     uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
     float    valueLow  = 0;
