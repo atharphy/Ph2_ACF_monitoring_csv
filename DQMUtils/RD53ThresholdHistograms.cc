@@ -24,8 +24,8 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
     auto           frontEnd       = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2);
     const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->thresholdRegs[0])) + 1;
 
-    auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
-    bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");
+    auto hThreshold = CanvasContainer<TH1F>("Threshold", "Threshold", rangeThreshold, 0, rangeThreshold);
+    bookImplementer(theOutputFile, theDetectorStructure, Threshold, hThreshold, "Threshold", "Entries");
 
     AreHistoBooked = true;
 }
@@ -52,15 +52,15 @@ void ThresholdHistograms::fill(const DetectorDataContainer& DataContainer)
                 {
                     if(cChip->hasSummary() == false) continue;
 
-                    auto* hThrehsold = Threhsold.getObject(cBoard->getId())
+                    auto* hThreshold = Threshold.getObject(cBoard->getId())
                                            ->getObject(cOpticalGroup->getId())
                                            ->getObject(cHybrid->getId())
                                            ->getObject(cChip->getId())
                                            ->getSummary<CanvasContainer<TH1F>>()
                                            .fTheHistogram;
 
-                    hThrehsold->Fill(cChip->getSummary<uint16_t>());
+                    hThreshold->Fill(cChip->getSummary<uint16_t>());
                 }
 }
 
-void ThresholdHistograms::process() { draw<TH1F>(Threhsold); }
+void ThresholdHistograms::process() { draw<TH1F>(Threshold); }

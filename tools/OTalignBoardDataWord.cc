@@ -290,7 +290,7 @@ bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* the
         isLineAligned = theAlignerInterface->IsLineWordAligned();
         if(!isLineAligned)
         {
-            LOG(INFO) << BOLDYELLOW << "Alignment on line " << lineId << " failed, retrying " << maxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
+            LOG(INFO) << BOLDYELLOW << "Alignment on line " << +lineId << " failed, retrying " << maxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
             theHybridAlignmentRetryVector[lineId]++;
         }
     }

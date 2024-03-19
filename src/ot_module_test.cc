@@ -891,7 +891,9 @@ int main(int argc, char* argv[])
                             // and that readout mode is set
                             // make sure L1 latency is configured
                             if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
-                            { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
+                            {
+                                (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01);
+                            }
                             if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
@@ -1362,7 +1364,7 @@ int main(int argc, char* argv[])
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
         cBeamTestCheck.writeObjects();
-        cBeamTestCheck.Reset();
+        // cBeamTestCheck.Reset();
     }
 
     if(!cmd.foundOption("read") && cmd.foundOption("ExternalCheck"))

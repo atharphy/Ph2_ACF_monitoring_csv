@@ -637,7 +637,7 @@ void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t ro
 // # Dedicated to monitoring #
 // ###########################
 
-uint32_t RD53BInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)
+int RD53BInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)
 // ############################################
 // # Possible observable name values are also #
 // # - INTERNAL_NTC                           #

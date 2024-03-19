@@ -69,21 +69,21 @@ void D19cBackendAlignmentFWInterface::Print()
                                                     {14, "TunedPHASE"},
                                                     {15, "Unknown"}};
     std::map<int, std::string> cWordFSMStateMap  = {{0, "IdleWORD or WaitIserdese"},
-                                                   {1, "WaitFrame"},
-                                                   {2, "ApplyBitslip"},
-                                                   {3, "WaitBitslip"},
-                                                   {4, "PatternVerification"},
-                                                   {5, "Not Defined"},
-                                                   {6, "Not Defined"},
-                                                   {7, "Not Defined"},
-                                                   {8, "Not Defined"},
-                                                   {9, "Not Defined"},
-                                                   {10, "Not Defined"},
-                                                   {11, "Not Defined"},
-                                                   {12, "FailedFrame"},
-                                                   {13, "FailedVerification"},
-                                                   {14, "TunedWORD"},
-                                                   {15, "Unknown"}};
+                                                    {1, "WaitFrame"},
+                                                    {2, "ApplyBitslip"},
+                                                    {3, "WaitBitslip"},
+                                                    {4, "PatternVerification"},
+                                                    {5, "Not Defined"},
+                                                    {6, "Not Defined"},
+                                                    {7, "Not Defined"},
+                                                    {8, "Not Defined"},
+                                                    {9, "Not Defined"},
+                                                    {10, "Not Defined"},
+                                                    {11, "Not Defined"},
+                                                    {12, "FailedFrame"},
+                                                    {13, "FailedVerification"},
+                                                    {14, "TunedWORD"},
+                                                    {15, "Unknown"}};
 
     if(fAlignerObject.fType == 0 && fVerbose == 3)
     {
@@ -215,7 +215,9 @@ Reply D19cBackendAlignmentFWInterface::TunePhase(AlignerObject pAlignerObject, L
     fLineConfiguration.fMode = fAlignmentModes["Auto"];
     SendCommand("Configure");
     if(fAlignerObject.fOptical == 0) // only applies for electrical
-    { SendCommand("SetPatternLength"); }
+    {
+        SendCommand("SetPatternLength");
+    }
     SendCommand("TunePhase");
     ClearStatus();
     SendCommand("ReturnResult");

@@ -28,7 +28,7 @@ void LatencyHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
     auto hLatency = CanvasContainer<TH1F>("Latency", "Latency", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
     bookImplementer(theOutputFile, theDetectorStructure, Latency, hLatency, "Latency (n.bx)", "Entries");
 
-    auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency Scan", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
+    auto hOcc1D = CanvasContainer<TH1F>("LatencyScan", "Latency scan", stopValue - startValue + nTRIGxEvent, startValue, stopValue + nTRIGxEvent);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Latency (n.bx)", "Efficiency");
 
     AreHistoBooked = true;

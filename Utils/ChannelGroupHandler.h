@@ -148,7 +148,9 @@ class ChannelGroup : public ChannelGroupBase
                     for(uint16_t clusterRow = 0; clusterRow < numberOfRowsPerCluster; ++clusterRow)
                     {
                         for(uint16_t clusterCol = 0; clusterCol < numberOfColsPerCluster; ++clusterCol)
-                        { static_cast<ChannelGroup<R, C>*>(currentChannelGroup.get())->enableChannel(row + clusterRow, col + clusterCol); }
+                        {
+                            static_cast<ChannelGroup<R, C>*>(currentChannelGroup.get())->enableChannel(row + clusterRow, col + clusterCol);
+                        }
                     }
                 }
             }

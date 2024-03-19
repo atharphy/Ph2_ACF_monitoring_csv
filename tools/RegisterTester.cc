@@ -861,7 +861,9 @@ void RegisterTester::RegisterTest()
                                       << " sensitive registers." << RESET;
                         std::sort(cSensitiveRegisters.begin(), cSensitiveRegisters.end(), customGreaterThanAddress);
                         for(auto cSensitiveRegister: cSensitiveRegisters)
-                        { LOG(INFO) << BOLDRED << "Sensitive register " << cSensitiveRegister.first << " on page " << +cSensitiveRegister.second.fPage << RESET; }
+                        {
+                            LOG(INFO) << BOLDRED << "Sensitive register " << cSensitiveRegister.first << " on page " << +cSensitiveRegister.second.fPage << RESET;
+                        }
                     } // chip
                 }     // hybrid
             }         // OG
@@ -1183,7 +1185,7 @@ void RegisterTester::ReconfigureRegisters(std::string pDirectoryName)
                     std::string pRegFile;
 
                     if(pDirectoryName.empty())
-                        pRegFile = "settings/CbcFiles/Cbc_default_electron.txt";
+                        pRegFile = "settings/CbcFiles/CBC3_default.txt";
                     else
                     {
                         char buffer[120];

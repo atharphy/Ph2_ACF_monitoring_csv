@@ -148,8 +148,8 @@ class RD53Event : public Ph2_HwInterface::Event
     static bool findEventStarts(const std::vector<uint32_t>& data, std::vector<size_t>& eventStarts, uint32_t& eventStatus);
     static void ForkDecodingThreads();
     static void JoinDecodingThreads();
-    static void DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus);
-    static void DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint32_t& eventStatus);
+    static void DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus, bool silentRunning = false);
+    static void DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint32_t& eventStatus, bool silentRunning = false);
     static bool EvtErrorHandler(uint32_t status);
     static void PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData = {});
     static void MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
@@ -185,6 +185,7 @@ class RD53Event : public Ph2_HwInterface::Event
 
     static std::condition_variable thereIsWork2Do;
     static std::atomic<bool>       keepDecodersRunning;
+    static std::atomic<bool>       silentRunning;
     static std::mutex              theMtx;
 };
 

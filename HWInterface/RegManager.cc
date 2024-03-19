@@ -272,7 +272,7 @@ std::vector<uint32_t> RegManager::ReadBlockReg(const std::string& pRegNode, cons
 
     if(mode == Mode::Capture) captureBlockRead(cBlockRead.value());
 
-    return std::move(cBlockRead.value());
+    return cBlockRead.value();
 }
 
 std::vector<uint32_t> RegManager::ReadBlockRegOffset(const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset)
@@ -296,7 +296,7 @@ std::vector<uint32_t> RegManager::ReadBlockRegOffset(const std::string& pRegNode
 
     if(mode == Mode::Capture) captureBlockRead(cBlockRead.value());
 
-    return std::move(cBlockRead.value());
+    return cBlockRead.value();
 }
 
 void RegManager::StackReg(const std::string& pRegNode, const uint32_t& pVal, bool pSend)

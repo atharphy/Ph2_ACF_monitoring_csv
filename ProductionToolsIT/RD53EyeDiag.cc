@@ -141,10 +141,7 @@ void EyeDiag::run(std::string runName)
                             error << "Measurement " << measurements[i] << " not defiend as an available observable. Please add it to kMeasurementMap";
                             throw std::runtime_error(error.str());
                         }
-                        else
-                        {
-                            value[kMeasurementMap[measurements.at(i)]] = obs_result;
-                        }
+                        else { value[kMeasurementMap[measurements.at(i)]] = obs_result; }
                     }
                     theEyeDiagContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())

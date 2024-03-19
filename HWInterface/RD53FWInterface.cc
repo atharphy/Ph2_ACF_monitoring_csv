@@ -445,9 +445,8 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
     uint32_t              channel_up;
     int                   nAttempts = 0;
-    std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
-    do
-    {
+    std::vector<uint16_t> initSequence(RD53Shared::firstChip->getLaneUpInitSequence());
+    do {
         // ###############################################
         // # Send sequence to help frontend chip to lock #
         // ###############################################
@@ -622,8 +621,7 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // # Wait for a stable number of words to read #
     // #############################################
     nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read");
-    do
-    {
+    do {
         nWordsInMemoryOld = nWordsInMemory;
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     } while(((nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read")) != nWordsInMemoryOld) && (pWait == true));
@@ -676,8 +674,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
-    do
-    {
+    do {
         retry = false;
         nAttempts++;
         pData.clear();
@@ -700,10 +697,10 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ###################
         // # Decoding events #
         // ###################
-        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
-        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status); // Decode events with a single thread
+        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status, RD53FWInterface::silentRunning); // Decode events with multiple threads
+        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status, RD53FWInterface::silentRunning); // Decode events with a single thread
 
-        if(RD53Event::EvtErrorHandler(status) == false)
+        if((RD53FWInterface::silentRunning == false) && (RD53Event::EvtErrorHandler(status) == false))
         {
             NtrialsNevents++;
             retry = true;
@@ -713,8 +710,9 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         if(RD53Event::decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
         {
             NtrialsNevents++;
-            LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
-                       << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
+            if(RD53FWInterface::silentRunning == false)
+                LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
+                           << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
             continue;
         }
@@ -723,7 +721,8 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     if(retry == true)
     {
-        LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
+        if(RD53FWInterface::silentRunning == false)
+            LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
         NcorruptedNevents++;
     }

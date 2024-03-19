@@ -67,6 +67,9 @@ class SSA2 : public ReadoutChip
             return 8;
     }
 
+    bool                          isTopSensor(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn = 0) override;
+    std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow) override;
+
   protected:
 }; // close class def
 

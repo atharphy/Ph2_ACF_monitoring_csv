@@ -58,7 +58,7 @@ class CanvasContainer : public PlotContainer
   public:
     CanvasContainer() : fTheHistogram(nullptr), fCanvas(nullptr) {}
 
-    CanvasContainer(const CanvasContainer<Hist>& container) = delete;
+    CanvasContainer(const CanvasContainer<Hist>& container)                  = delete;
     CanvasContainer<Hist>& operator=(const CanvasContainer<Hist>& container) = delete;
 
     template <class... Args>

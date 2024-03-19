@@ -87,6 +87,9 @@ class Cbc : public ReadoutChip
         else
             return 8;
     }
+
+    bool                          isTopSensor(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn) override;
+    std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow) override;
 };
 } // namespace Ph2_HwDescription
 

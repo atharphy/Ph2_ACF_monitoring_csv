@@ -31,7 +31,7 @@ class ThresholdHistograms : public DQMHistogramBase
   private:
     DetectorContainer* fDetectorContainer;
 
-    DetectorDataContainer Threhsold;
+    DetectorDataContainer Threshold;
 };
 
 #endif

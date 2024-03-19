@@ -168,7 +168,7 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerify, uint32_t pBlockSize)
 bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
-    LOG(DEBUG) << BOLDMAGENTA << "CicInterface::WriteChipReg trying to write to register 0x" << pRegNode << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "CicInterface::WriteChipReg trying to write to register 0x" << pRegNode << RESET;
     ChipRegMap cRegMap       = pChip->getRegMap();
     cRegMap[pRegNode].fValue = pValue;
     return fBoardFW->SingleRegisterWrite(pChip, cRegMap[pRegNode], pVerify);
@@ -199,7 +199,7 @@ bool CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std
 uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
     setBoard(pChip->getBeBoardId());
-    LOG(DEBUG) << BOLDMAGENTA << "CicInterface::ReadChipReg(string) Register " << pRegNode << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "CicInterface::ReadChipReg(string) Register " << pRegNode << RESET;
 
     ChipRegMap cRegMap = pChip->getRegMap();
     if(cRegMap.find(pRegNode) == cRegMap.end()) { LOG(INFO) << BOLDRED << "Could not find CIC register " << pRegNode << RESET; }
@@ -556,9 +556,9 @@ bool CicInterface::PhaseAlignerPorts(Chip* pChip, uint8_t pState)
 }
 bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
 {
-    LOG(DEBUG) << BOLDBLUE << "Resetting CIC phase aligner..." << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "Resetting CIC phase aligner..." << RESET;
     // apply a channel reset
-    LOG(DEBUG) << BOLDBLUE << "\t.... Enabling RESET on all phase aligner inputs" << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "\t.... Enabling RESET on all phase aligner inputs" << RESET;
     std::vector<std::pair<std::string, uint16_t>> resetEnableRegisterVector;
     resetEnableRegisterVector.push_back({"scResetChannels0", 0xFF});
     resetEnableRegisterVector.push_back({"scResetChannels1", 0xFF});
@@ -567,7 +567,7 @@ bool CicInterface::ResetPhaseAligner(Chip* pChip, uint16_t pWait_ms)
     std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
     // this->CheckPhaseAlignerLock(pChip, 0x00);
     // release channel reset
-    LOG(DEBUG) << BOLDBLUE << "\t... Disabling RESET on all phase aligner inputs" << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "\t... Disabling RESET on all phase aligner inputs" << RESET;
     std::vector<std::pair<std::string, uint16_t>> resetDiasbleRegisterVector;
     resetDiasbleRegisterVector.push_back({"scResetChannels0", 0x00});
     resetDiasbleRegisterVector.push_back({"scResetChannels1", 0x00});
@@ -746,7 +746,8 @@ GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> Ci
     std::unordered_map<std::string, uint8_t> phaseRegisterMap;
     for(const auto& registerNameAndValue: phaseRegisterValueVector) phaseRegisterMap[registerNameAndValue.first] = registerNameAndValue.second;
 
-    auto getPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel) {
+    auto getPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel)
+    {
         std::stringstream phaseRegisterName;
         phaseRegisterName << "scPhaseSelectB" << +channel << "o" << +phyPort / 2;
         return (phaseRegisterMap.at(phaseRegisterName.str()) >> (phyPort % 2 * 4)) & 0xF;
@@ -788,7 +789,8 @@ GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicIn
     std::unordered_map<std::string, uint8_t> isLockedRegisterMap;
     for(const auto& registerNameAndValue: isLockedRegisterValueVector) isLockedRegisterMap[registerNameAndValue.first] = registerNameAndValue.second;
 
-    auto isLocked = [&isLockedRegisterMap](uint8_t phyPort, uint8_t channel) {
+    auto isLocked = [&isLockedRegisterMap](uint8_t phyPort, uint8_t channel)
+    {
         std::stringstream isLockedRegisterName;
         isLockedRegisterName << "scChannelLocked" << +phyPort / 2;
         bool isLocked = (isLockedRegisterMap.at(isLockedRegisterName.str()) >> (phyPort % 2 * 4 + channel)) & 0x1;
@@ -823,7 +825,8 @@ GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicIn
 bool CicInterface::writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> cicInputTaps)
 {
     std::unordered_map<std::string, uint8_t> phaseRegisterMap;
-    auto                                     setPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel, uint8_t phase) {
+    auto                                     setPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel, uint8_t phase)
+    {
         std::stringstream phaseRegisterName;
         phaseRegisterName << "scPhaseSelectB" << +channel << "i" << +phyPort / 2;
         auto& theCurrentRegisterValue = phaseRegisterMap[phaseRegisterName.str()];
@@ -1172,7 +1175,8 @@ bool CicInterface::StartUp(Chip* pChip)
     auto opticalGroupId = pChip->getOpticalGroupId();
     auto hybridId       = pChip->getOpticalGroupId();
 
-    auto exceptionHandleFunction = [boardId, opticalGroupId, hybridId, this](const std::string&& failMode) {
+    auto exceptionHandleFunction = [boardId, opticalGroupId, hybridId, this](const std::string&& failMode)
+    {
         LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +boardId << " OpticalGroup id " << +opticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(boardId, opticalGroupId, hybridId);
     };
