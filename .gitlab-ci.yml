@@ -31,6 +31,8 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
 stages:
+  - validation
+  - pages
   - quality
   - build_c7
   - build_al8
