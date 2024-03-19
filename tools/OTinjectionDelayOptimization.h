@@ -40,7 +40,9 @@ class OTinjectionDelayOptimization : public Tool
     void injectionDelayScan2S();
     void injectionDelayScanPS();
 
-    uint8_t fCbcTestPulseValue {100};
+    uint32_t fNumberOfEvents {100};
+    uint8_t fCbcTestPulseValue {150};
+    float fCbcNumberOfSigmaNoiseAwayFromPedestal {10.};
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

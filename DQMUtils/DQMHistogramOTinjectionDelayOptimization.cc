@@ -25,9 +25,16 @@ void DQMHistogramOTinjectionDelayOptimization::book(TFile* theOutputFile, Detect
 
     HistContainer<TH1I> thresholdVsDelayHistogram("ThresholdVsDelayScan", "Threshold Vs Delay Scan", 150, -0.5, 150 - 0.5);
     thresholdVsDelayHistogram.fTheHistogram->GetXaxis()->SetTitle("Delay [ns]");
-    thresholdVsDelayHistogram.fTheHistogram->GetYaxis()->SetTitle("50% threshold");
+    thresholdVsDelayHistogram.fTheHistogram->GetYaxis()->SetTitle("50% threshold [VcTh]");
     thresholdVsDelayHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fThresholdVsDelayScanHistogramContainer, thresholdVsDelayHistogram);
+
+    HistContainer<TH1I> bestThresholdAndDelayHistogram("BestThresholdAndDelay", "Best Threshold And Delay", 150, -0.5, 150 - 0.5);
+    bestThresholdAndDelayHistogram.fTheHistogram->GetXaxis()->SetTitle("Best delay [ns]");
+    bestThresholdAndDelayHistogram.fTheHistogram->GetYaxis()->SetTitle("Best threshold [VcTh]");
+    bestThresholdAndDelayHistogram.fTheHistogram->SetStats(false);
+    bestThresholdAndDelayHistogram.fTheHistogram->SetMarkerStyle(47);
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fBestThresholdAndDelayHistogramContainer, bestThresholdAndDelayHistogram);
 }
 
 //========================================================================================================================
@@ -50,6 +57,27 @@ void DQMHistogramOTinjectionDelayOptimization::fillThresholdVsDelayScan(uint16_t
     }
 }
 
+//========================================================================================================================
+void DQMHistogramOTinjectionDelayOptimization::fillBestThresholdAndDelay(DetectorDataContainer& theBestThresholdAndDelayContainer)
+{
+    for(auto theBoard: theBestThresholdAndDelayContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                for(auto theChip: *theHybrid)
+                {
+                    if(!theChip->hasSummary()) continue;
+                    auto theHistogram = fBestThresholdAndDelayHistogramContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
+                    const auto& theBestThresholdAndDelay = theChip->getSummary<std::pair<float, uint16_t>>();
+                    theHistogram->SetBinContent(theBestThresholdAndDelay.second + 1, theBestThresholdAndDelay.first);
+                    theHistogram->SetBinError(theBestThresholdAndDelay.second + 1, 1);
+                }
+            }
+        }
+    }
+}
 
 //========================================================================================================================
 void DQMHistogramOTinjectionDelayOptimization::process()
@@ -70,6 +98,7 @@ bool DQMHistogramOTinjectionDelayOptimization::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
     ContainerSerialization theDelayScanSerialization("OTinjectionDelayOptimizationDelayScan");
+    ContainerSerialization theBestValuesSerialization("OTinjectionDelayOptimizationBestValues");
 
     if(theDelayScanSerialization.attachDeserializer(inputStream))
     {
@@ -77,6 +106,13 @@ bool DQMHistogramOTinjectionDelayOptimization::fill(std::string& inputStream)
         uint16_t              delayValue;
         DetectorDataContainer theDetectorData = theDelayScanSerialization.deserializeOpticalGroupContainer<EmptyContainer, uint16_t, EmptyContainer, EmptyContainer>(fDetectorContainer, delayValue);
         fillThresholdVsDelayScan(delayValue, theDetectorData);
+        return true;
+    }
+    if(theBestValuesSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTinjectionDelayOptimization BestValues!!!!!\n";
+        DetectorDataContainer theDetectorData = theBestValuesSerialization.deserializeOpticalGroupContainer<EmptyContainer, std::pair<float, uint16_t>, EmptyContainer, EmptyContainer>(fDetectorContainer);
+        fillBestThresholdAndDelay(theDetectorData);
         return true;
     }
 

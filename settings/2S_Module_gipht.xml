@@ -305,6 +305,9 @@
     <Setting name="OTCICphaseAlignmentMinLockingSuccessRate">0.95</Setting>
     <Setting name="OTverifyCICdataWordNumberOfIterations">1000</Setting>
     
+    <Setting name="OTinjectionDelayOptimizationNumberOfEvents">100</Setting>
+    <Setting name="OTinjectionDelayOptimizationCbcTestPulseValue">250</Setting> <!-- 218 roughly correspond to 1 MIP in 290um silicon-->
+    <Setting name="OTinjectionDelayOptimizationCbcNumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 </Settings>
 
 

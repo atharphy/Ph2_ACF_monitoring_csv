@@ -56,10 +56,12 @@ class DQMHistogramOTinjectionDelayOptimization : public DQMHistogramBase
     void reset(void) override;
 
     void fillThresholdVsDelayScan(uint16_t delay, DetectorDataContainer& theThresholdContainer);
+    void fillBestThresholdAndDelay(DetectorDataContainer& theBestThresholdAndDelayContainer);
 
   private:
     DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fThresholdVsDelayScanHistogramContainer;
+    DetectorDataContainer fBestThresholdAndDelayHistogramContainer;
 
 };
 #endif
