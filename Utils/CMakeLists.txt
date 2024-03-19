@@ -92,8 +92,12 @@ else()
     cet_make(LIBRARY_NAME Ph2_Utils
              LIBRARIES
              pthread
-             Boost::headers
-             ${Boost_LIBRARIES}
+             Boost::serialization
+             Boost::thread
+             Boost::date_time
+             Boost::iostreams
+             Boost::filesystem
+#             ${Boost_LIBRARIES}
              EXCLUDE UsbUtilities.h UsbUtilities.cc
             )
 
