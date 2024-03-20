@@ -19,24 +19,17 @@ namespace Ph2_HwInterface
 {
 PSInterface::PSInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap)
 {
-    theSSAInterface                                                     = static_cast<SSAInterface*>(new SSAInterface(pBoardMap));
-    theMPAInterface                                                     = static_cast<MPAInterface*>(new MPAInterface(pBoardMap));
-    theSSA2Interface                                                    = static_cast<SSA2Interface*>(new SSA2Interface(pBoardMap));
-    theMPA2Interface                                                    = static_cast<MPA2Interface*>(new MPA2Interface(pBoardMap));
-    const std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE1 = {
-        {FrontEndType::SSA, theSSAInterface}, {FrontEndType::SSA2, theSSA2Interface}, {FrontEndType::MPA, theMPAInterface}, {FrontEndType::MPA2, theMPA2Interface}};
-    CHIP_INTERFACE = CHIP_INTERFACE1;
+    fTheSSA2Interface                                                   = static_cast<SSA2Interface*>(new SSA2Interface(pBoardMap));
+    fTheMPA2Interface                                                   = static_cast<MPA2Interface*>(new MPA2Interface(pBoardMap));
+    const std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE1 = {{FrontEndType::SSA2, fTheSSA2Interface}, {FrontEndType::MPA2, fTheMPA2Interface}};
+    CHIP_INTERFACE                                                      = CHIP_INTERFACE1;
 }
 PSInterface::~PSInterface() {}
 
 ReadoutChipInterface* PSInterface::getInterface(Chip* pPS)
 {
-    if(pPS->getFrontEndType() == FrontEndType::SSA)
-        return static_cast<SSAInterface*>((CHIP_INTERFACE.find(pPS->getFrontEndType()))->second);
-    else if(pPS->getFrontEndType() == FrontEndType::SSA2)
+    if(pPS->getFrontEndType() == FrontEndType::SSA2)
         return static_cast<SSA2Interface*>((CHIP_INTERFACE.find(pPS->getFrontEndType()))->second);
-    else if(pPS->getFrontEndType() == FrontEndType::MPA)
-        return static_cast<MPAInterface*>((CHIP_INTERFACE.find(pPS->getFrontEndType()))->second);
     else if(pPS->getFrontEndType() == FrontEndType::MPA2)
         return static_cast<MPA2Interface*>((CHIP_INTERFACE.find(pPS->getFrontEndType()))->second);
     else
@@ -52,8 +45,7 @@ ReadoutChipInterface* PSInterface::getInterface(Chip* pPS)
 std::vector<uint8_t> PSInterface::readLUT(ReadoutChip* pPS, uint8_t pMode)
 {
     std::vector<uint8_t> cLUT(0);
-    if(pPS->getFrontEndType() == FrontEndType::MPA) { cLUT = theMPAInterface->readLUT(pPS, pMode); }
-    if(pPS->getFrontEndType() == FrontEndType::MPA2) { cLUT = theMPA2Interface->readLUT(pPS, pMode); }
+    if(pPS->getFrontEndType() == FrontEndType::MPA2) { cLUT = fTheMPA2Interface->readLUT(pPS, pMode); }
     return cLUT;
 }
 bool PSInterface::setInjectionSchema(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop) { return getInterface(pPS)->setInjectionSchema(pPS, group, pVerifLoop); }
@@ -93,29 +85,19 @@ bool PSInterface::ConfigureChip(Chip* pPS, bool pVerifLoop, uint32_t pBlockSize)
 
 void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->producePhaseAlignmentPattern(pChip, pWait_ms); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->producePhaseAlignmentPattern(pChip, pWait_ms); }
-    else if(pChip->getFrontEndType() == FrontEndType::SSA or pChip->getFrontEndType() == FrontEndType::SSA2)
-    {
-        LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
-    }
+    if(pChip->getFrontEndType() == FrontEndType::MPA2) { fTheMPA2Interface->producePhaseAlignmentPattern(pChip, pWait_ms); }
+    else { LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET; }
 }
 void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->produceWordAlignmentPattern(pChip); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->produceWordAlignmentPattern(pChip); }
-    else if(pChip->getFrontEndType() == FrontEndType::SSA or pChip->getFrontEndType() == FrontEndType::SSA2)
-    {
-        LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
-    }
+    if(pChip->getFrontEndType() == FrontEndType::MPA2) { fTheMPA2Interface->produceWordAlignmentPattern(pChip); }
+    else { LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET; }
 }
 
 bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop)
 {
-    if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->enableInjection(pPS, inject, pVerifLoop); }
-    else if(pPS->getFrontEndType() == FrontEndType::MPA2) { return theMPA2Interface->enableInjection(pPS, inject, pVerifLoop); }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA) { return theSSAInterface->enableInjection(pPS, inject, pVerifLoop); }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA2) { return theSSA2Interface->enableInjection(pPS, inject, pVerifLoop); }
+    if(pPS->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->enableInjection(pPS, inject, pVerifLoop); }
+    else if(pPS->getFrontEndType() == FrontEndType::SSA2) { return fTheSSA2Interface->enableInjection(pPS, inject, pVerifLoop); }
     else
         LOG(ERROR) << "Bad chip for PS interface";
     return false;
@@ -124,16 +106,14 @@ bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop
 //
 std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->decodeBendCode(pChip, pBendCode); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { return theMPA2Interface->decodeBendCode(pChip, pBendCode); }
+    if(pChip->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->decodeBendCode(pChip, pBendCode); }
     return std::vector<int>(0);
 }
 //
 void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
-    if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections, pPattern); }
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->digiInjection(pChip, pInjections, pPattern); }
-    else if(pChip->getFrontEndType() == FrontEndType::SSA2 or pChip->getFrontEndType() == FrontEndType::SSA)
+    if(pChip->getFrontEndType() == FrontEndType::MPA2) { fTheMPA2Interface->digiInjection(pChip, pInjections, pPattern); }
+    else
     {
         LOG(ERROR) << BOLDRED << "No digiInjection implemented for SSA for some reason " << RESET;
         throw std::runtime_error(std::string("No digiInjection implemented for SSA for some reason "));
@@ -142,8 +122,8 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
 
 bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
-    if(pPS->getFrontEndType() == FrontEndType::MPA2) { return theMPA2Interface->injectNoiseClusters(pPS, theClusterList); }
-    else { return theSSA2Interface->injectNoiseClusters(pPS, theClusterList); }
+    if(pPS->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->injectNoiseClusters(pPS, theClusterList); }
+    else { return fTheSSA2Interface->injectNoiseClusters(pPS, theClusterList); }
 }
 
 bool PSInterface::injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwDescription::ReadoutChip* pSSA, std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector)
@@ -170,7 +150,7 @@ bool PSInterface::injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwD
         stripClusterList.push_back({0, correlationCol, correlationClusterSize});
     }
 
-    return theMPA2Interface->injectNoiseClusters(pMPA, pixelClusterList) && theSSA2Interface->injectNoiseClusters(pSSA, stripClusterList);
+    return fTheMPA2Interface->injectNoiseClusters(pMPA, pixelClusterList) && fTheSSA2Interface->injectNoiseClusters(pSSA, stripClusterList);
 }
 
 } // namespace Ph2_HwInterface

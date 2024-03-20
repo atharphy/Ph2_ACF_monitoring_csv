@@ -60,7 +60,7 @@ class PixelAlive : public CalibBase
     size_t              nHITxCol;
     float               occPerPixel;
     bool                unstuckPixels;
-    bool                doDataIntegrity;
+    int                 doDataIntegrity;
     size_t              doOnlyNGroups;
     bool                doDisplay;
     bool                doUpdateChip;

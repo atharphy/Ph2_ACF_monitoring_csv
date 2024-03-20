@@ -49,7 +49,6 @@ else()
             LIBRARIES
             Ph2_Utils
             pthread
-            EXCLUDE MPA.h MPA.cc
     )
 
     install_headers()

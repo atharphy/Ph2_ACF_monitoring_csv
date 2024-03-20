@@ -256,21 +256,6 @@ void MemoryCheck2S::Initialise()
                 {
                     auto& cMasksThisChip                                                      = cMasksThisHybrid->getObject(cChip->getId());
                     cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<1, NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<1, NCHANNELS>>(cChip->getChipOriginalMask());
-                    // cOriginalMask = new ChannelGroup<1, NCHANNELS>;
-                    // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
-                    // {
-                    //     bool cEnabled = cMsk->isChannelEnabled(0, cChnl);
-                    //     if( cEnabled ){ cOriginalMask->enableChannel(0, cChnl );
-                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " enabled." << RESET;
-                    //     }
-                    //     else{
-                    //         cOriginalMask->disableChannel(0, cChnl);
-                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " disabled." << RESET;
-                    //     }
-                    // }
-                    // if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<1, NSSACHANNELS>;
-                    // if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<NMPAROWS, NSSACHANNELS>;
-                    // to -do .. same for MPA where have to look over cols
                 }
             } // hybrids
         }     // OG
@@ -1189,7 +1174,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                     } // Chip
                 }     // Hybrid
             }         // OG
-            auto cStubOffset  = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
+            auto cStubOffset  = cBoard->getStubOffset();
             int  cStubLatency = cLatency - cStubOffset;
             LOG(INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
             fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);

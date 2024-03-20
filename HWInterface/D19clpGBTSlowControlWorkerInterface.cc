@@ -72,7 +72,7 @@ D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDe
 {
     std::vector<uint32_t> cCommand;
     uint8_t               cWorkerId = LpGBTSlowControlWorker::BASE_ID + pChip->getOpticalGroupId();
-    uint8_t               cChipId   = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8);
+    uint8_t               cChipId   = pChip->getFrontEndType() == FrontEndType::CIC2 ? 0 : (pChip->getId() % 8);
     uint8_t               cChipCode = pChip->getChipCode();
     uint8_t               cMasterId = pChip->getMasterId();
     uint16_t              cNWords   = pRegisterItems.size();

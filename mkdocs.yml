@@ -1,0 +1,45 @@
+site_name: Ph2_ACF User guide
+site_description: Ph2_ACF User guide
+site_author: CMS Tracker Phase-2 upgrade community
+site_url: https://ph2acf.docs.cern.ch/
+
+repo_name: GitLab
+repo_url: https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF
+edit_uri: 'blob/master/docs'
+
+theme:
+  name: material
+  font: false
+  palette:
+    # Palette toggle for light mode
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra_css:
+  - stylesheets/fonts.css
+
+markdown_extensions:
+  - attr_list
+
+nav:
+    - Introduction: index.md
+    - 'General':
+      - 'General': general/index.md
+    - 'Inner Tracker':
+      - 'Inner Tracker': innerTracker/index.md
+    - 'Outer Tracker':
+      - 'Outer Tracker': outerTracker/index.md
+    - 'Interesting links': interesting_links/index.md
+    - 'MkDocs official documentation': https://www.mkdocs.org/

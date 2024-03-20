@@ -38,7 +38,7 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     auto hOcc2D = CanvasContainer<TH2F>("PixelAlive", "Pixel Alive", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "Columns", "Rows");
 
-    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", nCols, 0, nCols, nRows, 0, nRows);
+    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout arrors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
 
     auto hMask1Dcol = CanvasContainer<TH1F>("Masked1Dcol", "Masked pixels projection", nCols, 0, nCols);
@@ -50,7 +50,7 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     auto hToT1D = CanvasContainer<TH1F>("ToT1D", "<ToT> Distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
 
-    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "<ToT> Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "<ToT> map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 
     auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 1, BCIDsize + 1);
@@ -58,6 +58,9 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
 
     auto hTriggerID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 1, TrgIDsize + 1);
     bookImplementer(theOutputFile, theDetectorStructure, TriggerID, hTriggerID, "#DeltaTrigger-ID", "Entries");
+
+    auto hMasked2D = CanvasContainer<TH2F>("Masked2D", "Masked pixels", nCols, 0, nCols, nRows, 0, nRows);
+    bookImplementer(theOutputFile, theDetectorStructure, Masked2D, hMasked2D, "Columns", "Rows");
 
     AreHistoBooked = true;
 }
@@ -134,6 +137,12 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                               ->getObject(cChip->getId())
                                               ->getSummary<CanvasContainer<TH1F>>()
                                               .fTheHistogram;
+                    auto* Masked2DHist = Masked2D.getObject(cBoard->getId())
+                                             ->getObject(cOpticalGroup->getId())
+                                             ->getObject(cHybrid->getId())
+                                             ->getObject(cChip->getId())
+                                             ->getSummary<CanvasContainer<TH2F>>()
+                                             .fTheHistogram;
 
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
@@ -149,9 +158,14 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                                        sqrt(ToT2DHist->GetBinError(col + 1, row + 1) * ToT2DHist->GetBinError(col + 1, row + 1) +
                                                             cChip->getChannel<OccupancyAndPh>(row, col).fPhError * cChip->getChannel<OccupancyAndPh>(row, col).fPhError));
                             }
-                            else if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED)
+
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED)
+                            {
                                 Mask1DrowHist->Fill(row);
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
+                                Masked2DHist->Fill(row, col);
+                            }
+
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col, row);
                         }
 
                     for(auto col = 0u; col < nCols; col++)
@@ -215,4 +229,5 @@ void PixelAliveHistograms::process()
     draw<TH2F>(ToT2D, "gcolz");
     draw<TH1F>(BCID);
     draw<TH1F>(TriggerID);
+    draw<TH2F>(Masked2D, "gcolz");
 }

@@ -23,7 +23,6 @@ void PhaseScan::Initialize()
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    bool         cWithPS           = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
     bool         cWithPSv2         = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2 || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
 
     if(cWithCBC)
@@ -31,16 +30,6 @@ void PhaseScan::Initialize()
         CBCChannelGroupHandler theChannelGroupHandler;
         theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandler);
-    }
-    else if(cWithPS)
-    {
-        MPAChannelGroupHandler theChannelGroupHandlerMPA;
-        theChannelGroupHandlerMPA.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA);
-
-        SSAChannelGroupHandler theChannelGroupHandlerSSA;
-        theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA);
     }
     else if(cWithPSv2)
     {
@@ -82,9 +71,7 @@ void PhaseScan::ScanPhase()
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA)
-                                fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat - 1);
-                            else if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat + 1);
                             else
                                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat);
@@ -119,7 +106,7 @@ void PhaseScan::ScanPhase()
 
                                     // cTotalHitsS0 += cPclstrs.size();
                                     // cTotalHitsS1 += cSclstrs.size();
-                                    if(cChip->getFrontEndType() == FrontEndType::MPA2 or cChip->getFrontEndType() == FrontEndType::MPA)
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                                     {
                                         for(auto& cPclstr: cPclstrs)
                                         {
@@ -134,7 +121,7 @@ void PhaseScan::ScanPhase()
                                             }
                                         }
                                     }
-                                    if(cChip->getFrontEndType() == FrontEndType::SSA2 or cChip->getFrontEndType() == FrontEndType::SSA)
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                     {
                                         for(auto& cSclstr: cSclstrs)
                                         {

@@ -126,7 +126,6 @@ int main(int argc, char* argv[])
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cTool.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
     bool         fDisableStubLogic = true;
-    if(cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA) fDisableStubLogic = false;
 
     // now create a PedestalEqualization object
     PedestalEqualization cPedestalEqualization;
@@ -158,7 +157,7 @@ int main(int argc, char* argv[])
         // cPedeNoise.sweepSCurves (205);
 
         // Crashes with high event numbers, need to make as a setting
-        if(cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+        if(cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2)
             cPedeNoise.Validate();
         else
             cPedeNoise.Validate();
