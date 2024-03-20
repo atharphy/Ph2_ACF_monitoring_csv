@@ -18,8 +18,7 @@ class D19cPSEventAS : public Event
     ~D19cPSEventAS() {}
 
     void Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list) override;
-    void SetEvent(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNMPA, const std::vector<uint32_t>& list) override;
-
+    
     uint32_t                GetNHits(uint8_t pHybridId, uint8_t pMPAId) const override;
     std::vector<uint32_t>   GetHits(uint8_t pHybridId, uint8_t pMPAId) const override;
     EventDataVector         fEventDataVector;
