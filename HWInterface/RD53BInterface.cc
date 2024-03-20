@@ -99,6 +99,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Programmig global registers #
     // ###############################
     static const std::set<std::string> registerBlackList = {
+        "RADSENS_IDEAL_FACTOR", "RADSENS_IDEAL_FACTOR_ANA", "RADSENS_IDEAL_FACTOR_DIG", "TEMPSENS_OFFSET_TOP", "TEMPSENS_OFFSET_BOTTOM",
         "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "TEMPSENS_IDEAL_FACTOR_ANA", "TEMPSENS_IDEAL_FACTOR_DIG", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
     static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
                                                             "DAC_PREAMP_R_LIN",
@@ -755,7 +756,11 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t GlbPulseVal  = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", 1 << 12 | data, false);    // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP)); // The conversion is bad if we changing the mux setting too soon after
+    // After the muxes have been configured, some time has to pass before the voltage is stable (RC circuit)
+    // The amount of time depends on the particular signal and on the capacitance connected to VMUX/IMUX
+    // 100 ms should be enough to properly sample all voltages from VMUX on UZH SCCs and on modules (22 nF)
+    // On Bonn SCCs (100 nF), 100 ms are too short for RADSENS, and should be raised to 500 ms
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // ########################################################
     // # Sample data multiple times for better value estimate #
@@ -767,6 +772,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
         // Sending a long pulse breaks readout
         RD53BInterface::SendGlobalPulse(pChip, 1 << 6, 1); // Reset ADC
         RD53BInterface::SendGlobalPulse(pChip, 0x1000, 1); // Trigger Monitor Data to start conversion
+        std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Wait for end of conversion (at least 358.4 us according to manual)
         const uint32_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
         if(val != 0)
         {
@@ -783,20 +789,11 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
 }
 
 float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type, int beta)
-// #####################
-// # type == "POLY"    #
-// # type == "ANA"     #
-// # type == "DIG"     #
-// # type == "CENTER"  #
-// # type == "INT_NTC" #
-// #####################
 {
     // ################################################################################################
+    // #                     TEMPERATURE MEASUREMENT FOR TRANSISTOR-BASED SENSORS                     #
     // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #
     // # Temperature is calculated based on the difference of the two, with the formula on the bottom #
-    // # idealityFactor = 5000 [1/1000] for Poly Sens Bottom                                          #
-    // # idealityFactor = 2000 [1/1000] for Poly Sens Top                                             #
-    // # idealityFactor = 1225 [1/1000] for the rest                                                  #
     // ################################################################################################
 
     this->setBoard(pChip->getBeBoardId());
@@ -810,24 +807,43 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     const float       kb        = 1.38064852e-23; // [J/K]
     const float       e         = 1.6021766208e-19;
     const float       R         = 15;   // By circuit design
-    const uint8_t     sensorDEM = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
-    const std::string regName   = (type == "CENTER" ? "MON_SENS_ACB" : "MON_SENS_SLDO");
+    const int         nDEM      = 16;
+    const std::string regName   = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
 
-    float idealityFactor;
-    if(type == "ANA") { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_ANA").fValue / 1e3; }
-    else if(type == "DIG") { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_DIG").fValue / 1e3; }
-    else { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3; }
+    const std::unordered_map<std::string, std::string> observableToCalibrationConstant = {
+	{    "TEMPSENS_ANA_SLDO", "TEMPSENS_IDEAL_FACTOR_ANA" },
+	{    "TEMPSENS_DIG_SLDO", "TEMPSENS_IDEAL_FACTOR_DIG" },
+	{      "TEMPSENS_CENTER", "TEMPSENS_IDEAL_FACTOR"     },
+	{     "RADSENS_ANA_SLDO", "RADSENS_IDEAL_FACTOR_ANA"  },
+	{     "RADSENS_DIG_SLDO", "RADSENS_IDEAL_FACTOR_DIG"  },
+	{       "RADSENS_CENTER", "RADSENS_IDEAL_FACTOR"      },
+	{    "POLY_TEMPSENS_TOP", "TEMPSENS_OFFSET_TOP"       },
+	{ "POLY_TEMPSENS_BOTTOM", "TEMPSENS_OFFSET_BOTTOM"    },
+	{    "INTERNAL_NTC_VOLT", ""                          },
+	{         "INTERNAL_NTC", ""                          },
+    };
+
+    const auto iterator = observableToCalibrationConstant.find(type);
+    if(iterator == observableToCalibrationConstant.end()) {
+        LOG(ERROR) << BOLDRED << "Invalid temperature sensor" << RESET;
+        return -HUGE_VALF; // unphysically low temperature as error
+    }
+    float idealityFactor = 0;
+    if (iterator->second != "") {
+        idealityFactor = pChip->getRegItem(iterator->second).fValue / 1e3;
+    }
 
     uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
     float    valueLow  = 0;
     float    valueHigh = 0;
 
-    if(type == "INT_NTC")
+    if(type.find("INTERNAL_NTC") != std::string::npos) // also matches "INTERNAL_NTC_VOLT"
     {
         bool     isCurrentNotVoltage;
         uint32_t observable = RD53BInterface::getADCobservable("INTERNAL_NTC_VOLT", isCurrentNotVoltage);
         float    voltage    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable));
-        float    current    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data), true);
+                 observable = RD53BInterface::getADCobservable("INTERNAL_NTC", isCurrentNotVoltage);
+        float    current    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable), true);
 
         // ###############################################
         // # Calculate temperature with NTC Beta formula #
@@ -837,18 +853,26 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
 
         return temperature;
     }
-    else if(type != "POLY")
+    else if(type.find("POLY") != std::string::npos)
+    {
+        const float temperatureCoeff = 0.22e-2;
+        float voltage = RD53Interface::convertADC2VorI(pChip, measureADC(pChip, data));
+        float temperature = (voltage / idealityFactor - 1) / temperatureCoeff; // degree celsius
+        return temperature;
+    }
+
+    for(int sensorDEM = 0; sensorDEM < nDEM; ++sensorDEM)
     {
         // Get high bias voltage
-        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type == "DIG" ? 6 : 0);
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type.find("DIG") != std::string::npos ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
-        valueLow = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
+        valueLow += RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
 
         // Get low bias voltage
-        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type == "DIG" ? 6 : 0);
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type.find("DIG") != std::string::npos ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
+        valueHigh += RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
     }
-    valueHigh = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
 
     // ####################
     // # Turn off sensing #
@@ -856,7 +880,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     RD53Interface::WriteChipReg(pChip, "MON_SENS_ACB", 0);
     RD53Interface::WriteChipReg(pChip, "MON_SENS_SLDO", 0);
 
-    return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) - T0C;
+    return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) / nDEM - T0C;
 }
 
 } // namespace Ph2_HwInterface
