@@ -9,7 +9,7 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "boost/format.hpp"
+//#include "boost/format.hpp"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -1752,7 +1752,9 @@ void MemoryCheck2S::MonitorInputVoltage()
             uint8_t cADCsel         = 1;
             // char    cADC[4];
             // sprintf(cADC, "ADC%.1d", cADCsel);
-            std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
+            //std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
+            std::string cADC = "ADC" + std::to_string(cADCsel);
+
             const auto  cTimeStart = std::chrono::system_clock::now();
             fStartTime             = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
             std::vector<float> cVals(10);
@@ -1813,7 +1815,9 @@ void MemoryCheck2S::MonitorTemperature()
                 if(cADCsel == 14)
                     cADC = "TEMP";
                 else
-                    cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
+                    //cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
+                    std::string cADC = "ADC" + std::to_string(cADCsel);
+
 
                 const auto cTimeStart = std::chrono::system_clock::now();
                 fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
@@ -1922,7 +1926,8 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            //std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable
                             float cVal = clpGBTInterface->ReadADC(clpGBT, cADC.c_str()) * cFactor;
@@ -1962,7 +1967,8 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            //std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable
                             cMeas.push_back(clpGBTInterface->ReadADC(clpGBT, cADC) * cFactor);
