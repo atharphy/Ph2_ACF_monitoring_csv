@@ -1756,11 +1756,11 @@ void MemoryCheck2S::MonitorInputVoltage()
             uint8_t cADCsel         = 1;
             // char    cADC[4];
             // sprintf(cADC, "ADC%.1d", cADCsel);
-            //std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
+            // std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
             std::string cADC = "ADC" + std::to_string(cADCsel);
 
-            const auto  cTimeStart = std::chrono::system_clock::now();
-            fStartTime             = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
+            const auto cTimeStart = std::chrono::system_clock::now();
+            fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
             std::vector<float> cVals(10);
             for(size_t cM = 0; cM < cVals.size(); cM++)
             {
@@ -1819,9 +1819,8 @@ void MemoryCheck2S::MonitorTemperature()
                 if(cADCsel == 14)
                     cADC = "TEMP";
                 else
-                    //cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
+                    // cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
                     std::string cADC = "ADC" + std::to_string(cADCsel);
-
 
                 const auto cTimeStart = std::chrono::system_clock::now();
                 fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
@@ -1930,7 +1929,7 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            //std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            // std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
                             std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable
@@ -1971,7 +1970,7 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            //std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            // std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
                             std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable

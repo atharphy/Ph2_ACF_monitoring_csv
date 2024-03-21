@@ -27,7 +27,7 @@ void OTverifyBoardDataWord::Initialise(void)
     std::vector<float> initialEmptyVector(numberOfLines, 0);
     ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer, initialEmptyVector);
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

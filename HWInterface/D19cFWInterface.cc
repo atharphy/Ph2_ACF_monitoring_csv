@@ -2000,14 +2000,8 @@ float D19cFWInterface::GetSFPParameter_L12(std::string parameter, int channel)
     return error;
 } // D19cFWInterface
 
-std::vector<uint32_t> D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
-{
-    return fDebugInterface->L1ADebug(pWait_ms, pPrint);
-}
+std::vector<uint32_t> D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint) { return fDebugInterface->L1ADebug(pWait_ms, pPrint); }
 
-std::vector<std::vector<uint32_t>> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
-{
-    return fDebugInterface->StubDebug(pWithTestPulse, pNlines, pPrint);
-}
+std::vector<std::vector<uint32_t>> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint) { return fDebugInterface->StubDebug(pWithTestPulse, pNlines, pPrint); }
 
 } // namespace Ph2_HwInterface

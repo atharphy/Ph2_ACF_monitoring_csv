@@ -981,8 +981,10 @@ void Tool::setFWTestPulse()
             EventType cEventType = cBoard->getEventType();
             bool      cAsync     = (cEventType == EventType::PSAS);
 
-            if(!cAsync) cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source",  6});
-            else        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
+            if(!cAsync)
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+            else
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
             cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             break;
         }
