@@ -780,7 +780,6 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     uint16_t counter = 0;
     for(auto i = 0u; i < sampleNtimes; i++)
     {
-        // Sending a long pulse breaks readout
         RD53BInterface::SendGlobalPulse(pChip, 1 << 6, 1);         // Reset ADC
         RD53BInterface::SendGlobalPulse(pChip, 0x1000, 1);         // Trigger Monitor Data to start conversion
         std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Wait for end of conversion (at least 358.4 us according to manual)
@@ -812,14 +811,14 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     // #####################
     // # Natural constants #
     // #####################
-    const float       T0C              = 273.15;         // [Kelvin]
-    const float       T25C             = 298.15;         // [Kelvin]
-    const float       R25C             = 10;             // [kOhm]
-    const float       kb               = 1.38064852e-23; // [J/K]
-    const float       e                = 1.6021766208e-19;
-    const float       temperatureCoeff = 0.22e-2;
-    const float       R                = 15; // By circuit design
-    const int         nDEM             = 16; // Dynamic Element Matching
+    const float       T0C              = 273.15;           // [Kelvin]
+    const float       T25C             = 298.15;           // [Kelvin]
+    const float       R25C             = 10;               // [kOhm]
+    const float       kb               = 1.38064852e-23;   // [J/K]
+    const float       e                = 1.6021766208e-19; // [C]
+    const float       temperatureCoeff = 0.22e-2;          // By circuit design
+    const float       biasIratio       = 15;               // By circuit design
+    const int         nDEM             = 16;               // Dynamic Element Matching
     const std::string regName          = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
 
     const std::unordered_map<std::string, std::string> observableToCalibrationConstant = {
@@ -894,7 +893,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     RD53Interface::WriteChipReg(pChip, "MON_SENS_ACB", 0);
     RD53Interface::WriteChipReg(pChip, "MON_SENS_SLDO", 0);
 
-    return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) / nDEM - T0C;
+    return e / (idealityFactor * kb * log(biasIratio)) * (valueHigh - valueLow) / nDEM - T0C;
 }
 
 } // namespace Ph2_HwInterface
