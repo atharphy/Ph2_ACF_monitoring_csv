@@ -10,6 +10,7 @@
 #include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/ECVLinkAlignmentOT.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
@@ -155,6 +156,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
     cmd.defineOption("phaseScan", "Phase Scan");
 
+    cmd.defineOption("ecv", "Perform Electronic Chain Validation Scans", ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
@@ -239,6 +242,7 @@ int main(int argc, char* argv[])
     int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
     bool        cLatency            = (cmd.foundOption("latency")) ? true : false;
     bool        cStubLatency        = (cmd.foundOption("stublatency")) ? true : false;
+    bool        cEcv                = (cmd.foundOption("ecv")) ? true : false;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -551,6 +555,21 @@ int main(int argc, char* argv[])
         cRegTester.writeObjects();
     }
 
+    if(cEcv)
+    {
+        cTool.ConfigureHw(true);
+
+        ECVLinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cLinkAlignment.Start(theStartInfo);
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.writeObjects();
+        cLinkAlignment.dumpConfigFiles();
+    }
+
     // align CIC-lpGBT-BE
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
@@ -601,6 +620,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
+
         // align FEs - CIC
         LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
         CicFEAlignment cCicAligner;

@@ -254,6 +254,7 @@ run:IT:
     - cp settings/RD53Files/CMSIT_RD53B.txt .
   script:
     - source ./setup.sh ci
+    - fpgaconfig -c CMSIT_CI.xml -i IT-L12KSU_L8DIO5_CROC_4SCC_v4-8
     - CMSITminiDAQ -f CMSIT_CI.xml -r
     - CMSITminiDAQ -f CMSIT_CI.xml -c pixelalive
     - CMSITminiDAQ -f CMSIT_CI.xml -c threqu
