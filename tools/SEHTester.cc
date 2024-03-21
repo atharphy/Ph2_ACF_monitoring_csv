@@ -52,7 +52,10 @@ void SEHTester::readTestParameters(std::string file)
         {
             std::map<std::string, float>::iterator it = fDefaultParameters.find(param.first);
             if(it != fDefaultParameters.end()) { it->second = param.second; }
-            else { fDefaultParameters.insert(param); }
+            else
+            {
+                fDefaultParameters.insert(param);
+            }
         }
     }
 }
@@ -316,7 +319,8 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     cLeakTree->Branch("Time", &cTimeValVect);
 
     double time_taken;
-    do {
+    do
+    {
         float ILeak = 0;
         float HvMea = 0;
         float IMea  = 0;
@@ -519,11 +523,17 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 
                 // cout << "WARNING: HV test is bad at HV = " << xval << " V: " << yval << " V, allowed is " << y_allowed_min << " - " << y_allowed_max << " ." << endl;
             }
-            else { LOG(DEBUG) << BOLDGREEN << "DEBUG: HV test is good at HV = " << xval << " V: " << yvalConvert << " V, allowed is " << y_allowed_min << " - " << y_allowed_max << " ." << RESET; }
+            else
+            {
+                LOG(DEBUG) << BOLDGREEN << "DEBUG: HV test is good at HV = " << xval << " V: " << yvalConvert << " V, allowed is " << y_allowed_min << " - " << y_allowed_max << " ." << RESET;
+            }
         }
     }
     if(hv_fail == 1) { fillSummaryTree("ExternalBiasResult", 1); }
-    else { fillSummaryTree("ExternalBiasResult", 0); }
+    else
+    {
+        fillSummaryTree("ExternalBiasResult", 0);
+    }
 }
 void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
@@ -589,7 +599,8 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cLeakTree->Branch("Time", &cTimeValVect);
 
     double time_taken;
-    do {
+    do
+    {
         float ILeak = 0;
         float UMon  = 0;
         clock_gettime(CLOCK_MONOTONIC, &timer);
@@ -701,7 +712,10 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
         cSideValVect.clear(), cUinValVect.clear(), cIoutValVect.clear();
         uint32_t cStep = 0;
         if(cSide == "both") { cStep = pStep; }
-        else { cStep = 2 * pStep; }
+        else
+        {
+            cStep = 2 * pStep;
+        }
         for(int cLoadValue = pMinLoadValue; cLoadValue <= (int)pMaxLoadValue; cLoadValue += cStep)
         {
             float I_SEH;
@@ -738,7 +752,10 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
             cUoutLValVect.push_back(U_P1V2_L);
             cSideValVect.push_back(cSide);
             if(I_SEH * U_SEH == 0) { cEfficiencyValVect.push_back(-1); }
-            else { cEfficiencyValVect.push_back((I_P1V2_R * U_P1V2_R + I_P1V2_L * U_P1V2_L) / (I_SEH * U_SEH)); }
+            else
+            {
+                cEfficiencyValVect.push_back((I_P1V2_R * U_P1V2_R + I_P1V2_L * U_P1V2_L) / (I_SEH * U_SEH));
+            }
         }
         cEfficiencyTree->Fill();
 
@@ -815,7 +832,8 @@ void SEHTester::TestCardVoltages()
 {
     float k;
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
-    do {
+    do
+    {
         fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
         fillSummaryTree(c2SSEHMapIterator->first, k);
         c2SSEHMapIterator++;
@@ -824,7 +842,8 @@ void SEHTester::TestCardVoltages()
     // fTC_2SSEH->set_SehSupply(fTC_2SSEH->sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
-    do {
+    do
+    {
         fTC_2SSEH->read_supply(d2SSEHMapIterator->second, k);
         fillSummaryTree(d2SSEHMapIterator->first, k);
         d2SSEHMapIterator++;
@@ -846,7 +865,8 @@ void SEHTester::DCDCOutputEvaluation()
     auto cStackedHistogramm = new THStack("cDCDCOutput", "DC/DC Output Voltages");
     int  cIt                = 0;
     // auto gRandom            = new TRandom3();
-    do {
+    do
+    {
         cDCDCOutputTree->Branch(cDCDCMapIterator->first.c_str(), &cDCDCValueVect);
         auto cHistogramm = new TH1F(cDCDCMapIterator->first.c_str(), cDCDCMapIterator->first.c_str(), 30, 0, 3);
         cHistogramm->SetFillColor(cIt + 1);
@@ -1456,7 +1476,10 @@ void SEHTester::SEHInputsDebug()
         char Answer;
         std::cin >> Answer;
         if(Answer == 'y') { fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.start_input", 1); }
-        else if(Answer == 'n') { exit(1); }
+        else if(Answer == 'n')
+        {
+            exit(1);
+        }
         else
         {
             LOG(ERROR) << "Wrong option!" << std::endl;

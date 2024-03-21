@@ -406,7 +406,8 @@ class Event
         uint32_t cId          = 0;
         auto     cIterator    = pData.begin() + pOffset;
         size_t   cWordCounter = 0;
-        do {
+        do
+        {
             auto cWord = std::bitset<32>(*cIterator);
             // LOG(INFO) << BOLDBLUE << "Word " << +cWordCounter << " : " << cWord << RESET;
             for(size_t cIndex = 0; cIndex < 32; cIndex++)

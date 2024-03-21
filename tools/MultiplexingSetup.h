@@ -51,8 +51,7 @@ class MultiplexingSetup : public Tool
     {
         fAvailable.clear();
         // copy "numbits" from "buf" starting at position "at"
-        auto copybits = [](int buf, int at, int numbits)
-        {
+        auto copybits = [](int buf, int at, int numbits) {
             int mask = ((~0u) >> (sizeof(int) * 8 - numbits)) << at; // 2nd aproach
             return ((buf & mask) >> at);
         };

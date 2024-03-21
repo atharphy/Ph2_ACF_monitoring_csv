@@ -1,6 +1,8 @@
 #include "tools/OTinjectionDelayOptimization.h"
 #include "HWDescription/BeBoard.h"
+#include "HWDescription/BeBoard.h"
 #include "System/RegisterHelper.h"
+#include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/MPAChannelGroupHandler.h"
@@ -46,11 +48,13 @@ void OTinjectionDelayOptimization::Initialise(void)
     fMPAnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionDelayOptimizationMPAnumberOfSigmaNoiseAwayFromPedestal", 5.);
 
 #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTinjectionDelayOptimization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
+void OTinjectionDelayOptimization::ConfigureCalibration() {}
 void OTinjectionDelayOptimization::ConfigureCalibration() {}
 
 void OTinjectionDelayOptimization::Running()
@@ -69,15 +73,22 @@ void OTinjectionDelayOptimization::Stop(void)
     // Calibration is not running on the SoC: processing the histograms
     fDQMHistogramOTinjectionDelayOptimization.process();
 #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTinjectionDelayOptimization.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTinjectionDelayOptimization stopped.";
 }
 
 void OTinjectionDelayOptimization::Pause() {}
+void OTinjectionDelayOptimization::Pause() {}
 
 void OTinjectionDelayOptimization::Resume() {}
+void OTinjectionDelayOptimization::Resume() {}
 
+void OTinjectionDelayOptimization::Reset() { fRegisterHelper->restoreSnapshot(); }
 void OTinjectionDelayOptimization::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTinjectionDelayOptimization::optimizeInjectionDelay()
@@ -89,6 +100,9 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
     else
         prepareInjectionDelayScanPS();
 
+    DetectorDataContainer* theOccupancyContainer = new DetectorDataContainer; // used to store occupancy while running bitWiseScan
+    setSameDac("HitOr", 1);                                                   // using logical OR
+    setSameDac("TestPulsePotNodeSel", fCbcTestPulseValue);                    // injected charge
     DetectorDataContainer* theOccupancyContainer = new DetectorDataContainer; // used to store occupancy while running bitWiseScan
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *theOccupancyContainer);
     fDetectorDataContainer = theOccupancyContainer;
@@ -102,6 +116,8 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theHighestThresholdContainer, initialThreshold);
 
     uint16_t maximumPedestalDelay = is2Smodule ? 25 : 20;
+    uint16_t numberOfIterations   = 0;
+    bool     isPedestalAveraged   = false;
     uint16_t numberOfIterations   = 0;
     bool     isPedestalAveraged   = false;
 
@@ -134,9 +150,7 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
                         auto& theChipHighestThreshold = theHighestThresholdContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint16_t>();
                         theThresholdContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint16_t>() = theThreshold;
                         if(delay < maximumPedestalDelay) // still in the plateau, add to the pedestal average
-                        {
-                            theChipBestThresholdAndDelay.first += theThreshold;
-                        }
+                        { theChipBestThresholdAndDelay.first += theThreshold; }
                         else
                         {
                             if(!isPedestalAveraged)
@@ -180,12 +194,13 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
         {
             isPedestalAveraged = true;
         }
-
 #ifdef __USE_ROOT__
         fDQMHistogramOTinjectionDelayOptimization.fillThresholdVsDelayScan(delay, theThresholdContainer);
 #else
         if(fDQMStreamerEnabled)
         {
+            ContainerSerialization theContainerSerialization("OTinjectionDelayOptimizationDelayScan");
+            theContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theThresholdContainer, delay);
             ContainerSerialization theContainerSerialization("OTinjectionDelayOptimizationDelayScan");
             theContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theThresholdContainer, delay);
         }
@@ -219,6 +234,8 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
 #else
     if(fDQMStreamerEnabled)
     {
+        ContainerSerialization theBestValuesSerialization("OTinjectionDelayOptimizationBestValues");
+        theBestValuesSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBestThresholdAndDelayContainer);
         ContainerSerialization theBestValuesSerialization("OTinjectionDelayOptimizationBestValues");
         theBestValuesSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBestThresholdAndDelayContainer);
     }

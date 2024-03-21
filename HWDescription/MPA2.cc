@@ -217,7 +217,10 @@ std::pair<uint16_t, uint16_t> MPA2::getGlobalCoordinates(ReadoutChip* pChip, uin
     cGlobalY          = (pChip->getHybridId() % 2 == 0) ? pLocalRow + 1 : 2 * pChip->getNumberOfRows() - (pLocalRow + 1);
 
     if(pChip->getHybridId() % 2 == 0) { cGlobalX = (pChip->getNumberOfCols() - pLocalColumn) + (NCHIPS_OT * 2 - pChip->getId() - 1) * pChip->getNumberOfCols(); }
-    else { cGlobalX = pLocalColumn + (pChip->getId() - NCHIPS_OT) * pChip->getNumberOfCols(); }
+    else
+    {
+        cGlobalX = pLocalColumn + (pChip->getId() - NCHIPS_OT) * pChip->getNumberOfCols();
+    }
 
     return std::make_pair(cGlobalX, cGlobalY);
 }

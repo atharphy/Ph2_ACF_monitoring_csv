@@ -287,21 +287,21 @@ class lpGBTInterface : public ChipInterface
 
     std::map<std::string, uint8_t> revertedPUSMStatusMap;
     std::map<uint8_t, size_t>      fBERTMeasTimeMap = {{0, 1UL << 5},
-                                                       {1, 1UL << 7},
-                                                       {2, 1UL << 9},
-                                                       {3, 1UL << 11},
-                                                       {4, 1UL << 13},
-                                                       {5, 1UL << 15},
-                                                       {6, 1UL << 17},
-                                                       {7, 1UL << 19},
-                                                       {8, 1UL << 21},
-                                                       {9, 1UL << 23},
-                                                       {10, 1UL << 25},
-                                                       {11, 1UL << 27},
-                                                       {12, 1UL << 29},
-                                                       {13, 1UL << 31},
-                                                       {14, 1UL << 33},
-                                                       {15, 1UL < 35}};
+                                                  {1, 1UL << 7},
+                                                  {2, 1UL << 9},
+                                                  {3, 1UL << 11},
+                                                  {4, 1UL << 13},
+                                                  {5, 1UL << 15},
+                                                  {6, 1UL << 17},
+                                                  {7, 1UL << 19},
+                                                  {8, 1UL << 21},
+                                                  {9, 1UL << 23},
+                                                  {10, 1UL << 25},
+                                                  {11, 1UL << 27},
+                                                  {12, 1UL << 29},
+                                                  {13, 1UL << 31},
+                                                  {14, 1UL << 33},
+                                                  {15, 1UL < 35}};
 
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 

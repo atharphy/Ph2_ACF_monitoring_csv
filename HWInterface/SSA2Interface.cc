@@ -218,7 +218,10 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         cRegItem.fAddress = 0x600 + cChannel;
         cRegItems.push_back(cRegItem); // LSB
     }
-    else if(pRegNode == "ChipId") { return this->ReadChipId(pSSA2); }
+    else if(pRegNode == "ChipId")
+    {
+        return this->ReadChipId(pSSA2);
+    }
     else if(pRegNode == "Threshold" || pRegNode == "Bias_THDAC")
     {
         // LOG(DEBUG) << BOLDYELLOW << "Adding thrshld register to multi-reg read..." << RESET;
@@ -538,7 +541,10 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
 
         return this->ConfigureAmux(pSSA2, "Bandgap");
     }
-    else if(pRegNameMod == "MonitorGround") { return this->ConfigureAmux(pSSA2, "GND"); }
+    else if(pRegNameMod == "MonitorGround")
+    {
+        return this->ConfigureAmux(pSSA2, "GND");
+    }
     else if(pRegNameMod == "ReadoutMode") // AT THE TOP OF THIS METHOD _ALL IS REMOVED
     {
         return this->WriteChipRegBits(pSSA2, "control_1", pValue & 0x07, "mask_peri_D", 0x07);

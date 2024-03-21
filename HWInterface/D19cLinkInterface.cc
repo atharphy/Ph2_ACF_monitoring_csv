@@ -63,7 +63,8 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
     size_t cMaxAttempts = fConfiguration.fReTry ? fConfiguration.fMaxAttempts : 1;
     size_t cAttempts    = 0;
     bool   cLinkStatus  = false;
-    do {
+    do
+    {
         cAllLocked = true;
         LOG(INFO) << BOLDMAGENTA << "D19cLinkInterface::GeneralLinkReset Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << " [Attempt#" << cAttempts++ << "]" << RESET;
         ResetLinks();

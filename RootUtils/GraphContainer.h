@@ -23,7 +23,7 @@ class GraphContainer : public PlotContainer
   public:
     GraphContainer() : fTheGraph(nullptr) {}
 
-    GraphContainer(const GraphContainer<Graph>& container)                   = delete;
+    GraphContainer(const GraphContainer<Graph>& container) = delete;
     GraphContainer<Graph>& operator=(const GraphContainer<Graph>& container) = delete;
 
     template <class... Args>

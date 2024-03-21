@@ -87,18 +87,27 @@ bool PSInterface::ConfigureChip(Chip* pPS, bool pVerifLoop, uint32_t pBlockSize)
 void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA2) { fTheMPA2Interface->producePhaseAlignmentPattern(pChip, pWait_ms); }
-    else { LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET; }
+    else
+    {
+        LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
+    }
 }
 void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA2) { fTheMPA2Interface->produceWordAlignmentPattern(pChip); }
-    else { LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET; }
+    else
+    {
+        LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
+    }
 }
 
 bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop)
 {
     if(pPS->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->enableInjection(pPS, inject, pVerifLoop); }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA2) { return fTheSSA2Interface->enableInjection(pPS, inject, pVerifLoop); }
+    else if(pPS->getFrontEndType() == FrontEndType::SSA2)
+    {
+        return fTheSSA2Interface->enableInjection(pPS, inject, pVerifLoop);
+    }
     else
         LOG(ERROR) << "Bad chip for PS interface";
     return false;
@@ -124,7 +133,10 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
 bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
     if(pPS->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->injectNoiseClusters(pPS, theClusterList); }
-    else { return fTheSSA2Interface->injectNoiseClusters(pPS, theClusterList); }
+    else
+    {
+        return fTheSSA2Interface->injectNoiseClusters(pPS, theClusterList);
+    }
 }
 
 bool PSInterface::injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwDescription::ReadoutChip* pSSA, std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector)
