@@ -99,9 +99,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedestalEqualization,
              PedeNoise,
              KIRA>("Outer Tracker", "calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    Register<TuneLpGBTVref,
-             OTTemperature,
-             OTalignLpGBTinputs,
+    Register< OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
              OTalignStubPackage,
@@ -109,12 +107,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTCICwordAlignment,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
-             PedeNoise,
-             TuneLpGBTVref,
-             OTTemperature>("Outer Tracker", "pedenoise");
-    Register<TuneLpGBTVref,
-             OTTemperature,
-             OTalignLpGBTinputs,
+             PedeNoise>("Outer Tracker", "pedenoise");
+    Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
              OTalignStubPackage,
@@ -123,9 +117,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              PedestalEqualization,
-             PedeNoise,
-             TuneLpGBTVref,
-             OTTemperature>("Outer Tracker", "calibrationandpedenoise");
+             PedeNoise>("Outer Tracker", "calibrationandpedenoise");
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
