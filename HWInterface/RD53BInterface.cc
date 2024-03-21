@@ -98,18 +98,19 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {"RADSENS_IDEAL_FACTOR",
-                                                            "RADSENS_IDEAL_FACTOR_ANA",
-                                                            "RADSENS_IDEAL_FACTOR_DIG",
-                                                            "TEMPSENS_OFFSET_TOP",
-                                                            "TEMPSENS_OFFSET_BOTTOM",
-                                                            "RESISTORI2V",
+    static const std::set<std::string> registerBlackList = {"RESISTORI2V",
                                                             "ADC_OFFSET_VOLT",
                                                             "ADC_MAXIMUM_VOLT",
                                                             "TEMPSENS_IDEAL_FACTOR",
                                                             "TEMPSENS_IDEAL_FACTOR_ANA",
                                                             "TEMPSENS_IDEAL_FACTOR_DIG",
+                                                            "RADSENS_IDEAL_FACTOR",
+                                                            "RADSENS_IDEAL_FACTOR_ANA",
+                                                            "RADSENS_IDEAL_FACTOR_DIG",
+                                                            "TEMPSENS_OFFSET_TOP",
+                                                            "TEMPSENS_OFFSET_BOTTOM",
                                                             "SAMPLE_N_TIMES",
+                                                            "WAIT_MUX_CONFIG",
                                                             "VREF_ADC"}; // @CONST@
     static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
                                                             "DAC_PREAMP_R_LIN",
