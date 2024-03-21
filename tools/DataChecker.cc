@@ -491,7 +491,7 @@ void DataChecker::Initialise()
                         new TProfile(cName, Form("Event Monitor, digi-inject test CIC%d; Total number of clusters; First L1Id with a mismatch", (int)cChip->getId()), 100, 0, 100, "S");
                     bookHistogram(cChip, "MismatchProfile", cProfile);
 
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     cName = Form("h_PInj_FE%d", cChip->getId());
                     cObj  = gROOT->FindObject(cName);
@@ -672,7 +672,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     fReadoutChipInterface->WriteChipReg(cChip, "OutPattern7/FIFOconfig", cFifoDepth);
                 }
@@ -751,10 +751,10 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                         {
                             auto& cChipLatencyChip = cChipLatencyHybrid->getObject(cChip->getId());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
-                            if(cChip->getFrontEndType() != FrontEndType::SSA)
+                            if(cChip->getFrontEndType() != FrontEndType::SSA2)
                             {
                                 cChipLatencySmry = (cDelay) + cLatencyOffset;
-                                if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
+                                if(cChip->getFrontEndType() == FrontEndType::MPA2 && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
                             }
                             else // SSA needs an additional clock cycle of delay
                             {
@@ -795,8 +795,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
 
             std::map<int, std::vector<Injection>> cInjectionScheme;
             cInjectionScheme.clear();
-            do
-            {
+            do {
                 cInjectionScheme[cAttempt] = this->GeneratePSInjections(cMaxNstubs);
                 LOG(INFO) << BOLDMAGENTA << "Injection#" << +cAttempt << "\t\t..." << RESET;
                 std::sort(std::begin(cInjectionScheme[cAttempt]), std::end(cInjectionScheme[cAttempt]), [](Injection a, Injection b) { return a.fRow < b.fRow; });
@@ -829,7 +828,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                             std::vector<uint8_t> cIds(0);
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                 cIds.push_back(cChip->getId() % 8);
                             }
 
@@ -838,7 +837,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 uint8_t cPattern = cDistributeInj ? (1 << cId) : (0x1 << 0);
                                 for(auto cChip: *cHybrid)
                                 {
-                                    if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA2) continue;
                                     if(cChip->getId() % 8 != cId) continue;
 
                                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
@@ -848,7 +847,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 }
                                 for(auto cChip: *cHybrid)
                                 {
-                                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                     if(cChip->getId() % 8 != cId) continue;
 
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
@@ -883,8 +882,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                     auto&  cNtriggersInit = cTrgCntBrd->getSummary<uint32_t>();
                     auto   cNtriggers     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                     size_t cIter          = 0;
-                    do
-                    {
+                    do {
                         std::this_thread::sleep_for(std::chrono::microseconds(100));
                         // auto cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
                         cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -926,8 +924,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 1;
                 size_t cInjectionCounter = 0;
                 auto   cEventIter        = cPh2Events.begin();
-                do
-                {
+                do {
                     auto cInjections = cInjectionScheme[cInjectionCounter];
                     LOG(INFO) << BOLDMAGENTA << "Checking result for injection#" << cInjectionCounter << RESET;
                     for(auto cInj: cInjections) { LOG(INFO) << BOLDYELLOW << "\t\t.. injecting in row " << +cInj.fRow << " columnn " << +cInj.fColumn << RESET; }
@@ -951,7 +948,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 size_t cNStubs = 0;
                                 for(auto cChip: *cHybrid)
                                 {
-                                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                                     fPSevent.fChipL1Id   = static_cast<D19cCic2Event*>(*cEventIter)->L1Id(cHybrid->getId(), cChip->getId());
                                     auto cPclstrs        = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
@@ -966,9 +963,13 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                                         LOG(INFO) << BOLDGREEN << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +cChip->getId() << " found " << fPSevent.fNPclusters
                                                   << " P clusters, " << fPSevent.fNSclusters << " S clusters, and " << fPSevent.fStubSize << " stubs" << RESET;
                                         for(auto cCluster: cPclstrs)
-                                        { LOG(INFO) << BOLDYELLOW << "P-cluster in row " << +cCluster.fAddress << " column " << +cCluster.fZpos << " width is " << +cCluster.fWidth << RESET; }
+                                        {
+                                            LOG(INFO) << BOLDYELLOW << "P-cluster in row " << +cCluster.fAddress << " column " << +cCluster.fZpos << " width is " << +cCluster.fWidth << RESET;
+                                        }
                                         for(auto cCluster: cSclstrs)
-                                        { LOG(INFO) << BOLDCYAN << "S-cluster in row " << +cCluster.fAddress << " column " << (0) << " width is " << +cCluster.fWidth << RESET; }
+                                        {
+                                            LOG(INFO) << BOLDCYAN << "S-cluster in row " << +cCluster.fAddress << " column " << (0) << " width is " << +cCluster.fWidth << RESET;
+                                        }
                                         if(fPSevent.fStubSize != 0)
                                         {
                                             std::sort(std::begin(cStubs), std::end(cStubs), [](Stub a, Stub b) { return a.getRow() < b.getRow(); });
@@ -1120,7 +1121,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     fReadoutChipInterface->WriteChipReg(cChip, "OutPattern7/FIFOconfig", cFifoDepth);
                 }
@@ -1199,10 +1200,10 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                         {
                             auto& cChipLatencyChip = cChipLatencyHybrid->getObject(cChip->getId());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
-                            if(cChip->getFrontEndType() != FrontEndType::SSA)
+                            if(cChip->getFrontEndType() != FrontEndType::SSA2)
                             {
                                 cChipLatencySmry = (cDelay) + cLatencyOffset;
-                                if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
+                                if(cChip->getFrontEndType() == FrontEndType::MPA2 && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
                             }
                             else // SSA needs an additional clock cycle of delay
                             {
@@ -1243,8 +1244,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
 
             std::map<int, std::vector<Injection>> cInjectionScheme;
             cInjectionScheme.clear();
-            do
-            {
+            do {
                 cInjectionScheme[cAttempt] = this->GeneratePSInjections(cMaxNstubs);
                 LOG(INFO) << BOLDMAGENTA << "Injection#" << +cAttempt << "\t\t..." << RESET;
                 std::sort(std::begin(cInjectionScheme[cAttempt]), std::end(cInjectionScheme[cAttempt]), [](Injection a, Injection b) { return a.fRow < b.fRow; });
@@ -1289,7 +1289,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                             std::vector<uint8_t> cIds(0);
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                 cIds.push_back(cChip->getId() % 8);
                             }
 
@@ -1297,7 +1297,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                             {
                                 for(auto cChip: *cHybrid)
                                 {
-                                    if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA2) continue;
                                     if(cChip->getId() % 8 != cId) continue;
 
                                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
@@ -1306,7 +1306,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 }
                                 for(auto cChip: *cHybrid)
                                 {
-                                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                     if(cChip->getId() % 8 != cId) continue;
 
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
@@ -1342,8 +1342,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                     auto&  cNtriggersInit = cTrgCntBrd->getSummary<uint32_t>();
                     auto   cNtriggers     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                     size_t cIter          = 0;
-                    do
-                    {
+                    do {
                         std::this_thread::sleep_for(std::chrono::microseconds(100));
                         // auto cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
                         cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -1384,8 +1383,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 size_t cInjectionCounter = 0;
                 auto   cEventIter        = cPh2Events.begin();
                 size_t cMatchCounter     = 0;
-                do
-                {
+                do {
                     auto cInjections = cInjectionScheme[cInjectionCounter];
                     LOG(INFO) << BOLDMAGENTA << "Checking result for injection#" << cInjectionCounter << RESET;
                     // for( auto cInj : cInjections)
@@ -1419,7 +1417,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                                 size_t cNmpas    = 0;
                                 for(auto cChip: *cHybrid)
                                 {
-                                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                                     fPSevent.fChipL1Id   = static_cast<D19cCic2Event*>(*cEventIter)->L1Id(cHybrid->getId(), cChip->getId());
                                     auto cPclstrs        = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                     auto cSclstrs        = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
@@ -1502,8 +1500,7 @@ void DataChecker::ReadDataTestPS(BeBoard* pBoard, uint32_t pNevents)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNevents);
     fBeBoardInterface->Start(pBoard);
     bool cAllTriggersSent = false;
-    do
-    {
+    do {
         auto cNtriggersRxd = fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         if((int)(std::floor((float)cNtriggersRxd / 10.)) % (pNevents / 100) == 0) LOG(INFO) << BOLDMAGENTA << "\t\t..." << cNtriggersRxd << " triggers received..." << RESET;
         cAllTriggersSent = cNtriggersRxd >= pNevents;
@@ -1562,7 +1559,7 @@ void DataChecker::ReadDataTestPS(BeBoard* pBoard, uint32_t pNevents)
                 // printPSevent();
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                     fPSevent.fChipId     = cChip->getId();
                     fPSevent.fChipL1Id   = static_cast<D19cCic2Event*>(cEvent)->L1Id(cHybrid->getId(), cChip->getId());
                     auto Pclus           = static_cast<D19cCic2Event*>(cEvent)->GetPixelClusters(cHybrid->getId(), cChip->getId());
@@ -1673,10 +1670,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
                             auto& cOcc = cReadoutChipHitCheck->getSummary<int>();
                             cOcc += static_cast<int>(cMatched == cExpectedHits.size());
                         }
-                        else
-                        {
-                            cMissedEvent = true;
-                        }
+                        else { cMissedEvent = true; }
 
                         // stubs
                         auto cStubs         = cEvent->StubVector(cHybridId, cChipId);
@@ -1788,13 +1782,7 @@ void DataChecker::AsyncTest()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA)
-                    {
-                        cBoard->setEventType(EventType::PSAS);
-                        // cBoard->setEventType(EventType::MPAAS);
-                    }
-                    else
-                        cBoard->setEventType(EventType::SSAAS);
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2) cBoard->setEventType(EventType::PSAS);
                 }
             }
         }
@@ -1833,7 +1821,7 @@ void DataChecker::AsyncTest()
                             auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                             for(uint8_t cChnl = 0; cChnl < 5; cChnl++)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                     LOG(INFO) << BOLDBLUE << "Counter value Strip#" << +cChnl << " is " << cHits[cChnl] << RESET;
                                 else
                                     LOG(INFO) << BOLDBLUE << "Counter value Pix#" << +cChnl << " is " << cHits[cChnl] << RESET;
@@ -1862,10 +1850,10 @@ void DataChecker::ReadDataTest()
                 {
                     // ReadoutChip *cReadoutChip = static_cast<ReadoutChip*>(cChip);
                     if(cChip->getId() == 0)
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cChip, {10, 244}, {0, 0}, true);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cChip, {{10, 0}, {244, 0}}, true);
                     else
                         fReadoutChipInterface->WriteChipReg(cChip, "VCth", 100);
-                    // static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , {2} , {0}, true );
+                    // static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs( cChip , {{2,0}} , true );
                 }
             }
         }
@@ -1922,12 +1910,12 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
                     if(cReadoutChip->getId() % 2 == 0)
                     {
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", cTh1);
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {10, 244}, {0, 0}, true);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {{10, 0}, {244, 0}}, true);
                     }
                     else
                     {
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", cTh2);
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {2}, {0}, true);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(cReadoutChip, {{2, 0}}, true);
                     }
                 }
             }
@@ -2050,7 +2038,7 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                     cEventId.first  = cL1Id;
                     cEventId.second = cBxId;
                     cEvntTag.first  = cEventId;
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                     // check if it is in p-p or s-p mode
 
                     auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
@@ -2106,7 +2094,9 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                         bool     cFound       = (std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) != cPixelIds.end());
                         cMatchedStubs         = cMatchedStubs && cFound;
                         if(std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) == cPixelIds.end())
-                        { LOG(DEBUG) << BOLDRED << "\t Event# " << +cEventIndx << " BxId#" << +cBxId << " un-expected Stub in event.... Address " << +cStubAddress << " row " << +cRow << RESET; }
+                        {
+                            LOG(DEBUG) << BOLDRED << "\t Event# " << +cEventIndx << " BxId#" << +cBxId << " un-expected Stub in event.... Address " << +cStubAddress << " row " << +cRow << RESET;
+                        }
                     }
                     if((cStubs.size()) == 0)
                         LOG(DEBUG) << BOLDRED << "Event#" << +cEventIndx << " BxId#" << +cBxId << " has no stubs!" << RESET;
@@ -2131,10 +2121,7 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                             LOG(INFO) << BOLDYELLOW << "\t\t... address " << +cStubAddress << " row " << +cRow << RESET;
                         } // stubs
                     }
-                    else if(!cMatchedPCluster && cMatchedStubs)
-                    {
-                        cClass = 3;
-                    }
+                    else if(!cMatchedPCluster && cMatchedStubs) { cClass = 3; }
                     else if(cMatchedPCluster && !cMatchedStubs)
                     {
                         cClass = 4;
@@ -2146,8 +2133,10 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                             LOG(INFO) << BOLDRED << "\t Event# " << +cEventIndx << " BxId#" << +cBxId << " classified as an event type " << +cClass << " un-expected Stub in event.... Address "
                                       << +cStubAddress << " row " << +cRow << RESET;
                             for(auto cInjection: pInjections)
-                            { LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET; } // injections
-                        }                                                                                                                                           // stubs
+                            {
+                                LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET;
+                            } // injections
+                        }     // stubs
                     }
                     else if(cMatchedPCluster && cMatchedStubs)
                     {
@@ -2166,8 +2155,10 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                                               << " instead I see BxId#" << +cBxId << " classified as an event type " << +cClass << " un-expected Stub in event.... Address " << +cStubAddress << " row "
                                               << +cRow << RESET;
                                     for(auto cInjection: pInjections)
-                                    { LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET; } // injections
-                                }                                                                                                                                           // stubs
+                                    {
+                                        LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET;
+                                    } // injections
+                                }     // stubs
                             }
                         } // check number of Bxs
                     }
@@ -2274,7 +2265,7 @@ void DataChecker::PrepareDigitalInjection(DetectorDataContainer& pInjectionSchem
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         auto& cInjectionsChip = cInjectionsHybrid->getObject(cChip->getId());
                         auto& cSummaryInj     = cInjectionsChip->getSummary<std::vector<Injection>>();
@@ -2429,8 +2420,7 @@ bool DataChecker::GenericFastCommands()
             // wait until all triggers have been sent
             uint32_t cCounter = 0;
             uint32_t cNWords  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-            do
-            {
+            do {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
                 cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -2442,8 +2432,7 @@ bool DataChecker::GenericFastCommands()
             // now wait until number of words have stopped increasing
             uint32_t cNWordsPrev = 0;
             cCounter             = 0;
-            do
-            {
+            do {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cNWordsPrev = (cCounter == 0) ? 0 : cNWords;
                 cNWords     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -2511,8 +2500,7 @@ std::vector<int> DataChecker::GenerateIds()
     size_t                             cNFEs = cDist(cGen);
     std::vector<int>                   cIds;
     cIds.clear();
-    do
-    {
+    do {
         int cId = cIdDist(cGen);
         if(std::find(cIds.begin(), cIds.end(), cId) == cIds.end()) { cIds.push_back(cId); }
 
@@ -2540,8 +2528,7 @@ std::vector<Injection> DataChecker::GenerateInjections(int pMaxClusters, int pMa
 
     int                   cTotalNumberOfClusters = 0;
     std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
-    do
-    {
+    do {
         Injection cInjection;
         cInjection.fColumn = (cFlatDistCols(cGen));
         cInjection.fRow    = (cFlatDistRows(cGen));
@@ -2594,8 +2581,7 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
     //                     << +cStubs
     //                     << " stubs... "
     //                     << RESET;
-    do
-    {
+    do {
         // Seed
         Injection cInjection;
         cInjection.fColumn = 1 + cPixelIds.size();        //(cFlatDistSeeds(cGen));
@@ -2683,8 +2669,7 @@ std::vector<uint8_t> DataChecker::GeneratePSstrpClusters(int pMaxNSclusters)
     // generate injections in this MPA
     std::uniform_int_distribution<int> cFlatDistStrips(5, 110);
     std::vector<uint8_t>               cRows(0); // 20 , 30};
-    do
-    {
+    do {
         // Seed
         uint8_t cRow = (cFlatDistStrips(cGen));
         // nothing yet .. so .. add
@@ -2730,8 +2715,7 @@ std::vector<Injection> DataChecker::GeneratePSpxlClusters(int pMaxNPclusters)
     std::vector<uint8_t>  cColumns(0);  // 5 , 10 };
     std::vector<uint8_t>  cRows(0);     // 20 , 30};
     std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
-    do
-    {
+    do {
         // Seed
         Injection cInjection;
         cInjection.fColumn = (cFlatDistSeeds(cGen));
@@ -2797,7 +2781,7 @@ void DataChecker::PreparePSInjection(DetectorDataContainer& pInjectionScheme)
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                     auto& cInjectionsChip = cInjectionsHybrid->getObject(cChip->getId());
                     auto& cSummaryInj     = cInjectionsChip->getSummary<std::vector<Injection>>();
@@ -2827,7 +2811,7 @@ void DataChecker::PreparePSInjection(DetectorDataContainer& pInjectionScheme)
                 // mask all channels in all SSAs
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                 } // chip
@@ -2838,7 +2822,7 @@ void DataChecker::PreparePSInjection(DetectorDataContainer& pInjectionScheme)
                     auto cRows = cInjection.second;
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                        if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                         if(cChip->getId() != cInjection.first) continue;
 
@@ -2900,7 +2884,7 @@ void DataChecker::PSTriggerTest()
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     fReadoutChipInterface->WriteChipReg(cChip, "OutPattern7/FIFOconfig", cFifoDepth);
                 }
@@ -2935,7 +2919,7 @@ void DataChecker::PSTriggerTest()
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     // for the moment - only written for CBC3
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     if(std::find(cIds.begin(), cIds.end(), cChip->getId()) == cIds.end()) continue;
 
@@ -3014,11 +2998,11 @@ void DataChecker::PSTriggerTest()
                         {
                             auto& cChipLatencyChip = cChipLatencyHybrid->getObject(cChip->getId());
                             auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
-                            if(cChip->getFrontEndType() != FrontEndType::SSA)
+                            if(cChip->getFrontEndType() != FrontEndType::SSA2)
                             {
                                 // uint16_t cLatency = cDelay + cLatencyOffset ;
                                 cChipLatencySmry = cDelay + cLatencyOffset;
-                                if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
+                                if(cChip->getFrontEndType() == FrontEndType::MPA2 && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
                             }
                             else // SSA needs an additional clock cycle of delay
                             {
@@ -3027,7 +3011,7 @@ void DataChecker::PSTriggerTest()
                             }
                             if(cDistributeInj) cChipLatencySmry = cChipLatencySmry + cChip->getId();
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cChipLatencySmry);
-                            std::string cType = (cChip->getFrontEndType() != FrontEndType::SSA) ? "MPA" : "SSA";
+                            std::string cType = (cChip->getFrontEndType() != FrontEndType::SSA2) ? "MPA" : "SSA";
                             // LOG (DEBUG) << BOLDBLUE << "Setting L1 latency in " << cType << "#"
                             //     << +cChip->getId()
                             //     << " to " << +cChipLatencySmry
@@ -3080,70 +3064,6 @@ void DataChecker::PSTriggerTest()
                         }
                     }
                 }
-                // // look at events
-                // for(auto cEvent: cEvents)
-                // {
-                //     for( auto cBoard : *fDetectorContainer )
-                //     {
-                //         for(auto cOpticalGroup: *cBoard)
-                //         {
-                //             for(auto cHybrid: *cOpticalGroup)
-                //             {
-                //                 auto cL1Status = (static_cast<D19cCic2Event*>(cEvent))->L1Status(cHybrid->getId());
-                //                 uint32_t cL1Id = cEvent->L1Id( cHybrid->getId(), 0 );
-                //                 // LOG (INFO) << BOLDRED << "Event#" << +cEvent->GetEventCount()
-                //                 //     << " CIC L1 Status is " << std::bitset<9>(cL1Status)
-                //                 //     << " L1Id from CIC is " << +cL1Id
-                //                 //     << " expect "
-                //                 //     << RESET;
-                //                 // for(auto cChip: *cHybrid)
-                //                 // {
-                //                 //     if( cChip->getFrontEndType() == FrontEndType::SSA ) continue;
-
-                //                 //     auto cSClusters = (static_cast<D19cCic2Event*>(cEvent))->GetStripClusters(cHybrid->getId(), cChip->getId());
-                //                 //     auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                //                 //     auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-
-                //                 //     LOG (INFO) << BOLDRED << "\t..MPA#" << +cChip->getId()
-                //                 //         << " found " << +cSClusters.size()
-                //                 //         << " S-clusters, "
-                //                 //         << +cPClusters.size()
-                //                 //         << " P-clusters "
-                //                 //         << " and "
-                //                 //         << +cStubs.size()
-                //                 //         << " stubs."
-                //                 //         << RESET;
-                //                 //     // for( auto cSCluster : cSClusters )
-                //                 //     // {
-                //                 //     //     Injection cInjection;
-                //                 //     //     cInjection.fRow =  cSCluster.fAddress;// - cBend ;
-                //                 //     //     cInjection.fColumn = 0;
-                //                 //     //     cInjection.fChipId = cChip->getId();
-                //                 //     //     LOG (INFO) << BOLDRED << "\t\t.. found S-cluster in SSA#" << +cChip->getId()
-                //                 //     //         << " strip " << +cInjection.fRow
-                //                 //     //         << " in readout."
-                //                 //     //         << RESET ;
-                //                 //     // }
-                //                 //     // for( auto cPCluster : cPClusters )
-                //                 //     // {
-                //                 //     //     Injection cInjection;
-                //                 //     //     cInjection.fRow =  cPCluster.fAddress;
-                //                 //     //     cInjection.fColumn = cPCluster.fZpos;
-                //                 //     //     cInjection.fChipId = cChip->getId();
-                //                 //     //     LOG (DEBUG) << BOLDRED << "\t\t.. found P-cluster in MPA#" << +cChip->getId()
-                //                 //     //         << " strip " << +cInjection.fRow
-                //                 //     //         << " pixel column is " << +cInjection.fColumn
-                //                 //     //         << " in readout."
-                //                 //     //         << RESET ;
-                //                 //     // }
-                //                 // }
-                //             }
-                //         }
-                //     }
-                // }
-
-                // don't attempt to match things
-                // for this run
                 continue;
             }
             // retrieve events
@@ -3278,7 +3198,7 @@ void DataChecker::PSTriggerTest()
 
                                 std::string cClstrType, cChipType;
                                 size_t      cStubsThisFE = 0;
-                                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     cClstrType      = "strip-clusters";
                                     cChipType       = "SSA";
@@ -3327,7 +3247,7 @@ void DataChecker::PSTriggerTest()
                                 }
                                 cNstubsInReadout += cStubsThisFE;
 
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                                 // LOG (DEBUG) << BOLDMAGENTA << "\t\t.."
                                 //     << cChipType << "#" << +cChip->getId()
@@ -3437,7 +3357,7 @@ void DataChecker::PSTriggerTest()
                             uint32_t cNFEsInEror = 0;
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                                 int cErrorBit = (cCicL1 & (0x1 << (1 + cChip->getId()))) >> (1 + cChip->getId());
                                 cNFEsInEror += (cErrorBit == 1) ? 1 : 0;
                             }
@@ -3450,7 +3370,7 @@ void DataChecker::PSTriggerTest()
                             //         << RESET;
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                                 auto&   cInjSmryChip = cClusterInjectionHybrid->getObject(cChip->getId());
                                 auto&   cSmry        = cInjSmryChip->getSummary<std::vector<Injection>>();
@@ -3561,9 +3481,9 @@ void DataChecker::PSTriggerTest()
                             // Clusters per FE chip
                             auto&       cChipClusterChip = cChipClustersHybrid->getObject(cChip->getId());
                             auto&       cChipClusterSmry = cChipClusterChip->getSummary<std::vector<Injection>>();
-                            std::string cType            = (cChip->getFrontEndType() == FrontEndType::SSA) ? "SSA" : "MPA";
-                            std::string cClusterType     = (cChip->getFrontEndType() == FrontEndType::SSA) ? "S-cluster" : "P-cluster";
-                            int         cChipOffset      = (cChip->getFrontEndType() == FrontEndType::SSA) ? 0 : 8;
+                            std::string cType            = (cChip->getFrontEndType() == FrontEndType::SSA2) ? "SSA" : "MPA";
+                            std::string cClusterType     = (cChip->getFrontEndType() == FrontEndType::SSA2) ? "S-cluster" : "P-cluster";
+                            int         cChipOffset      = (cChip->getFrontEndType() == FrontEndType::SSA2) ? 0 : 8;
 
                             // LOG (INFO) << BOLDMAGENTA << "Injection in "
                             //     << cType << "#" << +cChip->getId()
@@ -3579,7 +3499,7 @@ void DataChecker::PSTriggerTest()
                                 for(auto cClusterInj: cInjSmry)
                                 {
                                     if(cClusterInj.fChipId != cChip->getId()) continue;
-                                    int cBendOffset  = (cChip->getFrontEndType() == FrontEndType::SSA) ? cBend : 0;
+                                    int cBendOffset  = (cChip->getFrontEndType() == FrontEndType::SSA2) ? cBend : 0;
                                     int cExpectedCol = cClusterInj.fColumn;
                                     int cExpectedRow = cClusterInj.fRow + cBendOffset;
 
@@ -3625,7 +3545,7 @@ void DataChecker::PSTriggerTest()
                                 {
                                     if(cClusterInj.fChipId != cChip->getId()) continue;
 
-                                    int      cBendOffset    = (cChip->getFrontEndType() == FrontEndType::SSA) ? cBend : 0;
+                                    int      cBendOffset    = (cChip->getFrontEndType() == FrontEndType::SSA2) ? cBend : 0;
                                     int      cExpectedPxl   = cClusterInj.fColumn;
                                     int      cExpectedStrip = cClusterInj.fRow + cBendOffset;
                                     uint32_t cPixelId       = (uint32_t)(cExpectedPxl * 120) + (uint32_t)cExpectedStrip;
@@ -3636,7 +3556,7 @@ void DataChecker::PSTriggerTest()
                                     for(auto cChipCluster: cChipClusterSmry)
                                     {
                                         bool cStripMatch = (cExpectedStrip == cChipCluster.fRow);
-                                        bool cPixelMatch = (cChip->getFrontEndType() == FrontEndType::SSA) ? true : (cExpectedPxl == cChipCluster.fColumn);
+                                        bool cPixelMatch = (cChip->getFrontEndType() == FrontEndType::SSA2) ? true : (cExpectedPxl == cChipCluster.fColumn);
                                         bool cMatchFound = cStripMatch && cPixelMatch;
                                         if(cMatchFound) cMatchedL1Ids.push_back(cL1s[cCntr]);
                                         cMatchedMapCic.find(cL1s[cCntr])->second += (cMatchFound) ? 1 : 0;
@@ -3673,7 +3593,7 @@ void DataChecker::PSTriggerTest()
                             size_t cMatchedHits = 0;
                             for(auto cMapItem: cMatchedMapL1)
                             {
-                                int  cExpectedRow  = (cChip->getFrontEndType() == FrontEndType::SSA) ? 0 : (cMapItem.first) / 120;
+                                int  cExpectedRow  = (cChip->getFrontEndType() == FrontEndType::SSA2) ? 0 : (cMapItem.first) / 120;
                                 int  cExpectedStrp = (cMapItem.first) % 120;
                                 int  cNmatches     = cMatchedMap.find(cMapItem.first)->second;
                                 bool cMatch        = (cNmatches == (int)(cNtrials - 1));
@@ -3716,7 +3636,7 @@ void DataChecker::PSTriggerTest()
                                 TH2D* cMismatchedInjMap = static_cast<TH2D*>(getHist(cChip, "MismatchedInjectionMap"));
                                 cMismatchedInjMap->Fill(cExpectedRow, cExpectedStrp, cNmismatches);
                                 // hit latencies
-                                std::string cHistName   = (cChip->getFrontEndType() == FrontEndType::SSA) ? "StripHitLatency" : "PixelHitLatency";
+                                std::string cHistName   = (cChip->getFrontEndType() == FrontEndType::SSA2) ? "StripHitLatency" : "PixelHitLatency";
                                 TH2D*       cHitLatency = static_cast<TProfile2D*>(getHist(cHybrid, cHistName));
                                 cHitLatency->Fill(cChipLatencySmry, cChip->getId(), cNmatches);
                                 // cluster counter
@@ -3768,7 +3688,7 @@ void DataChecker::PSTriggerTest()
                             cStubLatencyHist->Fill(cStubLatency, cChip->getId(), cTotalNstubs);
 #endif
 
-                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
 #ifdef __USE_ROOT__
                             // Injections per FE chip
@@ -3849,9 +3769,9 @@ void DataChecker::PSNominal()
     // configure latencies
     // L1 latency in MPA
     // stub latency in FW
-    auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
     for(auto cBoard: *fDetectorContainer)
     {
+        auto cStubOffset = cBoard->getStubOffset();
         // check trigger source
         // and reload
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
@@ -3872,10 +3792,10 @@ void DataChecker::PSNominal()
             {
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-                        if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
+                        if(cChip->getFrontEndType() == FrontEndType::MPA2 && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
                     }
                 } // chip
             }     // hybrid
@@ -3899,9 +3819,9 @@ void DataChecker::PSNominal()
             {
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
-                        if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                        if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                         fReadoutChipInterface->WriteChipReg(cChip, "SLVSDrive", cSLVSDrive);
                     }
                 } // chip
@@ -3928,14 +3848,13 @@ void DataChecker::PSNominal()
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& fTapsOrigHybrid = fTapsOrigOG->getObject(cHybrid->getId());
-                auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                // auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                // auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 // size_t cPhyPort=0;
                 // size_t cPhyPortChnl=0;
                 // size_t cCounter=0;
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                     std::string cOutput = "";
                     char        cBuffer[80];
                     // first all the stub lines
@@ -3948,11 +3867,11 @@ void DataChecker::PSNominal()
                     //     cCounter++;
                     // }
                     // then the L1 line
-                    size_t cPhyPortL1                    = (cChip->getId() > 3) ? 11 : 10;
-                    size_t cPhyPortChnlL1                = (cChip->getId() % 4);
-                    auto&  fTapsOrigChip                 = fTapsOrigHybrid->getObject(cChip->getId());
-                    auto   cOptimalTaps                  = fCicInterface->GetOptimalTaps(cCic);
-                    fTapsOrigChip->getSummary<uint8_t>() = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
+                    // size_t cPhyPortL1                    = (cChip->getId() > 3) ? 11 : 10;
+                    // size_t cPhyPortChnlL1                = (cChip->getId() % 4);
+                    auto& fTapsOrigChip = fTapsOrigHybrid->getObject(cChip->getId());
+                    // auto   cOptimalTaps                  = fCicInterface->GetOptimalTaps(cCic);
+                    // fTapsOrigChip->getSummary<uint8_t>() = cOptimalTaps[cPhyPortChnlL1][cPhyPortL1];
                     sprintf(cBuffer, "%.2d ", fTapsOrigChip->getSummary<uint8_t>());
                     cOutput += cBuffer;
                     LOG(INFO) << BOLDBLUE << "Optimal tap found on FE" << +cChip->getId() << " : " << cOutput << RESET;
@@ -3990,14 +3909,14 @@ void DataChecker::PSNominal()
                 {
                     auto& fTapsHybrid     = fTapsOG->getObject(cHybrid->getId());
                     auto& fTapsOrigHybrid = fTapsOrigOG->getObject(cHybrid->getId());
-                    auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    // auto& cCic            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     // auto cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
                     // size_t cPhyPort=0;
                     // size_t cPhyPortChnl=0;
                     // size_t cCounter=0;
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                         std::string cOutput = "";
                         // first all the stub lines
                         // for(uint8_t cInput = 0; cInput < 5; cInput += 1)
@@ -4009,13 +3928,13 @@ void DataChecker::PSNominal()
                         //     cCounter++;
                         // }
                         // then the L1 line
-                        size_t cPhyPortL1     = (cChip->getId() > 3) ? 11 : 10;
-                        size_t cPhyPortChnlL1 = (cChip->getId() % 4);
-                        auto&  fTapsChip      = fTapsHybrid->getObject(cChip->getId());
-                        auto&  fTapsOrigChip  = fTapsOrigHybrid->getObject(cChip->getId());
-                        int    cPhase         = fTapsOrigChip->getSummary<uint8_t>();
-                        int    cPhaseMod      = cPhase + cOffset;
-                        fCicInterface->SetOptimalTap(cCic, cPhyPortL1, cPhyPortChnlL1, cOffset);
+                        // size_t cPhyPortL1     = (cChip->getId() > 3) ? 11 : 10;
+                        // size_t cPhyPortChnlL1 = (cChip->getId() % 4);
+                        auto& fTapsChip     = fTapsHybrid->getObject(cChip->getId());
+                        auto& fTapsOrigChip = fTapsOrigHybrid->getObject(cChip->getId());
+                        int   cPhase        = fTapsOrigChip->getSummary<uint8_t>();
+                        int   cPhaseMod     = cPhase + cOffset;
+                        // fCicInterface->SetOptimalTap(cCic, cPhyPortL1, cPhyPortChnlL1, cOffset); Way too dangerous, it relyies on the order of function calls of the CICInterface
                         cPhaseMod                        = (cPhaseMod < 0 || cPhaseMod > 0xF) ? cPhase : cPhaseMod;
                         fTapsChip->getSummary<uint8_t>() = cPhaseMod;
                     }
@@ -4106,8 +4025,7 @@ void DataChecker::PSNominal()
                         size_t           cNMPAs            = cMPAsDist(cGen);
                         std::vector<int> cMPAs;
                         cMPAs.clear();
-                        do
-                        {
+                        do {
                             int cMPA = cMPAIdDist(cGen);
                             if(std::find(cMPAs.begin(), cMPAs.end(), cMPA) == cMPAs.end()) { cMPAs.push_back(cMPA); }
 
@@ -4118,7 +4036,7 @@ void DataChecker::PSNominal()
                         for(auto cChip: *cHybrid) // for each chip (makes sense)
                         {
                             // for the moment - only written for CBC3
-                            if(cChip->getFrontEndType() == FrontEndType::MPA)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 if(std::find(cMPAs.begin(), cMPAs.end(), cChip->getId()) == cMPAs.end()) continue;
 
@@ -4140,8 +4058,7 @@ void DataChecker::PSNominal()
 
                                 std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
                                 auto&                 cSummaryInj = cInjChp->getSummary<std::vector<Injection>>();
-                                do
-                                {
+                                do {
                                     Injection cInjection;
                                     cInjection.fColumn = (cFlatDistCols(cGen));
                                     cInjection.fRow    = (cFlatDistRows(cGen));
@@ -4226,7 +4143,7 @@ void DataChecker::PSNominal()
                             cSummaryBxIds.push_back(cBxId);
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                                 auto& cPClustersChip   = cPClustersHybrid->getObject(cChip->getId());
                                 auto& cPClustersSmry   = cPClustersChip->getSummary<std::vector<Injection>>();
@@ -4342,7 +4259,7 @@ void DataChecker::PSNominal()
                         auto& cReadoutHybrid = cReadoutOG->getObject(cHybrid->getId());
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                             auto& cInjChip = cInjHybrid->getObject(cChip->getId());
                             auto& cExpInjs = cInjChip->getSummary<std::vector<Injection>>();
@@ -4433,7 +4350,7 @@ void DataChecker::PSNominal()
 
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                             auto& cInjChip = cInjHybrid->getObject(cChip->getId());
                             auto& cExpInjs = cInjChip->getSummary<std::vector<Injection>>();
@@ -4536,7 +4453,7 @@ void DataChecker::PSNominal()
             //             }
             //             for(auto cChip: *cHybrid)
             //             {
-            //                 if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+            //                 if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
             //                 auto& cExpChip = cExpHybrid->getObject(cChip->getId());
             //                 auto& cExpPClusterSmry = cExpChip->getSummary<std::vector<Injection>>();
@@ -4668,7 +4585,7 @@ void DataChecker::Eye_CIC()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                     // digital sync this pattern on pixel 1
                     LOG(INFO) << BOLDBLUE << "Controlling injection .." << RESET;
@@ -4705,11 +4622,11 @@ void DataChecker::Eye_CIC()
                 for(auto cChip: *cHybrid)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-                    if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2 && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
                 } // chip
             }     // hybrid
         }         // module
-        auto cStubOffset  = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
+        auto cStubOffset  = cBoard->getStubOffset();
         int  cStubLatency = cLatency - (cStubOffset + cReTimeValue);
         LOG(INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
         // read events
@@ -4720,19 +4637,19 @@ void DataChecker::Eye_CIC()
     for(int cOffset = -1; cOffset < +1; cOffset++)
     {
         // set offsets on CICs
-        bool cValidOffset = true;
-        for(auto cBoard: *fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    auto& cCic   = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    cValidOffset = cValidOffset && fCicInterface->SetOptimalTaps(cCic, cOffset);
-                } // hybrid
-            }     // optical group
-        }         // board
-        if(!cValidOffset) continue;
+        // bool cValidOffset = true;
+        // for(auto cBoard: *fDetectorContainer)
+        // {
+        //     for(auto cOpticalGroup: *cBoard)
+        //     {
+        //         for(auto cHybrid: *cOpticalGroup)
+        //         {
+        //             auto& cCic   = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        //             cValidOffset = cValidOffset && fCicInterface->SetOptimalTaps(cCic, cOffset); It does not work with more then one CIC!!!
+        //         } // hybrid
+        //     }     // optical group
+        // }         // board
+        // if(!cValidOffset) continue;
 
         LOG(INFO) << BOLDBLUE << "Offset of " << +cOffset << " from optimal tap on CIC inputs.." << RESET;
         for(auto cBoard: *fDetectorContainer)
@@ -4885,7 +4802,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                 }
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                     fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_0", 1); // 1
                     fReadoutChipInterface->WriteChipReg(cChip, "OutSetting_1", 2); // 2
@@ -4957,7 +4874,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                             fBeBoardInterface->Stop(cBeBoard);
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                                 auto cRegValue = fReadoutChipInterface->ReadChipReg(cChip, "ErrorL1");
                                 LOG(INFO) << BOLDBLUE << "ErrorL1 register is 0x" << std::hex << +cRegValue << std::dec << RESET;
                             }
@@ -4997,7 +4914,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
     //                     for(auto cChip: *cHybrid)
     //                     {
     //                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
-    //                         if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
+    //                         if(cChip->getFrontEndType() == FrontEndType::MPA2 && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
     //                     } // chip
     //                 }     // hybrid
     //             }         // module
@@ -5216,18 +5133,10 @@ void DataChecker::ReadNeventsTest()
                     {
                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         {
-                            std::vector<uint8_t> cSeeds{10};
-                            cSeeds[0] = 2 * (cChip->getHybridId() + 1) + 5;
-                            std::vector<int> cBends{0};
-                            for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
-                            {
-                                auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
-                                LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " expect to see hits in channels : " << RESET;
-                                for(auto cHit: cHitList) LOG(INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
-                            }
-                            (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
+                            std::vector<std::pair<uint8_t, int>> seedAndBend{{2 * (cChip->getHybridId() + 1) + 5, 0}};
+                            (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, seedAndBend, cWithNoise);
                         }
-                        else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                        else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                         {
                             auto cReadoutMode = fReadoutChipInterface->ReadChipReg(cChip, "ReadoutMode");
                             LOG(INFO) << BOLDBLUE << "MPA#" << +cChip->getId() << " : readout mode [" << +cReadoutMode << " ]" << RESET;
@@ -5301,7 +5210,7 @@ void DataChecker::ReadNeventsTest()
     //                         fReadoutChipInterface->WriteChipReg(cChip,"Threshold",1000);
     //                         static_cast<CbcInterface*>(fReadoutChipInterface)->MaskAllChannels(cChip, false);
     //                     }
-    //                     else if(cChip->getFrontEndType() == FrontEndType::MPA)
+    //                     else if(cChip->getFrontEndType() == FrontEndType::MPA2)
     //                     {
     //                         auto cReadoutMode = fReadoutChipInterface->ReadChipReg(cChip, "ReadoutMode");
     //                         LOG(INFO) << BOLDBLUE << "MPA#" << +cChip->getId() << " : readout mode [" << +cReadoutMode << " ]" << RESET;
@@ -5469,8 +5378,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                         // both stub and bend are in units of half strips
                         // if using TP then always inject a stub with bend 0 ..
                         // later will use offset window to modify bend [ should probably put this in inject stub ]
-                        uint8_t cBend_halfStrips = cStub.second;
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, {cStub.first}, {cBend_halfStrips}, false);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, {cStub}, false);
                         // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5
                         // strips set offsets needs to be fixed
                         /*
@@ -5543,8 +5451,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                 // start triggers
                 fBeBoardInterface->Start(theBoard);
                 auto cNtriggers = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-                do
-                {
+                do {
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     cNtriggers = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                 } while(cNtriggers < 100);
@@ -5603,8 +5510,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                         int    cLatency_eq = cLatencyDAC - (cPipeline - cPipeline_first);
                                         double cTime_ns    = -1 * (cLatency_eq - fTPconfig.tpDelay) * 25 + cDelayDAC;
                                         auto   cIterator   = cExpectedHits.begin();
-                                        do
-                                        {
+                                        do {
                                             bool cMatchFound = std::find(cHits.begin(), cHits.end(), *cIterator) != cHits.end();
                                             cHitMatches[std::distance(cExpectedHits.begin(), cIterator)] += cMatchFound;
                                             cMatched += cMatchFound;
@@ -6233,7 +6139,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
                         // if using TP then always inject a stub with bend 0 ..
                         // later will use offset window to modify bend [ should probably put this in inject stub ]
                         uint8_t cBend_halfStrips = (pWithNoise) ? cStub.second : 0;
-                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, {cStub.first}, {cBend_halfStrips}, pWithNoise);
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, {{cStub.first, cBend_halfStrips}}, pWithNoise);
                         // each bend code is stored in this vector - bend encoding start at -7 strips, increments by 0.5
                         // strips set offsets needs to be fixed
                         /*
@@ -6409,8 +6315,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
     uint8_t cSecondSeed = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 3) / 2.))); // in half strips
     uint8_t cThirdSeed  = static_cast<uint8_t>(2 * (1 + std::floor((cTPgroup * 2 + 16 * 5) / 2.))); // in half strips
 
-    std::vector<uint8_t> cSeeds{cFirstSeed}; // cThirdSeed};
-    std::vector<int>     cBends(cSeeds.size(), cBend);
+    std::vector<std::pair<uint8_t, int>> cSeeds{{cFirstSeed, cBend}}; // cThirdSeed};
 
     LOG(INFO) << BOLDMAGENTA << "First stub expected to be " << std::bitset<8>(cFirstSeed) << RESET;
     LOG(INFO) << BOLDMAGENTA << "Second stub line expected to be " << std::bitset<8>(cSecondSeed) << RESET;
@@ -6441,7 +6346,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
                     if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) != pChipIds.end())
                     {
                         // first pattern - stubs lines 0,1,3
-                        cReadoutChipInterface->injectStubs(cReadoutChip, cSeeds, cBends, false);
+                        cReadoutChipInterface->injectStubs(cReadoutChip, cSeeds, false);
                         // set threshold back to low
                         // fReadoutChipInterface->WriteChipReg(cReadoutChip,"VCth",cThreshold);
                         // fReadoutChipInterface->WriteChipReg ( cReadoutChip, "TestPulseGroup", cTPgroup );
@@ -6551,7 +6456,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                     if(std::find(pChipIds.begin(), pChipIds.end(), cChip->getId()) != pChipIds.end())
                     {
                         // first pattern - stubs lines 0,1,3
-                        cReadoutChipInterface->injectStubs(cReadoutChip, {10}, {0}, true);
+                        cReadoutChipInterface->injectStubs(cReadoutChip, {{10, 0}}, true);
                         // switch off HitOr
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "HitOr", 0);
                         // enable stub logic
@@ -6559,10 +6464,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                         // set pT cut to maximum
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "PtCut", 14);
                     }
-                    else
-                    {
-                        fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", 100);
-                    }
+                    else { fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", 100); }
                 } // chip
             }     // hybrid
         }         // hybrid
@@ -6763,10 +6665,10 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                     if(cChannels.size() > 0)
                     {
                         // channel mask
-                        auto cChannelMask = std::make_shared<ChannelGroup<NCHNLS, 1>>();
+                        auto cChannelMask = std::make_shared<ChannelGroup<1, NCHNLS>>();
 
                         cChannelMask->disableAllChannels();
-                        for(auto cChannel: cChannels) cChannelMask->enableChannel(cChannel);
+                        for(auto cChannel: cChannels) cChannelMask->enableChannel(0, cChannel);
 
                         std::bitset<NCHNLS> cBitset = std::bitset<NCHNLS>(cChannelMask->getBitset());
                         LOG(DEBUG) << BOLDBLUE << "Injecting stubs in chip " << +cChip->getId() << " channel mask is " << cBitset << RESET;
@@ -6882,7 +6784,7 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
                         auto cReadoutChip = static_cast<ReadoutChip*>(cChip);
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "VCth", cThThisChip->getSummary<uint16_t>());
 
-                        auto cChannelMask = std::make_shared<ChannelGroup<NCHNLS, 1>>();
+                        auto cChannelMask = std::make_shared<ChannelGroup<1, NCHNLS>>();
                         cChannelMask->enableAllChannels();
                         fReadoutChipInterface->maskChannelGroup(cReadoutChip, cChannelMask);
                     }
@@ -6932,7 +6834,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
     // prepare mask
     // just for CBCs for now
     fCBCMask->disableAllChannels();
-    for(auto cChannel: pChannels) fCBCMask->enableChannel(cChannel);
+    for(auto cChannel: pChannels) fCBCMask->enableChannel(0, cChannel);
 
     auto     cSetting = fSettingsMap.find("Nevents");
     uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;

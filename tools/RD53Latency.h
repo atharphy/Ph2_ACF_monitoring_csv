@@ -27,7 +27,6 @@ class Latency : public PixelAlive
     ~Latency()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -60,10 +59,11 @@ class Latency : public PixelAlive
     DetectorDataContainer theLatencyContainer;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     size_t startValue;
     size_t stopValue;
-
-    int theCurrentRun;
 };
 
 #endif

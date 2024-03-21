@@ -1,6 +1,8 @@
 #include "OTQuickNoise.h"
+#ifdef __USE_ROOT__
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+#endif
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
@@ -34,10 +36,7 @@ void OTQuickNoise::SetThresholds()
                     cVisitor.setThreshold(fManualVcth);
                     static_cast<OuterTrackerHybrid*>(cHybrid)->accept(cVisitor);
                 }
-                else
-                {
-                    LOG(INFO) << BOLDCYAN << "Not resetting threshold! Running with values in config files." << RESET;
-                }
+                else { LOG(INFO) << BOLDCYAN << "Not resetting threshold! Running with values in config files." << RESET; }
             }
         }
     }
@@ -52,12 +51,12 @@ void OTQuickNoise::TakeData()
 
     DetectorDataContainer theHitContainer;
     ContainerFactory::copyAndInitStructure<EmptyContainer,
-                                           GenericDataArray<(NCHANNELS + 1), uint32_t>,
-                                           GenericDataArray<(HYBRID_CHANNELS_OT + 1), uint32_t>,
-                                           GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>,
+                                           GenericDataArray<uint32_t, NCHANNELS + 1>,
+                                           GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1>,
+                                           GenericDataArray<uint32_t, TOTAL_CHANNELS_OT + 1>,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, theHitContainer);
-
+#ifdef __USE_ROOT__
     for(auto cBoard: theHitContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->getObject(cBoard->getId()));
@@ -91,6 +90,7 @@ void OTQuickNoise::TakeData()
             }
         } // end module loop
     }
+#endif
 }
 
 void OTQuickNoise::parseSettings()

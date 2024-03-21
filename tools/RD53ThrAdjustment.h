@@ -32,7 +32,6 @@ class ThrAdjustment : public PixelAlive
     ~ThrAdjustment()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -64,13 +63,14 @@ class ThrAdjustment : public PixelAlive
     DetectorDataContainer theThrContainer;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     float  targetThreshold;
     size_t startValue;
     size_t stopValue;
     bool   doUpdateChip;
     bool   doDisplay;
-
-    int theCurrentRun;
 };
 
 #endif

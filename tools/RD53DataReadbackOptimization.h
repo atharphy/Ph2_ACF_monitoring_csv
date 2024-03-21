@@ -27,7 +27,6 @@ class DataReadbackOptimization : public BERtest
     ~DataReadbackOptimization()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -60,6 +59,9 @@ class DataReadbackOptimization : public BERtest
     DetectorDataContainer theTAP2Container;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     size_t startValueTAP0;
     size_t stopValueTAP0;
     size_t startValueTAP1;
@@ -69,8 +71,6 @@ class DataReadbackOptimization : public BERtest
     size_t stopValueTAP2;
     bool   invTAP2;
     bool   doUpdateChip;
-
-    int theCurrentRun;
 };
 
 #endif

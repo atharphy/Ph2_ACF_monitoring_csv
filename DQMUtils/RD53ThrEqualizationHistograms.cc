@@ -26,22 +26,21 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
     // #######################
     startValue            = this->findValueInSettings<double>(settingsMap, "TDACGainStart");
     stopValue             = this->findValueInSettings<double>(settingsMap, "TDACGainStop");
-    TDACGainNSteps        = this->findValueInSettings<double>(settingsMap, "TDACGainNSteps");
     nEvents               = this->findValueInSettings<double>(settingsMap, "nEvents");
     const size_t colStart = this->findValueInSettings<double>(settingsMap, "COLstart");
     const size_t colStop  = this->findValueInSettings<double>(settingsMap, "COLstop");
     frontEnd              = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
-    auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents + 1, 0, 1 + 1. / nEvents);
+    auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "Threshold Equalization", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, ThrEqualization, hThrEqualization, "Efficiency", "Entries");
 
-    auto hTDAC1D = CanvasContainer<TH1F>("TDAC1D", "TDAC Distribution", frontEnd->nTDACvalues, 0, frontEnd->nTDACvalues);
+    auto hTDAC1D = CanvasContainer<TH1F>("TDAC1D", "TDAC distribution", frontEnd->nTDACvalues, 0, frontEnd->nTDACvalues);
     bookImplementer(theOutputFile, theDetectorStructure, TDAC1D, hTDAC1D, "TDAC", "Entries");
 
-    auto hTDAC2D = CanvasContainer<TH2F>("TDAC2D", "TDAC Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hTDAC2D = CanvasContainer<TH2F>("TDAC2D", "TDAC map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, TDAC2D, hTDAC2D, "Column", "Row");
 
-    auto hOcc1D = CanvasContainer<TH1F>("TDACGainScan", "TDAC Gain Scan", stopValue - startValue + 1, startValue, stopValue + 1);
+    auto hOcc1D = CanvasContainer<TH1F>("TDACGainScan", "TDAC Gain scan", stopValue - startValue + 1, startValue, stopValue + 1);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "TDAC Gain", "Threshold Distribution (std.dev.)");
 
     auto hTDACGain = CanvasContainer<TH1F>("TDACGain", "TDAC Gain", stopValue - startValue + 1, startValue, stopValue + 1);
@@ -91,11 +90,7 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(OccupancyContainer.getObject(cBoard->getId())
-                           ->getObject(cOpticalGroup->getId())
-                           ->getObject(cHybrid->getId())
-                           ->getObject(cChip->getId())
-                           ->getChannelContainer<OccupancyAndPh>() == nullptr)
+                    if(OccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->hasChannelContainer() == false)
                         continue;
 
                     auto* hThrEqualization = ThrEqualization.getObject(cBoard->getId())
@@ -119,8 +114,7 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(TDACContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<uint16_t>() == nullptr)
-                        continue;
+                    if(TDACContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->hasChannelContainer() == false) continue;
 
                     auto* hTDAC1D =
                         TDAC1D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
@@ -154,9 +148,9 @@ void ThrEqualizationHistograms::fillOccupancyScan(const DetectorDataContainer& O
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                    const size_t TDACGainNSteps = cChip->getSummary<std::vector<float>>().size();
-                    const float  step           = (TDACGainNSteps != 0 ? (stopValue - startValue) / TDACGainNSteps : 0);
-                    for(auto i = 0u; i <= TDACGainNSteps; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<std::vector<float>>().at(i));
+                    const float TDACGainNSteps = cChip->getSummary<std::vector<float>>().size();
+                    const float step           = (TDACGainNSteps != 0 ? (stopValue - startValue) / TDACGainNSteps : 0);
+                    for(auto i = 0u; i < TDACGainNSteps; i++) Occupancy1DHist->SetBinContent(Occupancy1DHist->FindBin(startValue + step * i), cChip->getSummary<std::vector<float>>().at(i));
                 }
 }
 

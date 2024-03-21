@@ -1,26 +1,25 @@
 #ifndef _D19cDebugFWInterface_H__
 #define __D19cDebugFWInterface_H__
 
-#include "HWDescription/BeBoard.h"
-#include "HWInterface/RegManager.h"
-#include "Utils/Utilities.h"
-#include "Utils/easylogging++.h"
+#include <cstdint>
 #include <string>
+#include <vector>
 
 namespace Ph2_HwInterface
 {
-class D19cDebugFWInterface : public RegManager
+class RegManager;
+class D19cDebugFWInterface
 {
   public:
-    D19cDebugFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cDebugFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cDebugFWInterface(RegManager* theRegManager);
 
     ~D19cDebugFWInterface();
 
-  public:
-    std::vector<std::string> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 6, bool pPrint = true);
-    std::string              L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
-    std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
+    std::vector<std::vector<uint32_t>> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 6, bool pPrint = true);
+    std::vector<uint32_t>              L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
+    std::vector<std::string>           ScopeStubLines(bool pWithTestPulse = true);
+    RegManager*                        fTheRegManager{nullptr};
+    uint32_t                           fTotalNumberOfTriggers{0};
 };
 } // namespace Ph2_HwInterface
 #endif

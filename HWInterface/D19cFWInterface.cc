@@ -11,6 +11,7 @@
  */
 
 #include "HWInterface/D19cFWInterface.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Hybrid.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
@@ -34,7 +35,8 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, BeBoard* theBoard)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
     // can only link one type of trigger + FC interface to this type of FW
@@ -42,35 +44,35 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
-    : BeBoardFWInterface(puHalConfigFileName, pBoardId), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
         fSaveToFile = false;
@@ -82,35 +84,35 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
-    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(nullptr), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), fFileHandler(nullptr), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     LOG(INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
     std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
@@ -120,35 +122,35 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler)
-    : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
         fSaveToFile = false;
@@ -160,27 +162,27 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     // configure L1 readout interface
     if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fTriggerInterface = new D19cTriggerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
     if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fFastCommandInterface = new D19cFastCommandInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
     if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fDebugInterface = new D19cDebugFWInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
@@ -399,11 +401,11 @@ void D19cFWInterface::configureCDCE(uint16_t pClockRate, std::pair<std::string, 
     cWriteBuffer[2] = 0xEB840302; // reg2 (out2=240mhz,lvds  phase shift  0deg) 0xEB840302
 
     // Output 40 MHz clock on coax connectors (requires swapping of two resistors on FC7)
-    cWriteBuffer[3] = 0xEB140303; //# reg3 (40 MHz)
+    cWriteBuffer[3] = 0xEB140303; // # reg3 (40 MHz)
     // cWriteBuffer[3] = 0xEA860303; //# reg3 (off)
 
     // not used output
-    cWriteBuffer[4] = 0xEB140334; //# reg4 (off)  0x00860314
+    cWriteBuffer[4] = 0xEB140334; // # reg4 (off)  0x00860314
     // selecting the reference
     if(pCDCEselect.first == "sec")
     {
@@ -490,7 +492,7 @@ void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
     delete fL1ReadoutInterface;
-    fL1ReadoutInterface = new D19cPSCounterFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+    fL1ReadoutInterface = new D19cPSCounterFWInterface(this);
     static_cast<D19cPSCounterFWInterface*>(fL1ReadoutInterface)->LinkFEConfigurationInterface(fFEConfigurationInterface);
     LOG(INFO) << BOLDYELLOW << "Initialized D19cPSCounterFWInterface ..." << fL1ReadoutInterface << RESET;
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
@@ -500,7 +502,7 @@ void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
     delete fL1ReadoutInterface;
-    fL1ReadoutInterface = new D19cL1ReadoutInterface(this->getId(), this->getUri(), this->getAddressTable());
+    fL1ReadoutInterface = new D19cL1ReadoutInterface(this);
     LOG(INFO) << BOLDYELLOW << "Initialized D19cL1ReadoutInterface ..." << fL1ReadoutInterface << RESET;
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
     fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);
@@ -510,7 +512,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
     if(fLinkInterface == nullptr && pBoard->isOptical())
     {
         LOG(INFO) << BOLDBLUE << "Optical readout . initializing link control interface" << RESET;
-        fLinkInterface = new D19cLinkInterface(this->getId(), this->getUri(), this->getAddressTable());
+        fLinkInterface = new D19cLinkInterface(this);
     }
     if(fFEConfigurationInterface == nullptr)
     {
@@ -518,7 +520,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         if(!pBoard->isOptical())
         {
             LOG(INFO) << BOLDYELLOW << "Electrical readout.. initialize I2C interface" << RESET;
-            fFEConfigurationInterface = new D19cI2CInterface(this->getId(), this->getUri(), this->getAddressTable());
+            fFEConfigurationInterface = new D19cI2CInterface(this);
             (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
             cConfiguration.fRetry       = 0;
             cConfiguration.fVerify      = 0;
@@ -527,7 +529,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         else
         {
             LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface for FE configuration" << RESET;
-            fFEConfigurationInterface   = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
+            fFEConfigurationInterface   = new D19cOpticalInterface(this);
             cConfiguration.fRetryIC     = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.ic_retry");
             cConfiguration.fMaxRetryIC  = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_ic_retry");
             cConfiguration.fRetryI2C    = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.i2c_retry");
@@ -566,10 +568,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     std::vector<std::pair<std::string, uint32_t>> cBoardRegs;
     for(auto const& it: cRegMap)
     {
-        cBoardRegs.push_back({it.first, it.second});
-        if(it.first == "fc7_daq_cnfg.dio5_block.dio5_en") cEnableDIO5 = (bool)it.second;
-        if(it.first == "fc7_daq_cnfg.optical_block.enable.l8") { cL8Enable = std::bitset<12>(it.second); }
-        if(it.first == "fc7_daq_cnfg.optical_block.enable.l12") { c12Enable = std::bitset<12>(it.second); }
+        cBoardRegs.push_back({it.first, it.second.fValue});
+        if(it.first == "fc7_daq_cnfg.dio5_block.dio5_en") cEnableDIO5 = (bool)it.second.fValue;
+        if(it.first == "fc7_daq_cnfg.optical_block.enable.l8") { cL8Enable = std::bitset<12>(it.second.fValue); }
+        if(it.first == "fc7_daq_cnfg.optical_block.enable.l12") { c12Enable = std::bitset<12>(it.second.fValue); }
         if(it.first == "fc7_daq_cnfg.readout_block.global.zero_suppression_enable") { cBoardRegs.push_back({it.first, pBoard->getEventType() == EventType::ZS}); }
     }
     // configure CDCE - if needed
@@ -577,8 +579,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     bool                          cSecondaryReference = false;
     for(auto const& it: cRegMap)
     {
-        if(it.first == "fc7_daq_cnfg.clock.ext_clk_en") cSecondaryReference = cSecondaryReference | (it.second == 0);
-        if(it.first == "fc7_daq_cnfg.ttc.ttc_enable") cSecondaryReference = cSecondaryReference | (it.second == 1);
+        if(it.first == "fc7_daq_cnfg.clock.ext_clk_en") cSecondaryReference = cSecondaryReference | (it.second.fValue == 0);
+        if(it.first == "fc7_daq_cnfg.ttc.ttc_enable") cSecondaryReference = cSecondaryReference | (it.second.fValue == 1);
     }
     LOG(INFO) << BOLDBLUE << "External clock " << ((cSecondaryReference) ? "Disabled" : "Enabled") << RESET;
     if(cSecondaryReference)
@@ -732,10 +734,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard for optical readout" << RESET;
         LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslop " << RESET;
     }
-    else
-    {
-        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslop " << RESET;
-    }
+    else { LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslop " << RESET; }
     fOptical = pBoard->isOptical() && !cWithlpGBT;
     // if optical readout .. then configure links
     if(pBoard->isOptical() && cWithlpGBT)
@@ -764,7 +763,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
 
     // resetting hard
-    if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
+    if(fFirmwareFrontEndType == FrontEndType::CIC2)
     {
         for(auto cOpticalGroup: *pBoard)
         {
@@ -772,14 +771,12 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             this->ChipReset();
         }
     }
-    else
-    {
-        this->ReadoutChipReset();
-    }
+    else { this->ReadoutChipReset(); }
 
     // modifying FC7 configuration based on CIC
+    // TODO: avoid hardcoding sparsification and stubs?
     cVecReg.clear();
-    if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
+    if(fFirmwareFrontEndType == FrontEndType::CIC2)
     {
         // assuming only one type of CIC per board ...
         for(auto cOpticalGroup: *pBoard)
@@ -795,21 +792,18 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // disable stub debug
                 cVecReg.push_back({"fc7_daq_cnfg.ddr3_debug.stub_enable", 0});
                 std::string cFwRegName = "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable";
-                std::string cRegName   = (cCic->getFrontEndType() == FrontEndType::CIC) ? "CBC_SPARSIFICATION_SEL" : "FE_CONFIG";
+                std::string cRegName   = "FE_CONFIG";
                 ChipRegItem cRegItem   = static_cast<const OuterTrackerHybrid*>(pBoard->getFirstObject()->getFirstObject())->fCic->getRegItem(cRegName);
-                uint8_t     cRegValue  = (cCic->getFrontEndType() == FrontEndType::CIC) ? cRegItem.fValue : (cRegItem.fValue & 0x10) >> 4;
+                uint8_t     cRegValue  = (cRegItem.fValue & 0x10) >> 4;
                 LOG(INFO) << BOLDBLUE << "Sparsification set to " << +cRegValue << RESET;
-                cVecReg.push_back({cFwRegName, (cCic->getFrontEndType() == FrontEndType::CIC) ? cRegItem.fValue : (cRegItem.fValue & 0x10) >> 4});
+                cVecReg.push_back({cFwRegName, (cRegItem.fValue & 0x10) >> 4});
                 for(auto cReg: cVecReg) LOG(INFO) << BOLDBLUE << "Setting firmware register " << cReg.first << " to " << +cReg.second << RESET;
                 this->WriteStackReg(cVecReg);
                 cVecReg.clear();
             }
         }
     }
-    else
-    {
-        LOG(INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET;
-    }
+    else { LOG(INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET; }
 
     // Enable hybrids + Chips for readout
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
@@ -826,6 +820,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
 }
+
 void D19cFWInterface::EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard)
 {
     fNCic                                                       = 0;
@@ -882,10 +877,7 @@ void D19cFWInterface::InitFMCPower()
         else
             LOG(INFO) << BOLDGREEN << "Powering on DIO5 at L8..." << RESET;
     }
-    else if(cPSMux || c2SMux)
-    {
-        LOG(INFO) << BOLDGREEN << "Powering FMCs in multiplexing setup" << RESET;
-    }
+    else if(cPSMux || c2SMux) { LOG(INFO) << BOLDGREEN << "Powering FMCs in multiplexing setup" << RESET; }
 
     std::vector<std::string> cRegNames  = {"sysreg.fmc_pwr.l12_pwr_en", "sysreg.fmc_pwr.l8_pwr_en"};
     std::vector<bool>        cFMCStates = {cEnableL12, cEnableL8};
@@ -1010,7 +1002,7 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
         if(cRegName.find("fc7_daq_cnfg.fast_command_block.") != std::string::npos)
         {
             // LOG (DEBUG) << BOLDBLUE << "Setting " << cRegName << " : " << it.second << RESET;
-            cVecReg.push_back({it.first, it.second});
+            cVecReg.push_back({it.first, it.second.fValue});
         }
     }
     this->WriteStackReg(cVecReg);
@@ -1023,7 +1015,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 {
     pData.clear();
     uint32_t cNEvents = 0;
-    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if(fL1ReadoutInterface == nullptr)
     {
         LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
@@ -1055,7 +1047,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
     pData.clear();
-    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    // LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if(fL1ReadoutInterface == nullptr) LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
 
     auto cTriggerRate = ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
@@ -1064,7 +1056,7 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     if(fL1ReadoutInterface->ReadEvents(pBoard)) { pData = fL1ReadoutInterface->getData(); }
     else
     {
-        LOG(INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
+        LOG(INFO) << BOLDRED << "Failed to ReadNEvents. Contact Fabio Ravera and/or Irene Zoi." << RESET;
         // throw Exception("Failed to ReadNEvents....");
     }
     if(fSaveToFile) fFileHandler->setData(pData);
@@ -1076,30 +1068,16 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
 {
     uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
     fFirmwareFrontEndType      = getFrontEndType(cFrontEndTypeCode);
-    uint32_t cNHybrid          = pBoard->getNHybrid();
-    uint32_t cNChips           = 0;
+    // uint32_t cNHybrid          = pBoard->getNHybrid();
+    uint32_t cNChips = 0;
 
     uint32_t cNEventSize32 = 0;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup) { cNChips += cHybrid->size(); }
     }
-    if(fNCic != 0)
-    {
-        uint32_t cSparsified = ReadReg("fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable");
-        LOG(DEBUG) << BOLDBLUE << "CIC sparsification expected to be : " << +cSparsified << RESET;
-    }
-    else
-    {
-        if(fFirmwareFrontEndType == FrontEndType::CBC3) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChips * D19C_EVENT_SIZE_32_CBC3;
-        if(fFirmwareFrontEndType == FrontEndType::MPA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_MPA;
-        if(fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
-    }
-    if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
-    {
-        uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
-        if(!(cNEventSize32_divided_by_8 == cNEventSize32)) { cNEventSize32 = cNEventSize32_divided_by_8 + 8; }
-    }
+    uint32_t cNEventSize32_divided_by_8 = ((cNEventSize32 >> 3) << 3);
+    if(!(cNEventSize32_divided_by_8 == cNEventSize32)) { cNEventSize32 = cNEventSize32_divided_by_8 + 8; }
     return cNEventSize32;
 }
 
@@ -1108,11 +1086,11 @@ std::vector<uint32_t> D19cFWInterface::ReadBlockRegValue(const std::string& pReg
 std::vector<uint32_t> D19cFWInterface::ReadBlockRegOffsetValue(const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset)
 {
     std::vector<uint32_t> vBlock = ReadBlockRegOffset(pRegNode, pBlocksize, pBlockOffset);
-    LOG(DEBUG) << BOLDGREEN << +pBlocksize << " words read back from memory " << RESET;
+    // LOG(DEBUG) << BOLDGREEN << +pBlocksize << " words read back from memory " << RESET;
     if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
     {
         fDDR3Offset += pBlocksize;
-        LOG(DEBUG) << BOLDGREEN << "\t... " << +fDDR3Offset << " current offset in DDR3 " << RESET;
+        // LOG(DEBUG) << BOLDGREEN << "\t... " << +fDDR3Offset << " current offset in DDR3 " << RESET;
     }
     return vBlock;
 }
@@ -1152,8 +1130,8 @@ void D19cFWInterface::ChipReSync()
     FastCommand              cFastCmd;
     cFastCmd.resync_en     = 1;
     auto cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
-    bool cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
-    cFastCmd.bc0_en        = (cWithCIC && fIs2S) ? 1 : 0;
+    bool cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
+    cFastCmd.bc0_en        = (cWithCIC) ? 1 : 0;
     cFastCmds.push_back(cFastCmd);
     fFastCommandInterface->SendGlobalCustomFastCommands(cFastCmds);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -1184,8 +1162,7 @@ bool D19cFWInterface::Bx0Alignment()
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
     // number of triggers to accept
-    do
-    {
+    do {
         if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         // pause after reset
         // send a resync then wait
@@ -1461,7 +1438,7 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return 0;
         }
-        if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+        if(chipType == FrontEndType::CIC2)
         {
             LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                       << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1482,11 +1459,11 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
         auto cIterator    = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
         if(cIterator != cRegisterMap.end())
         {
-            auto cPreviousValue = cIterator->second.fValue;
+            // auto cPreviousValue = cIterator->second.fValue;
             pChip->setReg(cIterator->first, pItem.fValue);
             pItem = pChip->getRegItem(cIterator->first);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterRead successful read from 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
-                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterRead successful read from 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
+            //            << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
         }
         else if(pItem.fStatusReg == 0x00)
             LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << std::dec << RESET;
@@ -1521,7 +1498,7 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
                 ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
                 return false;
             }
-            if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+            if(chipType == FrontEndType::CIC2)
             {
                 LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                           << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1537,13 +1514,13 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
         if(success)
         {
             // update map
-            auto cPreviousValue = cIterator->second.fValue;
+            // auto cPreviousValue = cIterator->second.fValue;
             pChip->setReg(cIterator->first, pItem.fValue);
-            uint16_t readBackVal = pChip->getReg(cIterator->first);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite Succesful write of 0x" << std::hex << +pItem.fValue << " to " << cIterator->first << "\t.. Memory is now 0x"
-                       << +readBackVal << " it was 0x" << +cPreviousValue << std::dec << RESET;
+            // uint16_t readBackVal = pChip->getReg(cIterator->first);
+            // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite Succesful write of 0x" << std::hex << +pItem.fValue << " to " << cIterator->first << "\t.. Memory is now 0x"
+            //            << +readBackVal << " it was 0x" << +cPreviousValue << std::dec << RESET;
             pItem = pChip->getRegItem(cIterator->first);
-            LOG(DEBUG) << BOLDGREEN << " DONE D19cFWInterface::SingleRegisterWrite" << RESET;
+            // LOG(DEBUG) << BOLDGREEN << " DONE D19cFWInterface::SingleRegisterWrite" << RESET;
         }
         else
             LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILED to write to Register " << cIterator->first << RESET;
@@ -1566,8 +1543,8 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
     auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
     if(cIterator != cRegisterMap.end())
     {
-        auto cPreviousValue = cIterator->second.fValue;
-        bool success        = false;
+        // auto cPreviousValue = cIterator->second.fValue;
+        bool success = false;
         try
         {
             success = fFEConfigurationInterface->SingleWriteRead(pChip, pItem);
@@ -1583,7 +1560,7 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
                 ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
                 return false;
             }
-            if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+            if(chipType == FrontEndType::CIC2)
             {
                 LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                           << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1600,18 +1577,15 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
         {
             // update map
             pChip->setReg(cIterator->first, pItem.fValue);
-            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWriteRead successful write of 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
-                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWriteRead successful write of 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
+            //            << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
             pItem = pChip->getRegItem(cIterator->first);
             return true;
         }
         else
             LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead FAILED to write to Register " << cIterator->first << RESET;
     }
-    else
-    {
-        LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address " << std::hex << +pItem.fAddress << std::dec << " in register map " << RESET;
-    }
+    else { LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address " << std::hex << +pItem.fAddress << std::dec << " in register map " << RESET; }
     return false;
 }
 
@@ -1636,7 +1610,7 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return {};
         }
-        if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+        if(chipType == FrontEndType::CIC2)
         {
             LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                       << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1665,13 +1639,10 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
                 {
                     pChip->setReg(cIterator->first, cItem.fValue);
                     cValues.push_back(pChip->getReg(cIterator->first));
-                    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register " << cIterator->first << " 0x" << std::hex << +cItem.fAddress << std::dec << " set to 0x" << std::hex
-                               << +cValues.at(cValues.size() - 1) << std::dec << RESET;
+                    // LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register " << cIterator->first << " 0x" << std::hex << +cItem.fAddress << std::dec << " set to 0x" << std::hex
+                    //            << +cValues.at(cValues.size() - 1) << std::dec << RESET;
                 }
-                else
-                {
-                    cValues.push_back(cItem.fValue);
-                }
+                else { cValues.push_back(cItem.fValue); }
             } // update map
         }
     }
@@ -1703,7 +1674,7 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return false;
         }
-        if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+        if(chipType == FrontEndType::CIC2)
         {
             LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                       << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1718,7 +1689,7 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
 
     if(success)
     {
-        LOG(DEBUG) << BOLDGREEN << "D19cFWInterface::MultiRegisterWrite successful write to " << pItems.size() << " registers" << RESET;
+        // LOG(DEBUG) << BOLDGREEN << "D19cFWInterface::MultiRegisterWrite successful write to " << pItems.size() << " registers" << RESET;
         // update map
         auto cRegisterMap = pChip->getRegMap();
         for(auto& cItem: pItems)
@@ -1726,10 +1697,10 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
             auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) { return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage; });
             if(cIterator != cRegisterMap.end()) // if item is in the map
             {
-                auto cPreviousValue = cIterator->second.fValue;
+                // auto cPreviousValue = cIterator->second.fValue;
                 pChip->setReg(cIterator->first, cItem.fValue);
-                LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWrite successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
-                           << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+                // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWrite successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
+                //            << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
                 cItem = pChip->getRegItem(cIterator->first);
             }
             else
@@ -1764,7 +1735,7 @@ bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegIte
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return false;
         }
-        if(chipType == FrontEndType::CIC || chipType == FrontEndType::CIC2)
+        if(chipType == FrontEndType::CIC2)
         {
             LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead Error on Board id " << +pChip->getBeBoardId() << " OpticalGroup id " << +pChip->getOpticalGroupId() << " Hybrid id "
                       << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
@@ -1785,10 +1756,10 @@ bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegIte
             auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) { return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage; });
             if(cIterator != cRegisterMap.end())
             {
-                auto cPreviousValue = cIterator->second.fValue;
+                // auto cPreviousValue = cIterator->second.fValue;
                 pChip->setReg(cIterator->first, cItem.fValue);
-                LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWriteRead successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
-                           << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+                // LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWriteRead successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
+                //            << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
             }
             else
                 LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address in register map " << RESET;
@@ -1921,10 +1892,7 @@ float D19cFWInterface::GetSFPParameter_L8(std::string parameter, int channel)
             result = result * 0.1;
             LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
         }
-        else if(parameter == "raw")
-        {
-            LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET;
-        }
+        else if(parameter == "raw") { LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET; }
         return result;
     }
     return error;
@@ -2000,4 +1968,15 @@ float D19cFWInterface::GetSFPParameter_L12(std::string parameter, int channel)
     }
     return error;
 } // D19cFWInterface
+
+std::vector<uint32_t> D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
+{
+    return fDebugInterface->L1ADebug(pWait_ms, pPrint);
+}
+
+std::vector<std::vector<uint32_t>> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
+{
+    return fDebugInterface->StubDebug(pWithTestPulse, pNlines, pPrint);
+}
+
 } // namespace Ph2_HwInterface

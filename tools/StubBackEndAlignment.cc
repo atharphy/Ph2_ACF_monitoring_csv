@@ -252,28 +252,24 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
                 bool cWithNoise = false;
                 // inject stubs with TP
-                uint8_t              cSeed = 60; // 2 + (uint8_t)(cChip->getId()*2);
-                std::vector<uint8_t> cSeeds{cSeed};
-                std::vector<int>     cBends{0};
+                uint8_t                              cSeed = 60; // 2 + (uint8_t)(cChip->getId()*2);
+                std::vector<std::pair<uint8_t, int>> cSeeds{{cSeed, 0}};
                 // make sure we are within the limits of the CIC
                 // only inject 3 stubs here
-                if(cNinjectedStubsThisHybrid > cMaxStubs)
-                {
-                    cSeeds.clear();
-                    cBends.clear();
-                }
+                if(cNinjectedStubsThisHybrid > cMaxStubs) { cSeeds.clear(); }
 
                 size_t cNhits = 0;
-                for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
-                {
-                    auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
-                    cNinjectedHits += cHitList.size();
-                    cNhits += cHitList.size();
-                }
+                for(const auto& theSeedAndBend: cSeeds)
+                    for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
+                    {
+                        auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, theSeedAndBend.first, theSeedAndBend.second);
+                        cNinjectedHits += cHitList.size();
+                        cNhits += cHitList.size();
+                    }
 
                 cNinjectedStubs += cSeeds.size();
                 cNinjectedStubsThisHybrid += cSeeds.size();
-                (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise);
+                (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise);
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
                 // // enable stub logic
                 // // make sure OR mode is used
@@ -288,7 +284,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             // for PS - first digital injection in MPAs
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                 std::vector<Injection> cInjections(0);
                 for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
@@ -313,7 +309,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             // for PS - digital injection in SSAs
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if(cChip->getFrontEndType() != FrontEndType::SSA and cChip->getFrontEndType() != FrontEndType::SSA2) continue;
+                if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                 // uint8_t cPattern = cDistributeInj ? (1 << (7 - cChip->getId())) : (0x1 << 0);
                 // disable all SSAs when doing this - why?
@@ -355,7 +351,6 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             {
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency - 1);
                     if(cChip->getFrontEndType() == FrontEndType::SSA2)
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency + 1);
                     else
@@ -378,8 +373,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             auto cEventIter   = cEvents.begin() + cTriggerId;
             cNEventsMatched   = 0;
             size_t cAllEvents = 0;
-            do
-            {
+            do {
                 if(cEventIter >= cEvents.end()) break;
                 size_t cNHits = 0;
                 for(auto cOpticalReadout: *pBoard)
@@ -389,9 +383,9 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         size_t cNHitsPerHybrid = 0;
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cChip->getHybridId(), cChip->getId());
                                 auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cChip->getHybridId(), cChip->getId());
@@ -457,7 +451,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         size_t cNstubsThisHybrd = 0;
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                             if(cEvent->GetHits(cHybrid->getId(), cChip->getId()).size() == 0) continue;
 
                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
@@ -484,8 +478,6 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     {
         LOG(INFO) << BOLDMAGENTA << "Stub offset set to " << cCorrectOffset - cReTime << " clock cycles." << RESET;
         pBoard->setStubOffset(cCorrectOffset - cReTime);
-        // TO-DO .. remove this
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->SetStubOffset(cCorrectOffset - cReTime);
         // verification step
         // print to screen for now
         bool cConfirm = false;
@@ -501,7 +493,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
                             auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());

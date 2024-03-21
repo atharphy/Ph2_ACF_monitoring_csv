@@ -82,9 +82,9 @@ struct pixelMask
 // ###################################################
 struct LaneConfig
 {
-    LaneConfig() : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(true) {}
+    LaneConfig() : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), masterLane(0), isPrimary(true) {}
     LaneConfig(bool                                   isPrimary,
-               uint8_t                                master,
+               uint8_t                                masterLane,
                const std::array<uint8_t, NCHIPLANES>& outputLanes,
                const std::array<bool, NCHIPLANES>&    signleChannelInputLanes,
                const std::array<bool, NCHIPLANES>&    dualChannelInputLanes);
@@ -111,7 +111,7 @@ struct LaneConfig
     std::array<uint8_t, NCHIPLANES>  inputLaneMapping;
     std::array<bool, NCHIPLANES + 1> internalLanesEnabled;
     uint8_t                          nOutputLanes;
-    uint8_t                          master;
+    uint8_t                          masterLane;
     bool                             isPrimary;
 
   private:
@@ -190,7 +190,7 @@ class RD53 : public ReadoutChip
 
     RD53() : ReadoutChip(0, 0, 0, 0, 0) {}
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
-    RD53(const RD53& chipObj);
+    RD53(const RD53&) = delete;
 
     void              loadfRegMap(const std::string& fileName) override;
     std::stringstream getRegMapStream() override;

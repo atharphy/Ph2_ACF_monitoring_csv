@@ -23,11 +23,7 @@ void Gain::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents", 1);
+    CalibBase::ConfigureCalibration();
     injType        = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
@@ -69,19 +65,19 @@ void Gain::ConfigureCalibration()
 
 void Gain::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[Gain::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[Gain::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Gain.raw", 'w');
+        this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_Gain.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     Gain::run();
     Gain::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    Gain::draw();
     Gain::sendData();
 }
 
@@ -108,21 +104,19 @@ void Gain::sendData()
 void Gain::Stop()
 {
     LOG(INFO) << GREEN << "[Gain::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    Gain::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void Gain::localConfigure(const std::string& histoFileName, int currentRun)
 {
-    histos        = nullptr;
-    theCurrentRun = currentRun;
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
 
-    LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    histos = nullptr;
+
+    LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -196,20 +190,14 @@ void Gain::run()
 
 void Gain::draw(bool saveData)
 {
-    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
-    }
-
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookHistoSaveMetadata(histos);
     Gain::fillHisto();
     histos->process();
     doSaveData = saveData;
@@ -220,7 +208,7 @@ void Gain::draw(bool saveData)
     // #####################
     // # @TMP@ : CalibFile #
     // #####################
-    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, theCurrentRun, dacList, offset, nEvents, "Gain");
+    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, dacList, offset, nEvents, "Gain");
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze()

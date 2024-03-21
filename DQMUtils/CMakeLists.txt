@@ -55,12 +55,15 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}DQM UTILS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/DQMUtils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
     
+    include_directories(${Protobuf_INCLUDE_DIRS})
+
     cet_set_compiler_flags(
         EXTRA_FLAGS -Wno-reorder -Wl,--undefined -D__OTSDAQ__
     )
 
     cet_make(LIBRARY_NAME Ph2_DQMUtils
             LIBRARIES
+            ROOT::Core
     )
 
     install_headers()

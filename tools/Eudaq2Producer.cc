@@ -17,7 +17,6 @@
 #include "tools/Channel.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
-#include "tools/StubBackEndAlignment.h"
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
@@ -126,7 +125,7 @@ void Eudaq2Producer::DoInitialise()
         }
 
         // Update critical registers to correct value
-        //#FIXME some registers like threshold might be overwritten later on (ie: in the DoConfigure function)
+        // #FIXME some registers like threshold might be overwritten later on (ie: in the DoConfigure function)
     }
 
     fInitialised = true;
@@ -205,9 +204,9 @@ void Eudaq2Producer::DoStartRun()
                     // Fill chip threshold with current value
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         cRegister = cChip->getReg("VCth2") << 8 | cChip->getReg("VCth1");
-                    else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                    else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                         cRegister = cChip->getReg("ThDAC0");
-                    else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                    else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                         cRegister = cChip->getReg("Bias_THDAC");
                 }
             }
@@ -230,9 +229,9 @@ void Eudaq2Producer::DoStartRun()
                     {
                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
                             this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdCBC);
-                        else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                        else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdMPA);
-                        else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                        else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                             this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fThresholdSSA);
                     }
                 }
@@ -513,8 +512,8 @@ void Eudaq2Producer::ReadoutLoop()
                         cEudaqEvent->AddSubEvent(cEudaqSubEvent);
                     }
                     cPh2Events.erase(cPh2Events.begin(), cPh2Events.begin() + fTriggerMultiplicity + 1);
-                    //#FIXME check if you want to keep the lines bellow
-                    // skip first event
+                    // #FIXME check if you want to keep the lines bellow
+                    //  skip first event
                     if(!fSkipFirstEvent) SendEvent(std::move(cEudaqEvent));
                     fSkipFirstEvent = false;
                 }
@@ -570,8 +569,8 @@ void Eudaq2Producer::ReadoutLoop()
                         cEudaqEvent->AddSubEvent(cEudaqSubEvent);
                     }
                     cPh2Events.erase(cPh2Events.begin(), cPh2Events.begin() + fTriggerMultiplicity + 1);
-                    //#FIXME check if you want to keep the lines bellow
-                    // skip first event
+                    // #FIXME check if you want to keep the lines bellow
+                    //  skip first event
                     if(!fSkipFirstEvent) SendEvent(std::move(cEudaqEvent));
                     fSkipFirstEvent = false;
                 }
@@ -594,8 +593,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
         // module map dimenstions
         uint8_t  cMaxNChip      = 8;
         uint8_t  cMaxNHybrid    = 2;
-        uint16_t cNPixelColumns = (NMPACHANNELS / 16) * cMaxNChip;
-        uint16_t cNPixelRows    = NMPACOLS * cMaxNHybrid;
+        uint16_t cNPixelColumns = (NMPAROWS * NSSACHANNELS / 16) * cMaxNChip;
+        uint16_t cNPixelRows    = NMPAROWS * cMaxNHybrid;
         uint16_t cNStripColumns = NSSACHANNELS * cMaxNChip;
         uint16_t cNStripRows    = cMaxNHybrid;
         // Loop over optical groups
@@ -619,11 +618,11 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 {
                     uint8_t cChipId = cChip->getId();
                     // skip if not MPA. MPA holds cluster information for both pixel and strip
-                    if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                     // Get pixel clusters
                     std::vector<PCluster> cPClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetPixelClusters(cHybridId, cChipId);
                     // Extract pixel hit information
-                    //#FIXME not using GetHits for a more readable code
+                    // #FIXME not using GetHits for a more readable code
                     for(auto cCluster: cPClusters)
                     {
                         for(uint16_t cHitId = 0; cHitId < 1 + cCluster.fWidth; cHitId++)
@@ -632,7 +631,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             cPixelData.resize(cPixelDataOffset + 6);
                             // LOG(INFO) << BOLDRED << "Pixel Data size : " << +cPixelData.size() << RESET;
                             // tranform pixel hit Address (row) according to hybrid to build pixel map
-                            uint16_t cHitPosition = cCluster.fAddress + cHitId + (NMPACHANNELS / 16) * (cChipId % 8);
+                            uint16_t cHitPosition = cCluster.fAddress + cHitId + (NMPAROWS * NSSACHANNELS / 16) * (cChipId % 8);
                             uint16_t cHitAddress  = (cHybridId % 2 == 0) ? (960 - cHitPosition) : (cHitPosition - 1);
                             // push pixel hit address (column) in 16bits word
                             cPixelData[cPixelDataOffset + 0] = (cHitAddress >> 0) & 0xFF;
@@ -857,7 +856,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
             // Loop over chips
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                 uint32_t cChipId = cChip->getId();
                 // Extract pipeline address
                 char cTagName[100];
@@ -869,7 +868,9 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 // Extract Stubs
                 uint32_t cStubId = 0;
                 if(pPh2Event->StubVector(cHybridId, cChipId).size() > 0)
-                { LOG(INFO) << BOLDMAGENTA << "\tFound  " << +pPh2Event->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET; }
+                {
+                    LOG(INFO) << BOLDMAGENTA << "\tFound  " << +pPh2Event->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET;
+                }
                 for(auto cStub: pPh2Event->StubVector(cHybridId, cChipId))
                 {
                     // LOG(INFO) << BLUE << "\t\tPosition " << +cStub.getPosition() << " , Row " << +cStub.getRow() << ", Bend " << +cStub.getBend() << RESET;
@@ -951,7 +952,7 @@ void Eudaq2Producer::EnableDigitalInjection(uint8_t pPulseAmplitude, uint8_t pTh
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode", 0x00);
                         // make sure L1 latency is configured
@@ -960,7 +961,7 @@ void Eudaq2Producer::EnableDigitalInjection(uint8_t pPulseAmplitude, uint8_t pTh
                         (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01);
                     }
 
-                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         // make sure L1 latency is configured
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);

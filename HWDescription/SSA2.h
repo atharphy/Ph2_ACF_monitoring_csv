@@ -38,6 +38,11 @@ class SSA2 : public ReadoutChip
     SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
     // C'tors with object FE Description
     SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
+    SSA2(const SSA2&) = delete;
+
+    void initializeFreeRegisters() override;
+    void setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg) override;
+
     uint8_t           fPartnerId;
     uint8_t           getPartid() { return fPartnerId; }
     virtual void      accept(HwDescriptionVisitor& pVisitor) { pVisitor.visitChip(*this); }
@@ -63,7 +68,12 @@ class SSA2 : public ReadoutChip
             return 8;
     }
 
+    bool                          isTopSensor(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn = 0) override;
+    std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow) override;
+    static std::string            getStripRegisterName(const std::string& theRegisterName, uint16_t strip);
+
   protected:
+    static std::vector<std::string> fListOfGlobalRegisters;
 }; // close class def
 
 } // namespace Ph2_HwDescription

@@ -43,7 +43,8 @@ void ExceptionHandler::updateFWInformation(uint16_t boardId)
 void ExceptionHandler::disableChip(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
 {
     std::string functionName = "ExceptionHandler_disableChip_B" + std::to_string(boardId) + "_O" + std::to_string(opticalGroupId) + "_H" + std::to_string(hybridId) + "_C" + std::to_string(chipId);
-    auto        disableChip  = [chipId](const ChipContainer* theContainer) {
+    auto        disableChip  = [chipId](const ChipContainer* theContainer)
+    {
         if(theContainer->getId() == chipId) return false;
         return true;
     };
@@ -60,7 +61,8 @@ void ExceptionHandler::disableChip(uint16_t boardId, uint16_t opticalGroupId, ui
 void ExceptionHandler::disableHybrid(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId)
 {
     std::string functionName  = "ExceptionHandler_disableChip_B" + std::to_string(boardId) + "_O" + std::to_string(opticalGroupId) + "_H" + std::to_string(hybridId);
-    auto        disableHybrid = [hybridId](const HybridContainer* theContainer) {
+    auto        disableHybrid = [hybridId](const HybridContainer* theContainer)
+    {
         if(theContainer->getId() == hybridId) return false;
         return true;
     };
@@ -77,7 +79,8 @@ void ExceptionHandler::disableHybrid(uint16_t boardId, uint16_t opticalGroupId, 
 void ExceptionHandler::disableOpticalGroup(uint16_t boardId, uint16_t opticalGroupId)
 {
     std::string functionName        = "ExceptionHandler_disableChip_B" + std::to_string(boardId) + "_O" + std::to_string(opticalGroupId);
-    auto        disableOpticalGroup = [opticalGroupId](const OpticalGroupContainer* theContainer) {
+    auto        disableOpticalGroup = [opticalGroupId](const OpticalGroupContainer* theContainer)
+    {
         if(theContainer->getId() == opticalGroupId) return false;
         return true;
     };
@@ -86,7 +89,8 @@ void ExceptionHandler::disableOpticalGroup(uint16_t boardId, uint16_t opticalGro
     updateFWInformation(boardId);
     if(fDetectorContainer->getObject(boardId)->size() == 0)
     {
-        LOG(INFO) << BOLDRED << "No optical group enabled on Board id " << boardId << " --- Full board will be disabled" << RESET;
+        LOG(WARNING) << BOLDRED << "No optical group enabled on Board ID" << BOLDYELLOW << boardId << RESET;
+        LOG(WARNING) << BOLDBLUE << "\t--> Full board will be disabled" << RESET;
         disableBoard(boardId);
     }
 }
@@ -94,7 +98,8 @@ void ExceptionHandler::disableOpticalGroup(uint16_t boardId, uint16_t opticalGro
 void ExceptionHandler::disableBoard(uint16_t boardId)
 {
     std::string functionName = "ExceptionHandler_disableChip_B" + std::to_string(boardId);
-    auto        disableBoard = [boardId](const BoardContainer* theContainer) {
+    auto        disableBoard = [boardId](const BoardContainer* theContainer)
+    {
         if(theContainer->getId() == boardId) return false;
         return true;
     };

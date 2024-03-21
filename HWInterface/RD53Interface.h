@@ -80,12 +80,6 @@ class RD53Interface : public ReadoutChipInterface
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(cmd), pChip->getHybridId());
     }
 
-    template <typename T, size_t N>
-    static size_t ArraySize(const T (&)[N])
-    {
-        return N;
-    }
-
     uint16_t SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size);
     uint16_t GetFieldValue(uint16_t regValue, uint8_t start, uint8_t size);
     struct SpecialRegInfo
@@ -98,14 +92,14 @@ class RD53Interface : public ReadoutChipInterface
     // # Dedicated to monitoring #
     // ###########################
   public:
-    void ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)
+    void ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args, bool silentRunning = false)
     {
-        for(const auto& arg: args) ReadChipMonitor(pChip, arg);
+        for(const auto& arg: args) ReadChipMonitor(pChip, arg, silentRunning);
     }
-    float    ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
+    float    ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName, bool silentRunning = false);
     uint32_t ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
-    float    ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
-    float    ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
+    float    ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false);
+    float    ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false);
     float    convertADC2VorI(Ph2_HwDescription::ReadoutChip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
 
   private:

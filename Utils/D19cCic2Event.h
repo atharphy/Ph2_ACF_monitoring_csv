@@ -200,7 +200,7 @@ class D19cCic2Event : public Event
     std::vector<SCluster> GetStripClusters(uint8_t pHybridId, uint8_t pMPAId) const;
     std::vector<PCluster> GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId) const;
 
-    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
 
     void     print(std::ostream& out) const override;
     uint16_t L1Status(uint8_t pHybridId) const;
@@ -208,11 +208,11 @@ class D19cCic2Event : public Event
     uint32_t BxId(uint8_t pHybridId) const override;
     uint16_t Status(uint8_t pHybridId) const;
 
-    std::bitset<NMPACHANNELS> decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
-    std::bitset<NSSACHANNELS> decodeSClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
-    std::bitset<NCHANNELS>    decodeClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
-    std::bitset<RAW_L1_CBC>   getRawL1Word(uint8_t pHybridId, uint8_t pReadoutChipId) const;
-    size_t                    getHybridIndex(const uint8_t pHybridId) const
+    std::bitset<NMPAROWS * NSSACHANNELS> decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    std::bitset<NSSACHANNELS>            decodeSClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    std::bitset<NCHANNELS>               decodeClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    std::bitset<RAW_L1_CBC>              getRawL1Word(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    size_t                               getHybridIndex(const uint8_t pHybridId) const
     {
         // first find feIndex
         auto cHybridIterator = std::find(fHybridIds.begin(), fHybridIds.end(), pHybridId);
@@ -280,8 +280,7 @@ class D19cCic2Event : public Event
             std::adjacent_difference(pHits.begin(), pHits.end(), cDifference.begin()); // difference between consecutive elements
             auto cIter  = cDifference.begin();
             auto cStart = cDifference.begin();
-            do
-            {
+            do {
                 cIter = std::find_if(cIter, cDifference.end(), [](int i) { return (i > 1); });
                 Cluster cCluster;
                 cCluster.fSensor       = pSensorId;

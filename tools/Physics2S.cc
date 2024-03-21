@@ -21,6 +21,8 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+std::string Physics2S::fCalibrationDescription = "Take data";
+
 void Physics2S::ConfigureCalibration()
 {
     // #######################
@@ -212,11 +214,11 @@ void Physics2S::display()
 // 				{
 
 //     				auto curchip = cBoard->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());;
-//                     if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
+//                     if(curchip->getFrontEndType() != FrontEndType::MPA2) continue;
 
 // 					auto data2S = cChip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
-//                     data2S.fClusters    = fromVectorToGenericDataArray<NCHANNELS, Cluster>(static_cast<D19cCic2Event*>(event)->getClusters(cHybrid->getId(), cChip->getId()));
-//                     data2S.fStubs       = fromVectorToGenericDataArray<MAX_NUMBER_OF_STUB_CLUSTERS_2S, Stub>(static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId()));
+//                     data2S.fClusters    = fromVectorToGenericDataArray<Cluster, NCHANNELS>(static_cast<D19cCic2Event*>(event)->getClusters(cHybrid->getId(), cChip->getId()));
+//                     data2S.fStubs       = fromVectorToGenericDataArray<Stub, MAX_NUMBER_OF_STUB_CLUSTERS_2S>(static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId()));
 // 				}
 // 			}
 // 		}
@@ -254,15 +256,15 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
                         if(ceil(stub.getCenter()) != stub.getCenter())
                         {
                             // std::cout<<__LINE__<<std::endl;
-                            if(size_t(ceil(stub.getCenter())) < 254u) cChip->getChannel<float>(size_t(ceil(stub.getCenter()))) += 0.5;
+                            if(size_t(ceil(stub.getCenter())) < 254u) cChip->getChannel<float>(0, size_t(ceil(stub.getCenter()))) += 0.5;
                             // std::cout<<__LINE__<<std::endl;
-                            if(size_t(floor(stub.getCenter())) < 254u) cChip->getChannel<float>(size_t(floor(stub.getCenter()))) += 0.5;
+                            if(size_t(floor(stub.getCenter())) < 254u) cChip->getChannel<float>(0, size_t(floor(stub.getCenter()))) += 0.5;
                             // std::cout<<__LINE__<<std::endl;
                         }
                         else
                         {
                             // std::cout<<__LINE__<<std::endl;
-                            if(stub.getCenter() < 254u) ++cChip->getChannel<float>(size_t(stub.getCenter()));
+                            if(stub.getCenter() < 254u) ++cChip->getChannel<float>(0, size_t(stub.getCenter()));
                             // std::cout<<__LINE__<<std::endl;
                         }
                         // std::cout<<__LINE__<<std::endl;

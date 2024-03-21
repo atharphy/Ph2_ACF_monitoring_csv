@@ -94,15 +94,17 @@ else()
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
-    #    include_directories(${Protobuf_INCLUDE_DIRS})
+    include_directories(${Protobuf_INCLUDE_DIRS})
 
     cet_set_compiler_flags(
                            EXTRA_FLAGS -Wno-reorder -Wl,--undefined
                           )
 
-    cet_make(
-             LIBRARY_NAME Ph2_System
+    cet_make(LIBRARY_NAME Ph2_System
              LIBRARIES
+             cactus_uhal_uhal
+             cactus_uhal_log
+             cactus_uhal_grammars
              Ph2_Description
              Ph2_Interface
              Ph2_Utils

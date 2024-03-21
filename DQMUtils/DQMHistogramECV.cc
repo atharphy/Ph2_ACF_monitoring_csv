@@ -46,16 +46,6 @@ void DQMHistogramECV::book(TFile* theOutputFile, DetectorContainer& theDetectorS
     HistContainer<TH2F> hWordAlignmentScanPolarity1("WordAlignment_Polarity_1", "Polarity 1", 49, 0, 49, 75,0,75);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fWordAlignmentScanPolarity1, hWordAlignmentScanPolarity1);
 
-    HistContainer<TH2F> hPhaseTrainingPolarity0("PhaseTraining_Polarity_0", "Polarity 0", 49, 0, 49, 5,0,5);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanPolarity0, hPhaseTrainingPolarity0);
-    HistContainer<TH2F> hPhaseTrainingPolarity1("PhaseTraining_Polarity_1", "Polarity 1", 49, 0, 49, 5,0,5);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanPolarity1, hPhaseTrainingPolarity1);
-
-    HistContainer<TH2F> hChosenPhasePolarity0("ChosenPhase_Polarity_0", "Polarity 0", 7, 0, 7, 5,0,5);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fChosenPhasePolarity0, hChosenPhasePolarity0);
-    HistContainer<TH2F> hChosenPhasePolarity1("ChosenPhase_Polarity_1", "Polarity 1", 7, 0, 7, 5,0,5);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fChosenPhasePolarity1, hChosenPhasePolarity1);
-
 }
 
 //========================================================================================================================
@@ -81,7 +71,7 @@ void DQMHistogramECV::process()
                 {
                     for (uint32_t cicSignalStrength = 1; cicSignalStrength <= 5; cicSignalStrength++)
                     {
-                        std::string s = convertUInt32tToString(phase) + ":" + convertUInt32tToString(cicSignalStrength);
+                        std::string s = convertToString(phase) + ":" + convertToString(cicSignalStrength);
                         p0->GetYaxis()->SetBinLabel(binNumber, s.c_str() );
                         binNumber++;
                     }
@@ -92,7 +82,7 @@ void DQMHistogramECV::process()
                 {
                     for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
                     {
-                        std::string s = convertUInt32tToString(channel) + ":" + convertUInt32tToString(hybridClockStrength);
+                        std::string s = convertToString(channel) + ":" + convertToString(hybridClockStrength);
                         p0->GetXaxis()->SetBinLabel(binNumber, s.c_str() );
                         binNumber++;
                     }
@@ -126,7 +116,7 @@ void DQMHistogramECV::process()
                 {
                     for (uint32_t cicSignalStrength = 1; cicSignalStrength <= 5; cicSignalStrength++)
                     {
-                        std::string s = convertUInt32tToString(phase) + ":" + convertUInt32tToString(cicSignalStrength);
+                        std::string s = convertToString(phase) + ":" + convertToString(cicSignalStrength);
                         p1->GetYaxis()->SetBinLabel(binNumber, s.c_str() );
                         binNumber++;
                     }
@@ -137,7 +127,7 @@ void DQMHistogramECV::process()
                 {
                     for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
                     {
-                        std::string s = convertUInt32tToString(channel) + ":" + convertUInt32tToString(hybridClockStrength);
+                        std::string s = convertToString(channel) + ":" + convertToString(hybridClockStrength);
                         p1->GetXaxis()->SetBinLabel(binNumber, s.c_str() );
                         binNumber++;
                     }
@@ -167,7 +157,7 @@ void DQMHistogramECV::process()
                 {
                     for (uint32_t cicSignalStrength = 1; cicSignalStrength <= 5; cicSignalStrength++)
                     {
-                        std::string s = convertUInt32tToString(phase) + ":" + convertUInt32tToString(cicSignalStrength);
+                        std::string s = convertToString(phase) + ":" + convertToString(cicSignalStrength);
                         p0->GetYaxis()->SetBinLabel(binNumber, s.c_str() );
                         binNumber++;
                     }
@@ -178,7 +168,7 @@ void DQMHistogramECV::process()
                 {
                     for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
                     {
-                        std::string s = convertUInt32tToString(channel) + ":" + convertUInt32tToString(hybridClockStrength);
+                        std::string s = convertToString(channel) + ":" + convertToString(hybridClockStrength);
                         p0->GetXaxis()->SetBinLabel(binNumber, s.c_str() );
                         binNumber++;
                     }
@@ -212,7 +202,7 @@ void DQMHistogramECV::process()
                 {
                     for (uint32_t cicSignalStrength = 1; cicSignalStrength <= 5; cicSignalStrength++)
                     {
-                        std::string s = convertUInt32tToString(phase) + ":" + convertUInt32tToString(cicSignalStrength);
+                        std::string s = convertToString(phase) + ":" + convertToString(cicSignalStrength);
                         p1->GetYaxis()->SetBinLabel(binNumber, s.c_str() );
                         binNumber++;
                     }
@@ -223,7 +213,7 @@ void DQMHistogramECV::process()
                 {
                     for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
                     {
-                        std::string s = convertUInt32tToString(channel) + ":" + convertUInt32tToString(hybridClockStrength);
+                        std::string s = convertToString(channel) + ":" + convertToString(hybridClockStrength);
                         p1->GetXaxis()->SetBinLabel(binNumber, s.c_str() );
                         binNumber++;
                     }
@@ -233,160 +223,6 @@ void DQMHistogramECV::process()
                 berCanvas->SetGrid();
                 berCanvas->Update();
 
-            }
-        }
-    }
-    for(auto board: fPhaseScanPolarity0)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                std::string cCanvasName   = "ECV_PhaseTraining_CICClockParity0_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas*    berCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
-                berCanvas->cd();
-                TH2F* p1 = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                p1->GetXaxis()->SetTitle("Channel : CIC clock strength");
-                p1->GetYaxis()->SetTitle("CIC strength");
-                p1->GetYaxis()->SetLabelSize(0.03);
-
-                berCanvas->SetGrid();
-                int binNumber = 1;
-                for (uint32_t cicSignalStrength = 1; cicSignalStrength <= 5; cicSignalStrength++)
-                {
-                    std::string s = convertUInt32tToString(cicSignalStrength);
-                    p1->GetYaxis()->SetBinLabel(binNumber, s.c_str() );
-                    binNumber++;
-                }
-                binNumber = 1;
-
-                for (uint32_t channel = 1; channel <=7; channel++)
-                {
-                    for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
-                    {
-                        std::string s = convertUInt32tToString(channel) + ":" + convertUInt32tToString(hybridClockStrength);
-                        p1->GetXaxis()->SetBinLabel(binNumber, s.c_str() );
-                        binNumber++;
-                    }
-                }
-                p1->LabelsOption("v","X");
-                p1->DrawCopy("text");
-                berCanvas->SetGrid();
-                berCanvas->Update();
-
-            }
-        }
-    }
-    for(auto board: fPhaseScanPolarity1)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                std::string cCanvasName   = "ECV_PhaseTraining_CICClockParity1_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas*    berCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
-                berCanvas->cd();
-                TH2F* p1 = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                p1->GetXaxis()->SetTitle("Channel : CIC clock strength");
-                p1->GetYaxis()->SetTitle("CIC strength");
-                p1->GetYaxis()->SetLabelSize(0.03);
-
-                berCanvas->SetGrid();
-                int binNumber = 1;
-                for (uint32_t cicSignalStrength = 1; cicSignalStrength <= 5; cicSignalStrength++)
-                {
-                    std::string s = convertUInt32tToString(cicSignalStrength);
-                    p1->GetYaxis()->SetBinLabel(binNumber, s.c_str() );
-                    binNumber++;
-                }
-                binNumber = 1;
-
-                for (uint32_t channel = 1; channel <=7; channel++)
-                {
-                    for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
-                    {
-                        std::string s = convertUInt32tToString(channel) + ":" + convertUInt32tToString(hybridClockStrength);
-                        p1->GetXaxis()->SetBinLabel(binNumber, s.c_str() );
-                        binNumber++;
-                    }
-                }
-                p1->LabelsOption("v","X");
-                p1->DrawCopy("text");
-                berCanvas->SetGrid();
-                berCanvas->Update();
-
-            }
-        }
-    }
-    for(auto board: fChosenPhasePolarity0)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                std::string cCanvasName   = "ECV_ChosenPhase_CICClockParity0_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas*    berCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
-                berCanvas->cd();
-                TH2F* p1 = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                p1->GetXaxis()->SetTitle("Channel : CIC clock strength");
-                p1->GetYaxis()->SetTitle("CIC strength");
-                p1->GetYaxis()->SetLabelSize(0.03);
-
-                berCanvas->SetGrid();
-                int binNumber = 1;
-                for (uint32_t cicSignalStrength = 1; cicSignalStrength <= 5; cicSignalStrength++)
-                {
-                    std::string s = convertUInt32tToString(cicSignalStrength);
-                    p1->GetYaxis()->SetBinLabel(binNumber, s.c_str() );
-                    binNumber++;
-                }
-                binNumber = 1;
-
-                for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
-                {
-                    std::string s = convertUInt32tToString(hybridClockStrength);
-                    p1->GetXaxis()->SetBinLabel(binNumber, s.c_str() );
-                    binNumber++;
-                }
-                p1->DrawCopy("text");
-                berCanvas->SetGrid();
-                berCanvas->Update();
-            }
-        }
-    }
-    for(auto board: fChosenPhasePolarity1)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                std::string cCanvasName   = "ECV_ChosenPhase_CICClockParity1_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas*    berCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
-                berCanvas->cd();
-                TH2F* p1 = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                p1->GetXaxis()->SetTitle("Channel : CIC clock strength");
-                p1->GetYaxis()->SetTitle("CIC strength");
-                p1->GetYaxis()->SetLabelSize(0.03);
-
-                berCanvas->SetGrid();
-                int binNumber = 1;
-                for (uint32_t cicSignalStrength = 1; cicSignalStrength <= 5; cicSignalStrength++)
-                {
-                    std::string s = convertUInt32tToString(cicSignalStrength);
-                    p1->GetYaxis()->SetBinLabel(binNumber, s.c_str() );
-                    binNumber++;
-                }
-                binNumber = 1;
-
-                for (uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
-                {
-                    std::string s = convertUInt32tToString(hybridClockStrength);
-                    p1->GetXaxis()->SetBinLabel(binNumber, s.c_str() );
-                    binNumber++;
-                }
-                p1->DrawCopy("text");
-                berCanvas->SetGrid();
-                berCanvas->Update();
             }
         }
     }
@@ -428,48 +264,6 @@ void DQMHistogramECV::filllBER(uint8_t pClockPolarity, uint8_t pClockStrength, u
                 cBERSummary = fBitErrorScanPolarity1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(pHybridId)->getSummary<HistContainer<TH2F>>().fTheHistogram;
             float value = 1 - ber;
             cBERSummary->SetBinContent(pLine*7+pClockStrength,pPhase*5+pCicStrength, value);
-        }
-    }
-}
-
-void DQMHistogramECV::filllPhases(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pHybridId, uint8_t pLine, DetectorDataContainer& pPhase)
-{
-    for(auto board: pPhase)
-    {
-        for(auto opticalGroup: *board)
-        {
-
-            float phase = (float) pPhase.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(pHybridId)->getSummary<uint8_t>();
-            TH2F* cPhaseSummary;
-
-            if (pClockPolarity == 0)
-                cPhaseSummary = fPhaseScanPolarity0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(pHybridId)->getSummary<HistContainer<TH2F>>().fTheHistogram;
-            else
-                cPhaseSummary = fPhaseScanPolarity1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(pHybridId)->getSummary<HistContainer<TH2F>>().fTheHistogram;
-
-            cPhaseSummary->SetBinContent(   pLine*7    + pClockStrength, pCicStrength , phase );
-        }
-    }
-}
-
-void DQMHistogramECV::filllChosenPhase(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, DetectorDataContainer& pPhase)
-{
-    for(auto board: pPhase)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                float phase = (float) pPhase.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<uint8_t>();
-                TH2F* cPhaseSummary;
-
-                if (pClockPolarity == 0)
-                    cPhaseSummary = fChosenPhasePolarity0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                else
-                    cPhaseSummary = fChosenPhasePolarity1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-
-                cPhaseSummary->SetBinContent(  pClockStrength, pCicStrength , phase );
-            }
         }
     }
 }

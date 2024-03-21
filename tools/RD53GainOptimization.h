@@ -32,7 +32,6 @@ class GainOptimization : public Gain
     ~GainOptimization()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -63,12 +62,13 @@ class GainOptimization : public Gain
     DetectorDataContainer theKrumCurrContainer;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     size_t KrumCurrStart;
     size_t KrumCurrStop;
     bool   doUpdateChip;
     bool   doDisplay;
-
-    int theCurrentRun;
 };
 
 #endif

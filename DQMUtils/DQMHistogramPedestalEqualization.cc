@@ -160,18 +160,20 @@ void DQMHistogramPedestalEqualization::fillOccupancyPlots(DetectorDataContainer&
             {
                 for(auto chip: *hybrid)
                 {
-                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
                     TH1F* chipOccupancyHistogram = fDetectorOccupancyHistograms.getObject(board->getId())
                                                        ->getObject(opticalGroup->getId())
                                                        ->getObject(hybrid->getId())
                                                        ->getObject(chip->getId())
                                                        ->getSummary<HistContainer<TH1F>>()
                                                        .fTheHistogram;
-                    uint channelBin = 1;
-                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
-                        chipOccupancyHistogram->SetBinContent(channelBin, channel.fOccupancy);
-                        chipOccupancyHistogram->SetBinError(channelBin++, channel.fOccupancyError);
+                        for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
+                        {
+                            chipOccupancyHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<Occupancy>(row, col).fOccupancy);
+                            chipOccupancyHistogram->SetBinError(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<Occupancy>(row, col).fOccupancyError);
+                        }
                     }
                 }
             }
@@ -191,15 +193,20 @@ void DQMHistogramPedestalEqualization::fillOffsetPlots(DetectorDataContainer& th
             {
                 for(auto chip: *hybrid)
                 {
-                    if(chip->getChannelContainer<uint8_t>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
                     TH1I* chipOffsetHistogram = fDetectorOffsetHistograms.getObject(board->getId())
                                                     ->getObject(opticalGroup->getId())
                                                     ->getObject(hybrid->getId())
                                                     ->getObject(chip->getId())
                                                     ->getSummary<HistContainer<TH1I>>()
                                                     .fTheHistogram;
-                    uint channelBin = 1;
-                    for(auto channel: *chip->getChannelContainer<uint8_t>()) { chipOffsetHistogram->SetBinContent(channelBin++, channel); }
+                    for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
+                        {
+                            chipOffsetHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<uint8_t>(row, col));
+                        }
+                    }
                 }
             }
         }

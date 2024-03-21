@@ -408,7 +408,7 @@ class Event
 
     virtual std::vector<Cluster> getClusters(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
     virtual void                 fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
-    virtual void                 fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) = 0;
+    virtual void                 fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) = 0;
 
     // split stream of data
     template <std::size_t N>
@@ -418,8 +418,7 @@ class Event
         uint32_t cId          = 0;
         auto     cIterator    = pData.begin() + pOffset;
         size_t   cWordCounter = 0;
-        do
-        {
+        do {
             auto cWord = std::bitset<32>(*cIterator);
             // LOG(INFO) << BOLDBLUE << "Word " << +cWordCounter << " : " << cWord << RESET;
             for(size_t cIndex = 0; cIndex < 32; cIndex++)

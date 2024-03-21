@@ -91,7 +91,7 @@ void DQMInterface::startProcessingData(const StartInfo& theStartInfo)
     {
         LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result Directory: " << e.what() << RESET;
     }
-    std::string fileName = resultDirectoryName + "/Result.root";
+    std::string fileName = resultDirectoryName + "/Results.root";
     fOutputFile          = new TFile(fileName.c_str(), "RECREATE");
     for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, fSettingsMap);
     fRunning       = true;
@@ -106,7 +106,9 @@ void DQMInterface::stopProcessingData(void)
 
     fListener->disconnect();
     while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout > 0)
-    { LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET; }
+    {
+        LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET;
+    }
 
     LOG(INFO) << __PRETTY_FUNCTION__ << " Thread done running" << RESET;
 
@@ -188,7 +190,7 @@ bool DQMInterface::running()
                 }
                 if(!decodedByOneDQM)
                 {
-                    LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << "None decoded message " << inputStream << ", aborting..." << RESET;
+                    LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << " No DQM histogrammer decoded message " << inputStream << ", aborting..." << RESET;
                     abort();
                 }
             }

@@ -132,7 +132,7 @@ else()
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
-    # include_directories(${Protobuf_INCLUDE_DIRS})
+    include_directories(${Protobuf_INCLUDE_DIRS})
 
     cet_set_compiler_flags(
         EXTRA_FLAGS -Wno-reorder -Wl,--undefined
@@ -142,7 +142,10 @@ else()
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
-            $ENV{ROOTSYS}/lib/libCore.so
+            ROOT::Core
+            ROOT::Net
+            ROOT::Gui
+            ROOT::RIO
             EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
             EXCLUDE Eudaq2Producer.h Eudaq2Producer.cc
             EXCLUDE SSAPhysics.h SSAPhysics.cc

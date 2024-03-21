@@ -34,9 +34,9 @@ class ChannelGroupBase
     uint32_t         getNumberOfCols(void) const { return numberOfCols_; }
     uint32_t         getNumberOfEnabledChannels(void) const { return numberOfEnabledChannels_; }
     virtual uint32_t getNumberOfEnabledChannels(const std::shared_ptr<ChannelGroupBase> mask) const = 0;
-    virtual bool     isChannelEnabled(uint16_t row, uint16_t col = 0) const                         = 0;
-    virtual void     enableChannel(uint16_t row, uint16_t col = 0)                                  = 0;
-    virtual void     disableChannel(uint16_t row, uint16_t col = 0)                                 = 0;
+    virtual bool     isChannelEnabled(uint16_t row, uint16_t col) const                             = 0;
+    virtual void     enableChannel(uint16_t row, uint16_t col)                                      = 0;
+    virtual void     disableChannel(uint16_t row, uint16_t col)                                     = 0;
     virtual void     disableAllChannels(void)                                                       = 0;
     virtual void     enableAllChannels(void)                                                        = 0;
     virtual void     flipAllChannels(void)                                                          = 0;
@@ -50,7 +50,7 @@ class ChannelGroupBase
     uint32_t         numberOfEnabledChannels_;
 };
 
-template <size_t R, size_t C = 1>
+template <size_t R, size_t C>
 class ChannelGroup : public ChannelGroupBase
 {
   public:
@@ -72,13 +72,13 @@ class ChannelGroup : public ChannelGroupBase
 
     virtual ~ChannelGroup() { ; }
 
-    inline bool isChannelEnabled(uint16_t row, uint16_t col = 0) const override { return channelsBitset_[row + numberOfRows_ * col]; }
-    inline void enableChannel(uint16_t row, uint16_t col = 0) override
+    inline bool isChannelEnabled(uint16_t row, uint16_t col) const override { return channelsBitset_[row + numberOfRows_ * col]; }
+    inline void enableChannel(uint16_t row, uint16_t col) override
     {
         channelsBitset_[row + numberOfRows_ * col] = true;
         numberOfEnabledChannels_                   = channelsBitset_.count();
     }
-    inline void disableChannel(uint16_t row, uint16_t col = 0) override
+    inline void disableChannel(uint16_t row, uint16_t col) override
     {
         channelsBitset_[row + numberOfRows_ * col] = false;
         numberOfEnabledChannels_                   = channelsBitset_.count();
@@ -148,7 +148,9 @@ class ChannelGroup : public ChannelGroupBase
                     for(uint16_t clusterRow = 0; clusterRow < numberOfRowsPerCluster; ++clusterRow)
                     {
                         for(uint16_t clusterCol = 0; clusterCol < numberOfColsPerCluster; ++clusterCol)
-                        { static_cast<ChannelGroup<R, C>*>(currentChannelGroup.get())->enableChannel(row + clusterRow, col + clusterCol); }
+                        {
+                            static_cast<ChannelGroup<R, C>*>(currentChannelGroup.get())->enableChannel(row + clusterRow, col + clusterCol);
+                        }
                     }
                 }
             }
@@ -170,9 +172,11 @@ class ChannelGroup : public ChannelGroupBase
 class ChannelGroupHandler
 {
   public:
-    class ChannelGroupIterator : public std::iterator<std::output_iterator_tag, uint32_t>
+    class ChannelGroupIterator
     {
       public:
+        using iterator_category = std::output_iterator_tag;
+        using value_type        = uint32_t;
         explicit ChannelGroupIterator(ChannelGroupHandler& channelGroupHandler, uint32_t groupNumber) : channelGroupHandler_(channelGroupHandler), groupNumber_(groupNumber) { ; }
         const std::shared_ptr<ChannelGroupBase> operator*() const { return channelGroupHandler_.getTestGroup(groupNumber_); }
         ChannelGroupIterator&                   operator++()

@@ -22,20 +22,21 @@
 namespace Ph2_HwDescription
 { // open namespace
 
+std::vector<std::string> SSA2::fListOfGlobalRegisters{"ENFLAGS", "StripControl2", "THTRIMMING", "DigCalibPattern_L", "DigCalibPattern_H"};
+
 SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
 {
     fChipCode         = 3;
     fChipAddress      = 0x20 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in SSA2
-    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
     configFileName    = filename;
     loadfRegMap(filename);
     // select control regs
-    std::vector<std::string> cCntrlRegs{"THTRIMMING", "StripControl2", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L"};
     for(auto& cMapItem: fRegMap)
     {
-        if(std::find(cCntrlRegs.begin(), cCntrlRegs.end(), cMapItem.first) == cCntrlRegs.end()) continue;
+        if(std::find(fListOfGlobalRegisters.begin(), fListOfGlobalRegisters.end(), cMapItem.first) == fListOfGlobalRegisters.end()) continue;
         LOG(INFO) << BOLDYELLOW << cMapItem.first << " is a CtrlReg" << RESET;
         cMapItem.second.fControlReg = 1;
     }
@@ -48,7 +49,7 @@ SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
     fChipCode         = 3;
     fChipAddress      = 0x20 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     std::vector<std::string> cCntrlRegs{"THTRIMMING", "StripControl2", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L"};
@@ -62,12 +63,53 @@ SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
     setFrontEndType(FrontEndType::SSA2);
 }
 
+void SSA2::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^SEUcnt$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Ring_oscillator$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ADC_out$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^bist_output$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^status_reg$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Fuse_Value_b[0-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter[LM]SB_S.*"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^status_reg$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex(".*_Cnt_[LH]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^bist_output$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ADC_out_[LH]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Ring_oscillator_out_loc[TB][LCR]_T[12]_[HL]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^bist_memory_sram_output_[HL]_[0-9A-F]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex(".*ync_SEUcnt_.*"), RegisterType::ReadOnly));
+
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^mask_strip$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^mask_peri_[AD]$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Fuse_Prog_b[0-3]$"), RegisterType::Utility));
+    // Brodcast registers cannot be reset to avoid overriding local changes
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ENFLAGS$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^StripControl2$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^THTRIMMING$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter[LM]SB$"), RegisterType::ReadOnly));
+}
+
+void SSA2::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)
+{
+    if(std::find(fListOfGlobalRegisters.begin(), fListOfGlobalRegisters.end(), pReg) != fListOfGlobalRegisters.end())
+    {
+        for(uint8_t strip = 0; strip < getNumberOfCols(); ++strip) Chip::setReg(getStripRegisterName(pReg, strip), psetValue, pPrmptCfg, pStatusReg);
+    }
+
+    Chip::setReg(pReg, psetValue, pPrmptCfg, pStatusReg);
+    return;
+}
+
 void SSA2::loadfRegMap(const std::string& filename)
 { // start loadfRegMap
     std::ifstream file(filename.c_str(), std::ios::in);
 
     if(file)
     {
+        initializeFreeRegisters();
         std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;
@@ -142,6 +184,36 @@ std::stringstream SSA2::getRegMapStream()
     }
 
     return theStream;
+}
+
+bool                          SSA2::isTopSensor(ReadoutChip* pChip, uint16_t pLocalColumn) { return true; }
+std::pair<uint16_t, uint16_t> SSA2::getGlobalCoordinates(ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow)
+{
+    if(pLocalColumn > pChip->getNumberOfCols())
+    {
+        throw std::runtime_error("The given column " + std::to_string(pLocalColumn) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) +
+                                 ". Acceptable values are between 0 and " + std::to_string(pChip->getNumberOfCols()));
+    }
+    if(pLocalRow > pChip->getNumberOfRows())
+    {
+        throw std::runtime_error("The given row " + std::to_string(pLocalRow) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) + ". Acceptable values are between 0 and " +
+                                 std::to_string(pChip->getNumberOfRows()));
+    }
+
+    uint16_t cGlobalY = 0;
+    uint16_t cGlobalX = 0;
+    cGlobalY          = (pChip->getHybridId() % 2 == 0) ? 0 : 1;
+
+    if(pChip->getHybridId() % 2 == 0) { cGlobalX = (pChip->getNumberOfCols() - pLocalColumn) + (NCHIPS_OT - pChip->getId() - 1) * pChip->getNumberOfCols(); }
+    else { cGlobalX = pLocalColumn + pChip->getId() * pChip->getNumberOfCols(); }
+
+    return std::make_pair(cGlobalX, cGlobalY);
+}
+
+std::string SSA2::getStripRegisterName(const std::string& theRegisterName, uint16_t strip)
+{
+    std::string stripRegisterName = theRegisterName + "_S" + std::to_string(strip + 1);
+    return stripRegisterName;
 }
 
 } // namespace Ph2_HwDescription

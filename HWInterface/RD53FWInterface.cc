@@ -8,13 +8,27 @@
 */
 
 #include "HWInterface/RD53FWInterface.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "HWInterface/RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), ddr3Offset(0), FWinfo(0) {}
+const std::array<std::string, 8> RD53FWInterface::FastCommandsConfig::fastCmdWhiteList = {"user.ctrl_regs.fast_cmd_reg_2.trigger_source",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.init_ecr_en",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.backpressure_en",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.veto_en",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.trigger_duration",
+                                                                                          "user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12"}; // @CONST@
+
+RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), ddr3Offset(0), FWinfo(0)
+{
+}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 {
@@ -108,43 +122,12 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##################
     // # Configure DIO5 #
     // ##################
+    LOG(INFO) << GREEN << "Initializing DIO5" << RESET;
     RD53FWInterface::DIO5Config cfgDIO5;
-    LOG(INFO) << GREEN << "Initializing DIO5:" << RESET;
-    for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("HitOr_enable_l12") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos))
-        {
-            LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second << std::dec << " (" << it.second << ")" << RESET;
-            if(it.first.find("HitOr_enable_l12") != std::string::npos)
-                RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
-            else if(it.first.find("ext_clk_en") != std::string::npos)
-            {
-                cfgDIO5.enable     = cfgDIO5.enable | it.second;
-                cfgDIO5.ch_out_en  = cfgDIO5.ch_out_en & 0x0F;
-                cfgDIO5.ext_clk_en = it.second;
-            }
-            else
-            {
-                RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
-                if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::External)
-                {
-                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
-                    cfgDIO5.enable    = true;
-                    cfgDIO5.ch_out_en = cfgDIO5.ch_out_en & 0x1D;
-                }
-                else if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
-                {
-                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
-                    cfgDIO5.enable             = true;
-                    cfgDIO5.ch_out_en          = cfgDIO5.ch_out_en | 0x05;
-                    cfgDIO5.tlu_en             = true;
-                    cfgDIO5.tlu_handshake_mode = 0x02;
-                }
-            }
-        }
-
-    RD53FWInterface::ConfigureDIO5(&cfgDIO5);
-    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+    RD53FWInterface::ConfigureDIO5(pBoard, &cfgDIO5);
+    RD53FWInterface::SendDIO5Cfg(&cfgDIO5);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
     // #########################
     // # Configure DataMerging #
@@ -165,7 +148,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 {
                     enableDataMerging = true;
                     slaveEn |= 1 << lane;
-                    primaries[lane] = static_cast<RD53*>(cChip)->laneConfig.master;
+                    primaries[lane] = static_cast<RD53*>(cChip)->laneConfig.masterLane;
                 }
 
                 // ##############################
@@ -227,6 +210,12 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
     if(!((fabs(gtxClk / 1000. - 160) < 1) || (fabs(gtxClk / 1000. - 320) < 1))) LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << RESET;
+
+    // ##################
+    // # Reset Metadata #
+    // ##################
+    RD53FWInterface::resetNcorruptedNevents();
+    RD53FWInterface::resetNtrialsNevents();
 }
 
 void RD53FWInterface::PrintFWstatus()
@@ -293,22 +282,32 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     // ###############################################
     // # FW register initialization from config file #
     // ###############################################
+    bool                                          gtxRxPolarity = false;
+    bool                                          fastCmdReg1   = false;
+    bool                                          extTluReg2    = false;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    LOG(INFO) << GREEN << "Initializing board's registers:" << RESET;
+
+    LOG(INFO) << GREEN << "Initializing board's registers" << RESET;
 
     for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.first.find("ext_clk_en") == std::string::npos) && (it.first.find("trigger_source") == std::string::npos))
+        if(it.second.fPrmptCfg == true)
         {
-            LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second << std::dec << " (" << it.second << ")" << RESET;
-            cVecReg.push_back({it.first, it.second});
+            LOG(INFO) << BOLDBLUE << "\t--> " << it.first << ": 0x" << BOLDYELLOW << std::hex << std::uppercase << it.second.fValue << std::dec << " (" << it.second.fValue << ")" << RESET;
+            if(std::find(FastCommandsConfig::fastCmdWhiteList.begin(), FastCommandsConfig::fastCmdWhiteList.end(), it.first) == FastCommandsConfig::fastCmdWhiteList.end())
+            {
+                cVecReg.push_back({it.first, it.second.fValue});
+                if(it.first.find("gtx_rx_polarity") != std::string::npos) gtxRxPolarity = true;
+                if(it.first.find("fast_cmd_reg_1") != std::string::npos) fastCmdReg1 = true;
+                if(it.first.find("ext_tlu_reg2") != std::string::npos) extTluReg2 = true;
+            }
         }
 
     if(cVecReg.size() != 0)
     {
         RegManager::WriteStackReg(cVecReg);
-        RD53FWInterface::WriteStackReg({{"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 1}, {"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 0}});
-        RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
-        RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
+        if(gtxRxPolarity == true) RD53FWInterface::WriteStackReg({{"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 1}, {"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 0}});
+        if(fastCmdReg1 == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
+        if(extTluReg2 == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
@@ -329,14 +328,14 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     // ##########
     // # Header #
     // ##########
-    commandList.emplace_back(bits::pack<6, 10, 16>(RD53FWconstants::HEADEAR_WRTCMD, (hybridId < 0 ? enabledHybrids : 1 << hybridId), n32bitWords));
+    commandList.emplace_back(bits::pack<6, 10, 16>(RD53FWconstants::HEADEAR_WRTCMD, (hybridId < 0 ? this->enabledHybrids : 1 << hybridId), n32bitWords));
 
     // ############
     // # Commands #
     // ############
     for(auto i = 1u; i < data.size(); i += 2) commandList.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
 
-    // If data.size() is not even, add a sync command
+    // If data.size() is not even, add a SYNC command
     if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53ACmd::RD53ACmdEncoder::SYNC));
 }
 
@@ -430,19 +429,24 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 {
     LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;
 
+    isChipCommunicationOK = false;
+
     // ########################################
     // # Check communication with the chip(s) #
     // ########################################
     uint32_t chips_en = RD53FWInterface::GetBoardEnabledChips(pBoard, true);
-    if(chips_en == 0) throw Exception("[RD53FWInterface::CheckChipCommunication] No data lane is enabled: aborting");
+    if(chips_en == 0)
+    {
+        LOG(ERROR) << "\t--> No data lane is enabled: aborting" << RESET;
+        return isChipCommunicationOK;
+    }
     LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << ", i.e. "
-              << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
+              << BOLDYELLOW << std::bitset<32>(chips_en) << RESET;
 
     uint32_t              channel_up;
     int                   nAttempts = 0;
-    std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
-    do
-    {
+    std::vector<uint16_t> initSequence(RD53Shared::firstChip->getLaneUpInitSequence());
+    do {
         // ###############################################
         // # Send sequence to help frontend chip to lock #
         // ###############################################
@@ -453,7 +457,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
         LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "active" << BOLDBLUE << " data lanes:   " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up) << BOLDBLUE << ", i.e. "
-                  << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
+                  << BOLDYELLOW << std::bitset<32>(channel_up) << RESET;
 
         if(chips_en & ~channel_up) LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive" << BOLDYELLOW << " -- > retry " << RESET;
         nAttempts++;
@@ -461,12 +465,13 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
     if(nAttempts == RD53Shared::MAXATTEMPTS)
     {
-        LOG(ERROR) << BOLDRED << "\t--> Error, not all data lanes are active, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") " << RESET;
-        throw Exception("[RD53FWInterface::CheckChipCommunication] Some data lanes are enabled but inactive");
+        LOG(ERROR) << BOLDRED << "\t--> Error, some data lanes are enabled but inactive, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") " << RESET;
+        return isChipCommunicationOK;
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
-    return true;
+    isChipCommunicationOK = true;
+    return isChipCommunicationOK;
 }
 
 RD53FWconstants::ReadoutSpeed RD53FWInterface::ReadoutSpeed()
@@ -616,8 +621,7 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // # Wait for a stable number of words to read #
     // #############################################
     nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read");
-    do
-    {
+    do {
         nWordsInMemoryOld = nWordsInMemory;
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     } while(((nWordsInMemory = RegManager::ReadReg("user.stat_regs.words_to_read")) != nWordsInMemoryOld) && (pWait == true));
@@ -652,8 +656,9 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 
 void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
-    bool retry;
-    int  nAttempts = 0;
+    uint32_t status;
+    bool     retry;
+    int      nAttempts = 0;
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
 
@@ -669,11 +674,9 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
-    uint32_t status;
-    do
-    {
-        nAttempts++;
+    do {
         retry = false;
+        nAttempts++;
         pData.clear();
 
         // ####################
@@ -694,19 +697,22 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ###################
         // # Decoding events #
         // ###################
-        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
-        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status); // Decode events with a single thread
+        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status, RD53FWInterface::silentRunning); // Decode events with multiple threads
+        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status, RD53FWInterface::silentRunning); // Decode events with a single thread
 
-        if(RD53Event::EvtErrorHandler(status) == false)
+        if((RD53FWInterface::silentRunning == false) && (RD53Event::EvtErrorHandler(status) == false))
         {
+            NtrialsNevents++;
             retry = true;
             continue;
         }
 
         if(RD53Event::decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
         {
-            LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
-                       << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
+            NtrialsNevents++;
+            if(RD53FWInterface::silentRunning == false)
+                LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
+                           << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
             continue;
         }
@@ -715,8 +721,10 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     if(retry == true)
     {
-        LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
+        if(RD53FWInterface::silentRunning == false)
+            LOG(ERROR) << BOLDRED << "\t--> Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
+        NcorruptedNevents++;
     }
 
     // #################
@@ -730,14 +738,14 @@ void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)
     RegManager::WriteStackReg({{cmdReg, 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}, {cmdReg, 0}});
 }
 
-void RD53FWInterface::SendFastCommands(const FastCommandsConfig* cfg)
+void RD53FWInterface::SendFastCommands(const FastCommandsConfig* config)
 {
     const int GLOBAL_PULSE_WIDTH = 0x6; // @TMP@
 
-    if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
+    if(config == nullptr) config = &(RD53FWInterface::localCfgFastCmd);
 
     // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
-    if(cfg->autozero_source != AutozeroSource::Disabled)
+    if(config->autozero_source != AutozeroSource::Disabled)
         RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53AConstants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
 
     // ##################################
@@ -746,36 +754,36 @@ void RD53FWInterface::SendFastCommands(const FastCommandsConfig* cfg)
     RegManager::WriteStackReg({// ############################
                                // # General data for trigger #
                                // ############################
-                               {"user.ctrl_regs.fast_cmd_reg_2.trigger_source", (uint32_t)cfg->trigger_source},
-                               {"user.ctrl_regs.fast_cmd_reg_2.backpressure_en", (uint32_t)cfg->backpressure_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.init_ecr_en", (uint32_t)cfg->initial_ecr_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.veto_en", (uint32_t)cfg->veto_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay", (uint32_t)cfg->ext_trigger_delay},
-                               {"user.ctrl_regs.fast_cmd_reg_2.trigger_duration", (uint32_t)cfg->trigger_duration},
-                               {"user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12", (uint32_t)cfg->enable_hitor},
-                               {"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", (uint32_t)cfg->n_triggers},
+                               {"user.ctrl_regs.fast_cmd_reg_2.trigger_source", (uint32_t)config->trigger_source},
+                               {"user.ctrl_regs.fast_cmd_reg_2.backpressure_en", (uint32_t)config->backpressure_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.init_ecr_en", (uint32_t)config->initial_ecr_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.veto_en", (uint32_t)config->veto_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.ext_trig_delay", (uint32_t)config->ext_trigger_delay},
+                               {"user.ctrl_regs.fast_cmd_reg_2.trigger_duration", (uint32_t)config->trigger_duration},
+                               {"user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12", (uint32_t)config->enable_hitor},
+                               {"user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", (uint32_t)config->n_triggers},
 
                                // ##############################
                                // # Fast command configuration #
                                // ##############################
-                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en", (uint32_t)cfg->fast_cmd_fsm.ecr_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en", (uint32_t)cfg->fast_cmd_fsm.first_cal_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en", (uint32_t)cfg->fast_cmd_fsm.second_cal_en},
-                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en", (uint32_t)(cfg->enable_hitor != 0 ? 0 : cfg->fast_cmd_fsm.trigger_en)},
+                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_ecr_en", (uint32_t)config->fast_cmd_fsm.ecr_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_test_pulse_en", (uint32_t)config->fast_cmd_fsm.first_cal_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_inject_pulse_en", (uint32_t)config->fast_cmd_fsm.second_cal_en},
+                               {"user.ctrl_regs.fast_cmd_reg_2.tp_fsm_trigger_en", (uint32_t)(config->enable_hitor != 0 ? 0 : config->fast_cmd_fsm.trigger_en)},
 
-                               {"user.ctrl_regs.fast_cmd_reg_6.delay_after_init_prime", (uint32_t)cfg->fast_cmd_fsm.delay_after_first_prime},
-                               {"user.ctrl_regs.fast_cmd_reg_7.delay_after_ecr", (uint32_t)cfg->fast_cmd_fsm.delay_after_ecr},
-                               {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero", (uint32_t)cfg->fast_cmd_fsm.delay_after_autozero}, // @TMP@
-                               {"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime", (uint32_t)cfg->fast_cmd_fsm.first_cal_data},
-                               {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_prime},
-                               {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject", (uint32_t)cfg->fast_cmd_fsm.second_cal_data},
-                               {"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_inject},
-                               {"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse", (uint32_t)cfg->fast_cmd_fsm.delay_after_trigger},
+                               {"user.ctrl_regs.fast_cmd_reg_6.delay_after_init_prime", (uint32_t)config->fast_cmd_fsm.delay_after_first_prime},
+                               {"user.ctrl_regs.fast_cmd_reg_7.delay_after_ecr", (uint32_t)config->fast_cmd_fsm.delay_after_ecr},
+                               {"user.ctrl_regs.fast_cmd_reg_6.delay_after_autozero", (uint32_t)config->fast_cmd_fsm.delay_after_autozero}, // @TMP@
+                               {"user.ctrl_regs.fast_cmd_reg_4.cal_data_prime", (uint32_t)config->fast_cmd_fsm.first_cal_data},
+                               {"user.ctrl_regs.fast_cmd_reg_4.delay_after_prime_pulse", (uint32_t)config->fast_cmd_fsm.delay_after_prime},
+                               {"user.ctrl_regs.fast_cmd_reg_5.cal_data_inject", (uint32_t)config->fast_cmd_fsm.second_cal_data},
+                               {"user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse", (uint32_t)config->fast_cmd_fsm.delay_after_inject},
+                               {"user.ctrl_regs.fast_cmd_reg_6.delay_before_next_pulse", (uint32_t)config->fast_cmd_fsm.delay_after_trigger},
 
                                // ################################
                                // # @TMP@ Autozero configuration #
                                // ################################
-                               {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)cfg->autozero_source},
+                               {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)config->autozero_source},
                                {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53AConstants::BROADCAST_CHIPID, 0, GLOBAL_PULSE_WIDTH, 0)}});
 
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
@@ -911,16 +919,88 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
               << RD53Constants::ACCELERATOR_CLK * 1e6 /
                      static_cast<float>(
 
-                         // (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime + 1) * 4 + 7 +
+                         // ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en == true) ? (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime + 1) * 4 + 7 : 0) +
 
-                         (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 +
-                         (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + 1) * 4 + 7 +
-                         RD53FWInterface::localCfgFastCmd.trigger_duration)
+                         ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en == true) ? (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 : 0) +
+                         ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_en == true) ? (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 : 0) +
+                         ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.trigger_en == true) ? (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + 1) * 4 - 1 : 0) +
+                         ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_en == true) ? (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + 1) * 4 + 7 : 0) + 4)
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
+
+    // ##################################################
+    // # Configure remaining parameters of FastCommands #
+    // ##################################################
+    for(const auto& it: pBoard->getBeBoardRegMap())
+    {
+        if((it.second.fPrmptCfg == true) &&
+           (std::find(FastCommandsConfig::fastCmdWhiteList.begin(), FastCommandsConfig::fastCmdWhiteList.end(), it.first) != FastCommandsConfig::fastCmdWhiteList.end()))
+        {
+            if(it.first == FastCommandsConfig::fastCmdWhiteList[0])
+                RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second.fValue);
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[1])
+                RD53FWInterface::localCfgFastCmd.initial_ecr_en = it.second.fValue;
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[2])
+                RD53FWInterface::localCfgFastCmd.backpressure_en = it.second.fValue;
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[3])
+                RD53FWInterface::localCfgFastCmd.veto_en = it.second.fValue;
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[4])
+                RD53FWInterface::localCfgFastCmd.n_triggers = it.second.fValue;
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[5])
+                RD53FWInterface::localCfgFastCmd.ext_trigger_delay = it.second.fValue;
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[6])
+                RD53FWInterface::localCfgFastCmd.trigger_duration = it.second.fValue;
+            else if(it.first == FastCommandsConfig::fastCmdWhiteList[7])
+                RD53FWInterface::localCfgFastCmd.enable_hitor = it.second.fValue;
+        }
+    }
 }
 
-void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
+void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
+{
+    for(const auto& it: pBoard->getBeBoardRegMap())
+        if((it.second.fPrmptCfg == true) &&
+           ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos) || (it.first.find("dio5_ch1_thr") != std::string::npos) ||
+            (it.first.find("dio5_ch2_thr") != std::string::npos) || (it.first.find("dio5_ch3_thr") != std::string::npos) || (it.first.find("dio5_ch4_thr") != std::string::npos) ||
+            (it.first.find("dio5_ch5_thr") != std::string::npos)))
+        {
+            if(it.first.find("ext_clk_en") != std::string::npos)
+            {
+                config->enable     = config->enable | it.second.fValue;
+                config->ch_out_en  = config->ch_out_en & 0x0F;
+                config->ext_clk_en = it.second.fValue;
+            }
+            else if(it.first.find("trigger_source") != std::string::npos)
+            {
+                if(static_cast<RD53FWInterface::TriggerSource>(it.second.fValue) == TriggerSource::External)
+                {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
+                    config->enable    = true;
+                    config->ch_out_en = config->ch_out_en & 0x1D;
+                }
+                else if(static_cast<RD53FWInterface::TriggerSource>(it.second.fValue) == TriggerSource::TLU)
+                {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
+                    config->enable             = true;
+                    config->ch_out_en          = config->ch_out_en | 0x05;
+                    config->tlu_en             = true;
+                    config->tlu_handshake_mode = 0x02;
+                }
+            }
+            else if(it.first.find("dio5_ch1_thr") != std::string::npos)
+                config->ch1_thr = it.second.fValue;
+            else if(it.first.find("dio5_ch2_thr") != std::string::npos)
+                config->ch2_thr = it.second.fValue;
+            else if(it.first.find("dio5_ch3_thr") != std::string::npos)
+                config->ch3_thr = it.second.fValue;
+            else if(it.first.find("dio5_ch4_thr") != std::string::npos)
+                config->ch4_thr = it.second.fValue;
+            else if(it.first.find("dio5_ch5_thr") != std::string::npos)
+                config->ch5_thr = it.second.fValue;
+        }
+}
+
+void RD53FWInterface::SendDIO5Cfg(const DIO5Config* config)
 {
     const uint8_t fiftyOhmEnable = 0x12; // @CONST@
 
@@ -928,17 +1008,17 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 
     if(RegManager::ReadReg("user.stat_regs.global_reg.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
-    RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)cfg->enable},
-                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)cfg->ch_out_en},
+    RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)config->enable},
+                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)config->ch_out_en},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)fiftyOhmEnable},
-                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr", (uint32_t)cfg->ch1_thr},
-                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr", (uint32_t)cfg->ch2_thr},
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr", (uint32_t)cfg->ch3_thr},
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch4_thr", (uint32_t)cfg->ch4_thr},
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr", (uint32_t)cfg->ch5_thr},
-                               {"user.ctrl_regs.ext_tlu_reg2.tlu_en", (uint32_t)cfg->tlu_en},
-                               {"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)cfg->tlu_handshake_mode},
-                               {"user.ctrl_regs.reset_reg.ext_clk_en", (uint32_t)cfg->ext_clk_en}});
+                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr", (uint32_t)config->ch1_thr},
+                               {"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr", (uint32_t)config->ch2_thr},
+                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr", (uint32_t)config->ch3_thr},
+                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch4_thr", (uint32_t)config->ch4_thr},
+                               {"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr", (uint32_t)config->ch5_thr},
+                               {"user.ctrl_regs.ext_tlu_reg2.tlu_en", (uint32_t)config->tlu_en},
+                               {"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)config->tlu_handshake_mode},
+                               {"user.ctrl_regs.reset_reg.ext_clk_en", (uint32_t)config->ext_clk_en}});
 
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
 }
@@ -983,9 +1063,9 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     rxStatus  = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.rx_ready");
     mgtStatus = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.mgt_ready");
 
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << std::setw(2) << txStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(txStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << std::setw(2) << rxStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(rxStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << std::setw(2) << mgtStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << std::setw(2) << txStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(txStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << std::setw(2) << rxStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(rxStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << std::setw(2) << mgtStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(mgtStatus) << RESET;
 }
 
 bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify)
@@ -1099,7 +1179,7 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
         0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE reference is > 40 MHz
                     // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
         0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc, SEL_DEL1 = 1, SEL_DEL2 = 1
-        0x80001808  // Sync command configuration
+        0x80001808  // SYNC command configuration
     };
 
     // 0xyy8403yy --> 240 MHz, LVDS, phase shift   0 deg
@@ -1173,7 +1253,7 @@ void RD53FWInterface::ReadClockGenerator()
 // # FMC ADC measurements: temperature and voltage #
 // #################################################
 
-float RD53FWInterface::ReadHybridTemperature(int hybridId)
+float RD53FWInterface::ReadHybridTemperature(int hybridId, bool silentRunning)
 {
     const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%] @CONST@
 
@@ -1185,13 +1265,14 @@ float RD53FWInterface::ReadHybridTemperature(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcTemperature(sensor1, sensor2);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE << " temperature: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " C"
-              << std::setprecision(-1) << RESET;
+    if(silentRunning == false)
+        LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE << " temperature: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
+                  << " C" << std::setprecision(-1) << RESET;
 
     return value;
 }
 
-float RD53FWInterface::ReadHybridVoltage(int hybridId)
+float RD53FWInterface::ReadHybridVoltage(int hybridId, bool silentRunning)
 {
     const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%] @CONST@
 
@@ -1203,8 +1284,9 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " V"
-              << std::setprecision(-1) << RESET;
+    if(silentRunning == false)
+        LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE << " V"
+                  << std::setprecision(-1) << RESET;
 
     return value;
 }

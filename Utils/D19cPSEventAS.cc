@@ -69,7 +69,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     }             // optical groups
 }
 // required by event but not sure if makes sense for AS
-void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId)
 {
     uint8_t cHybridIndex = getHybridIndex(hybridId);
     uint8_t cChipIndex   = getChipIndex(cHybridIndex, chipContainer->getId());
@@ -81,18 +81,13 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     for(auto cHit: cHits)
     {
         if(testChannelGroup == nullptr) break;
-        if(testChannelGroup->isChannelEnabled(cChnl))
+        uint32_t cRow = cChnl / testChannelGroup->getNumberOfCols();
+        uint32_t cCol = cChnl % testChannelGroup->getNumberOfCols();
+        if(testChannelGroup->isChannelEnabled(cRow, cCol))
         {
             if(cChnl < 10) LOG(DEBUG) << BOLDYELLOW << "Chnl#" << cChnl << "\t" << cHit << RESET;
-            uint32_t cRow = cChnl % testChannelGroup->getNumberOfRows();
-            uint32_t cCol;
-            if(testChannelGroup->getNumberOfCols() == 0)
-                cCol = 0;
-            else
-                cCol = cChnl / testChannelGroup->getNumberOfRows();
 
             // if( cChnl < 10 ) LOG (INFO) << BOLDYELLOW << "Chnl#" << cChnl << "\t" << cHit  << "Row " << cRow << " Col" << cCol << RESET;
-
             chipContainer->getChannel<Occupancy>(cRow, cCol).fOccupancy += cHit;
             cOcc += cHit;
         }

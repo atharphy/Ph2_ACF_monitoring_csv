@@ -1,15 +1,15 @@
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "HWDescription/Chip.h"
+#include "HWInterface/RegManager.h"
+#include "Utils/ConsoleColor.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable) {}
-D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId)
-{
-    LOG(INFO) << BOLDYELLOW << "D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface Constructor" << RESET;
-}
+D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(RegManager* theRegManager) : fTheRegManager(theRegManager) {}
 D19cBackendAlignmentFWInterface::~D19cBackendAlignmentFWInterface() {}
+
 void D19cBackendAlignmentFWInterface::SetAlignerObject(AlignerObject pAlignerObject)
 {
     fAlignerObject.fHybrid  = (pAlignerObject.fHybrid);
@@ -69,21 +69,21 @@ void D19cBackendAlignmentFWInterface::Print()
                                                     {14, "TunedPHASE"},
                                                     {15, "Unknown"}};
     std::map<int, std::string> cWordFSMStateMap  = {{0, "IdleWORD or WaitIserdese"},
-                                                   {1, "WaitFrame"},
-                                                   {2, "ApplyBitslip"},
-                                                   {3, "WaitBitslip"},
-                                                   {4, "PatternVerification"},
-                                                   {5, "Not Defined"},
-                                                   {6, "Not Defined"},
-                                                   {7, "Not Defined"},
-                                                   {8, "Not Defined"},
-                                                   {9, "Not Defined"},
-                                                   {10, "Not Defined"},
-                                                   {11, "Not Defined"},
-                                                   {12, "FailedFrame"},
-                                                   {13, "FailedVerification"},
-                                                   {14, "TunedWORD"},
-                                                   {15, "Unknown"}};
+                                                    {1, "WaitFrame"},
+                                                    {2, "ApplyBitslip"},
+                                                    {3, "WaitBitslip"},
+                                                    {4, "PatternVerification"},
+                                                    {5, "Not Defined"},
+                                                    {6, "Not Defined"},
+                                                    {7, "Not Defined"},
+                                                    {8, "Not Defined"},
+                                                    {9, "Not Defined"},
+                                                    {10, "Not Defined"},
+                                                    {11, "Not Defined"},
+                                                    {12, "FailedFrame"},
+                                                    {13, "FailedVerification"},
+                                                    {14, "TunedWORD"},
+                                                    {15, "Unknown"}};
 
     if(fAlignerObject.fType == 0 && fVerbose == 3)
     {
@@ -167,12 +167,12 @@ void D19cBackendAlignmentFWInterface::SendCommand(std::string pCmdToTuner)
                    << " on Hybrid#" << +fAlignerObject.fHybrid << " for Chip#" << +fAlignerObject.fChip << " Optical set to " << +fAlignerObject.fOptical << " Cmd type set to "
                    << +fAlignerObject.fType << " Tuner mode set to " << +fLineConfiguration.fMode << RESET;
 
-    WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", fAlignerObject.fCommand);
+    fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", fAlignerObject.fCommand);
     std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
 }
 void D19cBackendAlignmentFWInterface::GetReply(std::string pCmdToTuner)
 {
-    fAlignerObject.fReply = ReadReg("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
+    fAlignerObject.fReply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
     if(pCmdToTuner == "ReturnConfig")
     {
         std::map<std::string, int> cCnfgMap = (fAlignerObject.fOptical == 1) ? fTunerCnfgBitMap_Optical : fTunerCnfgBitMap_Electrical;
@@ -215,7 +215,9 @@ Reply D19cBackendAlignmentFWInterface::TunePhase(AlignerObject pAlignerObject, L
     fLineConfiguration.fMode = fAlignmentModes["Auto"];
     SendCommand("Configure");
     if(fAlignerObject.fOptical == 0) // only applies for electrical
-    { SendCommand("SetPatternLength"); }
+    {
+        SendCommand("SetPatternLength");
+    }
     SendCommand("TunePhase");
     ClearStatus();
     SendCommand("ReturnResult");
@@ -240,11 +242,20 @@ Reply D19cBackendAlignmentFWInterface::AlignWord(AlignerObject pAlignerObject, L
         SendCommand("SetSyncPattern");
     }
     SendCommand("AlignLine");
-    std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
-    ClearStatus();
-    SendCommand("ReturnResult");
-    GetReply("ReturnResult");
 
+    bool isDone                  = false;
+    int  maxNumberOfIterations   = 10;
+    int  currentInterationNumber = 0;
+    while(!isDone && currentInterationNumber < maxNumberOfIterations)
+    {
+        ++currentInterationNumber;
+        std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
+        ClearStatus();
+        SendCommand("ReturnResult");
+        GetReply("ReturnResult");
+        isDone = (fStatus.fDone == 1);
+    }
+    if(currentInterationNumber == maxNumberOfIterations) LOG(ERROR) << BOLDRED << "D19cBackendAlignmentFWInterface::AlignWord - Align Line procedure timed out" << RESET;
     cReply.fCnfg    = fLineConfiguration;
     cReply.fSuccess = IsLineWordAligned(); //(fStatus.fDone == 1 && IsLineWordAligned());
     Print();
@@ -305,7 +316,7 @@ std::pair<bool, uint8_t> D19cBackendAlignmentFWInterface::PhaseTuneLine(const Ch
     cLineStatus.second = 0;
 
     fAlignerObject.fHybrid  = pChip->getHybridId();
-    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
+    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
     fAlignerObject.fLine    = pLineId;
     fAlignerObject.fOptical = pOptical;
 
@@ -331,7 +342,7 @@ std::pair<bool, uint8_t> D19cBackendAlignmentFWInterface::WordAlignLine(const Ch
     cLineStatus.second = 0;
 
     fAlignerObject.fHybrid  = pChip->getHybridId();
-    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
+    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
     fAlignerObject.fLine    = pLineId;
     fAlignerObject.fOptical = pOptical;
 
@@ -348,7 +359,7 @@ void D19cBackendAlignmentFWInterface::ManuallyConfigureLine(const Chip* pChip, u
 {
     EnablePrintout(true);
     fAlignerObject.fHybrid = pChip->getHybridId();
-    fAlignerObject.fChip   = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
+    fAlignerObject.fChip   = (pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
     fAlignerObject.fLine   = pLineId;
 
     fLineConfiguration.fDelay   = pPhase;

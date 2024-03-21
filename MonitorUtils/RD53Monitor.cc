@@ -13,6 +13,14 @@
 #include "Utils/ValueAndTime.h"
 #include <array>
 
+// #######################################
+// # Libraries used for lpGBT monitoring #
+// #######################################
+#include "HWDescription/lpGBT.h"
+#include "HWInterface/RD53Interface.h"
+#include "HWInterface/RD53lpGBTInterface.h"
+#include "HWInterface/lpGBTInterface.h"
+
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
@@ -28,10 +36,16 @@ void RD53Monitor::runMonitor()
 
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
     {
-        fTheSystemController->ReadSystemMonitor(cBoard, fDetectorMonitorConfig.fMonitorElementList.at("RD53"));
+        std::vector<std::string> listOfRegisters;
+        for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53"))
+            if(registerName.second) listOfRegisters.push_back(registerName.first);
+        fTheSystemController->ReadSystemMonitor(cBoard, listOfRegisters, fDetectorMonitorConfig.fSilentRunning);
 
-        for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("RD53").size(); i++) runRD53RegisterMonitor(fDetectorMonitorConfig.fMonitorElementList.at("RD53").at(i));
-        for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("LpGBT").size(); i++) runLpGBTRegisterMonitor(fDetectorMonitorConfig.fMonitorElementList.at("LpGBT").at(i));
+        for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53"))
+            if(registerName.second) runRD53RegisterMonitor(registerName.first);
+
+        for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+            if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
     }
 }
 
@@ -48,10 +62,12 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     float registerValue;
                     try
                     {
-                        registerValue = fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName);
+                        if(fDetectorMonitorConfig.fSilentRunning == false)
+                            LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                      << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
 
-                        LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                        registerValue =
+                            fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName, fDetectorMonitorConfig.fSilentRunning);
 
                         theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
                             ValueAndTime<float>(registerValue, getTimeStamp());
@@ -87,17 +103,22 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             float registerValue;
             try
             {
-                LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
+                if(fDetectorMonitorConfig.fSilentRunning == false)
+                    LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
+                auto* lpGBTInterface = fTheSystemController->flpGBTInterface;
 
-                if(fTheSystemController->flpGBTInterface->fADCInputMap.find(registerName) != fTheSystemController->flpGBTInterface->fADCInputMap.end())
+                if(lpGBTInterface->fADCInputMap.find(registerName) != lpGBTInterface->fADCInputMap.end())
                 {
                     if(registerName.find("TEMP") != std::string::npos)
-                        registerValue = fTheSystemController->flpGBTInterface->GetInternalTemperature(cOpticalGroup->flpGBT);
+                        registerValue = lpGBTInterface->MeasureTemperature(cOpticalGroup->flpGBT);
+                    else if((registerName.find("VDDTX") != std::string::npos) || (registerName.find("VDDRX") != std::string::npos) || (registerName.find("VDD") != std::string::npos) ||
+                            (registerName.find("VDDA") != std::string::npos))
+                        registerValue = lpGBTInterface->MeasurePowerSupplyVoltage(cOpticalGroup->flpGBT, registerName);
                     else
-                        registerValue = fTheSystemController->flpGBTInterface->ReadADC(cOpticalGroup->flpGBT, registerName);
+                        registerValue = lpGBTInterface->ReadADC(cOpticalGroup->flpGBT, registerName);
                 }
                 else
-                    registerValue = fTheSystemController->flpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
+                    registerValue = lpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
 
                 theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
             }
@@ -119,7 +140,7 @@ void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::stri
 {
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        ContainerSerialization theContainerSerialization("RD53MonitorRegister");
+        ContainerSerialization theContainerSerialization("ITMonitorRegister");
         theContainerSerialization.streamByChipContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
     }
 }

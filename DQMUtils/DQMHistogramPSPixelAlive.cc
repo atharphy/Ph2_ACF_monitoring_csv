@@ -42,20 +42,16 @@ void DQMHistogramPSPixelAlive::book(TFile* theOutputFile, DetectorContainer& the
     {
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
         fWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
-        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
+        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
+        fWithMPA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
     }
 
-    std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA, FrontEndType::SSA2};
-    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA, FrontEndType::MPA2};
-    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip) {
-        return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end());
-    };
-    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip) {
-        return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end());
-    };
+    std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA2};
+    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA2};
+    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
+    { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
+    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip)
+    { return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end()); };
 
     // find maximum number of channels
     std::vector<size_t> cNPixelChannels(0), cNStripChannels(0);
@@ -69,11 +65,8 @@ void DQMHistogramPSPixelAlive::book(TFile* theOutputFile, DetectorContainer& the
                 {
                     auto cNChannels = theDetectorStructure.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->size();
                     auto cType      = cChip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                    {
-                        cNPixelChannels.push_back(cNChannels);
-                    }
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
+                    else if(cType == FrontEndType::MPA2) { cNPixelChannels.push_back(cNChannels); }
                 }
             }
         }
@@ -134,7 +127,7 @@ void DQMHistogramPSPixelAlive::process()
                 {
                     TH1F* occupancyHistogram = nullptr;
                     auto  cType              = chip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                     {
                         occupancyCanvas->cd(chip->getId() + 1 + hybrid->size() * 0);
                         occupancyHistogram = fDetectorStripOccupancyHistograms.getObject(board->getId())
@@ -148,7 +141,7 @@ void DQMHistogramPSPixelAlive::process()
                         occupancyHistogram->GetYaxis()->SetTitle("Occupancy");
                         occupancyHistogram->DrawCopy();
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         occupancyCanvas->cd(chip->getId() + 1 + hybrid->size() * 0);
                         occupancyHistogram = fDetectorPixelOccupancyHistograms.getObject(board->getId())
@@ -184,7 +177,7 @@ void DQMHistogramPSPixelAlive::fillOccupancyPlots(DetectorDataContainer& theOccu
                 {
                     TH1F* chipOccupancyHistogram = nullptr;
                     auto  cType                  = chip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                     {
                         chipOccupancyHistogram = fDetectorStripOccupancyHistograms.getObject(board->getId())
                                                      ->getObject(opticalGroup->getId())
@@ -192,21 +185,28 @@ void DQMHistogramPSPixelAlive::fillOccupancyPlots(DetectorDataContainer& theOccu
                                                      ->getObject(chip->getId())
                                                      ->getSummary<HistContainer<TH1F>>()
                                                      .fTheHistogram;
-                        for(uint32_t iChan = 0; iChan < fNStripChannels; iChan++)
+                        for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                         {
-                            float occupancy =
-                                theOccupancy.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getChannel<Occupancy>(iChan).fOccupancy;
-                            float occupancyError = theOccupancy.getObject(board->getId())
-                                                       ->getObject(opticalGroup->getId())
-                                                       ->getObject(hybrid->getId())
-                                                       ->getObject(chip->getId())
-                                                       ->getChannel<Occupancy>(iChan)
-                                                       .fOccupancyError;
-                            chipOccupancyHistogram->SetBinContent(iChan + 1, occupancy);
-                            chipOccupancyHistogram->SetBinError(iChan + 1, occupancyError);
+                            for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
+                            {
+                                float occupancy = theOccupancy.getObject(board->getId())
+                                                      ->getObject(opticalGroup->getId())
+                                                      ->getObject(hybrid->getId())
+                                                      ->getObject(chip->getId())
+                                                      ->getChannel<Occupancy>(row, col)
+                                                      .fOccupancy;
+                                float occupancyError = theOccupancy.getObject(board->getId())
+                                                           ->getObject(opticalGroup->getId())
+                                                           ->getObject(hybrid->getId())
+                                                           ->getObject(chip->getId())
+                                                           ->getChannel<Occupancy>(row, col)
+                                                           .fOccupancyError;
+                                chipOccupancyHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, occupancy);
+                                chipOccupancyHistogram->SetBinError(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, occupancyError);
+                            }
                         }
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         chipOccupancyHistogram = fDetectorPixelOccupancyHistograms.getObject(board->getId())
                                                      ->getObject(opticalGroup->getId())
@@ -214,19 +214,26 @@ void DQMHistogramPSPixelAlive::fillOccupancyPlots(DetectorDataContainer& theOccu
                                                      ->getObject(chip->getId())
                                                      ->getSummary<HistContainer<TH1F>>()
                                                      .fTheHistogram;
-                        for(uint32_t iChan = 0; iChan < fNPixelChannels; iChan++)
+                        for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                         {
-                            float occupancy =
-                                theOccupancy.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getChannel<Occupancy>(iChan).fOccupancy;
-                            float occupancyError = theOccupancy.getObject(board->getId())
-                                                       ->getObject(opticalGroup->getId())
-                                                       ->getObject(hybrid->getId())
-                                                       ->getObject(chip->getId())
-                                                       ->getChannel<Occupancy>(iChan)
-                                                       .fOccupancyError;
+                            for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
+                            {
+                                float occupancy = theOccupancy.getObject(board->getId())
+                                                      ->getObject(opticalGroup->getId())
+                                                      ->getObject(hybrid->getId())
+                                                      ->getObject(chip->getId())
+                                                      ->getChannel<Occupancy>(row, col)
+                                                      .fOccupancy;
+                                float occupancyError = theOccupancy.getObject(board->getId())
+                                                           ->getObject(opticalGroup->getId())
+                                                           ->getObject(hybrid->getId())
+                                                           ->getObject(chip->getId())
+                                                           ->getChannel<Occupancy>(row, col)
+                                                           .fOccupancyError;
 
-                            chipOccupancyHistogram->SetBinContent(iChan + 1, occupancy);
-                            chipOccupancyHistogram->SetBinError(iChan + 1, occupancyError);
+                                chipOccupancyHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, occupancy);
+                                chipOccupancyHistogram->SetBinError(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, occupancyError);
+                            }
                         }
                     }
                 }

@@ -8,7 +8,7 @@
         <!-- skeleton -->
         <OpticalGroup Id="0" FMCId="L12" reset="1">
         <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+        <lpGBT Id="0" version="0" optical="1" configFile="lpGBT_v0_2S.txt">
         <Settings
         />
         </lpGBT>
@@ -27,17 +27,17 @@
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-            <CBC Id="0" configfile="CBC3_default.txt" />
-            <CBC Id="1" configfile="CBC3_default.txt" />
-            <CBC Id="2" configfile="CBC3_default.txt" />
-            <CBC Id="3" configfile="CBC3_default.txt" />
-            <CBC Id="4" configfile="CBC3_default.txt" />
-            <CBC Id="5" configfile="CBC3_default.txt" />
-            <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" /> 
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" /> 
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
             </Hybrid>
             </OpticalGroup>
 
@@ -182,7 +182,7 @@
         <OpticalGroup Id="0" FMCId="L12" reset="1">
             <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
             <lpGBT_Files path="./settings/lpGBTFiles/" />
-            <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+            <lpGBT Id="0" configFile="CMSOT_lpGBT.txt">
               <Settings
               />
             </lpGBT>
@@ -201,17 +201,17 @@
                 </Global>
 
                 <CBC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
-                <CBC Id="0" configfile="BE0_OG0_FE0_Chip0.txt" />
-                <CBC Id="1" configfile="BE0_OG0_FE0_Chip1.txt" />
-                <CBC Id="2" configfile="BE0_OG0_FE0_Chip2.txt" />
-                <CBC Id="3" configfile="BE0_OG0_FE0_Chip3.txt" />
-                <CBC Id="4" configfile="BE0_OG0_FE0_Chip4.txt" />
-                <CBC Id="5" configfile="BE0_OG0_FE0_Chip5.txt" />
-                <CBC Id="6" configfile="BE0_OG0_FE0_Chip6.txt" />
-                <CBC Id="7" configfile="BE0_OG0_FE0_Chip7.txt" /> 
+                <CBC Id="0" enable="1" configFile="BE0_OG0_FE0_Chip0.txt" />
+                <CBC Id="1" enable="1" configFile="BE0_OG0_FE0_Chip1.txt" />
+                <CBC Id="2" enable="1" configFile="BE0_OG0_FE0_Chip2.txt" />
+                <CBC Id="3" enable="1" configFile="BE0_OG0_FE0_Chip3.txt" />
+                <CBC Id="4" enable="1" configFile="BE0_OG0_FE0_Chip4.txt" />
+                <CBC Id="5" enable="1" configFile="BE0_OG0_FE0_Chip5.txt" />
+                <CBC Id="6" enable="1" configFile="BE0_OG0_FE0_Chip6.txt" />
+                <CBC Id="7" enable="1" configFile="BE0_OG0_FE0_Chip7.txt" /> 
         
-                <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
-                <CIC2 Id="8" configfile="BE0_OG0_FE0.txt" />
+                <CIC2_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
+                <CIC2 Id="8" enable="1" configFile="BE0_OG0_FE0.txt" />
             </Hybrid>
             <Hybrid Id="1" enable="1" reset="1" >
                 <Global>
@@ -224,17 +224,17 @@
                 </Global>
 
                 <CBC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
-                <CBC Id="0" configfile="BE0_OG0_FE1_Chip0.txt" />
-                <CBC Id="1" configfile="BE0_OG0_FE1_Chip1.txt" />
-                <CBC Id="2" configfile="BE0_OG0_FE1_Chip2.txt" />
-                <CBC Id="3" configfile="BE0_OG0_FE1_Chip3.txt" />
-                <CBC Id="4" configfile="BE0_OG0_FE1_Chip4.txt" />
-                <CBC Id="5" configfile="BE0_OG0_FE1_Chip5.txt" />
-                <CBC Id="6" configfile="BE0_OG0_FE1_Chip6.txt" />
-                <CBC Id="7" configfile="BE0_OG0_FE1_Chip7.txt" /> 
+                <CBC Id="0" enable="1" configFile="BE0_OG0_FE1_Chip0.txt" />
+                <CBC Id="1" enable="1" configFile="BE0_OG0_FE1_Chip1.txt" />
+                <CBC Id="2" enable="1" configFile="BE0_OG0_FE1_Chip2.txt" />
+                <CBC Id="3" enable="1" configFile="BE0_OG0_FE1_Chip3.txt" />
+                <CBC Id="4" enable="1" configFile="BE0_OG0_FE1_Chip4.txt" />
+                <CBC Id="5" enable="1" configFile="BE0_OG0_FE1_Chip5.txt" />
+                <CBC Id="6" enable="1" configFile="BE0_OG0_FE1_Chip6.txt" />
+                <CBC Id="7" enable="1" configFile="BE0_OG0_FE1_Chip7.txt" /> 
 
-                <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
-                <CIC2 Id="8" configfile="BE0_OG0_FE1.txt" />
+                <CIC2_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
+                <CIC2 Id="8" enable="1" configFile="BE0_OG0_FE1.txt" />
             </Hybrid>
         </OpticalGroup>
 

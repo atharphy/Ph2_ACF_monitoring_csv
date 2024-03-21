@@ -27,7 +27,6 @@ class PixelAlive : public CalibBase
     ~PixelAlive()
     {
         if(doSaveData == true) this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -54,28 +53,21 @@ class PixelAlive : public CalibBase
     DetectorDataContainer                  theTrgIDContainer;
 
   protected:
-    RD53Shared::INJtype                      injType;
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
+    RD53Shared::INJtype injType;
+    size_t              nHITxCol;
+    float               occPerPixel;
+    bool                unstuckPixels;
+    int                 doDataIntegrity;
+    size_t              doOnlyNGroups;
+    bool                doDisplay;
+    bool                doUpdateChip;
+    bool                saveBinaryData;
+
+    bool                                     doSaveData;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t nEvents;
-    size_t nEvtsBurst;
-    size_t nTRIGxEvent;
-    size_t nHITxCol;
-    float  occPerPixel;
-    bool   unstuckPixels;
-    bool   doDataIntegrity;
-    size_t doOnlyNGroups;
-    bool   doDisplay;
-    bool   doUpdateChip;
-    bool   saveBinaryData;
-
-    int  theCurrentRun;
-    bool doSaveData;
-
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };
 

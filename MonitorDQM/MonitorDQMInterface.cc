@@ -1,5 +1,6 @@
 #include "NetworkUtils/TCPSubscribeClient.h"
 #include "Parser/FileParser.h"
+#include "Parser/ParserDefinitions.h"
 #include "Utils/Container.h"
 
 #include "MonitorDQM/MonitorDQMInterface.h"
@@ -74,10 +75,10 @@ void MonitorDQMInterface::configure(const ConfigureInfo& theConfigureInfo)
     theConfigureInfo.setEnabledObjects(&fDetectorStructure);
 
     DetectorMonitorConfig theDetectorMonitorConfig;
-    std::string           monitoringType = theFileParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);
+    theFileParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);
 
-    if(monitoringType == "2S") fMonitorDQMVector.push_back(new MonitorDQMPlotCBC());
-    if(monitoringType == "PS") fMonitorDQMVector.push_back(new MonitorDQMPlotPS());
+    if(theDetectorMonitorConfig.fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2S_VALUE) fMonitorDQMVector.push_back(new MonitorDQMPlotCBC());
+    if(theDetectorMonitorConfig.fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_PS_VALUE) fMonitorDQMVector.push_back(new MonitorDQMPlotPS());
 
     fOutputFile = new TFile("Monitor_tmp.root", "RECREATE");
     for(auto monitorDQM: fMonitorDQMVector) monitorDQM->book(fOutputFile, fDetectorStructure, theDetectorMonitorConfig);
@@ -98,7 +99,9 @@ void MonitorDQMInterface::stopProcessingData(void)
 
     fListener->disconnect();
     while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout >= 0)
-    { LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET; }
+    {
+        LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET;
+    }
 
     LOG(INFO) << __PRETTY_FUNCTION__ << " Thread done running" << RESET;
 

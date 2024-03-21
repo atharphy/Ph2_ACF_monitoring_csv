@@ -57,6 +57,12 @@ void myflush(std::istream& in);
 
 std::string getResultDirectoryName(const StartInfo& theStartInfo);
 
+std::string getResultDirectoryName(const int runNumber);
+
+int returnPreviousRunNumber(std::string cFileName);
+
+int returnAndIncreaseRunNumber(std::string cFileName);
+
 /*!
  * \brief Wait for Enter key press
  */
@@ -104,10 +110,16 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens, const st
  * \return Result with variables expanded */
 std::string expandEnvironmentVariables(std::string s);
 
-/*! \brief Convert unit32_t to a string AVOIDING THE USAGE OF std::to_string()
- * \param number input number
+/*! \brief Convert value to a string AVOIDING THE USAGE OF std::to_string()
+ * \param value input value
  * \return Result string */
-std::string convertUInt32tToString(uint32_t number);
+template <typename T>
+std::string convertToString(T value)
+{
+    std::stringstream ss;
+    ss << +value;
+    return ss.str();
+}
 
 // get run number from file
 void getRunNumber(const std::string& pPath, int& pRunNumber, bool pIncrement = true);
@@ -185,5 +197,43 @@ std::string getReadoutChipString(uint16_t boardId, uint16_t opticalGroupId, uint
 time_t getTimeStamp();
 
 std::string getTimeStampString();
+
+template <size_t N>
+std::bitset<N> reorderBytes(const std::vector<uint32_t> theWordVector, uint8_t wordSize = 1)
+{
+    if(wordSize != 1 && wordSize != 2)
+    {
+        std::cerr << "getPatternPrintout wordSize can be only 1 or 2" << std::endl;
+        abort();
+    }
+    std::bitset<N> reorderedByteVector;
+    uint16_t       mask = 0xFF;
+    if(wordSize == 2) mask = 0xFFFF;
+
+    size_t numberOfTotalBytes = theWordVector.size() * sizeof(uint32_t) - wordSize;
+
+    for(size_t theWordIndex = 0; theWordIndex < theWordVector.size(); ++theWordIndex)
+    {
+        for(uint8_t theByteShift = 0; theByteShift < sizeof(uint32_t); theByteShift += wordSize)
+        {
+            std::bitset<N> byteValue{((theWordVector[theWordIndex] >> (theByteShift * 8)) & mask)};
+            byteValue = byteValue << numberOfTotalBytes * 8;
+            numberOfTotalBytes -= wordSize;
+            reorderedByteVector |= byteValue;
+        }
+    }
+
+    return reorderedByteVector;
+}
+
+std::vector<uint32_t> reorderPattern(const std::vector<uint32_t>& theWordVector, uint8_t wordSize);
+
+std::string getPatternPrintout(const std::vector<uint32_t>& theWordVector, uint8_t wordSize, bool reorderWords = false);
+
+std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfPacketsToSkip);
+
+std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask);
+
+uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols);
 
 #endif

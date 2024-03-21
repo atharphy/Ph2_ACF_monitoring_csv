@@ -21,6 +21,11 @@
 
 #include <uhal/uhal.hpp>
 
+namespace Ph2_HwDescription
+{
+class BeBoard;
+}
+
 // #######################
 // # FW useful constants #
 // #######################
@@ -49,7 +54,7 @@ namespace Ph2_HwInterface
 class RD53FWInterface : public BeBoardFWInterface
 {
   public:
-    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
     ~RD53FWInterface() { delete fFileHandler; }
 
     // #############################
@@ -79,6 +84,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void SetOptoLinkVersion(uint8_t version) override;
     // #############################
 
+    bool silentRunning = {false};
     void SelectBERcheckBitORFrame(const uint8_t bitORframe);
     void WriteArbitraryRegister(const std::string&                regName,
                                 const uint32_t                    value,
@@ -96,6 +102,11 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     bool                          CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
     RD53FWconstants::ReadoutSpeed ReadoutSpeed();
+    bool                          getChipCommunicationStatus() { return isChipCommunicationOK; }
+    size_t                        getNcorruptedNevents() { return NcorruptedNevents; }
+    void                          resetNcorruptedNevents() { NcorruptedNevents = 0; }
+    size_t                        getNtrialsNevents() { return NtrialsNevents; }
+    void                          resetNtrialsNevents() { NtrialsNevents = 0; }
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
@@ -159,6 +170,8 @@ class RD53FWInterface : public BeBoardFWInterface
         uint32_t enable_hitor      = 0; // Enable HitOr signals
 
         FastCmdFSMConfig fast_cmd_fsm;
+
+        static const std::array<std::string, 8> fastCmdWhiteList;
     };
 
     void ConfigureFromXML(const Ph2_HwDescription::BeBoard* pBoard);
@@ -202,15 +215,16 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #
     // ####################################################
-    float ReadHybridTemperature(int hybridId);
-    float ReadHybridVoltage(int hybridId);
+    float ReadHybridTemperature(int hybridId, bool silentRunning = false);
+    float ReadHybridVoltage(int hybridId, bool silentRunning = false);
     float calcTemperature(uint32_t sensor1, uint32_t sensor2, int beta = 3435);
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
   private:
     void     TurnOffFMC();
     void     TurnOnFMC();
-    void     ConfigureDIO5(const DIO5Config* config);
+    void     ConfigureDIO5(const Ph2_HwDescription::BeBoard* pBoard, DIO5Config* config);
+    void     SendDIO5Cfg(const DIO5Config* config);
     void     SendBoardCommandWithStrobe(const std::string& cmdReg);
     uint32_t GetBoardEnabledChips(const Ph2_HwDescription::BeBoard* pBoard, bool primariesOnly = false);
     uint32_t GetBoardEnabledHybrids(const Ph2_HwDescription::BeBoard* pBoard);
@@ -225,7 +239,10 @@ class RD53FWInterface : public BeBoardFWInterface
     size_t             ddr3Offset;
     bool               singleChip;
     uint32_t           FWinfo;
-    uint16_t           enabledHybrids;
+    uint32_t           enabledHybrids;
+    bool               isChipCommunicationOK{false};
+    size_t             NcorruptedNevents{0};
+    size_t             NtrialsNevents{0};
 };
 
 } // namespace Ph2_HwInterface

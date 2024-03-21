@@ -16,7 +16,7 @@ class StringContainer : public PlotContainer
         fTObjString = nullptr;
     }
 
-    StringContainer(const StringContainer& container) = delete;
+    StringContainer(const StringContainer& container)            = delete;
     StringContainer& operator=(const StringContainer& container) = delete;
 
     StringContainer(StringContainer&& container)
@@ -43,6 +43,7 @@ class StringContainer : public PlotContainer
     }
 
     void        setNameTitle(std::string histogramName, std::string histogramTitle) override{};
+    void        setName(const std::string& theName) { fName = theName; }
     std::string getName() const override { return fName; };
     std::string getTitle() const override { return ""; };
 

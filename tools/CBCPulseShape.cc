@@ -13,6 +13,8 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+std::string CBCPulseShape::fCalibrationDescription = "Run multiple SCurve with injection changing sampling point to reconstruct pulse shape";
+
 CBCPulseShape::CBCPulseShape() : PedeNoise() {}
 
 CBCPulseShape::~CBCPulseShape() {}
@@ -28,7 +30,7 @@ void CBCPulseShape::Initialise(void)
     fChannelGroup          = findValueInSettings<double>("PulseShapeChannelGroup", -1);
     fPlotPulseShapeSCurves = findValueInSettings<double>("PlotPulseShapeSCurves", 0);
 
-    fLimit = 0.02; // larger tollerance for SCurve limits
+    fLimit = 0.01; // larger tollerance for SCurve limits
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -42,7 +44,7 @@ void CBCPulseShape::Initialise(void)
 
     initializeRecycleBin();
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
     fCBCHistogramPulseShape.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -53,7 +55,6 @@ void CBCPulseShape::runCBCPulseShape(void)
     LOG(INFO) << "Taking Data with " << fEventsPerPoint << " triggers!";
 
     this->enableTestPulse(true);
-    setFWTestPulse();
     disableStubLogic();
 
     setSameDac("TestPulsePotNodeSel", fPulseAmplitude);
@@ -103,7 +104,6 @@ void CBCPulseShape::runCBCPulseShape(void)
         cleanContainerVector();
     }
 
-    reloadStubLogic();
     this->enableTestPulse(false);
     setSameGlobalDac("TestPulsePotNodeSel", 0);
     LOG(INFO) << BLUE << "Disabled test pulse. " << RESET;

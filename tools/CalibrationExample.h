@@ -15,7 +15,7 @@
 #include "Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
-// Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
+// Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
 #include "DQMUtils/DQMHistogramCalibrationExample.h"
 #endif
 
@@ -34,6 +34,8 @@ class CalibrationExample : public Tool
     // State machine
     void Running() override;
     void Stop(void) override;
+
+    static std::string fCalibrationDescription;
 
   private:
     uint32_t fEventsPerPoint;

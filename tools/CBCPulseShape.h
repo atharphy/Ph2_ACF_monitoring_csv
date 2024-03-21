@@ -15,7 +15,7 @@
 #include "PedeNoise.h"
 #include <map>
 #ifdef __USE_ROOT__
-// Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
+// Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
 #include "DQMUtils/CBCHistogramPulseShape.h"
 #endif
 
@@ -32,6 +32,8 @@ class CBCPulseShape : public PedeNoise
     // State machine
     void Running() override;
     void Stop(void) override;
+
+    static std::string fCalibrationDescription;
 
   private:
     uint16_t fInitialLatency{0};

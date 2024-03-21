@@ -107,9 +107,9 @@ void EyeScanOptimization::run()
     std::cout << " [EyeScanOptimization]" << std::endl;
     const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>(*fDetectorContainer, theTAP0scanContainer);
-    ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>(*fDetectorContainer, theTAP1scanContainer);
-    ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>(*fDetectorContainer, theTAP2scanContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>(*fDetectorContainer, theTAP0scanContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>(*fDetectorContainer, theTAP1scanContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>(*fDetectorContainer, theTAP2scanContainer);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
     EyeScanOptimization::scanDac("DAC_CML_BIAS_0", dacListTAP0, nEvents, &theTAP0scanContainer);
@@ -130,7 +130,7 @@ void EyeScanOptimization::run2d()
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", 0x0);
     const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize * TAPsize * TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>(*fDetectorContainer, the3DContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize * TAPsize * TAPsize>>(*fDetectorContainer, the3DContainer);
     EyeScanOptimization::scanDac3D("DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2", dacListTAP0, dacListTAP1, dacListTAP2, nEvents, &the3DContainer);
 
     // for (auto tap0 : dacListTAP0){
@@ -174,7 +174,7 @@ void EyeScanOptimization::scanDac(const std::string& regName, const std::vector<
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i] =
+                        cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>()[i] =
                             EyeDiag::theEyeDiagContainer.getObject(cBoard->getId())
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
@@ -218,12 +218,12 @@ void EyeScanOptimization::scanDac3D(const std::string&           regName1,
                     for(const auto cOpticalGroup: *cBoard)
                         for(const auto cHybrid: *cOpticalGroup)
                             for(const auto cChip: *cHybrid)
-                                cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>()
-                                    .data[i + j * dacList1.size() + k * dacList1.size() * dacList2.size()] = EyeDiag::theEyeDiagContainer.getObject(cBoard->getId())
-                                                                                                                 ->getObject(cOpticalGroup->getId())
-                                                                                                                 ->getObject(cHybrid->getId())
-                                                                                                                 ->getObject(cChip->getId())
-                                                                                                                 ->getSummary<std::unordered_map<std::string, std::array<float, 7>>>();
+                                cChip->getSummary<GenericDataArray<std::unordered_map<std::string, std::array<float, 7>>, TAPsize>>()[i + j * dacList1.size() + k * dacList1.size() * dacList2.size()] =
+                                    EyeDiag::theEyeDiagContainer.getObject(cBoard->getId())
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
+                                        ->getSummary<std::unordered_map<std::string, std::array<float, 7>>>();
             }
         }
     }
@@ -239,7 +239,7 @@ void EyeScanOptimization::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap();
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap(cChip->getFileName());
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + cChip->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());

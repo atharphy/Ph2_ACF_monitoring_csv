@@ -1,5 +1,5 @@
 #include "tools/MemoryCheck2S.h"
-//#ifdef __USE_ROOT__
+// #ifdef __USE_ROOT__
 
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/L1ReadoutInterface.h"
@@ -9,7 +9,7 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "boost/format.hpp"
+//#include "boost/format.hpp"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -31,7 +31,7 @@ void MemoryCheck2S::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
+        for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second.fValue)); }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         auto& cRegMapThisBoard = fRegMapContainer.getObject(cBoard->getId());
@@ -149,10 +149,10 @@ void MemoryCheck2S::Reconfigure()
                 for(auto cChip: *cHybrid)
                 {
                     auto& cMasksThisChip = cMasksThisHybrid->getObject(cChip->getId());
-                    auto& cOriginalMask  = cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<NCHANNELS>>>();
+                    auto& cOriginalMask  = cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<1, NCHANNELS>>>();
                     // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
                     // {
-                    //     bool cEnabled = cOriginalMask->isChannelEnabled(cChnl);
+                    //     bool cEnabled = cOriginalMask->isChannelEnabled(0, cChnl);
                     //     if( cEnabled )
                     //     {
                     //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDBLUE << "Reconfig Chnl#" << +cChnl << " enabled." << RESET;
@@ -242,7 +242,7 @@ void MemoryCheck2S::Initialise()
     }
 
     // read back original masks
-    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroup<NCHANNELS>>>(*fDetectorContainer, fChipMasks);
+    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroup<1, NCHANNELS>>>(*fDetectorContainer, fChipMasks);
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cMasksThisBrd = fChipMasks.getObject(cBoard->getId());
@@ -254,23 +254,8 @@ void MemoryCheck2S::Initialise()
                 auto& cMasksThisHybrid = cMasksThisOG->getObject(cHybrid->getId());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip                                                   = cMasksThisHybrid->getObject(cChip->getId());
-                    cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cChip->getChipOriginalMask());
-                    // cOriginalMask = new ChannelGroup<NCHANNELS, 1>;
-                    // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
-                    // {
-                    //     bool cEnabled = cMsk->isChannelEnabled(cChnl);
-                    //     if( cEnabled ){ cOriginalMask->enableChannel( cChnl );
-                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " enabled." << RESET;
-                    //     }
-                    //     else{
-                    //         cOriginalMask->disableChannel( cChnl );
-                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " disabled." << RESET;
-                    //     }
-                    // }
-                    // if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, 1>;
-                    // if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<NSSACHANNELS, NMPACOLS>;
-                    // to -do .. same for MPA where have to look over cols
+                    auto& cMasksThisChip                                                      = cMasksThisHybrid->getObject(cChip->getId());
+                    cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<1, NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<1, NCHANNELS>>(cChip->getChipOriginalMask());
                 }
             } // hybrids
         }     // OG
@@ -578,8 +563,7 @@ void MemoryCheck2S::GenericTriggers(int pTriggerSeparation, int pMaxBurstLength)
         cBxId++;
     }
     size_t cNtriggersToSend = 30;
-    do
-    {
+    do {
         // first injection
         fFastCommands.push_back(cFCMDs.fTestPulse);
         size_t cBxWithTP = cBxId;
@@ -642,8 +626,7 @@ bool MemoryCheck2S::SendGenericTriggers(int pTriggerSeparation)
         // wait until all triggers have been sent
         uint32_t cCounter   = 0;
         uint32_t cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             // auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -735,8 +718,7 @@ bool MemoryCheck2S::SendGenericTestPulses(int pReSync)
         // wait until all triggers have been sent
         uint32_t cCounter   = 0;
         uint32_t cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             // auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -765,8 +747,7 @@ bool MemoryCheck2S::ReadAfterGenericBlock(int pNExpected)
         size_t   cCounter    = 0;
         uint32_t cNtriggers  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
         auto     cNWords     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             cNWordsPrev = (cCounter == 0) ? 0 : cNWords;
             cNWords     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -901,31 +882,35 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
                     auto&              cThNoiseThisChip = cThNoiseThisHybrid->getObject(cChip->getId());
                     std::vector<float> cPedestalsThisChip(0);
                     std::vector<float> cNoiseThisChip(0);
-                    for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        // S-curve for this channel
-                        std::vector<float> cW(cThresholds.size(), 0);
-                        std::vector<float> cV(cThresholds.size(), 0);
-                        for(size_t cIndx = 0; cIndx < cThresholds.size(); cIndx++)
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
-                            auto& cDataThisBrd    = cScanData[cIndx]->getObject(cBoard->getId());
-                            auto& cDataThisOG     = cDataThisBrd->getObject(cOpticalGroup->getId());
-                            auto& cDataThisHybrid = cDataThisOG->getObject(cHybrid->getId());
-                            auto& cDataThisChip   = cDataThisHybrid->getObject(cChip->getId());
-                            cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
-                            cV[cIndx]             = cThresholds[cIndx];
-                        }
-                        auto cPedeNoise                                                   = evalNoise(cW, cV, true);
-                        cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold = cPedeNoise.first;
-                        cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise     = cPedeNoise.second;
-                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
-                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
-                        // if( cChnl%25 == 0 )
-                        //     LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
-                        //         << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold
-                        //         << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise
-                        //         << RESET;
-                    } // chnl loop
+                            // S-curve for this channel
+                            std::vector<float> cW(cThresholds.size(), 0);
+                            std::vector<float> cV(cThresholds.size(), 0);
+                            for(size_t cIndx = 0; cIndx < cThresholds.size(); cIndx++)
+                            {
+                                auto& cDataThisBrd    = cScanData[cIndx]->getObject(cBoard->getId());
+                                auto& cDataThisOG     = cDataThisBrd->getObject(cOpticalGroup->getId());
+                                auto& cDataThisHybrid = cDataThisOG->getObject(cHybrid->getId());
+                                auto& cDataThisChip   = cDataThisHybrid->getObject(cChip->getId());
+                                cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(row, col).fOccupancy;
+                                cV[cIndx]             = cThresholds[cIndx];
+                            }
+                            auto cPedeNoise                                                      = evalNoise(cW, cV, true);
+                            cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold = cPedeNoise.first;
+                            cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise     = cPedeNoise.second;
+                            cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
+                            cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+                            // if( cChnl%25 == 0 )
+                            //     LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
+                            //         << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold
+                            //         << " noise is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise
+                            //         << RESET;
+                        } // chnl loop
+                    }
                 }
             }
         }
@@ -974,10 +959,13 @@ void MemoryCheck2S::SetThreshold(float pSigma)
                     auto&              cThNoiseThisChip = cThNoiseThisHybrid->getObject(cChip->getId());
                     std::vector<float> cPedestalsThisChip(0);
                     std::vector<float> cNoiseThisChip(0);
-                    for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
-                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold);
+                            cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise);
+                        }
                     } // chnl loop
                     auto cPedStats = SummarizeStats<float>(cPedestalsThisChip);
                     // LOG (INFO) << BOLDMAGENTA << "\t\t... Mean pedestal on this chip is "
@@ -1119,20 +1107,18 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                     std::vector<uint8_t> cExpectedHits(0);
                     if(!cInjection) // all channels
                     {
-                        for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cAllOnes) ? 1 : 0; }
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                        {
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col) { cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = (cAllOnes) ? 1 : 0; }
+                        }
                         continue;
                     } // with noise .. all would be on/off
 
-                    uint8_t              cSeed = 2 * (cChip->getId() + 1);
-                    std::vector<uint8_t> cSeeds{cSeed};
-                    std::vector<int>     cBends{0};
+                    uint8_t                              cSeed = 2 * (cChip->getId() + 1);
+                    std::vector<std::pair<uint8_t, int>> cSeeds{{cSeed, 0}};
 
                     // if( cChip->getId()%2 == 0 )
-                    if(std::find(pActiveCbcs.begin(), pActiveCbcs.end(), cChip->getId()) == pActiveCbcs.end())
-                    {
-                        cSeeds.clear();
-                        cBends.clear();
-                    }
+                    if(std::find(pActiveCbcs.begin(), pActiveCbcs.end(), cChip->getId()) == pActiveCbcs.end()) { cSeeds.clear(); }
 
                     // retrieve hit list from stubs
                     std::vector<uint8_t> cCompleteHitList;
@@ -1142,24 +1128,27 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                         std::vector<uint8_t> cBendLUT = static_cast<CbcInterface*>(fReadoutChipInterface)->readLUT(cChip);
                         // each bend code is stored in this vector - bend encoding start at -7 strips,
                         // increments by 0.5 strips
-                        uint8_t cBendCode = cBendLUT[(cBends[cIndx] / 2. - (-7.0)) / 0.5];
+                        uint8_t cBendCode = cBendLUT[(cSeeds[cIndx].second / 2. - (-7.0)) / 0.5];
                         // uint8_t cBendCode = cBendLUT[ cBends[cIndx]/2. ];
                         // bend code
-                        Stub cStub(cSeeds[cIndx], cBendCode);
+                        Stub cStub(cSeeds[cIndx].first, cBendCode);
                         cExpectedStubs.push_back(cStub);
-                        auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                        auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx].first, cSeeds[cIndx].second);
                         cCompleteHitList.insert(cCompleteHitList.end(), cHitList.begin(), cHitList.end());
                     }
                     // configure occupancy
-                    for(size_t cHit = 0; cHit < cChip->size(); cHit++)
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
-                        bool cHitFound = std::find(cCompleteHitList.begin(), cCompleteHitList.end(), cHit) != cCompleteHitList.end();
-                        if(cHitFound)
-                            cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cAllOnes) ? 1 : 0;
-                        else
-                            cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = 0;
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            bool cHitFound = std::find(cCompleteHitList.begin(), cCompleteHitList.end(), col) != cCompleteHitList.end();
+                            if(cHitFound)
+                                cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = (cAllOnes) ? 1 : 0;
+                            else
+                                cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = 0;
+                        }
                     }
-                    (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise, cUseOffsets);
+                    (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise, cUseOffsets);
                 } // Chip
             }     // Hybrid
         }         // OG
@@ -1185,7 +1174,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                     } // Chip
                 }     // Hybrid
             }         // OG
-            auto cStubOffset  = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
+            auto cStubOffset  = cBoard->getStubOffset();
             int  cStubLatency = cLatency - cStubOffset;
             LOG(INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
             fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
@@ -1333,24 +1322,25 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
                         std::vector<uint8_t> cExpectedHits(0);
                         if(!cInjection) // all channels
                         {
-                            for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = cAllOnes ? 1 : 0; }
+                            for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                            {
+                                for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col) { cExpectedOccThisChip->getChannel<Occupancy>(row, col).fOccupancy = cAllOnes ? 1 : 0; }
+                            }
                             continue;
                         }
 
-                        uint8_t              cSeed = 10 + 2 * (cChip->getId() + 1);
-                        std::vector<uint8_t> cSeeds{10};
-                        cSeeds[0] = cSeed;
-                        std::vector<int> cBends{0};
+                        uint8_t                              cSeed = 10 + 2 * (cChip->getId() + 1);
+                        std::vector<std::pair<uint8_t, int>> cSeeds{{cSeed, 0}};
 
-                        for(size_t cIndx = 0; cIndx < cSeeds.size(); cIndx += 1)
+                        for(const auto& theSeedAndBend: cSeeds)
                         {
-                            auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, cSeeds[cIndx], cBends[cIndx]);
+                            auto cHitList = (static_cast<CbcInterface*>(fReadoutChipInterface))->stubInjectionPattern(cChip, theSeedAndBend.first, theSeedAndBend.second);
                             // LOG(INFO) << BOLDBLUE << "RoC#" << +cChip->getId() << " expect to see hits in channels : " << RESET;
-                            for(auto cHit: cHitList) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = cAllOnes ? 1 : 0; }
+                            for(auto cHit: cHitList) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = cAllOnes ? 1 : 0; } // only for CBC
                         }
                         // make sure sampled mode is used
                         static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(cChip, "Sampled", true, true);
-                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise, cUseOffsets);
+                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise, cUseOffsets);
                         // if using TP injection make sure the latency is set correctly
                     }
                 } // Chip
@@ -1497,11 +1487,11 @@ void MemoryCheck2S::MemoryCheck2SSparse()
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
                     auto& cExpectedOccThisChip = cExpectedOccThisHybrid->getObject(cChip->getId());
-                    for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cThreshold == 1000) ? 1 : 0; }
-                } // Chip
-            }     // Hybrid
-        }         // OG
-    }             // inj over boards
+                    for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(0, cHit).fOccupancy = (cThreshold == 1000) ? 1 : 0; } // only for CBC
+                }                                                                                                                                                          // Chip
+            }                                                                                                                                                              // Hybrid
+        }                                                                                                                                                                  // OG
+    }                                                                                                                                                                      // inj over boards
 
     // here have to be careful
     // because I can only look at a maximum of 32 clusters at a time per CBC
@@ -1548,18 +1538,14 @@ void MemoryCheck2S::MemoryCheck2SSparse()
                     size_t cStart = cChnlGroup * 2;
                     // prepare injections
                     // first figure out seeds
-                    std::vector<uint8_t> cSeeds{10};
-                    cSeeds.clear();
-                    std::vector<int> cBends{0};
-                    cBends.clear();
+                    std::vector<std::pair<uint8_t, int>> cSeeds;
                     for(size_t cIndx = cStart; cIndx < cStart + 2; cIndx++)
                     {
                         int cChannel = cGroup * 2 + 1 + 16 * cIndx;
                         int cStrip   = 2 * (1 + cChannel / 2);
                         // LOG(INFO) << BOLDBLUE << "\t.. Injecting in strip#" << cStrip << RESET;
 
-                        cSeeds.push_back(cStrip);
-                        cBends.push_back(0);
+                        cSeeds.push_back({cStrip, 0});
                     } // will have 16 stubs per CBC .. which is
                     // way too much for stubs but .. ok
 
@@ -1585,7 +1571,7 @@ void MemoryCheck2S::MemoryCheck2SSparse()
                                         //         LOG (INFO) << BOLDMAGENTA << "\t\t.." << +cHit << RESET;
                                         //     }
                                         // }
-                                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cBends, cWithNoise, cUseOffsets);
+                                        (static_cast<CbcInterface*>(fReadoutChipInterface))->injectStubs(cChip, cSeeds, cWithNoise, cUseOffsets);
                                     }
                                 } // Chip
                             }     // Hybrid
@@ -1624,15 +1610,15 @@ void MemoryCheck2S::SaveOptimalTaps()
             for(auto cHybrid: *cOpticalGroup)
             {
                 fPhyPort.fHybridId = cHybrid->getId();
-                auto& cCic         = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                auto  cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
+                // auto& cCic         = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                // auto  cOptimalTaps = fCicInterface->GetOptimalTaps(cCic);
                 for(size_t cPhyPortChnl = 0; cPhyPortChnl < 4; cPhyPortChnl++)
                 {
                     for(size_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
                     {
                         fPhyPort.fPort    = cPhyPort;
                         fPhyPort.fChannel = cPhyPortChnl;
-                        fPhyPort.fTap     = cOptimalTaps[cPhyPortChnl][cPhyPort];
+                        // fPhyPort.fTap     = cOptimalTaps[cPhyPortChnl][cPhyPort];
 #ifdef __USE_ROOT__
                         TTree* cTree = static_cast<TTree*>(getHist(cBoard, "PhyPortTree"));
                         cTree->Fill();
@@ -1766,7 +1752,9 @@ void MemoryCheck2S::MonitorInputVoltage()
             uint8_t cADCsel         = 1;
             // char    cADC[4];
             // sprintf(cADC, "ADC%.1d", cADCsel);
-            std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
+            //std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
+            std::string cADC = "ADC" + std::to_string(cADCsel);
+
             const auto  cTimeStart = std::chrono::system_clock::now();
             fStartTime             = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
             std::vector<float> cVals(10);
@@ -1827,7 +1815,9 @@ void MemoryCheck2S::MonitorTemperature()
                 if(cADCsel == 14)
                     cADC = "TEMP";
                 else
-                    cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
+                    //cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
+                    std::string cADC = "ADC" + std::to_string(cADCsel);
+
 
                 const auto cTimeStart = std::chrono::system_clock::now();
                 fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
@@ -1936,7 +1926,8 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            //std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable
                             float cVal = clpGBTInterface->ReadADC(clpGBT, cADC.c_str()) * cFactor;
@@ -1976,7 +1967,8 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            //std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable
                             cMeas.push_back(clpGBTInterface->ReadADC(clpGBT, cADC) * cFactor);
@@ -2190,28 +2182,31 @@ void MemoryCheck2S::Check()
                             }
                         }
 
-                        for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            // information about threshold + noise
-                            fMemEvent.fPedestal = cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold;
-                            fMemEvent.fNoise    = cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise;
-                            // memory row
-                            fMemEvent.fMemoryRow    = cChnl;
-                            float cExpectedOcc      = cExpectedOcThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
-                            int   cOcc              = (int)(std::find(cHits.begin(), cHits.end(), cChnl) != cHits.end());
-                            fMemEvent.fCorrectValue = (uint8_t)(cExpectedOcc == cOcc);
-                            if(fMemEvent.fCorrectValue == 0)
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
-                                cBadEventsSummary.push_back(fMemEvent);
-                                // PrintMemEvent(fMemEvent);
-                            }
-                            cNCorruptedCells += (fMemEvent.fCorrectValue == 0) ? 1 : 0;
+                                // information about threshold + noise
+                                fMemEvent.fPedestal = cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fThreshold;
+                                fMemEvent.fNoise    = cThNoiseThisChip->getChannel<ThresholdAndNoise>(row, col).fNoise;
+                                // memory row
+                                fMemEvent.fMemoryRow    = col;
+                                float cExpectedOcc      = cExpectedOcThisChip->getChannel<Occupancy>(row, col).fOccupancy;
+                                int   cOcc              = (int)(std::find(cHits.begin(), cHits.end(), col) != cHits.end());
+                                fMemEvent.fCorrectValue = (uint8_t)(cExpectedOcc == cOcc);
+                                if(fMemEvent.fCorrectValue == 0)
+                                {
+                                    cBadEventsSummary.push_back(fMemEvent);
+                                    // PrintMemEvent(fMemEvent);
+                                }
+                                cNCorruptedCells += (fMemEvent.fCorrectValue == 0) ? 1 : 0;
 // if ROOT is enabled fill tree here
 #ifdef __USE_ROOT__
-                            TTree* cTree = static_cast<TTree*>(getHist(cHybrid, "MemoryCheck2STree"));
-                            cTree->Fill();
+                                TTree* cTree = static_cast<TTree*>(getHist(cHybrid, "MemoryCheck2STree"));
+                                cTree->Fill();
 #endif
-                            cMemEventsSummary.push_back(fMemEvent);
+                                cMemEventsSummary.push_back(fMemEvent);
+                            }
                         }
                     } // chip
                 }     // hybrid

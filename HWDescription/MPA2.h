@@ -38,11 +38,17 @@ class MPA2 : public ReadoutChip
 {
   public:
     static constexpr size_t nRows = NSSACHANNELS;
-    static constexpr size_t nCols = NMPACOLS;
+    static constexpr size_t nCols = NMPAROWS;
 
     MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename);
     // C'tors with object FE Description
     MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename);
+
+    MPA2(const MPA2&) = delete;
+
+    void setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg) override;
+
+    void initializeFreeRegisters() override;
 
     using MPARegPair = std::pair<std::string, ChipRegItem>;
     uint8_t           fPartnerId;
@@ -59,7 +65,7 @@ class MPA2 : public ReadoutChip
     }
     uint8_t getNumberOfBits(const std::string& dacName) override
     {
-        if((dacName.find("TrimDAC_P", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
+        if((dacName.find("TrimDAC_C", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
             return 5;
         else
             return 8;
@@ -67,11 +73,20 @@ class MPA2 : public ReadoutChip
 
     // row, col starts at index 0, global pix number starts at number 1
 
-    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN + 1) / 120 + 1, ((PN - 1) % 120) + 1); }
+    // std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN + 1) / 120 + 1, ((PN - 1) % 120) + 1); }
 
-    uint32_t getNumberOfChannels() const override { return NMPACHANNELS; }
+    uint32_t getNumberOfChannels() const override { return NMPAROWS * NSSACHANNELS; }
 
-    uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
+    bool                          isTopSensor(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn = 0) override;
+    std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow) override;
+
+    // uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
+    static std::string getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col);
+    static std::string getRowRegisterName(const std::string& theRegisterName, uint16_t row);
+
+  protected:
+    static std::vector<std::string> fListOfGlobalPixelRegisters;
+    static std::vector<std::string> fListOfGlobalRowRegisters;
 };
 
 struct MPA2RegItemComparer // Irene

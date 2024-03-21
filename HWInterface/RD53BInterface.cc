@@ -69,13 +69,13 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const char* registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
-    bool               doWriteClkDataDelay        = false;
+    static const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+    bool                               doWriteClkDataDelay      = false;
 
-    for(auto i = 0u; i < ArraySize(registerClkDataDelayList); i++)
+    for(auto i = 0u; i < registerClkDataDelayList.size(); i++)
     {
-        auto cRegItem = pRD53RegMap.find(registerClkDataDelayList[i]);
-        if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
+        auto cRegItem = pRD53RegMap.find(*std::next(registerClkDataDelayList.begin(), i));
+        if((cRegItem->second.fPrmptCfg == true) && (cRegItem != pRD53RegMap.end()))
         {
             doWriteClkDataDelay = true;
 
@@ -99,7 +99,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Programmig global registers #
     // ###############################
     static const std::set<std::string> registerBlackList = {
-        "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+        "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "TEMPSENS_IDEAL_FACTOR_ANA", "TEMPSENS_IDEAL_FACTOR_DIG", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
     static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
                                                             "DAC_PREAMP_R_LIN",
                                                             "DAC_PREAMP_TL_LIN",
@@ -118,9 +118,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
-            (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
+            (registerClkDataDelayList.find(cRegItem.first) == registerClkDataDelayList.end()) && (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
            (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
+        else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
+            pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
 
     // ###################################
     // # Programmig pixel cell registers #
@@ -237,7 +239,7 @@ void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* 
         // #################################
 
         auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
-        fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.master);
+        fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.masterLane);
         if(static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == false)
         {
             RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
@@ -752,7 +754,8 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t sampleNtimes = pChip->getRegItem("SAMPLE_N_TIMES").fValue;
     const uint16_t GlbPulseVal  = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
-    RD53Interface::WriteChipReg(pChip, "MonitorConfig", data, false); // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 1 << 12 | data, false);    // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP)); // The conversion is bad if we changing the mux setting too soon after
 
     // ########################################################
     // # Sample data multiple times for better value estimate #
@@ -761,10 +764,10 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     uint16_t counter = 0;
     for(auto i = 0u; i < sampleNtimes; i++)
     {
-        RD53Interface::WriteChipReg(pChip, "MonitorConfig", data | 1 << 13, false); // Enable monitoring
-        RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);                       // Trigger Monitor Data to start conversion
-        RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);              // Stop monitoring
-        uint32_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+        // Sending a long pulse breaks readout
+        RD53BInterface::SendGlobalPulse(pChip, 1 << 6, 1); // Reset ADC
+        RD53BInterface::SendGlobalPulse(pChip, 0x1000, 1); // Trigger Monitor Data to start conversion
+        const uint32_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
         if(val != 0)
         {
             avgVal += val;
@@ -773,7 +776,8 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     }
     avgVal /= (counter != 0 ? counter : 1);
 
-    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0x04); // Restore value in Global Pulse Route
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);      // Stop monitoring
+    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", GlbPulseVal); // Restore value in Global Pulse Route
 
     return avgVal;
 }
@@ -800,15 +804,19 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     // #####################
     // # Natural constants #
     // #####################
-    const float       T0C            = 273.15;         // [Kelvin]
-    const float       T25C           = 298.15;         // [Kelvin]
-    const float       R25C           = 10;             // [kOhm]
-    const float       kb             = 1.38064852e-23; // [J/K]
-    const float       e              = 1.6021766208e-19;
-    const float       R              = 15;   // By circuit design
-    const uint8_t     sensorDEM      = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
-    const float       idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
-    const std::string regName        = (type == "CENTER" ? "MON_SENS_ACB" : "MON_SENS_SLDO");
+    const float       T0C       = 273.15;         // [Kelvin]
+    const float       T25C      = 298.15;         // [Kelvin]
+    const float       R25C      = 10;             // [kOhm]
+    const float       kb        = 1.38064852e-23; // [J/K]
+    const float       e         = 1.6021766208e-19;
+    const float       R         = 15;   // By circuit design
+    const uint8_t     sensorDEM = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
+    const std::string regName   = (type == "CENTER" ? "MON_SENS_ACB" : "MON_SENS_SLDO");
+
+    float idealityFactor;
+    if(type == "ANA") { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_ANA").fValue / 1e3; }
+    else if(type == "DIG") { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_DIG").fValue / 1e3; }
+    else { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3; }
 
     uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
     float    valueLow  = 0;

@@ -14,7 +14,6 @@
 #include "tools/RD53BERtest.h"
 #include "tools/RD53ClockDelay.h"
 #include "tools/RD53DataReadbackOptimization.h"
-#include "tools/RD53DataTransmissionTest.h"
 #include "tools/RD53Gain.h"
 #include "tools/RD53GainOptimization.h"
 #include "tools/RD53GenericDacDacScan.h"
@@ -46,6 +45,23 @@ INITIALIZE_EASYLOGGINGPP
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+
+void introBanner()
+{
+    // #######################
+    // # Introductory banner #
+    // #######################
+    LOG(INFO) << BOLDGREEN << "       ____  _     ____         _    ____ _____" << RESET;
+    LOG(INFO) << BOLDGREEN << "      |  _ \\| |__ |___ \\       / \\  / ___|  ___|" << RESET;
+    LOG(INFO) << BOLDGREEN << "      | |_) | '_ \\  __) |____ / _ \\| |   | |_" << RESET;
+    LOG(INFO) << BOLDGREEN << "      |  __/| | | |/ __/_____/ ___ \\ |___|  _|" << RESET;
+    LOG(INFO) << BOLDGREEN << "      |_|   |_| |_|_____|   /_/   \\_\\____|_|\n" << RESET;
+    LOG(INFO) << BOLDGREEN << "  ____ __  __ ____ ___ _____          _       _ ____    _    ___" << RESET;
+    LOG(INFO) << BOLDGREEN << " / ___|  \\/  / ___|_ _|_   _| __ ___ (_)_ __ (_)  _ \\  / \\  / _ \\" << RESET;
+    LOG(INFO) << BOLDGREEN << "| |   | |\\/| \\___ \\| |  | || '_ ` _ \\| | '_ \\| | | | |/ _ \\| | | |" << RESET;
+    LOG(INFO) << BOLDGREEN << "| |___| |  | |___) | |  | || | | | | | | | | | | |_| / ___ \\ |_| |" << RESET;
+    LOG(INFO) << BOLDGREEN << " \\____|_|  |_|____/___| |_||_| |_| |_|_|_| |_|_|____/_/   \\_\\__\\_\\\n" << RESET;
+}
 
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
@@ -102,12 +118,12 @@ int main(int argc, char** argv)
     cmd.defineOption("file", "Hardware description file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("file", "f");
 
-    cmd.defineOption("settingsFile", "Settings override file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
-    cmd.defineOptionAlternative("settingsFile", "s");
+    cmd.defineOption("calibSettingsFile", "Calibration settings override file", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("calibSettingsFile", "s");
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj"
-                     "injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning gendacdac]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -159,7 +175,7 @@ int main(int argc, char** argv)
     // # Retrieve options #
     // ####################
     std::string configFile        = cmd.foundOption("file") == true ? cmd.optionValue("file") : "";
-    std::string settingsFile      = cmd.foundOption("settingsFile") == true ? cmd.optionValue("settingsFile") : configFile;
+    std::string calibSettingsFile = cmd.foundOption("calibSettingsFile") == true ? cmd.optionValue("calibSettingsFile") : configFile;
     std::string whichCalib        = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
     std::string EUDAQproducerNAME = cmd.foundOption("prodName") == true ? cmd.optionValue("prodName") : "";
     std::string binaryFile        = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
@@ -185,6 +201,7 @@ int main(int argc, char** argv)
     conf.set(el::Level::Global, el::ConfigurationType::Filename, fileName);
     el::Loggers::reconfigureAllLoggers(conf);
 
+    introBanner();
     SystemController mySysCntr;
 
     // ##################################
@@ -194,7 +211,7 @@ int main(int argc, char** argv)
     {
         std::stringstream outp;
         mySysCntr.InitializeHw(configFile, outp);
-        mySysCntr.InitializeSettings(settingsFile, outp);
+        mySysCntr.InitializeSettings(calibSettingsFile, outp);
 
         // ##################
         // # Reset hardware #
@@ -230,13 +247,13 @@ int main(int argc, char** argv)
         // #######################
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
         ConfigureInfo theConfigureInfo;
-        theConfigureInfo.setConfigurationFiles(configFile, settingsFile);
+        theConfigureInfo.setConfigurationFiles(configFile, calibSettingsFile);
         theConfigureInfo.setCalibrationName(whichCalib);
         mySysCntr.Configure(theConfigureInfo, !skipcfg);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
 
-    std::cout << std::endl;
+    LOG(INFO) << RESET;
 
     // ###################
     // # Run Calibration #
@@ -270,20 +287,6 @@ int main(int argc, char** argv)
         dro.run();
         dro.draw();
     }
-    else if(whichCalib == "datatrtest")
-    {
-        // ##############################
-        // # Run Data Transmission Test #
-        // ##############################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Data Transmission Test @@@" << RESET;
-
-        std::string          fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DataTransmissionTest");
-        DataTransmissionTest dtt;
-        dtt.Inherit(&mySysCntr);
-        dtt.localConfigure(fileName, runNumber);
-        dtt.run();
-        dtt.draw();
-    }
     else if(whichCalib == "pixelalive")
     {
         // ##################
@@ -301,8 +304,7 @@ int main(int argc, char** argv)
         // #############################################
         int  evenORodd = 0;
         bool doTwice   = false;
-        do
-        {
+        do {
             if(TESTSUBDETECTOR == true)
             {
                 if(pa.fDetectorContainer->size() != 1)
@@ -542,8 +544,7 @@ int main(int argc, char** argv)
             ph.Start(theStartInfo);
             if(runtime == -1)
             {
-                do
-                {
+                do {
                     LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop the run ..." << RESET;
                 } while(std::cin.get() != '\n');
             }
@@ -601,9 +602,13 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
 #endif
     }
-    else if((program == false) && (whichCalib != ""))
+    else if((program == false) && (dumpRegs == false))
     {
-        LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
+        if(whichCalib == "")
+            LOG(ERROR) << BOLDRED << "Error: calibration not specified" << RESET;
+        else
+            LOG(ERROR) << BOLDRED << "Error: option not recognized (" << BOLDYELLOW << whichCalib << BOLDRED << ")" << RESET;
+
         mySysCntr.Destroy();
         exit(EXIT_FAILURE);
     }
@@ -611,13 +616,14 @@ int main(int argc, char** argv)
     // ###########################
     // # Copy configuration file #
     // ###########################
-    auto copyConfigFile = [&](const std::string& fileName) {
+    auto copyConfigFile = [&](const std::string& fileName)
+    {
         const auto fileBasename = fileName.substr(fileName.find_last_of("/\\") + 1);
         const auto outputFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + fileBasename;
         system(("cp " + fileName + " " + outputFile).c_str());
     };
     copyConfigFile(configFile);
-    if(configFile != settingsFile) copyConfigFile(settingsFile);
+    if(configFile != calibSettingsFile) copyConfigFile(calibSettingsFile);
 
     // #####################
     // # Update run number #

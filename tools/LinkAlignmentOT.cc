@@ -6,8 +6,9 @@
 #include "HWInterface/ExceptionHandler.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/LpGBTalignmentResult.h"
 
-//#include "boost/format.hpp"
+// #include "boost/format.hpp"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -32,6 +33,15 @@ bool LinkAlignmentOT::Align()
         for(auto cOpticalGroup: *cBoard)
         {
             AlignLpGBTInputs(cOpticalGroup);
+
+            auto& clpGBT = cOpticalGroup->flpGBT;
+            if((cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) && static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(clpGBT) == 10)
+            {
+                // FIXME it is not clear why but it seems to help finishing the reconfigure step.
+                LOG(INFO) << BOLDRED << "ATTENTION!!! Adding Phase Alignment for PS 10G ..." << RESET;
+                PhaseAlignBEdata(cOpticalGroup);
+            }
+
             WordAlignBEdata(cOpticalGroup);
         }
         // check that word alignment of L1 data worked
@@ -114,46 +124,10 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         cFeEnableRegs.push_back(fCicInterface->ReadChipReg(cCic, "FE_ENABLE"));
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
     }
-    bool                 cAligned = true;
-    std::vector<uint8_t> cEportGroups;
-    std::vector<uint8_t> cEportChnls;
-    for(auto cHybrid: *pOpticalGroup)
-    {
-        std::vector<uint8_t> cGroups;
-        std::vector<uint8_t> cChannels;
-        if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
-        {
-            if(cHybrid->getId() % 2 == 0)
-            {
-                cGroups   = {0, 4, 4, 5, 5, 6};
-                cChannels = {0, 0, 2, 0, 2, 0};
-            }
-            else
-            {
-                cGroups   = {0, 1, 1, 2, 2, 3};
-                cChannels = {2, 0, 2, 0, 2, 2};
-            }
-        }
-        else // PS
-        {
-            if(cHybrid->getId() % 2 == 0)
-            {
-                cGroups   = {4, 4, 5, 5, 6, 6, 0};
-                cChannels = {2, 0, 2, 0, 2, 0, 0};
-            }
-            else
-            {
-                cGroups   = {0, 1, 1, 2, 2, 3, 3};
-                cChannels = {2, 0, 2, 0, 2, 0, 2};
-            }
-        }
-        for(auto cGrp: cGroups) cEportGroups.push_back(cGrp);
-        for(auto cChnl: cChannels) cEportChnls.push_back(cChnl);
-    }
-    auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
-    cAligned   = cAligned && (cMode != 15);
-    // cMode      = ( cMode > 8 ) ? 5 : cMode;
-    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); }
+
+    std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels              = pOpticalGroup->getLpGBTrxGroupsAndChannels();
+    auto                                    theOpticalGroupAlignmentResult = static_cast<D19clpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(clpGBT, groupsAndChannels, 5);
+    bool                                    isAligned                      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->didAlignmentSucceded(theOpticalGroupAlignmentResult, 1, pOpticalGroup);
 
     // configure CICs to NOT output alignment pattern on stub lines
     size_t cIndx = 0;
@@ -166,9 +140,9 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         cIndx++;
 
         auto& cLinkSampling = fLpGBTSamplingDelay.getObject((*cBoardIter)->getId())->getObject(pOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<uint8_t>();
-        cLinkSampling       = cMode;
+        cLinkSampling       = 0;
     }
-    return cAligned;
+    return isAligned;
 }
 void LinkAlignmentOT::CheckLpgbtOutputs(uint8_t pPattern)
 {
@@ -310,7 +284,9 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup, bool pD
             if(!cAligned)
             {
                 if(((cHybrid->getId() % 2) == 0) & ((cLineId - 1) == 4) & (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
-                { continue; } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
+                {
+                    continue;
+                } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                 LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id"
                           << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
                 if (pDisableUnsresponsiveHybrids)
@@ -321,8 +297,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup, bool pD
             {
                 size_t cMaxAttempts = 10;
                 size_t cIter        = 0;
-                do
-                {
+                do {
                     cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
                     cAligned                = cAlignerInterface->IsLineWordAligned();
                     cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
@@ -568,8 +543,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
     {
         size_t cMaxAttempts = 10;
         size_t cIter        = 0;
-        do
-        {
+        do {
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
             cLineStatus.first  = cAlignerInterface->IsLineWordAligned();
             cLineStatus.second = cAlignerInterface->GetLineConfiguration().fBitslip;
@@ -653,7 +627,7 @@ void LinkAlignmentOT::LegacyAlignmentMPA(const Chip* pChip)
 bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod)
 {
     // For now keep legacy until we can test on MPA SCC
-    if(pChip->getFrontEndType() == FrontEndType::MPA or pChip->getFrontEndType() == FrontEndType::MPA2)
+    if(pChip->getFrontEndType() == FrontEndType::MPA2)
     {
         LegacyAlignmentMPA(pChip);
         return true;
@@ -684,8 +658,7 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
     bool                     cSuccess  = false;
     unsigned int             cAttempts = 0;
     std::pair<bool, uint8_t> cPhaseAlignmentStatus, cWordAlignmentStatus;
-    do
-    {
+    do {
         try
         {
             cPhaseAlignmentStatus = PhaseTuneLine(pChip, pLineId);
@@ -712,13 +685,10 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
 
         cAttempts++;
     } while(!cSuccess && cAttempts < 10);
-    if(cSuccess && pLineId == 1 &&
-       (pChip->getFrontEndType() == FrontEndType::CBC3 || pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::SSA2 ||
-        pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2))
+    if(cSuccess && pLineId == 1 && (pChip->getFrontEndType() == FrontEndType::CBC3 || pChip->getFrontEndType() == FrontEndType::SSA2 || pChip->getFrontEndType() == FrontEndType::MPA2))
     {
         LOG(INFO) << BOLDBLUE << "Forcing L1A line to match alignment result for first stub line." << RESET;
-        uint8_t cBitslip = cWordAlignmentStatus.second + (uint8_t)(pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::SSA2 ||
-                                                                   pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2);
+        uint8_t cBitslip = cWordAlignmentStatus.second + (uint8_t)(pChip->getFrontEndType() == FrontEndType::SSA2 || pChip->getFrontEndType() == FrontEndType::MPA2);
         ManuallyConfigureLine(pChip, pLineId, cPhaseAlignmentStatus.second, cBitslip);
     }
     return cSuccess;
@@ -824,8 +794,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
             LOG(INFO) << BOLDBLUE << "Going to try and align manually in software..." << RESET;
             const uint8_t cMaxIters  = 10;
             uint8_t       cIterCount = 0;
-            do
-            {
+            do {
                 LOG(INFO) << BOLDBLUE << "\t\t Alignment attempt#" << +cIterCount << RESET;
                 for(uint8_t cBitslip = 0; cBitslip < 8; cBitslip++)
                 {
@@ -990,8 +959,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "Original package delay is " << +cOriginalDelay << RESET;
         LOG(DEBUG) << cMaxBxCounter << RESET;
         size_t cAttempt = 0;
-        do
-        {
+        do {
             LOG(INFO) << BOLDMAGENTA << "Package delay alignment attempt#" << +cAttempt << RESET;
             for(cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
             {
@@ -1061,7 +1029,9 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
 
                             uint8_t cMatchFound = (cBxIds[cIdFirst] == cBxIds[cIdSecond]);
                             if(cMatchFound)
-                            { LOG(INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET; }
+                            {
+                                LOG(INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET;
+                            }
                             else
                                 LOG(INFO) << BOLDRED << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " DO NOT match.. " << RESET;
                             cMatchesFound.push_back(cMatchFound);
@@ -1105,7 +1075,9 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                                     cNRollOvers += ((cPreviousBxId >= 2500) && (cPreviousBxId < cMaxBxCounter)) && (cBxId < cPreviousBxId) ? 1 : 0;
                                     cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxId % cMaxBxCounter) - cBxDifference;
                                     if(cBxId > (int)cDelayAfterTP)
-                                    { LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET; }
+                                    {
+                                        LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
+                                    }
                                     else
                                         LOG(INFO) << BOLDRED << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << "[ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
                                     cBxDifferences.push_back(cBxDifference);

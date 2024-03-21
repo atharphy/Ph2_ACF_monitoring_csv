@@ -43,7 +43,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     cmake_minimum_required(VERSION 3.17)
     project(Ph2_ACF)
 
-# Set the output directory
+    # Set the output directory
     if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
        MESSAGE( STATUS "${BoldRed}" )
        MESSAGE( FATAL_ERROR "${Reset}In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
@@ -93,7 +93,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=format-overflow -Wno-error=pedantic")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context")
     set (GCC_10_NOERROR_FLAGS "-Wno-error=int-in-bool-context")
-    set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=int-in-bool-context")
+    set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=int-in-bool-context -Wno-error=nonnull")
 
     set(CMAKE_CXX_STANDARD $ENV{STDCXX} CACHE STRING "C++ version selection")
     set(CMAKE_CXX_STANDARD_REQUIRED ON)  # optional, ensure standard is supported
@@ -111,10 +111,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
       elseif(GCC_VERSION VERSION_LESS 11)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_10_NOERROR_FLAGS}")
-      elseif(GCC_VERSION VERSION_LESS 13)
+      elseif(GCC_VERSION VERSION_LESS 14)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_12_NOERROR_FLAGS}")
       endif()
-      
+
       if(GCC_VERSION VERSION_LESS 10.3)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} -Wno-error=deprecated-copy")
       endif ()
@@ -239,9 +239,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         add_subdirectory(DQMUtils)
         add_subdirectory(RootUtils)
         add_subdirectory(MonitorDQM)
-    endif()
-
-    if(NoDataShipping OR CompileForShep)
         add_subdirectory(src)
     endif()
 
@@ -272,10 +269,12 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}$ENV{PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
+    set (CMAKE_CXX_STANDARD 17)
+
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
-    include_directories($ENV{PH2ACF_BASE_DIR})
-
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+    
     set(CompileForShep true)
     set(CompileForHerd false)
     set(NoDataShipping false)
@@ -316,7 +315,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
     add_subdirectory(tools)
-    add_subdirectory(ProductionToolsIT)
+    #add_subdirectory(ProductionToolsIT)
     add_subdirectory(DQMUtils)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)

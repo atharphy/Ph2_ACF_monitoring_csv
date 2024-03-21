@@ -42,6 +42,7 @@
 #ifndef BIT_PACKING_H
 #define BIT_PACKING_H
 
+#include <cstdint>
 #include <iostream>
 #include <tuple>
 

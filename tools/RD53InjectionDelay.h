@@ -27,7 +27,6 @@ class InjectionDelay : public PixelAlive
     ~InjectionDelay()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -60,10 +59,11 @@ class InjectionDelay : public PixelAlive
     DetectorDataContainer theInjectionDelayContainer;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     size_t startValue;
     size_t stopValue;
-
-    int theCurrentRun;
 };
 
 #endif

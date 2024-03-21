@@ -11,12 +11,15 @@
 #define _BeBoard_h__
 
 #include "Definition.h"
+#include "HWDescription/BeBoardRegItem.h"
 #include "OpticalGroup.h"
 #include "Utils/ConditionDataSet.h"
 #include "Utils/Container.h"
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
+#include "pugixml.hpp"
 #include <map>
+#include <regex>
 #include <stdint.h>
 #include <vector>
 
@@ -26,7 +29,7 @@
  */
 namespace Ph2_HwDescription
 {
-using BeBoardRegMap = std::map<std::string, uint32_t>; /*!< Map containing the registers of a board */
+using BeBoardRegMap = std::map<std::string, BeBoardRegItem>; /*!< Map containing the registers of a board */
 
 /*!
  * \class BeBoard
@@ -54,6 +57,8 @@ class BeBoard : public BoardContainer
      * \param filename of the configuration file
      */
     BeBoard(uint8_t pBeId, const std::string& filename);
+
+    BeBoard(const BeBoard&) = delete;
 
     /*!
      * \brief Destructor
@@ -168,19 +173,33 @@ class BeBoard : public BoardContainer
     std::string getAddressTable() const { return fAddressTable; }
 
     std::vector<FrontEndType> connectedFrontEndTypes() const;
-    int                       dummyValue_ = 1989;
 
-    void dumpRegisters()
+    void dumpRegisters();
+
+    void              saveRegMap(const std::string& fileName);
+    std::stringstream getRegMapStream() const;
+
+    enum class RegisterType
     {
-        for(auto reg: fRegMap) std::cout << reg.first << " " << reg.second << std::endl;
-    }
+        Utility,
+        User
+    };
+
+    void                                             takeSnapshot();
+    void                                             clearSnapshot();
+    std::vector<std::pair<std::string, uint32_t>>    getSnapshot() const;
+    void                                             reinitializeFreeRegisters();
+    void                                             addFreeRegister(const std::regex& theRegisterName);
+    std::vector<std::pair<std::regex, RegisterType>> getFreeRegisterRegex() const { return fListOfFreeRegisters; };
+
+    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue);
 
   protected:
-    BoardType    fBoardType;
-    EventType    fEventType;
-    FrontEndType fFrontEndType;
+    BoardType                           fBoardType;
+    EventType                           fEventType;
+    FrontEndType                        fFrontEndType;
+    std::unique_ptr<pugi::xml_document> createRegisterPugiDocument() const;
 
-    BeBoardRegMap     fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
     ConditionDataSet* fCondDataSet;
     bool              fOptical{false};
     bool              fConfigureCDCE{false};
@@ -200,7 +219,12 @@ class BeBoard : public BoardContainer
      * \brief Load RegMap from a file
      * \param filename
      */
-    void loadConfigFile(const std::string& filename);
+    void                                             loadConfigFile(const std::string& filename);
+    void                                             initializeFreeRegisters();
+    BeBoardRegMap                                    fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
+    bool                                             fTrackModifiedRegistersEnabled{false};
+    std::map<std::string, uint32_t>                  fModifiedRegisters{};
+    std::vector<std::pair<std::regex, RegisterType>> fListOfFreeRegisters{};
 };
 } // namespace Ph2_HwDescription
 

@@ -14,7 +14,6 @@
 
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
-#include "HWInterface/MPAInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
 #include "pugixml.hpp"
 #include <vector>
@@ -26,6 +25,13 @@
 namespace Ph2_HwInterface
 {
 using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
+
+struct Injection
+{
+    uint8_t fRow;
+    uint8_t fColumn;
+    uint8_t fChipId;
+};
 
 /*!
  * \class MPA2Interface
@@ -43,18 +49,16 @@ class MPA2Interface : public ReadoutChipInterface
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait);
     void     ReadMPA(Ph2_HwDescription::ReadoutChip* pMPA);
 
-    bool WriteChipRegBits(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = true);
+    bool WriteChipRegBits(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false);
     bool WriteChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerify = true) override;
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = false) override;
     bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, const ChipContainer& pValue, bool pVerify = false) override;
 
-    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
+    uint16_t                                      ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
+    std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
 
     void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
     void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
-
-    void     Pix_write(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
-    uint32_t Pix_read(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
 
     // void                  Activate_async(Ph2_HwDescription::Chip* pMPA);
     // void                  Activate_sync(Ph2_HwDescription::Chip* pMPA);
@@ -62,7 +66,6 @@ class MPA2Interface : public ReadoutChipInterface
     void Activate_ss(Ph2_HwDescription::Chip* pMPA, uint8_t win = 0);
     void Activate_ps(Ph2_HwDescription::Chip* pMPA, uint8_t win = 8);
     // uint32_t Read_pixel_counter(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p);
-    void ReadASEvent(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
     void Pix_Smode(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p, std::string smode);
     void Enable_pix_BRcal(Ph2_HwDescription::ReadoutChip* pMPA, uint32_t p, std::string polarity = "rise", std::string smode = "edge");
     void Pix_Set_enable(Ph2_HwDescription::ReadoutChip* pMPA,
@@ -90,7 +93,7 @@ class MPA2Interface : public ReadoutChipInterface
 
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pMPA, bool pVerify, uint32_t pBlockSize);
     //
-    bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pMPA, bool mask, bool pVerify) { return true; }
+    bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pMPA, bool mask, bool pVerify = true);
 
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
     void                 Cleardata();
@@ -98,11 +101,8 @@ class MPA2Interface : public ReadoutChipInterface
     void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
     std::vector<int>     decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pMode = 0);
-    bool                 configPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, int pPixelNum, uint8_t pValue, bool pVerify = false);
-    uint16_t             readPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, int pPixelNum);
-    bool                 configRow(Ph2_HwDescription::Chip* pChip, std::string cReg, int pRowNum, uint8_t pValue, bool pVerify = false);
-    bool                 configPeri(Ph2_HwDescription::Chip* pChip, std::string cReg, uint8_t pValue, bool pVerify = false);
-    uint16_t             readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
+    bool                 configPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, uint16_t row, uint16_t col, uint8_t pValue, bool pVerify);
+    uint16_t             readPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, uint16_t row, uint16_t col);
     void                 loadVref(Ph2_HwDescription::Chip* pMPA2);
     void                 loadVref(Ph2_HwDescription::Chip* pMPA2, uint8_t VREFvalue);
     float                ADCMeasure(Ph2_HwDescription::Chip* pMPA2, uint32_t nreads = 5);
@@ -111,13 +111,14 @@ class MPA2Interface : public ReadoutChipInterface
     float                measureBg(Ph2_HwDescription::Chip* pMPA2);
     uint16_t             ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
 
-    float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
+    float                                calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
+    bool                                 injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
+    const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
 
   private:
     // pixelEnable bits
     const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE =
         {{"PixelMask", 0}, {"Polarity", 1}, {"EnEdgeBR", 2}, {"EnLvlBR", 3}, {"CounterEnable", 4}, {"DigitalInjection", 5}, {"AnalogueInjection", 6}, {"BrClk", 7}};
-    const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
 
     const std::map<std::string, uint8_t> CONTROL_TABLE = {{"ReadoutMode", 0}, {"RetimePix", 2}, {"PhaseShift", 5}}; // I think the doc should read 3,3,2 for the bits -- to check
 
@@ -157,17 +158,12 @@ class MPA2Interface : public ReadoutChipInterface
     std::map<uint16_t, std::string>      fMap;
     std::vector<uint8_t>                 fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
 
-    bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerify = false);
-    bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerify = false);
-    bool     WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerify = false);
-    uint16_t ReadReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, bool pVerify = false);
-    bool     maskPixel(Ph2_HwDescription::Chip* pChip, int pPixelNum, uint8_t pMask, bool pVerify = false);
-    bool     enablePixelInjection(Ph2_HwDescription::Chip* pChip, int pPixelNum, uint8_t pInj, bool pVerify = false);
-    bool     maskRowCol(Ph2_HwDescription::Chip* pChip, int pRow, int pColumn, uint8_t pMask, bool pVerify = false);
-    uint16_t regPixel(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow, int pColumn);
-    uint16_t regPeri(Ph2_HwDescription::Chip* pChip, int cBlock, int pBaseRegister);
-    uint16_t regRow(Ph2_HwDescription::Chip* pChip, int pBaseRegister, int pRow);
-    void     readAllBias(Ph2_HwDescription::Chip* pMPA);
+    bool                WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerify = false);
+    uint16_t            ReadChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode);
+    bool                maskPixel(Ph2_HwDescription::Chip* pChip, uint16_t row, uint16_t col, bool doMask, bool pVerify = false);
+    bool                enablePixelInjection(Ph2_HwDescription::Chip* pChip, uint16_t row, uint16_t col, bool inject, bool pVerify);
+    void                readAllBias(Ph2_HwDescription::Chip* pMPA);
+    std::pair<int, int> extractMaskedPixelAddress(const std::string& registerName) const;
 };
 } // namespace Ph2_HwInterface
 

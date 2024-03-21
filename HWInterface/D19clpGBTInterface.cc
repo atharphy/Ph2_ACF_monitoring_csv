@@ -8,11 +8,15 @@
 */
 
 #include "HWInterface/D19clpGBTInterface.h"
+#include "HWDescription/OpticalGroup.h"
+#include "HWDescription/lpGBT.h"
+#include "Utils/LpGBTalignmentResult.h"
 #include <chrono>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <unordered_map>
 
 using namespace Ph2_HwDescription;
 
@@ -30,30 +34,26 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     uint16_t cIter = 0, cMaxIter = 200;
     for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
     uint8_t cPUSMState = 0;
-    do
-    {
+    do {
         cPUSMState = GetPUSMStatus(pChip);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
     } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
     if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state " + fPUSMStatusMap[cChipVersion][cPUSMState])); }
+
     // Configuring chip
-    bool cReconfigure = false;
-    if(cReconfigure)
+    ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
+    std::vector<std::pair<std::string, uint16_t>> cRegVec;
+    cRegVec.clear();
+    uint16_t maximumWritableRegister = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F;
+
+    for(const auto& cRegItem: clpGBTRegMap)
     {
-        ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
-        std::vector<std::pair<std::string, uint16_t>> cRegVec;
-        cRegVec.clear();
-        for(const auto& cRegItem: clpGBTRegMap)
-        {
-            if(cRegItem.second.fAddress <= 0x13c && cRegItem.first.find("ChipConfig") == std::string::npos) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
-        } // get read/write registers
-        for(const auto& cReg: cRegVec)
-        {
-            LOG(DEBUG) << BOLDBLUE << "\tWriting 0x" << std::hex << +cReg.second << std::dec << " to " << cReg.first << RESET;
-            WriteChipReg(pChip, cReg.first, cReg.second);
-        }
-    }
+        if(cRegItem.second.fAddress <= maximumWritableRegister) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
+    } // get read/write registers
+
+    WriteChipMultReg(pChip, cRegVec);
+
     // Setting PUSM Done bits
     SetPUSMDone(pChip, true, true);
     // Checking if lpGBT reaches Ready state
@@ -66,10 +66,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         cIter++;
     }
     if(cReady) { LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET; }
-    else
-    {
-        throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
-    }
+    else { throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE")); }
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // LoadCalibrationData(pChip, 0x00244200);
@@ -77,43 +74,46 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     {
         LOG(INFO) << BOLDBLUE << "Load calibration data and automatically tune vref (repeat if temperature changes)!" << RESET;
 
-        LoadCalibrationData(pChip, ReadChipID(pChip, cChipVersion));
-        AutoTuneVref(pChip);
+        LoadCalibrationData(static_cast<lpGBT*>(pChip), ReadChipID(pChip, cChipVersion));
 
-        LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC0\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC0", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC1\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC1", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC2\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC2", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC3\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC3", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC4\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC4", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC5\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC5", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC6\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC6", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
-        // Example on how to use the current source to measure resistance
-        // Only for OT-2S
-        // if(pChip->getFrontEndType() == FrontEndType::OuterTracker2S) {
-        // CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
-        // LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
-        // LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;}
-        LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
-        LOG(INFO) << BOLDGREEN << MeasureTemperature(pChip) << " C" << RESET;
+        // Fabio's comment: auto tune should not be done here because if it gets calibrated and you try to reload again the registers
+        // it will be overwritten
+        // AutoTuneVref(pChip);
 
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDTX\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDTX") << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDRX\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDRX") << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDD\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDD") << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDA\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDA") << " V" << RESET;
+        // LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC0\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC0", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC1\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC1", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC2\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC2", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC3\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC3", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC4\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC4", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC5\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC5", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC6\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC6", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(pChip, \"ADC7\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(pChip, "ADC7", "VREF/2", 0) << " V" << RESET;
+        // // Example on how to use the current source to measure resistance
+        // // Only for OT-2S
+        // // if(pChip->getFrontEndType() == FrontEndType::OuterTracker2S) {
+        // // CdacSetCurrent(pChip, "ADC4", _CdacCodeToCurrent(pChip, "ADC4", 0xaa));
+        // // LOG(INFO) << BOLDGREEN << "MeasureResistance(pChip,\"ADC4\", 1000, false) " << RESET;
+        // // LOG(INFO) << BOLDGREEN << MeasureResistance(pChip, "ADC4", 1000, false) << " Ohms" << RESET;}
+        // LOG(INFO) << BOLDGREEN << "MeasureTemperature(pChip) " << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasureTemperature(pChip) << " C" << RESET;
+
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDTX\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDTX") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDRX\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDRX") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDD\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDD") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(pChip, \"VDDA\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(pChip, "VDDA") << " V" << RESET;
     }
     return cReady;
 } //
@@ -121,6 +121,53 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 /*-----------------------*/
 /* OT specific functions */
 /*-----------------------*/
+
+bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
+{
+    // first, identify the correct BeBoardFWInterface
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: pRegVec)
+    {
+        auto cIterator = cRegMap.find(cReq.first);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            continue;
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cItem.fValue      = cReq.second;
+        cRegItems.push_back(cItem);
+    }
+    return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
+}
+
+std::vector<std::pair<std::string, uint16_t>> D19clpGBTInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
+{
+    setBoard(pChip->getBeBoardId());
+    auto                     cRegMap = pChip->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: theRegisterList)
+    {
+        auto cIterator = cRegMap.find(cReq);
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            abort();
+        }
+
+        ChipRegItem cItem = cIterator->second;
+        cRegItems.push_back(cItem);
+    }
+
+    fBoardFW->MultiRegisterRead(pChip, cRegItems);
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    return theRegisterValues;
+}
 
 void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
 {
@@ -138,6 +185,71 @@ void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
         LOG(INFO) << BOLDGREEN << "Using I2C Slave Interface configuration mode" << RESET;
         fOptical = false;
     }
+}
+
+void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
+{
+    // Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
+    // hold resets
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
+    {
+        this->cbcReset(pChip, true, cSide);
+        this->cicReset(pChip, true, cSide);
+    }
+
+    // Fabio: I do not think this part should be here, but I keep it for consistency with the previous code
+#if defined(__TCUSB__)
+    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 0};
+    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 0};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    cEportGroups = {0, 1, 1, 2, 2, 3};
+    cEportChnls  = {2, 0, 2, 0, 2, 2};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+#endif
+}
+
+void D19clpGBTInterface::holdPSModuleResets(Ph2_HwDescription::Chip* pChip)
+{
+    // Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
+    // hold resets
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
+    {
+        this->ssaReset(pChip, true, cSide);
+        this->mpaReset(pChip, true, cSide);
+        this->cicReset(pChip, true, cSide);
+    }
+
+    // Fabio: I do not think this part should be here, but I keep it for consistency with the previous code
+#if defined(__TCUSB__)
+    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 6, 0};
+    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 2, 0};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    cEportGroups = {0, 1, 1, 2, 2, 3, 3};
+    cEportChnls  = {2, 0, 2, 0, 2, 0, 2};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+#endif
+}
+
+void D19clpGBTInterface::configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
+{
+    fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
+    fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+    fClkConfig.fClkDriveStr     = pClkCnfg.fClkDriveStr;
+    fClkConfig.fClkPreEmphWidth = pClkCnfg.fClkPreEmphWidth;
+    fClkConfig.fClkPreEmphMode  = pClkCnfg.fClkPreEmphMode;
+    fClkConfig.fClkPreEmphStr   = pClkCnfg.fClkPreEmphStr;
+
+    std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
+    std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex << (fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq)
+              << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg << " to 0x" << std::hex
+              << (fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth) << std::dec << std::endl;
+    WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
+    WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
 }
 
 // Preliminary
@@ -160,7 +272,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties()) { lpGBTInterface::ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, cTxDataRate); }
 
     for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
-    { ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity); }
+    {
+        ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity);
+    }
 
     // Rx configuration and Phase Align
     // Configure Rx Groups
@@ -171,7 +285,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 5;
     for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
-    { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
+    {
+        ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase);
+    }
     // Configuring I2C Master pull-ups for VTRx+
     WriteChipReg(pChip, "I2CM1Config", 1 << 4 | 1 << 6);
     // Reset I2C Masters
@@ -228,8 +344,12 @@ void D19clpGBTInterface::Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip)
 
 void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
-    std::vector<uint8_t> cOptimalTaps = {};
-    PhaseAlignRx(pChip, pGroups, pChannels);
+    std::vector<uint8_t>                    cOptimalTaps = {};
+    std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels;
+
+    for(size_t i = 0; i < pGroups.size(); ++i) { groupsAndChannels[pGroups[i]].push_back(pChannels[i]); }
+
+    PhaseAlignRx(pChip, groupsAndChannels, 5);
     // find mode
     for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { cOptimalTaps.push_back(GetPhaseTap(pChip, pGroups[cIndx], pChannels[cIndx])); }
     std::vector<uint8_t> cTapsHist(15, 0);
@@ -241,9 +361,8 @@ void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint
         for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cTapMode); }
 }
 
-uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::map<uint8_t, std::vector<uint8_t>>& groupsAndChannels, size_t pMaxAttempts)
 {
-    lpGBTInterface::fTrainedPhases.clear();
     LOG(INFO) << BOLDBLUE << "Aligning lpGBT#" << +pChip->getId() << RESET;
     const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
 
@@ -252,119 +371,133 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 3; // 4 --> 320 MHz || 5 --> 640 MHz
     lpGBTInterface::ConfigurePhShifter(pChip, {0, 2}, cFreq, cDriveStr, cEnFTune, cDelay);
 
-    // // Set data source for channels 0,2 to PRBS
-    // lpGBTInterface::ConfigureRxSource(pChip, pGroups, lpGBTconstants::PATTERN_PRBS);
-    // // Turn ON PRBS for channels 0,2
-    // lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, true);
-    std::vector<uint8_t> cAligned(pGroups.size(), 0);
-    bool                 cSuccess = true;
-    std::vector<uint8_t> cOptimalTaps(0);
+    LpGBTalignmentResult theAlignmentResults; // {Group : {channel : {successRate, bestPhaseHistogram}}}
 
-    for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++)
+    for(const auto& theGroupAndChannels: groupsAndChannels)
     {
-        uint8_t cGroup   = pGroups[cIndx];
-        uint8_t cChannel = pChannels[cIndx];
-
-        cFreq         = 2;
-        uint8_t cMode = 1; // Initial training mode
-        lpGBTInterface::ConfigureRxGroup(pChip, cGroup, cChannel, cFreq, cMode);
-        std::string cTrainRxReg;
-        if(cGroup == 0 || cGroup == 1)
-            cTrainRxReg = "EPRXTrain10";
-        else if(cGroup == 2 || cGroup == 3)
-            cTrainRxReg = "EPRXTrain32";
-        else if(cGroup == 4 || cGroup == 5)
-            cTrainRxReg = "EPRXTrain54";
-        else if(cGroup == 6)
-            cTrainRxReg = "EPRXTrainEc6";
-
-        std::vector<uint8_t> cPhases(0);
-        std::vector<uint8_t> cUniquePhases(0);
-        LOG(DEBUG) << BOLDYELLOW << "Group#" << +cGroup << " Channel#" << +cChannel << "...checking phase aligner" << RESET;
-        size_t cMaxAttempts = 5;
-        for(size_t cAttempt = 0; cAttempt < cMaxAttempts; cAttempt++)
+        uint8_t cGroup = theGroupAndChannels.first;
+        for(const auto cChannel: theGroupAndChannels.second)
         {
-            // Enable training
-            uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
+            float                       alignmentSuccessRate = 0.;
+            GenericDataArray<float, 16> bestPhaseHistogram;
+            std::fill(bestPhaseHistogram.begin(), bestPhaseHistogram.end(), 0);
+            for(auto& value: bestPhaseHistogram) value = 0;
 
-            // Assumption: write is stable enough that it sohuld never fail in normal condition
-            // If the fail occurs it means that the Chip has a major issue and this check avoids to be stuck in this loop for a very long time
-            bool writeSucceded = WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
-            if(!writeSucceded) return 15;
-            std::this_thread::sleep_for(std::chrono::microseconds((lpGBTconstants::DEEPSLEEP) / 10));
-            WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::microseconds((lpGBTconstants::DEEPSLEEP) / 10));
-            // Check for lock
-            std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
-            uint8_t     cLockShift   = cChannel + 4;
-            auto        cLock        = 0;
-            uint8_t     cCurrPhase   = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            bool        cContinue    = (cLock == 0);
-            uint8_t     cMaxIters    = 10;
-            uint8_t     cIter        = 0;
-            do
+            cFreq         = 2;
+            uint8_t cMode = 1; // Initial training mode
+            lpGBTInterface::ConfigureRxGroup(pChip, cGroup, cChannel, cFreq, cMode);
+            std::string cTrainRxReg;
+            if(cGroup == 0 || cGroup == 1)
+                cTrainRxReg = "EPRXTrain10";
+            else if(cGroup == 2 || cGroup == 3)
+                cTrainRxReg = "EPRXTrain32";
+            else if(cGroup == 4 || cGroup == 5)
+                cTrainRxReg = "EPRXTrain54";
+            else if(cGroup == 6)
+                cTrainRxReg = "EPRXTrainEc6";
+
+            LOG(DEBUG) << BOLDYELLOW << "Group#" << +cGroup << " Channel#" << +cChannel << "...checking phase aligner" << RESET;
+            for(size_t cAttempt = 0; cAttempt < pMaxAttempts; cAttempt++)
             {
-                std::this_thread::sleep_for(std::chrono::microseconds((lpGBTconstants::DEEPSLEEP) / 10));
-                cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
-                cContinue = cLock == 0;
-                cIter++;
-            } while(cContinue && cIter < cMaxIters);
-            if(cLock) cAligned[cIndx] += 1;
-            WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::microseconds((lpGBTconstants::DEEPSLEEP) / 10));
-            cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
-            cPhases.push_back(cCurrPhase);
-            cUniquePhases.push_back(cCurrPhase);
+                uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
+                if(cChipVersion == 0) { ResetRxDll(pChip, {cGroup}); }
+                // Enable training
+                uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
+
+                WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
+                std::this_thread::sleep_for(std::chrono::microseconds(10));
+                WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
+                // Check for lock
+                std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
+                uint8_t     cLockShift   = cChannel + 4;
+                auto        cLock        = 0;
+                uint8_t     cCurrPhase   = 255;
+                bool        cContinue    = true;
+                uint8_t     cMaxIters    = 10;
+                uint8_t     cIter        = 0;
+                do {
+                    std::this_thread::sleep_for(std::chrono::microseconds(10));
+                    cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
+                    cContinue = cLock == 0;
+                    cIter++;
+                } while(cContinue && cIter < cMaxIters);
+                if(cLock) alignmentSuccessRate += 1;
+                WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+                cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+                // LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
+                bestPhaseHistogram[cCurrPhase]++;
+            }
+
+            // find phase with highest entries
+            uint8_t bestPhase              = 15;
+            int     highestCount           = 0;
+            int     numberOfPossiblePhases = 0;
+            for(size_t phaseValue = 0; phaseValue < bestPhaseHistogram.size(); ++phaseValue)
+            {
+                if(bestPhaseHistogram[phaseValue] > highestCount)
+                {
+                    highestCount = bestPhaseHistogram[phaseValue];
+                    bestPhase    = phaseValue;
+                }
+                if(bestPhaseHistogram[phaseValue] > 0) ++numberOfPossiblePhases;
+            }
+
+            LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +bestPhase << " out of " << numberOfPossiblePhases
+                      << " possibilities" << RESET;
+            SetPhaseTap(pChip, cGroup, cChannel, bestPhase);
+            ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
+
+            // Normalize over total attempts
+            alignmentSuccessRate /= pMaxAttempts;
+            for(auto& phaseOccurrence: bestPhaseHistogram) phaseOccurrence /= pMaxAttempts;
+
+            theAlignmentResults.setGroupAndChannelResult(cGroup, cChannel, alignmentSuccessRate, bestPhase, bestPhaseHistogram);
         }
+    }
 
-        cSuccess = cSuccess && (cAligned[cIndx] == cMaxAttempts);
+    uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
+    for(const auto& theGroupAndChannels: groupsAndChannels)
+        for(const auto& channel: theGroupAndChannels.second) lpGBTInterface::ConfigureRxGroup(pChip, theGroupAndChannels.first, channel, 2, cMode);
 
-        std::sort(cUniquePhases.begin(), cUniquePhases.end());
-        cUniquePhases.erase(unique(cUniquePhases.begin(), cUniquePhases.end()), cUniquePhases.end());
-        std::vector<uint8_t> cCount(0);
-        size_t               cIndxBstPhase = 0;
-        size_t               cCntBstPhase  = 0;
-        for(size_t cIndx2 = 0; cIndx2 < cUniquePhases.size(); cIndx2++)
+    return theAlignmentResults;
+}
+
+bool D19clpGBTInterface::didAlignmentSucceded(LpGBTalignmentResult& theOpticalGroupAlignmentResult, float minAlignmentSuccessRate, const Ph2_HwDescription::OpticalGroup* theOpticalGroup)
+{
+    bool isAligned                     = true;
+    auto theGroupsAndChannelsPerHybrid = theOpticalGroup->getLpGBTrxGroupsAndChannelsPerHybrid();
+
+    for(const auto& theGoupAlignmenResult: theOpticalGroupAlignmentResult.fResultContainer)
+    {
+        for(const auto& theChannelAlignmentResult: theGoupAlignmenResult.second)
         {
-            uint8_t cCountThisPhase = 0;
-            for(auto cThisPhase: cPhases) { cCountThisPhase += (cThisPhase == cUniquePhases[cIndx2]); }
-            if(cCountThisPhase >= cCntBstPhase)
+            bool skipGroupAndChannel = false;
+            // Check if the group and channel belong to a disabled hybrid
+            for(auto cHybrid: *theOpticalGroup)
             {
-                cCntBstPhase  = cCountThisPhase;
-                cIndxBstPhase = cIndx2;
+                auto        theHybridId = cHybrid->getId();
+                std::string sideToMatch = (theHybridId % 2 == 0) ? "R" : "L";
+                std::string theSide     = theGroupsAndChannelsPerHybrid[std::make_pair(theGoupAlignmenResult.first, theChannelAlignmentResult.first)];
+                std::size_t found       = theSide.find("FEH" + sideToMatch);
+                if(found == std::string::npos && theOpticalGroup->size() != 2) { skipGroupAndChannel = true; }
+            }
+
+            float   alignmentSuccessRate = std::get<0>(theChannelAlignmentResult.second);
+            uint8_t bestPhaseFound       = std::get<1>(theChannelAlignmentResult.second);
+            if((alignmentSuccessRate < minAlignmentSuccessRate || bestPhaseFound == 15) && !skipGroupAndChannel)
+            {
+                isAligned = false;
+                std::stringstream errorMessage;
+                errorMessage << "OTalignLpGBTinputs::AlignLpGBTInputs - Error in aligning LpGBT Group " << +theGoupAlignmenResult.first << " Channel " << +theChannelAlignmentResult.first;
+                if(alignmentSuccessRate < minAlignmentSuccessRate)
+                    errorMessage << " - alignmen success rate = " << alignmentSuccessRate << " less then minimum requited (" << minAlignmentSuccessRate << ")";
+                if(bestPhaseFound == 15) errorMessage << " best phase = 15 (error flag)";
+                LOG(ERROR) << BOLDRED << errorMessage.str() << RESET;
             }
         }
-
-        cSuccess = cSuccess && (cUniquePhases[cIndxBstPhase] != 15);
-        if(cUniquePhases[cIndxBstPhase] != 15)
-        {
-            LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
-            SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
-            cOptimalTaps.push_back(cUniquePhases[cIndxBstPhase]);
-        }
-        else
-        {
-            LOG(INFO) << BOLDRED << "Group#" << +cGroup << " Channel#" << +cChannel << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
-            ConfigureRxPhase(pChip, cGroup, cChannel, 0);
-            SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
-        }
-        ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
-        lpGBTInterface::fTrainedPhases.push_back(std::make_pair(cGroup,std::make_pair(cChannel,cUniquePhases[cIndxBstPhase])));
     }
-    // Find mode
-    std::vector<uint8_t> cTapsHist(15, 0);
-    for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
-
-    auto cTapMode = std::max_element(cTapsHist.begin(), cTapsHist.end()) - cTapsHist.begin();
-    LOG(INFO) << BOLDMAGENTA << "Most frequent optimal tap is " << +cTapMode << RESET;
-    uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
-    lpGBTInterface::fChosenPhase = cTapMode;
-    // if(cTapMode!=15) for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cOptimalTaps[cIndx]); }
-    for(const auto& group: pGroups)
-        for(const auto& channel: pChannels) lpGBTInterface::ConfigureRxGroup(pChip, group, channel, 2, cMode);
-
-    return (cSuccess) ? cTapMode : 15;
+    return isAligned;
 }
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
@@ -389,7 +522,9 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties()) { lpGBTInterface::ConfigureTxGroup(pChip, TxProperty.Group, TxProperty.Channel, cTxDataRate); }
 
     for(const auto& TxProperty: static_cast<lpGBT*>(pChip)->getTxProperties())
-    { ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity); }
+    {
+        ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, cTxDriveStr, cTxPreEmphMode, cTxPreEmphStr, cTxPreEmphWidth, TxProperty.Polarity);
+    }
 
     // Rx configuration and Phase Align
     // Configure Rx Groups
@@ -398,7 +533,9 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 
     uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxPhase = 9;
     for(const auto& RxProperty: static_cast<lpGBT*>(pChip)->getRxProperties())
-    { ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase); }
+    {
+        ConfigureRxChannel(pChip, RxProperty.Group, RxProperty.Channel, cRxEqual, cRxTerm, cRxAcBias, RxProperty.Polarity, cRxPhase);
+    }
 
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
@@ -453,4 +590,40 @@ void D19clpGBTInterface::AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip)
         static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert);
     }
 }
+
+void D19clpGBTInterface::updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chip* pChip)
+{
+    auto        theChipRate               = this->GetChipRate(pChip);
+    std::string cicClockRightRegisterName = "EPCLK" + std::to_string(fClock_RHS_CIC) + "ChnCntrH";
+    std::string cicClockLeftRegisterName  = "EPCLK" + std::to_string(fClock_LHS_CIC) + "ChnCntrH";
+
+    uint8_t expectedCicClockSetting;
+    if(theChipRate == 5)
+        expectedCicClockSetting = 0x4;
+    else if(theChipRate == 10)
+        expectedCicClockSetting = 0x5;
+    else
+    {
+        std::string errorMessage =
+            std::string(__PRETTY_FUNCTION__) + " LpGBT TX rate not identified on BeBoard " + std::to_string(pChip->getBeBoardId()) + " OpticalGroup " + std::to_string(pChip->getOpticalGroupId());
+        throw std::runtime_error(errorMessage);
+    }
+
+    auto updateClockFunction = [this, theChipRate, pChip, expectedCicClockSetting](std::string registerName)
+    {
+        auto theCurrentRegisterValue = this->ReadChipReg(pChip, registerName);
+        if((theCurrentRegisterValue & 0x7) != expectedCicClockSetting)
+        {
+            uint16_t theNewRegisterValue = (theCurrentRegisterValue & 0xF8) | (expectedCicClockSetting & 0x7);
+            LOG(INFO) << BOLDYELLOW << "Attention! Updating " << registerName << " from 0x" << std::hex << +theCurrentRegisterValue << " to 0x" << +theNewRegisterValue << std::dec
+                      << " to provide the CIC with the correct clock based on the LpGBT data rate (" << +theChipRate << "Gb) for on BeBoard " << +pChip->getBeBoardId() << " OpticalGroup "
+                      << +pChip->getOpticalGroupId() << RESET;
+            this->WriteChipReg(pChip, registerName, theNewRegisterValue);
+        }
+    };
+
+    updateClockFunction(cicClockRightRegisterName);
+    updateClockFunction(cicClockLeftRegisterName);
+}
+
 } // namespace Ph2_HwInterface

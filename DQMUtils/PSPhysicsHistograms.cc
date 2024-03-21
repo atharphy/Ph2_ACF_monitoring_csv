@@ -24,25 +24,23 @@ void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
             for(auto hybrid: *optical)
                 for(auto chip: *hybrid)
                 {
-                    if(chip->getFrontEndType() == FrontEndType::MPA) std::cout << "MPA" << std::endl;
                     if(chip->getFrontEndType() == FrontEndType::MPA2) std::cout << "MPA2" << std::endl;
-                    if(chip->getFrontEndType() == FrontEndType::SSA) std::cout << "SSA" << std::endl;
                     if(chip->getFrontEndType() == FrontEndType::SSA2) std::cout << "SSA2" << std::endl;
                 }
 
     HistContainer<TH1F> theSClusterTemplateHistogram = HistContainer<TH1F>("S clusters", "S clusters", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
     HistContainer<TH2F> thePClusterTemplateHistogram =
-        HistContainer<TH2F>("P clusters", "P clusters", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPACHANNELS / NSSACHANNELS, -0.5, float(NMPACHANNELS / NSSACHANNELS) - 0.5);
+        HistContainer<TH2F>("P clusters", "P clusters", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS * NSSACHANNELS / NSSACHANNELS, -0.5, float(NMPAROWS * NSSACHANNELS / NSSACHANNELS) - 0.5);
     HistContainer<TH2F> theStubTemplateHistogram =
-        HistContainer<TH2F>("Stubs", "Stubs", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPACHANNELS / NSSACHANNELS, -0.5, float(NMPACHANNELS / NSSACHANNELS) - 0.5);
+        HistContainer<TH2F>("Stubs", "Stubs", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS * NSSACHANNELS / NSSACHANNELS, -0.5, float(NMPAROWS * NSSACHANNELS / NSSACHANNELS) - 0.5);
 
-    // auto mpaSelectFunction = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA); };
+    // auto mpaSelectFunction = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     // theDetectorStructure.setReadoutChipQueryFunction(mpaSelectFunction);
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fStubHistogramContainer, theStubTemplateHistogram);
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer, thePClusterTemplateHistogram);
     // theDetectorStructure.resetReadoutChipQueryFunction();
 
-    // auto ssaSelectFunction = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA); };
+    // auto ssaSelectFunction = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     // theDetectorStructure.setReadoutChipQueryFunction(ssaSelectFunction);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fStripOccupancyHistogramContainer, theSClusterTemplateHistogram);
     // theDetectorStructure.resetReadoutChipQueryFunction();
@@ -116,7 +114,7 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                 for(const auto chip: *hybrid)
                 {
                     // std::cout<<__LINE__<<std::endl;
-                    if(chip->getChannelContainer<float>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
 
                     // std::cout<<__LINE__<<std::endl;
                     // std::cout<<"board = "<<board->getId()<<std::endl;
@@ -126,7 +124,7 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                     FrontEndType theFrontEndType =
                         fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getFrontEndType();
                     // std::cout<<__LINE__<<std::endl;
-                    if(theFrontEndType == FrontEndType::MPA || theFrontEndType == FrontEndType::MPA2)
+                    if(theFrontEndType == FrontEndType::MPA2)
                     {
                         // std::cout<<__LINE__<<std::endl;
                         TH2F* pixelClusterHistogram = fOccupancyHistogramContainer.getObject(board->getId())
@@ -137,7 +135,7 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                                                           .fTheHistogram;
 
                         // std::cout<<__LINE__<<std::endl;
-                        for(int row = 0; row < NMPACHANNELS / NSSACHANNELS; ++row)
+                        for(int row = 0; row < NMPAROWS * NSSACHANNELS / NSSACHANNELS; ++row)
                         {
                             // std::cout<<__LINE__<<std::endl;
                             for(int col = 0; col < NSSACHANNELS; ++col)
@@ -162,7 +160,7 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                                                           ->getSummary<HistContainer<TH1F>>()
                                                           .fTheHistogram;
                         // std::cout<<__LINE__<<std::endl;
-                        for(int channel = 0; channel < NSSACHANNELS; ++channel) { stripClusterHistogram->Fill(channel, chip->getChannel<float>(channel)); }
+                        for(int channel = 0; channel < NSSACHANNELS; ++channel) { stripClusterHistogram->Fill(channel, chip->getChannel<float>(0, channel)); }
                         // std::cout<<__LINE__<<std::endl;
                     }
                 }
@@ -181,11 +179,11 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
             {
                 for(const auto chip: *hybrid)
                 {
-                    if(chip->getChannelContainer<float>() == nullptr) continue;
+                    if(chip->hasChannelContainer() == false) continue;
 
                     FrontEndType theFrontEndType =
                         fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getFrontEndType();
-                    if(theFrontEndType != FrontEndType::MPA && theFrontEndType != FrontEndType::MPA2) continue;
+                    if(theFrontEndType != FrontEndType::MPA2) continue;
 
                     TH2F* stubHistogram = fStubHistogramContainer.getObject(board->getId())
                                               ->getObject(opticalGroup->getId())
@@ -194,7 +192,7 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
                                               ->getSummary<HistContainer<TH2F>>()
                                               .fTheHistogram;
 
-                    for(int row = 0; row < NMPACHANNELS / NSSACHANNELS; ++row)
+                    for(int row = 0; row < NMPAROWS * NSSACHANNELS / NSSACHANNELS; ++row)
                     {
                         for(int col = 0; col < NSSACHANNELS; ++col) { stubHistogram->Fill(col, row, chip->getChannel<float>(row, col)); }
                     }

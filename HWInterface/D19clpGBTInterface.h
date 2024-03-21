@@ -12,6 +12,8 @@
 
 #include "HWInterface/lpGBTInterface.h"
 
+class LpGBTalignmentResult;
+
 namespace Ph2_HwInterface
 {
 class D19clpGBTInterface : public lpGBTInterface
@@ -31,22 +33,30 @@ class D19clpGBTInterface : public lpGBTInterface
     // General configuration of the lpGBT chip from register file
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
+    bool                                          WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;
+    std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
+
+    void hold2SModuleResets(Ph2_HwDescription::Chip* pChip);
+    void holdPSModuleResets(Ph2_HwDescription::Chip* pChip);
+
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pOptical, bool pToggleTC = false);
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     void AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip);
     // configure 2S-SEH
-    void        Configure2SSEH(Ph2_HwDescription::Chip* pChip);
-    void        Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip);
-    std::string getVariableValue(std::string variable, std::string buffer);
-    void        ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
-    void        InitialPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
-    void        PhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
-                             const Ph2_HwDescription::BeBoard*      pBoard,
-                             const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
-                             ReadoutChipInterface*                  pReadoutChipInterface) override{};
-    uint8_t     PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels) override;
+    void                 Configure2SSEH(Ph2_HwDescription::Chip* pChip);
+    void                 Add2SSEHeLinkProperties(Ph2_HwDescription::Chip* pChip);
+    std::string          getVariableValue(std::string variable, std::string buffer);
+    void                 ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void                 InitialPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void                 PhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
+                                      const Ph2_HwDescription::BeBoard*      pBoard,
+                                      const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
+                                      ReadoutChipInterface*                  pReadoutChipInterface) override{};
+    LpGBTalignmentResult PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::map<uint8_t, std::vector<uint8_t>>& groupsAndChannels, size_t pMaxAttempts);
+
+    bool didAlignmentSucceded(LpGBTalignmentResult& theOpticalGroupAlignmentResult, float minAlignmentSuccessRate, const Ph2_HwDescription::OpticalGroup* theOpticalGroup);
     // 0 [RHS], 1 [LHS]
     // active reset functions
     void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
@@ -108,23 +118,10 @@ class D19clpGBTInterface : public lpGBTInterface
         std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
     }
 
-    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
-    {
-        fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
-        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
-        fClkConfig.fClkDriveStr     = pClkCnfg.fClkDriveStr;
-        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
-        fClkConfig.fClkPreEmphWidth = pClkCnfg.fClkPreEmphWidth;
-        fClkConfig.fClkPreEmphMode  = pClkCnfg.fClkPreEmphMode;
-        fClkConfig.fClkPreEmphStr   = pClkCnfg.fClkPreEmphStr;
-
-        std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
-        std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
-        WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
-        WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
-    }
+    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg);
     void cicClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg); }
     void hybridClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
+    void updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chip* pChip);
 
     void                 setFrontEndType(FrontEndType pType) { fFeType = pType; }
     FrontEndType         getFrontEndType() { return fFeType; }

@@ -72,7 +72,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Find source files
     file(GLOB SOURCES *.cc)
     add_library(Ph2_miniDAQ STATIC ${SOURCES})
-    target_link_libraries(Ph2_miniDAQ CACTUS::headers)
+    target_link_libraries(Ph2_miniDAQ Ph2_Tools CACTUS::headers)
 
     ###############
     # EXECUTABLES #
@@ -96,31 +96,48 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "    ${BoldYellow}MINI DAQ${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
+
+    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
+    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
+    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
+    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
+
     include_directories(${UHAL_DIR}/uhal/include)
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
+#    include_directories(${Protobuf_INCLUDE_DIRS})
+include_directories(${PROTOBUF_INCLUDE_DIR})
 
     #library dirs
+#    link_directories(${Protobuf_LIBRARIES})
+    MESSAGE(STATUS "PROTOBUF is ${Protobuf_LIBRARIES}")
+    MESSAGE(STATUS "PROTOBUF is ${protobuf_LIBRARY}")
 
-    cet_make_exec(RunController
+    cet_make_exec(NAME RunController
         SOURCE
         RunController.cc MiddlewareController.cc MiddlewareMessageHandler.cc MiddlewareStateMachine.cc CombinedCalibrationFactory.cc
         LIBRARIES
-        ${Boost_REGEX_LIBRARY}
-        ${Boost_PROGRAM_OPTIONS_LIBRARY}
-        ${Boost_IOSTREAMS_LIBRARY}
+        Ph2_Utils
+        NetworkUtils
+        Ph2_MessageUtils
+        ${PROTOBUF_LIBRARY}
+
+#             Boost::serialization
+#             Boost::thread
+#             Boost::date_time
+             Boost::iostreams
+             Boost::filesystem
+        Boost::regex
+        Boost::program_options
+        Boost::headers
         cactus_uhal_uhal
         cactus_uhal_log
         cactus_uhal_grammars
         Ph2_Interface
         Ph2_System
-        Ph2_Utils
-        NetworkUtils
         Ph2_Tools
         Ph2_MonitorUtils
-        Ph2_MessageUtils
-        protobuf
     )
 
     MESSAGE(STATUS " ")

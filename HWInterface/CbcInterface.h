@@ -50,7 +50,11 @@ class CbcInterface : public ReadoutChipInterface
     bool ConfigurePage(Ph2_HwDescription::Chip* pCbc, uint8_t pPage, bool pVerify = true);
     bool ConfigureChip(Ph2_HwDescription::Chip* pCbc, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
-    void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    void produceL1phaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip);
+    void produceStubLine0PhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip);
+    void produceStubLines1To4PhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip);
+
+    void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 1) override;
     void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
 
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify = true) override;
@@ -106,6 +110,8 @@ class CbcInterface : public ReadoutChipInterface
      */
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode) override;
 
+    std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
+
     // cbc specific functions
     std::vector<uint8_t> createHitListFromStubs(uint8_t pSeed, bool pSeedLayer);
     std::vector<uint8_t> stubInjectionPattern(uint8_t pStubAddress, int pStubBend,
@@ -113,12 +119,12 @@ class CbcInterface : public ReadoutChipInterface
     std::vector<uint8_t> stubInjectionPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend);
     bool                 selectLogicMode(Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerify = true);
     bool                 enableHipSuppression(Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerify = true);
-    bool                 injectStubs(Ph2_HwDescription::ReadoutChip* pCbc,
-                                     std::vector<uint8_t>            pStubAddresses,
-                                     std::vector<int>                pStubBends,
-                                     bool                            pUseNoise   = true,
-                                     bool                            pUseOffsets = false,
-                                     uint8_t                         pAllOff     = 0xFF); // address + bend in units of half strips
+    bool                 injectClusters(Ph2_HwDescription::ReadoutChip* pCbc, std::vector<std::pair<uint8_t, uint8_t>> theClusterAddressAndWidthVector);
+    bool                 injectStubs(Ph2_HwDescription::ReadoutChip*      pCbc,
+                                     std::vector<std::pair<uint8_t, int>> theStubAddressesAndBendVector,
+                                     bool                                 pUseNoise   = true,
+                                     bool                                 pUseOffsets = false,
+                                     uint8_t                              pAllOff     = 0xFF); // address + bend in units of half strips
     uint16_t             readErrorRegister(Ph2_HwDescription::ReadoutChip* pCbc);
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pCbc, uint8_t pMode = 0);
     uint8_t              GetLastPage(Ph2_HwDescription::Chip* pCbc);

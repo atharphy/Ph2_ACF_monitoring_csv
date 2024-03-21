@@ -11,6 +11,7 @@
 #define RD53CalibBase_H
 
 #include "HWDescription/RD53.h"
+#include "MetadataHandlerIT.h"
 #include "Tool.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
@@ -18,6 +19,7 @@
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
+#include "TKey.h"
 #endif
 
 // ##################################
@@ -27,31 +29,47 @@ class CalibBase : public Tool
 {
   public:
     CalibBase() : showErrorReport(true) {}
+    ~CalibBase() { CalibBase::Stop(); }
     void    chipErrorReport() const;
     void    copyMaskFromDefault(const std::string& which = "all") const;
-    void    saveChipRegisters(int currentRun, bool doUpdateChip);
+    void    saveChipRegisters(bool doUpdateChip);
     void    downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::vector<const char*>& regNames, bool checkAgainst = false, int value = 0);
-    void    saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector,
-                                    int                                        theCurrentRun,
-                                    const std::vector<uint16_t>&               dacList,
-                                    size_t                                     offset,
-                                    size_t                                     nEvents,
-                                    const std::string&                         name);
+    void    saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector, const std::vector<uint16_t>& dacList, size_t offset, size_t nEvents, const std::string& name);
     uint8_t assignGroupType(RD53Shared::INJtype injType) const;
     void    prepareChipQueryForEnDis(const std::string& queryName);
+    void    ResetBoardsReadBkFIFO();
 
-    virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) = 0;
-    virtual void   run()                                                                      = 0;
-    virtual void   draw(bool doSaveData = true)                                               = 0;
+    void Stop() override;
+    void ConfigureCalibration() override;
+
+    virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1);
+    virtual void   run()                      = 0;
+    virtual void   draw(bool saveData = true) = 0;
     virtual size_t getNumberIterations() { return 0; };
+
+    template <typename T>
+    void bookHistoSaveMetadata(T* histos)
+    {
+#ifdef __USE_ROOT__
+        if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+
+        // ##################################
+        // # Fill metadata final conditions #
+        // ##################################
+        if(this->fMetadataHandler != nullptr)
+        {
+            LOG(INFO) << BOLDBLUE << "\t--> Saving and/or shipping metadata..." << RESET;
+            this->fMetadataHandler->fillFinalConditionsHardwareSpecific();
+        }
+    }
 
     template <typename T>
     void initializeFiles(const std::string& histoFileName, const std::string& calibName, T*& histos, int currentRun = -1, bool saveBinaryData = false)
     {
-        theHistoFileName = histoFileName;
-
         if(saveBinaryData == true)
         {
+            LOG(INFO) << BOLDBLUE << "\t--> Calibration initializing raw data file..." << RESET;
             this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
             this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_" + calibName + ".raw", 'w');
             this->initializeWriteFileHandler();
@@ -59,6 +77,33 @@ class CalibBase : public Tool
 
         delete histos;
         histos = new T;
+
+#ifdef __USE_ROOT__
+        if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
+        {
+            LOG(INFO) << BOLDBLUE << "\t--> Calibration initializing root file..." << RESET;
+#else
+        {
+#endif
+            this->InitResultFile(histoFileName);
+
+            // #################
+            // # Book metadata #
+            // #################
+            if(this->fMetadataHandler == nullptr)
+            {
+                this->fMetadataHandler = new MetadataHandlerIT();
+                this->fMetadataHandler->Inherit(this);
+                this->fMetadataHandler->initMetadata();
+                this->fMetadataHandler->justBookDQMMetadata();
+            }
+
+            // ####################################
+            // # Fill metadata initial conditions #
+            // ####################################
+            this->fMetadataHandler->fillInitialConditionsHardwareSpecific();
+            this->WriteRootFile();
+        }
     }
 
     template <typename T>
@@ -81,12 +126,34 @@ class CalibBase : public Tool
     }
 
   protected:
-    std::string theHistoFileName;
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
+    size_t      rowStart;
+    size_t      rowStop;
+    size_t      colStart;
+    size_t      colStop;
+    size_t      nEvents;
+    size_t      nEvtsBurst;
+    size_t      nTRIGxEvent;
+    bool        splitByHybrid;
     std::string dataOutputDir;
-    bool        showErrorReport;
+
+    int  theCurrentRun;
+    bool showErrorReport;
 
   private:
     virtual void fillHisto() = 0;
+
+    // ###############################
+    // # Split output file by Hybrid #
+    // ###############################
+#ifdef __USE_ROOT__
+    bool splitHistoFileByHybrid(TFile* theInputFile);
+    void copyDirectories(TFile* theInputFile, TFile* theOutputFile, const std::string& hybridName);
+    void copyContent(TFile* theInputFile, TFile* theOutputFile, const std::string& dirName);
+    bool openRootFileFolder(TFile* theInputFile, const std::string& folderName);
+#endif
 };
 
 #endif

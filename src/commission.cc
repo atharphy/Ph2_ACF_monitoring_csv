@@ -1,6 +1,6 @@
 #include <cstring>
 
-//#include "Utils/easylogging++.h"
+// #include "Utils/easylogging++.h"
 #include "TApplication.h"
 #include "TROOT.h"
 #include "Utils/StartInfo.h"
@@ -16,7 +16,6 @@
 #include "tools/PedeNoise.h"
 #include "tools/SignalScan.h"
 #include "tools/SignalScanFit.h"
-#include "tools/StubBackEndAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -140,10 +139,9 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.StartHttpServer();
 
-    bool cReInitialize = true;
     if(cmd.foundOption("reconfigure"))
     {
-        cTool.ConfigureHw(cReInitialize);
+        cTool.ConfigureHw();
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
@@ -188,8 +186,7 @@ int main(int argc, char* argv[])
     // reload settings on-to FE chips
     if(cmd.foundOption("reload"))
     {
-        // //cReInitialize=false;
-        cTool.ConfigureHw(cReInitialize);
+        cTool.ConfigureHw();
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
@@ -235,14 +232,14 @@ int main(int argc, char* argv[])
                 for(auto chip: *hybrid)
                 {
                     cTool.fReadoutChipInterface->WriteChipReg(chip, "InjectedCharge", 77);
-                    if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
+                    if(chip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "AnalogueSync", 1);
                         // cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 1);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat - 1);
                     }
-                    if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
+                    if(chip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         // cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);

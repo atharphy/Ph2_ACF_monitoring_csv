@@ -28,7 +28,7 @@ Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string&
     fChipCode         = 1;
     fChipAddress      = 0x41 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NCHANNELS>>();
     fChipOriginalMask->enableAllChannels();
     configFileName = filename;
     loadfRegMap(filename);
@@ -42,10 +42,16 @@ Cbc::Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     fChipCode         = 1;
     fChipAddress      = 0x41 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    fChipOriginalMask = std::make_shared<ChannelGroup<1, NCHANNELS>>();
     fChipOriginalMask->enableAllChannels();
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CBC3);
+}
+
+void Cbc::initializeFreeRegisters()
+{
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ChipIDFuse[1-3]$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BandgapFuse$"), RegisterType::ReadOnly));
 }
 
 // load fRegMap from file
@@ -55,6 +61,7 @@ void Cbc::loadfRegMap(const std::string& filename)
 
     if(file)
     {
+        initializeFreeRegisters();
         std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;
@@ -97,7 +104,7 @@ void Cbc::loadfRegMap(const std::string& filename)
                         for(uint8_t channel = 0; channel < 8; ++channel)
                         {
                             uint8_t chn = 1 << channel;
-                            if((fRegItem.fValue && chn) == 0) { fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20) * 8 + channel); }
+                            if((fRegItem.fValue && chn) == 0) { fChipOriginalMask->disableChannel(0, (fRegItem.fAddress - 0x20) * 8 + channel); }
                         }
                     }
                 }
@@ -150,6 +157,28 @@ std::stringstream Cbc::getRegMapStream()
     }
 
     return theStream;
+}
+
+bool                          Cbc::isTopSensor(ReadoutChip* pChip, uint16_t pLocalColumn) { return (pLocalColumn % 2 != 0) ? true : false; }
+std::pair<uint16_t, uint16_t> Cbc::getGlobalCoordinates(ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow)
+{
+    if(pLocalColumn > pChip->getNumberOfCols())
+    {
+        throw std::runtime_error("The given column " + std::to_string(pLocalColumn) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) +
+                                 ". Acceptable values are between 0 and " + std::to_string(pChip->getNumberOfCols()));
+    }
+    if(pLocalRow > pChip->getNumberOfRows())
+    {
+        throw std::runtime_error("The given row " + std::to_string(pLocalRow) + " does not exist in an " + pChip->getFrontEndName(pChip->getFrontEndType()) + ". Acceptable values are between 0 and " +
+                                 std::to_string(pChip->getNumberOfRows()));
+    }
+
+    uint16_t cGlobalY = 0;
+    uint16_t cGlobalX = 0;
+    uint16_t cCol     = pLocalColumn / 2;
+    if(pChip->getHybridId() % 2 == 0) { cGlobalX = (pChip->getNumberOfCols() / 2 - cCol) + (NCHIPS_OT - pChip->getId() - 1) * pChip->getNumberOfCols() / 2; }
+    else { cGlobalX = cCol + pChip->getId() * pChip->getNumberOfCols() / 2; }
+    return std::make_pair(cGlobalX, cGlobalY);
 }
 
 } // namespace Ph2_HwDescription

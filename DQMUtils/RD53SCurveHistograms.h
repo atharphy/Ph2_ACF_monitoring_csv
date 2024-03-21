@@ -20,6 +20,12 @@
 #include <TH2F.h>
 #include <TH3F.h>
 
+// #############
+// # CONSTANTS #
+// #############
+#define NBINS_THR 1000
+#define NBINS_NOISE 200
+
 class SCurveHistograms : public DQMHistogramBase
 {
   public:
@@ -45,6 +51,7 @@ class SCurveHistograms : public DQMHistogramBase
     DetectorDataContainer Threshold2D;
     DetectorDataContainer Noise2D;
     DetectorDataContainer ToT2D;
+    DetectorDataContainer ThrNoise2D;
 
     size_t nEvents;
     size_t nSteps;

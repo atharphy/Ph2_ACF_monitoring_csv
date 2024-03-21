@@ -39,6 +39,7 @@ extern Ph2_HwInterface::RD53Interface* chipInterface;
 
 const char     RESULTDIR[]            = "Results";                                       // Directory containing the results
 const float    PRECISION              = 1e-2;                                            // Resolution on computing observables
+const float    SUPERPRECISION         = 1e-9;                                            // Super resolution on computing observables
 const uint8_t  ISGOOD                 = 0;                                               // Encoding good channels
 const uint8_t  ISMASKED               = 1;                                               // Encoding masked channels
 const uint8_t  ISDISABLED             = 2;                                               // Encoding disabled channels
@@ -50,6 +51,7 @@ const uint8_t  READOUTSLEEP           = 50;                                     
 const uint8_t  MAXATTEMPTS            = 10;                                              // Maximum number of attempts
 const uint16_t MAXATTEMPTSCMDDISPATCH = 100;                                             // Maximum number of attempts to dispatch a command
 const uint8_t  MAXSTEPS               = 10;                                              // Maximum number of steps for a scan
+const uint8_t  NENDOFCALIB            = 2;                                               // Maximum number of end-of-calib data
 
 enum class INJtype : uint8_t
 {

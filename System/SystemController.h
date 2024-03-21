@@ -20,12 +20,10 @@
 #include "HWInterface/CicInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
 #include "HWInterface/MPA2Interface.h"
-#include "HWInterface/MPAInterface.h"
 #include "HWInterface/PSInterface.h"
 #include "HWInterface/RD53lpGBTInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
 #include "HWInterface/SSA2Interface.h"
-#include "HWInterface/SSAInterface.h"
 #include "HWInterface/lpGBTInterface.h"
 #include "NetworkUtils/TCPClient.h"
 #include "NetworkUtils/TCPPublishServer.h"
@@ -34,14 +32,8 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/D19SCEventAS.h"
-#include "Utils/D19cCbc3Event.h"
-#include "Utils/D19cCbc3EventZS.h"
 #include "Utils/D19cCic2Event.h"
-#include "Utils/D19cMPAEvent.h"
 #include "Utils/D19cPSEventAS.h"
-#include "Utils/D19cSSA2Event.h"
-#include "Utils/D19cSSAEvent.h"
 #include "Utils/Event.h"
 #include "Utils/FileHandler.h"
 #include "Utils/Utilities.h"
@@ -67,6 +59,7 @@ class DetectorMonitor;
 class ChannelGroupHandler;
 class ConfigureInfo;
 class StartInfo;
+class CommunicationSettingConfig;
 
 /*!
  * \namespace Ph2_System
@@ -74,6 +67,8 @@ class StartInfo;
  */
 namespace Ph2_System
 {
+class RegisterHelper;
+
 // using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
 using BeBoardFWMap = std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>; /*!< Map of Board connected */
 
@@ -102,6 +97,7 @@ class SystemController
     TCPPublishServer*       fMonitorDQMStreamer;
     DetectorMonitor*        fDetectorMonitor;
     TCPClient*              fPowerSupplyClient{nullptr};
+    RegisterHelper*         fRegisterHelper{nullptr};
     /*!
      * \brief Constructor of the SystemController class
      */
@@ -212,7 +208,7 @@ class SystemController
      * \param args
      * \return: none
      */
-    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const std::vector<std::string>& args) const;
+    void ReadSystemMonitor(Ph2_HwDescription::BeBoard* pBoard, const std::vector<std::string>& args, bool silentRunning = false) const;
 
     /*!
      * \brief Read Data from pBoard
@@ -331,9 +327,12 @@ class SystemController
         }
     }
 
-    void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
-    void setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler>      theChannelGroupHandlerPointer,
-                                std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
+    void setChannelGroupHandler(
+        ChannelGroupHandler&                      theChannelGroupHandler,
+        std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
+    void setChannelGroupHandler(
+        std::shared_ptr<ChannelGroupHandler>      theChannelGroupHandlerPointer,
+        std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType);
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::vector<FrontEndType> theFrontEndType);
 
@@ -371,14 +370,16 @@ class SystemController
     DetectorDataContainer* fChannelGroupHandlerContainer;
 
   protected:
-    DetectorDataContainer* fNameContainer;
-    bool                   fSameChannelGroupForAllChannels{true};
-    uint8_t                fInitializeInterfaces{1};
-    std::string            fConfigurationFileName{""};
-    std::string            fSettingsFileName{""};
-    std::string            fCalibrationName{""};
-    std::string            fConfigurationFileContent{""};
-    BoardType              fBoardType{BoardType::UNDEFINED};
+    DetectorDataContainer*      fNameContainer;
+    bool                        fSameChannelGroupForAllChannels{true};
+    uint8_t                     fInitializeInterfaces{1};
+    std::string                 fConfigurationFileName{""};
+    std::string                 fSettingsFileName{""};
+    std::string                 fCalibrationName{""};
+    std::string                 fInitialConfigurationFileContent{""};
+    BoardType                   fBoardType{BoardType::UNDEFINED};
+    CommunicationSettingConfig* fCommunicationSettingConfig{nullptr};
+    DetectorMonitorConfig*      fDetectorMonitorConfig{nullptr};
 };
 
 } // namespace Ph2_System

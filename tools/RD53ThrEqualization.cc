@@ -57,7 +57,7 @@ void ThrEqualization::ConfigureCalibration()
     // # Initialize dac scan values #
     // ##############################
     const float step = (TDACGainNSteps != 0 ? (stopTDACGainValue - startTDACGainValue) / TDACGainNSteps : 0);
-    for(auto i = 0u; i <= TDACGainNSteps; i++) dacList.push_back(startTDACGainValue + step * i);
+    for(auto i = 0u; i < TDACGainNSteps; i++) dacList.push_back(startTDACGainValue + step * i);
 
     // #######################
     // # Initialize progress #
@@ -67,19 +67,19 @@ void ThrEqualization::ConfigureCalibration()
 
 void ThrEqualization::Running()
 {
-    theCurrentRun = this->fRunNumber;
-    LOG(INFO) << GREEN << "[ThrEqualization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    CalibBase::theCurrentRun = this->fRunNumber;
+    LOG(INFO) << GREEN << "[ThrEqualization::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     if(PixelAlive::saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrEqualization.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_ThrEqualization.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     ThrEqualization::run();
     ThrEqualization::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    ThrEqualization::draw();
     ThrEqualization::sendData();
     PixelAlive::sendData();
 }
@@ -105,22 +105,20 @@ void ThrEqualization::sendData()
 void ThrEqualization::Stop()
 {
     LOG(INFO) << GREEN << "[ThrEqualization::Stop] Stopping" << RESET;
-
-    Tool::Stop();
-
-    ThrEqualization::draw();
-    this->SaveAndClose();
-
-    RD53RunProgress::reset();
+    CalibBase::Stop();
 }
 
 void ThrEqualization::localConfigure(const std::string& histoFileName, int currentRun)
 {
+    // ############################
+    // # CalibBase localConfigure #
+    // ############################
+    CalibBase::localConfigure(histoFileName, currentRun);
+
     histos             = nullptr;
     PixelAlive::histos = nullptr;
-    theCurrentRun      = currentRun;
 
-    LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+    LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     // ###############################
     // # Initialize output directory #
@@ -147,7 +145,7 @@ void ThrEqualization::run()
         // # Scan DAC and run threshold equalization #
         // ###########################################
         ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, theContainer);
-        CalibBase::fillVectorContainer<float>(theContainer, RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1, 0);
+        CalibBase::fillVectorContainer<float>(theContainer, dacList.size(), 0);
         ThrEqualization::scanDac(frontEnd->TDACGainReg, dacList, &theContainer);
 
         // #######################################
@@ -210,20 +208,14 @@ void ThrEqualization::run()
 
 void ThrEqualization::draw(bool saveData)
 {
-    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
-    {
-        this->InitResultFile(CalibBase::theHistoFileName);
-        LOG(INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
-    }
-
-    if(histos->AreHistoBooked == false) histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    CalibBase::bookHistoSaveMetadata(histos);
     ThrEqualization::fillHisto();
     histos->process();
 
@@ -435,9 +427,9 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
 
 void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue)
 {
-    float    tmp;
-    uint16_t init;
-    uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
+    float          tmp = 0;
+    uint16_t       init;
+    const uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
@@ -451,7 +443,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -531,9 +523,9 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
 
 void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
 {
-    float    tmp;
-    uint16_t init;
-    uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
+    float          tmp;
+    uint16_t       init;
+    const uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;

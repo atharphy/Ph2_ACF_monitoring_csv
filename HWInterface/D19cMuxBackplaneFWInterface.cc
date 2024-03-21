@@ -1,11 +1,18 @@
 #include "HWInterface/D19cMuxBackplaneFWInterface.h"
+#include "HWDescription/BeBoard.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cMuxBackplaneFWInterface::D19cMuxBackplaneFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler) : BeBoardFWInterface(puHalConfigFileName, pBoardId) {}
-D19cMuxBackplaneFWInterface::D19cMuxBackplaneFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler) : BeBoardFWInterface(pId, pUri, pAddressTable) {}
+D19cMuxBackplaneFWInterface::D19cMuxBackplaneFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard)
+{
+}
+D19cMuxBackplaneFWInterface::D19cMuxBackplaneFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler, BeBoard* theBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard)
+{
+}
 D19cMuxBackplaneFWInterface::~D19cMuxBackplaneFWInterface() {}
 
 // disconnect setup with multiplexing backplane
@@ -219,7 +226,9 @@ void D19cMuxBackplaneFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, i
                 LOG(INFO) << BOLDRED << "Setup is not configured. Problems with card power good signal! Check the HW!" << RESET;
 
                 if(InterlockEnabled) // Is the interlock feature enabled?
-                { LOG(INFO) << BOLDMAGENTA << " !! The interlock feature is ENABLED -> the interlock switch might be open !!" << RESET; }
+                {
+                    LOG(INFO) << BOLDMAGENTA << " !! The interlock feature is ENABLED -> the interlock switch might be open !!" << RESET;
+                }
             }
             else
             {

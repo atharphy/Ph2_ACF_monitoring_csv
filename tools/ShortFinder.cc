@@ -26,7 +26,7 @@ void ShortFinder::Reset()
         auto&                                         cBeRegMap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
-        for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
+        for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second.fValue));
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
         auto& cRegMapThisBoard = fRegMapContainer.getObject(cBoard->getId());
@@ -81,7 +81,7 @@ void ShortFinder::Initialise()
 {
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
     fWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    fWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
+    fWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
     LOG(INFO) << "With SSA set to " << ((fWithSSA) ? 1 : 0) << RESET;
 
     if(fWithCBC)
@@ -94,14 +94,12 @@ void ShortFinder::Initialise()
     {
         SSAChannelGroupHandler theChannelGroupHandler;
         theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
         setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
     }
     // if(cWithMPA)
     // {
     //     MPAChannelGroupHandler theChannelGroupHandler;
-    //     theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
-    //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
+    //     theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
     //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
     // }
 
@@ -155,7 +153,7 @@ void ShortFinder::Initialise()
 void ShortFinder::Stop() { this->Reset(); }
 void ShortFinder::Count(BeBoard* pBoard, const std::shared_ptr<ChannelGroupBase> pGroup)
 {
-    auto  cBitset              = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(pGroup)->getBitset());
+    auto  cBitset              = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<1, NCHANNELS>>(pGroup)->getBitset());
     auto& cThisShortsContainer = fShortsContainer.getObject(pBoard->getId());
     auto& cThisHitsContainer   = fHitsContainer.getObject(pBoard->getId());
     auto& cShorts              = fShorts.getObject(pBoard->getId());
@@ -201,7 +199,7 @@ void ShortFinder::Count(BeBoard* pBoard, const std::shared_ptr<ChannelGroupBase>
 }
 
 // //Hacky, temporary
-// void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGroup)
+// void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<1, NSSACHANNELS>* pGroup)
 // {
 
 //     auto cBitset = std::bitset<NSSACHANNELS>( pGroup->getBitset() );
@@ -362,7 +360,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 for(auto cReadoutChip: *cHybrid)
                 {
                     // add check for SSA
-                    if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
+                    if(cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
 
@@ -405,7 +403,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                         {
                             int cChipCountInjectedChnls = 0;
                             // add check for SSA
-                            if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
+                            if(cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                             LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
                             auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
@@ -481,7 +479,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
             for(auto cReadoutChip: *cHybrid)
             {
                 // add check for SSA
-                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
+                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                 auto& cShortsData = cShortsContainer.getObject(pBoard->getId())->getObject(cOpticalReadout->getId())->getObject(cHybrid->getId())->getObject(cReadoutChip->getId());
                 if(cShortsData->getSummary<uint16_t>() == 0)
@@ -515,7 +513,7 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
     {
         setSameGlobalDac("TestPulseGroup", cTestGroup);
         // bitset for this group
-        auto cBitset = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(cGroup)->getBitset());
+        auto cBitset = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<1, NCHANNELS>>(cGroup)->getBitset());
         LOG(INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET;
         LOG(DEBUG) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
 
@@ -555,7 +553,7 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
                 }
             }
         }
-        this->Count(pBoard, std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cGroup));
+        this->Count(pBoard, std::static_pointer_cast<ChannelGroup<1, NCHANNELS>>(cGroup));
         cTestGroup++;
     }
 }
@@ -573,10 +571,7 @@ void ShortFinder::FindShorts()
 
     // configure test pulse trigger
     if(fWithSSA) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM(fEventsPerPoint, 10000, 6, 0, 0); }
-    else
-    {
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay, cFirmwareTriggerDelay, 1000);
-    }
+    else { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(cFirmwareTPdelay, cFirmwareTriggerDelay, 1000); }
     for(auto cBoard: *fDetectorContainer)
     {
         LOG(INFO) << BOLDBLUE << "Starting short finding procedure on BeBoard#" << +cBoard->getId() << RESET;

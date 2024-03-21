@@ -23,7 +23,6 @@ void PhaseScan::Initialize()
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    bool         cWithPS           = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
     bool         cWithPSv2         = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2 || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
 
     if(cWithCBC)
@@ -32,20 +31,10 @@ void PhaseScan::Initialize()
         theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandler);
     }
-    else if(cWithPS)
-    {
-        MPAChannelGroupHandler theChannelGroupHandlerMPA;
-        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA);
-
-        SSAChannelGroupHandler theChannelGroupHandlerSSA;
-        theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA);
-    }
     else if(cWithPSv2)
     {
         MPAChannelGroupHandler theChannelGroupHandlerMPA;
-        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        theChannelGroupHandlerMPA.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
 
         SSAChannelGroupHandler theChannelGroupHandlerSSA;
@@ -71,11 +60,9 @@ void PhaseScan::Initialize()
 void PhaseScan::ScanPhase()
 {
     uint32_t cDeltaLat = fPhaseStartLatency;
-    do
-    {
+    do {
         uint32_t cPhaseLat = fStartPhase;
-        do
-        {
+        do {
             for(auto cBoard: *fDetectorContainer)
             {
                 for(auto cOpticalGroup: *cBoard)
@@ -84,9 +71,7 @@ void PhaseScan::ScanPhase()
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA)
-                                fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat - 1);
-                            else if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat + 1);
                             else
                                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat);
@@ -104,12 +89,11 @@ void PhaseScan::ScanPhase()
                 for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
                 {
                     DetectorDataContainer cHitContainer;
-                    ContainerFactory::copyAndInitChip<GenericDataArray<VECSIZE, uint16_t>>(*fDetectorContainer, cHitContainer);
+                    ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t, VECSIZE>>(*fDetectorContainer, cHitContainer);
 
                     // std::cout<<"cTriggerId "<<+cTriggerId<<std::endl;
                     auto cEventIter = cEvents.begin() + cTriggerId;
-                    do
-                    {
+                    do {
                         uint8_t cTDCVal = (*cEventIter)->GetTDC();
                         for(auto cOpticalGroup: *cBoard)
                         {
@@ -122,7 +106,7 @@ void PhaseScan::ScanPhase()
 
                                     // cTotalHitsS0 += cPclstrs.size();
                                     // cTotalHitsS1 += cSclstrs.size();
-                                    if(cChip->getFrontEndType() == FrontEndType::MPA2 or cChip->getFrontEndType() == FrontEndType::MPA)
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                                     {
                                         for(auto& cPclstr: cPclstrs)
                                         {
@@ -132,12 +116,12 @@ void PhaseScan::ScanPhase()
                                                     ->getObject(cOpticalGroup->getId())
                                                     ->getObject(cHybrid->getId())
                                                     ->getObject(cChip->getId())
-                                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                                 NPclus += 1;
                                             }
                                         }
                                     }
-                                    if(cChip->getFrontEndType() == FrontEndType::SSA2 or cChip->getFrontEndType() == FrontEndType::SSA)
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                     {
                                         for(auto& cSclstr: cSclstrs)
                                         {
@@ -147,7 +131,7 @@ void PhaseScan::ScanPhase()
                                                     ->getObject(cOpticalGroup->getId())
                                                     ->getObject(cHybrid->getId())
                                                     ->getObject(cChip->getId())
-                                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                                 NSclus += 1;
                                             }
                                         }

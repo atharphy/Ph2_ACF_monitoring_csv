@@ -42,25 +42,29 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
 
     if(pValue > RD53Shared::setBits(RD53Shared::MAXBITCHIPREG))
     {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress << RESET;
+        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress
+                   << RESET;
         return false;
     }
 
     if(pAddress >= cMaxWriteAddress)
     {
-        LOG(ERROR) << "LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
+        LOG(WARNING) << "[RD53lpGBTInterface::WriteReg] LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
         return false;
     }
 
     int  nAttempts = 0;
     bool status;
-    do
-    {
+    do {
         status = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerify);
         nAttempts++;
     } while((pVerify == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
-    if((pVerify == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
+    if((pVerify == true) && (status == false))
+    {
+        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT register writing issue" << RESET;
+        return false;
+    }
 
     return true;
 }
@@ -155,7 +159,14 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
                 static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
             }
             else
-                RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                try
+                {
+                    RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                }
+                catch(const std::exception& e)
+                {
+                    LOG(WARNING) << BOLDRED << "Warning: " << BOLDYELLOW << e.what() << RESET;
+                }
         }
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
@@ -169,6 +180,23 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         LOG(INFO) << BOLDBLUE << "\t--> DLL status of Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " is 0x" << BOLDYELLOW << std::hex << +lpGBTInterface::GetRxDllStatus(pChip, cGroup)
                   << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+    // #######################################
+    // # Properly configure lpGBT to use ADC #
+    // #######################################
+    std::string   ConfigFilePath = static_cast<lpGBT*>(pChip)->getConfigFilePath();
+    std::ifstream stream(ConfigFilePath);
+    if(!stream)
+    {
+        LOG(WARNING) << BOLDRED << "The LpGBT ADC calibraton file name " << BOLDYELLOW << ConfigFilePath << BOLDRED << " does not exist" << RESET;
+        ConfigFilePath = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv");
+        LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path: " << BOLDYELLOW << ConfigFilePath << RESET;
+    }
+
+    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), pChip->getId(), ConfigFilePath);
+    lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
+    lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
+    lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));
 
     return true;
 }
@@ -185,7 +213,7 @@ void RD53lpGBTInterface::SetDownLinkMapping(const OpticalGroup* pOpticalGroup)
         for(const auto cChip: *cHybrid)
         {
             auto pChip = static_cast<RD53*>(cChip);
-            auto fwGr  = mapLpGBTGrCh2fwGr[pChip->getTxGroup() * 10 + pChip->getTxChannel()];
+            auto fwGr  = pChip->getTxGroup() * 2 + (pChip->getTxChannel() == 2 ? 1 : 0);
             static_cast<RD53FWInterface*>(fBoardFW)->SetDownLinkMapping(pOpticalGroup->getOpticalGroupId(), fwGr, cHybrid->getId());
         }
 }
@@ -232,8 +260,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
         // # Wait until channels lock #
         // ############################
         LOG(INFO) << GREEN << "Phase aligning Rx Group: " << BOLDYELLOW << +RxProperty.Group << RESET;
-        do
-        {
+        do {
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         } while(this->IsRxLocked(pChip, RxProperty.Group) == false);
         LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +RxProperty.Group << BOLDBLUE << " LOCKED" << RESET;

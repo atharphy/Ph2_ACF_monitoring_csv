@@ -27,7 +27,6 @@ class GenericDacDacScan : public PixelAlive
     ~GenericDacDacScan()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -53,9 +52,12 @@ class GenericDacDacScan : public PixelAlive
     std::vector<uint16_t> dac1List;
     std::vector<uint16_t> dac2List;
     DetectorDataContainer theOccContainer;
-    DetectorDataContainer theGenericDacDacScanContainer;
+    DetectorDataContainer theGenericDacDacContainer;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     std::string regNameDAC1;
     size_t      startValueDAC1;
     size_t      stopValueDAC1;
@@ -65,7 +67,6 @@ class GenericDacDacScan : public PixelAlive
     size_t      stopValueDAC2;
     size_t      stepDAC2;
 
-    int  theCurrentRun;
     bool isDAC1ChipReg;
     bool isDAC2ChipReg;
 };

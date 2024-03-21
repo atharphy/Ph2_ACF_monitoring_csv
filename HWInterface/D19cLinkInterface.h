@@ -2,14 +2,16 @@
 #define _D19cLinkInterface_H__
 
 #include "HWInterface/LinkInterface.h"
+#include <cstdint>
 
 namespace Ph2_HwInterface
 {
+class RegManager;
+
 class D19cLinkInterface : public LinkInterface
 {
   public:
-    D19cLinkInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-    D19cLinkInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cLinkInterface(RegManager* theRegManager);
     ~D19cLinkInterface();
 
   public:

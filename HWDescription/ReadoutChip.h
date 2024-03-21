@@ -51,7 +51,7 @@ class ReadoutChip
     ReadoutChip(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue = 255);
 
     // Copy C'tor
-    ReadoutChip(const ReadoutChip& chipObj);
+    ReadoutChip(const ReadoutChip&) = delete;
 
     ~ReadoutChip();
 
@@ -85,6 +85,19 @@ class ReadoutChip
             fChipOriginalMask->disableChannel(cRow, cCol);
         }
         std::cout << "Channel mask has " << fChipOriginalMask->getNumberOfEnabledChannels() << " enabled channels\n";
+    }
+
+    // Functions to convert from local to gloabal coordinates
+    virtual bool isTopSensor(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn = 0)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    virtual std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return std::make_pair(65535, 65535);
     }
 
   protected:

@@ -26,7 +26,7 @@ class SSA2Interface : public ReadoutChipInterface
   public:
     SSA2Interface(const BeBoardFWMap& pBoardMap);
     ~SSA2Interface();
-    SSA2Interface(const SSA2Interface&) = delete;
+    SSA2Interface(const SSA2Interface&)            = delete;
     SSA2Interface& operator=(const SSA2Interface&) = delete;
     bool           ConfigureChip(Ph2_HwDescription::Chip* pSSA2, bool pVerify = false, uint32_t pBlockSize = 310) override; // FIXME
     void           DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                 // FIXME
@@ -43,13 +43,16 @@ class SSA2Interface : public ReadoutChipInterface
     bool WriteChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, bool pVerify = true) override;                                                      // FIXME
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pSSA2, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;                                  // FIXME
     bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pSSA2, const std::string& dacName, const ChipContainer& pValue, bool pVerify = true) override;                            // FIXME
+    std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
 
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode) override;
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pInput);
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
-
+    void     ReadFuseID(Ph2_HwDescription::Chip* pSSA2);
     float    CalculateADCLSB(Ph2_HwDescription::Chip* pSSA2, float vrefExp = SSA2_VREF_EXPECTED);
     uint16_t MeasureGND(Ph2_HwDescription::Chip* pSSA2);
+
+    bool injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
 
   private:
     uint8_t ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                                                                      // FIXME

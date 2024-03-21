@@ -15,8 +15,11 @@ void MonitorDQMPlotRD53::book(TFile* theOutputFile, DetectorContainer& theDetect
 {
     fDetectorContainer = &theDetectorStructure;
 
-    for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("RD53").size(); i++)
-        bookPlots(theOutputFile, theDetectorStructure, fDetectorMonitorConfig.fMonitorElementList.at("RD53")[i]);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53"))
+        if(registerName.second) bookPlots(theOutputFile, theDetectorStructure, registerName.first);
+
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+        if(registerName.second) bookPlots(theOutputFile, theDetectorStructure, registerName.first);
 }
 
 void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
@@ -27,16 +30,17 @@ void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer
 
 bool MonitorDQMPlotRD53::fill(std::string& inputStream)
 {
-    ContainerSerialization theContainerSerialization("RD53MonitorRegister");
+    ContainerSerialization theContainerSerialization("ITMonitorRegister");
 
     if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched RD53Monitor Register!!!!!\n";
+        LOG(INFO) << GREEN << "Matched IT register" << RESET;
         std::string           registerName;
         DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, ValueAndTime<float>>(fDetectorContainer, registerName);
         fillRegisterPlots(fDetectorData, registerName);
         return true;
     }
+
     return false;
 }
 
@@ -44,9 +48,9 @@ void MonitorDQMPlotRD53::fillRegisterPlots(DetectorDataContainer& DataContainer,
 {
     if(fRegisterMonitorPlotMap.find(registerName) == fRegisterMonitorPlotMap.end())
     {
-        std::string errorMessage = "No booked plots for RD53 register: " + registerName;
-        LOG(ERROR) << BOLDRED << errorMessage << RESET;
-        throw std::runtime_error(errorMessage);
+        std::string errorMessage = "No booked plots for IT register: ";
+        LOG(ERROR) << BOLDRED << errorMessage << BOLDYELLOW << registerName << RESET;
+        throw std::runtime_error(errorMessage + registerName);
     }
 
     for(const auto cBoard: DataContainer)

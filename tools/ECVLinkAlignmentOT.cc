@@ -147,7 +147,7 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
                     SetlpGBTRxPhase(pOpticalGroup,phase);
                     std::vector<std::pair<uint8_t, std::pair<uint8_t,bool>>>  alignedLines = CheckWordAlignBEdataStubs(pOpticalGroup);
 
-                    for (auto a : alignedLines)
+                    for (auto a : alignedLines) 
                     {
                         StoreWordAlignInHistogram(clockPolarity,clockStrength, cicStrength,phase,a.first,a.second.first, a.second.second);
                     }
@@ -250,75 +250,6 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
             }
         }
     }
-    
-    
-    for (uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
-    {
-        for (uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
-        {
-            SetCICClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
-            for (uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength ++)
-            {
-                for(auto cHybrid: *pOpticalGroup)
-                {
-                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    fCicInterface->ConfigureDriveStrength(cCic, cicStrength); 
-                }
-                LOG (INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
-                LOG (INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
-                LOG (INFO) << BOLDRED << "CIC STRENGTH:\t" << +cicStrength << RESET;
-
-                AlignLpGBTInputs(pOpticalGroup);
-
-                std::vector<std::pair<uint8_t,std::pair<uint8_t,uint8_t>>> trainedPhases = flpGBTInterface->fTrainedPhases;
-                uint8_t chosenPhase = flpGBTInterface->fChosenPhase;
-                std::vector<uint8_t> hybridIds;
-                // = getGroupsAndChannels(pOpticalGroup, false);
-                for (auto trainedPhase : trainedPhases)
-                {
-                    if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
-                    {
-                        if      (trainedPhase.first == 0 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,6, trainedPhase.second.second);
-                        else if (trainedPhase.first == 4 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, trainedPhase.second.second);
-                        else if (trainedPhase.first == 4 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,1, trainedPhase.second.second);
-                        else if (trainedPhase.first == 5 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,2, trainedPhase.second.second);
-                        else if (trainedPhase.first == 5 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,3, trainedPhase.second.second);
-                        else if (trainedPhase.first == 6 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,4, trainedPhase.second.second);
-                        
-                        else if (trainedPhase.first == 0 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,0, trainedPhase.second.second);
-                        else if (trainedPhase.first == 1 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,1, trainedPhase.second.second);
-                        else if (trainedPhase.first == 1 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,2, trainedPhase.second.second);
-                        else if (trainedPhase.first == 2 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,3, trainedPhase.second.second);
-                        else if (trainedPhase.first == 2 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,4, trainedPhase.second.second);
-                        else if (trainedPhase.first == 3 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,6, trainedPhase.second.second);
-                    }
-                    if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
-                    {
-                        if      (trainedPhase.first == 4 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,6, trainedPhase.second.second);
-                        else if (trainedPhase.first == 4 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,5, trainedPhase.second.second);
-                        else if (trainedPhase.first == 5 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,3, trainedPhase.second.second);
-                        else if (trainedPhase.first == 5 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,4, trainedPhase.second.second);
-                        else if (trainedPhase.first == 6 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,1, trainedPhase.second.second);
-                        else if (trainedPhase.first == 6 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,2, trainedPhase.second.second);
-                        else if (trainedPhase.first == 0 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, trainedPhase.second.second);
-                        
-                        else if (trainedPhase.first == 0 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,5, trainedPhase.second.second);
-                        else if (trainedPhase.first == 1 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,6, trainedPhase.second.second);
-                        else if (trainedPhase.first == 1 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,4, trainedPhase.second.second);
-                        else if (trainedPhase.first == 2 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,3, trainedPhase.second.second);
-                        else if (trainedPhase.first == 2 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,2, trainedPhase.second.second);
-                        else if (trainedPhase.first == 3 && trainedPhase.second.first == 0) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,1, trainedPhase.second.second);
-                        else if (trainedPhase.first == 3 && trainedPhase.second.first == 2) StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, trainedPhase.second.second);
-                    }
-                }
-                StoreChosenPhase(clockPolarity, clockStrength, cicStrength, chosenPhase);
-            }
-        }
-    }
-
-
-
-
 }
 
 void ECVLinkAlignmentOT::SetlpGBTRxPhase(const OpticalGroup* pOpticalGroup, uint8_t pPhase)
@@ -483,7 +414,7 @@ std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>> ECVLinkAlignmentOT::
         int n_events = 1000;
         for (int i = 0; i<n_events; i++)
         {
-            std::vector<std::string> stubData;
+            std::vector<std::vector<uint32_t>> stubData;
 
             for (auto line : cDebugInterface->StubDebug(true, cNlines,false) )
             {
@@ -496,18 +427,25 @@ std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>> ECVLinkAlignmentOT::
             int lineCount = 0;
 
             for (auto line : stubData){
+                std::string binaryLine;
+                for (auto word : line)
+                {
+                    std::bitset<32> bits(word);
+                    std::string binaryWordLine = bits.to_string();
+                    binaryLine += binaryWordLine;
+                }
                 if (i%200 ==0)
                 {
-                    LOG (INFO) << line << RESET;
+                    LOG (INFO)  << binaryLine <<RESET;
                 }
-                line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
+                //line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
                 //LOG (INFO) << "Line "<<(lineCount % (cNlines*hybridCount)) << " : "<<  line << RESET;
                 std::bitset<32> pattern = 0xEAAAAAAA;
 
-                std::size_t found = line.find("111");
+                std::size_t found = binaryLine.find("111");
                 if (found != std::string::npos)
                 {
-                    std::bitset<32> toCheck(line.substr(found,32));
+                    std::bitset<32> toCheck(binaryLine.substr(found,32));
                     std::bitset<32> bitErrors = (pattern ^ toCheck);
                     if (toCheck.count() == 32)
                         lineBitErrors[ ( lineCount % (cNlines) ) ] += 32;
@@ -600,7 +538,16 @@ std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>>  ECVLinkAlignmentOT:
         int last_fail_print = 0;
         for (int i = 1; i < n_triggers; i++)
         {
-            std::string l1adata = cDebugInterface->L1ADebug(1, false);
+            std::string l1adata;
+
+            std::vector<uint32_t> l1adatawords = cDebugInterface->L1ADebug(1, false);
+            for (auto word : l1adatawords)
+            {
+                std::bitset<32> bits(word);
+                std::string binaryWordLine = bits.to_string();
+                l1adata += binaryWordLine;
+            }
+
             if (i%200==0)
             {
                 LOG (INFO) << "L1A debug Hybrid "<< +cHybrid->getId() <<" iteration " << i << RESET;
@@ -726,50 +673,6 @@ void ECVLinkAlignmentOT::StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8
 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.filllWordAlign(pClockPolarity, pClockStrength, pCicStrength, pPhase,pHybridId, pLine,cAlignedWordsContainer);
-#endif
-}
-
-void ECVLinkAlignmentOT::StoreTrainedPhases(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pHybridId, uint8_t pLine, uint8_t pPhase)
-{
-    auto cBoard = fDetectorContainer->getFirstObject();
-
-    DetectorDataContainer cPhasesContainer;
-    ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, cPhasesContainer);
-
-    for(auto cOpticalGroup: *cBoard)
-    {
-        cPhasesContainer.getObject(cBoard->getId())
-                        ->getObject(cOpticalGroup->getId())
-                        ->getObject(pHybridId)
-                        ->getSummary<uint8_t>() = pPhase;
-        
-    } // optical group
-    LOG (INFO) << +pLine << RESET;
-#ifdef __USE_ROOT__
-    fDQMHistogrammer.filllPhases(pClockPolarity, pClockStrength, pCicStrength, pHybridId, pLine, cPhasesContainer);
-#endif
-}
-
-void ECVLinkAlignmentOT::StoreChosenPhase(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase)
-{
-    auto cBoard = fDetectorContainer->getFirstObject();
-
-    DetectorDataContainer cPhasesContainer;
-    ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, cPhasesContainer);
-
-    for(auto cOpticalGroup: *cBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            cPhasesContainer.getObject(cBoard->getId())
-                          ->getObject(cOpticalGroup->getId())
-                          ->getObject(cHybrid->getId())
-                          ->getSummary<uint8_t>() = pPhase;
-        }
-    } // optical group
-
-#ifdef __USE_ROOT__
-    fDQMHistogrammer.filllChosenPhase(pClockPolarity, pClockStrength, pCicStrength, cPhasesContainer);
 #endif
 }
 

@@ -53,11 +53,11 @@ class FileParser
     FileParser() {}
     ~FileParser() {}
 
-    void        parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void        parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
-    std::string parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
-    void        parseCommunicationSettings(const std::string& pFilename, CommunicationSettingConfig& theCommunicationSettingConfig, std::ostream& os);
-    void        openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
+    void parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
+    void parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
+    void parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
+    void parseCommunicationSettings(const std::string& pFilename, CommunicationSettingConfig& theCommunicationSettingConfig, std::ostream& os);
+    void openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
     std::map<uint16_t, std::tuple<std::string, std::string, std::string>> getRegManagerInfoList(const std::string& pFilename);
 
   protected:
@@ -75,7 +75,6 @@ class FileParser
      *\param os : ostream to dump output
      */
     void parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseSLink(pugi::xml_node pSLinkNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseHybridContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::ostream& os, Ph2_HwDescription::BeBoard* pBoard);
@@ -84,16 +83,11 @@ class FileParser
     void parseGlobalCbcSettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     void parseGlobalHybridMask(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
-    void parseSSAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
-    void parseSSASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
-    //
     void parseSSA2Container(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
-    void parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA);
+    void parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
-    void parseMPAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
-    void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
-    // Irene
     void parseMPA2Container(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
+    void parseMPA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
     void parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os);
 

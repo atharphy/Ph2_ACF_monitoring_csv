@@ -26,8 +26,10 @@ void CBCMonitor::runMonitor()
 {
     std::recursive_mutex                  theMutex;
     std::lock_guard<std::recursive_mutex> theGuard(theMutex);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("CBC")) runCBCRegisterMonitor(registerName);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("CBC"))
+        if(registerName.second) runCBCRegisterMonitor(registerName.first);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+        if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
 }
 
 void CBCMonitor::runCBCRegisterMonitor(std::string registerName)

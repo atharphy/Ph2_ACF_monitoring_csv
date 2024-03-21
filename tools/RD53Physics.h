@@ -38,7 +38,6 @@ class Physics : public CalibBase
     ~Physics()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -79,17 +78,13 @@ class Physics : public CalibBase
         void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList){};
     };
 
-    size_t      rowStart;
-    size_t      rowStop;
-    size_t      colStart;
-    size_t      colStop;
-    size_t      nTRIGxEvent;
-    bool        doDisplay;
-    bool        doUpdateChip;
-    bool        saveBinaryData;
-    std::string dataOutputDir;
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
+    bool doDisplay;
+    bool doUpdateChip;
+    bool saveBinaryData;
 
-    int                  theCurrentRun;
     size_t               numberOfEventsPerRun;
     std::recursive_mutex theMtx;
     evtConvType          genericEvtConverter;

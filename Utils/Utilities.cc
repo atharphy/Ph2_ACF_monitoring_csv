@@ -10,6 +10,8 @@
 */
 
 #include "Utils/Utilities.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
 #include <boost/math/special_functions/binomial.hpp>
 
 long getTimeTook(struct timeval& pStart, bool pMili)
@@ -42,10 +44,44 @@ void mypause()
 
 std::string getResultDirectoryName(const StartInfo& theStartInfo)
 {
-    std::string resultDirectory = "Results/Run_" + std::to_string(theStartInfo.getRunNumber());
+    std::string resultDirectory = getResultDirectoryName(theStartInfo.getRunNumber());
     std::string append          = theStartInfo.getAppendInformation();
     if(append != "") resultDirectory = resultDirectory + "_" + append;
     return resultDirectory;
+}
+
+std::string getResultDirectoryName(const int runNumber)
+{
+    std::string resultDirectory = "Results/Run_" + std::to_string(runNumber);
+    return resultDirectory;
+}
+
+int returnPreviousRunNumber(std::string cFileName)
+{
+    std::string   cLine;
+    int           cRunNumber = -1;
+    std::ifstream cStream(cFileName);
+    if(cStream.is_open())
+    {
+        while(std::getline(cStream, cLine))
+        {
+            std::istringstream cIStream(cLine);
+            cIStream >> cRunNumber;
+        }
+    }
+
+    return cRunNumber;
+}
+
+int returnAndIncreaseRunNumber(std::string cFileName)
+{
+    int           cRunNumber = returnPreviousRunNumber(cFileName) + 1;
+    std::ofstream cRunLog;
+    cRunLog.open(cFileName, std::fstream::app);
+    cRunLog << cRunNumber << "\n";
+    cRunLog.close();
+
+    return cRunNumber;
 }
 
 const std::string currentDateTime()
@@ -112,13 +148,6 @@ double convertAnyDouble(const char* pRegValue)
         baseType = 2;
     if(baseType != 0) myRegValue.erase(0, 2);
     return strtod(myRegValue.c_str(), 0);
-}
-
-std::string convertUInt32tToString(uint32_t number)
-{
-    std::stringstream ss;
-    ss << +number;
-    return ss.str();
 }
 
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters)
@@ -251,6 +280,8 @@ double hitProbabilityFunction(double* pStrips, double* pPar)
     double result = 0;
     double hitProb;
     double sampleProbability, x;
+    double indFraction = 0;
+    if(abs(cmnFraction) <= 1) indFraction = pow(1 - cmnFraction * cmnFraction, 0.5);
 
     int iStrips = int(ceil(pStrips[0] - 0.5));               // round to nearest integer
     if((iStrips < 0) || (iStrips > nActiveStrips)) return 0; // only defined in range
@@ -265,7 +296,7 @@ double hitProbabilityFunction(double* pStrips, double* pPar)
         sampleProbability -= hitProbability(x + samplingHalfStep);
 
         // probability of hit taking cmn into account
-        hitProb = hitProbability(threshold + x * cmnFraction);
+        hitProb = hitProbability((threshold + x * cmnFraction) * indFraction);
         // distribution function scaled to nevents
         result += binomialPdf(int(nActiveStrips), iStrips, hitProb) * sampleProbability * nEvents;
     }
@@ -299,3 +330,124 @@ std::string getTimeStampString()
 
     return time_str;
 }
+
+std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t numberOfPackets)
+{
+    uint16_t mask = 0xFF;
+    if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
+
+    int                   maxWritePatternShift = sizeof(uint32_t) / numberOfBytesInSinglePacket - 1;
+    std::vector<uint32_t> longIntWordVector;
+
+    uint32_t longIntWord             = 0;
+    int      writeSinglePatternShift = maxWritePatternShift;
+    for(auto theWord: theWordVector)
+    {
+        uint32_t tmpLongIntWord = theWord; // otherwise bitshift will roll over
+        for(int8_t readSinglePatterShift = (sizeof(uint32_t) / numberOfBytesInSinglePacket - 1); readSinglePatterShift >= 0; --readSinglePatterShift)
+        {
+            if(numberOfPackets > 0)
+            {
+                --numberOfPackets;
+                continue;
+            }
+            longIntWord = longIntWord | (((tmpLongIntWord >> (readSinglePatterShift * 8 * numberOfBytesInSinglePacket)) & mask) << (writeSinglePatternShift * numberOfBytesInSinglePacket * 8));
+            // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is "
+            // << std::hex <<
+            // (((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << (writeSinglePatternShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
+            --writeSinglePatternShift;
+            if(writeSinglePatternShift < 0)
+            {
+                longIntWordVector.push_back(longIntWord);
+                longIntWord             = 0;
+                writeSinglePatternShift = maxWritePatternShift;
+            }
+        }
+    }
+
+    return longIntWordVector;
+}
+
+std::vector<uint32_t> reorderPattern(const std::vector<uint32_t>& theWordVector, uint8_t wordSize)
+{
+    if(wordSize != 1 && wordSize != 2)
+    {
+        std::cerr << "reorderPattern wordSize can be only 1 or 2" << std::endl;
+        abort();
+    }
+
+    uint16_t mask = 0xFF;
+    if(wordSize == 2) mask = 0xFFFF;
+
+    size_t                wordVectorSize = theWordVector.size();
+    std::vector<uint32_t> theOrderedWordVector(wordVectorSize, 0);
+
+    for(size_t wordIndex = 0; wordIndex < wordVectorSize; ++wordIndex)
+    {
+        for(uint8_t theByteShift = 0; theByteShift < sizeof(uint32_t); theByteShift += wordSize)
+        {
+            uint32_t byteValue = ((theWordVector[wordIndex] >> (theByteShift * 8)) & mask);
+            // std::cout << std::hex << "full word " << theWordVector[wordIndex] << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;
+            theOrderedWordVector[wordIndex] |= byteValue << ((sizeof(uint32_t) - wordSize - theByteShift) * 8);
+        }
+    }
+
+    return theOrderedWordVector;
+}
+
+std::string getPatternPrintout(const std::vector<uint32_t>& theWordVector, uint8_t wordSize, bool reorderWords)
+{
+    if(wordSize != 1 && wordSize != 2)
+    {
+        std::cerr << "getPatternPrintout wordSize can be only 1 or 2" << std::endl;
+        abort();
+    }
+    std::vector<uint32_t> theLocalWordVector;
+    if(reorderWords)
+        theLocalWordVector = reorderPattern(theWordVector, wordSize);
+    else
+        theLocalWordVector = theWordVector;
+
+    uint16_t mask = 0xFF;
+    if(wordSize == 2) mask = 0xFFFF;
+
+    std::stringstream thePattern;
+    thePattern << std::hex;
+
+    for(auto theWord: theLocalWordVector)
+    {
+        for(int8_t theByteShift = sizeof(uint32_t) - wordSize; theByteShift >= 0; theByteShift -= wordSize)
+        {
+            uint32_t byteValue = ((theWord >> (theByteShift * 8)) & mask);
+            // std::cout << std::hex << "full word " << theWord << " bit shift " << (theByteShift*8) << " mask " << mask << " ouput byte " << byteValue << std::endl;
+            if(byteValue <= 0xF) thePattern << "0";
+            if(wordSize == 2)
+            {
+                if(byteValue <= 0xFF) thePattern << "0";
+                if(byteValue <= 0xFFF) thePattern << "0";
+            }
+            thePattern << +byteValue;
+        }
+        thePattern << " ";
+    }
+    thePattern << std::dec;
+
+    return thePattern.str();
+}
+
+std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask)
+{
+    uint8_t numberOfBytesInWord = sizeof(uint32_t);
+    for(uint8_t numberOfBytesToSkip = 0; numberOfBytesToSkip < numberOfBytesInWord; ++numberOfBytesToSkip)
+    {
+        std::vector<uint32_t> longIntWordVector = applyByteShift(theWordVector, numberOfBytesInSinglePacket, numberOfBytesToSkip);
+        for(size_t wordIndex = 0; wordIndex < longIntWordVector.size(); ++wordIndex)
+        {
+            if((longIntWordVector[wordIndex] & patternMask) == pattern) return {true, wordIndex * numberOfBytesInWord + numberOfBytesToSkip};
+        }
+    }
+
+    return {false, 0}; // pattern not found
+}
+
+uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols) { return col + row * numberOfCols; }

@@ -27,7 +27,6 @@ class ClockDelay : public PixelAlive
     ~ClockDelay()
     {
         this->WriteRootFile();
-        this->CloseResultFile();
         delete histos;
     }
 
@@ -61,12 +60,11 @@ class ClockDelay : public PixelAlive
     DetectorDataContainer theClockDelayContainer;
 
   protected:
+    // ######################################
+    // # Parameters from configuration file #
+    // ######################################
     size_t startValue;
     size_t stopValue;
-    bool   doDisplay;
-    bool   doUpdateChip;
-
-    int theCurrentRun;
 };
 
 #endif

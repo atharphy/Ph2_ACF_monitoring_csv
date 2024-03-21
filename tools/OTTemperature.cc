@@ -3,6 +3,8 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
+std::string OTTemperature::fCalibrationDescription = "Read Module temperatures";
+
 OTTemperature::OTTemperature() : OTTool() {}
 
 OTTemperature::~OTTemperature() {}
@@ -19,7 +21,6 @@ void OTTemperature::Running()
 {
     Initialise();
     fSuccess = true;
-    TuneLpGBTVref();
     ReadModuleTemperatures();
     Reset();
 }
@@ -101,10 +102,7 @@ float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::stri
         }
         file.close();
     }
-    else
-    {
-        LOG(INFO) << BOLDRED << "File " << cFilename << " could not be opened! Resistance to temperature translation not possible!" << RESET;
-    }
+    else { LOG(INFO) << BOLDRED << "File " << cFilename << " could not be opened! Resistance to temperature translation not possible!" << RESET; }
     float cSlope     = (cSecondTemp - cFirstTemp) / (cSecondResistance - cFirstResistance);
     float cIntercept = cSecondTemp - cSlope * cSecondResistance;
     float cTemp      = cSlope * cLSQResistance + cIntercept;
@@ -172,8 +170,7 @@ void OTTemperature::ReadModuleTemperatures()
                 LOG(INFO) << BOLDBLUE << "Gain of " << +fGain << "\t" << cVoltageADC << " ADC reading " << cMean << " converted voltage " << cVoltage << RESET;
                 cVoltageADCReadings.push_back(cMean);
             }
-            do
-            {
+            do {
                 ReadInternalThermistor(cOpticalGroup);
                 flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
                 // read ADC value of temperature sensor on the sensor
@@ -181,22 +178,6 @@ void OTTemperature::ReadModuleTemperatures()
             } while(fLoopReadout);
         }
     }
-}
-
-uint8_t OTTemperature::TuneLpGBTVref()
-{
-    uint8_t vref = 0;
-    for(const auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& clpGBT = cOpticalGroup->flpGBT;
-            if(clpGBT == nullptr) continue;
-            flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
-            vref = flpGBTInterface->TuneVref(clpGBT);
-        }
-    }
-    return vref;
 }
 
 void OTTemperature::Stop() {}

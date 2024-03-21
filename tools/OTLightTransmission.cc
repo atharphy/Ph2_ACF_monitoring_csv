@@ -1,7 +1,9 @@
 #include "OTLightTransmission.h"
 #include "HWInterface/D19cFWInterface.h"
+#ifdef __USE_ROOT__
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
+#endif
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -28,6 +30,7 @@ void OTLightTransmission::Running()
 
 void OTLightTransmission::ReadRegisters()
 {
+#ifdef __USE_ROOT__
     json j;
     j["type"]                        = "data";
     D19cFWInterface*       interface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
@@ -38,6 +41,7 @@ void OTLightTransmission::ReadRegisters()
         LOG(INFO) << BOLDBLUE << "Transciever measurement for" << item << " is " << j["data"][item] << RESET;
     }
     if(fOfStream != nullptr) { *(fOfStream) << j << std::endl; }
+#endif
 }
 
 void OTLightTransmission::Stop() {}

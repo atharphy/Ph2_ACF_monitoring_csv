@@ -26,7 +26,7 @@ class GenericDacDacScanHistograms : public DQMHistogramBase
     void reset() override{};
 
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer);
-    void fillGenericDacDacScan(const DetectorDataContainer& GenericDacDacScanContainer);
+    void fillGenericDacDac(const DetectorDataContainer& GenericDacDacContainer);
 
     bool AreHistoBooked = false;
 
@@ -34,8 +34,8 @@ class GenericDacDacScanHistograms : public DQMHistogramBase
     DetectorContainer* fDetectorContainer;
 
     DetectorDataContainer Occupancy2D;
-    DetectorDataContainer GenericDac1Scan;
-    DetectorDataContainer GenericDac2Scan;
+    DetectorDataContainer GenericDac1;
+    DetectorDataContainer GenericDac2;
 
     std::string regNameDAC1;
     size_t      startValueDAC1;
