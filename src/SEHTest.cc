@@ -771,6 +771,7 @@ int main(int argc, char* argv[])
         {
             gui::message("Bias voltage test finished");
             gui::status("Test finished");
+            gui::data("ResultsDirectory", cTool.getDirectoryName().c_str());
             gui::progress(10.0 / 10.0);
         }
     }

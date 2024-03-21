@@ -73,6 +73,17 @@ bool SEHTester::CheckShort(std::string powerSupplyId, std::string channelId)
         LOG(ERROR) << BOLDRED << "No output voltage at power supply, possible short detected!" << RESET;
         return false;
     }
+    float U_P1V2_R;
+    float U_P1V2_L;
+    float U_P2V5;
+
+    fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_R, U_P1V2_R);
+    fTC_2SSEH->read_load(fTC_2SSEH->U_P1V2_L, U_P1V2_L);
+    fTC_2SSEH->read_load(fTC_2SSEH->P2V5_VTRx_MON, U_P2V5);
+    fillSummaryTree("vout_test", 1);
+    fillSummaryTree("bpol2v5VoltageRight", U_P1V2_R);
+    fillSummaryTree("bpol2v5VoltageLeft", U_P1V2_L);
+    fillSummaryTree("bpol12vVoltage", U_P2V5);
     return true;
 }
 void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId, const std::vector<float>& cVoltages)
@@ -564,6 +575,8 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool s
         fTC_2SSEH->read_load(fTC_2SSEH->P2V5_VTRx_MON, U_P2V5);
         fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
         fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
+        fillSummaryTree("TurnOnVoltageRight", U_P1V2_R);
+        fillSummaryTree("TurnOnVoltageLeft", U_P1V2_L);
         fillSummaryTree("SEHInputVoltage", U_SEH);
     }
 }
