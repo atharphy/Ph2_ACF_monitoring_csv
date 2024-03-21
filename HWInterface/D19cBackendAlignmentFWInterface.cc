@@ -316,7 +316,7 @@ std::pair<bool, uint8_t> D19cBackendAlignmentFWInterface::PhaseTuneLine(const Ch
     cLineStatus.second = 0;
 
     fAlignerObject.fHybrid  = pChip->getHybridId();
-    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
+    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
     fAlignerObject.fLine    = pLineId;
     fAlignerObject.fOptical = pOptical;
 
@@ -342,7 +342,7 @@ std::pair<bool, uint8_t> D19cBackendAlignmentFWInterface::WordAlignLine(const Ch
     cLineStatus.second = 0;
 
     fAlignerObject.fHybrid  = pChip->getHybridId();
-    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
+    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
     fAlignerObject.fLine    = pLineId;
     fAlignerObject.fOptical = pOptical;
 
@@ -359,7 +359,7 @@ void D19cBackendAlignmentFWInterface::ManuallyConfigureLine(const Chip* pChip, u
 {
     EnablePrintout(true);
     fAlignerObject.fHybrid = pChip->getHybridId();
-    fAlignerObject.fChip   = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
+    fAlignerObject.fChip   = (pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
     fAlignerObject.fLine   = pLineId;
 
     fLineConfiguration.fDelay   = pPhase;

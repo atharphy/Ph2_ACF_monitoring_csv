@@ -84,13 +84,10 @@ class FrontEndDescription
     {
         if(theFrontEndType == FrontEndType::HYBRID) return "HYBRID";
         if(theFrontEndType == FrontEndType::CBC3) return "CBC3";
-        if(theFrontEndType == FrontEndType::MPA) return "MPA";
         if(theFrontEndType == FrontEndType::MPA2) return "MPA2";
-        if(theFrontEndType == FrontEndType::SSA) return "SSA";
         if(theFrontEndType == FrontEndType::SSA2) return "SSA2";
         if(theFrontEndType == FrontEndType::RD53A) return "RD53A";
         if(theFrontEndType == FrontEndType::RD53B) return "RD53B";
-        if(theFrontEndType == FrontEndType::CIC) return "CIC";
         if(theFrontEndType == FrontEndType::CIC2) return "CIC2";
         if(theFrontEndType == FrontEndType::OuterTracker2S) return "OuterTracker2S";
         if(theFrontEndType == FrontEndType::OuterTrackerPS) return "OuterTrackerPS";

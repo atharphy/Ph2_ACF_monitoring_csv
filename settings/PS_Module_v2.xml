@@ -22,7 +22,7 @@
                 <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
 
-            <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
+            <SSA2_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA2 Id="0" enable="1" configFile="SSA2.txt" />
             <SSA2 Id="1" enable="1" configFile="SSA2.txt" />
             <SSA2 Id="2" enable="1" configFile="SSA2.txt" />
@@ -32,7 +32,7 @@
             <SSA2 Id="6" enable="1" configFile="SSA2.txt" />
             <SSA2 Id="7" enable="1" configFile="SSA2.txt" />
 
-            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
+            <MPA2_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA2 Id="8" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="9" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="10" enable="1" configFile="MPA2.txt" />
@@ -42,7 +42,7 @@
             <MPA2 Id="14" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="15" enable="1" configFile="MPA2.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" enable="1" configFile="CIC2_PS.txt" />
         </Hybrid>
         
@@ -59,7 +59,7 @@
             </Global>
 
             
-            <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
+            <SSA2_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA2 Id="0" enable="1" configFile="SSA2.txt" />
             <SSA2 Id="1" enable="1" configFile="SSA2.txt" />
             <SSA2 Id="2" enable="1" configFile="SSA2.txt" />
@@ -69,7 +69,7 @@
             <SSA2 Id="6" enable="1" configFile="SSA2.txt" />
             <SSA2 Id="7" enable="1" configFile="SSA2.txt" />
 
-            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
+            <MPA2_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA2 Id="8" enable="1" configFile="MPA2.txt" /> 
             <MPA2 Id="9" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="10" enable="1" configFile="MPA2.txt" />
@@ -79,7 +79,7 @@
             <MPA2 Id="14" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="15" enable="1" configFile="MPA2.txt" />
 
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" enable="1" configFile="CIC2_PS.txt" />
         </Hybrid>
     </OpticalGroup>
@@ -247,6 +247,7 @@
     <Setting name="OTCICphaseAlignmentNumberOfAlignmentIterations">100</Setting>
     <Setting name="OTCICphaseAlignmentMinLockingSuccessRate">0.95</Setting>
     <Setting name="OTverifyCICdataWordNumberOfIterations">1000</Setting>
+    <Setting name="OTverifyMPASSAdataWordNumberOfIterations">1000</Setting>
     
 </Settings>
 
