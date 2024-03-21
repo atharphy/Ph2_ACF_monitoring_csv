@@ -19,7 +19,7 @@ void OTalignStubPackage::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     // free the registers in case any
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTalignStubPackage.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

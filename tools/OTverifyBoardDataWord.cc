@@ -1,6 +1,5 @@
 #include "tools/OTverifyBoardDataWord.h"
 #include "HWDescription/BeBoard.h"
-#include "HWInterface/D19cDebugFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
@@ -28,7 +27,7 @@ void OTverifyBoardDataWord::Initialise(void)
     std::vector<float> initialEmptyVector(numberOfLines, 0);
     ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer, initialEmptyVector);
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -66,14 +65,12 @@ void OTverifyBoardDataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 void OTverifyBoardDataWord::runIntegrityTest()
 {
     LOG(INFO) << BOLDYELLOW << "OTverifyBoardDataWord::runIntegrityTest ... start integrity test" << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
-    D19cDebugFWInterface* theDebugInterface = cInterface->getDebugInterface();
+    auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     for(auto theBoard: *fDetectorContainer)
     {
-        runStubIntegrityTest(theBoard, theDebugInterface);
-        runL1IntegrityTest(theBoard, theDebugInterface);
+        runStubIntegrityTest(theBoard, theFWInterface);
+        runL1IntegrityTest(theBoard, theFWInterface);
     }
 
     // normalize
@@ -99,7 +96,7 @@ void OTverifyBoardDataWord::runIntegrityTest()
 #endif
 }
 
-void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
+void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface)
 {
     LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest" << RESET;
 
@@ -124,7 +121,7 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cDebugFWI
 
             for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
             {
-                auto lineOutputVector = theDebugInterface->StubDebug(true, cNlines, false);
+                auto lineOutputVector = theFWInterface->StubDebug(true, cNlines, false);
                 for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
                 {
                     if(isKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
@@ -231,7 +228,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
     return true;
 }
 
-void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInterface* theDebugInterface)
+void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface)
 {
     LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
     // Set board trigger configuration for L1 alignment
@@ -261,13 +258,12 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cDebugFWInt
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
             for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
             {
-                auto lineOutputVector = theDebugInterface->L1ADebug(1, false);
+                auto lineOutputVector = theFWInterface->L1ADebug(1, false);
                 if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket))
                     ++theHybridPatternMatchingEfficiency[0];
                 else
                 {
                     LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET;
-                    LOG(DEBUG) << BOLDRED << "Total number of triggers = " << +theDebugInterface->fTotalNumberOfTriggers << RESET;
                 }
             }
         }

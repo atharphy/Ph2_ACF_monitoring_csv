@@ -19,7 +19,7 @@ void OTCICwordAlignment::Initialise(void)
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "EXT_WA_DELAY[0-1][0-9]");
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTCICwordAlignment.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

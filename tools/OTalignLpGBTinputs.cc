@@ -32,7 +32,7 @@ void OTalignLpGBTinputs::Initialise(void)
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
     }
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTalignLpGBTinputs.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

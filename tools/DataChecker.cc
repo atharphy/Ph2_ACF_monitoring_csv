@@ -3779,9 +3779,9 @@ void DataChecker::PSNominal()
     // configure latencies
     // L1 latency in MPA
     // stub latency in FW
-    auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
     for(auto cBoard: *fDetectorContainer)
     {
+        auto cStubOffset = cBoard->getStubOffset();
         // check trigger source
         // and reload
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
@@ -4638,7 +4638,7 @@ void DataChecker::Eye_CIC()
                 } // chip
             }     // hybrid
         }         // module
-        auto cStubOffset  = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
+        auto cStubOffset  = cBoard->getStubOffset();
         int  cStubLatency = cLatency - (cStubOffset + cReTimeValue);
         LOG(INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
         // read events
