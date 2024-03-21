@@ -235,7 +235,7 @@ std::vector<std::pair<std::string, uint16_t>> CicInterface::ReadChipMultReg(Ph2_
 
 bool CicInterface::GetResyncRequest(Chip* pChip)
 {
-    uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAD : 0xA6;
+    uint16_t cRegAddress = 0xA6;
 
     setBoard(pChip->getBeBoardId());
     LOG(DEBUG) << BOLDBLUE << "Checking if CIC requires a ReSync." << RESET;
@@ -246,13 +246,13 @@ bool CicInterface::GetResyncRequest(Chip* pChip)
     auto cRegValue      = fBoardFW->SingleRegisterRead(pChip, cRegItem);
 
     LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cRegValue) << " from RO status register" << RESET;
-    auto cResyncNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? cRegValue : ((cRegValue & 0x8) >> 3);
+    auto cResyncNeeded = ((cRegValue & 0x8) >> 3);
     return (cResyncNeeded == 1);
 }
 bool CicInterface::CheckReSync(Chip* pChip)
 {
     bool     cResyncNeeded = GetResyncRequest(pChip);
-    uint16_t cRegAddress   = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAD : 0xA6;
+    uint16_t cRegAddress   = 0xA6;
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem;
     cRegItem.fPage      = 0x00;
@@ -262,7 +262,7 @@ bool CicInterface::CheckReSync(Chip* pChip)
 }
 bool CicInterface::CheckFastCommandLock(Chip* pChip)
 {
-    uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAE : 0xA6;
+    uint16_t cRegAddress = 0xA6;
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Checking CIC" << +pChip->getHybridId() << " - has fast command decoder locked?" << RESET;
     ChipRegItem cRegItem;
@@ -271,7 +271,7 @@ bool CicInterface::CheckFastCommandLock(Chip* pChip)
     cRegItem.fStatusReg = 0x01;
     auto cRegValue      = fBoardFW->SingleRegisterRead(pChip, cRegItem);
     LOG(INFO) << BOLDYELLOW << "Read back value of " << std::bitset<5>(cRegValue) << " from RO status register" << RESET;
-    return (pChip->getFrontEndType() == FrontEndType::CIC) ? (cRegValue == 1) : ((cRegValue & 0x10) >> 4);
+    return ((cRegValue & 0x10) >> 4);
 }
 // configure alignment patterns on CIC
 bool CicInterface::ConfigureAlignmentPatterns(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns)
@@ -292,9 +292,9 @@ bool CicInterface::ConfigureAlignmentPatterns(Chip* pChip, std::vector<uint8_t> 
 // manually set Bx0 alignment
 bool CicInterface::ManualBx0Alignment(Chip* pChip, uint8_t pBx0delay)
 {
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "USE_EXT_BX0_DELAY" : "BX0_ALIGN_CONFIG";
+    std::string cRegName  = "BX0_ALIGN_CONFIG";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : ((cRegValue & 0x7F) | (0x01 << 7));
+    uint16_t    cValue    = ((cRegValue & 0x7F) | (0x01 << 7));
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Manually settomg BX0 delay value in CIC on FE" << +pChip->getHybridId() << " to " << +pBx0delay << " clock cycles." << RESET;
     bool cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
@@ -314,21 +314,21 @@ bool CicInterface::ConfigureBx0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
     LOG(DEBUG) << BOLDBLUE << "Configuring word alignment patterns on CIC" << RESET;
     bool cSuccess = ConfigureAlignmentPatterns(pChip, pAlignmentPatterns);
 
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "USE_EXT_BX0_DELAY" : "BX0_ALIGN_CONFIG";
+    std::string cRegName  = "BX0_ALIGN_CONFIG";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : ((cRegValue & 0x7F) | (0x00 << 7));
+    uint16_t    cValue    = ((cRegValue & 0x7F) | (0x00 << 7));
     cSuccess              = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
     if(!cSuccess) return cSuccess;
 
-    cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "BX0_ALIGNMENT_FE" : "BX0_ALIGN_CONFIG";
+    cRegName  = "BX0_ALIGN_CONFIG";
     cRegValue = this->ReadChipReg(pChip, cRegName);
-    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pFEId : ((cRegValue & 0xC7) | (cFeMapping[pFEId] << 3));
+    cValue    = ((cRegValue & 0xC7) | (cFeMapping[pFEId] << 3));
     cSuccess  = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
     if(!cSuccess) return cSuccess;
 
-    cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "BX0_ALIGNMENT_LINE" : "BX0_ALIGN_CONFIG";
+    cRegName  = "BX0_ALIGN_CONFIG";
     cRegValue = this->ReadChipReg(pChip, cRegName);
-    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pLineId : ((cRegValue & 0xF8) | (pLineId << 0));
+    cValue    = ((cRegValue & 0xF8) | (pLineId << 0));
     cSuccess  = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
     fBoardFW->ChipReSync();
     return cSuccess;
@@ -336,15 +336,15 @@ bool CicInterface::ConfigureBx0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
 bool CicInterface::AutoBx0Alignment(Chip* pChip, uint8_t pStatus)
 {
     // make sure auto WA request is 0
-    std::string cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "AUTO_WA_REQUEST" : "MISC_CTRL";
+    std::string cRegName   = "MISC_CTRL";
     uint16_t    cRegValue  = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : ((cRegValue & 0x1D) | (0x0 << 0));
+    uint16_t    cToggleOff = ((cRegValue & 0x1D) | (0x0 << 0));
     bool        cSuccess   = this->WriteChipReg(pChip, cRegName, cToggleOff);
     if(!cSuccess) return cSuccess;
 
-    cRegName        = (pChip->getFrontEndType() == FrontEndType::CIC) ? "AUTO_BX0_ALIGNMENT_REQUEST" : "BX0_ALIGN_CONFIG";
+    cRegName        = "BX0_ALIGN_CONFIG";
     cRegValue       = this->ReadChipReg(pChip, cRegName);
-    uint16_t cValue = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : ((cRegValue & 0xF8) | (pStatus << 6));
+    uint16_t cValue = ((cRegValue & 0xF8) | (pStatus << 6));
     cSuccess        = this->WriteChipReg(pChip, cRegName, cValue);
     if(!cSuccess) return cSuccess;
 
@@ -363,15 +363,15 @@ std::pair<bool, uint8_t> CicInterface::CheckBx0Alignment(Chip* pChip)
     // check status
     ChipRegItem cRegItem;
     cRegItem.fPage          = 0x00;
-    cRegItem.fAddress       = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x84 : 0xA6;
+    cRegItem.fAddress       = 0xA6;
     cRegItem.fStatusReg     = 0x01;
     auto     cRegValue      = fBoardFW->SingleRegisterRead(pChip, cRegItem);
-    uint16_t cReadBackValue = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cRegValue) : ((cRegValue & 0x02) >> 1);
+    uint16_t cReadBackValue = ((cRegValue & 0x02) >> 1);
     cSuccess                = (cReadBackValue == 1);
 
     // read back delay
     cRegItem.fPage      = 0x00;
-    cRegItem.fAddress   = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAF : 0xA7;
+    cRegItem.fAddress   = 0xA7;
     cRegItem.fStatusReg = 0x01;
     cRegValue           = fBoardFW->SingleRegisterRead(pChip, cRegItem);
     return std::make_pair(cSuccess, cRegValue);
@@ -486,7 +486,7 @@ bool CicInterface::ResetDLL(Chip* pChip, uint16_t pWait_ms)
 // check DLL lock in CIC
 bool CicInterface::CheckDLL(Chip* pChip)
 {
-    uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x5A : 0x9A;
+    uint16_t cRegAddress = 0x9A;
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Checking DLL lock in CIC" << +pChip->getHybridId() << RESET;
     std::vector<ChipRegItem> cRegItems;
@@ -708,7 +708,7 @@ bool CicInterface::SetPhaseTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortCh
     auto cRegisterMap = pChip->getRegMap();
 
     ChipRegItem cRegItem;
-    uint16_t    cBaseAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x20 : 0x25;
+    uint16_t    cBaseAddress = 0x25;
     uint16_t    cBaseReg     = cBaseAddress + pPhyPortChannel * 6;
 
     // 4 bits per phyPorts --> 12 phy ports --> 48 bits --> 6 registers
@@ -922,10 +922,10 @@ bool CicInterface::SoftReset(Chip* pChip, uint32_t cWait_ms)
 {
     setBoard(pChip->getBeBoardId());
 
-    std::string cRegName   = (pChip->getFrontEndType() == FrontEndType::CIC) ? "SOFT_RESET" : "MISC_CTRL";
+    std::string cRegName   = "MISC_CTRL";
     uint16_t    cRegValue  = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cToggleOn  = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x01 : (cRegValue & 0x0F) | (0x1 << 4);
-    uint16_t    cToggleOff = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x00 : (cRegValue & 0x0F) | (0x0 << 4);
+    uint16_t    cToggleOn  = (cRegValue & 0x0F) | (0x1 << 4);
+    uint16_t    cToggleOff = (cRegValue & 0x0F) | (0x0 << 4);
 
     LOG(DEBUG) << BOLDBLUE << "Setting register " << cRegName << " to " << std::bitset<5>(cToggleOn) << " to toggle ON soft reset." << RESET;
     if(!this->WriteChipReg(pChip, cRegName, cToggleOn)) return false;
@@ -945,9 +945,9 @@ bool CicInterface::SelectOutput(Chip* pChip, bool pFixedPattern)
         LOG(DEBUG) << BOLDBLUE << "Want to configure CIC to output data from readout chips... " << RESET;
 
     // enable output pattern from CIC
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "OUTPUT_PATTERN_ENABLE" : "MISC_CTRL";
+    std::string cRegName  = "MISC_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? static_cast<uint8_t>(pFixedPattern) : ((cRegValue & 0x1B) | (static_cast<uint8_t>(pFixedPattern) << 2));
+    uint16_t    cValue    = ((cRegValue & 0x1B) | (static_cast<uint8_t>(pFixedPattern) << 2));
 
     if(!this->WriteChipReg(pChip, cRegName, cValue)) return false;
 
@@ -1002,11 +1002,11 @@ bool CicInterface::configureEnabledFEs(Chip* pChip, std::vector<uint8_t> pFeIds)
 bool CicInterface::ConfigureStubOutput(Chip* pChip, uint8_t pLineSel)
 {
     setBoard(pChip->getBeBoardId());
-    std::string cRegName = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
+    std::string cRegName = "FE_CONFIG";
     auto        cFeType  = this->ReadChipReg(pChip, cRegName);
-    bool        c2S      = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cFeType == 0) : ((cFeType & 0x01) == 0);
+    bool        c2S      = ((cFeType & 0x01) == 0);
     uint8_t     cValue   = c2S ? 0 : 1;
-    cRegName             = (pChip->getFrontEndType() == FrontEndType::CIC) ? "N_OUTPUT_TRIGGER_LINES_SEL" : "FE_CONFIG";
+    cRegName             = "FE_CONFIG";
     auto    cRegValue    = this->ReadChipReg(pChip, cRegName);
     uint8_t cMask        = c2S ? 0xFE : 0xF7;
     uint8_t cBitShift    = c2S ? 0 : 3;
@@ -1024,9 +1024,9 @@ bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)
     setBoard(pChip->getBeBoardId());
 
     LOG(INFO) << BOLDBLUE << "Want to configure CIC mode : " << +pMode << RESET;
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "CBCMPA_SEL" : "FE_CONFIG";
+    std::string cRegName  = "FE_CONFIG";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pMode : ((cRegValue & 0x3E) | pMode);
+    uint16_t    cValue    = ((cRegValue & 0x3E) | pMode);
     if(pMode == 0) // for CBC mode .. always320 MHz and without last line
         cValue = (cValue & 0x35) | (pMode << 1) | (pMode << 3);
 
@@ -1044,9 +1044,9 @@ bool CicInterface::CheckSoftReset(Chip* pChip)
     ChipRegItem cRegItem;
     cRegItem.fPage        = 0x00;
     cRegItem.fStatusReg   = 0x01;
-    cRegItem.fAddress     = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0xAC : 0xA6;
+    cRegItem.fAddress     = 0xA6;
     auto cRegValue        = fBoardFW->SingleRegisterRead(pChip, cRegItem);
-    bool cSoftResetNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cRegValue == 1) : (((cRegValue & 0x04) >> 2) == 1);
+    bool cSoftResetNeeded = (((cRegValue & 0x04) >> 2) == 1);
     // if readback worked and the CIC says it needs a Resync then send
     // a resync
     if(cSoftResetNeeded)
@@ -1056,7 +1056,7 @@ bool CicInterface::CheckSoftReset(Chip* pChip)
     }
     // check if CIC still needs one
     cRegValue        = fBoardFW->SingleRegisterRead(pChip, cRegItem);
-    cSoftResetNeeded = (pChip->getFrontEndType() == FrontEndType::CIC) ? (cRegValue == 1) : (((cRegValue & 0x04) >> 2) == 1);
+    cSoftResetNeeded = (((cRegValue & 0x04) >> 2) == 1);
     if(cSoftResetNeeded)
         return false;
     else
@@ -1070,18 +1070,18 @@ bool CicInterface::SelectMux(Chip* pChip, uint8_t pPhyPort)
     // then select phy port
     LOG(DEBUG) << BOLDBLUE << "Selecting phyPort" << +pPhyPort << " on CIC on " << +pChip->getHybridId() << RESET;
     setBoard(pChip->getBeBoardId());
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "ctrlTestMux" : "MUX_CTRL";
+    std::string cRegName  = "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pPhyPort : (cRegValue & 0x10) | pPhyPort;
+    uint16_t    cValue    = (cRegValue & 0x10) | pPhyPort;
     LOG(DEBUG) << BOLDBLUE << "Selecting phyPort [0-11]: " << +pPhyPort << " by setting register to 0x" << std::hex << +cValue << std::dec << RESET;
     return this->WriteChipReg(pChip, cRegName, cValue);
 }
 bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
 {
     setBoard(pChip->getBeBoardId());
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "enableMux" : "MUX_CTRL";
+    std::string cRegName  = "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pEnable : (cRegValue & 0xF) | (pEnable << 4);
+    uint16_t    cValue    = (cRegValue & 0xF) | (pEnable << 4);
     if(pEnable == 1)
         LOG(DEBUG) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " << RESET;
     else
@@ -1128,9 +1128,9 @@ bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength)
 
 uint8_t CicInterface::ReadFCMDEdge(Chip* pChip)
 {
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "FC_ON_NEG_EDGE" : "MISC_CTRL";
+    std::string cRegName  = "MISC_CTRL";
     auto        cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint8_t     cNegEdge  = (pChip->getFrontEndType() == FrontEndType::CIC) ? cRegValue : ((cRegValue & 0x8) >> 3);
+    uint8_t     cNegEdge  = ((cRegValue & 0x8) >> 3);
     if(cNegEdge == 1)
         LOG(INFO) << BOLDBLUE << "Fast command block in CIC locks on falling edge." << RESET;
     else
@@ -1147,9 +1147,9 @@ bool CicInterface::ConfigureFCMDEdge(Chip* pChip, uint8_t pUseNegEdge)
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on falling edge." << RESET;
     else
         LOG(INFO) << BOLDBLUE << "Configuring fast command block in CIC to lock on rising edge." << RESET;
-    std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "FC_ON_NEG_EDGE" : "MISC_CTRL";
+    std::string cRegName  = "MISC_CTRL";
     auto        cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? cNegEdge : (cRegValue & 0x17) | (cNegEdge << 3);
+    uint16_t    cValue    = (cRegValue & 0x17) | (cNegEdge << 3);
     bool        cSuccess  = this->WriteChipReg(pChip, cRegName, cValue);
     if(!cSuccess)
     {
@@ -1164,11 +1164,7 @@ bool CicInterface::ConfigureFCMDEdge(Chip* pChip, uint8_t pUseNegEdge)
 // with the BE or the other readout ASICs on the chip
 bool CicInterface::StartUp(Chip* pChip)
 {
-    std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string(pChip->getHybridId());
-    if(pChip->getFrontEndType() == FrontEndType::CIC)
-        cOut += " for CIC1.";
-    else
-        cOut += " for CIC2.";
+    std::string cOut = ".... Starting CIC start-up ........ on hybrid " + std::to_string(pChip->getHybridId()) + " for CIC2.";
     LOG(INFO) << BOLDBLUE << cOut << RESET;
 
     auto boardId        = pChip->getBeBoardId();

@@ -259,7 +259,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
             else
                 LOG(ERROR) << "Unknown option " << fOption;
         }
-        else if(pCbc.getFrontEndType() == FrontEndType::SSA || pCbc.getFrontEndType() == FrontEndType::SSA2)
+        else if(pCbc.getFrontEndType() == FrontEndType::SSA2)
         {
             if(fOption == 'w')
             {
@@ -282,37 +282,8 @@ struct ThresholdVisitor : public HwDescriptionVisitor
             else
                 LOG(ERROR) << "Unknown option " << fOption;
         }
-        else if(pCbc.getFrontEndType() == FrontEndType::MPA)
-        {
-            if(fOption == 'w')
-            {
-                if(fThreshold > 255)
-                    LOG(ERROR) << "Error, Threshold for MPA can only be 10 bit max (255)!"; // h
-                else
-                {
-                    std::vector<std::pair<std::string, uint16_t>> cRegVec;
-                    uint16_t                                      cVCth1 = fThreshold & 0x00FF;
-                    cRegVec.emplace_back("ThDAC0", cVCth1);
-                    cRegVec.emplace_back("ThDAC1", cVCth1);
-                    cRegVec.emplace_back("ThDAC2", cVCth1);
-                    cRegVec.emplace_back("ThDAC3", cVCth1);
-                    cRegVec.emplace_back("ThDAC4", cVCth1);
-                    cRegVec.emplace_back("ThDAC5", cVCth1);
-                    cRegVec.emplace_back("ThDAC6", cVCth1);
-                    fInterface->WriteChipMultReg(&pCbc, cRegVec);
-                }
-            }
-            else if(fOption == 'r')
-            {
-                fInterface->ReadChipReg(&pCbc, "ThDAC0");
-                uint16_t cVCth1 = pCbc.getReg("ThDAC0");
-                fThreshold      = cVCth1 & 0xFF;
-            }
-            else
-                LOG(ERROR) << "Unknown option " << fOption;
-        }
         else
-            LOG(ERROR) << "Not a valid chip type!";
+            LOG(ERROR) << __PRETTY_FUNCTION__ << " Not a valid chip type!";
     }
 };
 
@@ -363,7 +334,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
             }
         }
 
-        else if(pCbc.getFrontEndType() == FrontEndType::SSA || pCbc.getFrontEndType() == FrontEndType::SSA2)
+        else if(pCbc.getFrontEndType() == FrontEndType::SSA2)
         {
             if(fOption == 'w')
             {
@@ -375,22 +346,8 @@ struct LatencyVisitor : public HwDescriptionVisitor
             }
             else { fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB") | (fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB") << 8); }
         }
-
-        else if(pCbc.getFrontEndType() == FrontEndType::MPA)
-        {
-            if(fOption == 'w')
-            {
-                // std::cout << "SSAL" << std::endl;
-                std::vector<std::pair<std::string, uint16_t>> cRegVec;
-                cRegVec.emplace_back("L1Offset_1_ALL", (0x00FF & fLatency) >> 0);
-                cRegVec.emplace_back("L1Offset_2_ALL", (0x0100 & fLatency) >> 8);
-                fInterface->WriteChipMultReg(&pCbc, cRegVec, false);
-            }
-            else { fLatency = fInterface->ReadChipReg(&pCbc, "L1Offset_1_R1") | (fInterface->ReadChipReg(&pCbc, "L1Offset_2_R1") << 8); }
-        }
-
         else
-            LOG(ERROR) << "Not a valid chip type!";
+            LOG(ERROR) << __PRETTY_FUNCTION__ << " Not a valid chip type!";
     }
 };
 

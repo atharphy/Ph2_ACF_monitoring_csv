@@ -29,7 +29,7 @@ Cic::Cic(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string&
     fMaxRegValue   = 255; // 8 bit registers in CIC
     configFileName = filename;
     loadfRegMap(filename);
-    setFrontEndType(FrontEndType::CIC);
+    setFrontEndType(FrontEndType::CIC2);
 }
 
 // C'tors which take BeBoardId, FMCId, HybridId, CbcId
@@ -40,7 +40,7 @@ Cic::Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     fMaxRegValue   = 255; // 8 bit registers in CIC
     configFileName = filename;
     loadfRegMap(filename);
-    setFrontEndType(FrontEndType::CIC);
+    setFrontEndType(FrontEndType::CIC2);
 }
 
 void Cic::initializeFreeRegisters()
