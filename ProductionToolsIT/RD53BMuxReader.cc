@@ -105,7 +105,10 @@ void RD53BMuxReader::run()
                                 adc_sum += value;
                                 n_valid += 1;
                             }
-                            else { line << RED << std::fixed << std::setw(5) << value << YELLOW; }
+                            else
+                            {
+                                line << RED << std::fixed << std::setw(5) << value << YELLOW;
+                            }
                         }
                         float adc_mean = float(adc_sum) / n_valid;
                         float value    = adc_mean * V_REF / 4096; // nominal 12 bit ADC

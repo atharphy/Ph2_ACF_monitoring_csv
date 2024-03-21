@@ -19,7 +19,7 @@ void OTCICwordAlignment::Initialise(void)
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "EXT_WA_DELAY[0-1][0-9]");
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTCICwordAlignment.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -115,8 +115,7 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
 {
     LOG(INFO) << BOLDBLUE << "Starting CIC automated word alignment procedure .... " << RESET;
     std::string theQueryFunction = "skipSSAQuery";
-    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip)
-    {
+    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
         return true;
     };

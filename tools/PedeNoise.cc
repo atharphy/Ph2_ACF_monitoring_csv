@@ -383,7 +383,7 @@ void PedeNoise::Validate()
                                     {
                                         // char cRegName[11];
                                         // sprintf(cRegName, "Channel%03d", iChan + 1);
-                                        //std::string cRegName = "Channel" + (boost::format("%|03|") % (col + 1)).str();
+                                        // std::string cRegName = "Channel" + (boost::format("%|03|") % (col + 1)).str();
                                         std::ostringstream oss;
                                         oss << "Channel" << std::setw(3) << std::setfill('0') << (col + 1);
                                         std::string cRegName = oss.str();
@@ -393,7 +393,7 @@ void PedeNoise::Validate()
                                     {
                                         // char cRegName[17];
                                         // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
-                                        //std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
+                                        // std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
                                         std::string cRegName = "THTRIMMING_S" + std::to_string(col + 1);
                                         cRegVec.push_back({cRegName, 0x1F});
                                     }
@@ -500,7 +500,8 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
         bool cStripFirstLim = false, cPixelFirstLim = false;
         bool cLimitFound = false, cStripLimitFound = false, cPixelLimitFound = false;
         int  cStripLimitCounter = 0, cPixelLimitCounter = 0;
-        do {
+        do
+        {
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
             fSCurvePixelOccupancyMap[cPixelValue]        = theOccupancyContainer;

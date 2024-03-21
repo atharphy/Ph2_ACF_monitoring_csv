@@ -49,7 +49,8 @@ void D19cL1ReadoutInterface::CountFwEvents()
     bool   cFoundEmpty    = false;
     size_t cOffset        = 0;
     size_t cCorr          = 0;
-    do {
+    do
+    {
         // check event header
         uint32_t cFirstWord = *cEventIterator;
         uint32_t cHeader    = ((0xFFFF << 16) & cFirstWord) >> 16;
@@ -106,7 +107,8 @@ bool D19cL1ReadoutInterface::WaitForReadout()
         // LOG (INFO) << BOLDMAGENTA << "D19cL1ReadoutInterface::WaitForReadout Now checking words from the FC7" << RESET;
         uint32_t cNWordsPrev    = cNWords;
         bool     cStopIncrement = false;
-        do {
+        do
+        {
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cNWords        = fTheRegManager->ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
             cStopIncrement = (cNWords == cNWordsPrev);
@@ -144,7 +146,8 @@ bool D19cL1ReadoutInterface::CheckReadoutReq()
     auto     cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
     auto     cDuration   = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
     auto     cReadoutReq = fTheRegManager->ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-    do {
+    do
+    {
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
         cReadoutReq = fTheRegManager->ReadReg("fc7_daq_stat.readout_block.general.readout_req");
         // LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::CheckReadoutReq ReadoutReq is " << +cReadoutReq << RESET;
@@ -176,7 +179,8 @@ bool D19cL1ReadoutInterface::CheckForWordsInReadout()
     auto     cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
     auto     cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
     auto     cNWords   = fTheRegManager->ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-    do {
+    do
+    {
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
         cNWords = fTheRegManager->ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
         // LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::CheckForWordsInReadout words_cnt is " << +cNWords << RESET;
@@ -216,9 +220,7 @@ bool D19cL1ReadoutInterface::PollReadoutData(const BeBoard* pBoard, bool pWait)
     if(pWait)
     {
         if(fTriggerInterface->WaitForNTriggers(1)) // wait until at least 1 trigger has been sent
-        {
-            cSuccess = CheckForWordsInReadout();
-        }
+        { cSuccess = CheckForWordsInReadout(); }
     }
 
     if(cSuccess)
@@ -234,7 +236,8 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
     // LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents " << fNEvents << RESET;
     fReadoutAttempt = 0;
     bool cSuccess   = true;
-    do {
+    do
+    {
         // clear internal data vector
         fData.clear();
         // configure readout

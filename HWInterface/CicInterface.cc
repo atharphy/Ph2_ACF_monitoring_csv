@@ -746,8 +746,7 @@ GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> Ci
     std::unordered_map<std::string, uint8_t> phaseRegisterMap;
     for(const auto& registerNameAndValue: phaseRegisterValueVector) phaseRegisterMap[registerNameAndValue.first] = registerNameAndValue.second;
 
-    auto getPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel)
-    {
+    auto getPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel) {
         std::stringstream phaseRegisterName;
         phaseRegisterName << "scPhaseSelectB" << +channel << "o" << +phyPort / 2;
         return (phaseRegisterMap.at(phaseRegisterName.str()) >> (phyPort % 2 * 4)) & 0xF;
@@ -789,8 +788,7 @@ GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicIn
     std::unordered_map<std::string, uint8_t> isLockedRegisterMap;
     for(const auto& registerNameAndValue: isLockedRegisterValueVector) isLockedRegisterMap[registerNameAndValue.first] = registerNameAndValue.second;
 
-    auto isLocked = [&isLockedRegisterMap](uint8_t phyPort, uint8_t channel)
-    {
+    auto isLocked = [&isLockedRegisterMap](uint8_t phyPort, uint8_t channel) {
         std::stringstream isLockedRegisterName;
         isLockedRegisterName << "scChannelLocked" << +phyPort / 2;
         bool isLocked = (isLockedRegisterMap.at(isLockedRegisterName.str()) >> (phyPort % 2 * 4 + channel)) & 0x1;
@@ -825,8 +823,7 @@ GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicIn
 bool CicInterface::writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> cicInputTaps)
 {
     std::unordered_map<std::string, uint8_t> phaseRegisterMap;
-    auto                                     setPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel, uint8_t phase)
-    {
+    auto                                     setPhaseValue = [&phaseRegisterMap](uint8_t phyPort, uint8_t channel, uint8_t phase) {
         std::stringstream phaseRegisterName;
         phaseRegisterName << "scPhaseSelectB" << +channel << "i" << +phyPort / 2;
         auto& theCurrentRegisterValue = phaseRegisterMap[phaseRegisterName.str()];
@@ -1171,8 +1168,7 @@ bool CicInterface::StartUp(Chip* pChip)
     auto opticalGroupId = pChip->getOpticalGroupId();
     auto hybridId       = pChip->getOpticalGroupId();
 
-    auto exceptionHandleFunction = [boardId, opticalGroupId, hybridId, this](const std::string&& failMode)
-    {
+    auto exceptionHandleFunction = [boardId, opticalGroupId, hybridId, this](const std::string&& failMode) {
         LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +boardId << " OpticalGroup id " << +opticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(boardId, opticalGroupId, hybridId);
     };

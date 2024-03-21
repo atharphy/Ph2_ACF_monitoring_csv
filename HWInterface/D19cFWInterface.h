@@ -82,9 +82,9 @@ class D19cFWInterface : public BeBoardFWInterface
     // i2c version of master
     uint32_t fI2CVersion;
     // optical readout
-    bool                       fOptical        = false;
-    bool                       fUseOpticalLink = false;
-    bool                       fConfigureCDCE  = false;
+    bool fOptical        = false;
+    bool fUseOpticalLink = false;
+    bool fConfigureCDCE  = false;
 
     // 2S or PS readout
     bool           fIs2S           = true;
@@ -367,7 +367,7 @@ class D19cFWInterface : public BeBoardFWInterface
     float GetSFPParameter_L8(std::string parameter, int channel);
     float GetSFPParameter_L12(std::string parameter, int channel);
 
-    std::vector<uint32_t> L1ADebug(uint8_t pWait_ms, bool pPrint);
+    std::vector<uint32_t>              L1ADebug(uint8_t pWait_ms, bool pPrint);
     std::vector<std::vector<uint32_t>> StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint);
 };
 } // namespace Ph2_HwInterface

@@ -28,7 +28,7 @@ void OTCICphaseAlignment::Initialise(void)
     fNumberOfAlignmentIterations = findValueInSettings<double>("OTCICphaseAlignmentNumberOfAlignmentIterations", 100);
     fMinLockingSuccessRate       = findValueInSettings<double>("OTCICphaseAlignmentMinLockingSuccessRate", 1.);
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTCICphaseAlignment.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -67,8 +67,7 @@ void OTCICphaseAlignment::phaseAlignment()
 {
     LOG(INFO) << BOLDBLUE << "Starting CIC automated phase alignment procedure" << RESET;
     std::string theQueryFunction = "skipSSAQuery";
-    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip)
-    {
+    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
         return true;
     };

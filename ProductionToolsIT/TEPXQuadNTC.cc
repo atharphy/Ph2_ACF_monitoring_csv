@@ -137,7 +137,10 @@ void TEPXQuadNTC::run()
                                           << std::fixed << std::setw(12) << std::setprecision(3) << R_ntc << std::fixed << std::setw(12) << std::setprecision(1) << TfromR(R_ntc);
                             }
                         }
-                        else { LOG(INFO) << RED << "ERROR reading ntc" << RESET; }
+                        else
+                        {
+                            LOG(INFO) << RED << "ERROR reading ntc" << RESET;
+                        }
                     }
 
                     // for each chip calculate temperature  from slopes of ntc_adc/r_ref_adc values

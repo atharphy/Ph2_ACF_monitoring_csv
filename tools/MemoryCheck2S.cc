@@ -563,7 +563,8 @@ void MemoryCheck2S::GenericTriggers(int pTriggerSeparation, int pMaxBurstLength)
         cBxId++;
     }
     size_t cNtriggersToSend = 30;
-    do {
+    do
+    {
         // first injection
         fFastCommands.push_back(cFCMDs.fTestPulse);
         size_t cBxWithTP = cBxId;
@@ -626,7 +627,8 @@ bool MemoryCheck2S::SendGenericTriggers(int pTriggerSeparation)
         // wait until all triggers have been sent
         uint32_t cCounter   = 0;
         uint32_t cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do {
+        do
+        {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             // auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -718,7 +720,8 @@ bool MemoryCheck2S::SendGenericTestPulses(int pReSync)
         // wait until all triggers have been sent
         uint32_t cCounter   = 0;
         uint32_t cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do {
+        do
+        {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
             // auto cNWords = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -747,7 +750,8 @@ bool MemoryCheck2S::ReadAfterGenericBlock(int pNExpected)
         size_t   cCounter    = 0;
         uint32_t cNtriggers  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
         auto     cNWords     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-        do {
+        do
+        {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
             cNWordsPrev = (cCounter == 0) ? 0 : cNWords;
             cNWords     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -1752,11 +1756,11 @@ void MemoryCheck2S::MonitorInputVoltage()
             uint8_t cADCsel         = 1;
             // char    cADC[4];
             // sprintf(cADC, "ADC%.1d", cADCsel);
-            //std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
+            // std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
             std::string cADC = "ADC" + std::to_string(cADCsel);
 
-            const auto  cTimeStart = std::chrono::system_clock::now();
-            fStartTime             = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
+            const auto cTimeStart = std::chrono::system_clock::now();
+            fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
             std::vector<float> cVals(10);
             for(size_t cM = 0; cM < cVals.size(); cM++)
             {
@@ -1815,9 +1819,8 @@ void MemoryCheck2S::MonitorTemperature()
                 if(cADCsel == 14)
                     cADC = "TEMP";
                 else
-                    //cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
+                    // cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
                     std::string cADC = "ADC" + std::to_string(cADCsel);
-
 
                 const auto cTimeStart = std::chrono::system_clock::now();
                 fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
@@ -1926,7 +1929,7 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            //std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            // std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
                             std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable
@@ -1967,7 +1970,7 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            //std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            // std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
                             std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable

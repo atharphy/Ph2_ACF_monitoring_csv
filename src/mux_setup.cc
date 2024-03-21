@@ -66,7 +66,10 @@ int main(int argc, char** argv)
     cMuxControl.Inherit(&cTool);
     cMuxControl.Initialise();
     if(cMuxDisconnect) { cMuxControl.Disconnect(); }
-    else if(cMuxScan) { cMuxControl.Scan(); }
+    else if(cMuxScan)
+    {
+        cMuxControl.Scan();
+    }
     else if(cMuxConfigure)
     {
         std::string       sBPNumCardNum = cmd.optionValue("mux_configure");
@@ -82,7 +85,10 @@ int main(int argc, char** argv)
         uint8_t cCardNum      = vBPNumCardNum.at(1);
         cMuxControl.ConfigureSingleCard(cBackplaneNum, cCardNum);
     }
-    else if(cMuxAutoConfigure) { cMuxControl.ConfigureAll(); }
+    else if(cMuxAutoConfigure)
+    {
+        cMuxControl.ConfigureAll();
+    }
 #endif //__MULTIPLEXING__
     LOG(INFO) << "*** End of the operation ***";
     // cTool.Destroy();

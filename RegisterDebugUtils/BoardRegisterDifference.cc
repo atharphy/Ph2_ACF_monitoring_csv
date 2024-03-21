@@ -71,9 +71,7 @@ void compareAndPrintDifferences(const std::map<std::string, uint32_t>& originalR
     for(auto finalRegister = finalRegisterMap.begin(); finalRegister != finalRegisterMap.end(); ++finalRegister)
     {
         if(originalRegisterMap.find(finalRegister->first) == originalRegisterMap.end())
-        {
-            std::cout << std::hex << "Register " << finalRegister->first << " not found in the original configuration" << std::dec << std::endl;
-        }
+        { std::cout << std::hex << "Register " << finalRegister->first << " not found in the original configuration" << std::dec << std::endl; }
     }
 }
 

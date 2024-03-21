@@ -102,7 +102,10 @@ float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::stri
         }
         file.close();
     }
-    else { LOG(INFO) << BOLDRED << "File " << cFilename << " could not be opened! Resistance to temperature translation not possible!" << RESET; }
+    else
+    {
+        LOG(INFO) << BOLDRED << "File " << cFilename << " could not be opened! Resistance to temperature translation not possible!" << RESET;
+    }
     float cSlope     = (cSecondTemp - cFirstTemp) / (cSecondResistance - cFirstResistance);
     float cIntercept = cSecondTemp - cSlope * cSecondResistance;
     float cTemp      = cSlope * cLSQResistance + cIntercept;
@@ -170,7 +173,8 @@ void OTTemperature::ReadModuleTemperatures()
                 LOG(INFO) << BOLDBLUE << "Gain of " << +fGain << "\t" << cVoltageADC << " ADC reading " << cMean << " converted voltage " << cVoltage << RESET;
                 cVoltageADCReadings.push_back(cMean);
             }
-            do {
+            do
+            {
                 ReadInternalThermistor(cOpticalGroup);
                 flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
                 // read ADC value of temperature sensor on the sensor

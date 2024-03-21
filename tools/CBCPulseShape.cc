@@ -44,7 +44,7 @@ void CBCPulseShape::Initialise(void)
 
     initializeRecycleBin();
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fCBCHistogramPulseShape.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
