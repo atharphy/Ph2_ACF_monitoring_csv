@@ -41,19 +41,19 @@ class ECVLinkAlignmentOT : public LinkAlignmentOT
 #ifdef __USE_ROOT__
     DQMHistogramECV fDQMHistogrammer;
 #endif
-    void                  SetCICClockPolarityAndStrength(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pInverted, uint8_t pStrength);
-    std::vector<uint8_t>  getGroupsAndChannels(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pGroups);
-    void                  ECV(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void                 SetCICClockPolarityAndStrength(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pInverted, uint8_t pStrength);
+    std::vector<uint8_t> getGroupsAndChannels(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pGroups);
+    void                 ECV(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
 
-    std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>>    StubBitErrorTest(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void                  InitL1BitErrorTest(const OpticalGroup* pOpticalGroup);
-    std::vector<std::pair<uint8_t, std::pair< uint8_t, float>>>    L1BitErrorTest(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void                  SetlpGBTRxPhase(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pPhase);
-    void                  InitWordAlignStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    std::vector<std::pair<uint8_t, std::pair<uint8_t,bool>>>     CheckWordAlignBEdataStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void                  StopWordAlignStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    std::vector<std::pair<uint8_t, std::pair<uint8_t,bool>>>     CheckWordAlignBEdataL1(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void                  StoreBERInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, float pBer);
-    void                  StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, bool pAligned);
+    std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> StubBitErrorTest(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void                                                       InitL1BitErrorTest(const OpticalGroup* pOpticalGroup);
+    std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> L1BitErrorTest(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void                                                       SetlpGBTRxPhase(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pPhase);
+    void                                                       InitWordAlignStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>>  CheckWordAlignBEdataStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void                                                       StopWordAlignStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>>  CheckWordAlignBEdataL1(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void StoreBERInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, float pBer);
+    void StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, bool pAligned);
 };
 #endif

@@ -53,7 +53,7 @@ class DQMHistogramECV : public DQMHistogramBase
     void reset(void) override;
     // virtual void summarizeHistos();
 
-    void filllWordAlign(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine,  DetectorDataContainer& pWordAlignSummary);
+    void filllWordAlign(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, DetectorDataContainer& pWordAlignSummary);
 
     void filllBER(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, DetectorDataContainer& pBERSummary);
 
@@ -70,6 +70,5 @@ class DQMHistogramECV : public DQMHistogramBase
 
     DetectorDataContainer fChosenPhasePolarity0;
     DetectorDataContainer fChosenPhasePolarity1;
-
 };
 #endif
