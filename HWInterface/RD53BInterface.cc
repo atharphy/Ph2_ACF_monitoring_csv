@@ -816,7 +816,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     const float       R25C             = 10;               // [kOhm]
     const float       kb               = 1.38064852e-23;   // [J/K]
     const float       e                = 1.6021766208e-19; // [C]
-    const float       temperatureCoeff = 0.22e-2;          // By circuit design
+    const float       temperatureCoeff = 0.22e-2;          // By circuit design [dR/dT]
     const float       biasIratio       = 15;               // By circuit design
     const int         nDEM             = 16;               // Dynamic Element Matching
     const std::string regName          = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
