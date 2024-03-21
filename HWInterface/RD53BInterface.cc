@@ -812,14 +812,15 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     // #####################
     // # Natural constants #
     // #####################
-    const float       T0C     = 273.15;         // [Kelvin]
-    const float       T25C    = 298.15;         // [Kelvin]
-    const float       R25C    = 10;             // [kOhm]
-    const float       kb      = 1.38064852e-23; // [J/K]
-    const float       e       = 1.6021766208e-19;
-    const float       R       = 15; // By circuit design
-    const int         nDEM    = 16; // Dynamic Element Matching
-    const std::string regName = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
+    const float       T0C              = 273.15;         // [Kelvin]
+    const float       T25C             = 298.15;         // [Kelvin]
+    const float       R25C             = 10;             // [kOhm]
+    const float       kb               = 1.38064852e-23; // [J/K]
+    const float       e                = 1.6021766208e-19;
+    const float       temperatureCoeff = 0.22e-2;
+    const float       R                = 15; // By circuit design
+    const int         nDEM             = 16; // Dynamic Element Matching
+    const std::string regName          = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
 
     const std::unordered_map<std::string, std::string> observableToCalibrationConstant = {
         {"TEMPSENS_ANA_SLDO", "TEMPSENS_IDEAL_FACTOR_ANA"},
@@ -841,10 +842,10 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         return -HUGE_VALF; // Unphysically low temperature as error
     }
 
-    float    idealityFactor = (iterator->second != "" ? pChip->getRegItem(iterator->second).fValue / 1e3 : 0);
-    uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
-    float    valueLow  = 0;
-    float    valueHigh = 0;
+    const float idealityFactor = (iterator->second != "" ? pChip->getRegItem(iterator->second).fValue / 1e3 : 0);
+    uint16_t    sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
+    float       valueLow  = 0;
+    float       valueHigh = 0;
 
     if(type.find("INTERNAL_NTC") != std::string::npos)
     {
@@ -864,9 +865,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     }
     else if(type.find("POLY") != std::string::npos)
     {
-        const float temperatureCoeff = 0.22e-2; // @CONST@
-        float       voltage          = RD53Interface::convertADC2VorI(pChip, measureADC(pChip, data));
-        float       temperature      = (voltage / idealityFactor - 1) / temperatureCoeff; // [Celsius]
+        float voltage     = RD53Interface::convertADC2VorI(pChip, measureADC(pChip, data));
+        float temperature = (voltage / idealityFactor - 1) / temperatureCoeff; // [Celsius]
 
         return temperature;
     }
