@@ -10,8 +10,10 @@
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/OTCICphaseAlignment.h"
+#include "tools/OTCICphaseAlignmentForBypass.h"
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
+#include "tools/OTCicBypassTest.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTalignBoardDataWord.h"
@@ -57,6 +59,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord>("Outer Tracker",
                                                                                                                                                                                         "alignment");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignmentForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
+
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,

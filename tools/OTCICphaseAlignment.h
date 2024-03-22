@@ -10,7 +10,7 @@
 #ifndef OTCICphaseAlignment_h__
 #define OTCICphaseAlignment_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
@@ -28,7 +28,7 @@ class OTCICphaseAlignment : public Tool
     OTCICphaseAlignment();
     ~OTCICphaseAlignment();
 
-    void Initialise(void);
+    virtual void Initialise(void);
 
     // State machine
     void Running() override;

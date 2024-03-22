@@ -12,10 +12,10 @@
 
 #include "HWDescription/RD53.h"
 #include "MetadataHandlerIT.h"
-#include "Tool.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/RD53ChannelGroupHandler.h"
+#include "tools/Tool.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"

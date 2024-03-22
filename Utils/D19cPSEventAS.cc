@@ -96,27 +96,6 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     LOG(DEBUG) << BOLDYELLOW << "Chip#" << +chipContainer->getId() << " chip occupancy is " << cOcc / chipContainer->size() << RESET;
 }
 
-void D19cPSEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::vector<uint32_t>& list)
-{
-    std::cout << "MPAASEV" << std::endl;
-
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            uint32_t nc = 0;
-            for(auto cChip: *cHybrid)
-            {
-                fEventDataVector[encodeVectorIndex(cHybrid->getId(), cChip->getId(), pNMPA)] = std::vector<uint32_t>(list.begin() + nc * 1920, list.begin() + (nc + 1) * 1920);
-                // std::cout<<fEventDataVector[encodeVectorIndex (cHybrid->getId(), cChip->getId(), pNMPA)
-                // ][5]<<std::endl;
-
-                nc += 1;
-            }
-        }
-    }
-}
-
 uint32_t D19cPSEventAS::GetNHits(uint8_t pHybridId, uint8_t pChipId) const
 {
     uint8_t cHybridIndex = getHybridIndex(pHybridId);

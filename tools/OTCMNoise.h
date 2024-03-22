@@ -11,7 +11,7 @@
 #ifndef OTCMNoise_H__
 #define OTCMNoise_H__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 
 #include "Utils/CommonVisitors.h"
 
