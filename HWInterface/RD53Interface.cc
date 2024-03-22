@@ -252,19 +252,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
 
     if((observableName.find("TEMPSENS") != std::string::npos) || (observableName.find("RADSENS") != std::string::npos) || (observableName.find("INTERNAL_NTC") != std::string::npos))
     {
-        std::string type;
-        if(observableName.find("POLY") != std::string::npos)
-            type = "POLY";
-        else if(observableName.find("ANA") != std::string::npos)
-            type = "ANA";
-        else if(observableName.find("DIG") != std::string::npos)
-            type = "DIG";
-        else if(observableName.find("INTERNAL_NTC") != std::string::npos)
-            type = "INT_NTC";
-        else
-            type = "CENTER";
-
-        value = measureTemperature(pChip, observable, type);
+        value = measureTemperature(pChip, observable, observableName);
         if(silentRunning == false)
             LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << observableName << BOLDBLUE << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
                       << " C" << std::setprecision(-1) << RESET;

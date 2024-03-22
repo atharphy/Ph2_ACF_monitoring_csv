@@ -1,10 +1,10 @@
 #include "tools/OTinjectionDelayOptimization.h"
-#include "System/RegisterHelper.h"
-#include "Utils/ContainerSerialization.h"
 #include "HWDescription/BeBoard.h"
+#include "System/RegisterHelper.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -24,20 +24,17 @@ void OTinjectionDelayOptimization::Initialise(void)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "TriggerLatency1");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "FeCtrl&TrgLat2");
 
-    fNumberOfEvents = findValueInSettings<double>("OTinjectionDelayOptimizationNumberOfEvents", 100);
-    fCbcTestPulseValue = findValueInSettings<double>("OTinjectionDelayOptimizationCbcTestPulseValue", 150);
-    fCbcNumberOfSigmaNoiseAwayFromPedestal  = findValueInSettings<double>("OTinjectionDelayOptimizationCbcNumberOfSigmaNoiseAwayFromPedestal", 10.);
+    fNumberOfEvents                        = findValueInSettings<double>("OTinjectionDelayOptimizationNumberOfEvents", 100);
+    fCbcTestPulseValue                     = findValueInSettings<double>("OTinjectionDelayOptimizationCbcTestPulseValue", 150);
+    fCbcNumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionDelayOptimizationCbcNumberOfSigmaNoiseAwayFromPedestal", 10.);
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTinjectionDelayOptimization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
-void OTinjectionDelayOptimization::ConfigureCalibration()
-{
-
-}
+void OTinjectionDelayOptimization::ConfigureCalibration() {}
 
 void OTinjectionDelayOptimization::Running()
 {
@@ -51,37 +48,29 @@ void OTinjectionDelayOptimization::Running()
 void OTinjectionDelayOptimization::Stop(void)
 {
     LOG(INFO) << "Stopping OTinjectionDelayOptimization measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTinjectionDelayOptimization.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTinjectionDelayOptimization.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTinjectionDelayOptimization stopped.";
 }
 
-void OTinjectionDelayOptimization::Pause()
-{
+void OTinjectionDelayOptimization::Pause() {}
 
-}
+void OTinjectionDelayOptimization::Resume() {}
 
-
-void OTinjectionDelayOptimization::Resume()
-{
-
-}
-
-void OTinjectionDelayOptimization::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTinjectionDelayOptimization::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTinjectionDelayOptimization::optimizeInjectionDelay()
 {
     this->enableTestPulse(true);
     bool is2Smodule = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S);
-    if(is2Smodule) injectionDelayScan2S();
-    else injectionDelayScanPS();
+    if(is2Smodule)
+        injectionDelayScan2S();
+    else
+        injectionDelayScanPS();
 }
 
 void OTinjectionDelayOptimization::injectionDelayScan2S()
@@ -89,10 +78,10 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
     LOG(INFO) << BOLDBLUE << "OTinjectionDelayOptimization::injectionDelayScan2S - Scanning Delay for 2S module" << RESET;
 
     uint16_t initialLatency = 200;
-    uint16_t totalDelay = 150;
-    uint16_t delayStep = 1;
-    float expectedNoise = 6.5; // VCth units
-    uint16_t delayOffset = 12; // number of delays from pulse shape lower edge
+    uint16_t totalDelay     = 150;
+    uint16_t delayStep      = 1;
+    float    expectedNoise  = 6.5; // VCth units
+    uint16_t delayOffset    = 12;  // number of delays from pulse shape lower edge
 
     CBCChannelGroupHandler theChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET));
     theChannelGroupHandler.setChannelGroupParameters(16, 2);
@@ -114,15 +103,15 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
         }
     }
 
-    setSameDac("HitOr", 1); // using logical OR
-    setSameDac("TestPulsePotNodeSel", fCbcTestPulseValue); // injected charge
-    DetectorDataContainer* theOccupancyContainer = new DetectorDataContainer; //used to store occupancy while running bitWiseScan
+    setSameDac("HitOr", 1);                                                   // using logical OR
+    setSameDac("TestPulsePotNodeSel", fCbcTestPulseValue);                    // injected charge
+    DetectorDataContainer* theOccupancyContainer = new DetectorDataContainer; // used to store occupancy while running bitWiseScan
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *theOccupancyContainer);
     fDetectorDataContainer = theOccupancyContainer;
 
     auto fromTotalDelayToDACs = [](uint16_t delay, uint16_t initialLatency)
     {
-        uint8_t delayDAC   = 25 - (delay % 25);
+        uint8_t  delayDAC   = 25 - (delay % 25);
         uint16_t latencyDAC = initialLatency - (delay / 25);
         if(delayDAC == 25)
         {
@@ -134,19 +123,20 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
 
     std::map<uint16_t, DetectorDataContainer> theThresholdVsDelayMap;
 
-    std::pair<float, uint16_t> defaultThresholdAndDelay {0, 0}; // since 0 delay would not be measureable with this procedure (no pedestal) using 0 as not yet found value
-    DetectorDataContainer theBestThresholdAndDelayContainer;
+    std::pair<float, uint16_t> defaultThresholdAndDelay{0, 0}; // since 0 delay would not be measureable with this procedure (no pedestal) using 0 as not yet found value
+    DetectorDataContainer      theBestThresholdAndDelayContainer;
     ContainerFactory::copyAndInitChip<std::pair<float, uint16_t>>(*fDetectorContainer, theBestThresholdAndDelayContainer, defaultThresholdAndDelay);
 
     uint16_t maximumPedestalDelay = 25;
-    uint16_t numberOfIterations = 0;
-    bool isPedestalAveraged = false;
+    uint16_t numberOfIterations   = 0;
+    bool     isPedestalAveraged   = false;
 
     for(uint16_t delay = 0; delay <= totalDelay; delay += delayStep)
     {
         float targetThreshold = 0.50;
-        auto latencyAndDelay = fromTotalDelayToDACs(delay, initialLatency);
-        LOG(INFO) << BOLDBLUE << "Finding threshold corresponging to " << targetThreshold << "% occupancy with latency " << +latencyAndDelay.first << " and injection delay " << +latencyAndDelay.second << RESET;
+        auto  latencyAndDelay = fromTotalDelayToDACs(delay, initialLatency);
+        LOG(INFO) << BOLDBLUE << "Finding threshold corresponging to " << targetThreshold << "% occupancy with latency " << +latencyAndDelay.first << " and injection delay " << +latencyAndDelay.second
+                  << RESET;
         setSameDac("TriggerLatency", latencyAndDelay.first);
         setSameDac("TestPulseDelay", latencyAndDelay.second);
         bitWiseScan("Threshold", fNumberOfEvents, targetThreshold);
@@ -161,8 +151,9 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
                 {
                     for(auto theChip: *theHybrid)
                     {
-                        auto theThreshold = fReadoutChipInterface->ReadChipReg(theChip, "Threshold");
-                        auto& theChipBestThresholdAndDelay = theBestThresholdAndDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<float, uint16_t>>();
+                        auto  theThreshold = fReadoutChipInterface->ReadChipReg(theChip, "Threshold");
+                        auto& theChipBestThresholdAndDelay =
+                            theBestThresholdAndDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<float, uint16_t>>();
                         theThresholdContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint16_t>() = theThreshold;
                         if(delay < maximumPedestalDelay) // still in the plateau, add to the pedestal average
                         {
@@ -173,19 +164,16 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
                             // auto &theChipBestDelay    = theBestDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint16_t>();
                             if(!isPedestalAveraged)
                             {
-                                theChipBestThresholdAndDelay.first /= numberOfIterations; // average pedestal
+                                theChipBestThresholdAndDelay.first /= numberOfIterations;                                       // average pedestal
                                 theChipBestThresholdAndDelay.first -= (expectedNoise * fCbcNumberOfSigmaNoiseAwayFromPedestal); // move away from pedestal by n times the noise
                             }
-                            if((theThreshold <= theChipBestThresholdAndDelay.first) && theChipBestThresholdAndDelay.second == 0)
-                            {
-                                theChipBestThresholdAndDelay.second = delay + delayOffset;
-                            }
+                            if((theThreshold <= theChipBestThresholdAndDelay.first) && theChipBestThresholdAndDelay.second == 0) { theChipBestThresholdAndDelay.second = delay + delayOffset; }
                         }
                     }
                 }
             }
         }
-        
+
         if(delay >= maximumPedestalDelay && !isPedestalAveraged) // still in the plateau, add to the pedestal average
         {
             isPedestalAveraged = true;
@@ -215,7 +203,8 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
             {
                 for(auto theChip: *theHybrid)
                 {
-                    auto theChipAveragePedestalAndBestDelay    = theBestThresholdAndDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<float, uint16_t>>();
+                    auto theChipAveragePedestalAndBestDelay =
+                        theBestThresholdAndDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<float, uint16_t>>();
                     auto latencyAndDelay = fromTotalDelayToDACs(theChipAveragePedestalAndBestDelay.second, initialLatency);
                     fReadoutChipInterface->WriteChipReg(theChip, "TriggerLatency", latencyAndDelay.first);
                     fReadoutChipInterface->WriteChipReg(theChip, "TestPulseDelay", latencyAndDelay.second);
@@ -298,3 +287,4 @@ void OTinjectionDelayOptimization::injectionDelayScanPS()
 
 }
 
+void OTinjectionDelayOptimization::injectionDelayScanPS() {}

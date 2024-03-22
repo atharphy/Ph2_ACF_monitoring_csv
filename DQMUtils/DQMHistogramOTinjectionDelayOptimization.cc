@@ -49,8 +49,10 @@ void DQMHistogramOTinjectionDelayOptimization::fillThresholdVsDelayScan(uint16_t
                 for(auto theChip: *theHybrid)
                 {
                     if(!theChip->hasSummary()) continue;
-                    auto theHistogram = fThresholdVsDelayScanHistogramContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
-                    theHistogram->SetBinContent(delay+1, theChip->getSummary<uint16_t>());
+                    auto theHistogram = fThresholdVsDelayScanHistogramContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())
+                                            ->getSummary<HistContainer<TH1I>>()
+                                            .fTheHistogram;
+                    theHistogram->SetBinContent(delay + 1, theChip->getSummary<uint16_t>());
                 }
             }
         }
@@ -69,7 +71,9 @@ void DQMHistogramOTinjectionDelayOptimization::fillBestThresholdAndDelay(Detecto
                 for(auto theChip: *theHybrid)
                 {
                     if(!theChip->hasSummary()) continue;
-                    auto theHistogram = fBestThresholdAndDelayHistogramContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
+                    auto theHistogram = fBestThresholdAndDelayHistogramContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())
+                                            ->getSummary<HistContainer<TH1I>>()
+                                            .fTheHistogram;
                     const auto& theBestThresholdAndDelay = theChip->getSummary<std::pair<float, uint16_t>>();
                     theHistogram->SetBinContent(theBestThresholdAndDelay.second + 1, theBestThresholdAndDelay.first);
                     theHistogram->SetBinError(theBestThresholdAndDelay.second + 1, 1);
@@ -84,7 +88,6 @@ void DQMHistogramOTinjectionDelayOptimization::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -111,7 +114,8 @@ bool DQMHistogramOTinjectionDelayOptimization::fill(std::string& inputStream)
     if(theBestValuesSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTinjectionDelayOptimization BestValues!!!!!\n";
-        DetectorDataContainer theDetectorData = theBestValuesSerialization.deserializeOpticalGroupContainer<EmptyContainer, std::pair<float, uint16_t>, EmptyContainer, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theDetectorData =
+            theBestValuesSerialization.deserializeOpticalGroupContainer<EmptyContainer, std::pair<float, uint16_t>, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillBestThresholdAndDelay(theDetectorData);
         return true;
     }

@@ -21,7 +21,7 @@ void OTverifyMPASSAdataWord::Initialise(void)
     // free the registers in case any
     fNumberOfIterations = findValueInSettings<double>("OTverifyMPASSAdataWordNumberOfIterations", 1000);
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyMPASSAdataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

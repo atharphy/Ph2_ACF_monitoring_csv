@@ -78,6 +78,7 @@
               ADC_MAXIMUM_VOLT       =    "839"
               TEMPSENS_IDEAL_FACTOR  =   "1225"
               SAMPLE_N_TIMES         =     "10"
+              WAIT_MUX_CONFIG        =    "100"
               VREF_ADC               =    "800"
               />
         </RD53B>

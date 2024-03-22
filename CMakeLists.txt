@@ -269,6 +269,8 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}$ENV{PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
+    set (CMAKE_CXX_STANDARD 17)
+
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -313,7 +315,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
     add_subdirectory(tools)
-    add_subdirectory(ProductionToolsIT)
+    #add_subdirectory(ProductionToolsIT)
     add_subdirectory(DQMUtils)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)
