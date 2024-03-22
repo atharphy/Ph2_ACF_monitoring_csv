@@ -19,7 +19,7 @@
 
 namespace Ph2_HwInterface
 {
-    class D19cFWInterface;
+class D19cFWInterface;
 }
 
 class OTCicBypassTest : public Tool
@@ -39,18 +39,16 @@ class OTCicBypassTest : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
-  private:
-    void    runCICbypassTest();
-    void    injectStubs2S(Ph2_HwDescription::ReadoutChip* theCBC);
-    void    injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA);
 
-    size_t fNumberOfIterations {1};
+  private:
+    void runCICbypassTest();
+    void injectStubs2S(Ph2_HwDescription::ReadoutChip* theCBC);
+    void injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA);
+
+    size_t fNumberOfIterations{1};
     // For simplicity, make sure bendind code is always greater than half value (0x7)
     std::map<uint8_t, uint8_t> fBendingAndCode{{0, 0x5}, {2, 0xA}, {4, 0xF}};
 
-
-    
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTCicBypassTest fDQMHistogramOTCicBypassTest;

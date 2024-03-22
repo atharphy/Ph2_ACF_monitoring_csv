@@ -335,7 +335,7 @@ class Event
      * \param i : pixel bit data number i
      * \return Data Bit
      */
-    virtual bool              DataBit(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const { return true; }
+    virtual bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const { return true; }
     /*!
      * \brief Function to get Stub bit
      * \param pHybridId : Hybrid Id

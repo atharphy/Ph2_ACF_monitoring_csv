@@ -72,7 +72,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             }
         } // hybrids
     }     // opticalGroup
-    fBeId        = pBoard->getId();
+    fBeId = pBoard->getId();
 
     fFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
 
@@ -95,7 +95,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         {
             fExternalTriggerID = (*(cEventIterator + 1) >> 16) & 0x7FFF;
             // TDC + L1A counter
-            uint32_t cEvntCntTag = (*(cEventIterator + 2));
+            uint32_t cEvntCntTag   = (*(cEventIterator + 2));
             uint32_t cFc7EvtId     = (cEvntCntTag & (0x00FFFFFF));
             fTDC                   = (cEvntCntTag & (0xFF << 24)) >> 24;
             uint8_t cTDCShiftValue = 1;
@@ -104,12 +104,12 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             else
                 fTDC -= cTDCShiftValue;
             // internal counters
-            cEvntCntTag = (*(cEventIterator + 3));
+            cEvntCntTag       = (*(cEventIterator + 3));
             uint16_t cFc7BxId = (cEvntCntTag & (0xFFFF));
             if(fTLUenabled == 0) { fExternalTriggerID = (cEvntCntTag & (0xFFFF << 16)) >> 16; }
             fEventCount = cFc7EvtId; // 0x00FFFFFF & *(cEventIterator + 2);
             fBunch      = cFc7BxId;  // 0xFFFFFFFF & *(cEventIterator + 3);
-            
+
             auto     cIterator  = cEventIterator + LENGTH_EVENT_HEADER;
             uint32_t cStatus    = 0x00000000;
             size_t   cChipIndex = 0;
@@ -134,8 +134,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             std::pair<uint16_t, uint16_t> cL1Information;
                             cL1Information.first  = (*(cIterator + 2) & 0x7FC000) >> 14;
                             cL1Information.second = (*(cIterator + 2) & 0xFF800000) >> 23;
-                            int cL1Offset = cOffset + 3;
-                            
+                            int cL1Offset         = cOffset + 3;
+
                             if(fIsSparsified)
                             {
                                 size_t cEOffset                   = 3;
@@ -165,7 +165,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 
                                     fNPxlClusters[cHybridIndex]   = cNPxlClusters;
                                     fNStripClusters[cHybridIndex] = cNStripClusters;
-                                    
+
                                     // split stream into s and p clusters
                                     std::vector<std::bitset<S_CLUSTER_WORD_SIZE>> cL1SWords(cNStripClusters, 0);
                                     this->splitStream(pData, cL1SWords, cOffset + cEOffset, cNStripClusters);
@@ -194,7 +194,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 const size_t                            cNblocks = RAW_L1_CBC * cFullSize / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
                                 std::vector<std::bitset<L1_BLOCK_SIZE>> cL1Words(cNblocks, 0);
                                 this->splitStream(pData, cL1Words, cL1Offset,
-                                                    cNblocks); // split 32 bit words in  blocks of 11 bits
+                                                  cNblocks); // split 32 bit words in  blocks of 11 bits
                                 // now try and arrange them by Hybrid again ...
 
                                 for(size_t cChipIndex = 0; cChipIndex < cFullSize; cChipIndex++)
@@ -550,7 +550,7 @@ std::string D19cCic2Event::DataHexString(uint8_t pHybridId, uint8_t pCbcId) cons
 }
 
 // NOT READY (what is i??????????)
-bool     D19cCic2Event::Error(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const { return Bit(pHybridId, pCbcId, D19C_OFFSET_ERROR_CBC3); }
+bool D19cCic2Event::Error(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const { return Bit(pHybridId, pCbcId, D19C_OFFSET_ERROR_CBC3); }
 
 uint16_t D19cCic2Event::L1Status(uint8_t pHybridId) const
 {

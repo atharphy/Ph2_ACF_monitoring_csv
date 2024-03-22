@@ -12,6 +12,7 @@
 #include "tools/OTCICphaseAlignment.h"
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
+#include "tools/OTCicBypassTest.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTalignBoardDataWord.h"
@@ -38,8 +39,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTinjectionDelayOptimization.h"
-#include "tools/OTCicBypassTest.h"
 
 using namespace MessageUtils;
 
