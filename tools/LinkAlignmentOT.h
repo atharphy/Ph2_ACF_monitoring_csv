@@ -79,7 +79,7 @@ class LinkAlignmentOT : public OTTool
     bool AlignStubPackage(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool AlignStubPackage(Ph2_HwDescription::BeBoard* pBoard);
     bool Align();
-  private:
 
+  private:
 };
 #endif

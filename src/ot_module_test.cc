@@ -10,10 +10,10 @@
 #include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/ECVLinkAlignmentOT.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
-#include "tools/ECVLinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTLightTransmission.h"
@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
     int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
     bool        cLatency            = (cmd.foundOption("latency")) ? true : false;
     bool        cStubLatency        = (cmd.foundOption("stublatency")) ? true : false;
-    bool        cEcv             = (cmd.foundOption("ecv")) ? true : false;
+    bool        cEcv                = (cmd.foundOption("ecv")) ? true : false;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -555,7 +555,7 @@ int main(int argc, char* argv[])
         cRegTester.writeObjects();
     }
 
-    if (cEcv)
+    if(cEcv)
     {
         cTool.ConfigureHw(true);
 
@@ -568,9 +568,7 @@ int main(int argc, char* argv[])
         cLinkAlignment.waitForRunToBeCompleted();
         cLinkAlignment.writeObjects();
         cLinkAlignment.dumpConfigFiles();
-
     }
-
 
     // align CIC-lpGBT-BE
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
@@ -599,7 +597,6 @@ int main(int argc, char* argv[])
         cPSAlignment.Start(theStartInfo);
         cPSAlignment.waitForRunToBeCompleted();
 
-
         // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
 
@@ -623,7 +620,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
-        
+
         // align FEs - CIC
         LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
         CicFEAlignment cCicAligner;

@@ -277,8 +277,8 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup, bool pD
             cLineCnfg.fPattern       = 0xEA;
             cLineCnfg.fPatternPeriod = 8;
             cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-            cAligned                = cAlignerInterface->IsLineWordAligned();
-            LOG (INFO) << "Line " << +cLineId << " " << cAligned << RESET;
+            cAligned = cAlignerInterface->IsLineWordAligned();
+            LOG(INFO) << "Line " << +cLineId << " " << cAligned << RESET;
             cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
 
             if(!cAligned)
@@ -289,8 +289,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup, bool pD
                 } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                 LOG(INFO) << BOLDRED << "Could not word align-BE data in LinkAlignmentOT on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id"
                           << +cHybrid->getId() << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
-                if (pDisableUnsresponsiveHybrids)
-                    ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
+                if(pDisableUnsresponsiveHybrids) ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
                 continue;
             }
             if(cThisBeBitSlip[cLineId] == 0 && !fAllowZeroBitslip)
@@ -307,8 +306,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup, bool pD
                 {
                     LOG(INFO) << BOLDRED << "Bitslip of 0 found for BE-stub data on Board id " << +cBoardId << " OpticalGroup id" << +pOpticalGroup->getId() << " Hybrid id" << +cHybrid->getId()
                               << " stub line " << +(cLineId - 1) << " --- Hybrid will be disabled" << RESET;
-                    if (pDisableUnsresponsiveHybrids)
-                        ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
+                    if(pDisableUnsresponsiveHybrids) ExceptionHandler::getInstance()->disableHybrid(cBoardId, pOpticalGroup->getId(), cHybrid->getId());
                     continue;
                 }
             }
@@ -738,7 +736,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
 
     for(auto cHybrid: *pOpticalGroup)
     {
-        if (cHybrid->getId() + 1 == pSkipLine) // only scan line 1 or 2  if pSkipLine is set pSkilLine == 0 means no line should be skipped
+        if(cHybrid->getId() + 1 == pSkipLine) // only scan line 1 or 2  if pSkipLine is set pSkilLine == 0 means no line should be skipped
             continue;
 
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
