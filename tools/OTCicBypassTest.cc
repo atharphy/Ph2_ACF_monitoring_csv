@@ -25,7 +25,6 @@ void OTCicBypassTest::Initialise(void)
 #endif
 }
 
-
 void OTCicBypassTest::ConfigureCalibration() {}
 
 void OTCicBypassTest::Running()

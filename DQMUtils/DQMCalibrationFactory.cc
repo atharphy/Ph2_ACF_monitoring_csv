@@ -35,8 +35,6 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
-#include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
-#include "DQMUtils/DQMHistogramOTCicBypassTest.h"
 
 
 using namespace MessageUtils;

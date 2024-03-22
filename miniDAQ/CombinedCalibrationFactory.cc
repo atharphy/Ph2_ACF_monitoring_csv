@@ -40,8 +40,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTinjectionDelayOptimization.h"
-#include "tools/OTCicBypassTest.h"
 
 
 using namespace MessageUtils;
