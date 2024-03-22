@@ -228,6 +228,8 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
 
 void OTinjectionDelayOptimization::injectionDelayScanPS()
 {
+    //TODO: working in progess by Fabio
+
     // LOG(INFO) << BOLDBLUE << "OTinjectionDelayOptimization::injectionDelayScanPS - Scanning Delay for PS module" << RESET;
 
     //     uint16_t initialLatency = 200;
@@ -282,5 +284,3 @@ void OTinjectionDelayOptimization::injectionDelayScanPS()
     //     // "Delay_line"
     //     // "DL_ctrl0" -> "DL_ctrl6"
 }
-
-void OTinjectionDelayOptimization::injectionDelayScanPS() {}
