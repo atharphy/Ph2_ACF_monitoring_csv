@@ -37,6 +37,7 @@
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
 #include "tools/OTinjectionDelayOptimization.h"
+#include "tools/OTCicBypassTest.h"
 
 using namespace MessageUtils;
 
@@ -56,6 +57,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord>("Outer Tracker",
                                                                                                                                                                                         "alignment");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, OTinjectionDelayOptimization>("Outer Tracker", "injectionDelayOptimization");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCicBypassTest>("Outer Tracker", "testCICbypass");
                                       
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,

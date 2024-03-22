@@ -33,6 +33,7 @@
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
 #include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
+#include "DQMUtils/DQMHistogramOTCicBypassTest.h"
 
 using namespace MessageUtils;
 
@@ -68,6 +69,16 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord,
+             DQMHistogramOTCicBypassTest>("testCICbypass");
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
