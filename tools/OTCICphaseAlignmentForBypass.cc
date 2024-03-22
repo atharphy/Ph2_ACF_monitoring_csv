@@ -26,5 +26,4 @@ void OTCICphaseAlignmentForBypass::Initialise()
             }
         }
     }
-
 }

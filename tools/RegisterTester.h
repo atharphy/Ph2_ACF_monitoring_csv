@@ -12,10 +12,10 @@
 #ifndef RegisterTester_h__
 #define RegisterTester_h__
 
-#include "tools/Tool.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerRecycleBin.h"
+#include "tools/Tool.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMHistogramRegisterTest.h"

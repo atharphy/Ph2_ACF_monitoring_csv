@@ -11,8 +11,8 @@
 #ifndef OTQuickNoise_H__
 #define OTQuickNoise_H__
 
-#include "tools/Tool.h"
 #include "Utils/CommonVisitors.h"
+#include "tools/Tool.h"
 #include <math.h>
 
 using namespace Ph2_System;

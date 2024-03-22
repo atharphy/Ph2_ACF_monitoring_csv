@@ -21,7 +21,6 @@ void DQMHistogramOTCICphaseAlignmentForBypass::book(TFile* theOutputFile, Detect
     // make fDetectorContainer ready to receive the information fromm the stream
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
-    
 }
 
 //========================================================================================================================
@@ -29,7 +28,6 @@ void DQMHistogramOTCICphaseAlignmentForBypass::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -47,7 +45,7 @@ bool DQMHistogramOTCICphaseAlignmentForBypass::fill(std::string& inputStream)
 
     // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTCICphaseAlignmentForBypass"
     // ContainerSerialization myStreamer("OTCICphaseAlignmentForBypass");
-    
+
     // if(myStreamer.attachDeserializer(inputStream))
     // {
     //     // It matched! Decoding data
@@ -58,7 +56,7 @@ bool DQMHistogramOTCICphaseAlignmentForBypass::fill(std::string& inputStream)
     //     myFillplotFunction(theDetectorData);
     //     return true;
     // }
-    //the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
+    // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
     // for this stream)
     return false;
     // SoC utilities only - END

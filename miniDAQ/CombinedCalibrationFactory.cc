@@ -10,6 +10,7 @@
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/OTCICphaseAlignment.h"
+#include "tools/OTCICphaseAlignmentForBypass.h"
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
@@ -39,7 +40,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTCICphaseAlignmentForBypass.h"
 
 using namespace MessageUtils;
 

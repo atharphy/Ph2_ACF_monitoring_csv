@@ -26,7 +26,7 @@ class OTCICphaseAlignmentForBypass : public OTCICphaseAlignment
     void Initialise(void) override;
 
     static std::string fCalibrationDescription;
-    
+
   private:
 };
 

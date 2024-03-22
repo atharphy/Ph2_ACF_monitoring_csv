@@ -228,7 +228,7 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
 
 void OTinjectionDelayOptimization::injectionDelayScanPS()
 {
-    //TODO: working in progess by Fabio
+    // TODO: working in progess by Fabio
 
     // LOG(INFO) << BOLDBLUE << "OTinjectionDelayOptimization::injectionDelayScanPS - Scanning Delay for PS module" << RESET;
 
