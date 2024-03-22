@@ -10,7 +10,7 @@
 #ifndef OTverifyMPASSAdataWord_h__
 #define OTverifyMPASSAdataWord_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here

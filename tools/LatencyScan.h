@@ -12,7 +12,7 @@
 #ifndef LATENCYSCAN_H__
 #define LATENCYSCAN_H__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include "Utils/CommonVisitors.h"
 #include "Utils/ContainerRecycleBin.h"
 #include "Utils/Visitor.h"

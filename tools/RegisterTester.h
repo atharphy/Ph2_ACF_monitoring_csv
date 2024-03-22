@@ -12,7 +12,7 @@
 #ifndef RegisterTester_h__
 #define RegisterTester_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerRecycleBin.h"

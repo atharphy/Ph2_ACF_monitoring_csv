@@ -11,7 +11,7 @@
 #ifndef OTQuickNoise_H__
 #define OTQuickNoise_H__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include "Utils/CommonVisitors.h"
 #include <math.h>
 

@@ -12,7 +12,7 @@
 
 #include "HWDescription/RD53.h"
 #include "MetadataHandlerIT.h"
-#include "Tool.h"
+#include "tools/Tool.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/RD53ChannelGroupHandler.h"

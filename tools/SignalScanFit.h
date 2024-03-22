@@ -12,7 +12,7 @@
 #ifndef SIGNALSCANFIT_H__
 #define SIGNALSCANFIT_H__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #ifdef __USE_ROOT__
 
 #include "Utils/CommonVisitors.h"

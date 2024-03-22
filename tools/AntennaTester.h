@@ -15,7 +15,7 @@
 
 #include "Channel.h"
 #include "HWInterface/BeBoardFWInterface.h"
-#include "Tool.h"
+#include "tools/Tool.h"
 #include "Utils/CommonVisitors.h"
 #include "Utils/Utilities.h"
 #include "Utils/Visitor.h"
