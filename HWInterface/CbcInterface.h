@@ -56,6 +56,7 @@ class CbcInterface : public ReadoutChipInterface
 
     void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 1) override;
     void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void produceBX0AlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
 
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify = true) override;
 
@@ -131,6 +132,7 @@ class CbcInterface : public ReadoutChipInterface
     void                 resetPageMap() { fPageMap.clear(); }
 
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
+    std::vector<uint8_t> getBX0AlignmentPatterns() override { return fBX0AlignmentPatterns; }
     /*!
      * \brief Read CBC ID eFuse
      * \param pChip: pointer to Chip object
@@ -140,6 +142,8 @@ class CbcInterface : public ReadoutChipInterface
   private:
     bool                        fSortPageInc           = true;
     std::vector<uint8_t>        fWordAlignmentPatterns = {0x7A, 0xBC, 0xD4, 0x31, 0x81};
+    // std::vector<uint8_t>        fBX0AlignmentPatterns  = {0x00, 0x00, 0x00, 0x00, 0x80};
+    std::vector<uint8_t>        fBX0AlignmentPatterns  = {0x0A, 0x0A, 0x0A, 0x99, 0x89};
     bool                        fRetry                 = true;
     std::map<uint32_t, uint8_t> fPageMap;
     bool                        fWithlpGBT = false;

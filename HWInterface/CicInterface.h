@@ -92,7 +92,7 @@ class CicInterface : public ChipInterface
     bool                        CheckFastCommandLock(Ph2_HwDescription::Chip* pChip);
     bool                        ConfigureAlignmentPatterns(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
     bool                        AutomatedWordAlignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
-    bool                        PrepareForAutomatedBX0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
+    bool                        PrepareForAutomatedBX0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, uint8_t pLine);
     bool                        AutomatedBX0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
     bool                        CheckAutomatedBX0Alignment(Ph2_HwDescription::Chip* pChip);
     bool                        ConfigureBx0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pPatterns, uint8_t pFEId = 0, uint8_t pLineId = 0);

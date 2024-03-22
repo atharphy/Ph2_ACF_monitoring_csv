@@ -449,7 +449,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
 }
 
 
-bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns)
+bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, uint8_t pLine)
 {
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Running automated BX0 alignment in CIC on FE" << +pChip->getHybridId() << RESET;
@@ -477,8 +477,8 @@ bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* pChip, std::vector<uint
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << cRegValue << std::dec << " bin " << std::bitset<8>(cRegValue) << " to use another chip or line" << RESET;
 
     // set to read another chip or line then 0 0
-    uint16_t    useLine = (cRegValue & 0xF8) | (0x0 << 0);
-    std::cout << " useChip " << useLine << std::endl;
+    uint16_t    useLine = (cRegValue & 0xF8) | (pLine << 0);
+    std::cout << " useLine " << useLine << std::endl;
     this->WriteChipReg(pChip, cRegName, useLine);
     cRegValue            = this->ReadChipReg(pChip, cRegName);
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << cRegValue << std::dec << " bin " << std::bitset<8>(cRegValue) << " to use another chip or line" << RESET;

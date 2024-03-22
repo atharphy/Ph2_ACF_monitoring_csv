@@ -520,6 +520,7 @@ void OTverifyCICdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCI
 
     // padding 0s
     if(numberOfBytesInSinglePacket == 1) thePattern.addToPattern(0x0, 0xFFFFF, 20); // 5G case only
+    LOG(INFO) << BOLDRED << "Stub pattern expected " << getPatternPrintout(thePattern.getPattern(), numberOfBytesInSinglePacket) << RESET;
 
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {

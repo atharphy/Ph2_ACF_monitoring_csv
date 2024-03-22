@@ -96,7 +96,9 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
 
                     // configure word alignment pattern on CBCs
                     std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getBX0AlignmentPatterns();
-                    fCicInterface->PrepareForAutomatedBX0Alignment(cCic, cAlignmentPatterns);
+                    uint8_t pLine = 0;
+                    if(theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) pLine = 4;
+                    fCicInterface->PrepareForAutomatedBX0Alignment(cCic, cAlignmentPatterns, pLine);
                     for(uint8_t cIndex = 0; cIndex < (uint8_t)cAlignmentPatterns.size(); cIndex += 1)
                     {
                          LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns[cIndex]) << RESET;
