@@ -60,11 +60,9 @@ void PhaseScan::Initialize()
 void PhaseScan::ScanPhase()
 {
     uint32_t cDeltaLat = fPhaseStartLatency;
-    do
-    {
+    do {
         uint32_t cPhaseLat = fStartPhase;
-        do
-        {
+        do {
             for(auto cBoard: *fDetectorContainer)
             {
                 for(auto cOpticalGroup: *cBoard)
@@ -95,8 +93,7 @@ void PhaseScan::ScanPhase()
 
                     // std::cout<<"cTriggerId "<<+cTriggerId<<std::endl;
                     auto cEventIter = cEvents.begin() + cTriggerId;
-                    do
-                    {
+                    do {
                         uint8_t cTDCVal = (*cEventIter)->GetTDC();
                         for(auto cOpticalGroup: *cBoard)
                         {

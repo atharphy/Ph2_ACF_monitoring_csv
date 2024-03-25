@@ -344,10 +344,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
                 cRegVec.emplace_back("L1-Latency_MSB", (0x0100 & fLatency) >> 8);
                 fInterface->WriteChipMultReg(&pCbc, cRegVec);
             }
-            else
-            {
-                fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB") | (fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB") << 8);
-            }
+            else { fLatency = fInterface->ReadChipReg(&pCbc, "L1-Latency_LSB") | (fInterface->ReadChipReg(&pCbc, "L1-Latency_MSB") << 8); }
         }
         else
             LOG(ERROR) << __PRETTY_FUNCTION__ << " Not a valid chip type!";

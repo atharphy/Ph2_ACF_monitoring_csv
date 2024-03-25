@@ -59,13 +59,8 @@ void AntennaTester::EnableAntenna(bool pAntennaEnable, uint8_t pDigiPotentiomete
     {
         cAntenna.ConfigureClockGenerator(3, 8); // initialize SPI communication for ADC
     }
-    else if(trigSource == 7)
-    {
-    }
-    else
-    {
-        LOG(INFO) << "ERROR, wrong trig source set " << int(trigSource);
-    }
+    else if(trigSource == 7) {}
+    else { LOG(INFO) << "ERROR, wrong trig source set " << int(trigSource); }
     cAntenna.ConfigureDigitalPotentiometer(2, pDigiPotentiometer); // configure bias for antenna pull-up
     // configure analogue switch
     uint8_t analog_switch_cs = 0;

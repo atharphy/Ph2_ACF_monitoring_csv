@@ -226,7 +226,9 @@ void D19cMuxBackplaneFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, i
                 LOG(INFO) << BOLDRED << "Setup is not configured. Problems with card power good signal! Check the HW!" << RESET;
 
                 if(InterlockEnabled) // Is the interlock feature enabled?
-                { LOG(INFO) << BOLDMAGENTA << " !! The interlock feature is ENABLED -> the interlock switch might be open !!" << RESET; }
+                {
+                    LOG(INFO) << BOLDMAGENTA << " !! The interlock feature is ENABLED -> the interlock switch might be open !!" << RESET;
+                }
             }
             else
             {

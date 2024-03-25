@@ -125,7 +125,9 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
                 for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
                 {
                     if(isKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
-                    { continue; } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
+                    {
+                        continue;
+                    } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                     if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket))
                         ++theHybridPatternMatchingEfficiency[lineIndex + 1];
                     else
@@ -174,12 +176,16 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
                 {
                     ++numberOfConsecutiveIdleCharacters;
                     if(numberOfConsecutiveIdleCharacters > numberOfIdleCharacters) // too many Idle characters!!!
-                    { status = SearchPatternStatus::Error; }
+                    {
+                        status = SearchPatternStatus::Error;
+                    }
                 }
                 else if(currentByte == flagCharacter)
                 {
                     if(firstFlagCharacterFound && numberOfConsecutiveIdleCharacters != numberOfIdleCharacters) // not enough idle characters!!!
-                    { status = SearchPatternStatus::Error; }
+                    {
+                        status = SearchPatternStatus::Error;
+                    }
                     else
                     {
                         firstFlagCharacterFound = true;
@@ -261,10 +267,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
                 auto lineOutputVector = theFWInterface->L1ADebug(1, false);
                 if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket))
                     ++theHybridPatternMatchingEfficiency[0];
-                else
-                {
-                    LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET;
-                }
+                else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
             }
         }
     }

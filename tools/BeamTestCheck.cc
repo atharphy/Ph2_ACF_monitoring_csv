@@ -360,8 +360,7 @@ void BeamTestCheck::UpdateClusterContainers(BeBoard* pBoard, const std::vector<E
     for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
     {
         auto cEventIter = pEvents.begin() + cTriggerId;
-        do
-        {
+        do {
             if(cEventIter >= pEvents.end()) break;
             for(auto cOpticalGroup: *pBoard)
             {
@@ -512,8 +511,7 @@ void BeamTestCheck::ScanThreshold(BeBoard* pBoard)
     LOG(INFO) << BOLDGREEN << "Scanning threshold until all zeros reached" << RESET;
     std::vector<uint16_t> cThresholdOffsets(0);
     fThStep = 0;
-    do
-    {
+    do {
         // update threshold
         for(auto cOpticalGroup: *pBoard) // for on opticalGroup - begin
         {
@@ -627,7 +625,9 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
     DetectorDataContainer cBrdTriggerMult;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cBrdTriggerMult);
     for(auto cBoard: *fDetectorContainer)
-    { cBrdTriggerMult.getObject(cBoard->getId())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"); }
+    {
+        cBrdTriggerMult.getObject(cBoard->getId())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    }
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -667,8 +667,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
     DetectorDataContainer cHitContainer;
     ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t, VECSIZE>>(*fDetectorContainer, cHitContainer);
     bool cBreak = false;
-    do
-    {
+    do {
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -1044,8 +1043,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
         fDetectorDataContainer                       = theOccupancyContainer;
 
         auto cMaxEventsToProc = (fNevents >= 10000) ? 10000 : fNevents;
-        do
-        {
+        do {
             if(cEventIter >= pEvents.end()) break;
 
             uint8_t cTDCVal = (*cEventIter)->GetTDC();
@@ -1341,10 +1339,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             }
 
                             if(cEventCount == 0 && cValidCoords) { cOccChip->getChannel<Occupancy>(cRow, cCol).fOccupancy = 1; }
-                            else if(cValidCoords)
-                            {
-                                cOccChip->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
-                            }
+                            else if(cValidCoords) { cOccChip->getChannel<Occupancy>(cRow, cCol).fOccupancy++; }
 
                             if(cSensorID == 0 && cValidCoords)
                                 cEventL1OccS0.getObject(cBrdIndx)
@@ -1555,8 +1550,7 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
     uint16_t cLat     = fStartLatency;
     float    cMaxHits = 0;
     fOptimalLatency   = cLat;
-    do
-    {
+    do {
         setSameDacBeBoard(pBoard, "TriggerLatency", cLat);
         fBeBoardInterface->ChipReSync(pBoard);
 
@@ -1611,8 +1605,7 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
             int   cTotalHitsS1                           = 0;
 
             int cRefHits = 0;
-            do
-            {
+            do {
                 if(cEventIter >= cEvents.end()) break;
                 uint8_t cTDCVal = (*cEventIter)->GetTDC();
                 cTDCContainer->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal]++;
@@ -1755,7 +1748,9 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
     DetectorDataContainer cBrdTriggerMult;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cBrdTriggerMult);
     for(auto cBoard: *fDetectorContainer)
-    { cBrdTriggerMult.getObject(cBoard->getId())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"); }
+    {
+        cBrdTriggerMult.getObject(cBoard->getId())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    }
 
     // zero container
     // that hold latency per hybrid
@@ -1767,7 +1762,9 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(uint16_t cIndx = 0; cIndx < fLatencyRange; cIndx++)
-                { cLatencyContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cIndx] = 0; }
+                {
+                    cLatencyContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cIndx] = 0;
+                }
             } // hybrid
         }     // optical group
     }
@@ -1798,8 +1795,7 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
 
     fOptimalLatency = 0;
     size_t cLatStep = 0;
-    do
-    {
+    do {
         // set stub latency on all BE boards
         std::vector<uint8_t> cSet(0);
         for(auto cBoard: *fDetectorContainer)

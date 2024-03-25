@@ -779,10 +779,7 @@ uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
         uint16_t cRegValue = ReadChipSingleReg(pCbc, "MiscTestPulseCtrl&AnalogMux");
         return (cRegValue & 0x40) >> 6;
     }
-    else
-    {
-        return ReadChipSingleReg(pCbc, pRegNode) & 0xFF;
-    }
+    else { return ReadChipSingleReg(pCbc, pRegNode) & 0xFF; }
 }
 
 void CbcInterface::produceL1phaseAlignmentPattern(ReadoutChip* pChip)

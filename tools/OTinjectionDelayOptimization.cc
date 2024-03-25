@@ -107,7 +107,8 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *theOccupancyContainer);
     fDetectorDataContainer = theOccupancyContainer;
 
-    auto fromTotalDelayToDACs = [](uint16_t delay, uint16_t initialLatency) {
+    auto fromTotalDelayToDACs = [](uint16_t delay, uint16_t initialLatency)
+    {
         uint8_t  delayDAC   = 25 - (delay % 25);
         uint16_t latencyDAC = initialLatency - (delay / 25);
         if(delayDAC == 25)
@@ -157,7 +158,9 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
                             theBestThresholdAndDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<float, uint16_t>>();
                         theThresholdContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint16_t>() = theThreshold;
                         if(delay < maximumPedestalDelay) // still in the plateau, add to the pedestal average
-                        { theChipBestThresholdAndDelay.first += theThreshold; }
+                        {
+                            theChipBestThresholdAndDelay.first += theThreshold;
+                        }
                         else
                         {
                             // auto &theChipBestDelay    = theBestDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint16_t>();
@@ -174,7 +177,9 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
         }
 
         if(delay >= maximumPedestalDelay && !isPedestalAveraged) // still in the plateau, add to the pedestal average
-        { isPedestalAveraged = true; }
+        {
+            isPedestalAveraged = true;
+        }
 
 #ifdef __USE_ROOT__
         fDQMHistogramOTinjectionDelayOptimization.fillThresholdVsDelayScan(delay, theThresholdContainer);

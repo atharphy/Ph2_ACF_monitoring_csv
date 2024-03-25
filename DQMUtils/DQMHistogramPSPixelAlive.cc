@@ -48,12 +48,10 @@ void DQMHistogramPSPixelAlive::book(TFile* theOutputFile, DetectorContainer& the
 
     std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA2};
     std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA2};
-    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip) {
-        return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end());
-    };
-    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip) {
-        return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end());
-    };
+    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
+    { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
+    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip)
+    { return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end()); };
 
     // find maximum number of channels
     std::vector<size_t> cNPixelChannels(0), cNStripChannels(0);
@@ -68,10 +66,7 @@ void DQMHistogramPSPixelAlive::book(TFile* theOutputFile, DetectorContainer& the
                     auto cNChannels = theDetectorStructure.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->size();
                     auto cType      = cChip->getFrontEndType();
                     if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
-                    else if(cType == FrontEndType::MPA2)
-                    {
-                        cNPixelChannels.push_back(cNChannels);
-                    }
+                    else if(cType == FrontEndType::MPA2) { cNPixelChannels.push_back(cNChannels); }
                 }
             }
         }

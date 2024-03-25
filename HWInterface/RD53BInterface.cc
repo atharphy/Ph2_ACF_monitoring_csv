@@ -815,14 +815,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
 
     float idealityFactor;
     if(type == "ANA") { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_ANA").fValue / 1e3; }
-    else if(type == "DIG")
-    {
-        idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_DIG").fValue / 1e3;
-    }
-    else
-    {
-        idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
-    }
+    else if(type == "DIG") { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR_DIG").fValue / 1e3; }
+    else { idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3; }
 
     uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
     float    valueLow  = 0;
