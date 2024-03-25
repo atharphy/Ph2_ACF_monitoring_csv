@@ -15,7 +15,7 @@
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/Visitor.h"
-#include "Tool.h"
+#include "tools/Tool.h"
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramPhaseScan.h"
 #include "TCanvas.h"

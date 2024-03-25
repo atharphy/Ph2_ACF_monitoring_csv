@@ -417,7 +417,7 @@ void RD53AInterface::SendBoardClear(const BeBoard* pBoard)
 // # Dedicated to monitoring #
 // ###########################
 
-uint32_t RD53AInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)
+int RD53AInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)
 {
     uint32_t voltageObservable(0), currentObservable(0);
 

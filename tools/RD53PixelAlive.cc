@@ -187,11 +187,11 @@ void PixelAlive::run()
                                 if((doDataIntegrity == 2) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
                                 {
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
-                                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->MaskAllChannels(cChip, true);
+                                    this->fReadoutChipInterface->MaskAllChannels(cChip, true);
                                     const auto& ele     = std::find(suffix.begin(), suffix.end(), su);
                                     const auto  coreCol = (ele - suffix.begin()) * numberOfBits + i;
 
-                                    LOG(WARNING) << BOLDBLUE << "\t--> Found problematic Core-Column " << BOLDYELLOW << coreCol << BOLDBLUE << " --> I'll try to nail down the problem at pixel level"
+                                    LOG(WARNING) << GREEN << "Found problematic Core-Column " << BOLDYELLOW << coreCol << RESET << GREEN << " --> I'll try to nail down the problem at pixel level"
                                                  << RESET;
 
                                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
@@ -228,17 +228,19 @@ void PixelAlive::run()
                                                     ->getObject(cHybrid->getId())
                                                     ->getObject(cChip->getId())
                                                     ->getChannel<uint8_t>(row, col) = true;
+                                                static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                             }
                                         }
                                     }
-
                                     static_cast<RD53*>(cChip)->copyMaskFromDefault("en");
-                                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                 }
 
                                 if(((doDataIntegrity == 1) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0))) ||
                                    (badPixelsCounter == (RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE)))
+                                {
                                     regValueMap[su] ^= 1 << i;
+                                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
+                                }
                             }
                         }
 
@@ -252,9 +254,9 @@ void PixelAlive::run()
                             this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, regValueMap[su]);
                             const auto numberOfBits = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
                             uint16_t   mask         = RD53Shared::setBits(numberOfBits);
-                            auto       value        = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[su]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
-                                             .to_string()
-                                             .erase(0, RD53Constants::NBIT_MAXREG - numberOfBits);
+                            const auto value        = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[su]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
+                                                   .to_string()
+                                                   .erase(0, RD53Constants::NBIT_MAXREG - numberOfBits);
                             bool problems = (regValueMap[su] != mask);
                             LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + su << (problems ? BOLDRED : BOLDBLUE) << " = 0b" << BOLDYELLOW << value
                                       << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)" << RESET;
@@ -285,7 +287,7 @@ void PixelAlive::run()
                                 if(badPixelsCounter != 0)
                                 {
                                     static_cast<RD53*>(cChip)->copyMaskToDefault("en");
-                                    LOG(WARNING) << BOLDRED << "\t--> Found " << BOLDYELLOW << badPixelsCounter << BOLDRED << " bad pixel(s) in this region --> masked" << RESET;
+                                    LOG(WARNING) << BOLDRED << "\t\t--> Found " << BOLDYELLOW << badPixelsCounter << BOLDRED << " bad pixel(s) in this region --> masked" << RESET;
                                 }
                             }
                         }
