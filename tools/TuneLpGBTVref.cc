@@ -30,10 +30,7 @@ void TuneLpGBTVref::tuneVref()
                 flpGBTInterface->ConfigureInternalMonitoring(clpGBT, 0);
                 flpGBTInterface->TuneVref(clpGBT);
             }
-            else
-            {
-                flpGBTInterface->AutoTuneVref(clpGBT);
-            }
+            else { flpGBTInterface->AutoTuneVref(clpGBT); }
         }
     }
 }

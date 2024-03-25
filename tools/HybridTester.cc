@@ -1187,13 +1187,8 @@ void HybridTester::AntennaScan(uint8_t pDigiPotentiometer)
     {
         cAntenna.ConfigureClockGenerator(3, 8); // initialize SPI communication for ADC
     }
-    else if(trigSource == 7)
-    {
-    }
-    else
-    {
-        LOG(INFO) << "ERROR, wrong trig source set " << int(trigSource);
-    }
+    else if(trigSource == 7) {}
+    else { LOG(INFO) << "ERROR, wrong trig source set " << int(trigSource); }
 
     cAntenna.ConfigureDigitalPotentiometer(2, pDigiPotentiometer); // configure bias for antenna pull-up
 

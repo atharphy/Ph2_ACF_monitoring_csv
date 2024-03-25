@@ -29,15 +29,11 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
 {
     setBoard(pMPA2->getBeBoardId());
     if(pRegNode == "StubMode" || pRegNode == "LayerSwap") // should work with MPA2 address table
-    { return (ReadChipReg(pMPA2, "ECM") >> 6) & 0x3; }
-    else if(pRegNode == "StubWindow")
     {
-        return ReadChipReg(pMPA2, "ECM") & 0x3F;
+        return (ReadChipReg(pMPA2, "ECM") >> 6) & 0x3;
     }
-    else if(pRegNode == "vref")
-    {
-        return ReadChipReg(pMPA2, "ADCcontrol") & 0xFF;
-    }
+    else if(pRegNode == "StubWindow") { return ReadChipReg(pMPA2, "ECM") & 0x3F; }
+    else if(pRegNode == "vref") { return ReadChipReg(pMPA2, "ADCcontrol") & 0xFF; }
     else if(pRegNode == "ReadoutMode") // New decoding control reg for MPA2
     {
         return ReadChipReg(pMPA2, "Control_1") & 0x3;
@@ -51,34 +47,13 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     {
         return (ReadChipReg(pMPA2, "Control_1") >> 5) & 0x7;
     }
-    else if(pRegNode == "Threshold")
-    {
-        return this->ReadChipReg(pMPA2, "ThDAC0");
-    }
-    else if(pRegNode == "InjectedCharge")
-    {
-        return this->ReadChipReg(pMPA2, "CalDAC0");
-    }
-    else if(pRegNode == "ADC_output")
-    {
-        return (this->ReadChipReg(pMPA2, "ADC_output_LSB") & 0xFF) + ((this->ReadChipReg(pMPA2, "ADC_output_MSB") & 0xF) << 8);
-    }
-    else if(pRegNode == "TriggerLatency")
-    {
-        return ((ReadChipReg(pMPA2, "MemoryControl_2_R0") & (0x1)) << 8) | ReadChipReg(pMPA2, "MemoryControl_1_R0");
-    }
-    else if(pRegNode == "PixelControl_ALL" || pRegNode == "PixelControl")
-    {
-        return ReadChipReg(pMPA2, "PixelControl_R0");
-    }
-    else if(pRegNode == "ENFLAGS_ALL")
-    {
-        return ReadChipReg(pMPA2, "ENFLAGS_C0_R0");
-    }
-    else
-    {
-        return ReadChipSingleReg(pMPA2, pRegNode);
-    }
+    else if(pRegNode == "Threshold") { return this->ReadChipReg(pMPA2, "ThDAC0"); }
+    else if(pRegNode == "InjectedCharge") { return this->ReadChipReg(pMPA2, "CalDAC0"); }
+    else if(pRegNode == "ADC_output") { return (this->ReadChipReg(pMPA2, "ADC_output_LSB") & 0xFF) + ((this->ReadChipReg(pMPA2, "ADC_output_MSB") & 0xF) << 8); }
+    else if(pRegNode == "TriggerLatency") { return ((ReadChipReg(pMPA2, "MemoryControl_2_R0") & (0x1)) << 8) | ReadChipReg(pMPA2, "MemoryControl_1_R0"); }
+    else if(pRegNode == "PixelControl_ALL" || pRegNode == "PixelControl") { return ReadChipReg(pMPA2, "PixelControl_R0"); }
+    else if(pRegNode == "ENFLAGS_ALL") { return ReadChipReg(pMPA2, "ENFLAGS_C0_R0"); }
+    else { return ReadChipSingleReg(pMPA2, pRegNode); }
 }
 
 // Unchanged from MPA1 -- to check
@@ -424,10 +399,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         uint8_t cRegMask  = (0x3 << cBitShift);
         return this->WriteChipRegBits(pMPA2, "ECM", (pValue << cBitShift), "Mask", cRegMask, false);
     }
-    else if(pRegName == "StubWindow")
-    {
-        return this->WriteChipRegBits(pMPA2, "ECM", pValue, "Mask", 0x3F, false);
-    }
+    else if(pRegName == "StubWindow") { return this->WriteChipRegBits(pMPA2, "ECM", pValue, "Mask", 0x3F, false); }
     else if(pRegName == "DigitalPattern")
     {
         bool cReadoutMode   = WriteChipReg(pMPA2, "ReadoutMode", 0x02, pVerify);
@@ -641,7 +613,9 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
     for(uint16_t row = 0; row < pMPA2->getNumberOfRows(); ++row)
     {
         for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col)
-        { registerList.push_back({MPA2::getPixelRegisterName("TrimDAC", row, col), localRegValues.getChannel<uint16_t>(row, col) & 0x1F}); }
+        {
+            registerList.push_back({MPA2::getPixelRegisterName("TrimDAC", row, col), localRegValues.getChannel<uint16_t>(row, col) & 0x1F});
+        }
     }
     cSuccess &= WriteChipMultReg(pMPA2, registerList, pVerify);
     return cSuccess;

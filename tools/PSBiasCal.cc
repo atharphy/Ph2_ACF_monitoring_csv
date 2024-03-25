@@ -529,10 +529,7 @@ float PSBiasCal::MeasureGnd(Chip* cChip, Chip* clpGBT, std::string dac_str)
     float gnd_val = 0.0;
 
     if(cChip->getFrontEndType() == FrontEndType::MPA2) { gnd_val = static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->measureGnd(cChip); }
-    else if(cChip->getFrontEndType() == FrontEndType::SSA2)
-    {
-        gnd_val = static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->MeasureGND(cChip);
-    }
+    else if(cChip->getFrontEndType() == FrontEndType::SSA2) { gnd_val = static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->MeasureGND(cChip); }
     LOG(DEBUG) << BOLDRED << "gndval " << gnd_val << RESET;
     return gnd_val;
 }

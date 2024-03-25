@@ -603,10 +603,7 @@ void DPInterface::Start(BeBoardFWInterface* pInterface, uint8_t pType)
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     bool cIsRunning = this->IsRunning(pInterface, pType);
     if(cIsRunning) { LOG(INFO) << BOLDGREEN << " Data Player [STARTED]" << RESET; }
-    else
-    {
-        LOG(INFO) << BOLDRED << " Data Player [START ERROR]" << RESET;
-    }
+    else { LOG(INFO) << BOLDRED << " Data Player [START ERROR]" << RESET; }
 }
 
 bool DPInterface::IsRunning(BeBoardFWInterface* pInterface, uint8_t pType)

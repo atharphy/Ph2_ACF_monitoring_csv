@@ -207,7 +207,8 @@ int main(int argc, char** argv)
     // ###########################
     // # Copy configuration file #
     // ###########################
-    auto copyConfigFile = [&](const std::string& fileName) {
+    auto copyConfigFile = [&](const std::string& fileName)
+    {
         const auto fileBasename = fileName.substr(fileName.find_last_of("/\\") + 1);
         const auto outputFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + fileBasename;
         system(("cp " + fileName + " " + outputFile).c_str());

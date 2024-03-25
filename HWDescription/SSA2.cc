@@ -207,10 +207,7 @@ std::pair<uint16_t, uint16_t> SSA2::getGlobalCoordinates(ReadoutChip* pChip, uin
     cGlobalY          = (pChip->getHybridId() % 2 == 0) ? 0 : 1;
 
     if(pChip->getHybridId() % 2 == 0) { cGlobalX = (pChip->getNumberOfCols() - pLocalColumn) + (NCHIPS_OT - pChip->getId() - 1) * pChip->getNumberOfCols(); }
-    else
-    {
-        cGlobalX = pLocalColumn + pChip->getId() * pChip->getNumberOfCols();
-    }
+    else { cGlobalX = pLocalColumn + pChip->getId() * pChip->getNumberOfCols(); }
 
     return std::make_pair(cGlobalX, cGlobalY);
 }

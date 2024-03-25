@@ -179,10 +179,7 @@ std::pair<uint16_t, uint16_t> Cbc::getGlobalCoordinates(ReadoutChip* pChip, uint
     uint16_t cGlobalX = 0;
     uint16_t cCol     = pLocalColumn / 2;
     if(pChip->getHybridId() % 2 == 0) { cGlobalX = (pChip->getNumberOfCols() / 2 - cCol) + (NCHIPS_OT - pChip->getId() - 1) * pChip->getNumberOfCols() / 2; }
-    else
-    {
-        cGlobalX = cCol + pChip->getId() * pChip->getNumberOfCols() / 2;
-    }
+    else { cGlobalX = cCol + pChip->getId() * pChip->getNumberOfCols() / 2; }
     return std::make_pair(cGlobalX, cGlobalY);
 }
 

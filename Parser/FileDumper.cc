@@ -56,10 +56,7 @@ std::stringstream FileDumper::dumpConfigurationFiles(DetectorContainer*         
     LOG(INFO) << BOLDBLUE << "Configfiles for all Chips written to " << fOutputDirectory << RESET;
 
     if(doc.save_file(outputFileName.c_str())) { LOG(INFO) << BOLDYELLOW << "New configuration file saved: " << outputFileName << RESET; }
-    else
-    {
-        LOG(ERROR) << BOLDRED << "Error saving the new configuration file." << RESET;
-    }
+    else { LOG(ERROR) << BOLDRED << "Error saving the new configuration file." << RESET; }
 
     std::stringstream finalConfigurationStream;
     doc.save(finalConfigurationStream);
@@ -195,7 +192,8 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
     bool cWithMPA = (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return (x->getFrontEndType() == FrontEndType::MPA2); }) != theHybrid->end());
     bool cWithSSA = (std::find_if(theHybrid->begin(), theHybrid->end(), [](Ph2_HwDescription::Chip* x) { return (x->getFrontEndType() == FrontEndType::SSA2); }) != theHybrid->end());
 
-    auto appendReadoutChipConfigFilePath = [this, &theHybridNode](std::string theChipString) {
+    auto appendReadoutChipConfigFilePath = [this, &theHybridNode](std::string theChipString)
+    {
         std::string theCICFilePathNodeName                              = theChipString + CHIP_FILES_APPEND_NODE_NAME;
         auto        theCICFilePathNode                                  = theHybridNode.append_child(theCICFilePathNodeName.c_str());
         theCICFilePathNode.append_attribute(COMMON_PATH_ATTRIBUTE_NAME) = fOutputDirectory.c_str();
@@ -301,7 +299,8 @@ void FileDumper::dumpCommunicationSettings(pugi::xml_node theMotherNode, Communi
 {
     pugi::xml_node theCommunicationSettingsNode = theMotherNode.append_child(COMMUNICATIONSETTINGS_NODE_NAME);
 
-    auto dumpCommunicationSetting = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting theCommunicationSetting, const std::string& nodeName) {
+    auto dumpCommunicationSetting = [&theCommunicationSettingsNode](CommunicationSettingConfig::CommunicationSetting theCommunicationSetting, const std::string& nodeName)
+    {
         if(theCommunicationSetting.fIP != "")
         {
             pugi::xml_node theSettingNode                                                          = theCommunicationSettingsNode.append_child(nodeName.c_str());
