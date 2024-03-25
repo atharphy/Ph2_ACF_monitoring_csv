@@ -197,7 +197,7 @@ void Tool::Start(const StartInfo& theStartInfo)
 // }
 
 
-void Tool::readRegs()
+void Tool::readBitslipRegs()
 {   
     std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
     for(size_t linkNumber = 0; linkNumber < 16; ++linkNumber)
@@ -226,7 +226,6 @@ void Tool::Stop()
     {
         Tool::fKeepRunning = false;
         Tool::waitForRunToBeCompleted();
-        readRegs();
         // if(fRunningThread.joinable() == true) fRunningThread.join(); // @Mauro@
         try
         {
@@ -240,14 +239,11 @@ void Tool::Stop()
         {
             throw std::runtime_error(e.what());
         }
-        readRegs();
 
         SystemController::Stop();
-        readRegs();
         Tool::dumpConfigFiles();
         if(fMetadataHandler != nullptr) fMetadataHandler->fillFinalConditions();
 
-        readRegs();
         if(fDQMStreamerEnabled == true)
         {
             std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
@@ -256,11 +252,8 @@ void Tool::Stop()
             fDQMStreamer->broadcast(doneWithRunMessage);
         }
 
-        readRegs();
         Tool::SaveResults();
-        readRegs();
         Tool::WriteRootFile();
-        readRegs();
     }
 }
 

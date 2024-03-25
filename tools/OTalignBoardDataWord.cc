@@ -52,10 +52,8 @@ void OTalignBoardDataWord::Running()
     LOG(INFO) << "Starting OTalignBoardDataWord measurement.";
     Initialise();
     wordAlignBEdata();
-    readRegs();
     LOG(INFO) << "Done with OTalignBoardDataWord.";
     Reset();
-    readRegs();
 }
 
 void OTalignBoardDataWord::Stop(void)
@@ -170,13 +168,6 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
 
     // Updating bitslip registers with MSB set to 1
     fBeBoardInterface->WriteBoardMultReg(theBoard, alignedBitslipRegisters);
-
-    for(const auto& registerNameAndValue: alignedBitslipRegisters)
-    {
-        std::cout<< "Writing " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << std::endl;
-    }
-
-    readRegs();
 }
 
 bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
