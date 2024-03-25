@@ -10,6 +10,7 @@
 #include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/ECVLinkAlignmentOT.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
@@ -155,6 +156,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
     cmd.defineOption("phaseScan", "Phase Scan");
 
+    cmd.defineOption("ecv", "Perform Electronic Chain Validation Scans", ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
@@ -239,6 +242,7 @@ int main(int argc, char* argv[])
     int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
     bool        cLatency            = (cmd.foundOption("latency")) ? true : false;
     bool        cStubLatency        = (cmd.foundOption("stublatency")) ? true : false;
+    bool        cEcv                = (cmd.foundOption("ecv")) ? true : false;
 
     uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
@@ -551,6 +555,21 @@ int main(int argc, char* argv[])
         cRegTester.writeObjects();
     }
 
+    if(cEcv)
+    {
+        cTool.ConfigureHw(true);
+
+        ECVLinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(cRunNumber);
+        cLinkAlignment.Start(theStartInfo);
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.writeObjects();
+        cLinkAlignment.dumpConfigFiles();
+    }
+
     // align CIC-lpGBT-BE
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
@@ -601,6 +620,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
+
         // align FEs - CIC
         LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
         CicFEAlignment cCicAligner;
@@ -769,83 +789,7 @@ int main(int argc, char* argv[])
         cLinkAlignment.CheckLpgbtOutputs(cPattern);
         cLinkAlignment.Reset();
     }
-    // if(cmd.foundOption("linkTest") && !cmd.foundOption("read"))
-    // {
-    //     auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-    //     D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-    //     for(auto cBoard: *cTool.fDetectorContainer)
-    //     {
-    //         for(auto cOpticalGroup: *cBoard)
-    //         {
-    //             if(cSrcLnkTst == "lpGBT")
-    //             {
-    //                 auto& clpGBT = cOpticalGroup->flpGBT;
-    //                 // configure lpGBT to produce constant pattern
-    //                 cTool.flpGBTInterface->ConfigureRxSource(clpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
-    //                 cTool.flpGBTInterface->ConfigureDPPattern(clpGBT, 0xE0E0E0E0);
-    //                 D19cFWInterface::PhaseTuner cTuner;
-    //                 for(size_t cLineId = 1; cLineId <= 6; cLineId++)
-    //                 {
-    //                     for(auto cHybrid: *cOpticalGroup) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, 0xE0, 8, true); }
-    //                 }
-    //                 for(auto cHybrid: *cOpticalGroup)
-    //                 {
-    //                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-    //                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { cDebugInterface->StubDebug(true, 6); }
-    //                 }
-    //                 continue;
-    //             }
-    //             for(auto cHybrid: *cOpticalGroup)
-    //             {
-    //                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-    //                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-    //                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-    //                 if(cSrcLnkTst == "CIC")
-    //                 {
-    //                     // CIC alignment pattern
-    //                     cTool.fCicInterface->SelectOutput(cCic, true);
-    //                 }
-    //                 else
-    //                 {
-    //                     LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
-    //                     // MPA shift pattern
-    //                     // enable MPA alignment pattern
-    //                     LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
-    //                     std::vector<uint8_t>     cOriginalValues;
-    //                     std::vector<std::string> cRegs;
-    //                     uint8_t                  cAlignmentPattern = 0xE0;
-    //                     std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
-    //                     std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
-    //                     for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)
-    //                     {
-    //                         for(auto cChip: *cHybrid)
-    //                         {
-    //                             if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
-    //                             cOriginalValues.push_back(cTool.fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
-    //                             cRegs.push_back(cRegNames[cIndex]);
-    //                             cTool.fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
-    //                         } // loop over MPAs
-    //                     }     // loop over registers
-    //                     for(uint8_t cPhyPort = 8; cPhyPort < 9; cPhyPort++)
-    //                     {
-    //                         LOG(INFO) << BOLDMAGENTA << "PhyPort#" << +cPhyPort << RESET;
-    //                         cTool.fCicInterface->SelectMux(cCic, cPhyPort);
-    //                         // align line
-    //                         D19cFWInterface::PhaseTuner cTuner;
-    //                         for(size_t cLineId = 1; cLineId <= 3; cLineId++) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, cAlignmentPattern, 8, true); }
-    //                         for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { cDebugInterface->StubDebug(true, 3); }
-    //                     }
-    //                 }
-    //                 if(cSrcLnkTst == "CIC" || cSrcLnkTst == "lpGBT")
-    //                 {
-    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { cDebugInterface->StubDebug(true, 6); }
-    //                 }
-    //             } // hybrid
-    //         }     // OG
-    //     }         // board
-    // }
     if(cmd.foundOption("injectionTest") && !cmd.foundOption("read"))
     {
         // auto cNevents          = findValueInSettings("Check2STPamplitude", 255);
@@ -890,11 +834,8 @@ int main(int argc, char* argv[])
                         {
                             // and that readout mode is set
                             // make sure L1 latency is configured
-                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
-                            {
-                                (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01);
-                            }
-                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA2) { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
@@ -966,7 +907,7 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
+                            if(chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 for(auto cPxl: cPxls)
                                 {
@@ -978,7 +919,7 @@ int main(int argc, char* argv[])
                                     cTool.fReadoutChipInterface->WriteChipReg(chip, cRegNameTrim.str(), 0x0);
                                 }
                             }
-                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
+                            if(chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 for(auto sStrp: cStrps)
                                 {
@@ -998,13 +939,13 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
+                            if(chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "CalPulse_duration", 0x01);
                             }
-                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
+                            if(chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
@@ -1051,11 +992,11 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
+                            if(chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0xF, false); // 0x5E
                             }
-                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
+                            if(chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x1, false); // 0x5E
                             }
@@ -1069,12 +1010,12 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
+                            if(chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                             }
-                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
+                            if(chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
@@ -1102,12 +1043,12 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
+                            if(chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                             }
-                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
+                            if(chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
@@ -1133,94 +1074,6 @@ int main(int argc, char* argv[])
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read")) // S-curves
     {
-        // auto cSetting       = cTool.fSettingsMap.find("PedeNoisePulseAmplitude");
-        // int  cInjectionAmpl = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 255;
-        // for(auto cBoard: *cTool.fDetectorContainer)
-        // {
-        //     cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 1);
-        //     cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", cInjectionAmpl);
-        // }
-        // cTool.setFWTestPulse();
-        // for(auto cBoard: *cTool.fDetectorContainer)
-        // {
-        //     cBoard->setEventType(EventType::PSAS);
-        //     // std::vector<uint16_t> cThresholds{5,static_cast<uint16_t>(cInjectionAmpl+20)};//, 20, 40, 50, 100,200};
-        //     // for( auto cThreshold : cThresholds )
-        //     for( uint16_t cOffset=0; cOffset < 30 ; cOffset ++)
-        //     {
-        //         cTool.setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "ThresholdTrim", cOffset);
-        //         LOG (INFO) << BOLDMAGENTA << "Offset of " << +cOffset;
-        //         //for( uint8_t cNacitve=7; cNacitve < 8 ;cNacitve++)
-        //         //{
-        //             //for( size_t cAttempt = 0 ; cAttempt < 3; cAttempt++ )
-        //             //{
-        //                 std::stringstream cOut;
-        //                 //cOut << +cNacitve << " SSA-MPA pairs [Attempt# " << +cAttempt << " ]: ";
-        //                 for(auto cOpticalGroup: *cBoard)
-        //                 {
-        //                     for(auto cHybrid: *cOpticalGroup)
-        //                     {
-        //                         //size_t cActive=0;
-        //                         for(auto cChip: *cHybrid)
-        //                         {
-        //                             if( cChip->getFrontEndType() == FrontEndType::MPA )  cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",130+30);
-        //                             else cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",57+20);
-
-        //                             //if( cActive < cNacitve ){
-        //                             //    cTool.fReadoutChipInterface->WriteChipReg(cChip,"Threshold",cThreshold);
-        //                             //    cOut << " SSA#" << +cChip->getId() << " [Th:" << +cThreshold << "] ";
-        //                             //    cActive++;
-        //                             //}
-        //                             //else cOut << " SSA#" << +cChip->getId() << " [Th:255] ";
-        //                         }
-        //                     }
-        //                 }
-        //                 LOG (INFO) << BOLDBLUE << cOut.str() << RESET;
-        //                 cTool.ReadNEvents(cBoard, 42);
-        //                 //const std::vector<Event*>& cEvents = cTool.GetEvents();
-        //                 //LOG (INFO) << BOLDYELLOW << "Read-back " << +cEvents.size() << " events from the FC7 when 42 were requested" << RESET;
-        //                 //for(auto& event: cEvents) event->fillDataContainer((cTool.fDetectorDataContainer->getObject(fBoardIndex)), fTestChannelGroup);
-
-        //             //}
-        //         // for( size_t cAttempt = 0 ; cAttempt < 1; cAttempt++ )
-        //         // {
-        //         //     //for( uint16_t cDelay=10;  cDelay < 11 ; cDelay++)
-        //         //     for( uint16_t cDelay=120*16*8-3*8+1; cDelay <= 120*16*8-3*8+1; cDelay +=1)
-        //         //     {
-        //         //         LOG (INFO) << BOLDMAGENTA << "Async Delay SSA 0x" << std::hex << (cDelay)  << std::dec << RESET;
-        //         //         for(auto cOpticalGroup: *cBoard)
-        //         //         {
-        //         //             for(auto cHybrid: *cOpticalGroup)
-        //         //             {
-        //         //                 for(auto cChip: *cHybrid)
-        //         //                 {
-        //         //                     if( cChip->getFrontEndType() != FrontEndType::SSA ) continue;
-
-        //         //                     cTool.fReadoutChipInterface->WriteChipReg( cChip, "AsyncDelay", cDelay );
-        //         //                     auto cDelayLSB = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_LSB");
-        //         //                     auto cDelayMSB = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_MSB");
-        //         //                     LOG (DEBUG) << BOLDBLUE << "Delay is 0x" << std::hex << (cDelayMSB << 8 | cDelayLSB) << std::dec << RESET;
-        //         //                     // //cTool.fReadoutChipInterface->WriteChipReg( cChip, "ReadoutMode", 1 );
-        //         //                     // auto cMode = cTool.fReadoutChipInterface->ReadChipReg( cChip, "ReadoutMode");
-        //         //                     // auto cCnfg = cTool.fReadoutChipInterface->ReadChipReg( cChip, "ENFLAGS_S2");
-        //         //                     // uint8_t cDly_LSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_LSB");
-        //         //                     // uint8_t cDly_MSB  = cTool.fReadoutChipInterface->ReadChipReg( cChip, "AsyncRead_StartDel_MSB");
-        //         //                     // //uint16_t  cDly  = (cDly_MSB << 8 ) | cDly_LSB;
-        //         //                     // LOG (DEBUG) << BOLDBLUE << "Readout mode is " << +cMode
-        //         //                     //     << " ENFLAGS_ALL is set to 0x" << std::hex << +cCnfg
-        //         //                     //     << std::dec
-        //         //                     //     << " Delay value LSB is 0x" << std::hex << +cDly_LSB << std::dec
-        //         //                     //     << " Delay value MSB is 0x" << std::hex << +cDly_MSB << std::dec
-        //         //                     //     << RESET;
-        //         //                 }
-        //         //             }
-        //         //         }
-        //         //         cTool.ReadNEvents(cBoard, 42);
-        //         //     }
-        //         // }
-        //     }
-        // }
-
         bool cAllChan = (cmd.foundOption("allChan")) ? true : false;
         LOG(INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
         t.start();

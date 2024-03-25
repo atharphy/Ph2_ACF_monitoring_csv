@@ -26,14 +26,18 @@ bool D19cL1ReadoutInterface::ResetReadout()
     fTheRegManager->WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    LOG(DEBUG) << BOLDBLUE << "Reseting DDR3 " << RESET;
-    fDDR3Offset          = 0;
-    auto cDDR3Calibrated = (fTheRegManager->ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
-    while(!cDDR3Calibrated)
+    LOG(DEBUG) << BOLDBLUE << "Resetting DDR3 " << RESET;
+    fDDR3Offset              = 0;
+    auto     cDDR3Calibrated = (fTheRegManager->ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
+    uint16_t cAttempts       = 0;
+    uint16_t cMaxAttempts    = 1000;
+
+    while(!cDDR3Calibrated && (cAttempts < cMaxAttempts))
     {
         LOG(DEBUG) << "Waiting for DDR3 to finish initial calibration";
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
         cDDR3Calibrated = (fTheRegManager->ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
+        cAttempts++;
     }
     return cDDR3Calibrated;
 }

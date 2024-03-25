@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTalignBoardDataWord::fCalibrationDescription = "Align triggered data on to decode events";
+std::string OTalignBoardDataWord::fCalibrationDescription = "Find bitslips in the FPGA to decode triggered data on to decode words";
 
 OTalignBoardDataWord::OTalignBoardDataWord() : Tool() {}
 
@@ -39,7 +39,7 @@ void OTalignBoardDataWord::Initialise(void)
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBitSlipContainer, initialEmptyVector);
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fAlignmentRetryContainer, initialEmptyVector);
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTalignBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

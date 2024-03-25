@@ -396,7 +396,7 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
             }
         }
         else
-            LOG(ERROR) << "Not a valid chip type!";
+            LOG(ERROR) << __PRETTY_FUNCTION__ << " Not a valid chip type!";
     }
     else if(dacName == "ClusterCut")
     {
@@ -424,7 +424,7 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
             }
         }
         else
-            LOG(ERROR) << "Not a valid chip type!";
+            LOG(ERROR) << __PRETTY_FUNCTION__ << " Not a valid chip type!";
     }
     else if(dacName == "TestPulseDelay")
     {

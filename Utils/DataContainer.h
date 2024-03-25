@@ -628,6 +628,10 @@ class HybridDataContainer : public DataContainer<ChipDataContainer>
         return DataContainer<ChipDataContainer>::getObject(id);
     }
 
+    ChipDataContainer*& getChip(uint16_t chipId) { return getObject(chipId); }
+
+    const ChipDataContainer* const& getChip(uint16_t chipId) const { return getObject(chipId); }
+
   private:
     friend class boost::serialization::access;
     template <class Archive>
@@ -663,6 +667,14 @@ class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
         LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
         return DataContainer<HybridDataContainer>::getObject(id);
     }
+
+    HybridDataContainer*& getHybrid(uint16_t hybridId) { return getObject(hybridId); }
+
+    const HybridDataContainer* const& getHybrid(uint16_t hybridId) const { return getObject(hybridId); }
+
+    ChipDataContainer*& getChip(uint16_t hybridId, uint16_t chipId) { return getHybrid(hybridId)->getChip(chipId); }
+
+    const ChipDataContainer* const& getChip(uint16_t hybridId, uint16_t chipId) const { return getHybrid(hybridId)->getChip(chipId); }
 
   private:
     friend class boost::serialization::access;
@@ -700,6 +712,18 @@ class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
         return DataContainer<OpticalGroupDataContainer>::getObject(id);
     }
 
+    OpticalGroupDataContainer*& getOpticalGroup(uint16_t opticalGroupId) { return getObject(opticalGroupId); }
+
+    const OpticalGroupDataContainer* const& getOpticalGroup(uint16_t opticalGroupId) const { return getObject(opticalGroupId); }
+
+    HybridDataContainer*& getHybrid(uint16_t opticalGroupId, uint16_t hybridId) { return getOpticalGroup(opticalGroupId)->getHybrid(hybridId); }
+
+    const HybridDataContainer* const& getHybrid(uint16_t opticalGroupId, uint16_t hybridId) const { return getOpticalGroup(opticalGroupId)->getHybrid(hybridId); }
+
+    ChipDataContainer*& getChip(uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId) { return getOpticalGroup(opticalGroupId)->getHybrid(hybridId)->getChip(chipId); }
+
+    const ChipDataContainer* const& getChip(uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId) const { return getOpticalGroup(opticalGroupId)->getHybrid(hybridId)->getChip(chipId); }
+
   private:
     friend class boost::serialization::access;
     template <class Archive>
@@ -734,6 +758,28 @@ class DetectorDataContainer : public DataContainer<BoardDataContainer>
         }
         LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
         return DataContainer<BoardDataContainer>::getObject(id);
+    }
+
+    BoardDataContainer*& getBoard(uint16_t boardId) { return getObject(boardId); }
+
+    const BoardDataContainer* const& getBoard(uint16_t boardId) const { return getObject(boardId); }
+
+    OpticalGroupDataContainer*& getOpticalGroup(uint16_t boardId, uint16_t opticalGroupId) { return getBoard(boardId)->getOpticalGroup(opticalGroupId); }
+
+    const OpticalGroupDataContainer* const& getOpticalGroup(uint16_t boardId, uint16_t opticalGroupId) const { return getBoard(boardId)->getOpticalGroup(opticalGroupId); }
+
+    HybridDataContainer*& getHybrid(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId) { return getBoard(boardId)->getOpticalGroup(opticalGroupId)->getHybrid(hybridId); }
+
+    const HybridDataContainer* const& getHybrid(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId) const { return getBoard(boardId)->getOpticalGroup(opticalGroupId)->getHybrid(hybridId); }
+
+    ChipDataContainer*& getChip(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
+    {
+        return getBoard(boardId)->getOpticalGroup(opticalGroupId)->getHybrid(hybridId)->getChip(chipId);
+    }
+
+    const ChipDataContainer* const& getChip(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId) const
+    {
+        return getBoard(boardId)->getOpticalGroup(opticalGroupId)->getHybrid(hybridId)->getChip(chipId);
     }
 
   private:

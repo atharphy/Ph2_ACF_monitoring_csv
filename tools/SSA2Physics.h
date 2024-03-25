@@ -12,10 +12,7 @@
 
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/SSA2ChannelGroupHandler.h"
 #include "tools/Tool.h"
-// #include "Utils/SSASharedConstants.h"
-// #include "HWInterface/SSAFWInterface.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/SSAPhysicsHistograms.h"

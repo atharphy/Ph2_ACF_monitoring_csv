@@ -214,7 +214,7 @@ void Physics2S::display()
 // 				{
 
 //     				auto curchip = cBoard->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());;
-//                     if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
+//                     if(curchip->getFrontEndType() != FrontEndType::MPA2) continue;
 
 // 					auto data2S = cChip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
 //                     data2S.fClusters    = fromVectorToGenericDataArray<Cluster, NCHANNELS>(static_cast<D19cCic2Event*>(event)->getClusters(cHybrid->getId(), cChip->getId()));

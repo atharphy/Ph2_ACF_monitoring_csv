@@ -14,7 +14,7 @@
 #define DataChecker_h_
 
 #ifdef __USE_ROOT__
-#include "Tool.h"
+#include "tools/Tool.h"
 
 #ifndef ChannelList
 typedef std::vector<uint8_t> ChannelList;

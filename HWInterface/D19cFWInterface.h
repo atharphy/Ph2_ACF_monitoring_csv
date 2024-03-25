@@ -82,16 +82,14 @@ class D19cFWInterface : public BeBoardFWInterface
     // i2c version of master
     uint32_t fI2CVersion;
     // optical readout
-    bool                       fOptical        = false;
-    bool                       fUseOpticalLink = false;
-    bool                       fConfigureCDCE  = false;
-    std::map<uint8_t, uint8_t> fRxPolarity;
-    std::map<uint8_t, uint8_t> fTxPolarity;
+    bool fOptical        = false;
+    bool fUseOpticalLink = false;
+    bool fConfigureCDCE  = false;
+
     // 2S or PS readout
     bool           fIs2S           = true;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
     // // I'm going to add a variable to hold the stub offset
-    uint32_t fStubOffset = 0xFFFF;
     // event counter
     uint32_t fEventCounter = 0;
 
@@ -225,9 +223,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
     // FMCs
     void InitFMCPower();
-    // set stub offset
-    void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
-    uint32_t getStubOffset() { return fStubOffset; };
 
   private:
     uint32_t fReadoutAttempts = 0;
@@ -276,9 +271,9 @@ class D19cFWInterface : public BeBoardFWInterface
                                                {19, "FMC_FE_FOR_PS_ROH_FMC1"},
                                                {20, "FMC_FE_FOR_PS_ROH_FMC2"}};
 
-    std::map<uint32_t, std::string> fChipNamesMap = {{0, "CBC2"}, {1, "CBC3"}, {2, "MPA"}, {3, "SSA"}, {4, "CIC"}, {5, "CIC2"}};
+    std::map<uint32_t, std::string> fChipNamesMap = {{1, "CBC3"}, {2, "MPA2"}, {3, "SSA2"}, {5, "CIC2"}};
 
-    std::map<uint32_t, FrontEndType> fFETypesMap = {{1, FrontEndType::CBC3}, {2, FrontEndType::MPA}, {3, FrontEndType::SSA}, {4, FrontEndType::CIC}, {5, FrontEndType::CIC2}};
+    std::map<uint32_t, FrontEndType> fFETypesMap = {{1, FrontEndType::CBC3}, {2, FrontEndType::MPA2}, {3, FrontEndType::SSA2}, {5, FrontEndType::CIC2}};
 
     // template to copy every nth element out of a vector to another vector
     template <class in_it, class out_it>
@@ -321,8 +316,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void configureLinks(const Ph2_HwDescription::BeBoard* pBoard);
     void configureTxRxPolarities(const Ph2_HwDescription::BeBoard* pBoard);
     void configureLpGbtVersions(const Ph2_HwDescription::BeBoard* pBoard);
-    void setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
-    void setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 
     // CDCE
     void configureCDCE_old(uint16_t pClockRate = 120);
@@ -373,6 +366,9 @@ class D19cFWInterface : public BeBoardFWInterface
     void  ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
     float GetSFPParameter_L8(std::string parameter, int channel);
     float GetSFPParameter_L12(std::string parameter, int channel);
+
+    std::vector<uint32_t>              L1ADebug(uint8_t pWait_ms, bool pPrint);
+    std::vector<std::vector<uint32_t>> StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint);
 };
 } // namespace Ph2_HwInterface
 

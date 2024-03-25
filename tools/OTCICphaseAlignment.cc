@@ -13,7 +13,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTCICphaseAlignment::fCalibrationDescription = "Insert brief calibration description here";
+std::string OTCICphaseAlignment::fCalibrationDescription = "Run the CIC automatic procedure to find the sampling phase for CBC/MPA stub and L1 lines";
 
 OTCICphaseAlignment::OTCICphaseAlignment() : Tool() {}
 
@@ -28,7 +28,7 @@ void OTCICphaseAlignment::Initialise(void)
     fNumberOfAlignmentIterations = findValueInSettings<double>("OTCICphaseAlignmentNumberOfAlignmentIterations", 100);
     fMinLockingSuccessRate       = findValueInSettings<double>("OTCICphaseAlignmentMinLockingSuccessRate", 1.);
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTCICphaseAlignment.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

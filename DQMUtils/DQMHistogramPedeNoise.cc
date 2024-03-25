@@ -43,14 +43,12 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     {
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
         fWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
-        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
+        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
+        fWithMPA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
     }
 
-    std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA, FrontEndType::SSA2};
-    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA, FrontEndType::MPA2};
+    std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA2};
+    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA2};
     auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
     { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
     auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip)
@@ -68,8 +66,8 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
                 {
                     auto cNChannels = theDetectorStructure.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->size();
                     auto cType      = cChip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) { cNPixelChannels.push_back(cNChannels); }
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
+                    else if(cType == FrontEndType::MPA2) { cNPixelChannels.push_back(cNChannels); }
                 }
             }
         }
@@ -260,7 +258,7 @@ void DQMHistogramPedeNoise::process()
                 for(auto cChip: *cHybrid)
                 {
                     auto cType = cChip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                     {
                         cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 0);
                         TH1F* validationHistogram = fDetectorStripValidationHistograms.getObject(cBoard->getId())
@@ -331,7 +329,7 @@ void DQMHistogramPedeNoise::process()
                                 ->SetRangeUser(0., 20.);
                         }
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 0);
                         TH1F* validationHistogram = fDetectorPixelValidationHistograms.getObject(cBoard->getId())
@@ -363,7 +361,7 @@ void DQMHistogramPedeNoise::process()
 
                     if(fPlotSCurves)
                     {
-                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                         {
                             TH2F* cChipStripSCurveHist = fDetectorChipStripSCurveHistograms.getObject(cBoard->getId())
                                                              ->getObject(cOpticalGroup->getId())
@@ -389,7 +387,7 @@ void DQMHistogramPedeNoise::process()
                                 .fTheHistogram->GetYaxis()
                                 ->SetRangeUser(0., 20.);
                         }
-                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        else if(cType == FrontEndType::MPA2)
                         {
                             TH2F* cChipPixelSCurveHist = fDetectorChipPixelSCurveHistograms.getObject(cBoard->getId())
                                                              ->getObject(cOpticalGroup->getId())
@@ -517,7 +515,7 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupa
                 {
                     TH1F* cChipValidationHistogram = nullptr;
                     auto  cType                    = cChip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                     {
                         cChipValidationHistogram = fDetectorStripValidationHistograms.getObject(cBoard->getId())
                                                        ->getObject(cOpticalGroup->getId())
@@ -526,7 +524,7 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupa
                                                        ->getSummary<HistContainer<TH1F>>()
                                                        .fTheHistogram;
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         cChipValidationHistogram = fDetectorPixelValidationHistograms.getObject(cBoard->getId())
                                                        ->getObject(cOpticalGroup->getId())
@@ -587,7 +585,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                     TH1F *   cChipPedestalHistogram = nullptr, *cChipNoiseHistogram = nullptr, *cChannelPedestalHistogram = nullptr, *cChannelNoiseHistogram = nullptr,
                          *cChannelStripNoiseEvenHistogram = nullptr, *cChannelStripNoiseOddHistogram = nullptr;
                     TH2F* cChannel2DPixelNoiseHistogram = nullptr;
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                     {
                         cNChannels = fNStripChannels;
 
@@ -641,7 +639,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                                                                  .fTheHistogram;
                         }
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         cNChannels = fNPixelChannels;
 
@@ -729,7 +727,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                                     cHybridStripNoiseOddHistogram->SetBinError(cNChannels / 2 * (cChip->getId() % 8) + int(col / 2) + 1, cNoiseErr);
                                 }
                             }
-                            if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2) { cChannel2DPixelNoiseHistogram->SetBinContent(col + 1, row + 1, cNoise); }
+                            if(cType == FrontEndType::MPA2) { cChannel2DPixelNoiseHistogram->SetBinContent(col + 1, row + 1, cNoise); }
                         }
                     }
                 }
@@ -751,13 +749,13 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                 {
                     auto     cType = cChip->getFrontEndType();
                     uint16_t cTh   = 0;
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                         cTh = pStripTh;
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                         cTh = pPixelTh;
 
                     TH2F* cChipSCurve = nullptr;
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                     {
                         cChipSCurve = fDetectorChipStripSCurveHistograms.getObject(cBoard->getId())
                                           ->getObject(cOpticalGroup->getId())
@@ -766,7 +764,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                                           ->getSummary<HistContainer<TH2F>>()
                                           .fTheHistogram;
                     }
-                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    else if(cType == FrontEndType::MPA2)
                     {
                         cChipSCurve = fDetectorChipPixelSCurveHistograms.getObject(cBoard->getId())
                                           ->getObject(cOpticalGroup->getId())
@@ -793,7 +791,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                             {
                                 TH1F* cChannelSCurve = nullptr;
 
-                                if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                                if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                                 {
                                     cChannelSCurve = fDetectorChannelStripSCurveHistograms.getObject(cBoard->getId())
                                                          ->getObject(cOpticalGroup->getId())
@@ -802,7 +800,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                                                          ->getChannel<HistContainer<TH1F>>(row, col)
                                                          .fTheHistogram;
                                 }
-                                else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                                else if(cType == FrontEndType::MPA2)
                                 {
                                     cChannelSCurve = fDetectorChannelPixelSCurveHistograms.getObject(cBoard->getId())
                                                          ->getObject(cOpticalGroup->getId())
@@ -844,7 +842,7 @@ void DQMHistogramPedeNoise::fitSCurves()
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
                             TH1F *cChannelSCurve = nullptr, *cChannelNoiseHistogram = nullptr, *cChannelPedestalHistogram = nullptr;
-                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                             {
                                 cChannelSCurve = fDetectorChannelStripSCurveHistograms.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
@@ -867,7 +865,7 @@ void DQMHistogramPedeNoise::fitSCurves()
                                                                 ->getSummary<HistContainer<TH1F>>()
                                                                 .fTheHistogram;
                             }
-                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                            else if(cType == FrontEndType::MPA2)
                             {
                                 cChannelSCurve = fDetectorChannelPixelSCurveHistograms.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())

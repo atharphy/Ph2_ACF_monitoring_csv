@@ -488,7 +488,7 @@ bool MPA2Interface::WriteChipMultReg(Chip* pMPA2, const std::vector<std::pair<st
         auto cIterator = cRegMap.find(cReq.first);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "MPAInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            LOG(ERROR) << BOLDRED << "MPA2Interface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
             continue;
         }
 

@@ -1,7 +1,7 @@
 #ifndef TPCalibration_h__
 #define TPCalibration_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #ifdef __USE_ROOT__
 
 #ifdef __USE_ROOT__

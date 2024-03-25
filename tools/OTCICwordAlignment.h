@@ -10,7 +10,7 @@
 #ifndef OTCICwordAlignment_h__
 #define OTCICwordAlignment_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
@@ -33,7 +33,9 @@ class OTCICwordAlignment : public Tool
     void Resume() override;
     void Reset();
 
-    static std::string fCalibrationDescription;
+    static std::string   fCalibrationDescription;
+    std::vector<uint8_t> fFeEnableRegs = {0};
+    uint32_t             fEnableMask;
 
   private:
     void WordAlignment(uint32_t pWait_us = 10);

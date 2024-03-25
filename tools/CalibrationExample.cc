@@ -23,7 +23,7 @@ void CalibrationExample::Initialise(void)
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramCalibrationExample.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

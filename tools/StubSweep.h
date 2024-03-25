@@ -9,7 +9,7 @@
 
 #ifndef __STUBSWEEP_H__
 #define __STUBWEEP_H__
-#include "Tool.h"
+#include "tools/Tool.h"
 #ifdef __USE_ROOT__
 
 #include <map>

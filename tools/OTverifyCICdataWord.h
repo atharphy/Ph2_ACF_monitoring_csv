@@ -10,7 +10,7 @@
 #ifndef OTverifyCICdataWord_h__
 #define OTverifyCICdataWord_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
@@ -25,7 +25,7 @@ class BeBoard;
 
 namespace Ph2_HwInterface
 {
-class D19cDebugFWInterface;
+class D19cFWInterface;
 }
 
 class PatternMatcher;
@@ -50,17 +50,17 @@ class OTverifyCICdataWord : public Tool
 
   protected:
     void         runIntegrityTest();
-    void         runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
-    void         runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface);
-    void         injectStubs2S(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
-    virtual void injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
-    float        injectAndMatch2SstubPatterns(Ph2_HwDescription::ReadoutChip*        theChip,
-                                              uint8_t                                chipIdForCIC,
-                                              Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface,
-                                              uint8_t                                numberOfBytesInSinglePacket,
-                                              std::vector<std::pair<uint8_t, int>>   stubSeedAndBendingVector);
-    void         injectL12S(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
-    virtual void injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket);
+    void         runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
+    void         runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
+    void         injectStubs2S(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket);
+    virtual void injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket);
+    float        injectAndMatch2SstubPatterns(Ph2_HwDescription::ReadoutChip*      theChip,
+                                              uint8_t                              chipIdForCIC,
+                                              Ph2_HwInterface::D19cFWInterface*    theFWInterface,
+                                              uint8_t                              numberOfBytesInSinglePacket,
+                                              std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector);
+    void         injectL12S(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket);
+    virtual void injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket);
     bool         matchL1Pattern(std::vector<uint32_t> theWordVector, PatternMatcher thePatternMatcher, uint8_t numberOfBytesInSinglePacket);
     bool         matchStubPattern(std::vector<uint32_t> theWordVector, PatternMatcher thePatternMatcher, uint8_t numberOfBytesInSinglePacket, size_t numberOfLines);
 

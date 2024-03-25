@@ -9,7 +9,7 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "boost/format.hpp"
+// #include "boost/format.hpp"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -256,21 +256,6 @@ void MemoryCheck2S::Initialise()
                 {
                     auto& cMasksThisChip                                                      = cMasksThisHybrid->getObject(cChip->getId());
                     cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<1, NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<1, NCHANNELS>>(cChip->getChipOriginalMask());
-                    // cOriginalMask = new ChannelGroup<1, NCHANNELS>;
-                    // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
-                    // {
-                    //     bool cEnabled = cMsk->isChannelEnabled(0, cChnl);
-                    //     if( cEnabled ){ cOriginalMask->enableChannel(0, cChnl );
-                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " enabled." << RESET;
-                    //     }
-                    //     else{
-                    //         cOriginalMask->disableChannel(0, cChnl);
-                    //         if( cChip->getId()  == 0 ) LOG (INFO) << BOLDMAGENTA << "Chnl#" << +cChnl << " disabled." << RESET;
-                    //     }
-                    // }
-                    // if( cChip->getFrontEndType() == FrontEndType::SSA )  cOriginalMask = new ChannelGroup<1, NSSACHANNELS>;
-                    // if( cChip->getFrontEndType() == FrontEndType::MPA )  cOriginalMask = new ChannelGroup<NMPAROWS, NSSACHANNELS>;
-                    // to -do .. same for MPA where have to look over cols
                 }
             } // hybrids
         }     // OG
@@ -1189,7 +1174,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
                     } // Chip
                 }     // Hybrid
             }         // OG
-            auto cStubOffset  = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
+            auto cStubOffset  = cBoard->getStubOffset();
             int  cStubLatency = cLatency - cStubOffset;
             LOG(INFO) << BOLDBLUE << "Setting L1 latency to " << +cLatency << " and stub latency to " << +cStubLatency << RESET;
             fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubLatency);
@@ -1767,9 +1752,11 @@ void MemoryCheck2S::MonitorInputVoltage()
             uint8_t cADCsel         = 1;
             // char    cADC[4];
             // sprintf(cADC, "ADC%.1d", cADCsel);
-            std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
-            const auto  cTimeStart = std::chrono::system_clock::now();
-            fStartTime             = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
+            // std::string cADC       = "ADC" + (boost::format("%|01|") % cADCsel).str();
+            std::string cADC = "ADC" + std::to_string(cADCsel);
+
+            const auto cTimeStart = std::chrono::system_clock::now();
+            fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
             std::vector<float> cVals(10);
             for(size_t cM = 0; cM < cVals.size(); cM++)
             {
@@ -1828,7 +1815,8 @@ void MemoryCheck2S::MonitorTemperature()
                 if(cADCsel == 14)
                     cADC = "TEMP";
                 else
-                    cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
+                    // cADC = "cADC" + (boost::format("%|01|") % cADCsel).str();
+                    std::string cADC = "ADC" + std::to_string(cADCsel);
 
                 const auto cTimeStart = std::chrono::system_clock::now();
                 fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
@@ -1937,7 +1925,8 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            // std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable
                             float cVal = clpGBTInterface->ReadADC(clpGBT, cADC.c_str()) * cFactor;
@@ -1977,7 +1966,8 @@ void MemoryCheck2S::MonitorAnalogue()
                             uint8_t cADCsel = (cHybrid->getId() % 2 == 0) ? 3 : 0;
                             // char    cADC[4];
                             // sprintf(cADC, "ADC%.1d", cADCsel);
-                            std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            // std::string cADC = "ADC" + (boost::format("%|01|") % cADCsel).str();
+                            std::string cADC = "ADC" + std::to_string(cADCsel);
 
                             // now wait until the output is stable
                             cMeas.push_back(clpGBTInterface->ReadADC(clpGBT, cADC) * cFactor);

@@ -1,5 +1,5 @@
 #include "tools/OTverifyMPASSAdataWord.h"
-#include "HWInterface/D19cDebugFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
@@ -9,7 +9,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTverifyMPASSAdataWord::fCalibrationDescription = "Insert brief calibration description here";
+std::string OTverifyMPASSAdataWord::fCalibrationDescription = "Inject L1 and stubs for each MPA + SSA and verify that CIC output corresponds to the expected pattern (calibration skipped for 2S)";
 
 OTverifyMPASSAdataWord::OTverifyMPASSAdataWord() : OTverifyCICdataWord() {}
 
@@ -21,7 +21,7 @@ void OTverifyMPASSAdataWord::Initialise(void)
     // free the registers in case any
     fNumberOfIterations = findValueInSettings<double>("OTverifyMPASSAdataWordNumberOfIterations", 1000);
 
-#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyMPASSAdataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -31,6 +31,7 @@ void OTverifyMPASSAdataWord::ConfigureCalibration() {}
 
 void OTverifyMPASSAdataWord::Running()
 {
+    // Assumes 1 board per Ph2_ACF instance
     if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) return;
     LOG(INFO) << "Starting OTverifyMPASSAdataWord measurement.";
     Initialise();
@@ -71,7 +72,7 @@ void OTverifyMPASSAdataWord::fillHistograms()
 #endif
 }
 
-void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
+void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket)
 {
     ReadoutChip* theSSA = nullptr;
     try
@@ -146,7 +147,7 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
         thePatternMatcher.addToPattern(0x00a, 0x00f, 12); // 10G debug output is very often cut
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
-        auto lineOutputVector        = theDebugInterface->L1ADebug(1, false);
+        auto lineOutputVector        = theFWInterface->L1ADebug(1, false);
         auto orderedLineOutputVector = reorderPattern(lineOutputVector, numberOfBytesInSinglePacket);
         // std::cout << "L1 Line -> " << getPatternPrintout(orderedLineOutputVector, numberOfBytesInSinglePacket) << std::endl;
         if(matchL1Pattern(orderedLineOutputVector, thePatternMatcher, numberOfBytesInSinglePacket))
@@ -167,7 +168,7 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
     theL1Efficiency /= fNumberOfIterations;
 }
 
-void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCIC, D19cDebugFWInterface* theDebugInterface, uint8_t numberOfBytesInSinglePacket)
+void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCIC, D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket)
 {
     ReadoutChip* theSSA = nullptr;
     try
@@ -244,7 +245,7 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
 
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
-        auto                  lineOutputVector        = theDebugInterface->StubDebug(true, numberOfLines, false);
+        auto                  lineOutputVector        = theFWInterface->StubDebug(true, numberOfLines, false);
         std::vector<uint32_t> concatenatedStubPackage = mergeCICStubOuput(lineOutputVector, numberOfBytesInSinglePacket);
         if(matchStubPattern(concatenatedStubPackage, thePattern, numberOfBytesInSinglePacket, numberOfLines))
         {

@@ -1,7 +1,6 @@
 #include "tools/PedeNoise.h"
 #include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Cbc.h"
-#include "HWDescription/SSA.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/CBCChannelGroupHandler.h"
@@ -13,7 +12,7 @@
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "boost/format.hpp"
+// #include "boost/format.hpp"
 #include <math.h>
 
 #ifdef __USE_ROOT__
@@ -79,10 +78,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     {
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
         fWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
-        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end() ||
-                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
+        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
+        fWithMPA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
         for(auto cFrontEndType: cFrontEndTypes)
         {
             if(std::find(cAllFrontEndTypes.begin(), cAllFrontEndTypes.end(), cFrontEndType) == cAllFrontEndTypes.end()) cAllFrontEndTypes.push_back(cFrontEndType);
@@ -101,13 +98,13 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
             theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler);
         }
-        else if(cFrontEndType == FrontEndType::SSA || cFrontEndType == FrontEndType::SSA2)
+        else if(cFrontEndType == FrontEndType::SSA2)
         {
             SSAChannelGroupHandler theChannelGroupHandler;
             theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
-        else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
+        else if(cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
             theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
@@ -257,7 +254,7 @@ void PedeNoise::sweepSCurves()
                     {
                         auto cType = cChip->getFrontEndType();
 
-                        if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        if(cType == FrontEndType::MPA2)
                         {
                             std::cout << __LINE__ << " ------------- MPA fPulseAmplitudePix " << +fPulseAmplitudePix << std::endl;
                             fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitudePix);
@@ -386,17 +383,21 @@ void PedeNoise::Validate()
                                     {
                                         // char cRegName[11];
                                         // sprintf(cRegName, "Channel%03d", iChan + 1);
-                                        std::string cRegName = "Channel" + (boost::format("%|03|") % (col + 1)).str();
+                                        // std::string cRegName = "Channel" + (boost::format("%|03|") % (col + 1)).str();
+                                        std::ostringstream oss;
+                                        oss << "Channel" << std::setw(3) << std::setfill('0') << (col + 1);
+                                        std::string cRegName = oss.str();
                                         cRegVec.push_back({cRegName, 0xFF});
                                     }
-                                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                     {
                                         // char cRegName[17];
                                         // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
-                                        std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
+                                        // std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
+                                        std::string cRegName = "THTRIMMING_S" + std::to_string(col + 1);
                                         cRegVec.push_back({cRegName, 0x1F});
                                     }
-                                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                                     {
                                         std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
                                         cRegVec.push_back({cRegName, 0x1F});
@@ -451,13 +452,13 @@ void PedeNoise::findPedestal(bool forceAllChannels)
                         fMeanStrips += tmpVthr;
                         cNStripChips++;
                     }
-                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("Bias_THDAC");
                         fMeanStrips += tmpVthr;
                         cNStripChips++;
                     }
-                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("ThDAC0");
                         fMeanPixels += tmpVthr;
@@ -514,9 +515,9 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
                         for(auto cChip: *cHybrid)
                         {
                             auto cType = cChip->getFrontEndType();
-                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cStripValue);
-                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                            else if(cType == FrontEndType::MPA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cPixelValue);
                         }
                     }
@@ -551,12 +552,12 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
                             auto cType    = cChip->getFrontEndType();
                             auto cChipOccupancy =
                                 theOccupancyContainer->getObject(cBoardIdx)->getObject(cOpticalGroupIdx)->getObject(cHybridIdx)->getObject(cChipIdx)->getSummary<Occupancy, Occupancy>().fOccupancy;
-                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                             {
                                 cNStripChips++;
                                 cStripGlobalOccupancy += cChipOccupancy;
                             }
-                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                            else if(cType == FrontEndType::MPA2)
                             {
                                 cNPixelChips++;
                                 cPixelGlobalOccupancy += cChipOccupancy;
@@ -719,7 +720,7 @@ void PedeNoise::extractPedeNoise()
 
                                 float currentOccupancy = 0, previousOccupancy = 0, binCenter = 0;
                                 auto  cType = chip->getFrontEndType();
-                                if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                                if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                                 {
                                     if(mStripIt == fSCurveStripOccupancyMap.rend())
                                     {
@@ -741,7 +742,7 @@ void PedeNoise::extractPedeNoise()
                                                            .fOccupancy;
                                     binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
                                 }
-                                else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                                else if(cType == FrontEndType::MPA2)
                                 {
                                     if(mPixelIt == fSCurvePixelOccupancyMap.rend())
                                     {
@@ -922,9 +923,6 @@ void PedeNoise::setThresholdtoNSigma(BoardContainer* board, float pNSigma)
                     cThresholdWorkingPoint = cPedestal;
                 }
                 fReadoutChipInterface->WriteChipReg(chip, "Threshold", cThresholdWorkingPoint);
-
-                ThresholdVisitor cThresholdVisitor(fReadoutChipInterface, cThresholdWorkingPoint);
-                static_cast<ReadoutChip*>(chip)->accept(cThresholdVisitor);
             }
         }
     }
@@ -938,22 +936,21 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
         {
             for(auto chip: *hybrid)
             {
-                LOG(INFO) << BOLDYELLOW << chip->getId() << RESET;
                 auto chipDC = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                 // auto cType = chipDC->getFrontEndType();
 
                 // uint32_t       NCH = NCHANNELS;
                 // if(cType == FrontEndType::CBC3)
                 //   NCH = NCHANNELS;
-                // else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                // else if(cType == FrontEndType::SSA2)
                 //  NCH = NSSACHANNELS;
-                // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                // else if(cType == FrontEndType::MPA2)
                 //  NCH = NMPAROWS * NSSACHANNELS;
 
                 /*float fMean=1.0;
-                        if(cType == FrontEndType::MPA or  cType == FrontEndType::MPA2)
+                        if(cType == FrontEndType::MPA2)
                      fMean=2.7;
-                        if(cType == FrontEndType::SSA or  cType == FrontEndType::SSA2)
+                        if(cType == FrontEndType::SSA2)
                      fMean=4.2;*/
                 auto     cOriginalMask = chipDC->getChipOriginalMask();
                 uint32_t nMask         = 0;

@@ -242,47 +242,52 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     } while(cLine < nLines); // making sure missing stub line pair is skipped in 2S case
 
                     LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-                    cTriggerInterface->Start();
-                    cTriggerInterface->WaitForNTriggers(10);
-                    cTriggerInterface->Stop();
-                    auto cWordsL1A = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-                    for(auto cWord: cWordsL1A) LOG(DEBUG) << BOLDBLUE << "# " << std::bitset<32>(cWord) << RESET;
-                    uint32_t cCicOutOutputL1A = cWordsL1A[0];
-                    LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
-
-                    cMatch = 32;
-                    cShift = 0;
-                    for(uint8_t shift = 0; shift < 8; shift++)
+                    uint8_t maxAttempt = 3;
+                    for(uint8_t attempt = 0; attempt < maxAttempt; attempt++)
                     {
-                        cWrappedByte = (cPattern >> shift) | (cPattern << (8 - shift));
-                        cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
-                        LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
-                        LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
-                        int popcount = __builtin_popcountll(cWrappedData ^ cCicOutOutputL1A);
-                        if(popcount < cMatch)
-                        {
-                            cMatch = popcount;
-                            cShift = shift;
-                        }
-                        LOG(DEBUG) << BOLDBLUE << "Line L1A Shift " << +shift << " Match " << +popcount << RESET;
-                    }
-                    LOG(INFO) << BOLDBLUE << "Found for L1A a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of " << BOLDWHITE << +cShift << RESET;
-                    cFWInterface->getL1ReadoutInterface()->ResetReadout();
-                    if((cMatch == 0))
-                    {
-                        LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line"
-                                  << " for hybrid side " << +hybridNumber << RESET;
-                    }
-                    else
-                    {
+                        cTriggerInterface->Start();
+                        cTriggerInterface->WaitForNTriggers(10);
+                        cTriggerInterface->Stop();
+                        auto cWordsL1A = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                        for(auto cWord: cWordsL1A) LOG(DEBUG) << BOLDBLUE << "# " << std::bitset<32>(cWord) << RESET;
+                        uint32_t cCicOutOutputL1A = cWordsL1A[0];
                         LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
-                        LOG(INFO) << BOLDRED << "CIC Out Test failed for L1A line"
-                                  << " for hybrid side " << +hybridNumber << RESET;
-                        res = false;
+
+                        cMatch = 32;
+                        cShift = 0;
+                        for(uint8_t shift = 0; shift < 8; shift++)
+                        {
+                            cWrappedByte = (cPattern >> shift) | (cPattern << (8 - shift));
+                            cWrappedData = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
+                            LOG(DEBUG) << BOLDBLUE << std::bitset<8>(cWrappedByte) << RESET;
+                            LOG(DEBUG) << BOLDBLUE << std::bitset<32>(cWrappedData) << RESET;
+                            int popcount = __builtin_popcountll(cWrappedData ^ cCicOutOutputL1A);
+                            if(popcount < cMatch)
+                            {
+                                cMatch = popcount;
+                                cShift = shift;
+                            }
+                            LOG(DEBUG) << BOLDBLUE << "Line L1A Shift " << +shift << " Match " << +popcount << RESET;
+                        }
+                        LOG(INFO) << BOLDBLUE << "Found for L1A a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of " << BOLDWHITE << +cShift << RESET;
+                        cFWInterface->getL1ReadoutInterface()->ResetReadout();
+                        if((cMatch == 0))
+                        {
+                            LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line"
+                                      << " for hybrid side " << +hybridNumber << RESET;
+                            break;
+                        }
+                        else
+                        {
+                            LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
+                            LOG(INFO) << BOLDRED << "CIC Out Test failed for L1A line"
+                                      << " for hybrid side " << +hybridNumber << RESET;
+                            if(attempt == (maxAttempt - 1)) { res = false; }
+                        }
                     }
                     fillSummaryTree(Form("L1A_hybrid_%d_miss_match_0x%02X", hybridNumber, cPattern), cMatch);
                     fillSummaryTree(Form("L1A_hybrid_%d_shift_0x%02X", hybridNumber, cPattern), cShift);
-                    uint32_t cL1ATotalWrong = 0;
+                    /* uint32_t cL1ATotalWrong = 0;
                     uint32_t cL1ATotal      = 0;
                     cWrappedByte            = (cPattern >> cShift) | (cPattern << (8 - cShift));
                     cWrappedData            = (cWrappedByte << 24) | (cWrappedByte << 16) | (cWrappedByte << 8) | (cWrappedByte << 0);
@@ -291,7 +296,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                         cL1ATotalWrong += __builtin_popcountll(cWrappedData ^ cWord);
                         cL1ATotal += 32;
                     }
-                    LOG(DEBUG) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET;
+                    LOG(DEBUG) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET; */
                 }
             }
         }
