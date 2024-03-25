@@ -59,6 +59,7 @@ bool PSInterface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop,
 
 // To generalize
 uint16_t PSInterface::ReadChipReg(Chip* pPS, const std::string& pRegName) { return getInterface(pPS)->ReadChipReg(pPS, pRegName); }
+uint32_t PSInterface::ReadChipFuseID(Chip* pPS) { return getInterface(pPS)->ReadChipFuseID(pPS); }
 
 std::vector<std::pair<std::string, uint16_t>> PSInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
 {

@@ -48,7 +48,7 @@ class SSA2Interface : public ReadoutChipInterface
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode) override;
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pInput);
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
-    void     ReadFuseID(Ph2_HwDescription::Chip* pSSA2);
+    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pSSA2) override;
     float    CalculateADCLSB(Ph2_HwDescription::Chip* pSSA2, float vrefExp = SSA2_VREF_EXPECTED);
     uint16_t MeasureGND(Ph2_HwDescription::Chip* pSSA2);
 
