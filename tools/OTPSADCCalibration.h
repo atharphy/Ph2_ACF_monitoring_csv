@@ -36,6 +36,8 @@ class OTPSADCCalibration : public Tool
     static std::string fCalibrationDescription;
     
   private:
+    void CalibrateBias();
+    void DisableTestPadsOutput(Ph2_HwDescription::ReadoutChip* cChip);
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

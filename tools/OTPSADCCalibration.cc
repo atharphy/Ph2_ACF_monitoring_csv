@@ -1,12 +1,13 @@
 #include "tools/OTPSADCCalibration.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/ADCSlope.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTPSADCCalibration::fCalibrationDescription = "Insert brief calibration description here";
+std::string OTPSADCCalibration::fCalibrationDescription = "Calibrate the ADC of MPA and SSA chips. First it calibrates VREF using the bandgap values, then it calibrates the ADC biases.";
 
 OTPSADCCalibration::OTPSADCCalibration() : Tool() {}
 
@@ -44,12 +45,76 @@ void OTPSADCCalibration::ConfigureCalibration()
 
 void OTPSADCCalibration::Running()
 {
-    LOG(INFO) << "Starting OTPSADCCalibration measurement.";
+    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) return;
+    LOG(INFO) << BOLDMAGENTA << "Starting OTPSADCCalibration measurement." << RESET;
     Initialise();
-    CalibrateBias() // FIXMEEEE!!! This needs to be added (and maybe renamed)
-    LOG(INFO) << "Done with OTPSADCCalibration.";
+    CalibrateBias(); 
+    LOG(INFO) << BOLDMAGENTA << "Done with OTPSADCCalibration." << RESET;
     Reset();
 }
+
+void OTPSADCCalibration::CalibrateBias()
+{
+
+    DetectorDataContainer theVREFDACContainer;
+    ContainerFactory::copyAndInitChip<std::pair<uint8_t, float>>(*fDetectorContainer, theVREFDACContainer);
+    DetectorDataContainer theADCSlopeContainer;
+    ContainerFactory::copyAndInitChip<ADCSlope>(*fDetectorContainer, theADCSlopeContainer);
+    DetectorDataContainer theAVDDContainer;
+    ContainerFactory::copyAndInitChip<std::pair<uint32_t, float>>(*fDetectorContainer, theAVDDContainer);
+    DetectorDataContainer theDVDDContainer;
+    ContainerFactory::copyAndInitChip<std::pair<uint32_t, float>>(*fDetectorContainer, theDVDDContainer);
+
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalReadout: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalReadout)
+            {
+                for(auto cChip: *cHybrid) 
+                { 
+                  DisableTestPadsOutput(cChip);
+                } // chip
+            }
+        }
+    }
+
+// #ifdef __USE_ROOT__
+//     fDQMHistogramPSBiasCal.fillDACPlots(theVREFDACContainer);
+//     fDQMHistogramPSBiasCal.fillSlopePlots(theADCSlopeContainer);
+//     fDQMHistogramPSBiasCal.fillVDDPlots(theAVDDContainer, true);
+//     fDQMHistogramPSBiasCal.fillVDDPlots(theDVDDContainer, false);
+// #else
+//     if(fDQMStreamerEnabled)
+//     {
+//         ContainerSerialization theContainerSerialization("PSBiasCalVrefDac");
+//         theContainerSerialization.streamByBoardContainer(fDQMStreamer, theVREFDACContainer);
+//         ContainerSerialization theSecondContainerSerialization("PSBiasCalADCSlope");
+//         theSecondContainerSerialization.streamByBoardContainer(fDQMStreamer, theADCSlopeContainer);
+//         ContainerSerialization theAVDDContainerSerialization("PSBiasCalAVDD");
+//         theAVDDContainerSerialization.streamByBoardContainer(fDQMStreamer, theAVDDContainer);
+//         ContainerSerialization theDVDDContainerSerialization("PSBiasCalDVDD");
+//         theDVDDContainerSerialization.streamByBoardContainer(fDQMStreamer, theDVDDContainer);
+//     }
+// #endif
+
+}
+
+void OTPSADCCalibration::DisableTestPadsOutput(ReadoutChip* cChip)
+{
+    if(cChip->getFrontEndType() == FrontEndType::MPA2)
+    {
+        LOG(INFO) << BOLDMAGENTA << "Disable all MPA test pads outputs... " << RESET;
+        static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->selectBlock(cChip, 0);
+    }
+    else if(cChip->getFrontEndType() == FrontEndType::SSA2)
+    {
+        LOG(INFO) << BOLDMAGENTA << "Disable all SSA test pads outputs... " << RESET;
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_lsb", 0x0);
+        fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_msb", 0x0);
+    }
+}
+
 
 void OTPSADCCalibration::Stop(void)
 {

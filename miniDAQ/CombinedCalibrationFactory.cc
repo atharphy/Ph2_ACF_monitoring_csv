@@ -24,6 +24,7 @@
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyMPASSAdataWord.h"
 #include "tools/PSPhysics.h"
+#include "tools/OTPSADCCalibration.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/Physics2S.h"
@@ -85,7 +86,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTCICwordAlignment,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
-             PedestalEqualization>("Outer Tracker", "calibration");
+             OTPSADCCalibration>("Outer Tracker", "calibration");
+            //  PedestalEqualization>("Outer Tracker", "calibration");
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
