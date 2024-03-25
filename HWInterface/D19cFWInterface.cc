@@ -823,7 +823,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         cL1ReadoutInterfaceReset = fL1ReadoutInterface->ResetReadout();
         cAttempts++;
     }
-    if(!cL1ReadoutInterfaceReset) { LOG(WARNING) << BOLDYELLOW << "Reseting DDR3 failed!" << RESET; }
+    if(!cL1ReadoutInterfaceReset) { LOG(WARNING) << BOLDYELLOW << "Resetting DDR3 failed!" << RESET; }
     fL1ReadoutInterface->ResetReadout();
     // reset trigger
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
