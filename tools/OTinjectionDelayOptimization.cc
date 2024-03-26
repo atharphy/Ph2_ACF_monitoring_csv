@@ -65,7 +65,6 @@ void OTinjectionDelayOptimization::Reset() { fRegisterHelper->restoreSnapshot();
 
 void OTinjectionDelayOptimization::optimizeInjectionDelay()
 {
-    this->enableTestPulse(true);
     bool is2Smodule = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S);
     if(is2Smodule)
         injectionDelayScan2S();
@@ -75,6 +74,7 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
 
 void OTinjectionDelayOptimization::injectionDelayScan2S()
 {
+    this->enableTestPulse(true);
     LOG(INFO) << BOLDBLUE << "OTinjectionDelayOptimization::injectionDelayScan2S - Scanning Delay for 2S module" << RESET;
 
     uint16_t initialLatency = 200;
@@ -87,7 +87,7 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
     theChannelGroupHandler.setChannelGroupParameters(16, 2);
     setChannelGroupHandler(theChannelGroupHandler);
 
-    this->SetTestAllChannels(true);
+    this->SetTestAllChannels(false);
     // Setting sparsification for simplicity
     for(auto theBoard: *fDetectorContainer)
     {
@@ -120,8 +120,6 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
         }
         return std::make_pair(latencyDAC, delayDAC);
     };
-
-    std::map<uint16_t, DetectorDataContainer> theThresholdVsDelayMap;
 
     std::pair<float, uint16_t> defaultThresholdAndDelay{0, 0}; // since 0 delay would not be measureable with this procedure (no pedestal) using 0 as not yet found value
     DetectorDataContainer      theBestThresholdAndDelayContainer;
@@ -188,9 +186,6 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
             theContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theThresholdContainer, delay);
         }
 #endif
-
-        theThresholdVsDelayMap.emplace(std::make_pair(delay, std::move(theThresholdContainer)));
-
         ++numberOfIterations;
     }
 
@@ -228,59 +223,182 @@ void OTinjectionDelayOptimization::injectionDelayScan2S()
 
 void OTinjectionDelayOptimization::injectionDelayScanPS()
 {
-    // TODO: working in progess by Fabio
+    fTestPulse = true;
+    
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
-    // LOG(INFO) << BOLDBLUE << "OTinjectionDelayOptimization::injectionDelayScanPS - Scanning Delay for PS module" << RESET;
+    // fBeBoardInterface->WriteBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
+    // fBeBoardInterface->WriteBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+    // ReadNEvents(fDetectorContainer->getFirstObject(), 10);
 
-    //     uint16_t initialLatency = 200;
-    //     uint16_t totalDelay = 150;
-    //     uint16_t delayStep = 1;
-    //     float expectedNoise = 6.5; // VCth units
-    //     uint16_t delayOffset = 12; // number of delays from pulse shape lower edge
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
-    //     // Enabling 1 every N columns and corresponding rows in a diagonal pattern
-    //     ChannelGroup<NMPAROWS, NSSACHANNELS> theMPAChannelGroup;
-    //     theMPAChannelGroup.disableAllChannels();
-    //     uint16_t initialCol = 2;
-    //     uint16_t colsToSkip = 10;
-    //     uint16_t currentRow = 1;
-    //     uint16_t rowsToSkip = 1;
-    //     for(uint16_t col = initialCol; col < NSSACHANNELS; col+=initialCol)
-    //     {
-    //         theMPAChannelGroup.enableChannel(currentRow % NMPAROWS, col);
-    //         currentRow += rowsToSkip;
-    //     }
+    // fBeBoardInterface->WriteBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_cnfg.fast_command_block.trigger_source", 6);
+    // fBeBoardInterface->WriteBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+    // ReadNEvents(fDetectorContainer->getFirstObject(), 10);
 
-    //     MPAChannelGroupHandler theChannelGroupHandlerMPA;
-    //     theChannelGroupHandlerMPA.setChannelGroupParameters(NMPAROWS, NSSACHANNELS);
-    //     setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
-    //     // Enabling 1 every N columns
-    //     ChannelGroup<1, NSSACHANNELS> theSSAChannelGroup;
-    //     theSSAChannelGroup.disableAllChannels();
-    //     uint16_t initialStrip = 3;
-    //     uint16_t stripsToSkip = 10;
-    //     for(uint16_t col = initialStrip; col < NSSACHANNELS; col+=stripsToSkip) theSSAChannelGroup.enableChannel(0, col);
-    //     SSAChannelGroupHandler theChannelGroupHandlerSSA;
-    //     theChannelGroupHandlerSSA.setCustomChannelGroup(theSSAChannelGroup);
-    //     theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS);
-    //     setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA2);
 
-    //     this->SetTestAllChannels(true);
+    LOG(INFO) << BOLDBLUE << "OTinjectionDelayOptimization::injectionDelayScanPS - Scanning Delay for PS module" << RESET;
 
-    //     auto fromTotalDelayToDACs = [](uint16_t delay, uint16_t initialLatency)
-    //     {
-    //         uint8_t delayDAC   = 25 - (delay % 25);
-    //         uint16_t latencyDAC = initialLatency - (delay / 25);
-    //         if(delayDAC == 25)
-    //         {
-    //             delayDAC   = 0;
-    //             latencyDAC = latencyDAC + 1;
-    //         }
-    //         delayDAC = delayDAC + (1 << 7); // in the SSA the MSB of the delay register need to be set to 1 to enable the delay
-    //         return std::make_pair(latencyDAC, delayDAC);
-    //     };
+    uint16_t initialLatency = 200;
+    uint16_t totalDelay = 150;
+    uint16_t delayStep = 1;
+    // float expectedNoise = 6.5; // VCth units
+    // uint16_t delayOffset = 12; // number of delays from pulse shape lower edge
+    
+    // Setting sparsification for simplicity
+    for(auto theBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", initialLatency - 1);
+        // for(auto theOpticalGroup: *theBoard)
+        // {
+        //     for(auto theHybrid: *theOpticalGroup)
+        //     {
+        //         auto cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+        //         fCicInterface->SetSparsification(cCic, 0);
+        //     }
+        // }
+    }
 
-    //     // "Delay_line"
-    //     // "DL_ctrl0" -> "DL_ctrl6"
+    // Enabling 1 every N columns and corresponding rows in a diagonal pattern
+    ChannelGroup<NMPAROWS, NSSACHANNELS> theMPAChannelGroup;
+    theMPAChannelGroup.disableAllChannels();
+    uint16_t initialCol = 2;
+    uint16_t colsToSkip = 100;
+    uint16_t currentRow = 1;
+    uint16_t rowsToSkip = 1;
+    for(uint16_t col = initialCol; col < NSSACHANNELS; col+=colsToSkip)
+    {
+        theMPAChannelGroup.enableChannel(currentRow % NMPAROWS, col);
+        currentRow += rowsToSkip;
+    }
+
+    MPAChannelGroupHandler theChannelGroupHandlerMPA;
+    theChannelGroupHandlerMPA.setCustomChannelGroup(theMPAChannelGroup);
+    theChannelGroupHandlerMPA.setChannelGroupParameters(NMPAROWS, NSSACHANNELS);
+    setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] number of pixel enabled = " << theMPAChannelGroup.getNumberOfEnabledChannels() << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] number of pixel Groups  = " << theChannelGroupHandlerMPA.getNumberOfGroups() << std::endl;
+
+    // Enabling 1 every N columns
+    ChannelGroup<1, NSSACHANNELS> theSSAChannelGroup;
+    theSSAChannelGroup.disableAllChannels();
+    uint16_t initialStrip = 3;
+    uint16_t stripsToSkip = 100;
+    for(uint16_t col = initialStrip; col < NSSACHANNELS; col+=stripsToSkip) theSSAChannelGroup.enableChannel(0, col);
+    SSAChannelGroupHandler theChannelGroupHandlerSSA;
+    theChannelGroupHandlerSSA.setCustomChannelGroup(theSSAChannelGroup);
+    theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS);
+    setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA2);
+
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] number of strip enabled = " << theSSAChannelGroup.getNumberOfEnabledChannels() << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] number of strip Groups  = " << theChannelGroupHandlerSSA.getNumberOfGroups() << std::endl;
+
+    this->SetTestAllChannels(true);
+
+    auto fromTotalDelayToDACs = [](uint16_t delay, uint16_t initialLatency)
+    {
+        uint8_t delayDAC   = 25 - (delay % 25);
+        uint16_t latencyDAC = initialLatency - (delay / 25);
+        if(delayDAC == 25)
+        {
+            delayDAC   = 0;
+            latencyDAC = latencyDAC + 1;
+        }
+        delayDAC = delayDAC + (1 << 7); // in the SSA the MSB of the delay register need to be set to 1 to enable the delay
+        return std::make_pair(latencyDAC, delayDAC);
+    };
+
+    auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
+    std::string theMPAqueryFunctionString = "MPAqueryFunction";
+
+    auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
+    std::string theSSAqueryFunctionString = "SSAqueryFunction";
+    
+    for(uint16_t delay = 0; delay <= totalDelay; delay += delayStep)
+    {
+        float targetThreshold = 0.50;
+        auto  latencyAndDelay = fromTotalDelayToDACs(delay, initialLatency);
+        LOG(INFO) << BOLDBLUE << "Finding threshold corresponging to " << targetThreshold << "% occupancy with latency " << +latencyAndDelay.first << " and injection delay " << +(latencyAndDelay.second & 0x7F)
+                  << RESET;
+        setSameDac("TriggerLatency", latencyAndDelay.first);
+    
+        // setting delay for SSAs
+        fDetectorContainer->addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
+        setSameDac("Delay_line", latencyAndDelay.second);
+        fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
+
+        // setting delay for MPAs
+        fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
+        setSameDac("DL_ctrl0", latencyAndDelay.second);
+        setSameDac("DL_ctrl1", latencyAndDelay.second);
+        setSameDac("DL_ctrl2", latencyAndDelay.second);
+        setSameDac("DL_ctrl3", latencyAndDelay.second);
+        setSameDac("DL_ctrl4", latencyAndDelay.second);
+        setSameDac("DL_ctrl5", latencyAndDelay.second);
+        setSameDac("DL_ctrl6", latencyAndDelay.second);
+        fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
+
+
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        bitWiseScan("Threshold", fNumberOfEvents, targetThreshold);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
+        DetectorDataContainer theThresholdContainer;
+        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theThresholdContainer);
+
+        for(auto theBoard: *fDetectorContainer)
+        {
+            for(auto theOpticalGroup: *theBoard)
+            {
+                for(auto theHybrid: *theOpticalGroup)
+                {
+                    for(auto theChip: *theHybrid)
+                    {
+                        auto  theThreshold = fReadoutChipInterface->ReadChipReg(theChip, "Threshold");
+                        // auto& theChipBestThresholdAndDelay =
+                        //     theBestThresholdAndDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<float, uint16_t>>();
+                        theThresholdContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint16_t>() = theThreshold;
+                        // if(delay < maximumPedestalDelay) // still in the plateau, add to the pedestal average
+                        // {
+                        //     theChipBestThresholdAndDelay.first += theThreshold;
+                        // }
+                        // else
+                        // {
+                        //     // auto &theChipBestDelay    = theBestDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint16_t>();
+                        //     if(!isPedestalAveraged)
+                        //     {
+                        //         theChipBestThresholdAndDelay.first /= numberOfIterations;                                       // average pedestal
+                        //         theChipBestThresholdAndDelay.first -= (expectedNoise * fCbcNumberOfSigmaNoiseAwayFromPedestal); // move away from pedestal by n times the noise
+                        //     }
+                        //     if((theThreshold <= theChipBestThresholdAndDelay.first) && theChipBestThresholdAndDelay.second == 0) { theChipBestThresholdAndDelay.second = delay + delayOffset; }
+                        // }
+                    }
+                }
+            }
+        }
+
+
+#ifdef __USE_ROOT__
+        fDQMHistogramOTinjectionDelayOptimization.fillThresholdVsDelayScan(delay, theThresholdContainer);
+#else
+        if(fDQMStreamerEnabled)
+        {
+            ContainerSerialization theContainerSerialization("OTinjectionDelayOptimizationDelayScan");
+            theContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theThresholdContainer, delay);
+        }
+#endif
+
+    }
+
 }

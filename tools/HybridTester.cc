@@ -280,7 +280,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                     //}
                     // experimental
 
-                    std::vector<uint32_t> cHits = pEvent->GetHits(cHybrid->getId(), cCbc->getId());
+                    auto cHits = pEvent->GetHits(cHybrid->getId(), cCbc->getId());
                     cHitCounter += cHits.size();
 
                     for(__attribute__((unused)) auto cHit: cHits) cScurve->second->Fill(pValue);

@@ -291,7 +291,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId)
 {
     // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling GetHits" << std::endl;
-    std::vector<uint32_t> cHits;
+    std::vector<std::pair<uint16_t, uint16_t>> cHits; // row and col
     try
     {
         cHits = this->GetHits(hybridId, chipContainer->getId());
@@ -304,9 +304,9 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
 
     for(auto cHit: cHits)
     {
-        if(testChannelGroup->isChannelEnabled(0, cHit)) // This cannot work for PS since hits are not returned as expected
+        if(testChannelGroup->isChannelEnabled(cHit.first, cHit.second)) // This cannot work for PS since hits are not returned as expected
         {
-            chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+            chipContainer->getChannel<Occupancy>(cHit.first, cHit.second).fOccupancy += 1.;
         }
     }
 }
@@ -823,9 +823,9 @@ uint32_t D19cCic2Event::GetNHits(uint8_t pHybridId, uint8_t pReadoutChipId) cons
     return cNHits;
 }
 
-std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadoutChipId) const
+std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
-    std::vector<uint32_t> cHits(0);
+    std::vector<std::pair<uint16_t, uint16_t>> cHits(0);
     if(fIsSparsified)
     {
         if(fIs2S)
@@ -838,37 +838,24 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadout
                 for(int cId = 0; cId < cCluster.fClusterWidth; cId++)
                 {
                     // LOG(DEBUG) << BOLDMAGENTA << "\t\t.. hit in channel " << +cFirstChannel + 2 * cId << RESET;
-                    cHits.push_back(cFirstChannel + cId * 2);
+                    cHits.push_back({0, cFirstChannel + cId * 2});
                 }
             }
-            // auto cDataBitset = this->decodeClusters(pHybridId, pReadoutChipId);
-            // for(uint32_t i = 0; i < NCHANNELS; ++i)
-            // {
-            //     if(cDataBitset[i] > 0) { cHits.push_back(i); }
-            // }
         }
         else
         {
             for(auto cCluster: GetPixelClusters(pHybridId, pReadoutChipId))
             {
-                for(int cId = 0; cId <= cCluster.fWidth; cId++)
+                for(int cId = 0; cId < cCluster.fWidth; cId++)
                 {
-                    uint32_t cHit = ((cCluster.fZpos + 1) << 24) | (cCluster.fAddress - 1) << 8 | cId << 0;
-                    if(cCluster.fWidth > 0)
-                        // LOG(DEBUG) << BOLDBLUE << "Pixel cluster " << +cCluster.fZpos << " [z-pos]; " << +cCluster.fAddress << " [address] " << +cId << " [in cluster]"
-                        //            << " hit is " << +cHit << RESET;
-                        cHits.push_back(cHit);
+                    cHits.push_back({cCluster.fZpos + 1, cCluster.fAddress - 1});
                 }
             }
             for(auto cCluster: GetStripClusters(pHybridId, pReadoutChipId))
             {
-                for(int cId = 0; cId <= cCluster.fWidth; cId++)
+                for(int cId = 0; cId < cCluster.fWidth; cId++)
                 {
-                    uint32_t cHit = 0 << 24 | (cCluster.fAddress - 1) << 8 | cId << 0;
-                    if(cCluster.fWidth > 0)
-                        // LOG(DEBUG) << BOLDGREEN << "Strip cluster " << +cCluster.fAddress << " [address] " << +cId << " [in cluster]"
-                        //            << " hit is " << +cHit << RESET;
-                        cHits.push_back(cHit);
+                        cHits.push_back({0, cCluster.fAddress - 1});
                 }
             }
         }
@@ -884,14 +871,9 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadout
             {
                 if(cDataBitset[cDataBitset.size() - cOffset - 1 - cPos] == 1)
                 {
-                    // LOG(DEBUG) << BOLDYELLOW << " Hit in channel " << +cPos << RESET;
-                    cHits.push_back(cPos);
+                    cHits.push_back({0, cPos});
                 }
             }
-        }
-        else
-        {
-            // To-DO add here for raw PS data
         }
     }
     return cHits;
@@ -930,7 +912,7 @@ void D19cCic2Event::print(std::ostream& os) const
                 printL1Header(os, cHybridId, cReadoutChipId);
 
                 // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling GetHits" << std::endl;
-                std::vector<uint32_t> cHits = this->GetHits(cHybridId, cReadoutChipId);
+                std::vector<std::pair<uint16_t, uint16_t>> cHits = this->GetHits(cHybridId, cReadoutChipId);
                 if(cHits.size() == NCHANNELS)
                     os << BOLDRED << "All channels firing!" << RESET << std::endl;
                 else
@@ -938,7 +920,7 @@ void D19cCic2Event::print(std::ostream& os) const
                     int cCounter = 0;
                     for(auto& cHit: cHits)
                     {
-                        os << std::setw(3) << cHit << " ";
+                        os << cHit.first << " - " << cHit.second;
                         cCounter++;
                         if(cCounter == 10)
                         {
@@ -1096,7 +1078,7 @@ SLinkEvent D19cCic2Event::GetSLinkEvent(BeBoard* pBoard) const
                     // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling GetHits" << std::endl;
                     auto cHits = this->GetHits(cHybridId, cChip->getId());
                     // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] calling GetHits" << std::endl;
-                    // for(auto cHit: this->GetHits(cHybridId, cChip->getId())) { LOG(DEBUG) << BOLDBLUE << "\t... Hit in channel " << +cHit << RESET; }
+                    // for(auto cHit: this->GetHits(cHybridId, cChip->getId())) { LOG(DEBUG) << BOLDBLUE << "\t... Hit in channel " << +cHit.second << RESET; }
                 }
                 // now stubs
                 for(auto cStub: this->StubVector(cHybridId, cChip->getId()))

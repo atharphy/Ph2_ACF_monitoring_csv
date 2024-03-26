@@ -158,6 +158,8 @@ bool     MPA2Interface::maskPixel(Chip* pChip, uint16_t row, uint16_t col, bool 
 
 bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] enabling " << group->getNumberOfEnabledChannels() << "channels " << std::endl;
+
     auto cOriginalMask = cChip->getChipOriginalMask();
 
     bool returnval = true;
@@ -165,7 +167,11 @@ bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<C
     {
         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
         {
-            if(cOriginalMask->isChannelEnabled(row, col) && group->isChannelEnabled(row, col)) continue;
+            if(cOriginalMask->isChannelEnabled(row, col) && group->isChannelEnabled(row, col))
+            {
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] enabling pixel (row, col) " << row << " - " << col << std::endl;
+                continue;
+            }
             returnval &= maskPixel(cChip, row, col, true, pVerify);
         }
     }
@@ -188,9 +194,13 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
 }
 bool MPA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify)
 {
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] enabling " << group->getNumberOfEnabledChannels() << "channels " << std::endl;
     bool success = true;
     if(mask) success &= maskChannelGroup(pChip, group, pVerify);
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+    
     if(inject) success &= setInjectionSchema(pChip, group, pVerify);
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     return success;
 }

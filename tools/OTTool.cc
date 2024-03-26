@@ -756,7 +756,8 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
                         fBoardData.localX    = cHybrid->getId() % 2;
                         fBoardData.localY    = cStripId;
                         fBoardData.cSensorId = (cChnl % 2 == 0) ? 0 : 1;
-                        auto cHitFound       = std::find(cHits.begin(), cHits.end(), cChnl) != cHits.end();
+                        std::pair<uint16_t, uint16_t> theHit = {0, cChnl};
+                        auto cHitFound       = std::find(cHits.begin(), cHits.end(), theHit) != cHits.end();
                         fBoardData.hit       = (cHitFound) ? 1 : 0;
 #ifdef __USE_ROOT__
                         if(fSaveTree) fTree->Fill();

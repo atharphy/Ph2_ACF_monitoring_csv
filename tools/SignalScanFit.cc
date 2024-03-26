@@ -237,18 +237,18 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                             TProfile*             cClusterSizeOdd     = static_cast<TProfile*>(getHist(cCbc, "Cbc_ClusterSize_odd"));
                             TH2D*                 cClusters2DEvenHist = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_even"));
                             TH2D*                 cClusters2DOddHist  = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_odd"));
-                            std::vector<uint32_t> cHits               = cEvent->GetHits(cHybrid->getId(), cCbc->getId());
+                            auto cHits               = cEvent->GetHits(cHybrid->getId(), cCbc->getId());
                             LOG(DEBUG) << BOLDBLUE << "Found " << +cHits.size() << " hits in CBC" << +cCbc->getId() << RESET;
                             for(auto cId: cHits)
                             {
-                                LOG(DEBUG) << BOLDBLUE << "\t.... Hit found in channel " << +cId << " i.e. sensor " << (int)(cId % 2) << RESET;
+                                LOG(DEBUG) << BOLDBLUE << "\t.... Hit found in channel " << +cId.second << " i.e. sensor " << (int)(cId.second % 2) << RESET;
                                 // Check which sensor we are on
-                                if((int(cId) % 2) == 0)
+                                if((int(cId.second) % 2) == 0)
                                     cHitsEvenHist->Fill(cVCth);
                                 else
                                     cHitsOddHist->Fill(cVCth);
 
-                                cSignalHist->Fill(cCbc->getId() * NCHANNELS + cId, cVCth);
+                                cSignalHist->Fill(cCbc->getId() * NCHANNELS + cId.second, cVCth);
                                 cEventHits++;
                             } // end for cId
                             // Fill the cluster histos, use the middleware clustering
