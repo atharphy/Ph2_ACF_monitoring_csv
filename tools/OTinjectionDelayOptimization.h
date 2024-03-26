@@ -10,7 +10,7 @@
 #ifndef OTinjectionDelayOptimization_h__
 #define OTinjectionDelayOptimization_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
@@ -34,16 +34,16 @@ class OTinjectionDelayOptimization : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void optimizeInjectionDelay();
     void injectionDelayScan2S();
     void injectionDelayScanPS();
 
-    uint32_t fNumberOfEvents {100};
-    uint8_t fCbcTestPulseValue {150};
-    float fCbcNumberOfSigmaNoiseAwayFromPedestal {10.};
-    
+    uint32_t fNumberOfEvents{100};
+    uint8_t  fCbcTestPulseValue{150};
+    float    fCbcNumberOfSigmaNoiseAwayFromPedestal{10.};
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTinjectionDelayOptimization fDQMHistogramOTinjectionDelayOptimization;

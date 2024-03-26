@@ -815,6 +815,15 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // load trigger configuration
     // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     fTriggerInterface->ResetTriggerFSM();
+    uint16_t cAttempts                = 0;
+    uint16_t cMaxAttempts             = 5;
+    bool     cL1ReadoutInterfaceReset = false;
+    while(!cL1ReadoutInterfaceReset && (cAttempts < cMaxAttempts))
+    {
+        cL1ReadoutInterfaceReset = fL1ReadoutInterface->ResetReadout();
+        cAttempts++;
+    }
+    if(!cL1ReadoutInterfaceReset) { LOG(WARNING) << BOLDYELLOW << "Resetting DDR3 failed!" << RESET; }
     fL1ReadoutInterface->ResetReadout();
     // reset trigger
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
@@ -1969,14 +1978,8 @@ float D19cFWInterface::GetSFPParameter_L12(std::string parameter, int channel)
     return error;
 } // D19cFWInterface
 
-std::vector<uint32_t> D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
-{
-    return fDebugInterface->L1ADebug(pWait_ms, pPrint);
-}
+std::vector<uint32_t> D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint) { return fDebugInterface->L1ADebug(pWait_ms, pPrint); }
 
-std::vector<std::vector<uint32_t>> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
-{
-    return fDebugInterface->StubDebug(pWithTestPulse, pNlines, pPrint);
-}
+std::vector<std::vector<uint32_t>> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint) { return fDebugInterface->StubDebug(pWithTestPulse, pNlines, pPrint); }
 
 } // namespace Ph2_HwInterface

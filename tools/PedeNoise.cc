@@ -12,7 +12,7 @@
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/ThresholdAndNoise.h"
-//#include "boost/format.hpp"
+// #include "boost/format.hpp"
 #include <math.h>
 
 #ifdef __USE_ROOT__
@@ -383,7 +383,7 @@ void PedeNoise::Validate()
                                     {
                                         // char cRegName[11];
                                         // sprintf(cRegName, "Channel%03d", iChan + 1);
-                                        //std::string cRegName = "Channel" + (boost::format("%|03|") % (col + 1)).str();
+                                        // std::string cRegName = "Channel" + (boost::format("%|03|") % (col + 1)).str();
                                         std::ostringstream oss;
                                         oss << "Channel" << std::setw(3) << std::setfill('0') << (col + 1);
                                         std::string cRegName = oss.str();
@@ -393,7 +393,7 @@ void PedeNoise::Validate()
                                     {
                                         // char cRegName[17];
                                         // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
-                                        //std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
+                                        // std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
                                         std::string cRegName = "THTRIMMING_S" + std::to_string(col + 1);
                                         cRegVec.push_back({cRegName, 0x1F});
                                     }

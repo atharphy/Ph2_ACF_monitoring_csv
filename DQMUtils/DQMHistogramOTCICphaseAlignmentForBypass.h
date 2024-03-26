@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTinjectionDelayOptimization.h
-        \brief               DQM class for OTinjectionDelayOptimization
+        \file                DQMHistogramOTCICphaseAlignmentForBypass.h
+        \brief               DQM class for OTCICphaseAlignmentForBypass
         \author              Fabio Ravera
-        \date                15/03/24
+        \date                22/03/24
 */
 
-#ifndef DQMHistogramOTinjectionDelayOptimization_h_
-#define DQMHistogramOTinjectionDelayOptimization_h_
+#ifndef DQMHistogramOTCICphaseAlignmentForBypass_h_
+#define DQMHistogramOTCICphaseAlignmentForBypass_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTinjectionDelayOptimization
- * \brief Class for OTinjectionDelayOptimization monitoring histograms
+ * \class DQMHistogramOTCICphaseAlignmentForBypass
+ * \brief Class for OTCICphaseAlignmentForBypass monitoring histograms
  */
-class DQMHistogramOTinjectionDelayOptimization : public DQMHistogramBase
+class DQMHistogramOTCICphaseAlignmentForBypass : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTinjectionDelayOptimization();
+    DQMHistogramOTCICphaseAlignmentForBypass();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTinjectionDelayOptimization();
+    ~DQMHistogramOTCICphaseAlignmentForBypass();
 
     /*!
      * \brief Book histograms
@@ -55,12 +55,7 @@ class DQMHistogramOTinjectionDelayOptimization : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillThresholdVsDelayScan(uint16_t delay, DetectorDataContainer& theThresholdContainer);
-    void fillBestThresholdAndDelay(DetectorDataContainer& theBestThresholdAndDelayContainer);
-
   private:
-    DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fThresholdVsDelayScanHistogramContainer;
-    DetectorDataContainer fBestThresholdAndDelayHistogramContainer;
+    DetectorContainer* fDetectorContainer;
 };
 #endif
