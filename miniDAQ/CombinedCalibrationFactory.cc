@@ -40,6 +40,8 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
+#include "tools/OTinjectionDelayOptimization.h"
+#include "tools/ECVLinkAlignmentOT.h"
 
 using namespace MessageUtils;
 
@@ -52,7 +54,15 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     // OT calibrations
     Register<PedeNoise>("Outer Tracker", "noiseOT");
     Register<OTVTRXLightOff>("Outer Tracker", "vtrxoff");
-    Register<ECVLinkAlignmentOT>("Outer Tracker", "ecv");
+    Register<ECVLinkAlignmentOT,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord>("Outer Tracker", "ecv");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
     Register<OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
@@ -111,7 +121,15 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedestalEqualization,
              PedeNoise,
              KIRA>("Outer Tracker", "calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, PedeNoise>(
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
+             PedeNoise>(
         "Outer Tracker", "pedenoise");
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
