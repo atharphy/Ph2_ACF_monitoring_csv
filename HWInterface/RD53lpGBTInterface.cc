@@ -193,9 +193,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path: " << BOLDYELLOW << ConfigFilePath << RESET;
     }
 
-    uint32_t CHIPID = this->ReadChipID(static_cast<lpGBT*>(pChip), 1);
-
-    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), CHIPID, ConfigFilePath);
+    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), this->ReadChipID(static_cast<lpGBT*>(pChip), 1), ConfigFilePath);
     lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
     lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
     lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));

@@ -252,7 +252,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             if((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
         }
         else if(static_cast<std::string>(theChild.name()) == LPGBT_CONFIGFILE_NODE_NAME)
-            theConfigFilePath =  expandEnvironmentVariables(theChild.attribute(COMMON_FILENAME_ATTRIBUTE_NAME).value());
+            theConfigFilePath = expandEnvironmentVariables(theChild.attribute(COMMON_FILENAME_ATTRIBUTE_NAME).value());
         else if(static_cast<std::string>(theChild.name()) == LPGBT_NODE_NAME)
         {
             std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
