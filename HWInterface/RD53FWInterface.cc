@@ -1370,7 +1370,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_lane, uint8_t frontendSpeed)
+std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
@@ -1398,51 +1398,71 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
         time2run   = frames2run / fps;
     }
 
-    // Configure number of printouts and calculate the frequency of printouts
+    // ##########################################################################
+    // # Configure number of printouts and calculate the frequency of printouts #
+    // ##########################################################################
     double time_per_step = std::min(std::max(time2run / nPrints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
-    WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
-                   {"user.ctrl_regs.PRBS_checker.chip_address", chip_lane},
-                   {"user.ctrl_regs.PRBS_checker.reset_cntr", 1},
-                   {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
+    // ##################
+    // # Reset counters #
+    // ##################
+    for(const auto& thePair: hybrid_id_chip_lane)
+        RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", thePair.first},
+                                   {"user.ctrl_regs.PRBS_checker.chip_address", thePair.second},
+                                   {"user.ctrl_regs.PRBS_checker.reset_cntr", 1},
+                                   {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
 
     // ##########################
     // # Set PRBS frames to run #
     // ##########################
     uint32_t lowFrames, highFrames;
     std::tie(highFrames, lowFrames) = bits::unpack<32, 32>(static_cast<long long>(frames2run));
-    WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames}, {"user.ctrl_regs.prbs_frames_to_run_high", highFrames}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames}, {"user.ctrl_regs.prbs_frames_to_run_high", highFrames}});
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.PRBS_checker.load_config");
 
     // #########
     // # Start #
     // #########
-    WriteStackReg({{"user.ctrl_regs.PRBS_checker.start_checker", 1}, {"user.ctrl_regs.PRBS_checker.start_checker", 0}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.start_checker", 1}, {"user.ctrl_regs.PRBS_checker.start_checker", 0}});
 
-    LOG(INFO) << BOLDGREEN << std::fixed << std::setprecision(0) << "===== BER run starting @ " << bitPerFrame << "-bits/frame  =====" << RESET;
+    // #########################################
+    // # Read frame counters to check progress #
+    // #########################################
+    LOG(INFO) << BOLDGREEN << std::fixed << std::setprecision(0) << "===== BER run starting @ " << BOLDYELLOW << bitPerFrame << BOLDGREEN << "-bits/frame  =====" << RESET;
     bool     run_done     = false;
     int      idx          = 1;
-    uint64_t frameCounter = 0, nErrors = 0;
+    uint64_t frameCounter = 0;
+    uint64_t nErrors;
     while(run_done == false)
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
-        // #########################################
-        // # Read frame counters to check progress #
-        // #########################################
-        cntr_hi = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
-        cntr_lo = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
-        if(bits::pack<32, 32>(cntr_hi, cntr_lo) == frameCounter)
+        bool forceDone = true;
+        for(const auto& thePair: hybrid_id_chip_lane)
         {
-            LOG(ERROR) << BOLDRED << "BER test stopping because no clock was detected for this chip" << RESET;
-            return -1;
-        }
-        frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-        nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+            RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", thePair.first}, {"user.ctrl_regs.PRBS_checker.chip_address", thePair.second}});
 
-        double percent_done = frameCounter / frames2run * 100.;
-        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
-        LOG(INFO) << GREEN << "Current counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
+            cntr_hi = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
+            cntr_lo = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
+
+            if(bits::pack<32, 32>(cntr_hi, cntr_lo) == 0)
+                LOG(WARNING) << BOLDRED << "No clock was detected for Hybrid ID " << BOLDYELLOW << thePair.first << BOLDRED << " Chip Lane " << BOLDYELLOW << thePair.second << RESET;
+            else
+            {
+                frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
+                forceDone    = false;
+            }
+        }
+
+        if(forceDone == true)
+        {
+            LOG(WARNING) << BOLDRED << "BER test is stopping because no clock was detected from any of the chips" << RESET;
+            return {};
+        }
+
+        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << frameCounter / frames2run * 100. << RESET << GREEN << "% done)"
+                  << RESET;
+
         if(given_time == true)
             run_done = (time_per_step * idx >= time2run);
         else
@@ -1454,23 +1474,32 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     // ########
     // # Stop #
     // ########
-    WriteStackReg({{"user.ctrl_regs.PRBS_checker.stop_checker", 1}, {"user.ctrl_regs.PRBS_checker.stop_checker", 0}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.stop_checker", 1}, {"user.ctrl_regs.PRBS_checker.stop_checker", 0}});
 
     // ###########################
     // # Read PRBS frame counter #
     // ###########################
-    cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
-    cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
-    frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-    nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
-    LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
-    LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
-    LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
-    LOG(INFO) << GREEN << "Final Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
-              << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
-    LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
+    std::vector<double> results;
+    for(const auto& thePair: hybrid_id_chip_lane)
+    {
+        RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", thePair.first}, {"user.ctrl_regs.PRBS_checker.chip_address", thePair.second}});
 
-    return nErrors / frames2run;
+        cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
+        cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
+        frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
+        nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+        results.push_back(nErrors / frames2run);
+
+        LOG(INFO) << BOLDGREEN << "===== BER test summary for Hybrid ID " << BOLDYELLOW << thePair.first << BOLDGREEN << " Chip Lane " << BOLDYELLOW << thePair.second << " =====" << RESET;
+        LOG(INFO) << GREEN << "Number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
+        LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors << RESET;
+        LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3) << results.back() * 100
+                  << RESET << GREEN << "%)" << RESET;
+        LOG(INFO) << GREEN << "BER test result: " << (nErrors == 0 ? BOLDYELLOW : BOLDRED) << (nErrors == 0 ? "PASSED" : "NOT PASSED") << RESET;
+        LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
+    }
+
+    return results;
 }
 
 } // namespace Ph2_HwInterface

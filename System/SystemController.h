@@ -194,15 +194,6 @@ class SystemController
     void initializeExceptionHandler();
 
     /*!
-     * \brief Run Bit Error Rate test
-     * \param chain2test     : which part of the chain to be tested
-     * \param given_time     : states if PRBS has to be run for a certain amount of time or for a certain amount of frames
-     * \param frames_or_time : time [s] or number of frames
-     * \return: none
-     */
-    void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
-
-    /*!
      * \brief Read Monitor Data from pBoard
      * \param pBeBoard
      * \param args

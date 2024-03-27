@@ -197,8 +197,8 @@ uint16_t RD53Interface::GetFieldValue(uint16_t regValue, uint8_t start, uint8_t 
 // # PRBS generator #
 // ##################
 
-void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
-void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
+void RD53Interface::StartPRBSpattern(const BeBoard* pBoard) { RD53Interface::WriteBoardBroadcastChipReg(pBoard, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS); }
+void RD53Interface::StopPRBSpattern(const BeBoard* pBoard) { RD53Interface::WriteBoardBroadcastChipReg(pBoard, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA); }
 
 bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerify)
 {
