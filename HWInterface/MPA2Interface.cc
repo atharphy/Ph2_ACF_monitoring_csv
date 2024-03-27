@@ -33,7 +33,7 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
         return (ReadChipReg(pMPA2, "ECM") >> 6) & 0x3;
     }
     else if(pRegNode == "StubWindow") { return ReadChipReg(pMPA2, "ECM") & 0x3F; }
-    else if(pRegNode == "vref") { return ReadChipReg(pMPA2, "ADCcontrol") & 0xFF; }
+    else if(pRegNode == "vref") { return ReadChipReg(pMPA2, "ADCcontrol") & 0x1F; }
     else if(pRegNode == "ReadoutMode") // New decoding control reg for MPA2
     {
         return ReadChipReg(pMPA2, "Control_1") & 0x3;
@@ -742,7 +742,7 @@ bool MPA2Interface::setAllBiasBlockRegisters(Chip* pMPA2, std::string registerNa
     return success;
 }
 
-uint16_t MPA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
+uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
     auto theRegister = ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == ADC_CONTROL_TABLE.end())
@@ -752,9 +752,33 @@ uint16_t MPA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
     }
     LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
     this->selectBlock(static_cast<ReadoutChip*>(pChip), theRegister->second.first, theRegister->second.second);
-    uint32_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
+    uint16_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
     LOG(DEBUG) << BOLDMAGENTA << " ADC " << ADC << RESET;
     return ADC;
+}
+
+uint32_t MPA2Interface::readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
+{
+    return readADC(pChip,"GND");
+}
+
+uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip)
+{
+    return readADC(pChip,"VBG");
+}
+
+uint32_t MPA2Interface::readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
+{
+    uint32_t theVrefADC = readADC(pChip,"vref");
+    std::cout << " theVrefADC " << theVrefADC << std::endl;
+    return theVrefADC;
+}
+
+uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
+{
+    uint8_t theVrefADC = ReadChipReg(pChip,"vref");
+    std::cout << " theVrefADC " << +theVrefADC << std::endl;
+    return theVrefADC;
 }
 
 float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
@@ -784,7 +808,7 @@ float MPA2Interface::calculateADCLSB(Chip* pMPA2, float vrefExp)
 
 bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn) { return this->WriteChipReg(pMPA2, "ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block), true); }
 
-float MPA2Interface::measureGnd(Chip* pMPA2)
+uint32_t MPA2Interface::measureGround(ReadoutChip* pMPA2)
 {
     this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
     uint32_t sumData = 0;
@@ -824,19 +848,65 @@ uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2)
     return val;
 }
 
-void MPA2Interface::loadVref(Chip* pMPA2)
+bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
 {
     // Set the Vref from the fuse
-    this->ReadChipFuseID(pMPA2);
-    this->WriteChipRegBits(pMPA2, "ADCcontrol", pMPA2->pChipFuseID.ADCRef(), "Mask", (0x1F));
+    // this->ReadChipFuseID(pMPA2);
     LOG(DEBUG) << BOLDMAGENTA << " loading VREF from fuse ID " << +pMPA2->pChipFuseID.ADCRef() << RESET;
+    return this->WriteChipRegBits(pMPA2, "ADCcontrol", pMPA2->pChipFuseID.ADCRef(), "Mask", (0x1F));
 }
 
-void MPA2Interface::loadVref(Chip* pMPA2, uint8_t VREFvalue)
+bool MPA2Interface::setVref(ReadoutChip* pMPA2, uint8_t VREFvalue)
 {
     // Set the Vref to a desired value
-    this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
     LOG(DEBUG) << BOLDMAGENTA << " loading VREF " << +VREFvalue << RESET;
+
+    return this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
+}
+
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float MPA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2)
+{
+    return MPA2_VBG_EXPECTED;
+
+}
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float MPA2Interface::getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2)
+{
+    return MPA2_VREF_EXPECTED;
+}
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float MPA2Interface::getVrefPrecision(Ph2_HwDescription::ReadoutChip* pMPA2)
+{
+    return MPA2_ADC_PRECISION;
+}
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float MPA2Interface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pMPA2)
+{
+    return MPA2_VREF_MIN;
+}
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float MPA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pMPA2)
+{
+    return MPA2_VREF_MAX;
+}
+
+
+
+bool MPA2Interface::disableTestPadsOutput(ReadoutChip* pMPA2)
+{
+    LOG(INFO) << BOLDMAGENTA << "Disable all MPA test pads outputs... " << RESET;
+    return this->selectBlock(pMPA2, 0);
 }
 
 bool MPA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify)

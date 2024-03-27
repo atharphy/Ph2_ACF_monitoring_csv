@@ -46,13 +46,24 @@ class SSA2Interface : public ReadoutChipInterface
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
 
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode) override;
-    uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pInput);
-    uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
+    uint32_t ReadADC(Ph2_HwDescription::ReadoutChip* pSSA2, uint8_t pInput);
+    uint32_t readADC(Ph2_HwDescription::ReadoutChip* pSSA2, std::string pRegName);
+    uint32_t readADCGround(Ph2_HwDescription::ReadoutChip* pSSA2) override;
+    uint32_t readADCBandGap(Ph2_HwDescription::ReadoutChip* pSSA2);
+    uint32_t readADCVref(Ph2_HwDescription::ReadoutChip* pSSA2);
+    uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pSSA2);
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pSSA2) override;
-    float    CalculateADCLSB(Ph2_HwDescription::Chip* pSSA2, float vrefExp = SSA2_VREF_EXPECTED);
-    uint16_t MeasureGND(Ph2_HwDescription::Chip* pSSA2);
+    bool     setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pSSA2)  override;
+    bool     setVref(Ph2_HwDescription::ReadoutChip* pSSA2, uint8_t theVrefRegisterValue)  override;
+    float    CalculateADCLSB(Ph2_HwDescription::ReadoutChip* pSSA2, float vrefExp = SSA2_VREF_EXPECTED);
+    bool     disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pSSA2);
+    bool     injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
 
-    bool injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
+    float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pSSA2);
+    float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pSSA2);
+    float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pSSA2);
+    float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pSSA2);
+    float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2);
 
   private:
     uint8_t ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                                                                      // FIXME

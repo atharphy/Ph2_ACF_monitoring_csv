@@ -43,8 +43,8 @@ class PSBiasCal : public Tool
     uint8_t  TuneDAC(Ph2_HwDescription::Chip* cChip, float slope, float exp_val, std::string DAC, uint8_t DAC_val, bool isVref = false);
     void     CalibrateBias();
     void     DisableTest(Ph2_HwDescription::Chip* cChip);
-    float    MeasureGnd(Ph2_HwDescription::Chip* cChip, Ph2_HwDescription::Chip* clpGBT, std::string dac_str);
-    float    MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, uint8_t* DAC); //, float VBGexpected, float VREFexpected, float VREFmin, float VREFmax);
+    float    MeasureGnd(Ph2_HwDescription::ReadoutChip* cChip, Ph2_HwDescription::Chip* clpGBT, std::string dac_str);
+    float    MeasureVREF(Ph2_HwDescription::Chip* cChip, std::string VBGstring, std::string VREFstring, uint8_t* DAC);
 
     void Running() override;
     void Stop() override;

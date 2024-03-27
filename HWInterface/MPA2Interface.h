@@ -106,7 +106,7 @@ class MPA2Interface : public ReadoutChipInterface
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pMPA, bool pVerify, uint32_t pBlockSize);
     //
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pMPA, bool mask, bool pVerify = true);
-
+    bool disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pMPA2);
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
     void                 Cleardata();
     //
@@ -115,13 +115,23 @@ class MPA2Interface : public ReadoutChipInterface
     std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pMode = 0);
     bool                 configPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, uint16_t row, uint16_t col, uint8_t pValue, bool pVerify);
     uint16_t             readPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, uint16_t row, uint16_t col);
-    void                 loadVref(Ph2_HwDescription::Chip* pMPA2);
-    void                 loadVref(Ph2_HwDescription::Chip* pMPA2, uint8_t VREFvalue);
+    bool                 setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pMPA2)  override;
+    bool                 setVref(Ph2_HwDescription::ReadoutChip* pMPA2, uint8_t theVrefRegisterValue)  override;
     float                ADCMeasure(Ph2_HwDescription::Chip* pMPA2, uint32_t nreads = 5);
     bool                 selectBlock(Ph2_HwDescription::Chip* pMPA2, uint8_t block, uint8_t testPoint = 0, uint8_t swEn = 0);
-    float                measureGnd(Ph2_HwDescription::Chip* pMPA2);
+    uint32_t             readADCGround(Ph2_HwDescription::ReadoutChip* pMPA2);
+    uint32_t             measureGround(Ph2_HwDescription::ReadoutChip* pMPA2);
     float                measureBg(Ph2_HwDescription::Chip* pMPA2);
-    uint16_t             ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName);
+    uint32_t             readADC(Ph2_HwDescription::ReadoutChip* pMPA2, std::string pRegName);
+    uint32_t             readADCVref(Ph2_HwDescription::ReadoutChip* pMPA2);
+    uint32_t             readVrefRegister(Ph2_HwDescription::ReadoutChip* pMPA2);
+    uint32_t             readADCBandGap(Ph2_HwDescription::ReadoutChip* pMPA2);
+
+    float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2);
+    float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2);
+    float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pMPA2);
+    float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pMPA2);
+    float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pMPA2);
 
     float                                calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
     bool                                 injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);

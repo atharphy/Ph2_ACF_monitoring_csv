@@ -151,7 +151,7 @@ uint32_t SSA2Interface::ReadChipFuseID(Chip* pSSA2)
     return val;
 }
 
-uint16_t SSA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
+uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
     auto theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == SSA2_ADC_CONTROL_TABLE.end())
@@ -163,7 +163,7 @@ uint16_t SSA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
     return SSA2Interface::ReadADC(pChip, theRegister->second);
 }
 
-uint16_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
+uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
 {
     bool cVerify = true;
     setBoard(pChip->getBeBoardId());
@@ -186,17 +186,97 @@ uint16_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
     return (cMSB << 8 | cLSB);
 }
 
-uint16_t SSA2Interface::MeasureGND(Chip* pSSA2)
+
+uint32_t SSA2Interface::readADCGround(ReadoutChip* pSSA2)
 {
-    LOG(DEBUG) << BOLDMAGENTA << "GND  " << +this->ReadADC(static_cast<ReadoutChip*>(pSSA2), 12) << RESET;
+    LOG(INFO) << BOLDMAGENTA << "GND  " << +this->ReadADC(static_cast<ReadoutChip*>(pSSA2), 12) << RESET;
     return this->ReadADC(static_cast<ReadoutChip*>(pSSA2), 12);
 }
 
-float SSA2Interface::CalculateADCLSB(Chip* pSSA2, float vrefExp)
+uint32_t SSA2Interface::readADCBandGap(ReadoutChip* pSSA2)
 {
-    float offset = this->MeasureGND(pSSA2);
+    auto theBandGap = this->readADC(static_cast<ReadoutChip*>(pSSA2), "VBG");
+    LOG(INFO) << BOLDMAGENTA << "VBG  " << theBandGap  << RESET;
+    return theBandGap;
+}
 
-    LOG(DEBUG) << BOLDMAGENTA << "ADCLSB " << vrefExp / (4095.0 - offset) << RESET;
+uint32_t SSA2Interface::readADCVref(ReadoutChip* pSSA2)
+{
+    uint8_t theVrefADC = readADC(pSSA2,"ADC_VREF");
+    LOG(INFO) << BOLDMAGENTA << "ADC_VREF  " << +theVrefADC << RESET;
+    return theVrefADC;
+}
+
+uint32_t SSA2Interface::readVrefRegister(ReadoutChip* pSSA2)
+{
+    uint8_t theVrefADC = ReadChipReg(pSSA2,"ADC_VREF");
+    LOG(INFO) << BOLDMAGENTA << "ADC_VREF  " << +theVrefADC << RESET;
+    return theVrefADC;
+}
+
+bool SSA2Interface::setVrefFromFuseID(ReadoutChip* pSSA2)
+{
+        LOG(INFO) << BOLDMAGENTA << "Set Vref from value stored in fuse id " <<  +pSSA2->pChipFuseID.ADCRef() << RESET;
+        return this->WriteChipReg(pSSA2,"ADC_VREF",pSSA2->pChipFuseID.ADCRef());
+}
+bool SSA2Interface::setVref(ReadoutChip* pSSA2, uint8_t theVrefRegisterValue)
+{
+        LOG(INFO) << BOLDMAGENTA << "Set Vref from desired value " << +theVrefRegisterValue << RESET;
+        return this->WriteChipReg(pSSA2,"ADC_VREF",theVrefRegisterValue);
+}
+
+
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float SSA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2)
+{
+    return SSA2_VBG_EXPECTED;
+
+}
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float SSA2Interface::getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pSSA2)
+{
+    return SSA2_VREF_EXPECTED;
+}
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float SSA2Interface::getVrefPrecision(Ph2_HwDescription::ReadoutChip* pSSA2)
+{
+    return SSA2_ADC_PRECISION;
+}
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float SSA2Interface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pSSA2)
+{
+    return SSA2_VREF_MIN;
+}
+//FIXME At the moment we are setting the exepected values 
+// of bandgap and vref to the default nominal value.
+// This will be updated once we have the real values for each chip
+float SSA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2)
+{
+    return SSA2_VREF_MAX;
+}
+
+
+
+bool SSA2Interface::disableTestPadsOutput(ReadoutChip* pSSA2)
+{
+        LOG(INFO) << BOLDMAGENTA << "Disable all SSA test pads outputs... " << RESET;
+        bool success = this->WriteChipReg(pSSA2, "Bias_TEST_lsb", 0x0);
+        return success & this->WriteChipReg(pSSA2, "Bias_TEST_msb", 0x0);
+}
+
+float SSA2Interface::CalculateADCLSB(ReadoutChip* pSSA2, float vrefExp)
+{
+    float offset = this->readADCGround(pSSA2);
+
+    LOG(INFO) << BOLDMAGENTA << "ADCLSB " << vrefExp / (4095.0 - offset) << RESET;
     return vrefExp / (4095.0 - offset);
 }
 

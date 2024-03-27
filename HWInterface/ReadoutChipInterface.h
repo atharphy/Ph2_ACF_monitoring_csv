@@ -79,6 +79,127 @@ class ReadoutChipInterface : public ChipInterface
     }
 
     /*!
+     * \brief Read the ADC values of the ADC MUX
+     * \param pChip: pointer to Chip object
+     */
+    virtual uint32_t readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string theADCName)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Maeasure the ground value of the ADC
+     * \param pChip: pointer to Chip object
+     */
+    virtual uint32_t readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Read the ADC band gap value specifically of the ADC MUX
+     * \param pChip: pointer to Chip object
+     */
+    virtual uint32_t readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Read the ADC Vref value specifically of the ADC MUX
+     * \param pChip: pointer to Chip object
+     */
+    virtual uint32_t readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Read the Vref register value 
+     * \param pChip: pointer to Chip object
+     */
+    virtual uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Set the ADC Vref value to a desired value
+     * \param pChip: pointer to Chip object
+     * \param theVrefRegisterValue: the value to be set to Vref register
+     */
+    virtual bool setVref(Ph2_HwDescription::ReadoutChip* pChip, uint8_t theVrefRegisterValue)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Set the ADC Vref value to the value cointened in the Fuse ID from wafer testing
+     * \param pChip: pointer to Chip object
+     */
+    virtual bool setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Get the ADC band gap expected value. At the moment a default value is stored in the definition file
+     * \param pChip: pointer to Chip object
+     */
+    virtual float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Get the ADC Vref expected value. 
+     * \param pChip: pointer to Chip object
+     */
+    virtual float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Get the ADC precision. Currently estimated from 1 skeleton testing 
+     * \param pChip: pointer to Chip object
+     */
+    virtual float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Get the Vref allowed minimum value. 
+     * \param pChip: pointer to Chip object
+     */
+    virtual float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
+     * \brief Get the Vref allowed maximum value. 
+     * \param pChip: pointer to Chip object
+     */
+    virtual float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /*!
      * \brief mask and inject with one function to increase speed
      * \param pChip: pointer to Chip object
      * \param group: group of channels under test
@@ -95,6 +216,17 @@ class ReadoutChipInterface : public ChipInterface
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
     virtual bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) = 0;
+
+
+    /*!
+     * \brief Disable the test pad output
+     * \param pChip: pointer to Chip object
+     */
+    virtual bool disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return false;
+    }
 
     /*!
      * \brief Write all Local registers on Chip and Chip Config File (able to recognize local parameter names)
@@ -139,7 +271,7 @@ class ReadoutChipInterface : public ChipInterface
     virtual void DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
     /*!
-     * \brief Monitorign memeber functions
+     * \brief Monitoring memeber functions
      */
     virtual float ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false)
     {

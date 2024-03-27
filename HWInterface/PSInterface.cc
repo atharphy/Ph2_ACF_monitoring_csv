@@ -121,6 +121,79 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     }
 }
 
+bool PSInterface::disableTestPadsOutput(ReadoutChip* pPS)
+{
+    return getInterface(pPS)->disableTestPadsOutput(pPS);
+
+}
+
+uint32_t PSInterface::readADCGround(ReadoutChip* pPS)
+{
+    return getInterface(pPS)->readADCGround(pPS);
+
+}
+
+uint32_t PSInterface::readADC(ReadoutChip* pPS, std::string theADCName)
+{
+    return getInterface(pPS)->readADC(pPS, theADCName);
+
+}
+
+uint32_t PSInterface::readADCVref(ReadoutChip* pPS)
+{
+    return getInterface(pPS)->readADCVref(pPS);
+
+}
+
+uint32_t PSInterface::readVrefRegister(ReadoutChip* pPS)
+{
+    return getInterface(pPS)->readVrefRegister(pPS);
+
+}
+
+uint32_t PSInterface::readADCBandGap(ReadoutChip* pPS)
+{
+    return getInterface(pPS)->readADCBandGap(pPS);
+
+}
+
+bool PSInterface::setVref(ReadoutChip* pPS, uint8_t theVrefRegisterValue)
+{
+    return getInterface(pPS)->setVref(pPS, theVrefRegisterValue);
+
+}
+
+bool PSInterface::setVrefFromFuseID(ReadoutChip* pPS)
+{
+    return getInterface(pPS)->setVrefFromFuseID(pPS);
+
+}
+
+float PSInterface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pPS)
+{
+    return getInterface(pPS)->getBandGapExpectedValue(pPS);
+
+}
+
+float PSInterface::getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pPS)
+{
+    return getInterface(pPS)->getVrefExpectedValue(pPS);
+}
+
+float PSInterface::getVrefPrecision(Ph2_HwDescription::ReadoutChip* pPS)
+{
+    return getInterface(pPS)->getVrefPrecision(pPS);
+}
+
+float PSInterface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pPS)
+{
+    return getInterface(pPS)->getVrefMinValue(pPS);
+}
+float PSInterface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pPS)
+{
+    return getInterface(pPS)->getVrefMaxValue(pPS);
+}
+
 bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
     if(pPS->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->injectNoiseClusters(pPS, theClusterList); }
