@@ -1429,15 +1429,13 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     // # Read frame counters to check progress #
     // #########################################
     LOG(INFO) << BOLDGREEN << std::fixed << std::setprecision(0) << "===== BER run starting @ " << BOLDYELLOW << bitPerFrame << BOLDGREEN << "-bits/frame  =====" << RESET;
-    bool     run_done     = false;
+    bool     runDone, forceDone;
     int      idx          = 1;
     uint64_t frameCounter = 0;
-    uint64_t nErrors;
-    while(run_done == false)
-    {
+    do {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
-        bool forceDone = true;
+        forceDone = true;
         for(const auto& thePair: hybrid_id_chip_lane)
         {
             RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", thePair.first}, {"user.ctrl_regs.PRBS_checker.chip_address", thePair.second}});
@@ -1454,21 +1452,15 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
             }
         }
 
-        if(forceDone == true)
-        {
-            LOG(WARNING) << BOLDRED << "BER test is stopping because no clock was detected from any of the chips" << RESET;
-            return {};
-        }
-
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << frameCounter / frames2run * 100. << RESET << GREEN << "% done)"
                   << RESET;
 
         if(given_time == true)
-            run_done = (time_per_step * idx >= time2run);
+            runDone = (time_per_step * idx >= time2run);
         else
-            run_done = (frameCounter >= frames2run);
+            runDone = (frameCounter >= frames2run);
         idx++;
-    }
+    } while((runDone == false) && (forceDone == false));
     LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
 
     // ########
@@ -1480,6 +1472,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     // # Read PRBS frame counter #
     // ###########################
     std::vector<double> results;
+    uint64_t            nErrors;
     for(const auto& thePair: hybrid_id_chip_lane)
     {
         RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", thePair.first}, {"user.ctrl_regs.PRBS_checker.chip_address", thePair.second}});
