@@ -17,7 +17,7 @@ void OTPSADCCalibration::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
 
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "vref");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "ADCcontrol");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "A[0-6]");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "B[0-6]");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "C[0-6]");
@@ -307,7 +307,8 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
         fReadoutChipInterface->setVref(theChip, theVrefToUse);
 
         theRetrievedVrefADCValue = fReadoutChipInterface->readVrefRegister(theChip);
-
+        //FIXME!!! 
+        //FIXME also in output txt
         LOG(INFO) << BOLDRED << " retrieve dac after writing " << theRetrievedVrefADCValue << RESET;
         LOG(INFO) << BOLDRED << " VREF calibrated" << RESET;
 
