@@ -54,7 +54,7 @@ class SSA2Interface : public ReadoutChipInterface
     uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pSSA2);
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pSSA2) override;
     bool     setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pSSA2)  override;
-    bool     setVref(Ph2_HwDescription::ReadoutChip* pSSA2, uint8_t theVrefRegisterValue)  override;
+    bool     setVref(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t theVrefRegisterValue)  override;
     float    CalculateADCLSB(Ph2_HwDescription::ReadoutChip* pSSA2, float vrefExp = SSA2_VREF_EXPECTED);
     bool     disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pSSA2);
     bool     injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);

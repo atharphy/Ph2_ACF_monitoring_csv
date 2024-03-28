@@ -79,7 +79,7 @@ class PSInterface : public ReadoutChipInterface
     uint32_t readADCBandGap(Ph2_HwDescription::ReadoutChip* pPS);
     uint32_t readADCVref(Ph2_HwDescription::ReadoutChip* pPS);
     uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pPS);
-    bool     setVref(Ph2_HwDescription::ReadoutChip* pPS, uint8_t theVrefRegisterValue);
+    bool     setVref(Ph2_HwDescription::ReadoutChip* pPS, uint16_t theVrefRegisterValue);
     bool     setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pPS);
 
     float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pPS);

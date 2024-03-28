@@ -219,7 +219,7 @@ bool SSA2Interface::setVrefFromFuseID(ReadoutChip* pSSA2)
         LOG(INFO) << BOLDMAGENTA << "Set Vref from value stored in fuse id " <<  +pSSA2->pChipFuseID.ADCRef() << RESET;
         return this->WriteChipReg(pSSA2,"ADC_VREF",pSSA2->pChipFuseID.ADCRef());
 }
-bool SSA2Interface::setVref(ReadoutChip* pSSA2, uint8_t theVrefRegisterValue)
+bool SSA2Interface::setVref(ReadoutChip* pSSA2, uint16_t theVrefRegisterValue)
 {
         LOG(INFO) << BOLDMAGENTA << "Set Vref from desired value " << +theVrefRegisterValue << RESET;
         return this->WriteChipReg(pSSA2,"ADC_VREF",theVrefRegisterValue);

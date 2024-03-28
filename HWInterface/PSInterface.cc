@@ -157,7 +157,7 @@ uint32_t PSInterface::readADCBandGap(ReadoutChip* pPS)
 
 }
 
-bool PSInterface::setVref(ReadoutChip* pPS, uint8_t theVrefRegisterValue)
+bool PSInterface::setVref(ReadoutChip* pPS, uint16_t theVrefRegisterValue)
 {
     return getInterface(pPS)->setVref(pPS, theVrefRegisterValue);
 

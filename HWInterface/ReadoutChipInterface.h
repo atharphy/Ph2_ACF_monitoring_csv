@@ -133,7 +133,7 @@ class ReadoutChipInterface : public ChipInterface
      * \param pChip: pointer to Chip object
      * \param theVrefRegisterValue: the value to be set to Vref register
      */
-    virtual bool setVref(Ph2_HwDescription::ReadoutChip* pChip, uint8_t theVrefRegisterValue)
+    virtual bool setVref(Ph2_HwDescription::ReadoutChip* pChip, uint16_t theVrefRegisterValue)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;

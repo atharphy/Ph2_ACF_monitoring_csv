@@ -776,9 +776,9 @@ uint32_t MPA2Interface::readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
 
 uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    uint8_t theVrefADC = ReadChipReg(pChip,"vref");
-    std::cout << " theVrefADC " << +theVrefADC << std::endl;
-    return theVrefADC;
+    uint16_t theVrefADC = ReadChipReg(pChip,"vref");
+    std::cout << " theVrefADC " << theVrefADC << std::endl;
+    return uint32_t(theVrefADC);
 }
 
 float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
@@ -856,10 +856,10 @@ bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
     return this->WriteChipRegBits(pMPA2, "ADCcontrol", pMPA2->pChipFuseID.ADCRef(), "Mask", (0x1F));
 }
 
-bool MPA2Interface::setVref(ReadoutChip* pMPA2, uint8_t VREFvalue)
+bool MPA2Interface::setVref(ReadoutChip* pMPA2, uint16_t VREFvalue)
 {
     // Set the Vref to a desired value
-    LOG(DEBUG) << BOLDMAGENTA << " loading VREF " << +VREFvalue << RESET;
+    LOG(INFO) << BOLDMAGENTA << " loading VREF " << +VREFvalue << RESET;
 
     return this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
 }
