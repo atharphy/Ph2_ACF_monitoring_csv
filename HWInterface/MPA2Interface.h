@@ -107,6 +107,8 @@ class MPA2Interface : public ReadoutChipInterface
     //
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pMPA, bool mask, bool pVerify = true);
     bool disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pMPA2);
+    // bool selectTestPadsOutput(Ph2_HwDescription::ReadoutChip* pMPA2, std::string theRegisterName);
+
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
     void                 Cleardata();
     //
@@ -127,13 +129,15 @@ class MPA2Interface : public ReadoutChipInterface
     uint32_t             readVrefRegister(Ph2_HwDescription::ReadoutChip* pMPA2);
     uint32_t             readADCBandGap(Ph2_HwDescription::ReadoutChip* pMPA2);
 
+    const std::map<std::string, std::pair<uint8_t,float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pMPA);
+
     float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2);
     float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2);
     float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pMPA2);
     float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pMPA2);
     float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pMPA2);
 
-    float                                calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = MPA2_VREF_EXPECTED);
+    float                                calculateADCLSB(Ph2_HwDescription::ReadoutChip* pMPA2, float theVrefValue = MPA2_VREF_EXPECTED) override;
     bool                                 injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
     const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
 
@@ -161,6 +165,47 @@ class MPA2Interface : public ReadoutChipInterface
         {"CalDAC3", std::make_pair(4, 6)},  {"CalDAC4", std::make_pair(5, 6)}, {"CalDAC5", std::make_pair(6, 6)}, {"CalDAC6", std::make_pair(7, 6)},      {"GND", std::make_pair(1, 7)},
         {"VBG", std::make_pair(8, 0)},      {"dac_ref", std::make_pair(9, 0)}, {"vref", std::make_pair(10, 0)},   {"temperature", std::make_pair(11, 0)}, {"avdd", std::make_pair(12, 0)},
         {"io_vdd", std::make_pair(13, 0)},  {"dvdd", std::make_pair(14, 0)}};
+
+    // Map of the bias structure registers
+    // < register name , <default register value (DAC) , expected value in V on the test pad> 
+    typedef std::pair<uint8_t, float>  DAC_expectedValue;
+    const std::map<std::string, DAC_expectedValue> MPA2_BIAS_STRUCTURE_DEFAULT = {
+      {"A0", std::make_pair(0x0F, 0.082)},
+      {"A1", std::make_pair(0x0F, 0.082)},
+      {"A2", std::make_pair(0x0F, 0.082)},
+      {"A3", std::make_pair(0x0F, 0.082)},
+      {"A4", std::make_pair(0x0F, 0.082)},
+      {"A5", std::make_pair(0x0F, 0.082)},
+      {"A6", std::make_pair(0x0F, 0.082)},
+      {"B0", std::make_pair(0x0F, 0.082)},
+      {"B1", std::make_pair(0x0F, 0.082)},
+      {"B2", std::make_pair(0x0F, 0.082)},
+      {"B3", std::make_pair(0x0F, 0.082)},
+      {"B4", std::make_pair(0x0F, 0.082)},
+      {"B5", std::make_pair(0x0F, 0.082)},
+      {"B6", std::make_pair(0x0F, 0.082)},
+      {"C0", std::make_pair(0x0F, 0.108)},
+      {"C1", std::make_pair(0x0F, 0.108)},
+      {"C2", std::make_pair(0x0F, 0.108)},
+      {"C3", std::make_pair(0x0F, 0.108)},
+      {"C4", std::make_pair(0x0F, 0.108)},
+      {"C5", std::make_pair(0x0F, 0.108)},
+      {"C6", std::make_pair(0x0F, 0.108)},
+      {"D0", std::make_pair(0x0F, 0.082)},
+      {"D1", std::make_pair(0x0F, 0.082)},
+      {"D2", std::make_pair(0x0F, 0.082)},
+      {"D3", std::make_pair(0x0F, 0.082)},
+      {"D4", std::make_pair(0x0F, 0.082)},
+      {"D5", std::make_pair(0x0F, 0.082)},
+      {"D6", std::make_pair(0x0F, 0.082)},
+      {"E0", std::make_pair(0x0F, 0.082)},
+      {"E1", std::make_pair(0x0F, 0.082)},
+      {"E2", std::make_pair(0x0F, 0.082)},
+      {"E3", std::make_pair(0x0F, 0.082)},
+      {"E4", std::make_pair(0x0F, 0.082)},
+      {"E5", std::make_pair(0x0F, 0.082)},
+      {"E6", std::make_pair(0x0F, 0.082)}};
+
 
     // MPA2 periphery config register map
     const std::map<std::string, std::pair<uint8_t, uint8_t>> PERI_CONFIG_TABLE = {{"Control_1", std::pair<uint8_t, uint8_t>{0x11, 0}}, // MPA2 has 0x11 and 0x12 peri blocks

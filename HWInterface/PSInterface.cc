@@ -127,6 +127,12 @@ bool PSInterface::disableTestPadsOutput(ReadoutChip* pPS)
 
 }
 
+// bool PSInterface::selectTestPadsOutput(ReadoutChip* pPS, std::string theRegisterName)
+// {
+//     return getInterface(pPS)->selectTestPadsOutput(pPS, theRegisterName);
+
+// }
+
 uint32_t PSInterface::readADCGround(ReadoutChip* pPS)
 {
     return getInterface(pPS)->readADCGround(pPS);
@@ -169,27 +175,37 @@ bool PSInterface::setVrefFromFuseID(ReadoutChip* pPS)
 
 }
 
-float PSInterface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pPS)
+const std::map<std::string, std::pair<uint8_t,float>> PSInterface::getBiasStructureDefaultTable(ReadoutChip* pPS)
+{
+    return getInterface(pPS)->getBiasStructureDefaultTable(pPS);
+}
+
+float PSInterface::calculateADCLSB(ReadoutChip* pPS, float theVrefValue)
+{
+    return getInterface(pPS)->calculateADCLSB(pPS,theVrefValue);
+}
+
+float PSInterface::getBandGapExpectedValue(ReadoutChip* pPS)
 {
     return getInterface(pPS)->getBandGapExpectedValue(pPS);
 
 }
 
-float PSInterface::getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pPS)
+float PSInterface::getVrefExpectedValue(ReadoutChip* pPS)
 {
     return getInterface(pPS)->getVrefExpectedValue(pPS);
 }
 
-float PSInterface::getVrefPrecision(Ph2_HwDescription::ReadoutChip* pPS)
+float PSInterface::getVrefPrecision(ReadoutChip* pPS)
 {
     return getInterface(pPS)->getVrefPrecision(pPS);
 }
 
-float PSInterface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pPS)
+float PSInterface::getVrefMinValue(ReadoutChip* pPS)
 {
     return getInterface(pPS)->getVrefMinValue(pPS);
 }
-float PSInterface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pPS)
+float PSInterface::getVrefMaxValue(ReadoutChip* pPS)
 {
     return getInterface(pPS)->getVrefMaxValue(pPS);
 }
@@ -200,7 +216,7 @@ bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<std::tuple<u
     else { return fTheSSA2Interface->injectNoiseClusters(pPS, theClusterList); }
 }
 
-bool PSInterface::injectNoiseStubs(Ph2_HwDescription::ReadoutChip* pMPA, Ph2_HwDescription::ReadoutChip* pSSA, std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector)
+bool PSInterface::injectNoiseStubs(ReadoutChip* pMPA, ReadoutChip* pSSA, std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector)
 {
     if(pMPA->getFrontEndType() != FrontEndType::MPA2 || pSSA->getFrontEndType() != FrontEndType::SSA2)
     {

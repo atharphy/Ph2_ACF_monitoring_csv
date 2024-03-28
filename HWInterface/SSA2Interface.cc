@@ -225,6 +225,11 @@ bool SSA2Interface::setVref(ReadoutChip* pSSA2, uint16_t theVrefRegisterValue)
         return this->WriteChipReg(pSSA2,"ADC_VREF",theVrefRegisterValue);
 }
 
+const std::map<std::string, std::pair<uint8_t,float>> SSA2Interface::getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pSSA2)
+{
+    return SSA2_BIAS_STRUCTURE_DEFAULT;
+}
+
 
 //FIXME At the moment we are setting the exepected values 
 // of bandgap and vref to the default nominal value.
@@ -272,12 +277,12 @@ bool SSA2Interface::disableTestPadsOutput(ReadoutChip* pSSA2)
         return success & this->WriteChipReg(pSSA2, "Bias_TEST_msb", 0x0);
 }
 
-float SSA2Interface::CalculateADCLSB(ReadoutChip* pSSA2, float vrefExp)
+float SSA2Interface::calculateADCLSB(ReadoutChip* pSSA2, float theVrefValue)
 {
     float offset = this->readADCGround(pSSA2);
 
-    LOG(INFO) << BOLDMAGENTA << "ADCLSB " << vrefExp / (4095.0 - offset) << RESET;
-    return vrefExp / (4095.0 - offset);
+    LOG(INFO) << BOLDMAGENTA << "ADCLSB " << theVrefValue / (4095.0 - offset) << RESET;
+    return theVrefValue / (4095.0 - offset);
 }
 
 // READ REGISTER ON CHIP:
@@ -599,26 +604,26 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         cRegItem.fValue = (pValue << 2) | (1 << 0);
         return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
-    else if(pRegNameMod == "AmuxHigh")
-    {
-        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
-        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+    // else if(pRegNameMod == "AmuxHigh")
+    // {
+    //     LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+    //     throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
 
-        return this->ConfigureAmux(pSSA2, "HighZ");
-    }
+    //     return this->ConfigureAmux(pSSA2, "HighZ");
+    // }
     // need to re-name threshold here..
     // else if(fAmuxMap.find(pRegNameMod) != fAmuxMap.end())
     // {
     //     return this->ConfigureAmux(pSSA2, pRegNameMod);
     // }
-    else if(pRegNameMod == "MonitorBandgap")
-    {
-        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
-        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
+    // else if(pRegNameMod == "MonitorBandgap")
+    // {
+    //     LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBits " << RESET;
+    //     throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBits");
 
-        return this->ConfigureAmux(pSSA2, "Bandgap");
-    }
-    else if(pRegNameMod == "MonitorGround") { return this->ConfigureAmux(pSSA2, "GND"); }
+    //     return this->ConfigureAmux(pSSA2, "Bandgap");
+    // }
+    // else if(pRegNameMod == "MonitorGround") { return this->ConfigureAmux(pSSA2, "GND"); }
     else if(pRegNameMod == "ReadoutMode") // AT THE TOP OF THIS METHOD _ALL IS REMOVED
     {
         return this->WriteChipRegBits(pSSA2, "control_1", pValue & 0x07, "mask_peri_D", 0x07);
@@ -994,54 +999,54 @@ std::vector<std::pair<std::string, uint16_t>> SSA2Interface::ReadChipMultReg(Ph2
 }
 
 //	// AMUX CONFIGURATION:
-bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, bool pVerify)
-{
-    setBoard(pChip->getBeBoardId());
-    auto        cRegMap = pChip->getRegMap();
-    ChipRegItem cRegItem;
-    // first make sure amux is set to 0 to avoid shorts
-    // from SSA2 python methods
-    uint8_t                  cHighZValue = 0x00;
-    std::vector<std::string> cRegNames{"Bias_TEST_lsb", "Bias_TEST_msb"};
-    for(auto cReg: cRegNames)
-    {
-        cRegItem        = cRegMap[cReg];
-        cRegItem.fValue = cHighZValue;
-        bool cSuccess   = fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerify);
-        if(!cSuccess)
-            return cSuccess;
-        else
-            LOG(DEBUG) << BOLDBLUE << "Set " << cReg << " to 0x" << std::hex << +cHighZValue << std::dec << RESET;
-    }
-    if(pRegister != "HighZ")
-    {
-        auto cMapIterator = fAmuxMap.find(pRegister);
-        if(cMapIterator != fAmuxMap.end())
-        {
-            uint16_t cValue = (1 << cMapIterator->second);
-            LOG(DEBUG) << BOLDBLUE << "Select test_Bias 0x" << std::hex << cValue << std::dec << RESET;
-            uint8_t cIndex = 0;
-            for(auto cReg: cRegNames)
-            {
-                uint8_t cRegValue = (cValue & (0xFF << 8 * cIndex)) >> 8 * cIndex;
-                cRegItem          = cRegMap[cReg];
-                cRegItem.fValue   = cRegValue;
+// bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, bool pVerify)
+// {
+//     setBoard(pChip->getBeBoardId());
+//     auto        cRegMap = pChip->getRegMap();
+//     ChipRegItem cRegItem;
+//     // first make sure amux is set to 0 to avoid shorts
+//     // from SSA2 python methods
+//     uint8_t                  cHighZValue = 0x00;
+//     std::vector<std::string> cRegNames{"Bias_TEST_lsb", "Bias_TEST_msb"};
+//     for(auto cReg: cRegNames)
+//     {
+//         cRegItem        = cRegMap[cReg];
+//         cRegItem.fValue = cHighZValue;
+//         bool cSuccess   = fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerify);
+//         if(!cSuccess)
+//             return cSuccess;
+//         else
+//             LOG(DEBUG) << BOLDBLUE << "Set " << cReg << " to 0x" << std::hex << +cHighZValue << std::dec << RESET;
+//     }
+//     if(pRegister != "HighZ")
+//     {
+//         auto cMapIterator = fAmuxMap.find(pRegister);
+//         if(cMapIterator != fAmuxMap.end())
+//         {
+//             uint16_t cValue = (1 << cMapIterator->second);
+//             LOG(DEBUG) << BOLDBLUE << "Select test_Bias 0x" << std::hex << cValue << std::dec << RESET;
+//             uint8_t cIndex = 0;
+//             for(auto cReg: cRegNames)
+//             {
+//                 uint8_t cRegValue = (cValue & (0xFF << 8 * cIndex)) >> 8 * cIndex;
+//                 cRegItem          = cRegMap[cReg];
+//                 cRegItem.fValue   = cRegValue;
 
-                bool cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerify);
-                if(!cSuccess)
-                    return cSuccess;
-                else
-                    LOG(DEBUG) << BOLDBLUE << "Set " << cReg << " to 0x" << std::hex << +cRegValue << std::dec << RESET;
-                cIndex++;
-            }
-            return true;
-        }
-        else
-            return false;
-    }
-    else
-        return true;
-}
+//                 bool cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerify);
+//                 if(!cSuccess)
+//                     return cSuccess;
+//                 else
+//                     LOG(DEBUG) << BOLDBLUE << "Set " << cReg << " to 0x" << std::hex << +cRegValue << std::dec << RESET;
+//                 cIndex++;
+//             }
+//             return true;
+//         }
+//         else
+//             return false;
+//     }
+//     else
+//         return true;
+// }
 /////////// ALIAS CALLS:
 bool SSA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify) { return this->WriteChipReg(pChip, "AnalogueAsync", 1); }
 bool SSA2Interface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerify) { return this->WriteChipReg(pChip, "InjectedCharge", injectionAmplitude, pVerify); }

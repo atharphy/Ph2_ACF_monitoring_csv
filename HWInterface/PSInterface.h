@@ -82,6 +82,10 @@ class PSInterface : public ReadoutChipInterface
     bool     setVref(Ph2_HwDescription::ReadoutChip* pPS, uint16_t theVrefRegisterValue);
     bool     setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pPS);
 
+    float calculateADCLSB(Ph2_HwDescription::ReadoutChip* pPS, float theVrefValue) override;
+
+    const std::map<std::string, std::pair<uint8_t,float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pPS);
+    
     float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pPS);
     float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pPS);
     float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pPS);
@@ -95,6 +99,8 @@ class PSInterface : public ReadoutChipInterface
     //
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop) { return true; }
     bool disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pPS);
+    // bool selectTestPadsOutput(Ph2_HwDescription::ReadoutChip* pPS, std::string theRegisterName);
+
     void SetOptical()
     {
         bool cFoundLpgbt = this->lpGBTFound();

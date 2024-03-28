@@ -82,6 +82,10 @@ void OTPSADCCalibration::CalibrateBias()
                     uint8_t theVrefRegisterValue = 0;
                     float theVrefValue = CalibrateVref(theChip, &theVrefRegisterValue);
                     std::cout << "theVrefValue " << theVrefValue <<std::endl;
+                    std::cout << fReadoutChipInterface->ReadChipReg(theChip, "ADCcontrol") << std::endl;
+                    CalibrateChipBias(theChip, theVrefValue);
+
+
                 } // chip
             }
         }
@@ -108,6 +112,23 @@ void OTPSADCCalibration::CalibrateBias()
 
 }
 
+void OTPSADCCalibration::CalibrateChipBias(ReadoutChip* theChip, float theVrefValue)
+{
+
+    // The register table is < std::string register name, < uint8_t register default value, float register expected value>>
+    auto theRegistersTable = fReadoutChipInterface->getBiasStructureDefaultTable(theChip);
+    for (auto it = theRegistersTable.begin(); it != theRegistersTable.end(); it++)
+    {
+        std::string theRegisterName  = it->first;
+        uint8_t     theDefaultValue  = it->second.first;
+        float       theExpectedValue = it->second.second;
+
+        float theADCLSB = fReadoutChipInterface->calculateADCLSB(theChip,theVrefValue);
+        LOG(INFO) << MAGENTA << " theRegisterName " << theRegisterName << " ADCLSB " << theADCLSB << RESET;
+        TuneDAC(theChip,theADCLSB,theExpectedValue,theRegisterName,theDefaultValue,false);
+    }
+
+}
 
 // One should first tune Vref using the BandGap as reference to tune it and then tune the different bias registers.
 uint8_t OTPSADCCalibration::TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref)
@@ -133,7 +154,7 @@ uint8_t OTPSADCCalibration::TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, flo
     if(isVref)
         fReadoutChipInterface->setVref(theChip, theDACMaxValue);
     else
-    fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACMaxValue);
+        fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACMaxValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
     uint32_t theMaxValue = isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName): fReadoutChipInterface->readADCBandGap(theChip);
     LOG(INFO) << BLUE << " DAC " << theDACtoTuneName << " at " << +theDACMaxValue << " gives theMaxValue " << theMaxValue << RESET;
@@ -150,7 +171,7 @@ uint8_t OTPSADCCalibration::TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, flo
     if(isVref)
         fReadoutChipInterface->setVref(theChip, theDACValue);
     else
-    fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
+        fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
     uint32_t theCurrentValue = isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName): fReadoutChipInterface->readADCBandGap(theChip);
     LOG(INFO) << BLUE << " theDACValue at nominal value " << +theDACValue << " gives theCurrentValue " << theCurrentValue << RESET;
@@ -274,7 +295,7 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
     uint32_t theADCGroundValue        = fReadoutChipInterface->readADCGround(theChip);   
     uint32_t theADCMaxValue           = 4095;
     uint32_t theADCBandGapValue       = fReadoutChipInterface->readADCBandGap(theChip);
-    uint8_t  theRetrievedVrefADCValue = 0;
+    uint32_t theRetrievedVrefADCValue = 0;
     uint8_t  theVrefFuseIDValue       = theChip->pChipFuseID.ADCRef();
     uint8_t  theVrefReadRegisterValue = fReadoutChipInterface->readVrefRegister(theChip);
     //FIXME for now the VREF is not written in the SSA fuse ID so we check if it is zero or not. 
@@ -300,15 +321,16 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
         LOG(INFO) << BOLDRED << " Need to calibrate VREF" << RESET;
         LOG(INFO) << BOLDRED << " theVrefToUse " << +theVrefToUse << RESET;
 
-        theVrefToUse = TuneDAC(theChip, theVrefExpectedValue / (theADCMaxValue - theADCGroundValue), theBandGapExpectedValue, "vref", theVrefToUse, true); 
+        theVrefToUse = TuneDAC(theChip, theVrefExpectedValue / (theADCMaxValue - theADCGroundValue), theBandGapExpectedValue, "xxxxxxx", theVrefToUse, true); 
 
         LOG(INFO) << BLUE << "calibrated theVrefToUse " << +theVrefToUse << RESET;
 
         fReadoutChipInterface->setVref(theChip, theVrefToUse);
 
         theRetrievedVrefADCValue = fReadoutChipInterface->readVrefRegister(theChip);
-        //FIXME!!! 
-        //FIXME also in output txt
+        std::cout << fReadoutChipInterface->ReadChipReg(theChip, "ADCcontrol") << std::endl;
+        auto test = fReadoutChipInterface->ReadChipReg(theChip, "ADCcontrol") & 0x1F;
+        std::cout << test << std::endl;
         LOG(INFO) << BOLDRED << " retrieve dac after writing " << theRetrievedVrefADCValue << RESET;
         LOG(INFO) << BOLDRED << " VREF calibrated" << RESET;
 
@@ -356,4 +378,18 @@ void OTPSADCCalibration::Resume()
 void OTPSADCCalibration::Reset()
 {
     fRegisterHelper->restoreSnapshot();
+    // for(const auto theBoard: *fDetectorContainer)
+    // {
+    //     for(auto theOpticalReadout: *theBoard)
+    //     {
+    //         for(auto theHybrid: *theOpticalReadout)
+    //         {
+    //             for(auto theChip: *theHybrid) 
+    //             { 
+    //                 std::cout << fReadoutChipInterface->ReadChipReg(theChip, "ADCcontrol") << std::endl;
+    //             }
+    //         }
+    //     }
+    // }
+
 }

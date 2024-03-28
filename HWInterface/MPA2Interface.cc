@@ -284,7 +284,14 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos) { return this->setThreshold(pMPA2, pValue); }
     else if(pRegName == "DL_ctrl")
         return this->setInjectionDelay(pMPA2, pValue);
-    else if(pRegName == "vref") { return this->WriteChipReg(pMPA2, "ADCcontrol", pValue, false); }
+    else if(pRegName == "vref")
+    { 
+        std::cout << " reading ADCcontrol before writing " << ReadChipReg(pMPA2,"ADCcontrol") << std::endl; 
+        std::cout << "HERE!!!" << pValue << std::endl;
+        uint8_t cRegMask  = 0x1F;
+        // return this->WriteChipReg(pMPA2, "ADCcontrol", pValue , false); 
+        return this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false); 
+    }
     else if(pRegName == "Offsets") { return this->WriteChipReg(pMPA2, "TrimDAC_ALL", pValue, false); }
     else if(pRegName == "ReadoutMode") { return this->WriteChipRegBits(pMPA2, "Control_1", pValue, "Mask", 0x3, false); }
     else if(pRegName == "RetimePix")
@@ -776,34 +783,37 @@ uint32_t MPA2Interface::readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
 
 uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    uint16_t theVrefADC = ReadChipReg(pChip,"vref");
+    uint32_t theVrefADC = ReadChipReg(pChip,"vref");
     std::cout << " theVrefADC " << theVrefADC << std::endl;
-    return uint32_t(theVrefADC);
+    return theVrefADC;
 }
 
 float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
 {
+    std::cout << "before setting ADCcontrol to read ADC output " << this->ReadChipReg(pMPA2, "ADCcontrol") << std::endl;
     uint32_t ADCReadsAve = 0;
     for(uint32_t i = 0; i < nreads; i++)
     {
-        this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x7 << 5), "Mask", (0x7 << 5));
-        this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x6 << 5), "Mask", (0x7 << 5));
+        this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x7 << 5), "Mask", 0xE0);
+        this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x6 << 5), "Mask", 0xE0);
         std::this_thread::sleep_for(std::chrono::microseconds(1000));
         uint16_t ADCRead = this->ReadChipReg(pMPA2, "ADC_output");
         ADCReadsAve += ADCRead;
         // std::cout<<"ADCRead "<<+ADCRead<<std::endl;
     }
+    std::cout << "after setting ADCcontrol to read ADC output " << this->ReadChipReg(pMPA2, "ADCcontrol") << std::endl;
+
     // std::cout<<"ADCReadAVE "<<float(ADCReadsAve)/float(nreads)<<std::endl;
     return float(ADCReadsAve) / float(nreads);
 }
 
-float MPA2Interface::calculateADCLSB(Chip* pMPA2, float vrefExp)
+float MPA2Interface::calculateADCLSB(ReadoutChip* pMPA2, float theVrefValue)
 {
     this->selectBlock(pMPA2, 1, 7, 0);
     float offset = this->ADCMeasure(pMPA2);
 
-    // LOG(INFO) << BOLDMAGENTA << "ADCLSB "<<vrefExp/(4095.0 - offset) << RESET;
-    return vrefExp / (4095.0 - offset);
+    // LOG(INFO) << BOLDMAGENTA << "ADCLSB "<<theVrefValue/(4095.0 - offset) << RESET;
+    return theVrefValue / (4095.0 - offset);
 }
 
 bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn) { return this->WriteChipReg(pMPA2, "ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block), true); }
@@ -859,9 +869,15 @@ bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
 bool MPA2Interface::setVref(ReadoutChip* pMPA2, uint16_t VREFvalue)
 {
     // Set the Vref to a desired value
-    LOG(INFO) << BOLDMAGENTA << " loading VREF " << +VREFvalue << RESET;
+    LOG(INFO) << BOLDMAGENTA << " loading VREF " << VREFvalue << RESET;
+    return this->WriteChipReg(pMPA2, "vref", VREFvalue); // , "Mask", (0x1F));
 
-    return this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
+    // return this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
+}
+
+const std::map<std::string, std::pair<uint8_t,float>> MPA2Interface::getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pMPA2)
+{
+    return MPA2_BIAS_STRUCTURE_DEFAULT;
 }
 
 //FIXME At the moment we are setting the exepected values 
@@ -908,6 +924,13 @@ bool MPA2Interface::disableTestPadsOutput(ReadoutChip* pMPA2)
     LOG(INFO) << BOLDMAGENTA << "Disable all MPA test pads outputs... " << RESET;
     return this->selectBlock(pMPA2, 0);
 }
+
+// bool MPA2Interface::selectTestPadsOutput(ReadoutChip* pMPA2, std::string theRegisterName)
+// {
+//     LOG(INFO) << BOLDMAGENTA << "Select MPA test pad output for "<< theRegisterName << RESET;
+//     auto theBlock = ADC_CONTROL_TABLE
+//     return this->selectBlock(pMPA2, 0);
+// }
 
 bool MPA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify)
 {

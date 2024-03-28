@@ -456,7 +456,7 @@ uint8_t PSBiasCal::TuneDAC(Chip* cChip, float slope, float exp_val, std::string 
     return DAC_val;
 }
 
-uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr, std::string dac_str, float VREFmeasured)
+uint32_t PSBiasCal::CalibrateChipBias(ReadoutChip* cChip, Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr, std::string dac_str, float VREFmeasured)
 {
     // float VREF_LPGBT        = 1.0;
     // float cConversionFactor = VREF_LPGBT / 1024.;
@@ -465,18 +465,22 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     // uint32_t    DAC_new_val = 0;
     std::string DAC;
     // uint8_t     regIndex = 0;
-    float ADCLSB = 0;
-    if(cChip->getFrontEndType() == FrontEndType::MPA2) { ADCLSB = (static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->calculateADCLSB(cChip)); }
-    else if(cChip->getFrontEndType() == FrontEndType::SSA2)
-    {
-        //FIXME Borken after redefining readADCGround
-        // ADCLSB = (static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->CalculateADCLSB(cChip, VREFmeasured));
-    }
-    else
-    {
-        LOG(ERROR) << BOLDRED << "Calibration procedure unknown for this chip type - aborting." << RESET;
-        std::runtime_error(std::string("PSBiasCal::CalibrateChipBias: Error, procedure implemented only for MPA2 & SSA2 at this time. Abort."));
-    }
+    float ADCLSB = fReadoutChipInterface->calculateADCLSB(cChip,VREFmeasured);
+    // if(cChip->getFrontEndType() == FrontEndType::MPA2)
+    // {   
+    //     //FIXME Borken after redefining calculateADCLSB
+    //     ADCLSB = fReadoutChipInterface->calculateADCLSB(cChip); }
+    // }
+    // else if(cChip->getFrontEndType() == FrontEndType::SSA2)
+    // {
+    //     //FIXME Borken after redefining readADCGround
+    //     // ADCLSB = (static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->CalculateADCLSB(cChip, VREFmeasured));
+    // }
+    // else
+    // {
+    //     LOG(ERROR) << BOLDRED << "Calibration procedure unknown for this chip type - aborting." << RESET;
+    //     std::runtime_error(std::string("PSBiasCal::CalibrateChipBias: Error, procedure implemented only for MPA2 & SSA2 at this time. Abort."));
+    // }
     if(cChip->getFrontEndType() == FrontEndType::MPA2)
     {
         std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};

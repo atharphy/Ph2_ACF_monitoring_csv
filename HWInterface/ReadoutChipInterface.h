@@ -150,6 +150,31 @@ class ReadoutChipInterface : public ChipInterface
     }
 
     /*!
+     * \brief Calculate in V the precision of the ADC LSB
+     * \param pChip: pointer to Chip object
+     * \param theVrefValue: the value of Vref, needed for SSA2
+     */
+    virtual float calculateADCLSB(Ph2_HwDescription::ReadoutChip* pChip, float theVrefValue)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+
+    /*!
+     * \brief Get the table cointaing < bias register name, < default register value, expected value in volts>> 
+     * \param pChip: pointer to Chip object
+     */
+    virtual const std::map<std::string, std::pair<uint8_t,float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        std::map<std::string, std::pair<uint8_t,float>> theBiasStucture;
+        theBiasStucture["empty"] = std::make_pair(255,-1);
+        return theBiasStucture;
+
+    }
+
+    /*!
      * \brief Get the ADC band gap expected value. At the moment a default value is stored in the definition file
      * \param pChip: pointer to Chip object
      */
@@ -227,6 +252,16 @@ class ReadoutChipInterface : public ChipInterface
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return false;
     }
+
+    // /*!
+    //  * \brief Select the register to be read on the test pad output
+    //  * \param pChip: pointer to Chip object
+    //  */
+    // virtual bool selectTestPadsOutput(Ph2_HwDescription::ReadoutChip* pChip, std::string theRegisterName)
+    // {
+    //     LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    //     return false;
+    // }
 
     /*!
      * \brief Write all Local registers on Chip and Chip Config File (able to recognize local parameter names)

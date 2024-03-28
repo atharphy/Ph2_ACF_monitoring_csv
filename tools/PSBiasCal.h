@@ -31,7 +31,7 @@ class PSBiasCal : public Tool
     void Initialise();
     void CalibrateADC();
 
-    uint32_t CalibrateChipBias(Ph2_HwDescription::Chip* cChip,
+    uint32_t CalibrateChipBias(Ph2_HwDescription::ReadoutChip* cChip,
                                Ph2_HwDescription::Chip* clpGBT,
                                uint32_t                 point,
                                uint32_t                 block,
