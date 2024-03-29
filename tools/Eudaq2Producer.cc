@@ -625,7 +625,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     // #FIXME not using GetHits for a more readable code
                     for(auto cCluster: cPClusters)
                     {
-                        for(uint16_t cHitId = 0; cHitId < 1 + cCluster.fWidth; cHitId++)
+                        for(uint16_t cHitId = 0; cHitId < cCluster.fWidth; cHitId++)
                         {
                             // extent pixel data container by 6 elements
                             cPixelData.resize(cPixelDataOffset + 6);
@@ -664,7 +664,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     // Extract strip hit information
                     for(auto cCluster: cSClusters)
                     {
-                        for(uint16_t cHitId = 0; cHitId < 1 + cCluster.fWidth; cHitId++)
+                        for(uint16_t cHitId = 0; cHitId < cCluster.fWidth; cHitId++)
                         {
                             // extent strip data container by 6 elements
                             cStripData.resize(cStripDataOffset + 6);

@@ -38,6 +38,7 @@ struct Injection
  * \brief Class representing the User Interface to the MPA on different boards
  */
 
+/// @brief 
 class MPA2Interface : public ReadoutChipInterface
 { // begin class
   public:
@@ -80,7 +81,17 @@ class MPA2Interface : public ReadoutChipInterface
                         uint32_t                        BRclk);
 
     bool Set_calibration(Ph2_HwDescription::Chip* pMPA, uint32_t cal);
-    bool Set_threshold(Ph2_HwDescription::Chip* pMPA, uint32_t th);
+    bool setThreshold(Ph2_HwDescription::Chip* pMPA, uint8_t threshold);
+    bool setInjectionDelay(Ph2_HwDescription::Chip* pMPA, uint8_t delay);
+
+    /*!
+     * @brief set same register for all MPA bias block in 
+     * @param pMPA2 the MPA to write
+     * @param registerName Name of the register without the bias block number
+     * @param value value to write in the register
+     * @return success
+     */
+    bool setAllBiasBlockRegisters(Ph2_HwDescription::Chip* pMPA2, std::string registerName, uint8_t value);
 
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0);
     bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerify = false);

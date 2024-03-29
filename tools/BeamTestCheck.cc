@@ -1123,29 +1123,29 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 for(auto cPxlCluster: cPxlClusters)
                                 {
                                     uint32_t cRow = cPxlCluster.fZpos;
-                                    uint32_t cCol = cPxlCluster.fAddress - 1;
-                                    if(cPxlCluster.fWidth != 0)
+                                    uint32_t cCol = cPxlCluster.fAddress;
+                                    if(cPxlCluster.fWidth != 1)
                                     {
                                         cSingles = false;
                                         continue;
                                     }
                                     cClusterContainerS0->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
-                                    for(uint8_t cOff = 0; cOff <= cPxlCluster.fWidth; cOff++) cCenterOfMassP += cPxlCluster.fAddress + cOff;
-                                    cCenterOfMassP /= (1 + cPxlCluster.fWidth);
+                                    for(uint8_t cOff = 0; cOff < cPxlCluster.fWidth; cOff++) cCenterOfMassP += cPxlCluster.fAddress + cOff;
+                                    cCenterOfMassP /= (cPxlCluster.fWidth);
                                 }
                                 double cCenterOfMassS = 0;
                                 for(auto cStrpCluster: cStripClusters)
                                 {
                                     uint32_t cRow = 0;
-                                    uint32_t cCol = cStrpCluster.fAddress - 1;
+                                    uint32_t cCol = cStrpCluster.fAddress;
                                     if(cStrpCluster.fWidth != 0)
                                     {
                                         cSingles = false;
                                         continue;
                                     }
                                     cClusterContainerS1->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
-                                    for(uint8_t cOff = 0; cOff <= cStrpCluster.fWidth; cOff++) cCenterOfMassS += cStrpCluster.fAddress + cOff;
-                                    cCenterOfMassS /= (1 + cStrpCluster.fWidth);
+                                    for(uint8_t cOff = 0; cOff < cStrpCluster.fWidth; cOff++) cCenterOfMassS += cStrpCluster.fAddress + cOff;
+                                    cCenterOfMassS /= (cStrpCluster.fWidth);
                                 }
                                 // cSingles = cSingles && (cTDCVal == 3 );
                                 // cSingles = cSingles && (cTDCVal < 2 || cTDCVal > 4 );

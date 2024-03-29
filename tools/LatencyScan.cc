@@ -325,7 +325,7 @@ void LatencyScan::ScanLatency()
                                         if(cSclstrs.size() > 0)
                                             LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
                                                        << +cPclstr.fWidth << RESET;
-                                        for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
+                                        for(uint8_t cId = 0; cId < (cPclstr.fWidth); cId++)
                                         {
                                             cHitContainer.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -340,7 +340,7 @@ void LatencyScan::ScanLatency()
                                     {
                                         if(cPclstrs.size() > 0)
                                             LOG(DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
-                                        for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
+                                        for(uint8_t cId = 0; cId < (cSclstr.fWidth); cId++)
                                         {
                                             cHitContainer.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())

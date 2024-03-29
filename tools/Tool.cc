@@ -1202,11 +1202,9 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
     DetectorDataContainer* currentStepOccupancyContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *currentStepOccupancyContainer);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     DetectorDataContainer* previousDacList = new DetectorDataContainer();
     DetectorDataContainer* currentDacList  = new DetectorDataContainer();
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     uint16_t allZeroRegister = 0;
     uint16_t allOneRegister  = (0xFFFF >> (16 - numberOfBits));
@@ -1225,16 +1223,10 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         setAllLocalDacBeBoard(boardId, dacName, *previousDacList);
     else
         setAllGlobalDacBeBoard(boardId, dacName, *previousDacList);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     fDetectorDataContainer = previousStepOccupancyContainer;
     LOG(DEBUG) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
     measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     LOG(DEBUG) << BOLDBLUE << "Setting all bits of register " << dacName << "  to  " << +allOneRegister << RESET;
     if(localDAC)
@@ -1449,7 +1441,7 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                                                   .fOccupancy;
                         }
                     }
-                    // LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }
@@ -2065,10 +2057,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, i
     }
     else
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        
         groupScan->setGroup(-1);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         (*groupScan)();
     }
 }
@@ -2081,7 +2070,6 @@ class MeasureBeBoardDataPerGroup : public ScanBase
 
     void operator()() override
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         
         uint32_t burstNumbers;
         uint32_t lastBurstNumberOfEvents;
@@ -2100,14 +2088,12 @@ class MeasureBeBoardDataPerGroup : public ScanBase
                 lastBurstNumberOfEvents = fNumberOfEvents % fNumberOfEventsPerBurst;
             }
         }
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         while(burstNumbers > 0)
         {
             uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
             // LOG (INFO) << BOLDYELLOW << "Tool::ReadNEvents : number of events requested is " << +currentNumberOfEvents << RESET;
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             
             if(fTool->ifUseReadNEvents())
                 fTool->ReadNEvents(fDetectorContainer->getObject(fBoardId), currentNumberOfEvents);
@@ -2120,20 +2106,14 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                 fTool->ReadData(fDetectorContainer->getObject(fBoardId), false);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             // Loop over Events from this Acquisition
             const std::vector<Event*>& events = fTool->GetEvents();
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             fTool->setNReadbackEvents(events.size());
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             // Assuming all chip will have all channels enabled:
             if(fSameChannelGroupForAllChannels)
             {
                 // LOG (INFO) << BOLDYELLOW << "MeasureBeBoardDataPerGroup fSameChannelGroupForAllChannels read-back " << events.size() << " event." << RESET;
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fGroupNumber = " << +fGroupNumber << std::endl;
-                
                 auto channelGroup = this->getChannelGroup(fGroupNumber);
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] enable channels = " << channelGroup->getNumberOfEnabledChannels() << std::endl;
                 if(channelGroup == nullptr)
                     LOG(ERROR) << BOLDRED << "Channel group does not exist..." << RESET;
                 else
@@ -2143,7 +2123,6 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             }
             else
             {
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                 
                 // LOG(DEBUG) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
                 for(auto cOpticalGroup: *fDetectorDataContainer->getObject(fBoardId))
@@ -2152,12 +2131,9 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                     {
                         for(const auto cChip: *cHybrid)
                         {
-                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                             
                             auto channelGroup = this->getChannelGroup(fGroupNumber, fDetectorDataContainer->getObject(fBoardId)->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
-                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                             for(auto& event: events) event->fillChipDataContainer(cChip, channelGroup, cHybrid->getId());
-                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                             
                         }
                     }
@@ -2175,14 +2151,11 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
 void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     
     MeasureBeBoardDataPerGroup theScan(this);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     
     theScan.setDataContainer(fDetectorDataContainer);
     // Make sure async mode uses ReadNEvents
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     
     bool cUseReadNEvents = fUseReadNEvents;
     if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
@@ -2192,15 +2165,19 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
     }
 
     doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
         numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
 
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;
 
+    // const auto& theOccupancy =  fDetectorDataContainer->getObject(boardId)->getFirstObject()->getFirstObject()->getFirstObject()->getSummary<Occupancy>().fOccupancy;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Occupancy = " << theOccupancy << std::endl;
     if(fNormalize)
         fDetectorDataContainer->getObject(boardId)->normalizeAndAverageContainers(fDetectorContainer->getObject(boardId), getChannelGroupHandlerContainer()->getObject(boardId), numberOfEvents);
+
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Occupancy = " << theOccupancy << std::endl;
+    
     fUseReadNEvents = cUseReadNEvents;
 }
 

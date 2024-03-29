@@ -23,13 +23,26 @@ void DQMHistogramOTinjectionDelayOptimization::book(TFile* theOutputFile, Detect
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    HistContainer<TH1I> thresholdVsDelayHistogram("ThresholdVsDelayScan", "Threshold Vs Delay Scan", 150, -0.5, 150 - 0.5);
+    uint16_t maximumDelay = findValueInSettings<double>(pSettingsMap, "OTinjectionDelayOptimizationMaximumDelay", 150);
+    fDelayStep = findValueInSettings<double>(pSettingsMap, "OTinjectionDelayOptimizationDelayStep", 1);
+    uint16_t numberOfBins = maximumDelay/fDelayStep;
+
+    float bitSizeInNs = 1.;
+    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS)
+    {
+        bitSizeInNs = 25./12.;
+    }
+
+    float minimumDelayInNs = bitSizeInNs/2.;
+    float maximumDelayInNs = (maximumDelay -0.5) * bitSizeInNs;
+
+    HistContainer<TH1I> thresholdVsDelayHistogram("ThresholdVsDelayScan", "Threshold Vs Delay Scan", numberOfBins, minimumDelayInNs, maximumDelayInNs);
     thresholdVsDelayHistogram.fTheHistogram->GetXaxis()->SetTitle("Delay [ns]");
     thresholdVsDelayHistogram.fTheHistogram->GetYaxis()->SetTitle("50% threshold [VcTh]");
     thresholdVsDelayHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fThresholdVsDelayScanHistogramContainer, thresholdVsDelayHistogram);
 
-    HistContainer<TH1I> bestThresholdAndDelayHistogram("BestThresholdAndDelay", "Best Threshold And Delay", 150, -0.5, 150 - 0.5);
+    HistContainer<TH1I> bestThresholdAndDelayHistogram("BestThresholdAndDelay", "Best Threshold And Delay", numberOfBins, minimumDelayInNs, maximumDelayInNs);
     bestThresholdAndDelayHistogram.fTheHistogram->GetXaxis()->SetTitle("Best delay [ns]");
     bestThresholdAndDelayHistogram.fTheHistogram->GetYaxis()->SetTitle("Best threshold [VcTh]");
     bestThresholdAndDelayHistogram.fTheHistogram->SetStats(false);
@@ -52,7 +65,7 @@ void DQMHistogramOTinjectionDelayOptimization::fillThresholdVsDelayScan(uint16_t
                     auto theHistogram = fThresholdVsDelayScanHistogramContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())
                                             ->getSummary<HistContainer<TH1I>>()
                                             .fTheHistogram;
-                    theHistogram->SetBinContent(delay + 1, theChip->getSummary<uint16_t>());
+                    theHistogram->SetBinContent((delay/fDelayStep) + 1, theChip->getSummary<uint16_t>());
                 }
             }
         }

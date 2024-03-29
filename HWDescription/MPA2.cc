@@ -41,6 +41,7 @@ MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
         if(cMapItem.first.find("_ALL") == std::string::npos) continue;
         cMapItem.second.fControlReg = 1;
     }
+    fAverageNoise = 2.5;
 }
 
 MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
@@ -59,6 +60,7 @@ MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
         if(cMapItem.first.find("_ALL") == std::string::npos) continue;
         cMapItem.second.fControlReg = 1;
     }
+    fAverageNoise = 2.5;
 }
 
 void MPA2::initializeFreeRegisters()

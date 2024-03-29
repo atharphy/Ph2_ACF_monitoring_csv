@@ -81,6 +81,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
 
 void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] event = " << getPatternPrintout(pData, 1, false) << std::endl;
     const uint16_t LENGTH_EVENT_HEADER = 4;
     const uint8_t  VALID_L1_HEADER     = 0x0A;
     const uint8_t  VALID_STUB_HEADER   = 0x05;
@@ -304,10 +305,11 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
 
     for(auto cHit: cHits)
     {
-        if(testChannelGroup->isChannelEnabled(cHit.first, cHit.second)) // This cannot work for PS since hits are not returned as expected
+        if(testChannelGroup->isChannelEnabled(cHit.first, cHit.second))
         {
             chipContainer->getChannel<Occupancy>(cHit.first, cHit.second).fOccupancy += 1.;
         }
+        // else std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] impossible! hit on chip ID " << chipContainer->getId() << " -> " << cHit.first << " - " << cHit.second << std::endl;
     }
 }
 
@@ -369,8 +371,8 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pHybridId, uint8_t
             PCluster aPCluster;
 
             // LOG (INFO) << BOLDGREEN << "PCLUS ..... " << std::bitset<16>(*cIterator)  << RESET;
-            aPCluster.fAddress = cAdd;   //((*cIterator) & ((0x7F) << (0 + 4 + 3))) >> (0 + 4 + 3);
-            aPCluster.fWidth   = cWdth;  //((*cIterator) & ((0x7) << (0 + 4))) >> (0 + 4);
+            aPCluster.fAddress = cAdd  - 1;   //((*cIterator) & ((0x7F) << (0 + 4 + 3))) >> (0 + 4 + 3);
+            aPCluster.fWidth   = cWdth + 1;  //((*cIterator) & ((0x7) << (0 + 4))) >> (0 + 4);
             aPCluster.fZpos    = cZInfo; //((*cIterator) & ((0xF) << 0)) >> 0;
             cPClusters.push_back(aPCluster);
             // LOG(INFO) << BOLDGREEN << "P-cluster in chip " << +pReadoutChipId << ", address : " << unsigned(aPCluster.fAddress) << "," << unsigned(aPCluster.fWidth) << ","
@@ -381,26 +383,6 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pHybridId, uint8_t
 
     return cPClusters;
 
-    // uint8_t NSclus = GetNStripClusters(pHybridId, pReadoutChipId);
-    // uint8_t NPclus = GetNPixelClusters(pHybridId, pReadoutChipId);
-    // auto&  cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
-
-    // for(int ic=NSclus; ic <(NSclus+NPclus) ; ic++)
-    // {
-    // //LOG(INFO) << BOLDRED << "firstword " <<firstword<<" nword "<<nword<< RESET;
-
-    // aPCluster.fAddress = (0x00003f80 & cClusterWords[ic]) >> 7;
-    // aPCluster.fWidth   = (0x00000070 & cClusterWords[ic]) >> 4;
-    // aPCluster.fZpos    =  0x0000000F & cClusterWords[ic];
-    // //LOG(INFO) << BOLDRED << "PIX" << RESET;
-    // //LOG(INFO) << BOLDRED << std::bitset<17>(cClusterWord) << RESET;
-
-    // //LOG(INFO) << BOLDRED << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
-    // result.push_back(aPCluster);
-
-    // }
-
-    // return result;
 }
 
 std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
@@ -417,17 +399,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t
     auto cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
     if(cClusterWords.size() == 0) return cSClusters;
 
-    // why?
-    // decltype(fEventHitList[0].second) cClusterWords;
-    // try
-    // {
-    //     cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
-    // }
-    // catch(const std::exception& e)
-    // {
-    //     std::cerr << e.what() << '\n';
-    //     return cSClusters;
-    // }
+
     auto cIterator = cClusterWords.begin();
     auto cEnd      = cClusterWords.begin() + GetNStripClusters(pHybridId);
     while(cIterator < cEnd)
@@ -446,8 +418,8 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t
         {
             // LOG (INFO) << BOLDGREEN << "SCLUS ..... " << std::bitset<14>(*cIterator)  << RESET;
             SCluster cSCluster;
-            cSCluster.fAddress = cAdd;  //((*cIterator) & ((0x7F) << (0 + 1 + 3))) >> (0 + 1 + 3);
-            cSCluster.fWidth   = cWdth; //((*cIterator) & ((0x7) << (0 + 1))) >> (0 + 1);
+            cSCluster.fAddress = cAdd  - 1;  //((*cIterator) & ((0x7F) << (0 + 1 + 3))) >> (0 + 1 + 3);
+            cSCluster.fWidth   = cWdth + 1; //((*cIterator) & ((0x7) << (0 + 1))) >> (0 + 1);
             cSCluster.fMip     = cMip;  //((*cIterator) & ((0x1) << 0)) >> 0;
             cSClusters.push_back(cSCluster);
             // LOG(INFO) << BOLDYELLOW << "S-cluster in chip " << +pReadoutChipId << ", address : " << unsigned(cSCluster.fAddress) << "," << unsigned(cSCluster.fWidth) << ","
@@ -844,18 +816,32 @@ std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybri
         }
         else
         {
-            for(auto cCluster: GetPixelClusters(pHybridId, pReadoutChipId))
+            if(pReadoutChipId >= 8) // it is an MPA
             {
-                for(int cId = 0; cId < cCluster.fWidth; cId++)
+                for(auto cCluster: GetPixelClusters(pHybridId, pReadoutChipId))
                 {
-                    cHits.push_back({cCluster.fZpos + 1, cCluster.fAddress - 1});
+                    for(int cId = 0; cId <= cCluster.fWidth; cId++)
+                    {
+                        if(cCluster.fWidth > 0)
+                        {
+                            cHits.push_back({cCluster.fZpos, cCluster.fAddress});
+                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] found pixel cluster in " << cHits.back().first << " - " << cHits.back().second << std::endl;
+                        }
+                    }
                 }
             }
-            for(auto cCluster: GetStripClusters(pHybridId, pReadoutChipId))
+            else // it is an SSA
             {
-                for(int cId = 0; cId < cCluster.fWidth; cId++)
+                for(auto cCluster: GetStripClusters(pHybridId, pReadoutChipId))
                 {
-                        cHits.push_back({0, cCluster.fAddress - 1});
+                    for(int cId = 0; cId <= cCluster.fWidth; cId++)
+                    {
+                        if(cCluster.fWidth > 0)
+                        {
+                            cHits.push_back({0, cCluster.fAddress});
+                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] found strip cluster in " << cHits.back().second << std::endl;
+                        }
+                    }
                 }
             }
         }
