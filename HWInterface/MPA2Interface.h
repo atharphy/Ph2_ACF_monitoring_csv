@@ -123,7 +123,6 @@ class MPA2Interface : public ReadoutChipInterface
     bool                 selectBlock(Ph2_HwDescription::Chip* pMPA2, uint8_t block, uint8_t testPoint = 0, uint8_t swEn = 0);
     uint32_t             readADCGround(Ph2_HwDescription::ReadoutChip* pMPA2);
     uint32_t             measureGround(Ph2_HwDescription::ReadoutChip* pMPA2);
-    float                measureBg(Ph2_HwDescription::Chip* pMPA2);
     uint32_t             readADC(Ph2_HwDescription::ReadoutChip* pMPA2, std::string pRegName);
     uint32_t             readADCVref(Ph2_HwDescription::ReadoutChip* pMPA2);
     uint32_t             readVrefRegister(Ph2_HwDescription::ReadoutChip* pMPA2);

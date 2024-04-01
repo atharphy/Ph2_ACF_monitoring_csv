@@ -790,7 +790,6 @@ uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
 
 float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
 {
-    std::cout << "before setting ADCcontrol to read ADC output " << this->ReadChipReg(pMPA2, "ADCcontrol") << std::endl;
     uint32_t ADCReadsAve = 0;
     for(uint32_t i = 0; i < nreads; i++)
     {
@@ -801,7 +800,6 @@ float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
         ADCReadsAve += ADCRead;
         // std::cout<<"ADCRead "<<+ADCRead<<std::endl;
     }
-    std::cout << "after setting ADCcontrol to read ADC output " << this->ReadChipReg(pMPA2, "ADCcontrol") << std::endl;
 
     // std::cout<<"ADCReadAVE "<<float(ADCReadsAve)/float(nreads)<<std::endl;
     return float(ADCReadsAve) / float(nreads);
@@ -829,16 +827,6 @@ uint32_t MPA2Interface::measureGround(ReadoutChip* pMPA2)
     }
     this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
     return float(sumData) / 7.0;
-}
-float MPA2Interface::measureBg(Chip* pMPA2)
-{
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
-    this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
-    this->selectBlock(pMPA2, 8, 7, 1);
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
-    float data = this->ADCMeasure(pMPA2); // maybe??
-    this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
-    return data;
 }
 
 uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2)
