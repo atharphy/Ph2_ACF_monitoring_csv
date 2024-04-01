@@ -172,9 +172,9 @@ class D19cCic2Event : public Event
      * \brief Function to get a sparsified hit vector
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
-     * \return vector with hit channels
+     * \return vector with hit channels (row, col)
      */
-    std::vector<uint32_t> GetHits(uint8_t pHybridId, uint8_t pCbcId) const override;
+    std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId) const override;
 
     std::vector<Cluster>  getClusters(uint8_t pHybridId, uint8_t pCbcId) const override;
     uint8_t               GetNStripClusters(uint8_t pHybridId) const;

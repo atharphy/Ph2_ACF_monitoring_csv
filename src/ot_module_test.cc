@@ -9,13 +9,10 @@
 #include "tools/CBCPulseShape.h"
 #include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
-#include "tools/DataChecker.h"
 #include "tools/ECVLinkAlignmentOT.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
-#include "tools/ECVLinkAlignmentOT.h"
-#include "tools/MemoryCheck2S.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTLightTransmission.h"
 #include "tools/OTQuickNoise.h"
@@ -160,7 +157,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("ecv", "Perform Electronic Chain Validation Scans", ArgvParser::NoOptionAttribute);
 
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
-    cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("alignPS", "Perform SSA-MPA alignment steps", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkClusters", "Check CIC2 sparsification... ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("psDataTest", "....", ArgvParser::NoOptionAttribute);
@@ -172,7 +168,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("noiseInjection", "Check noise injection...", ArgvParser::NoOptionAttribute);
     cmd.defineOption("calibrateADC", "Calibrate ADC on lpGBT....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("readIDs", "Read chip ids....", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("memCheck", "Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("pageToTest", "Page to test", ArgvParser::OptionRequiresValue);
@@ -229,7 +224,6 @@ int main(int argc, char* argv[])
     // now query the parsing results
     std::string cHWFile             = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
     bool        batchMode           = (cmd.foundOption("batch")) ? true : false;
-    bool        cCheckData          = (cmd.foundOption("checkData"));
     bool        cSaveToFile         = cmd.foundOption("save");
     std::string cSkip               = (cmd.foundOption("skipAlignment")) ? cmd.optionValue("skipAlignment") : "";
     std::string cInjectionSource    = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
@@ -597,7 +591,6 @@ int main(int argc, char* argv[])
         cPSAlignment.Inherit(&cTool);
         cPSAlignment.Start(theStartInfo);
         cPSAlignment.waitForRunToBeCompleted();
-
 
         // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
@@ -1122,81 +1115,6 @@ int main(int argc, char* argv[])
         cTester.TakeData();
     }
 
-    // inject hits and stubs using mask and compare input against output
-    if(cmd.foundOption("memCheck") && !cmd.foundOption("read"))
-    {
-        MemoryCheck2S cMemoryChecker;
-        cMemoryChecker.Inherit(&cTool);
-        cMemoryChecker.Initialise();
-
-        // configure reference voltage
-        cMemoryChecker.ConfigureVref();
-        cMemoryChecker.MonitorTemperature();
-        cMemoryChecker.MonitorInputVoltage();
-        // find pedestal and set threshold
-        if(cmd.foundOption("completeDataCheck"))
-        {
-            std::string          cArgsStr      = cmd.optionValue("completeDataCheck");
-            std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
-            cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
-            cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
-
-            int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
-            cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
-        }
-
-        cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
-        cMemoryChecker.MemoryCheck2SRaw(false); // all zeros
-
-        cMemoryChecker.MonitorAnalogue();
-        cMemoryChecker.SaveOptimalTaps();
-        cMemoryChecker.writeObjects();
-        cMemoryChecker.resetPointers();
-    }
-    if(cCheckData && !cmd.foundOption("read"))
-    {
-        std::string          cArgsStr = cmd.optionValue("checkData");
-        std::vector<uint8_t> cArgs;
-        std::stringstream    cArgsSS(cArgsStr);
-        int                  i;
-        while(cArgsSS >> i)
-        {
-            cArgs.push_back(i);
-            if(cArgsSS.peek() == ',') cArgsSS.ignore();
-        };
-        t.start();
-        DataChecker cDataChecker;
-        cDataChecker.Inherit(&cTool);
-        cDataChecker.Initialise();
-        if(cmd.foundOption("psDataTest"))
-        {
-            // auto cInjections = cDataChecker.GeneratePSInjections(4);
-            // for(auto cInjection : cInjections )
-            // {
-            //     LOG (INFO) << BOLDMAGENTA << "injection in pixel " << +cInjection.fColumn
-            //         << " and row " << +cInjection.fRow
-            //         << RESET;
-            // }
-            cDataChecker.InjectionTestPS(100);
-        }
-        if(cmd.foundOption("checkClusters")) cDataChecker.ClusterCheck(cArgs);
-        if(cmd.foundOption("checkSLink")) cDataChecker.WriteSlinkTest(cmd.optionValue("checkSLink"));
-        if(cmd.foundOption("checkStubs")) cDataChecker.StubCheck(cArgs);
-        if(cmd.foundOption("noiseInjection")) cDataChecker.StubCheckWNoise(cArgs);
-        if(cmd.foundOption("checkReadData")) cDataChecker.ReadDataTest();
-        if(cmd.foundOption("checkAsync")) cDataChecker.AsyncTest();
-        if(cmd.foundOption("checkReadNEvents")) cDataChecker.ReadNeventsTest();
-        if(cSaveToFile) cDataChecker.CollectEvents();
-
-        // cDataChecker.ReadNeventsTest();
-        // cDataChecker.DataCheck(cFEsToCheck,0,0);
-        // cDataChecker.ReadDataTest();
-        // cDataChecker.HitCheck();
-        cDataChecker.writeObjects();
-        cDataChecker.resetPointers();
-        t.show("Time to check data of the front-ends on the system: ");
-    }
-
     uint8_t cScanL1    = (cmd.foundOption("scanL1") || cmd.foundOption("scanLatencies")) ? 1 : 0;
     uint8_t cScanStubs = (cmd.foundOption("scanStubs") || cmd.foundOption("scanLatencies")) ? 1 : 0;
     if(!cmd.foundOption("read") && cmd.foundOption("TestPulseCheck"))
@@ -1344,27 +1262,6 @@ int main(int argc, char* argv[])
         t.stop();
         t.show("Time for pulseShape plot measurement");
         t.reset();
-    }
-
-    if(!cmd.foundOption("read") && cmd.foundOption("checkSharedStubs"))
-    {
-        LOG(INFO) << BOLDMAGENTA << "Checking stubs across CBC neighbors" << RESET;
-        t.start();
-
-        MemoryCheck2S cMemoryChecker;
-        cMemoryChecker.Inherit(&cTool);
-        cMemoryChecker.Initialise();
-        cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
-        cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
-
-        CheckCbcNeighbors cCheckCbcNeighbors;
-        cCheckCbcNeighbors.Inherit(&cTool);
-        cCheckCbcNeighbors.Initialise();
-
-        cCheckCbcNeighbors.TestCbcNeighbors();
-
-        t.stop();
-        t.show("Time to check stubs on shared channels");
     }
 
     if(cLatency || cStubLatency)

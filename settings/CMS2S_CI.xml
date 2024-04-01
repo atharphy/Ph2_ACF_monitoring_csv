@@ -122,8 +122,10 @@
     <Setting name="OTverifyCICdataWordNumberOfIterations">1000</Setting>
 
     <Setting name="OTinjectionDelayOptimizationNumberOfEvents">100</Setting>
-    <Setting name="OTinjectionDelayOptimizationCbcTestPulseValue">250</Setting> <!-- 218 roughly correspond to 1 MIP in 290um silicon-->
-    <Setting name="OTinjectionDelayOptimizationCbcNumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
+    <Setting name="OTinjectionDelayOptimizationMaximumDelay">150</Setting>
+    <Setting name="OTinjectionDelayOptimizationDelayStep">1</Setting>
+    <Setting name="OTinjectionDelayOptimizationCBCtestPulseValue">218</Setting> <!-- 218 roughly correspond to 1 MIP in 290um silicon-->
+    <Setting name="OTinjectionDelayOptimizationCBCnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 </Settings>
 
 <CommunicationSettings>

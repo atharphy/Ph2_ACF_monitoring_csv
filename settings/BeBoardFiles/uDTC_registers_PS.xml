@@ -100,9 +100,9 @@
 				<Register name="select_even">0</Register>
 			</Register>
 			<Register name="test_pulse">
-				<Register name="delay_after_fast_reset">300</Register>
-				<Register name="delay_after_test_pulse">300</Register>
-				<Register name="delay_before_next_pulse">5000</Register>
+				<Register name="delay_after_fast_reset">100</Register>
+				<Register name="delay_after_test_pulse">200</Register>
+				<Register name="delay_before_next_pulse">1000</Register>
 				<Register name="en_fast_reset">1</Register>
 				<Register name="en_l1a">1</Register>
 				<Register name="en_shutter">0</Register>

@@ -625,7 +625,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     // #FIXME not using GetHits for a more readable code
                     for(auto cCluster: cPClusters)
                     {
-                        for(uint16_t cHitId = 0; cHitId < 1 + cCluster.fWidth; cHitId++)
+                        for(uint16_t cHitId = 0; cHitId < cCluster.fWidth; cHitId++)
                         {
                             // extent pixel data container by 6 elements
                             cPixelData.resize(cPixelDataOffset + 6);
@@ -664,7 +664,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     // Extract strip hit information
                     for(auto cCluster: cSClusters)
                     {
-                        for(uint16_t cHitId = 0; cHitId < 1 + cCluster.fWidth; cHitId++)
+                        for(uint16_t cHitId = 0; cHitId < cCluster.fWidth; cHitId++)
                         {
                             // extent strip data container by 6 elements
                             cStripData.resize(cStripDataOffset + 6);
@@ -760,19 +760,19 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     //	continue;
 
                     // Get chip hits : 254 bit vector
-                    const std::vector<uint32_t> cHits = pPh2Event->GetHits(cHybridId, cChipId);
+                    const auto cHits = pPh2Event->GetHits(cHybridId, cChipId);
                     fHitsCounter += pPh2Event->GetNHits(cHybridId, cChipId);
                     // EUDAQ reauires blocks of uint8_t vectors
                     // Hit row position, collumn, and ToT will be stored over 2 uint8_t each in the Top/BottomData
                     // Thus an offset of 6 between each hit
                     for(auto cHit: cHits)
                     {
-                        if(cHit % 2 == 1) // Top sensor : odd channels
+                        if(cHit.second % 2 == 1) // Top sensor : odd channels
                         {
                             // extent strip data container by 6 elements
                             cTopData.resize(cTopDataOffset + 6);
                             // transform hit position (row) according to hybrid to build strip map
-                            uint32_t cHitPosition = (cChipId * NCHANNELS / 2) + (cHit - 1) / 2;
+                            uint32_t cHitPosition = (cChipId * NCHANNELS / 2) + (cHit.second - 1) / 2;
                             if(cHybridId % 2 == 0) cHitPosition = 1015 - cHitPosition;
                             // push hit columns in 16bits word
                             cTopData[cTopDataOffset + 0] = (cHitPosition >> 0) & 0xFF;
@@ -791,7 +791,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             // extent strip data container by 6 elements
                             cBottomData.resize(cBottomDataOffset + 6);
                             // transform hit position (row) according to hybrid to build strip map
-                            uint32_t cHitPosition = (cChipId * NCHANNELS / 2) + cHit / 2;
+                            uint32_t cHitPosition = (cChipId * NCHANNELS / 2) + cHit.second / 2;
                             if(cHybridId % 2 == 0) cHitPosition = 1015 - cHitPosition;
                             // push hit row in 16bits word
                             cBottomData[cBottomDataOffset + 0] = (cHitPosition >> 0) & 0xFF; // First 8bits of row position

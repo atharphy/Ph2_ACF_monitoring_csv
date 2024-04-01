@@ -158,40 +158,80 @@ bool     MPA2Interface::maskPixel(Chip* pChip, uint16_t row, uint16_t col, bool 
 
 bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
+    uint32_t numberOfEnabledChannels = group->getNumberOfEnabledChannels();
+    uint32_t totalNumberOfChannels   = NSSACHANNELS * NMPAROWS;
+
     auto cOriginalMask = cChip->getChipOriginalMask();
 
-    bool returnval = true;
-    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
+    theRegisterVector.push_back({"Mask_ALL", 0x01});
+    if(numberOfEnabledChannels < totalNumberOfChannels / 2) // faster to write unmasked channels
     {
-        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+        theRegisterVector.push_back({"ENFLAGS_ALL", 0x00});
+        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
         {
-            if(cOriginalMask->isChannelEnabled(row, col) && group->isChannelEnabled(row, col)) continue;
-            returnval &= maskPixel(cChip, row, col, true, pVerify);
+            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+            {
+                if(cOriginalMask->isChannelEnabled(row, col) && group->isChannelEnabled(row, col)) theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x01});
+            }
         }
     }
-    return returnval;
+    else // faster to write masked channels
+    {
+        theRegisterVector.push_back({"ENFLAGS_ALL", 0x01});
+        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+        {
+            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+            {
+                if(cOriginalMask->isChannelEnabled(row, col) && group->isChannelEnabled(row, col)) continue;
+                theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x00});
+            }
+        }
+    }
+    theRegisterVector.push_back({"Mask_ALL", 0xFF});
+
+    return WriteChipMultReg(cChip, theRegisterVector);
 }
 
 bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
-    std::bitset<NSSACHANNELS* NMPAROWS> cBitset = std::bitset<NSSACHANNELS * NMPAROWS>(std::static_pointer_cast<const ChannelGroup<NMPAROWS, NSSACHANNELS>>(group)->getBitset());
-    if(cBitset.count() == 0) // no mask set... so do nothing
-        return true;
+    uint32_t numberOfEnabledChannels = group->getNumberOfEnabledChannels();
+    uint32_t totalNumberOfChannels   = NSSACHANNELS * NMPAROWS;
 
-    bool returnval = true;
-
-    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
+    theRegisterVector.push_back({"Mask_ALL", 0x40});
+    if(numberOfEnabledChannels < totalNumberOfChannels / 2) // faster to write injected channels
     {
-        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col) { returnval &= enablePixelInjection(cChip, row, col, group->isChannelEnabled(row, col), pVerify); }
+        theRegisterVector.push_back({"ENFLAGS_ALL", 0x00});
+        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+        {
+            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+            {
+                if(group->isChannelEnabled(row, col)) theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x40});
+            }
+        }
     }
-    return returnval;
+    else // faster to write not injected channels
+    {
+        theRegisterVector.push_back({"ENFLAGS_ALL", 0x40});
+        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+        {
+            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+            {
+                if(group->isChannelEnabled(row, col)) continue;
+                theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x00});
+            }
+        }
+    }
+    theRegisterVector.push_back({"Mask_ALL", 0xFF});
+
+    return WriteChipMultReg(cChip, theRegisterVector);
 }
 bool MPA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify)
 {
     bool success = true;
     if(mask) success &= maskChannelGroup(pChip, group, pVerify);
     if(inject) success &= setInjectionSchema(pChip, group, pVerify);
-
     return success;
 }
 
@@ -241,12 +281,9 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     // LOG(DEBUG) << BOLDMAGENTA << "VALUE " << pValue << RESET;
 
     // need to or success
-    if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos)
-    {
-        // LOG(DEBUG) << BOLDMAGENTA << "Setting threshold on MPA#" << +pMPA2->getId() << " to " << pValue << RESET;
-        this->Set_threshold(pMPA2, pValue);
-        return true;
-    }
+    if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos) { return this->setThreshold(pMPA2, pValue); }
+    else if(pRegName == "DL_ctrl")
+        return this->setInjectionDelay(pMPA2, pValue);
     else if(pRegName == "vref") { return this->WriteChipReg(pMPA2, "ADCcontrol", pValue, false); }
     else if(pRegName == "Offsets") { return this->WriteChipReg(pMPA2, "TrimDAC_ALL", pValue, false); }
     else if(pRegName == "ReadoutMode") { return this->WriteChipRegBits(pMPA2, "Control_1", pValue, "Mask", 0x3, false); }
@@ -453,7 +490,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         // LOG(DEBUG) << BOLDBLUE << "Setting "
         //            << " bias thresh to " << +pValue << " on MPA" << +pMPA2->getId() << RESET;
-        return Set_threshold(pMPA2, pValue);
+        return setThreshold(pMPA2, pValue);
     }
     else if(pRegName == "InjectedCharge")
     {
@@ -689,15 +726,19 @@ bool MPA2Interface::Set_calibration(Chip* pMPA2, uint32_t cal)
     return success;
 }
 
-bool MPA2Interface::Set_threshold(Chip* pMPA2, uint32_t th)
+bool MPA2Interface::setThreshold(Chip* pMPA2, uint8_t threshold) { return setAllBiasBlockRegisters(pMPA2, "ThDAC", threshold); }
+
+bool MPA2Interface::setInjectionDelay(Chip* pMPA2, uint8_t injectionDelay) { return setAllBiasBlockRegisters(pMPA2, "DL_ctrl", injectionDelay); }
+
+bool MPA2Interface::setAllBiasBlockRegisters(Chip* pMPA2, std::string registerName, uint8_t value)
 {
-    std::vector<std::pair<std::string, uint16_t>> theVector;
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
     for(int index = 0; index <= 6; ++index)
     {
-        std::string registerName = "ThDAC" + convertToString(index);
-        theVector.push_back(std::make_pair(registerName, th));
+        std::string registerFullName = registerName + convertToString(index);
+        theRegisterVector.push_back(std::make_pair(registerFullName, value));
     }
-    bool success = this->WriteChipMultReg(pMPA2, theVector);
+    bool success = this->WriteChipMultReg(pMPA2, theRegisterVector);
     return success;
 }
 

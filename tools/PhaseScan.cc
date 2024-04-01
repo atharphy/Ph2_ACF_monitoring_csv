@@ -110,7 +110,7 @@ void PhaseScan::ScanPhase()
                                     {
                                         for(auto& cPclstr: cPclstrs)
                                         {
-                                            for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
+                                            for(uint8_t cId = 0; cId < (cPclstr.fWidth); cId++)
                                             {
                                                 cHitContainer.getObject(cBoard->getId())
                                                     ->getObject(cOpticalGroup->getId())
@@ -125,7 +125,7 @@ void PhaseScan::ScanPhase()
                                     {
                                         for(auto& cSclstr: cSclstrs)
                                         {
-                                            for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
+                                            for(uint8_t cId = 0; cId < (cSclstr.fWidth); cId++)
                                             {
                                                 cHitContainer.getObject(cBoard->getId())
                                                     ->getObject(cOpticalGroup->getId())

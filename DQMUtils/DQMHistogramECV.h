@@ -61,7 +61,6 @@ class DQMHistogramECV : public DQMHistogramBase
 
     void fillChosenPhase(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, DetectorDataContainer& pPhase);
 
-
   private:
     DetectorDataContainer fDetectorData;
     DetectorDataContainer fBitErrorScanPolarity0;

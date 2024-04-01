@@ -231,6 +231,7 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
     theReadoutChipNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME)         = std::to_string(theReadoutChip->getId()).c_str();
     theReadoutChipNode.append_attribute(COMMON_ENABLE_ATTRIBUTE_NAME)     = "1";
     theReadoutChipNode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
+    theReadoutChipNode.append_attribute(CHIP_NOISE_ATTRIBUTE_NAME)        = std::to_string(theReadoutChip->getAverageNoise()).c_str();
 }
 
 void FileDumper::dumpSettings(pugi::xml_node theMotherNode, const std::unordered_map<std::string, boost::any>& theSettingMap)
