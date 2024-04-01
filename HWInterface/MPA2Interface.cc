@@ -702,7 +702,6 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;
     }
     pMPA2->setRegisterTracking(1);
-    this->readFuseID(pMPA2);
     return cSuccess;
 }
 
@@ -821,7 +820,7 @@ float MPA2Interface::measureBg(Chip* pMPA2)
     return data;
 }
 
-void MPA2Interface::readFuseID(Chip* pMPA2)
+uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2)
 {
     this->WriteChipReg(pMPA2, "EfuseMode", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
@@ -835,12 +834,13 @@ void MPA2Interface::readFuseID(Chip* pMPA2)
 
     LOG(INFO) << GREEN << "FuseID from MPA2#" << +pMPA2->getId() << " Pos " << +pMPA2->pChipFuseID.Pos() << " Wafer " << +pMPA2->pChipFuseID.Wafer() << " Lot " << +pMPA2->pChipFuseID.Lot()
               << " Status " << +pMPA2->pChipFuseID.Status() << " Process " << +pMPA2->pChipFuseID.Process() << " ADCRef " << +pMPA2->pChipFuseID.ADCRef() << RESET;
+    return val;
 }
 
 void MPA2Interface::loadVref(Chip* pMPA2)
 {
     // Set the Vref from the fuse
-    this->readFuseID(pMPA2);
+    this->ReadChipFuseID(pMPA2);
     this->WriteChipRegBits(pMPA2, "ADCcontrol", pMPA2->pChipFuseID.ADCRef(), "Mask", (0x1F));
     LOG(DEBUG) << BOLDMAGENTA << " loading VREF from fuse ID " << +pMPA2->pChipFuseID.ADCRef() << RESET;
 }

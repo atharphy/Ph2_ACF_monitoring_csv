@@ -235,6 +235,72 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
             }
         }
     }
+    for (uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
+    {
+        for (uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
+        {
+            SetCICClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
+            for (uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength ++)
+            {
+                for(auto cHybrid: *pOpticalGroup)
+                {
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    fCicInterface->ConfigureDriveStrength(cCic, cicStrength); 
+                }
+                LOG (INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
+                LOG (INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
+                LOG (INFO) << BOLDRED << "CIC STRENGTH:\t" << +cicStrength << RESET;
+
+                AlignLpGBTInputs(pOpticalGroup);
+
+                std::map<std::string, uint8_t> trainedPhases = flpGBTInterface->GetPhaseTapMap();
+
+                //uint8_t chosenPhase = flpGBTInterface->fChosenPhase;
+                std::vector<uint8_t> hybridIds;
+
+//map<char, int>::iterator it;
+                for(auto it=trainedPhases.begin(); it!=trainedPhases.end(); ++it){
+                    if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+                    {
+                        if (it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,6, it->second);
+                        if (it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, it->second);
+                        if (it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,1, it->second);
+                        if (it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,2, it->second);
+                        if (it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,3, it->second);
+                        if (it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,4, it->second);
+                        if (it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,0, it->second);
+                        if (it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,1, it->second);
+                        if (it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,2, it->second);
+                        if (it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,3, it->second);
+                        if (it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,4, it->second);
+                        if (it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,6, it->second);
+
+                    }
+                    if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
+                    {
+                        if (it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,6, it->second);
+                        if (it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,5, it->second);
+                        if (it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,3, it->second);
+                        if (it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,4, it->second);
+                        if (it->first == "Group6Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,1, it->second);
+                        if (it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,2, it->second);
+                        if (it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, it->second);
+
+                        if (it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,5, it->second);
+                        if (it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,6, it->second);
+                        if (it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,4, it->second);
+                        if (it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,3, it->second);
+                        if (it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,2, it->second);
+                        if (it->first == "Group3Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,1, it->second);
+                        if (it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,0, it->second);
+                    }
+                }
+                //StoreChosenPhase(clockPolarity, clockStrength, cicStrength, chosenPhase);
+            }
+        }
+    }
+
+
 }
 
 void ECVLinkAlignmentOT::SetlpGBTRxPhase(const OpticalGroup* pOpticalGroup, uint8_t pPhase)
@@ -610,7 +676,7 @@ void ECVLinkAlignmentOT::StoreBERInHistogram(uint8_t pClockPolarity, uint8_t pCl
     for(auto cOpticalGroup: *cBoard) { cBERContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(pHybridId)->getSummary<float>() = pBer; } // optical group
 
 #ifdef __USE_ROOT__
-    fDQMHistogrammer.filllBER(pClockPolarity, pClockStrength, pCicStrength, pPhase, pHybridId, pLine, cBERContainer);
+    fDQMHistogrammer.fillBER(pClockPolarity, pClockStrength, pCicStrength, pPhase, pHybridId, pLine, cBERContainer);
 #endif
 }
 
@@ -628,9 +694,54 @@ void ECVLinkAlignmentOT::StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8
     } // optical group
 
 #ifdef __USE_ROOT__
-    fDQMHistogrammer.filllWordAlign(pClockPolarity, pClockStrength, pCicStrength, pPhase, pHybridId, pLine, cAlignedWordsContainer);
+    fDQMHistogrammer.fillWordAlign(pClockPolarity, pClockStrength, pCicStrength, pPhase, pHybridId, pLine, cAlignedWordsContainer);
 #endif
 }
+
+void ECVLinkAlignmentOT::StoreTrainedPhases(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pHybridId, uint8_t pLine, uint8_t pPhase)
+{
+    auto cBoard = fDetectorContainer->getFirstObject();
+
+    DetectorDataContainer cPhasesContainer;
+    ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, cPhasesContainer);
+
+    for(auto cOpticalGroup: *cBoard)
+    {
+        cPhasesContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(pHybridId)
+                        ->getSummary<uint8_t>() = pPhase;
+        
+    } // optical group
+    LOG (INFO) << +pLine << RESET;
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.fillPhases(pClockPolarity, pClockStrength, pCicStrength, pHybridId, pLine, cPhasesContainer);
+#endif
+}
+
+void ECVLinkAlignmentOT::StoreChosenPhase(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase)
+{
+    auto cBoard = fDetectorContainer->getFirstObject();
+
+    DetectorDataContainer cPhasesContainer;
+    ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, cPhasesContainer);
+
+    for(auto cOpticalGroup: *cBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            cPhasesContainer.getObject(cBoard->getId())
+                          ->getObject(cOpticalGroup->getId())
+                          ->getObject(cHybrid->getId())
+                          ->getSummary<uint8_t>() = pPhase;
+        }
+    } // optical group
+
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.fillChosenPhase(pClockPolarity, pClockStrength, pCicStrength, cPhasesContainer);
+#endif
+}
+
 
 // State machine control functions
 void ECVLinkAlignmentOT::Running()

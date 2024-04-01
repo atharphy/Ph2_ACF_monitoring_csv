@@ -57,6 +57,7 @@ class MPA2Interface : public ReadoutChipInterface
 
     uint16_t                                      ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
+    uint32_t                                      ReadChipFuseID(Ph2_HwDescription::Chip* pMPA2) override;
 
     void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
     void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
@@ -165,7 +166,6 @@ class MPA2Interface : public ReadoutChipInterface
 
     // MPA2 pixel config register map
     const std::map<std::string, uint8_t> PIXEL_CONFIG_TABLE = {{"ENFLAGS", 0}, {"TrimDAC", 1}, {"DigiPattern", 2}, {"ACCounter_LSB", 4}, {"ACCounter_MSB", 5}};
-    void                                 readFuseID(Ph2_HwDescription::Chip* pMPA2);
     std::map<uint16_t, std::string>      fMap;
     std::vector<uint8_t>                 fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
 
