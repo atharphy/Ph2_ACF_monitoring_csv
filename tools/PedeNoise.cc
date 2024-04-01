@@ -431,8 +431,6 @@ void PedeNoise::findPedestal(bool forceAllChannels)
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of hybrid 0 = " << fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->size() << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of hybrid 0 = " << fDetectorDataContainer->getFirstObject()->getFirstObject()->getFirstObject()->size() << std::endl;
     this->bitWiseScan("Threshold", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
 
@@ -854,6 +852,22 @@ void PedeNoise::extractPedeNoise()
         board->normalizeAndAverageContainers(fDetectorContainer->getObject(board->getId()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
     }
     setNormalization(cNormalizationOrig);
+
+    // saving average noise for each chip
+    for(auto theBoard: *fDetectorContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                for(auto theChip: *theHybrid)
+                {
+                    const auto& noiseAndThreshold = fThresholdAndNoiseContainer->getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<ThresholdAndNoise>();
+                    theChip->setAverageNoise(noiseAndThreshold.fNoise);
+                }
+            }
+        }
+    }
 }
 
 void PedeNoise::producePedeNoisePlots()
