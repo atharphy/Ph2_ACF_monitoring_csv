@@ -118,10 +118,10 @@ bool Tool::GetRunningStatus()
         {
             LOG(INFO) << "Ignoring future exception, future already retrieved";
         }
-        // catch(const std::exception& e)
-        // {
-        // throw std::runtime_error(e.what());
-        // }
+        catch(const std::exception& e)
+        {
+            throw std::runtime_error(e.what());
+        }
         return true;
     }
     else
