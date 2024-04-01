@@ -374,7 +374,7 @@ class Event
     {
         std::cerr << __PRETTY_FUNCTION__ << " not implemented! Aborting..." << std::endl;
         abort();
-        return {}; 
+        return {};
     }
     /*!
      * \brief Function to get an encoded SLinkEvent object

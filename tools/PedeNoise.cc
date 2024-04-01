@@ -862,7 +862,8 @@ void PedeNoise::extractPedeNoise()
             {
                 for(auto theChip: *theHybrid)
                 {
-                    const auto& noiseAndThreshold = fThresholdAndNoiseContainer->getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<ThresholdAndNoise>();
+                    const auto& noiseAndThreshold =
+                        fThresholdAndNoiseContainer->getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<ThresholdAndNoise>();
                     theChip->setAverageNoise(noiseAndThreshold.fNoise);
                 }
             }

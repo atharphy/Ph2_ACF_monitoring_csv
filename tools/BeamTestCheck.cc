@@ -1274,8 +1274,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         {
                             auto& cOccChip = cOccHybrid->getObject(cChip->getId());
                             if(pPrint)
-                                LOG(INFO) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " Channel " << cHit.second << cOccChip->getChannel<Occupancy>(0, 0).fOccupancy
-                                          << RESET;
+                                LOG(INFO) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " Channel " << cHit.second
+                                          << cOccChip->getChannel<Occupancy>(0, 0).fOccupancy << RESET;
                             uint16_t cRow = cHit.first;
                             uint16_t cCol = cHit.second;
                             // sensor iD - 0 -- bottoml; 1 -- top

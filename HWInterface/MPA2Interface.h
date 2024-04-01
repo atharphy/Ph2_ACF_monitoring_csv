@@ -38,7 +38,7 @@ struct Injection
  * \brief Class representing the User Interface to the MPA on different boards
  */
 
-/// @brief 
+/// @brief
 class MPA2Interface : public ReadoutChipInterface
 { // begin class
   public:
@@ -86,7 +86,7 @@ class MPA2Interface : public ReadoutChipInterface
     bool setInjectionDelay(Ph2_HwDescription::Chip* pMPA, uint8_t delay);
 
     /*!
-     * @brief set same register for all MPA bias block in 
+     * @brief set same register for all MPA bias block in
      * @param pMPA2 the MPA to write
      * @param registerName Name of the register without the bias block number
      * @param value value to write in the register

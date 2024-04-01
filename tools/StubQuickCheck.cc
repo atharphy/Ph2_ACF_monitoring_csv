@@ -231,7 +231,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                         for(auto cExpectedHit: cExpectedHits)
                         {
                             std::pair<uint16_t, uint16_t> theExpectedHit(0, cExpectedHit);
-                            auto cLookForMatch = std::find(cHits.begin(), cHits.end(), theExpectedHit);
+                            auto                          cLookForMatch = std::find(cHits.begin(), cHits.end(), theExpectedHit);
                             if(cLookForMatch != cHits.end()) { cMatchFound = true; }
                         }
                         if(cMatchFound)

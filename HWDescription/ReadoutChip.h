@@ -104,16 +104,16 @@ class ReadoutChip
      * \brief Set chip average noise
      * \param theNoise
      */
-    void setAverageNoise(float theNoise) {fAverageNoise = theNoise;}
+    void setAverageNoise(float theNoise) { fAverageNoise = theNoise; }
     /*!
      * \brief Get chip average noise
      * \return theNoise
      */
-    float getAverageNoise() const {return fAverageNoise;}
+    float getAverageNoise() const { return fAverageNoise; }
 
   protected:
     std::shared_ptr<ChannelGroupBase> fChipOriginalMask{nullptr};
-    float fAverageNoise {-1.};
+    float                             fAverageNoise{-1.};
 };
 } // namespace Ph2_HwDescription
 

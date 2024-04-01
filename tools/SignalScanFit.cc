@@ -229,15 +229,15 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                         }
                         for(auto cCbc: *cHybrid)
                         {
-                            TH1D*                 cHitsEvenHist       = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Hits_even"));
-                            TH1D*                 cHitsOddHist        = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Hits_odd"));
-                            TH1D*                 cClustersEvenHist   = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Clusters_even"));
-                            TH1D*                 cClustersOddHist    = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Clusters_odd"));
-                            TProfile*             cClusterSizeEven    = static_cast<TProfile*>(getHist(cCbc, "Cbc_ClusterSize_even"));
-                            TProfile*             cClusterSizeOdd     = static_cast<TProfile*>(getHist(cCbc, "Cbc_ClusterSize_odd"));
-                            TH2D*                 cClusters2DEvenHist = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_even"));
-                            TH2D*                 cClusters2DOddHist  = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_odd"));
-                            auto cHits               = cEvent->GetHits(cHybrid->getId(), cCbc->getId());
+                            TH1D*     cHitsEvenHist       = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Hits_even"));
+                            TH1D*     cHitsOddHist        = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Hits_odd"));
+                            TH1D*     cClustersEvenHist   = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Clusters_even"));
+                            TH1D*     cClustersOddHist    = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Clusters_odd"));
+                            TProfile* cClusterSizeEven    = static_cast<TProfile*>(getHist(cCbc, "Cbc_ClusterSize_even"));
+                            TProfile* cClusterSizeOdd     = static_cast<TProfile*>(getHist(cCbc, "Cbc_ClusterSize_odd"));
+                            TH2D*     cClusters2DEvenHist = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_even"));
+                            TH2D*     cClusters2DOddHist  = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_odd"));
+                            auto      cHits               = cEvent->GetHits(cHybrid->getId(), cCbc->getId());
                             LOG(DEBUG) << BOLDBLUE << "Found " << +cHits.size() << " hits in CBC" << +cCbc->getId() << RESET;
                             for(auto cId: cHits)
                             {

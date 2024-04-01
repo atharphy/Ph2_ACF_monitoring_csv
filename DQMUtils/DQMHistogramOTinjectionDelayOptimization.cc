@@ -24,17 +24,14 @@ void DQMHistogramOTinjectionDelayOptimization::book(TFile* theOutputFile, Detect
     // SoC utilities only - END
 
     uint16_t maximumDelay = findValueInSettings<double>(pSettingsMap, "OTinjectionDelayOptimizationMaximumDelay", 150);
-    fDelayStep = findValueInSettings<double>(pSettingsMap, "OTinjectionDelayOptimizationDelayStep", 1);
-    uint16_t numberOfBins = maximumDelay/fDelayStep;
+    fDelayStep            = findValueInSettings<double>(pSettingsMap, "OTinjectionDelayOptimizationDelayStep", 1);
+    uint16_t numberOfBins = maximumDelay / fDelayStep;
 
     float bitSizeInNs = 1.;
-    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS)
-    {
-        bitSizeInNs = 25./12.;
-    }
+    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) { bitSizeInNs = 25. / 12.; }
 
-    float minimumDelayInNs = bitSizeInNs/2.;
-    float maximumDelayInNs = (maximumDelay -0.5) * bitSizeInNs;
+    float minimumDelayInNs = bitSizeInNs / 2.;
+    float maximumDelayInNs = (maximumDelay - 0.5) * bitSizeInNs;
 
     HistContainer<TH1I> thresholdVsDelayHistogram("ThresholdVsDelayScan", "Threshold Vs Delay Scan", numberOfBins, minimumDelayInNs, maximumDelayInNs);
     thresholdVsDelayHistogram.fTheHistogram->GetXaxis()->SetTitle("Delay [ns]");
@@ -65,7 +62,7 @@ void DQMHistogramOTinjectionDelayOptimization::fillThresholdVsDelayScan(uint16_t
                     auto theHistogram = fThresholdVsDelayScanHistogramContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())
                                             ->getSummary<HistContainer<TH1I>>()
                                             .fTheHistogram;
-                    theHistogram->SetBinContent((delay/fDelayStep) + 1, theChip->getSummary<uint16_t>());
+                    theHistogram->SetBinContent((delay / fDelayStep) + 1, theChip->getSummary<uint16_t>());
                 }
             }
         }

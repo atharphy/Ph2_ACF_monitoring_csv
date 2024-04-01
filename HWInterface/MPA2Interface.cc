@@ -159,7 +159,7 @@ bool     MPA2Interface::maskPixel(Chip* pChip, uint16_t row, uint16_t col, bool 
 bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
     uint32_t numberOfEnabledChannels = group->getNumberOfEnabledChannels();
-    uint32_t totalNumberOfChannels = NSSACHANNELS * NMPAROWS;
+    uint32_t totalNumberOfChannels   = NSSACHANNELS * NMPAROWS;
 
     auto cOriginalMask = cChip->getChipOriginalMask();
 
@@ -172,8 +172,7 @@ bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<C
         {
             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
             {
-                if(cOriginalMask->isChannelEnabled(row, col) && group->isChannelEnabled(row, col))
-                    theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x01});
+                if(cOriginalMask->isChannelEnabled(row, col) && group->isChannelEnabled(row, col)) theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x01});
             }
         }
     }
@@ -192,14 +191,12 @@ bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<C
     theRegisterVector.push_back({"Mask_ALL", 0xFF});
 
     return WriteChipMultReg(cChip, theRegisterVector);
-
 }
 
 bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
     uint32_t numberOfEnabledChannels = group->getNumberOfEnabledChannels();
-    uint32_t totalNumberOfChannels = NSSACHANNELS * NMPAROWS;
-
+    uint32_t totalNumberOfChannels   = NSSACHANNELS * NMPAROWS;
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
     theRegisterVector.push_back({"Mask_ALL", 0x40});
@@ -210,8 +207,7 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
         {
             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
             {
-                if(group->isChannelEnabled(row, col))
-                    theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x40});
+                if(group->isChannelEnabled(row, col)) theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x40});
             }
         }
     }
@@ -230,7 +226,6 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
     theRegisterVector.push_back({"Mask_ALL", 0xFF});
 
     return WriteChipMultReg(cChip, theRegisterVector);
-
 }
 bool MPA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify)
 {
@@ -286,11 +281,9 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     // LOG(DEBUG) << BOLDMAGENTA << "VALUE " << pValue << RESET;
 
     // need to or success
-    if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos)
-    {
-        return this->setThreshold(pMPA2, pValue);
-    }
-    else if(pRegName == "DL_ctrl") return this->setInjectionDelay(pMPA2, pValue);
+    if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos) { return this->setThreshold(pMPA2, pValue); }
+    else if(pRegName == "DL_ctrl")
+        return this->setInjectionDelay(pMPA2, pValue);
     else if(pRegName == "vref") { return this->WriteChipReg(pMPA2, "ADCcontrol", pValue, false); }
     else if(pRegName == "Offsets") { return this->WriteChipReg(pMPA2, "TrimDAC_ALL", pValue, false); }
     else if(pRegName == "ReadoutMode") { return this->WriteChipRegBits(pMPA2, "Control_1", pValue, "Mask", 0x3, false); }
@@ -733,15 +726,9 @@ bool MPA2Interface::Set_calibration(Chip* pMPA2, uint32_t cal)
     return success;
 }
 
-bool MPA2Interface::setThreshold(Chip* pMPA2, uint8_t threshold)
-{
-    return setAllBiasBlockRegisters(pMPA2, "ThDAC", threshold);
-}
+bool MPA2Interface::setThreshold(Chip* pMPA2, uint8_t threshold) { return setAllBiasBlockRegisters(pMPA2, "ThDAC", threshold); }
 
-bool MPA2Interface::setInjectionDelay(Chip* pMPA2, uint8_t injectionDelay)
-{
-    return setAllBiasBlockRegisters(pMPA2, "DL_ctrl", injectionDelay);
-}
+bool MPA2Interface::setInjectionDelay(Chip* pMPA2, uint8_t injectionDelay) { return setAllBiasBlockRegisters(pMPA2, "DL_ctrl", injectionDelay); }
 
 bool MPA2Interface::setAllBiasBlockRegisters(Chip* pMPA2, std::string registerName, uint8_t value)
 {

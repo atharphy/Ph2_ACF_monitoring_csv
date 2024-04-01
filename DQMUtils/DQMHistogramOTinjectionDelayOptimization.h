@@ -62,6 +62,6 @@ class DQMHistogramOTinjectionDelayOptimization : public DQMHistogramBase
     DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fThresholdVsDelayScanHistogramContainer;
     DetectorDataContainer fBestThresholdAndDelayHistogramContainer;
-    uint16_t              fDelayStep {1};
+    uint16_t              fDelayStep{1};
 };
 #endif

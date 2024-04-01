@@ -22,18 +22,18 @@ void OTinjectionDelayOptimization::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
 
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^TestPulseDel&ChanGroup$"); // injection delay
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^TriggerLatency1$"); // latency register 1
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^FeCtrl&TrgLat2$"); // latency register 2
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^VCth[12]$"); // threshold
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^TriggerLatency1$");        // latency register 1
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^FeCtrl&TrgLat2$");         // latency register 2
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^VCth[12]$");               // threshold
 
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^DL_ctrl[0-6]$"); // injection delay
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^DL_en$"); // injection delay enable
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^DL_ctrl[0-6]$");           // injection delay
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^DL_en$");                  // injection delay enable
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^MemoryControl_[1-2]_R0$"); // latency
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC[0-6]$"); // threshold
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC[0-6]$");             // threshold
 
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Delay_line$"); // injection delay
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Delay_line$");   // injection delay
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^control_[13]$"); // latency
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$"); // threshold
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$");   // threshold
 
     fNumberOfEvents                        = findValueInSettings<double>("OTinjectionDelayOptimizationNumberOfEvents", 100);
     fMaximumDelay                          = findValueInSettings<double>("OTinjectionDelayOptimizationMaximumDelay", 150);
@@ -84,32 +84,35 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
 {
     bool is2Smodule = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S);
 
-    if(is2Smodule) prepareInjectionDelayScan2S();
-    else           prepareInjectionDelayScanPS();
+    if(is2Smodule)
+        prepareInjectionDelayScan2S();
+    else
+        prepareInjectionDelayScanPS();
 
     DetectorDataContainer* theOccupancyContainer = new DetectorDataContainer; // used to store occupancy while running bitWiseScan
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *theOccupancyContainer);
     fDetectorDataContainer = theOccupancyContainer;
 
     std::pair<uint16_t, uint16_t> defaultThresholdAndDelay{0, 0}; // since 0 delay would not be measureable with this procedure (no pedestal) using 0 as not yet found value
-    DetectorDataContainer      theBestThresholdAndDelayContainer;
+    DetectorDataContainer         theBestThresholdAndDelayContainer;
     ContainerFactory::copyAndInitChip<std::pair<uint16_t, uint16_t>>(*fDetectorContainer, theBestThresholdAndDelayContainer, defaultThresholdAndDelay);
-    
-    uint16_t initialThreshold = is2Smodule ? 1023 : 0;
-    DetectorDataContainer      theHighestThresholdContainer;
+
+    uint16_t              initialThreshold = is2Smodule ? 1023 : 0;
+    DetectorDataContainer theHighestThresholdContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theHighestThresholdContainer, initialThreshold);
 
     uint16_t maximumPedestalDelay = is2Smodule ? 25 : 20;
     uint16_t numberOfIterations   = 0;
     bool     isPedestalAveraged   = false;
 
-
     for(uint16_t delay = 0; delay <= fMaximumDelay; delay += fDelayStep)
     {
         float targetThreshold = 0.50;
         LOG(INFO) << BOLDBLUE << "Finding threshold corresponging to " << targetThreshold << "% occupancy with total injection delay " << delay << RESET;
-        if(is2Smodule) setLatencyAndDelay2S(delay);
-        else           setLatencyAndDelayPS(delay);
+        if(is2Smodule)
+            setLatencyAndDelay2S(delay);
+        else
+            setLatencyAndDelayPS(delay);
 
         theOccupancyContainer->clear();
 
@@ -138,13 +141,13 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
                         {
                             if(!isPedestalAveraged)
                             {
-                                float expectedNoise = theChip->getAverageNoise();
+                                float expectedNoise         = theChip->getAverageNoise();
                                 float distanceFromThreshold = 0;
-                                auto theChipFrontEndType = theChip->getFrontEndType();
-                                if(theChipFrontEndType == FrontEndType::CBC3) distanceFromThreshold = - expectedNoise * fCBCnumberOfSigmaNoiseAwayFromPedestal;
+                                auto  theChipFrontEndType   = theChip->getFrontEndType();
+                                if(theChipFrontEndType == FrontEndType::CBC3) distanceFromThreshold = -expectedNoise * fCBCnumberOfSigmaNoiseAwayFromPedestal;
                                 if(theChipFrontEndType == FrontEndType::SSA2) distanceFromThreshold = expectedNoise * fSSAnumberOfSigmaNoiseAwayFromPedestal;
                                 if(theChipFrontEndType == FrontEndType::MPA2) distanceFromThreshold = expectedNoise * fMPAnumberOfSigmaNoiseAwayFromPedestal;
-                                float theBestThreshold = float(theChipBestThresholdAndDelay.first)/numberOfIterations + distanceFromThreshold;
+                                float theBestThreshold             = float(theChipBestThresholdAndDelay.first) / numberOfIterations + distanceFromThreshold;
                                 theChipBestThresholdAndDelay.first = std::round(theBestThreshold);
                             }
                         }
@@ -152,7 +155,7 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
                         {
                             if(theChipHighestThreshold > theThreshold)
                             {
-                                theChipHighestThreshold = theThreshold;
+                                theChipHighestThreshold             = theThreshold;
                                 theChipBestThresholdAndDelay.second = delay;
                             }
                         }
@@ -160,7 +163,7 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
                         {
                             if(theChipHighestThreshold < theThreshold)
                             {
-                                theChipHighestThreshold = theThreshold;
+                                theChipHighestThreshold             = theThreshold;
                                 theChipBestThresholdAndDelay.second = delay;
                             }
                         }
@@ -188,7 +191,6 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
         }
 #endif
     }
-
 
     // set best delay and latency
     for(auto theBoard: *fDetectorContainer)
@@ -224,14 +226,13 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
 
     delete theOccupancyContainer;
     fDetectorDataContainer = nullptr;
-
 }
 
 std::pair<uint16_t, uint8_t> OTinjectionDelayOptimization::calculateDACsFromTotalDelay(uint16_t totalDelay, bool is2Smodule) const
 {
-    uint8_t numberOfDelayInClockCycle = is2Smodule ? fNumberOfDelayInClockCycle2S : fNumberOfDelayInClockCyclePS;
-    uint8_t  delayDAC   = numberOfDelayInClockCycle - (totalDelay % numberOfDelayInClockCycle);
-    uint16_t latencyDAC = fInitialLatency - (totalDelay / numberOfDelayInClockCycle);
+    uint8_t  numberOfDelayInClockCycle = is2Smodule ? fNumberOfDelayInClockCycle2S : fNumberOfDelayInClockCyclePS;
+    uint8_t  delayDAC                  = numberOfDelayInClockCycle - (totalDelay % numberOfDelayInClockCycle);
+    uint16_t latencyDAC                = fInitialLatency - (totalDelay / numberOfDelayInClockCycle);
     if(delayDAC == numberOfDelayInClockCycle)
     {
         delayDAC   = 0;
@@ -265,13 +266,13 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScan2S()
         }
     }
 
-    setSameDac("HitOr", 1);                                                   // using logical OR
-    setSameDac("TestPulsePotNodeSel", fCBCtestPulseValue);                    // injected charge
+    setSameDac("HitOr", 1);                                // using logical OR
+    setSameDac("TestPulsePotNodeSel", fCBCtestPulseValue); // injected charge
 }
 
 void OTinjectionDelayOptimization::setLatencyAndDelay2S(uint16_t totalInjectionDelay)
 {
-    auto  latencyAndDelay = calculateDACsFromTotalDelay(totalInjectionDelay, true);
+    auto latencyAndDelay = calculateDACsFromTotalDelay(totalInjectionDelay, true);
     setSameDac("TriggerLatency", latencyAndDelay.first);
     setSameDac("TestPulseDelay", latencyAndDelay.second);
 }
@@ -295,35 +296,34 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScanPS()
     std::string theMPAqueryFunctionString = "MPAqueryFunction";
     // settings for MPAs
     fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
-    setSameDac("Control_1", 0x0); // set Readout mode to normal
+    setSameDac("Control_1", 0x0);                     // set Readout mode to normal
     setSameDac("InjectedCharge", fMPAtestPulseValue); // injected charge
-    setSameDac("PixelControl_ALL", 0x1D); // disable Hip cut, cluster cut to the maximum, mode select level
-    setSameDac("ENFLAGS_ALL", 0x4E); // use level sampling mode and enable analog pulse
-    setSameDac("DL_en", 0x7F); // enable injection delay on all bias blocks
+    setSameDac("PixelControl_ALL", 0x1D);             // disable Hip cut, cluster cut to the maximum, mode select level
+    setSameDac("ENFLAGS_ALL", 0x4E);                  // use level sampling mode and enable analog pulse
+    setSameDac("DL_en", 0x7F);                        // enable injection delay on all bias blocks
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 
     auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     std::string theSSAqueryFunctionString = "SSAqueryFunction";
     // settings for SSAs
     fDetectorContainer->addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
-    setSameDac("StripControl2", 0x07); // disable HIP cut
+    setSameDac("StripControl2", 0x07);                // disable HIP cut
     setSameDac("InjectedCharge", fSSAtestPulseValue); // injected charge
-    setSameDac("ENFLAGS", 0x30); // use level sampling mode and enable analog pulse
-    setSameDac("ReadoutMode", 0x0);     // normal readout mode
-    setSameDac("control_2", 0x0F);     // maximize cluster cut
-    setSameDac("CalPulse_duration", 1); // set calpulse duration to 1 40MHz clock cycle
+    setSameDac("ENFLAGS", 0x30);                      // use level sampling mode and enable analog pulse
+    setSameDac("ReadoutMode", 0x0);                   // normal readout mode
+    setSameDac("control_2", 0x0F);                    // maximize cluster cut
+    setSameDac("CalPulse_duration", 1);               // set calpulse duration to 1 40MHz clock cycle
     fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
-
 
     // Enabling 1 every N columns and corresponding rows in a diagonal pattern
     ChannelGroup<NMPAROWS, NSSACHANNELS> theMPAChannelGroup;
     theMPAChannelGroup.disableAllChannels();
-    uint16_t initialCol = 2;
-    uint16_t colsToSkip = 20;
-    uint16_t currentRow = 1;
-    uint16_t rowsToSkip = 1;
+    uint16_t initialCol                 = 2;
+    uint16_t colsToSkip                 = 20;
+    uint16_t currentRow                 = 1;
+    uint16_t rowsToSkip                 = 1;
     uint16_t totalNumberOfPixelClusters = 0;
-    for(uint16_t col = initialCol; col < NSSACHANNELS; col+=colsToSkip)
+    for(uint16_t col = initialCol; col < NSSACHANNELS; col += colsToSkip)
     {
         theMPAChannelGroup.enableChannel(currentRow % NMPAROWS, col);
         currentRow += rowsToSkip;
@@ -339,14 +339,14 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScanPS()
     theChannelGroupHandlerMPA.setCustomChannelGroup(theMPAChannelGroup);
     theChannelGroupHandlerMPA.setChannelGroupParameters(NMPAROWS, NSSACHANNELS);
     setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
-    
+
     // Enabling 1 every N columns
     ChannelGroup<1, NSSACHANNELS> theSSAChannelGroup;
     theSSAChannelGroup.disableAllChannels();
-    uint16_t initialStrip = 3;
-    uint16_t stripsToSkip = 20;
+    uint16_t initialStrip               = 3;
+    uint16_t stripsToSkip               = 20;
     uint16_t totalNumberOfStripClusters = 0;
-    for(uint16_t col = initialStrip; col < NSSACHANNELS; col+=stripsToSkip)
+    for(uint16_t col = initialStrip; col < NSSACHANNELS; col += stripsToSkip)
     {
         theSSAChannelGroup.enableChannel(0, col);
         ++totalNumberOfStripClusters;
@@ -362,7 +362,6 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScanPS()
     theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS);
     setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA2);
 
-
     for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
@@ -371,17 +370,15 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScanPS()
             {
                 for(auto theChip: *theHybrid)
                 {
-                    auto theChannelGroupHandler = getChannelGroupHandlerContainer()->getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())
-                                            ->getSummary<std::shared_ptr<ChannelGroupHandler>>();
+                    auto theChannelGroupHandler = getChannelGroupHandlerContainer()
+                                                      ->getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())
+                                                      ->getSummary<std::shared_ptr<ChannelGroupHandler>>();
 
-                    fReadoutChipInterface->maskChannelsAndSetInjectionSchema(theChip,
-                                                                                theChannelGroupHandler->getTestGroup(-1),
-                                                                                true,
-                                                                                true);
+                    fReadoutChipInterface->maskChannelsAndSetInjectionSchema(theChip, theChannelGroupHandler->getTestGroup(-1), true, true);
                 }
             }
         }
-    }  
+    }
 }
 
 void OTinjectionDelayOptimization::setLatencyAndDelayPS(uint16_t totalInjectionDelay)
@@ -392,17 +389,16 @@ void OTinjectionDelayOptimization::setLatencyAndDelayPS(uint16_t totalInjectionD
     auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     std::string theSSAqueryFunctionString = "SSAqueryFunction";
 
-    auto  latencyAndDelay = calculateDACsFromTotalDelay(totalInjectionDelay, false);
+    auto latencyAndDelay = calculateDACsFromTotalDelay(totalInjectionDelay, false);
     setSameDac("TriggerLatency", latencyAndDelay.first);
 
     // setting delay for SSAs
     fDetectorContainer->addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
-    setSameDac("Delay_line", latencyAndDelay.second + (1 << 7));  // in the SSA the MSB of the delay register need to be set to 1 to enable the delay
+    setSameDac("Delay_line", latencyAndDelay.second + (1 << 7)); // in the SSA the MSB of the delay register need to be set to 1 to enable the delay
     fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
 
     // setting delay for MPAs
     fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
     setSameDac("DL_ctrl", latencyAndDelay.second);
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
-
 }

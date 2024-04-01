@@ -13,7 +13,6 @@
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
-#include "tools/ECVLinkAlignmentOT.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTLightTransmission.h"
 #include "tools/OTQuickNoise.h"
@@ -592,7 +591,6 @@ int main(int argc, char* argv[])
         cPSAlignment.Inherit(&cTool);
         cPSAlignment.Start(theStartInfo);
         cPSAlignment.waitForRunToBeCompleted();
-
 
         // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
