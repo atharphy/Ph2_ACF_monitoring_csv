@@ -33,7 +33,7 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
         return (ReadChipReg(pMPA2, "ECM") >> 6) & 0x3;
     }
     else if(pRegNode == "StubWindow") { return ReadChipReg(pMPA2, "ECM") & 0x3F; }
-    else if(pRegNode == "vref") { return ReadChipReg(pMPA2, "ADCcontrol") & 0x1F; }
+    else if(pRegNode == "ADC_VREF") { return ReadChipReg(pMPA2, "ADCcontrol") & 0x1F; }
     else if(pRegNode == "ReadoutMode") // New decoding control reg for MPA2
     {
         return ReadChipReg(pMPA2, "Control_1") & 0x3;
@@ -284,7 +284,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos) { return this->setThreshold(pMPA2, pValue); }
     else if(pRegName == "DL_ctrl")
         return this->setInjectionDelay(pMPA2, pValue);
-    else if(pRegName == "vref")
+    else if(pRegName == "ADC_VREF")
     { 
         std::cout << " reading ADCcontrol before writing " << ReadChipReg(pMPA2,"ADCcontrol") << std::endl; 
         std::cout << "HERE!!!" << pValue << std::endl;
@@ -776,14 +776,14 @@ uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip)
 
 uint32_t MPA2Interface::readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    uint32_t theVrefADC = readADC(pChip,"vref");
+    uint32_t theVrefADC = readADC(pChip,"ADC_VREF");
     std::cout << " theVrefADC " << theVrefADC << std::endl;
     return theVrefADC;
 }
 
 uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    uint32_t theVrefADC = ReadChipReg(pChip,"vref");
+    uint32_t theVrefADC = ReadChipReg(pChip,"ADC_VREF");
     std::cout << " theVrefADC " << theVrefADC << std::endl;
     return theVrefADC;
 }
@@ -870,7 +870,7 @@ bool MPA2Interface::setVref(ReadoutChip* pMPA2, uint16_t VREFvalue)
 {
     // Set the Vref to a desired value
     LOG(INFO) << BOLDMAGENTA << " loading VREF " << VREFvalue << RESET;
-    return this->WriteChipReg(pMPA2, "vref", VREFvalue); // , "Mask", (0x1F));
+    return this->WriteChipReg(pMPA2, "ADC_VREF", VREFvalue); // , "Mask", (0x1F));
 
     // return this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
 }
@@ -881,7 +881,7 @@ const std::map<std::string, std::pair<uint8_t,float>> MPA2Interface::getBiasStru
 }
 
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float MPA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2)
 {
@@ -889,28 +889,28 @@ float MPA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMP
 
 }
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float MPA2Interface::getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2)
 {
     return MPA2_VREF_EXPECTED;
 }
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float MPA2Interface::getVrefPrecision(Ph2_HwDescription::ReadoutChip* pMPA2)
 {
     return MPA2_ADC_PRECISION;
 }
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float MPA2Interface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pMPA2)
 {
     return MPA2_VREF_MIN;
 }
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float MPA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pMPA2)
 {

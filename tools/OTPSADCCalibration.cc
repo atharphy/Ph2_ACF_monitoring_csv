@@ -2,6 +2,7 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/ADCSlope.h"
+#include "HWInterface/D19cFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -82,33 +83,124 @@ void OTPSADCCalibration::CalibrateBias()
                     uint8_t theVrefRegisterValue = 0;
                     float theVrefValue = CalibrateVref(theChip, &theVrefRegisterValue);
                     std::cout << "theVrefValue " << theVrefValue <<std::endl;
+
+                    LOG(INFO) << MAGENTA << " ------ setting VREF in theVREFDACContainer "  << RESET;
+                    theVREFDACContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<std::pair<uint8_t, float>>()
+                        .first = theVrefRegisterValue;
+                    theVREFDACContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<std::pair<uint8_t, float>>()
+                        .second = theVrefValue;
+
                     std::cout << fReadoutChipInterface->ReadChipReg(theChip, "ADCcontrol") << std::endl;
                     CalibrateChipBias(theChip, theVrefValue);
 
+                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<ADCSlope>()
+                        .fADC_GND = theGroundValue;
+                    uint32_t theADCBandgapValue =  fReadoutChipInterface->readADCBandGap(theChip);
+                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<ADCSlope>()
+                        .fADC_VBG = theADCBandgapValue;
+                    float theBandgapVoltage = fReadoutChipInterface->getBandGapExpectedValue(theChip); //FIXME this should be the real bandgap value!!
+                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<ADCSlope>()
+                        .fMeasured_VBG = theBandgapVoltage; 
+                    float theSlope       = theBandgapVoltage / (theADCBandgapValue - theGroundValue);
+                    float theOffset      = -theGroundValue * theSlope;
+                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<ADCSlope>()
+                        .fSlope = theSlope;
+                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<ADCSlope>()
+                        .fOffset = theOffset;
+
+
+
+
+                    // reset chip before measuring VDDs 
+                    fBeBoardInterface->setBoard(theBoard->getId());
+                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadoutChipReset();
+
+                    uint32_t theADCAnalogVDD  = fReadoutChipInterface->readADC(theChip,"AVDD");
+                    uint32_t theADCDigitalVDD = fReadoutChipInterface->readADC(theChip,"DVDD");
+                    float    theAVDDVoltage   = theADCAnalogVDD * theSlope + theOffset;
+                    float    theDVDDVoltage   = theADCDigitalVDD * theSlope + theOffset;
+                    
+                    LOG(INFO) << BOLDRED << " theADCAnalogVDD " << theADCAnalogVDD << " theADCDigitalVDD " << theADCDigitalVDD << RESET;
+                    theAVDDContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<std::pair<uint32_t, float>>()
+                        .first = theADCAnalogVDD;
+                    theAVDDContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<std::pair<uint32_t, float>>()
+                        .second = theAVDDVoltage * 2; // including factor 2 to take voltage divider into account
+                    theDVDDContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<std::pair<uint32_t, float>>()
+                        .first = theADCDigitalVDD;
+                    theDVDDContainer.getObject(theChip->getBeBoardId())
+                        ->getObject(theChip->getOpticalGroupId())
+                        ->getObject(theChip->getHybridId())
+                        ->getObject(theChip->getId())
+                        ->getSummary<std::pair<uint32_t, float>>()
+                        .second = theDVDDVoltage * 2; // including factor 2 to take voltage divider into account
+
+
+                    // make sure test pads output is disabled
+                    fReadoutChipInterface->disableTestPadsOutput(theChip);
 
                 } // chip
             }
         }
     }
 
-// #ifdef __USE_ROOT__
-//     fDQMHistogramPSBiasCal.fillDACPlots(theVREFDACContainer);
-//     fDQMHistogramPSBiasCal.fillSlopePlots(theADCSlopeContainer);
-//     fDQMHistogramPSBiasCal.fillVDDPlots(theAVDDContainer, true);
-//     fDQMHistogramPSBiasCal.fillVDDPlots(theDVDDContainer, false);
-// #else
-//     if(fDQMStreamerEnabled)
-//     {
-//         ContainerSerialization theContainerSerialization("PSBiasCalVrefDac");
-//         theContainerSerialization.streamByBoardContainer(fDQMStreamer, theVREFDACContainer);
-//         ContainerSerialization theSecondContainerSerialization("PSBiasCalADCSlope");
-//         theSecondContainerSerialization.streamByBoardContainer(fDQMStreamer, theADCSlopeContainer);
-//         ContainerSerialization theAVDDContainerSerialization("PSBiasCalAVDD");
-//         theAVDDContainerSerialization.streamByBoardContainer(fDQMStreamer, theAVDDContainer);
-//         ContainerSerialization theDVDDContainerSerialization("PSBiasCalDVDD");
-//         theDVDDContainerSerialization.streamByBoardContainer(fDQMStreamer, theDVDDContainer);
-//     }
-// #endif
+#ifdef __USE_ROOT__
+    fDQMHistogramOTPSADCCalibration.fillDACPlots(theVREFDACContainer);
+    fDQMHistogramOTPSADCCalibration.fillSlopePlots(theADCSlopeContainer);
+    fDQMHistogramOTPSADCCalibration.fillVDDPlots(theAVDDContainer, true);
+    fDQMHistogramOTPSADCCalibration.fillVDDPlots(theDVDDContainer, false);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("OTPSADCCalibrationVrefDac");
+        theContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theVREFDACContainer);
+        ContainerSerialization theSecondContainerSerialization("OTPSADCCalibrationADCSlope");
+        theSecondContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theADCSlopeContainer);
+        ContainerSerialization theAVDDContainerSerialization("OTPSADCCalibrationAVDD");
+        theAVDDContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theAVDDContainer);
+        ContainerSerialization theDVDDContainerSerialization("OTPSADCCalibrationDVDD");
+        theDVDDContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theDVDDContainer);
+    }
+#endif
 
 }
 
@@ -237,7 +329,7 @@ uint8_t OTPSADCCalibration::TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, flo
 
         if((theExpectedDifferenceDown < theExpectedDifference) || (theExpectedDifferenceUp < theExpectedDifference))
         {
-            LOG(INFO) << BOLDRED << "Bad extrapolation in PSBiasCal: theExpectedDifferenceDown:" << theExpectedDifferenceDown << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << ", iteration:" << theCurrentIteration << RESET;
+            LOG(INFO) << BOLDRED << "Bad extrapolation in OTPSADCCalibration: theExpectedDifferenceDown:" << theExpectedDifferenceDown << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << ", iteration:" << theCurrentIteration << RESET;
             if((theExpectedDifferenceDown < theExpectedDifference))
             {
                 theDACValue     = theDACDownValue;
@@ -251,7 +343,7 @@ uint8_t OTPSADCCalibration::TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, flo
         }
         else
         {
-            LOG(INFO) << BOLDMAGENTA << "Correct extrapolation in PSBiasCal , iteration:" << theCurrentIteration << " theDACValue "<< +theDACValue << RESET;
+            LOG(INFO) << BOLDMAGENTA << "Correct extrapolation in OTPSADCCalibration , iteration:" << theCurrentIteration << " theDACValue "<< +theDACValue << RESET;
             if(isVref)
                 fReadoutChipInterface->setVref(theChip, theDACValue);
             else
@@ -284,7 +376,7 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
 {
 
     //FIXME At the moment we are setting the exepected values 
-    // of bandgap and vref to the default nominal value.
+    // of bandgap and ADC_VREF to the default nominal value.
     // This will be updated once we have the real values for each chip
     float    theBandGapExpectedValue  = fReadoutChipInterface->getBandGapExpectedValue(theChip);
     float    theVrefExpectedValue     = fReadoutChipInterface->getVrefExpectedValue(theChip);
@@ -321,7 +413,7 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
         LOG(INFO) << BOLDRED << " Need to calibrate VREF" << RESET;
         LOG(INFO) << BOLDRED << " theVrefToUse " << +theVrefToUse << RESET;
 
-        theVrefToUse = TuneDAC(theChip, theVrefExpectedValue / (theADCMaxValue - theADCGroundValue), theBandGapExpectedValue, "xxxxxxx", theVrefToUse, true); 
+        theVrefToUse = TuneDAC(theChip, theVrefExpectedValue / (theADCMaxValue - theADCGroundValue), theBandGapExpectedValue, "ADC_VREF", theVrefToUse, true); 
 
         LOG(INFO) << BLUE << "calibrated theVrefToUse " << +theVrefToUse << RESET;
 
@@ -377,6 +469,7 @@ void OTPSADCCalibration::Resume()
 
 void OTPSADCCalibration::Reset()
 {
+
     fRegisterHelper->restoreSnapshot();
     // for(const auto theBoard: *fDetectorContainer)
     // {

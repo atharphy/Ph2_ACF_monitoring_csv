@@ -10,6 +10,7 @@
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
+#define fGraphSize 2
 
 class TFile;
 
@@ -55,7 +56,30 @@ class DQMHistogramOTPSADCCalibration : public DQMHistogramBase
      */
     void reset(void) override;
 
+    /*!
+     * \brief Fill validation histograms
+     * \param theSlope : DataContainer for the slope info
+     */
+    void fillSlopePlots(DetectorDataContainer& theADCSlopeContainer);
+
+    /*!
+     * \brief Fill validation histograms
+     * \param theVrefContainer : DataContainer for the VREF register and the VREF value in Volts
+     */
+    void fillDACPlots(DetectorDataContainer& theVrefContainer);
+
+    /*!
+     * \brief Fill validation histograms
+     * \param theVDDContainer : DataContainer for the AVDD or DVDD ADC & voltage value info
+     */
+    void fillVDDPlots(DetectorDataContainer& theVDDContainer, bool isAVDD);
+
+
   private:
     DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fChipSlopeGraphs;
+    DetectorDataContainer fChipAVDDHistograms;
+    DetectorDataContainer fChipDVDDHistograms;
+    DetectorDataContainer fChipVrefHistograms;
 };
 #endif

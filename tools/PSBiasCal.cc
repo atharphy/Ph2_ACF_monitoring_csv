@@ -603,7 +603,7 @@ void PSBiasCal::CalibrateBias()
                         std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF};           //, 0xFF, 0xFF};
                         std::vector<float>    exp_val{0.082, 0.082, 0.108, 0.082, 0.082}; //, 1.0, 1.0};
                         static_cast<MPA2Interface*>(fReadoutChipInterface)->setVrefFromFuseID(cChip);
-                        VREFstring   = "vref";
+                        VREFstring   = "ADC_VREF";
                         VREFmeasured = MeasureVREF(cChip, "VBG", VREFstring, &VREFdac);
                         LOG(INFO) << BOLDMAGENTA << "VREFdac " << +VREFdac << " VREFmeasured " << VREFmeasured << RESET;
 
@@ -645,7 +645,7 @@ void PSBiasCal::CalibrateBias()
                         // }
                         // LOG(DEBUG) << BOLDMAGENTA << " For chip " << +cChip->getId() << " on hybrid " << +cChip->getHybridId() << " VBG is " << theRegister->second << RESET;
                         // measured_VBG = theRegister->second;
-                        VREFstring = "vref";
+                        VREFstring = "ADC_VREF";
                     }
                     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
@@ -707,10 +707,10 @@ void PSBiasCal::CalibrateBias()
                     if(cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         ADC_AVDD =
-                            uint32_t(std::round(static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->readADC(static_cast<ReadoutChip*>(cChip), "avdd")));
+                            uint32_t(std::round(static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->readADC(static_cast<ReadoutChip*>(cChip), "AVDD")));
                         obtained_AVDD = ADC_AVDD * fSlope + fOffset;
                         ADC_DVDD =
-                            uint32_t(std::round(static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->readADC(static_cast<ReadoutChip*>(cChip), "dvdd")));
+                            uint32_t(std::round(static_cast<MPA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->readADC(static_cast<ReadoutChip*>(cChip), "DVDD")));
                         obtained_DVDD = ADC_DVDD * fSlope + fOffset;
                     }
                     else if(cChip->getFrontEndType() == FrontEndType::SSA2)

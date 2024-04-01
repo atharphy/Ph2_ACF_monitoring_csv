@@ -163,8 +163,8 @@ class MPA2Interface : public ReadoutChipInterface
         {"ThDAC0", std::make_pair(1, 5)},   {"ThDAC1", std::make_pair(2, 5)},  {"ThDAC2", std::make_pair(3, 5)},  {"ThDAC3", std::make_pair(4, 5)},       {"ThDAC4", std::make_pair(5, 5)},
         {"ThDAC5", std::make_pair(6, 5)},   {"ThDAC6", std::make_pair(7, 5)},  {"CalDAC0", std::make_pair(1, 6)}, {"CalDAC1", std::make_pair(2, 6)},      {"CalDAC2", std::make_pair(3, 6)},
         {"CalDAC3", std::make_pair(4, 6)},  {"CalDAC4", std::make_pair(5, 6)}, {"CalDAC5", std::make_pair(6, 6)}, {"CalDAC6", std::make_pair(7, 6)},      {"GND", std::make_pair(1, 7)},
-        {"VBG", std::make_pair(8, 0)},      {"dac_ref", std::make_pair(9, 0)}, {"vref", std::make_pair(10, 0)},   {"temperature", std::make_pair(11, 0)}, {"avdd", std::make_pair(12, 0)},
-        {"io_vdd", std::make_pair(13, 0)},  {"dvdd", std::make_pair(14, 0)}};
+        {"VBG", std::make_pair(8, 0)},      {"dac_ref", std::make_pair(9, 0)}, {"ADC_VREF", std::make_pair(10, 0)},   {"temperature", std::make_pair(11, 0)}, {"AVDD", std::make_pair(12, 0)},
+        {"io_vdd", std::make_pair(13, 0)},  {"DVDD", std::make_pair(14, 0)}};
 
     // Map of the bias structure registers
     // < register name , <default register value (DAC) , expected value in V on the test pad> 

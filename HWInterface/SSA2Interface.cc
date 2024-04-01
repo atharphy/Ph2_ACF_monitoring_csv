@@ -232,7 +232,7 @@ const std::map<std::string, std::pair<uint8_t,float>> SSA2Interface::getBiasStru
 
 
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float SSA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2)
 {
@@ -240,28 +240,28 @@ float SSA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMP
 
 }
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float SSA2Interface::getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pSSA2)
 {
     return SSA2_VREF_EXPECTED;
 }
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float SSA2Interface::getVrefPrecision(Ph2_HwDescription::ReadoutChip* pSSA2)
 {
     return SSA2_ADC_PRECISION;
 }
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float SSA2Interface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pSSA2)
 {
     return SSA2_VREF_MIN;
 }
 //FIXME At the moment we are setting the exepected values 
-// of bandgap and vref to the default nominal value.
+// of bandgap and ADC_VREF to the default nominal value.
 // This will be updated once we have the real values for each chip
 float SSA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2)
 {

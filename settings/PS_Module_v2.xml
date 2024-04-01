@@ -265,8 +265,8 @@
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
     <MonitoringElement device="MPA2"  register="CalDAC7" enable="1"/>
     <MonitoringElement device="MPA2"  register="bandgap" enable="1"/>
-    <MonitoringElement device="MPA2"  register="avdd" enable="1"/> 
-    <MonitoringElement device="MPA2"  register="dvdd" enable="1"/>    
+    <MonitoringElement device="MPA2"  register="AVDD" enable="1"/> 
+    <MonitoringElement device="MPA2"  register="DVDD" enable="1"/>    
     <MonitoringElement device="SSA2"  register="AVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="DVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="VBG" enable="1"/>
