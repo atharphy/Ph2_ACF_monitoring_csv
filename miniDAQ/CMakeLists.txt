@@ -106,13 +106,10 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     include_directories(${UHAL_DIR}/log/include)
     include_directories(${UHAL_DIR}/grammars/include)
 
-#    include_directories(${Protobuf_INCLUDE_DIRS})
-include_directories(${PROTOBUF_INCLUDE_DIR})
+    include_directories(${Protobuf_INCLUDE_DIRS})
 
     #library dirs
-#    link_directories(${Protobuf_LIBRARIES})
-    MESSAGE(STATUS "PROTOBUF is ${Protobuf_LIBRARIES}")
-    MESSAGE(STATUS "PROTOBUF is ${protobuf_LIBRARY}")
+    link_directories(${Protobuf_LIBRARIES})
 
     cet_make_exec(NAME RunController
         SOURCE
@@ -121,13 +118,9 @@ include_directories(${PROTOBUF_INCLUDE_DIR})
         Ph2_Utils
         NetworkUtils
         Ph2_MessageUtils
-        ${PROTOBUF_LIBRARY}
-
-#             Boost::serialization
-#             Boost::thread
-#             Boost::date_time
-             Boost::iostreams
-             Boost::filesystem
+        protobuf
+        Boost::iostreams
+        Boost::filesystem
         Boost::regex
         Boost::program_options
         Boost::headers
