@@ -639,7 +639,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 
     for(uint32_t nline = 0; nline<6; ++nline)
     {
-        uint32_t command = 0x20010000 + (nline << 20);
+        uint32_t command = 0x20000000 + (nline << 20);
         WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command);
         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phase_tuning_ctrl = " << std::hex << command << std::dec << std::endl;
 
