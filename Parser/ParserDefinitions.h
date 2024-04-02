@@ -86,6 +86,9 @@
 // Hybrid attributes
 #define HYBRID_ENABLE_ATTRIBUTE_NAME "enable"
 
+// Chip attibutes
+#define CHIP_NOISE_ATTRIBUTE_NAME "noise"
+
 // Monitoring attributes
 #define MONITORING_NODE_TYPE_ATTRIBUTE_NAME "type"
 #define MONITORING_NODE_ENABLE_ATTRIBUTE_NAME "enable"

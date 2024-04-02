@@ -303,7 +303,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     // std::cout<<__LINE__<<std::endl;
                     for(auto& pixelCluster: pixelClusterList)
                     {
-                        for(uint8_t subPixel = 0; subPixel <= (pixelCluster.fWidth); ++subPixel)
+                        for(uint8_t subPixel = 0; subPixel < (pixelCluster.fWidth); ++subPixel)
                         {
                             if(pixelCluster.fAddress + subPixel < 120u) ++cChip->getChannel<float>(pixelCluster.fZpos, pixelCluster.fAddress + subPixel);
                         }
@@ -359,7 +359,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
 
                     for(auto& stripCluster: stripClusterList)
                     {
-                        for(uint8_t subStrip = 0; subStrip <= (stripCluster.fWidth); ++subStrip)
+                        for(uint8_t subStrip = 0; subStrip < (stripCluster.fWidth); ++subStrip)
                         {
                             if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(0, stripCluster.fAddress + subStrip);
                         }

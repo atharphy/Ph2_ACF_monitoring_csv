@@ -297,7 +297,7 @@ void LatencyScan::ScanLatency()
                                     cTotalHits += cHits.size();
                                     for(auto cHit: cHits)
                                     {
-                                        if(cHit % 2 == 0)
+                                        if(cHit.second % 2 == 0)
                                             cTotalHitsS0++;
                                         else
                                             cTotalHitsS1++;
@@ -307,7 +307,7 @@ void LatencyScan::ScanLatency()
                                             ->getObject(cChip->getId())
                                             ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
                                         auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                                        cOccChip->getChannel<Occupancy>(0, cHit).fOccupancy++; // only for CBC
+                                        cOccChip->getChannel<Occupancy>(cHit.first, cHit.second).fOccupancy++; // only for CBC
                                     }
                                 }
                                 else
@@ -325,7 +325,7 @@ void LatencyScan::ScanLatency()
                                         if(cSclstrs.size() > 0)
                                             LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
                                                        << +cPclstr.fWidth << RESET;
-                                        for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
+                                        for(uint8_t cId = 0; cId < (cPclstr.fWidth); cId++)
                                         {
                                             cHitContainer.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -340,7 +340,7 @@ void LatencyScan::ScanLatency()
                                     {
                                         if(cPclstrs.size() > 0)
                                             LOG(DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
-                                        for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
+                                        for(uint8_t cId = 0; cId < (cSclstr.fWidth); cId++)
                                         {
                                             cHitContainer.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -540,7 +540,7 @@ void LatencyScan::StubLatencyScan()
                                 {
                                     // first check for hits
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                    for(auto cHit: cHits) { LOG(DEBUG) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << " hit in channel " << +cHit << RESET; }
+                                    for(auto cHit: cHits) { LOG(DEBUG) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << " hit in channel " << +cHit.second << RESET; }
                                     auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                                     std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
                                     auto                 cStubs                = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
@@ -567,7 +567,7 @@ void LatencyScan::StubLatencyScan()
                                         for(auto cHit: cHits)
                                         {
                                             // LOG(INFO) << BOLDYELLOW << "\t\t\t\t.. expect a hit in position " << +cHit << RESET;
-                                            auto cFound = std::find(cExpectedHits.begin(), cExpectedHits.end(), cHit);
+                                            auto cFound = std::find(cExpectedHits.begin(), cExpectedHits.end(), cHit.second);
                                             cMatched    = cMatched && (cFound != cExpectedHits.end());
                                             // cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
                                         }

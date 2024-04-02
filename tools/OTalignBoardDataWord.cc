@@ -258,7 +258,6 @@ bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup, 
         theLineConfiguration.fMode       = 0;
         theLineConfiguration.fEnableL1   = 0;
         theLineConfiguration.fMasterLine = 0;
-        theAlignerInterface->ManuallyConfigureLine(theAlignerObject, theLineConfiguration);
 
         uint16_t cPatternLength = 40;
         LOG(INFO) << BOLDYELLOW << "Trying to align data with pattern length " << +cPatternLength << RESET;

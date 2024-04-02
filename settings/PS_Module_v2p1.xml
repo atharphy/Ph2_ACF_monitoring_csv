@@ -241,6 +241,14 @@
     <Setting name="OTverifyCICdataWordNumberOfIterations">1000</Setting>
     <Setting name="OTverifyMPASSAdataWordNumberOfIterations">1000</Setting>
     
+    <Setting name="OTinjectionDelayOptimizationNumberOfEvents">100</Setting>
+    <Setting name="OTinjectionDelayOptimizationMaximumDelay">150</Setting>
+    <Setting name="OTinjectionDelayOptimizationDelayStep">1</Setting>
+    <Setting name="OTinjectionDelayOptimizationSSAtestPulseValue">45</Setting> <!-- 45 roughly correspond to 1/2 MIP in 290um silicon-->
+    <Setting name="OTinjectionDelayOptimizationMPAtestPulseValue">50</Setting> <!-- 50 roughly correspond to 1/2 MIP in 290um silicon-->
+    <Setting name="OTinjectionDelayOptimizationSSAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
+    <Setting name="OTinjectionDelayOptimizationMPAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
+
 </Settings>
 
 

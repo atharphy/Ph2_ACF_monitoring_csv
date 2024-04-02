@@ -198,17 +198,17 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                     bool cTopSensor    = false;
                     for(auto cHit: cHits)
                     {
-                        if(cHit % 2 == 0) cBottomSensor = true;
+                        if(cHit.second % 2 == 0) cBottomSensor = true;
 
-                        if(cHit % 2 != 0) cTopSensor = true;
+                        if(cHit.second % 2 != 0) cTopSensor = true;
                     }
                     if(!(cBottomSensor && cTopSensor)) continue;
 
                     for(auto cHit: cHits)
                     {
-                        if(cHit % 2 == 0)
+                        if(cHit.second % 2 == 0)
                         {
-                            auto cStripHit    = cChip->getId() * 127 + std::floor(cHit / 2.0);
+                            auto cStripHit    = cChip->getId() * 127 + std::floor(cHit.second / 2.0);
                             auto cHybridStrip = (cHybrid->getId() % 2 == 0) ? cStripHit : (8 * 127 - 1 - cStripHit);
                             for(auto cStub: cStubs)
                             {
@@ -230,7 +230,8 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                         bool cMatchFound = false;
                         for(auto cExpectedHit: cExpectedHits)
                         {
-                            auto cLookForMatch = std::find(cHits.begin(), cHits.end(), cExpectedHit);
+                            std::pair<uint16_t, uint16_t> theExpectedHit(0, cExpectedHit);
+                            auto                          cLookForMatch = std::find(cHits.begin(), cHits.end(), theExpectedHit);
                             if(cLookForMatch != cHits.end()) { cMatchFound = true; }
                         }
                         if(cMatchFound)

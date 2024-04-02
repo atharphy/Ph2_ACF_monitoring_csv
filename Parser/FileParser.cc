@@ -486,6 +486,8 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     cSSA2->setOptical(pHybrid->isOptical());
     cSSA2->setNumberOfChannels(1, NSSACHANNELS);
     cSSA2->setMasterId(pHybrid->getMasterId());
+
+    if(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cSSA2->setAverageNoise(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
 }
 
 void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os)
@@ -629,6 +631,8 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
     cMPA->setOptical(pHybrid->isOptical());
     cMPA->setNumberOfChannels(NMPAROWS, NSSACHANNELS);
     cMPA->setMasterId(pHybrid->getMasterId());
+
+    if(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cMPA->setAverageNoise(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
 
     os << BOLDCYAN << "|"
        << "  "
@@ -1165,6 +1169,8 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     cCbc->setOptical(cHybrid->isOptical());
     cCbc->setNumberOfChannels(1, NCHANNELS);
     cCbc->setMasterId(cHybrid->getMasterId());
+
+    if(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cCbc->setAverageNoise(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
 
     os << BOLDCYAN << "|"
        << "  "

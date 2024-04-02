@@ -38,6 +38,7 @@ struct Injection
  * \brief Class representing the User Interface to the MPA on different boards
  */
 
+/// @brief
 class MPA2Interface : public ReadoutChipInterface
 { // begin class
   public:
@@ -56,6 +57,7 @@ class MPA2Interface : public ReadoutChipInterface
 
     uint16_t                                      ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
+    uint32_t                                      ReadChipFuseID(Ph2_HwDescription::Chip* pMPA2) override;
 
     void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
     void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
@@ -80,7 +82,17 @@ class MPA2Interface : public ReadoutChipInterface
                         uint32_t                        BRclk);
 
     bool Set_calibration(Ph2_HwDescription::Chip* pMPA, uint32_t cal);
-    bool Set_threshold(Ph2_HwDescription::Chip* pMPA, uint32_t th);
+    bool setThreshold(Ph2_HwDescription::Chip* pMPA, uint8_t threshold);
+    bool setInjectionDelay(Ph2_HwDescription::Chip* pMPA, uint8_t delay);
+
+    /*!
+     * @brief set same register for all MPA bias block in
+     * @param pMPA2 the MPA to write
+     * @param registerName Name of the register without the bias block number
+     * @param value value to write in the register
+     * @return success
+     */
+    bool setAllBiasBlockRegisters(Ph2_HwDescription::Chip* pMPA2, std::string registerName, uint8_t value);
 
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0);
     bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerify = false);
@@ -154,7 +166,6 @@ class MPA2Interface : public ReadoutChipInterface
 
     // MPA2 pixel config register map
     const std::map<std::string, uint8_t> PIXEL_CONFIG_TABLE = {{"ENFLAGS", 0}, {"TrimDAC", 1}, {"DigiPattern", 2}, {"ACCounter_LSB", 4}, {"ACCounter_MSB", 5}};
-    void                                 readFuseID(Ph2_HwDescription::Chip* pMPA2);
     std::map<uint16_t, std::string>      fMap;
     std::vector<uint8_t>                 fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
 

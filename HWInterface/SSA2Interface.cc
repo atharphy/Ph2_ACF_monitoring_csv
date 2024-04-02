@@ -131,11 +131,10 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     }
 
     pSSA2->setRegisterTracking(1);
-    this->ReadFuseID(pSSA2);
     return cSuccess;
 }
 
-void SSA2Interface::ReadFuseID(Chip* pSSA2)
+uint32_t SSA2Interface::ReadChipFuseID(Chip* pSSA2)
 {
     this->WriteChipReg(pSSA2, "Fuse_Mode", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
@@ -149,6 +148,7 @@ void SSA2Interface::ReadFuseID(Chip* pSSA2)
 
     LOG(INFO) << GREEN << "FuseID from SSA2#" << +pSSA2->getId() << " Pos " << +pSSA2->pChipFuseID.Pos() << " Wafer " << +pSSA2->pChipFuseID.Wafer() << " Lot " << +pSSA2->pChipFuseID.Lot()
               << " Status " << +pSSA2->pChipFuseID.Status() << " Process " << +pSSA2->pChipFuseID.Process() << " ADCRef " << +pSSA2->pChipFuseID.ADCRef() << RESET;
+    return val;
 }
 
 uint16_t SSA2Interface::ReadADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
@@ -1003,6 +1003,7 @@ bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<C
     auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(pChip->getChipOriginalMask());
     auto groupToMask   = std::static_pointer_cast<const ChannelGroup<1, NSSACHANNELS>>(group);
     auto cBitset       = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
+
     // LOG(DEBUG) << BOLDYELLOW << "\t... Applying mask to SSA" << +pChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
     //            << " original mask  \t... : " << cOriginalMask << " enabled channels "
     //            << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
