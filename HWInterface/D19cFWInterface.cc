@@ -636,6 +636,18 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // configure FC7 after the fast reset
     LOG(INFO) << BOLDBLUE << "Configuring FC7..." << RESET;
     this->WriteStackReg(cBoardRegs);
+
+    for(uint32_t nline = 0; nline<6; ++nline)
+    {
+        uint32_t command = 0x20010000 + (nline << 20);
+        WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command);
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phase_tuning_ctrl = " << std::hex << command << std::dec << std::endl;
+
+        uint32_t reply = ReadReg("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phase_tuning_reply = " << std::hex << reply << std::dec << std::endl << std::endl;
+    }
+
+
     cBoardRegs.clear();
     // load dio5 configuration
     if(cEnableDIO5 && cWithDIO5)
