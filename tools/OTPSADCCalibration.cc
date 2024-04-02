@@ -21,11 +21,9 @@ void OTPSADCCalibration::Initialise(void)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "ADCcontrol");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "A[0-6]");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "B[0-6]");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "C[0-6]");
+    // fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "C[0-6]");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "D[0-6]");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "E[0-6]");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "ThDAC[0-6]");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "CalDAC[0-6]");
 
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "ADC_VREF");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5BFEED");
@@ -77,14 +75,18 @@ void OTPSADCCalibration::CalibrateBias()
             {
                 for(auto theChip: *theHybrid) 
                 { 
+                    LOG(INFO) << BOLDGREEN << "------------------------------------------------- "  << RESET;
+                    LOG(INFO) << BOLDGREEN << "Calibrating ADC of " << theChip->getFrontEndName(theChip->getFrontEndType()) << "#" << +theChip->getId() << " on Hybrid#"<< +theHybrid->getId() << RESET;
+                    LOG(INFO) << BOLDGREEN << "------------------------------------------------- "  << RESET;
+
                     fReadoutChipInterface->disableTestPadsOutput(theChip);
                     float theGroundValue = fReadoutChipInterface->readADCGround(theChip);
-                    LOG(INFO) << BOLDMAGENTA << "Ground Value for " << theChip->getFrontEndName(theChip->getFrontEndType()) << "#" << +theChip->getId() << "on hybrid "<< +theHybrid->getId() << " is " << theGroundValue << RESET;
+                    LOG(DEBUG) << BOLDMAGENTA << "Ground ADC value is " << theGroundValue << RESET;
                     uint8_t theVrefRegisterValue = 0;
+                    LOG(INFO) << BOLDYELLOW << "Going to calibrate the voltage reference value..."<< RESET;
                     float theVrefValue = CalibrateVref(theChip, &theVrefRegisterValue);
-                    std::cout << "theVrefValue " << theVrefValue <<std::endl;
 
-                    LOG(INFO) << MAGENTA << " ------ setting VREF in theVREFDACContainer "  << RESET;
+                    LOG(DEBUG) << MAGENTA << " ------ setting VREF in theVREFDACContainer "  << RESET;
                     theVREFDACContainer.getObject(theChip->getBeBoardId())
                         ->getObject(theChip->getOpticalGroupId())
                         ->getObject(theChip->getHybridId())
@@ -98,7 +100,7 @@ void OTPSADCCalibration::CalibrateBias()
                         ->getSummary<std::pair<uint8_t, float>>()
                         .second = theVrefValue;
 
-                    std::cout << fReadoutChipInterface->ReadChipReg(theChip, "ADCcontrol") << std::endl;
+                    LOG(INFO) << BOLDYELLOW << "Going to calibrate the ADC bias registers..."<< RESET;
                     CalibrateChipBias(theChip, theVrefValue);
 
                     theADCSlopeContainer.getObject(theChip->getBeBoardId())
@@ -139,44 +141,44 @@ void OTPSADCCalibration::CalibrateBias()
 
 
 
-                    // reset chip before measuring VDDs 
-                    fBeBoardInterface->setBoard(theBoard->getId());
-                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadoutChipReset();
+                    // // reset chip before measuring VDDs 
+                    // fBeBoardInterface->setBoard(theBoard->getId());
+                    // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadoutChipReset();
 
-                    uint32_t theADCAnalogVDD  = fReadoutChipInterface->readADC(theChip,"AVDD");
-                    uint32_t theADCDigitalVDD = fReadoutChipInterface->readADC(theChip,"DVDD");
-                    float    theAVDDVoltage   = theADCAnalogVDD * theSlope + theOffset;
-                    float    theDVDDVoltage   = theADCDigitalVDD * theSlope + theOffset;
+                    // uint32_t theADCAnalogVDD  = fReadoutChipInterface->readADC(theChip,"AVDD");
+                    // uint32_t theADCDigitalVDD = fReadoutChipInterface->readADC(theChip,"DVDD");
+                    // float    theAVDDVoltage   = theADCAnalogVDD * theSlope + theOffset;
+                    // float    theDVDDVoltage   = theADCDigitalVDD * theSlope + theOffset;
                     
-                    LOG(INFO) << BOLDRED << " theADCAnalogVDD " << theADCAnalogVDD << " theADCDigitalVDD " << theADCDigitalVDD << RESET;
-                    theAVDDContainer.getObject(theChip->getBeBoardId())
-                        ->getObject(theChip->getOpticalGroupId())
-                        ->getObject(theChip->getHybridId())
-                        ->getObject(theChip->getId())
-                        ->getSummary<std::pair<uint32_t, float>>()
-                        .first = theADCAnalogVDD;
-                    theAVDDContainer.getObject(theChip->getBeBoardId())
-                        ->getObject(theChip->getOpticalGroupId())
-                        ->getObject(theChip->getHybridId())
-                        ->getObject(theChip->getId())
-                        ->getSummary<std::pair<uint32_t, float>>()
-                        .second = theAVDDVoltage * 2; // including factor 2 to take voltage divider into account
-                    theDVDDContainer.getObject(theChip->getBeBoardId())
-                        ->getObject(theChip->getOpticalGroupId())
-                        ->getObject(theChip->getHybridId())
-                        ->getObject(theChip->getId())
-                        ->getSummary<std::pair<uint32_t, float>>()
-                        .first = theADCDigitalVDD;
-                    theDVDDContainer.getObject(theChip->getBeBoardId())
-                        ->getObject(theChip->getOpticalGroupId())
-                        ->getObject(theChip->getHybridId())
-                        ->getObject(theChip->getId())
-                        ->getSummary<std::pair<uint32_t, float>>()
-                        .second = theDVDDVoltage * 2; // including factor 2 to take voltage divider into account
+                    // LOG(INFO) << BOLDRED << " theADCAnalogVDD " << theADCAnalogVDD << " theADCDigitalVDD " << theADCDigitalVDD << RESET;
+                    // theAVDDContainer.getObject(theChip->getBeBoardId())
+                    //     ->getObject(theChip->getOpticalGroupId())
+                    //     ->getObject(theChip->getHybridId())
+                    //     ->getObject(theChip->getId())
+                    //     ->getSummary<std::pair<uint32_t, float>>()
+                    //     .first = theADCAnalogVDD;
+                    // theAVDDContainer.getObject(theChip->getBeBoardId())
+                    //     ->getObject(theChip->getOpticalGroupId())
+                    //     ->getObject(theChip->getHybridId())
+                    //     ->getObject(theChip->getId())
+                    //     ->getSummary<std::pair<uint32_t, float>>()
+                    //     .second = theAVDDVoltage * 2; // including factor 2 to take voltage divider into account
+                    // theDVDDContainer.getObject(theChip->getBeBoardId())
+                    //     ->getObject(theChip->getOpticalGroupId())
+                    //     ->getObject(theChip->getHybridId())
+                    //     ->getObject(theChip->getId())
+                    //     ->getSummary<std::pair<uint32_t, float>>()
+                    //     .first = theADCDigitalVDD;
+                    // theDVDDContainer.getObject(theChip->getBeBoardId())
+                    //     ->getObject(theChip->getOpticalGroupId())
+                    //     ->getObject(theChip->getHybridId())
+                    //     ->getObject(theChip->getId())
+                    //     ->getSummary<std::pair<uint32_t, float>>()
+                    //     .second = theDVDDVoltage * 2; // including factor 2 to take voltage divider into account
 
 
                     // make sure test pads output is disabled
-                    fReadoutChipInterface->disableTestPadsOutput(theChip);
+                    // fReadoutChipInterface->disableTestPadsOutput(theChip);
 
                 } // chip
             }
@@ -216,161 +218,11 @@ void OTPSADCCalibration::CalibrateChipBias(ReadoutChip* theChip, float theVrefVa
         float       theExpectedValue = it->second.second;
 
         float theADCLSB = fReadoutChipInterface->calculateADCLSB(theChip,theVrefValue);
-        LOG(INFO) << MAGENTA << " theRegisterName " << theRegisterName << " ADCLSB " << theADCLSB << RESET;
-        TuneDAC(theChip,theADCLSB,theExpectedValue,theRegisterName,theDefaultValue,false);
+        fReadoutChipInterface->TuneDAC(theChip,theADCLSB,theExpectedValue,theRegisterName,theDefaultValue,false);
     }
 
 }
 
-// One should first tune Vref using the BandGap as reference to tune it and then tune the different bias registers.
-uint8_t OTPSADCCalibration::TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref)
-{
-
-    LOG(INFO) << MAGENTA << " theDACtoTuneName " << theDACtoTuneName << RESET;
-
-    uint32_t theGroundADCValue = fReadoutChipInterface->readADCGround(theChip);
-    LOG(INFO) << MAGENTA << " theGroundADCValue " << theGroundADCValue  << RESET;
-
-    // write DAC (ie one of the registers) with value 0 (minimum)
-    uint8_t theDACMinValue = 0;
-    if(isVref)
-        fReadoutChipInterface->setVref(theChip, theDACMinValue);
-    else
-        fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACMinValue);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t theOffsetValue = isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName) : fReadoutChipInterface->readADCBandGap(theChip);
-    LOG(INFO) << BLUE << "DAC " << theDACtoTuneName << " at " << +theDACMinValue << " gives theOffsetValue " << theOffsetValue << RESET;
-
-    // now set the DAC value to its max value
-    uint8_t theDACMaxValue = 0x1F;
-    if(isVref)
-        fReadoutChipInterface->setVref(theChip, theDACMaxValue);
-    else
-        fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACMaxValue);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t theMaxValue = isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName): fReadoutChipInterface->readADCBandGap(theChip);
-    LOG(INFO) << BLUE << " DAC " << theDACtoTuneName << " at " << +theDACMaxValue << " gives theMaxValue " << theMaxValue << RESET;
-
-    float theLSB = abs(float(theMaxValue) - float(theOffsetValue)) / float(theDACMaxValue);
-    LOG(INFO) << BOLDMAGENTA << " abs(float(theMaxValue) - float(theOffsetValue)) " << abs(float(theMaxValue) - float(theOffsetValue)) << " float(theDACMaxValue) " << float(theDACMaxValue) << RESET;
-    LOG(INFO) << BLUE << theDACtoTuneName << " LSB " << theLSB << RESET;
-
-    float theADCDExpectedValue = 0.0;
-    theADCDExpectedValue       = theExpectedValue / theSlope + theGroundADCValue; // converted from volts to ADC
-    LOG(INFO) << BLUE << theDACtoTuneName << " expected value in ADC " << theADCDExpectedValue << RESET;
-
-    // now set the DAC value to its default value and get the value at the default value 
-    if(isVref)
-        fReadoutChipInterface->setVref(theChip, theDACValue);
-    else
-        fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t theCurrentValue = isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName): fReadoutChipInterface->readADCBandGap(theChip);
-    LOG(INFO) << BLUE << " theDACValue at nominal value " << +theDACValue << " gives theCurrentValue " << theCurrentValue << RESET;
-
-    int theStepSign = 0;
-    if(theADCDExpectedValue < theCurrentValue)
-        theStepSign =(isVref) ? 1 : -1;
-    else
-        theStepSign =(isVref) ? -1 : 1;
-
-    uint8_t theSteps       = uint8_t(std::round(abs(float(theADCDExpectedValue) - float(theCurrentValue)) / float(theLSB)));
-    uint8_t theDACNewValue = 0;
-    LOG(INFO) << MAGENTA << " theSteps " << +theSteps << RESET;
-    if(float(theDACValue + theStepSign * theSteps) > theDACMaxValue)
-        theDACNewValue = theDACMaxValue;
-    else if((float(theDACValue + theStepSign * theSteps) < theDACMinValue))
-        theDACNewValue = theDACMinValue;
-    else
-        theDACNewValue = theDACValue + theStepSign * theSteps;
- 
-    theDACValue = theDACNewValue;
-
-    LOG(INFO) << MAGENTA << " theDACNewValue " << +theDACNewValue << RESET;
-
-    // now writing the DAC to the same new value  estimated above
-    if(isVref)
-        fReadoutChipInterface->setVref(theChip, theDACNewValue);
-    else
-        fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACNewValue);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
-
-    uint32_t theNewValue = isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName): fReadoutChipInterface->readADCBandGap(theChip);
-    LOG(INFO) << BOLDBLUE << "after changing value for DAC " << theDACtoTuneName << " to " << +theDACValue << " the theNewValue is " << theNewValue << RESET;
-
-
-    bool     isSearching = true;
-    uint32_t theCurrentIteration = 0;
-    while(isSearching)
-    {
-
-        LOG(INFO) << MAGENTA << " theDACNewValue - 1 " << +theDACNewValue - 1 << RESET;
-        uint8_t theDACDownValue = std::max(theDACMinValue, uint8_t(theDACNewValue - 1));
-        if(isVref)
-            fReadoutChipInterface->setVref(theChip, theDACDownValue);
-        else
-            fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACDownValue);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        uint32_t theNewValueDown =  isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName): fReadoutChipInterface->readADCBandGap(theChip);
-
-
-        uint8_t theDACUpValue = std::min(uint8_t(theDACMaxValue), uint8_t(theDACNewValue + 1));
-        LOG(INFO) << MAGENTA << "theDACUpValue " << +theDACUpValue << RESET;
-        if(isVref)
-            fReadoutChipInterface->setVref(theChip, theDACUpValue);
-        else
-            fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACUpValue);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        uint32_t theNewValueUp = isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName): fReadoutChipInterface->readADCBandGap(theChip);
-    
-        float theExpectedDifference     = std::fabs(theADCDExpectedValue - theNewValue);
-        float theExpectedDifferenceDown = std::fabs(theADCDExpectedValue - theNewValueDown);
-        float theExpectedDifferenceUp   = std::fabs(theADCDExpectedValue - theNewValueUp);
-
-        if((theExpectedDifferenceDown < theExpectedDifference) || (theExpectedDifferenceUp < theExpectedDifference))
-        {
-            LOG(INFO) << BOLDRED << "Bad extrapolation in OTPSADCCalibration: theExpectedDifferenceDown:" << theExpectedDifferenceDown << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << ", iteration:" << theCurrentIteration << RESET;
-            if((theExpectedDifferenceDown < theExpectedDifference))
-            {
-                theDACValue     = theDACDownValue;
-                theDACNewValue = theDACNewValue - 1;
-            }
-            if((theExpectedDifferenceUp < theExpectedDifference))
-            {
-                theDACValue     = theDACUpValue;
-                theDACNewValue = std::min(uint8_t(theDACMaxValue), uint8_t(theDACNewValue + 1));
-            }
-        }
-        else
-        {
-            LOG(INFO) << BOLDMAGENTA << "Correct extrapolation in OTPSADCCalibration , iteration:" << theCurrentIteration << " theDACValue "<< +theDACValue << RESET;
-            if(isVref)
-                fReadoutChipInterface->setVref(theChip, theDACValue);
-            else
-                fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2));
-
-            usleep(100000);
-            uint32_t theCheckValue = isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName): fReadoutChipInterface->readADCBandGap(theChip);
-            LOG(INFO) << BOLDGREEN << " Register " << theDACtoTuneName << " gives ADC " << theCheckValue << RESET;
-            isSearching = false;
-        }
-        LOG(INFO) << BOLDMAGENTA << "Writing DAC val " << +theDACValue << RESET;
-        if(isVref)
-            fReadoutChipInterface->setVref(theChip, theDACValue);
-        else
-            fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
-
-        theNewValue = isVref == 0 ? fReadoutChipInterface->readADC(theChip,theDACtoTuneName): fReadoutChipInterface->readADCBandGap(theChip);
- 
-        theCurrentIteration += 1;
-    }
-
-    LOG(INFO) << BOLDBLUE << "New DAC val: " << theNewValue << " Expected val: " << theADCDExpectedValue << "+/-" << theLSB << RESET;
-
-    return theDACValue;
-}
 
 float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip, uint8_t* theVrefRegisterValue)
 {
@@ -392,39 +244,31 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
     uint8_t  theVrefReadRegisterValue = fReadoutChipInterface->readVrefRegister(theChip);
     //FIXME for now the VREF is not written in the SSA fuse ID so we check if it is zero or not. 
     uint8_t  theVrefToUse = theVrefFuseIDValue !=0 ? theVrefFuseIDValue : theVrefReadRegisterValue;
-
-    std::cout << " theVrefFuseIDValue " << +theVrefFuseIDValue << " theVrefReadRegisterValue " << +theVrefReadRegisterValue << " theVrefToUse " << +theVrefToUse << std::endl; 
     
     *theVrefRegisterValue = theVrefToUse;
 
     float theADCSlope  = theBandGapExpectedValue / (float(theADCBandGapValue) - float(theADCGroundValue));
     float theADCOffset = -float(theADCGroundValue) * theADCSlope;
 
-    LOG(INFO) << BLUE << " theADCOffset " << theADCOffset << " theADCSlope " << theADCSlope << " theADCBandGapValue " << theADCBandGapValue << " theADCGroundValue " << theADCGroundValue << RESET;
-
+    LOG(DEBUG) << BLUE << "theADCOffset " << theADCOffset << " theADCSlope " << theADCSlope << RESET;
+    LOG(INFO) << MAGENTA << "The initial BandGapValue in ADC is " << theADCBandGapValue << RESET;
+ 
     float theVrefObtained = theADCMaxValue * theADCSlope + theADCOffset;
-    LOG(INFO) << BLUE << "for theVrefToUse " << +theVrefToUse << " VREF val extrapolated: " << theVrefObtained << " Expected val: " << theVrefExpectedValue << RESET;
+    LOG(INFO) << MAGENTA << "For the intial ADC VREF register value " << +theVrefToUse << ":" << RESET;
+    LOG(INFO) << MAGENTA << "VREF extrapolated value: " << theVrefObtained << " [V]" << RESET;
+    LOG(INFO) << MAGENTA << "VREF expected     value: " << theVrefExpectedValue << " [V]" << RESET;
 
-    LOG(INFO) << BOLDBLUE << " theVrefObtained " << theVrefObtained << " theVrefMaxValue " << theVrefMaxValue << " theVrefMinValue " << theVrefMinValue << " (theVrefObtained - theVrefExpectedValue) " << (theVrefObtained - theVrefExpectedValue)
+    LOG(DEBUG) << BOLDBLUE << "theVrefObtained " << theVrefObtained << " theVrefMaxValue " << theVrefMaxValue << " theVrefMinValue " << theVrefMinValue << " (theVrefObtained - theVrefExpectedValue) " << (theVrefObtained - theVrefExpectedValue)
                << " theVrefPrecision " << theVrefPrecision << RESET;
 
     if(theVrefObtained > theVrefMaxValue || theVrefObtained < theVrefMinValue || abs(theVrefObtained - theVrefExpectedValue) > theVrefPrecision)
     {
-        LOG(INFO) << BOLDRED << " Need to calibrate VREF" << RESET;
-        LOG(INFO) << BOLDRED << " theVrefToUse " << +theVrefToUse << RESET;
+        LOG(INFO) << BOLDRED << "Need to calibrate VREF" << RESET;
 
-        theVrefToUse = TuneDAC(theChip, theVrefExpectedValue / (theADCMaxValue - theADCGroundValue), theBandGapExpectedValue, "ADC_VREF", theVrefToUse, true); 
-
-        LOG(INFO) << BLUE << "calibrated theVrefToUse " << +theVrefToUse << RESET;
-
+        theVrefToUse = fReadoutChipInterface->TuneDAC(theChip, theVrefExpectedValue / (theADCMaxValue - theADCGroundValue), theBandGapExpectedValue, "ADC_VREF", theVrefToUse, true); 
         fReadoutChipInterface->setVref(theChip, theVrefToUse);
 
-        theRetrievedVrefADCValue = fReadoutChipInterface->readVrefRegister(theChip);
-        std::cout << fReadoutChipInterface->ReadChipReg(theChip, "ADCcontrol") << std::endl;
-        auto test = fReadoutChipInterface->ReadChipReg(theChip, "ADCcontrol") & 0x1F;
-        std::cout << test << std::endl;
-        LOG(INFO) << BOLDRED << " retrieve dac after writing " << theRetrievedVrefADCValue << RESET;
-        LOG(INFO) << BOLDRED << " VREF calibrated" << RESET;
+        LOG(DEBUG) << BOLDGREEN << " VREF calibrated" << RESET;
 
         
         theADCBandGapValue = fReadoutChipInterface->readADCBandGap(theChip);
@@ -432,13 +276,13 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
         theADCSlope  = (theBandGapExpectedValue) / (theADCBandGapValue - theADCGroundValue);
         theADCOffset = -theADCGroundValue * theADCSlope;
 
-        *theVrefRegisterValue = theRetrievedVrefADCValue;
+        *theVrefRegisterValue = theVrefToUse;
 
         theVrefObtained = theADCMaxValue * theADCSlope + theADCOffset;
         LOG(DEBUG) << BOLDRED << "for new theVrefToUse " << +theRetrievedVrefADCValue << " New VREF val: " << theVrefObtained << " Expected val: " << theVrefExpectedValue << RESET;
     }
 
-    LOG(INFO) << BOLDMAGENTA << " VREF calibrated *theVrefRegisterValue " << +(*theVrefRegisterValue) << " theVrefObtained " << theVrefObtained << RESET;
+    LOG(INFO) << BOLDGREEN << "VREF calibrated *theVrefRegisterValue " << +(*theVrefRegisterValue) << " theVrefObtained " << theVrefObtained << RESET;
     return theVrefObtained;
 }
 
@@ -471,18 +315,6 @@ void OTPSADCCalibration::Reset()
 {
 
     fRegisterHelper->restoreSnapshot();
-    // for(const auto theBoard: *fDetectorContainer)
-    // {
-    //     for(auto theOpticalReadout: *theBoard)
-    //     {
-    //         for(auto theHybrid: *theOpticalReadout)
-    //         {
-    //             for(auto theChip: *theHybrid) 
-    //             { 
-    //                 std::cout << fReadoutChipInterface->ReadChipReg(theChip, "ADCcontrol") << std::endl;
-    //             }
-    //         }
-    //     }
-    // }
+
 
 }

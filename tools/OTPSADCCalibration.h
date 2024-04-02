@@ -37,7 +37,6 @@ class OTPSADCCalibration : public Tool
     
   private:
     void    CalibrateBias();
-    uint8_t TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref = false);
     float   CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip, uint8_t* theVrefRegisterValue);
     void    CalibrateChipBias(Ph2_HwDescription::ReadoutChip* theChip, float theVrefValue);
 #ifdef __USE_ROOT__

@@ -100,7 +100,7 @@ class PSInterface : public ReadoutChipInterface
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop) { return true; }
     bool disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pPS);
     // bool selectTestPadsOutput(Ph2_HwDescription::ReadoutChip* pPS, std::string theRegisterName);
-
+    uint8_t TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref = false);
     void SetOptical()
     {
         bool cFoundLpgbt = this->lpGBTFound();

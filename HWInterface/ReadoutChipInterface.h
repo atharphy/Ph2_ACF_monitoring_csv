@@ -253,6 +253,21 @@ class ReadoutChipInterface : public ChipInterface
         return false;
     }
 
+
+    /// @brief Tune the ADC registers. One should first tune Vref using the BandGap as reference to tune it and then tune the different bias registers.
+    /// @param theChip: pointer to Chip object 
+    /// @param theSlope: ADC slope 
+    /// @param theExpectedValue: Register expected value
+    /// @param theDACtoTuneName: Register name
+    /// @param theDACValue: the initial register value
+    /// @param isVref: tell if the register being tuned is the reference one 
+    /// @return 
+    virtual uint8_t TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
     // /*!
     //  * \brief Select the register to be read on the test pad output
     //  * \param pChip: pointer to Chip object

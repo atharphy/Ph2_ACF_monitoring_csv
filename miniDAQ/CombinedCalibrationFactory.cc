@@ -55,7 +55,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     // OT calibrations
     Register<PedeNoise>("Outer Tracker", "noiseOT");
     Register<OTVTRXLightOff>("Outer Tracker", "vtrxoff");
-
     Register<ECVLinkAlignmentOT,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
@@ -131,6 +130,17 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyMPASSAdataWord,
              PedestalEqualization,
              PedeNoise>("Outer Tracker", "calibrationandpedenoise");
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
+             OTPSADCCalibration,
+             PedestalEqualization,
+             PedeNoise>("Outer Tracker", "adccalibrationandpedenoise");
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,

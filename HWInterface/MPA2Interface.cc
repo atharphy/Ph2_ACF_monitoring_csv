@@ -286,8 +286,6 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         return this->setInjectionDelay(pMPA2, pValue);
     else if(pRegName == "ADC_VREF")
     { 
-        std::cout << " reading ADCcontrol before writing " << ReadChipReg(pMPA2,"ADCcontrol") << std::endl; 
-        std::cout << "HERE!!!" << pValue << std::endl;
         uint8_t cRegMask  = 0x1F;
         // return this->WriteChipReg(pMPA2, "ADCcontrol", pValue , false); 
         return this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false); 
@@ -751,6 +749,7 @@ bool MPA2Interface::setAllBiasBlockRegisters(Chip* pMPA2, std::string registerNa
 
 uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     auto theRegister = ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == ADC_CONTROL_TABLE.end())
     {
@@ -766,25 +765,26 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
 
 uint32_t MPA2Interface::readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     return readADC(pChip,"GND");
 }
 
 uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     return readADC(pChip,"VBG");
 }
 
 uint32_t MPA2Interface::readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
 {
     uint32_t theVrefADC = readADC(pChip,"ADC_VREF");
-    std::cout << " theVrefADC " << theVrefADC << std::endl;
     return theVrefADC;
 }
 
 uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t theVrefADC = ReadChipReg(pChip,"ADC_VREF");
-    std::cout << " theVrefADC " << theVrefADC << std::endl;
     return theVrefADC;
 }
 
@@ -795,7 +795,7 @@ float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
     {
         this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x7 << 5), "Mask", 0xE0);
         this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x6 << 5), "Mask", 0xE0);
-        std::this_thread::sleep_for(std::chrono::microseconds(1000));
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
         uint16_t ADCRead = this->ReadChipReg(pMPA2, "ADC_output");
         ADCReadsAve += ADCRead;
         // std::cout<<"ADCRead "<<+ADCRead<<std::endl;
@@ -807,9 +807,7 @@ float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
 
 float MPA2Interface::calculateADCLSB(ReadoutChip* pMPA2, float theVrefValue)
 {
-    this->selectBlock(pMPA2, 1, 7, 0);
-    float offset = this->ADCMeasure(pMPA2);
-
+    float offset = this->measureGround(pMPA2);
     // LOG(INFO) << BOLDMAGENTA << "ADCLSB "<<theVrefValue/(4095.0 - offset) << RESET;
     return theVrefValue / (4095.0 - offset);
 }
@@ -848,6 +846,8 @@ uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2)
 
 bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+
     // Set the Vref from the fuse
     // this->ReadChipFuseID(pMPA2);
     LOG(DEBUG) << BOLDMAGENTA << " loading VREF from fuse ID " << +pMPA2->pChipFuseID.ADCRef() << RESET;
@@ -856,8 +856,10 @@ bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
 
 bool MPA2Interface::setVref(ReadoutChip* pMPA2, uint16_t VREFvalue)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+
     // Set the Vref to a desired value
-    LOG(INFO) << BOLDMAGENTA << " loading VREF " << VREFvalue << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << " loading VREF " << VREFvalue << RESET;
     return this->WriteChipReg(pMPA2, "ADC_VREF", VREFvalue); // , "Mask", (0x1F));
 
     // return this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
@@ -909,7 +911,7 @@ float MPA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pMPA2)
 
 bool MPA2Interface::disableTestPadsOutput(ReadoutChip* pMPA2)
 {
-    LOG(INFO) << BOLDMAGENTA << "Disable all MPA test pads outputs... " << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "Disable all MPA test pads outputs... " << RESET;
     return this->selectBlock(pMPA2, 0);
 }
 

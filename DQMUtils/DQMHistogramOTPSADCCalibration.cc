@@ -60,7 +60,7 @@ void DQMHistogramOTPSADCCalibration::reset(void)
 //========================================================================================================================
 void DQMHistogramOTPSADCCalibration::fillDACPlots(DetectorDataContainer& theVrefContainer)
 {
-    LOG(INFO) << __PRETTY_FUNCTION__ << " Fill DAC Plots " << RESET;
+    LOG(DEBUG) << __PRETTY_FUNCTION__ << " Fill DAC Plots " << RESET;
     for(auto cBoard: theVrefContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -78,8 +78,8 @@ void DQMHistogramOTPSADCCalibration::fillDACPlots(DetectorDataContainer& theVref
                                                    ->getObject(cChip->getId())
                                                    ->getSummary<HistContainer<TH1F>>()
                                                    .fTheHistogram;
-                    LOG(INFO) << BOLDBLUE << " Fill Chip " << RESET;
-                    LOG(INFO) << BOLDBLUE << " DAC, VREF "
+                    LOG(DEBUG) << BOLDBLUE << " Fill Chip " << RESET;
+                    LOG(DEBUG) << BOLDBLUE << " DAC, VREF "
                                << +theVrefContainer.getObject(cBoard->getId())
                                        ->getObject(cOpticalGroup->getId())
                                        ->getObject(cHybrid->getId())
@@ -130,9 +130,7 @@ void DQMHistogramOTPSADCCalibration::fillSlopePlots(DetectorDataContainer& theAD
                                                ->getSummary<GraphContainer<TGraph>>()
                                                .fTheGraph;
                     auto cChipContainer = theADCSlopeContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ADCSlope>();
-                    LOG(INFO) << BLUE << " Fill " << RESET;
-                    LOG(INFO) << BLUE << " GND ADC " << cChipContainer.fADC_GND << RESET;
-                    LOG(INFO) << BLUE << " VBG ADC " << cChipContainer.fADC_VBG << " measured V " << cChipContainer.fMeasured_VBG << RESET;
+
                     float ADCs[fGraphSize]     = {cChipContainer.fADC_GND, cChipContainer.fADC_VBG};
                     float voltages[fGraphSize] = {0, cChipContainer.fMeasured_VBG};
                     for(int i = 0; i < fGraphSize; i++)

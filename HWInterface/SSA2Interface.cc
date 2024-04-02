@@ -153,6 +153,7 @@ uint32_t SSA2Interface::ReadChipFuseID(Chip* pSSA2)
 
 uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     auto theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == SSA2_ADC_CONTROL_TABLE.end())
     {
@@ -165,50 +166,61 @@ uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
 
 uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
 {
-    bool cVerify = true;
+    // bool cVerify = true;
     setBoard(pChip->getBeBoardId());
-    auto cRegMap = pChip->getRegMap();
-    auto cItem   = cRegMap["ADC_control"];
-    cItem.fValue = 0xE0 | (pInput & 0x1F);
-    fBoardFW->SingleRegisterWrite(pChip, cItem, cVerify);
-    cItem.fValue = 0xC0 | (pInput & 0x1F);
-    fBoardFW->SingleRegisterWrite(pChip, cItem, cVerify);
+    // auto cRegMap = pChip->getRegMap();
+    // auto cItem   = cRegMap["ADC_control"];
+    // cItem.fValue = 0xE0 | (pInput & 0x1F);
+    auto theRegValue = 0xE0 | (pInput & 0x1F);
+    WriteChipReg(pChip,"ADC_control",theRegValue);
+    theRegValue = 0xC0 | (pInput & 0x1F);
+    WriteChipReg(pChip,"ADC_control",theRegValue);
+    // fBoardFW->SingleRegisterWrite(pChip, cItem, cVerify);
+    // cItem.fValue = 0xC0 | (pInput & 0x1F);
+    // fBoardFW->SingleRegisterWrite(pChip, cItem, cVerify);
     // this->WriteChipReg(pChip, "ADC_control", 0xE0 | (pInput & 0x1F));
     // this->WriteChipReg(pChip, "ADC_control", 0xC0 | (pInput & 0x1F));
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    cItem         = cRegMap["ADC_out_H"];
-    uint16_t cMSB = fBoardFW->SingleRegisterRead(pChip, cItem);
-    cItem         = cRegMap["ADC_out_L"];
-    uint16_t cLSB = fBoardFW->SingleRegisterRead(pChip, cItem);
+    // cItem         = cRegMap["ADC_out_H"];
+    // uint16_t cMSB = fBoardFW->SingleRegisterRead(pChip, cItem);
+    uint16_t cMSB = ReadChipReg(pChip,"ADC_out_H");
+    // cItem         = cRegMap["ADC_out_L"];
+    // uint16_t cLSB = fBoardFW->SingleRegisterRead(pChip, cItem);
+    uint16_t cLSB = ReadChipReg(pChip,"ADC_out_L");
+    auto finalValue = (cMSB << 8 | cLSB);
     // uint16_t cMSB = this->ReadChipReg(pChip, "ADC_out_H");
     // uint16_t cLSB = this->ReadChipReg(pChip, "ADC_out_L");
-    return (cMSB << 8 | cLSB);
+    // WriteChipReg(pChip,"ADC_control",0x00);
+    return finalValue;
 }
 
 
 uint32_t SSA2Interface::readADCGround(ReadoutChip* pSSA2)
 {
-    LOG(INFO) << BOLDMAGENTA << "GND  " << +this->ReadADC(static_cast<ReadoutChip*>(pSSA2), 12) << RESET;
-    return this->ReadADC(static_cast<ReadoutChip*>(pSSA2), 12);
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    LOG(DEBUG) << BOLDMAGENTA << "GND  " << +this->readADC(static_cast<ReadoutChip*>(pSSA2), "GND") << RESET;
+    return this->readADC(static_cast<ReadoutChip*>(pSSA2), "GND");
 }
 
 uint32_t SSA2Interface::readADCBandGap(ReadoutChip* pSSA2)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     auto theBandGap = this->readADC(static_cast<ReadoutChip*>(pSSA2), "VBG");
-    LOG(INFO) << BOLDMAGENTA << "VBG  " << theBandGap  << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "VBG  " << theBandGap  << RESET;
     return theBandGap;
 }
 
 uint32_t SSA2Interface::readADCVref(ReadoutChip* pSSA2)
 {
     uint8_t theVrefADC = readADC(pSSA2,"ADC_VREF");
-    LOG(INFO) << BOLDMAGENTA << "ADC_VREF  " << +theVrefADC << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "ADC_VREF  " << +theVrefADC << RESET;
     return theVrefADC;
 }
 
 uint32_t SSA2Interface::readVrefRegister(ReadoutChip* pSSA2)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint8_t theVrefADC = ReadChipReg(pSSA2,"ADC_VREF");
     LOG(INFO) << BOLDMAGENTA << "ADC_VREF  " << +theVrefADC << RESET;
     return theVrefADC;
@@ -216,13 +228,17 @@ uint32_t SSA2Interface::readVrefRegister(ReadoutChip* pSSA2)
 
 bool SSA2Interface::setVrefFromFuseID(ReadoutChip* pSSA2)
 {
-        LOG(INFO) << BOLDMAGENTA << "Set Vref from value stored in fuse id " <<  +pSSA2->pChipFuseID.ADCRef() << RESET;
-        return this->WriteChipReg(pSSA2,"ADC_VREF",pSSA2->pChipFuseID.ADCRef());
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+
+    LOG(INFO) << BOLDMAGENTA << "Set Vref from value stored in fuse id " <<  +pSSA2->pChipFuseID.ADCRef() << RESET;
+    return this->WriteChipReg(pSSA2,"ADC_VREF",pSSA2->pChipFuseID.ADCRef());
 }
 bool SSA2Interface::setVref(ReadoutChip* pSSA2, uint16_t theVrefRegisterValue)
 {
-        LOG(INFO) << BOLDMAGENTA << "Set Vref from desired value " << +theVrefRegisterValue << RESET;
-        return this->WriteChipReg(pSSA2,"ADC_VREF",theVrefRegisterValue);
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+
+    LOG(DEBUG) << BOLDMAGENTA << "Set Vref to desired value " << +theVrefRegisterValue << RESET;
+    return this->WriteChipReg(pSSA2,"ADC_VREF",theVrefRegisterValue);
 }
 
 const std::map<std::string, std::pair<uint8_t,float>> SSA2Interface::getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pSSA2)
@@ -272,16 +288,17 @@ float SSA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2)
 
 bool SSA2Interface::disableTestPadsOutput(ReadoutChip* pSSA2)
 {
-        LOG(INFO) << BOLDMAGENTA << "Disable all SSA test pads outputs... " << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "Disable all SSA test pads outputs... " << RESET;
         bool success = this->WriteChipReg(pSSA2, "Bias_TEST_lsb", 0x0);
         return success & this->WriteChipReg(pSSA2, "Bias_TEST_msb", 0x0);
 }
 
 float SSA2Interface::calculateADCLSB(ReadoutChip* pSSA2, float theVrefValue)
 {
+    
     float offset = this->readADCGround(pSSA2);
 
-    LOG(INFO) << BOLDMAGENTA << "ADCLSB " << theVrefValue / (4095.0 - offset) << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "ADCLSB " << theVrefValue / (4095.0 - offset) << RESET;
     return theVrefValue / (4095.0 - offset);
 }
 
