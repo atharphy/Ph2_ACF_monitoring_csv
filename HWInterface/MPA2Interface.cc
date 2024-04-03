@@ -766,7 +766,18 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
 uint32_t MPA2Interface::readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    return readADC(pChip,"GND");
+    // It seems to be more precise for the ground...
+    this->WriteChipReg(pChip, "ADC_TEST_selection", 0, true);
+    uint32_t sumData = 0;
+    for(uint32_t iBlock = 0; iBlock < 7; iBlock++)
+    {
+        this->selectBlock(pChip, iBlock + 1, 7, 1);
+        sumData += this->ADCMeasure(pChip); // maybe??
+    }
+    this->WriteChipReg(pChip, "ADC_TEST_selection", 0, true);
+    return uint32_t(float(sumData) / 7.0);
+
+    // return readADC(pChip,"GND");
 }
 
 uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip)

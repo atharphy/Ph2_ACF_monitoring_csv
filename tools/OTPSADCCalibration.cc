@@ -139,46 +139,8 @@ void OTPSADCCalibration::CalibrateBias()
                         .fOffset = theOffset;
 
 
-
-
-                    // // reset chip before measuring VDDs 
-                    // fBeBoardInterface->setBoard(theBoard->getId());
-                    // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadoutChipReset();
-
-                    // uint32_t theADCAnalogVDD  = fReadoutChipInterface->readADC(theChip,"AVDD");
-                    // uint32_t theADCDigitalVDD = fReadoutChipInterface->readADC(theChip,"DVDD");
-                    // float    theAVDDVoltage   = theADCAnalogVDD * theSlope + theOffset;
-                    // float    theDVDDVoltage   = theADCDigitalVDD * theSlope + theOffset;
-                    
-                    // LOG(INFO) << BOLDRED << " theADCAnalogVDD " << theADCAnalogVDD << " theADCDigitalVDD " << theADCDigitalVDD << RESET;
-                    // theAVDDContainer.getObject(theChip->getBeBoardId())
-                    //     ->getObject(theChip->getOpticalGroupId())
-                    //     ->getObject(theChip->getHybridId())
-                    //     ->getObject(theChip->getId())
-                    //     ->getSummary<std::pair<uint32_t, float>>()
-                    //     .first = theADCAnalogVDD;
-                    // theAVDDContainer.getObject(theChip->getBeBoardId())
-                    //     ->getObject(theChip->getOpticalGroupId())
-                    //     ->getObject(theChip->getHybridId())
-                    //     ->getObject(theChip->getId())
-                    //     ->getSummary<std::pair<uint32_t, float>>()
-                    //     .second = theAVDDVoltage * 2; // including factor 2 to take voltage divider into account
-                    // theDVDDContainer.getObject(theChip->getBeBoardId())
-                    //     ->getObject(theChip->getOpticalGroupId())
-                    //     ->getObject(theChip->getHybridId())
-                    //     ->getObject(theChip->getId())
-                    //     ->getSummary<std::pair<uint32_t, float>>()
-                    //     .first = theADCDigitalVDD;
-                    // theDVDDContainer.getObject(theChip->getBeBoardId())
-                    //     ->getObject(theChip->getOpticalGroupId())
-                    //     ->getObject(theChip->getHybridId())
-                    //     ->getObject(theChip->getId())
-                    //     ->getSummary<std::pair<uint32_t, float>>()
-                    //     .second = theDVDDVoltage * 2; // including factor 2 to take voltage divider into account
-
-
                     // make sure test pads output is disabled
-                    // fReadoutChipInterface->disableTestPadsOutput(theChip);
+                    fReadoutChipInterface->disableTestPadsOutput(theChip);
 
                 } // chip
             }
@@ -239,7 +201,6 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
     uint32_t theADCGroundValue        = fReadoutChipInterface->readADCGround(theChip);   
     uint32_t theADCMaxValue           = 4095;
     uint32_t theADCBandGapValue       = fReadoutChipInterface->readADCBandGap(theChip);
-    uint32_t theRetrievedVrefADCValue = 0;
     uint8_t  theVrefFuseIDValue       = theChip->pChipFuseID.ADCRef();
     uint8_t  theVrefReadRegisterValue = fReadoutChipInterface->readVrefRegister(theChip);
     //FIXME for now the VREF is not written in the SSA fuse ID so we check if it is zero or not. 
@@ -272,14 +233,14 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
 
         
         theADCBandGapValue = fReadoutChipInterface->readADCBandGap(theChip);
-
+        LOG(INFO) << BLUE << " theADCBandGapValue " << theADCBandGapValue << " theADCGroundValue " << theADCGroundValue << RESET;
         theADCSlope  = (theBandGapExpectedValue) / (theADCBandGapValue - theADCGroundValue);
-        theADCOffset = -theADCGroundValue * theADCSlope;
-
+        theADCOffset = -(float(theADCGroundValue) * theADCSlope);
+        LOG(INFO) << BLUE << "theADCSlope " << theADCSlope << " theADCOffset " << theADCOffset << RESET;
         *theVrefRegisterValue = theVrefToUse;
 
         theVrefObtained = theADCMaxValue * theADCSlope + theADCOffset;
-        LOG(DEBUG) << BOLDRED << "for new theVrefToUse " << +theRetrievedVrefADCValue << " New VREF val: " << theVrefObtained << " Expected val: " << theVrefExpectedValue << RESET;
+        LOG(INFO) << BOLDRED << "for new theVrefToUse " << theVrefToUse << " New VREF val: " << theVrefObtained << " Expected val: " << theVrefExpectedValue << RESET;
     }
 
     LOG(INFO) << BOLDGREEN << "VREF calibrated *theVrefRegisterValue " << +(*theVrefRegisterValue) << " theVrefObtained " << theVrefObtained << RESET;
