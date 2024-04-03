@@ -91,27 +91,8 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 
 ##
 ### The `Ph2_ACF` software
-Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal, etc...):
 
-1. Clone the GitHub repo and run cmake
-```bash
-git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
-cd Ph2_ACF
-source setup.sh
-mkdir build
-cd build
-cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to call it `cmake3 ..`
-```
-
-2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the `Ph2_ACF` root directory
-
-3. Don't forget to `source setup.sh` to set all the environment variables correctly
-
-4. Launch
-```bash
-fpgaconfig --help
-```
-to upload a new FW image to the FC7
+Installation of the software is documented at <https://ph2acf.docs.cern.ch/general/ph2acf_install/>
 
 
 ##
@@ -234,90 +215,8 @@ tar zxvf v2.9.2.tar.gz
 
 ##
 ### Setup on RHEL 9 or AlmaLinux 9
-The following procedure will install (in order):
-1. complete the `cern` installation
-2. when installing `rarpd` use the version for `Fedora`
-3. the `boost` and `pugixml` libraries
-4. `erlang` (using [these instructions](https://www.rabbitmq.com/install-rpm.html))
-5. the `cactus` libraries for `IPbus` (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
-6. `root` with all its needed libraries
-7. `cmake`, tools for clang, including `clang-format` and `git-extras`
-8. `gcc-toolset-12`
-9. `python3`
-10. `protobuf`
-11. `pybind11`
 
-#### Complete the CERN installation
-Make sure that the CERN installation is complete by running
-```bash
-sudo dnf --repofrompath=cern9el,http://linuxsoft.cern.ch/cern/alma/9/CERN/x86_64/ --repo=cern9el install cern-release
-```
-
-#### Libraries needed by Ph2_ACF
-```bash
-sudo yum install epel-release
-sudo yum install -y boost-devel pugixml-devel json-devel
-```
-
-#### Erlang (needed by uHAL)
-This installs `erlang` from a specific rpm. It would be nice if in the future, the correct version of `erlang` could be made available via the CERN repository
-```bash
-wget https://github.com/rabbitmq/erlang-rpm/releases/download/v25.1.2/erlang-25.1.2-1.el9.x86_64.rpm
-sudo yum -y install erlang-25.1.2-1.el9.x86_64.rpm
-```
-
-#### uHAL libraries (cactus)
-```bash
-sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.el9.repo -o /etc/yum.repos.d/ipbus-sw.repo
-sudo yum clean all
-sudo yum groupinstall -y uhal controlhub
-```
-
-#### ROOT
-```bash
-sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
-  root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
-```
-
-#### Build tools and some nice git extras
-```bash
-sudo yum install -y cmake3 clang-tools-extra git-extras
-```
-
-**gcc-toolset-12**
-```bash
-sudo yum makecache --refresh
-sudo yum -y install gcc-toolset-12
-```
-
-**python3**
-```bash
-sudo yum install -y python3 python3-devel
-```
-
-**protobuf**
-Follow instructions to install protobuf from (just install section is needed) `https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md`
-
-**pybind11**
-If installed in parallel to the directory where you plan to install `Ph2_ACF`, the `setup.sh` script will point to the correct location.
-
-```bash
-wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
-tar zxvf v2.9.2.tar.gz
-```
-
-##
-### clang-format (required to submit merge requests)
-1. Install clang
-```bash
-dnf install clang
-```
-
-2. If you already sourced the environment, you should be able to run the command to format the `Ph2_ACF` (to be done before each merge request):
-```bash
-formatAll
-```
-
+See <https://ph2acf.docs.cern.ch/general/required_install/> for instructions on installing required libraries and tools on RHEL/AlmaLinux 9.
 
 ##
 ### To pull large files
