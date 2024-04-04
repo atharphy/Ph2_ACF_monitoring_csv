@@ -266,11 +266,36 @@ void MPA2Interface::readAllBias(Chip* pChip)
 
 bool MPA2Interface::WriteChipRegBits(Chip* pMPA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify)
 {
-    std::vector<std::pair<std::string, uint16_t>> registerVector;
-    registerVector.push_back({pMaskReg, mask});
-    registerVector.push_back({pRegNode, pValue});
-    registerVector.push_back({pMaskReg, 0xFF});
-    return WriteChipMultReg(pMPA2, registerVector, pVerify);
+    setBoard(pMPA2->getBeBoardId());
+    uint16_t registerValue = pMPA2->getReg(pRegNode);
+    auto cRegMap = pMPA2->getRegMap();
+  
+    // Preserve the original register values changing only the needed bits
+    registerValue = (registerValue & ~mask) + pValue;
+
+    // Preparing registers and masks
+    auto theMaskRegisterMasked   = cRegMap[pMaskReg];
+    theMaskRegisterMasked.fValue = mask;
+    auto success                 = fBoardFW->SingleRegisterWrite(pMPA2, theMaskRegisterMasked, false);
+
+    auto theRegister   = cRegMap[pRegNode];
+    theRegister.fValue = registerValue;
+    success &= fBoardFW->SingleRegisterWrite(pMPA2, theRegister, pVerify);
+
+    auto theMaskRegisterUnmasked   = cRegMap[pMaskReg];
+    theMaskRegisterUnmasked.fValue = 0xFF;
+    success &= fBoardFW->SingleRegisterWrite(pMPA2, theMaskRegisterUnmasked, false);
+    pMPA2->setReg(pRegNode,registerValue);
+    return success;
+
+    // OLD WAY, problematic with monitoring, especially when writing registers composed by subregisters
+    // std::vector<std::pair<std::string, uint16_t>> registerVector;
+    // registerVector.push_back({pMaskReg, mask});
+    // registerVector.push_back({pRegNode, pValue});
+    // registerVector.push_back({pMaskReg, 0xFF});
+    // bool cSuccess = WriteChipMultReg(pMPA2, registerVector, pVerify);
+
+
 }
 
 bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint16_t pValue, bool pVerify)
@@ -804,6 +829,7 @@ float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
     uint32_t ADCReadsAve = 0;
     for(uint32_t i = 0; i < nreads; i++)
     {
+        // this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false); 
         this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x7 << 5), "Mask", 0xE0);
         this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x6 << 5), "Mask", 0xE0);
         std::this_thread::sleep_for(std::chrono::microseconds(100));
@@ -811,6 +837,8 @@ float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
         ADCReadsAve += ADCRead;
         // std::cout<<"ADCRead "<<+ADCRead<<std::endl;
     }
+    // disabling the ADC output after the mesurement
+    this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x0 << 5), "Mask", 0xE0);
 
     // std::cout<<"ADCReadAVE "<<float(ADCReadsAve)/float(nreads)<<std::endl;
     return float(ADCReadsAve) / float(nreads);
