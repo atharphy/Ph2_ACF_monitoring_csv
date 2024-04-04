@@ -230,6 +230,9 @@ void PixelAlive::run()
                                                     ->getChannel<uint8_t>(row, col) = true;
                                                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                             }
+
+                                            auto testedPixel = row * RD53Shared::firstChip->getNRows() + col - colStart;
+                                            if((testedPixel % NPIXELS_PRINTOUT) == 0) LOG(INFO) << GREEN << "Number of tested pixels: " << BOLDYELLOW << NPIXELS_PRINTOUT << RESET;
                                         }
                                     }
                                     static_cast<RD53*>(cChip)->copyMaskFromDefault("en");

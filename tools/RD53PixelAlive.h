@@ -18,6 +18,11 @@
 typedef bool PixelAliveHistograms;
 #endif
 
+// #############
+// # CONSTANTS #
+// #############
+#define NPIXELS_PRINTOUT 336 // Number of tested pixels before next printout
+
 // #########################
 // # PixelAlive test suite #
 // #########################
