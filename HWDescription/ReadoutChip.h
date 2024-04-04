@@ -111,6 +111,30 @@ class ReadoutChip
      */
     float getAverageNoise() const { return fAverageNoise; }
 
+    virtual void setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    }
+
+    virtual    void setIsCalibrationDataUpdated(bool isLoaded)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    }
+
+    virtual bool getIsCalibrationDataUpdated() const 
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return false; 
+    }
+
+    virtual std::map<std::string, float> getADCCalibrationMap() const 
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        std::map<std::string ,float> theSlope;
+        theSlope["empty"] = 0;
+        return theSlope;
+    }
+
   protected:
     std::shared_ptr<ChannelGroupBase> fChipOriginalMask{nullptr};
     float                             fAverageNoise{-1.};

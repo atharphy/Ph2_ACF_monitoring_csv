@@ -234,4 +234,9 @@ std::string MPA2::getRowRegisterName(const std::string& theRegisterName, uint16_
     return rowRegisterName;
 }
 
+void MPA2::setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
+{
+    for(const auto& theInput: theInputMap) fADCcalibrationMap[theInput.first] = theInput.second;
+}
+
 } // namespace Ph2_HwDescription

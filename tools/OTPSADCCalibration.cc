@@ -138,7 +138,11 @@ void OTPSADCCalibration::CalibrateBias()
                         ->getSummary<ADCSlope>()
                         .fOffset = theOffset;
 
-
+                    std::map<std::string, float>          theADCcalibrationMap;
+                    theADCcalibrationMap["ADC_SLOPE"]  = theSlope;
+                    theADCcalibrationMap["ADC_OFFSET"] = theOffset; 
+                    static_cast<ReadoutChip*>(theChip)->setADCCalibrationMap(theADCcalibrationMap);
+                    static_cast<ReadoutChip*>(theChip)->setIsCalibrationDataUpdated(true);
                     // make sure test pads output is disabled
                     fReadoutChipInterface->disableTestPadsOutput(theChip);
 
