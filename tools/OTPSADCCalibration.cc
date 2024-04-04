@@ -233,14 +233,14 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
 
         
         theADCBandGapValue = fReadoutChipInterface->readADCBandGap(theChip);
-        LOG(INFO) << BLUE << " theADCBandGapValue " << theADCBandGapValue << " theADCGroundValue " << theADCGroundValue << RESET;
+        LOG(DEBUG) << BLUE << " theADCBandGapValue " << theADCBandGapValue << " theADCGroundValue " << theADCGroundValue << RESET;
         theADCSlope  = (theBandGapExpectedValue) / (theADCBandGapValue - theADCGroundValue);
         theADCOffset = -(float(theADCGroundValue) * theADCSlope);
-        LOG(INFO) << BLUE << "theADCSlope " << theADCSlope << " theADCOffset " << theADCOffset << RESET;
+        LOG(DEBUG) << BLUE << "theADCSlope " << theADCSlope << " theADCOffset " << theADCOffset << RESET;
         *theVrefRegisterValue = theVrefToUse;
 
         theVrefObtained = theADCMaxValue * theADCSlope + theADCOffset;
-        LOG(INFO) << BOLDRED << "for new theVrefToUse " << theVrefToUse << " New VREF val: " << theVrefObtained << " Expected val: " << theVrefExpectedValue << RESET;
+        LOG(DEBUG) << BOLDMAGENTA << "for new theVrefToUse " << +theVrefToUse << " New VREF val: " << theVrefObtained << " Expected val: " << theVrefExpectedValue << RESET;
     }
 
     LOG(INFO) << BOLDGREEN << "VREF calibrated *theVrefRegisterValue " << +(*theVrefRegisterValue) << " theVrefObtained " << theVrefObtained << RESET;
