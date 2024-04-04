@@ -631,6 +631,13 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     this->InitFMCPower();
 
     // make effective the bitslip registers
+    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20024000});
+    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20124000});
+    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20224000});
+    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20324000});
+    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20424000});
+    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20524000});
+    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20624000});
     cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0xFFF50002});
 
     // configure FC7 after the fast reset

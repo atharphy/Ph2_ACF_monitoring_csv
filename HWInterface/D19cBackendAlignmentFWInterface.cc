@@ -259,8 +259,6 @@ Reply D19cBackendAlignmentFWInterface::AlignWord(AlignerObject pAlignerObject, L
         GetReply("ReturnResult");
         isDone = (fStatus.fDone == 1);
     }
-    SendCommand("ReturnConfig");
-    GetReply("ReturnConfig");
     if(currentInterationNumber == maxNumberOfIterations) LOG(ERROR) << BOLDRED << "D19cBackendAlignmentFWInterface::AlignWord - Align Line procedure timed out" << RESET;
     cReply.fCnfg    = fLineConfiguration;
     cReply.fSuccess = IsLineWordAligned(); //(fStatus.fDone == 1 && IsLineWordAligned());

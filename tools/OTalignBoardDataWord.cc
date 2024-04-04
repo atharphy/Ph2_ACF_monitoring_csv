@@ -155,13 +155,15 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
         for(size_t hybridId = 0; hybridId < 2; ++hybridId)
         {
             std::stringstream registerNameStream;
-            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link"  << std::uppercase << linkNumber << "_hybrid" << hybridId;
+            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link"  << std::uppercase << linkNumber << "_hybrid" << std::dec << hybridId;
             alignedBitslipRegisters.push_back({registerNameStream.str(), 0xFFFFFFFF});
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << registerNameStream.str() << " = " << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, registerNameStream.str()) << std::dec << std::endl;
         }
     }
 
     // Reading all bitslip registers
     fBeBoardInterface->ReadBoardMultReg(theBoard, alignedBitslipRegisters);
+
 
     // Set MSB to 1 to use values from bitslip registers
     std::for_each(alignedBitslipRegisters.begin(), alignedBitslipRegisters.end(), [](std::pair<std::string, uint32_t> &registerNameAndValue) { registerNameAndValue.second = registerNameAndValue.second | 0x80000000; });
