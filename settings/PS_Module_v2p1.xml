@@ -24,30 +24,30 @@
             </Global>
 
             <SSA2_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA2 Id="0" enable="0" configFile="SSA2.txt" />
+            <SSA2 Id="0" enable="1" configFile="SSA2.txt" />
             <SSA2 Id="1" enable="1" configFile="SSA2.txt" />
-            <SSA2 Id="2" enable="0" configFile="SSA2.txt" />
-            <SSA2 Id="3" enable="0" configFile="SSA2.txt" />
-            <SSA2 Id="4" enable="0" configFile="SSA2.txt" />
-            <SSA2 Id="5" enable="0" configFile="SSA2.txt" />
-            <SSA2 Id="6" enable="0" configFile="SSA2.txt" />
-            <SSA2 Id="7" enable="0" configFile="SSA2.txt" />
+            <SSA2 Id="2" enable="1" configFile="SSA2.txt" />
+            <SSA2 Id="3" enable="1" configFile="SSA2.txt" />
+            <SSA2 Id="4" enable="1" configFile="SSA2.txt" />
+            <SSA2 Id="5" enable="1" configFile="SSA2.txt" />
+            <SSA2 Id="6" enable="1" configFile="SSA2.txt" />
+            <SSA2 Id="7" enable="1" configFile="SSA2.txt" />
 
             <MPA2_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA2 Id="8" enable="1" configFile="MPA2.txt" />
-            <MPA2 Id="9" enable="0" configFile="MPA2.txt" />
-            <MPA2 Id="10" enable="0" configFile="MPA2.txt" />
-            <MPA2 Id="11" enable="0" configFile="MPA2.txt" />
-            <MPA2 Id="12" enable="0" configFile="MPA2.txt" />
-            <MPA2 Id="13" enable="0" configFile="MPA2.txt" />
-            <MPA2 Id="14" enable="0" configFile="MPA2.txt" />
-            <MPA2 Id="15" enable="0" configFile="MPA2.txt" />
+            <MPA2 Id="8"  enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="9"  enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="10" enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="11" enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="12" enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="13" enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="14" enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="15" enable="1" configFile="MPA2.txt" />
 
             <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" enable="1" configFile="CIC2_PS.txt" />
         </Hybrid>
         
-        <Hybrid Id="1" enable="0" reset="1" invertClock="0">
+        <Hybrid Id="1" enable="1" reset="1" invertClock="0">
             <Global>
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
                 <HitLogic        stripMode="0" pixelMode="0" pixelClusterCut="5"/> <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
@@ -71,8 +71,8 @@
             <SSA2 Id="7" enable="1" configFile="SSA2.txt" />
 
             <MPA2_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA2 Id="8" enable="1" configFile="MPA2.txt" /> 
-            <MPA2 Id="9" enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="8"  enable="1" configFile="MPA2.txt" /> 
+            <MPA2 Id="9"  enable="1" configFile="MPA2.txt" />
             <MPA2 Id="10" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="11" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="12" enable="1" configFile="MPA2.txt" />
