@@ -478,7 +478,6 @@ bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<st
 bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify)
 {
     setBoard(pSSA2->getBeBoardId());
-    auto cRegMap = pSSA2->getRegMap();
 
     uint16_t registerValue = pSSA2->getReg(pRegNode);
     unsigned posOfFirstOne = 0;
@@ -490,20 +489,31 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
     // Preserve the original register values changing only the needed bits
     registerValue = (registerValue & ~mask) + (pValue << posOfFirstOne);
 
+    std::vector<std::pair<std::string, uint16_t>> registerVector;
+    registerVector.push_back({pMaskReg, mask});
+    registerVector.push_back({pRegNode, (pValue << posOfFirstOne) });
+    registerVector.push_back({pMaskReg, 0xFF});
+    bool cSuccess = WriteChipMultReg(pSSA2, registerVector, pVerify);
+
+    pSSA2->setReg(pRegNode, registerValue);
+
+    return cSuccess;
+
+
     // Preparing registers and masks
-    auto theMaskRegisterMasked   = cRegMap[pMaskReg];
-    theMaskRegisterMasked.fValue = mask;
-    auto success                 = fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterMasked, false);
+    // auto theMaskRegisterMasked   = cRegMap[pMaskReg];
+    // theMaskRegisterMasked.fValue = mask;
+    // auto success                 = fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterMasked, false);
 
-    auto theRegister   = cRegMap[pRegNode];
-    theRegister.fValue = registerValue;
-    success &= fBoardFW->SingleRegisterWrite(pSSA2, theRegister, pVerify);
+    // auto theRegister   = cRegMap[pRegNode];
+    // theRegister.fValue = registerValue;
+    // success &= fBoardFW->SingleRegisterWrite(pSSA2, theRegister, pVerify);
 
-    auto theMaskRegisterUnmasked   = cRegMap[pMaskReg];
-    theMaskRegisterUnmasked.fValue = 0xFF;
-    success &= fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterUnmasked, false);
+    // auto theMaskRegisterUnmasked   = cRegMap[pMaskReg];
+    // theMaskRegisterUnmasked.fValue = 0xFF;
+    // success &= fBoardFW->SingleRegisterWrite(pSSA2, theMaskRegisterUnmasked, false);
 
-    return success;
+    // return success;
 
     // Fabio's comment: I do see the reason why you need to rewrite all the masks and not only the one that changes
     // Also, I think one can write new mask, register and original mask in one shot (FW should write them in the same order)

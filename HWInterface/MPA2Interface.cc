@@ -268,32 +268,19 @@ bool MPA2Interface::WriteChipRegBits(Chip* pMPA2, const std::string& pRegNode, u
 {
     setBoard(pMPA2->getBeBoardId());
     uint16_t registerValue = pMPA2->getReg(pRegNode);
-    auto     cRegMap       = pMPA2->getRegMap();
 
     // Preserve the original register values changing only the needed bits
     registerValue = (registerValue & ~mask) + pValue;
 
-    // Preparing registers and masks
-    auto theMaskRegisterMasked   = cRegMap[pMaskReg];
-    theMaskRegisterMasked.fValue = mask;
-    auto success                 = fBoardFW->SingleRegisterWrite(pMPA2, theMaskRegisterMasked, false);
+    std::vector<std::pair<std::string, uint16_t>> registerVector;
+    registerVector.push_back({pMaskReg, mask});
+    registerVector.push_back({pRegNode, pValue});
+    registerVector.push_back({pMaskReg, 0xFF});
+    bool cSuccess = WriteChipMultReg(pMPA2, registerVector, pVerify);
 
-    auto theRegister   = cRegMap[pRegNode];
-    theRegister.fValue = registerValue;
-    success &= fBoardFW->SingleRegisterWrite(pMPA2, theRegister, pVerify);
-
-    auto theMaskRegisterUnmasked   = cRegMap[pMaskReg];
-    theMaskRegisterUnmasked.fValue = 0xFF;
-    success &= fBoardFW->SingleRegisterWrite(pMPA2, theMaskRegisterUnmasked, false);
     pMPA2->setReg(pRegNode, registerValue);
-    return success;
 
-    // OLD WAY, problematic with monitoring, especially when writing registers composed by subregisters
-    // std::vector<std::pair<std::string, uint16_t>> registerVector;
-    // registerVector.push_back({pMaskReg, mask});
-    // registerVector.push_back({pRegNode, pValue});
-    // registerVector.push_back({pMaskReg, 0xFF});
-    // bool cSuccess = WriteChipMultReg(pMPA2, registerVector, pVerify);
+    return cSuccess;
 }
 
 bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint16_t pValue, bool pVerify)
