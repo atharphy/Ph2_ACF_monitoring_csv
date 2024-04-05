@@ -19,7 +19,7 @@ D19cLinkInterface::D19cLinkInterface(RegManager* theRegManager) : LinkInterface(
 {
     fConfiguration.fResetWait_ms = 2000;
     fConfiguration.fReTry        = 1;
-    fConfiguration.fMaxAttempts  = 20;
+    fConfiguration.fMaxAttempts  = 5;
 }
 
 D19cLinkInterface::~D19cLinkInterface() {}

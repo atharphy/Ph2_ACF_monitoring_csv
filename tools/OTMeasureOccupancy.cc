@@ -77,7 +77,7 @@ void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
     this->enableTestPulse(true);
     LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::injectionDelayScan2S - Scanning Delay for 2S module" << RESET;
 
-    CBCChannelGroupHandler theChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET));
+    CBCChannelGroupHandler theChannelGroupHandler;
     theChannelGroupHandler.setChannelGroupParameters(16, 2);
     setChannelGroupHandler(theChannelGroupHandler);
 
