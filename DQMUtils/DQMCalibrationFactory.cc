@@ -18,6 +18,7 @@
 #include "DQMUtils/DQMHistogramOTverifyMPASSAdataWord.h"
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #include "DQMUtils/DQMHistogramPedestalEqualization.h"
+#include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
 #include "DQMUtils/DQMMetadataIT.h"
 #include "DQMUtils/DQMMetadataOT.h"
 #include "DQMUtils/PSPhysicsHistograms.h"
@@ -70,6 +71,9 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -142,6 +146,18 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("calibrationandpedenoise");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord,
+             DQMHistogramOTPSADCCalibration,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise>("adccalibrationandpedenoise");
     Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
