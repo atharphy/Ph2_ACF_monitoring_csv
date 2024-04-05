@@ -86,16 +86,6 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICwordAlignment,
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
-             DQMHistogramOTCicBypassTest>("testCICbypass");
-    Register<DQMMetadataOT,
-             DQMHistogramOTalignLpGBTinputs,
-             DQMHistogramOTalignBoardDataWord,
-             DQMHistogramOTverifyBoardDataWord,
-             DQMHistogramOTalignStubPackage,
-             DQMHistogramOTCICphaseAlignment,
-             DQMHistogramOTCICwordAlignment,
-             DQMHistogramOTverifyCICdataWord,
-             DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization>("calibration");
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
