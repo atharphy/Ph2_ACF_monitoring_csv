@@ -140,7 +140,6 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
 
 bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
 {
-    LOG(INFO) << BOLDYELLOW << getPatternPrintout(theWordVector, numberOfBytesInSinglePacket, true) << RESET;
     // create a mask that is 0xFF for 5G and 0xFFFF for 10G modules
     uint16_t mask = 0xFF;
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;

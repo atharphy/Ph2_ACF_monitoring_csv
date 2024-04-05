@@ -631,29 +631,20 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     this->InitFMCPower();
 
     // make effective the bitslip registers
-    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20024000});
-    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20124000});
-    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20224000});
-    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20324000});
-    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20424000});
-    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20524000});
-    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0x20624000});
+    for(uint32_t hybridId = 0; hybridId < 16; hybridId++)
+    {
+        for(uint32_t lineId = 0; lineId < 7; lineId++)
+        {
+            uint32_t command =  0x20002000 | (hybridId << 16) | (lineId << 20);
+            cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command});
+        }
+
+    }
     cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0xFFF50002});
 
     // configure FC7 after the fast reset
     LOG(INFO) << BOLDBLUE << "Configuring FC7..." << RESET;
     this->WriteStackReg(cBoardRegs);
-
-    for(uint32_t nline = 0; nline<6; ++nline)
-    {
-        uint32_t command = 0x20000000 + (nline << 20);
-        WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phase_tuning_ctrl = " << std::hex << command << std::dec << std::endl;
-
-        uint32_t reply = ReadReg("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phase_tuning_reply = " << std::hex << reply << std::dec << std::endl << std::endl;
-    }
-
 
     cBoardRegs.clear();
     // load dio5 configuration

@@ -23,14 +23,7 @@ OTalignBoardDataWord::~OTalignBoardDataWord() {}
 void OTalignBoardDataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
-    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.bitslip_Link[0-1A-F]_hybrid[01]");
-    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select");
-    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.readout_block.control.readout_reset");
-    fRegisterHelper->freeBoardRegister("fc7_daq_stat.fast_command_block.general.fsm_state");
+    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.bitslip_Link[0-9A-F]_hybrid[01]");
 
     // need to free bitslip when will be accessible
     // free the registers in case any
@@ -157,7 +150,6 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
             std::stringstream registerNameStream;
             registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link"  << std::uppercase << linkNumber << "_hybrid" << std::dec << hybridId;
             alignedBitslipRegisters.push_back({registerNameStream.str(), 0xFFFFFFFF});
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << registerNameStream.str() << " = " << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, registerNameStream.str()) << std::dec << std::endl;
         }
     }
 
