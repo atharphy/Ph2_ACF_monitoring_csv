@@ -468,12 +468,10 @@ uint32_t PSBiasCal::CalibrateChipBias(ReadoutChip* cChip, Chip* clpGBT, uint32_t
     float ADCLSB = fReadoutChipInterface->calculateADCLSB(cChip,VREFmeasured);
     // if(cChip->getFrontEndType() == FrontEndType::MPA2)
     // {   
-    //     //FIXME Borken after redefining calculateADCLSB
     //     ADCLSB = fReadoutChipInterface->calculateADCLSB(cChip); }
     // }
     // else if(cChip->getFrontEndType() == FrontEndType::SSA2)
     // {
-    //     //FIXME Borken after redefining readADCGround
     //     // ADCLSB = (static_cast<SSA2Interface*>(static_cast<PSInterface*>(fReadoutChipInterface)->getInterface(cChip))->CalculateADCLSB(cChip, VREFmeasured));
     // }
     // else
