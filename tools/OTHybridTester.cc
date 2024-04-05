@@ -917,7 +917,9 @@ bool OTHybridTester::LpGBTTestVTRx()
                 cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
                 if(cReadBackValue == 0xAC)
                 {
-                    clpGBTInterface->resetVTRxLLD(clpGBT);
+                    LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 0);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    LpGBTSetGPIOLevel({static_cast<D19clpGBTInterface*>(flpGBTInterface)->getVtrxResetGPIO()}, 1);
                     cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, 0x0d);
                     cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
                     if(cReadBackValue == 0xA0)
