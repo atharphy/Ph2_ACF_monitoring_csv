@@ -141,7 +141,7 @@ class ReadoutChip
     std::map<std::string, float> fADCcalibrationMap = {
         {"ADC_SLOPE",  0.0002}, // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
         {"ADC_OFFSET", 0.},     // In volts, assumed 0. It depends on the ground value
-    }
+    };
 
 };
 } // namespace Ph2_HwDescription
