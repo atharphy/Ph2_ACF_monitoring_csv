@@ -49,14 +49,14 @@ void PSMonitor::runSSA2RegisterMonitor(std::string registerName)
                 {
                     if(chip->getFrontEndType() == FrontEndType::SSA2)
                     {
-                        uint16_t registerValue            = fTheSystemController->fReadoutChipInterface->readADC(chip, registerName);
+                        uint16_t registerValue = fTheSystemController->fReadoutChipInterface->readADC(chip, registerName);
                         LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
-                        auto theADCcalibrationMap = chip->getADCCalibrationMap();
-                        float theConversionFactor = 1000; // without the conversion factor the voltages are not visible
-                        if (registerName == "AVDD" || registerName == "DVDD" ) theConversionFactor = theConversionFactor*2; // keep into account a voltage divider
-                        auto theSlope  = theADCcalibrationMap["ADC_SLOPE"]*theConversionFactor;
-                        auto theOffset = theADCcalibrationMap["ADC_OFFSET"]*theConversionFactor;
-                        registerValue = registerValue*theSlope + theOffset;
+                        auto  theADCcalibrationMap = chip->getADCCalibrationMap();
+                        float theConversionFactor  = 1000;                                                                  // without the conversion factor the voltages are not visible
+                        if(registerName == "AVDD" || registerName == "DVDD") theConversionFactor = theConversionFactor * 2; // keep into account a voltage divider
+                        auto theSlope  = theADCcalibrationMap["ADC_SLOPE"] * theConversionFactor;
+                        auto theOffset = theADCcalibrationMap["ADC_OFFSET"] * theConversionFactor;
+                        registerValue  = registerValue * theSlope + theOffset;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
                         theSSA2RegisterContainer.getObject(board->getId())
                             ->getObject(opticalGroup->getId())
@@ -95,14 +95,14 @@ void PSMonitor::runMPA2RegisterMonitor(std::string registerName)
                 {
                     if(chip->getFrontEndType() == FrontEndType::MPA2)
                     {
-                        uint16_t registerValue            = fTheSystemController->fReadoutChipInterface->readADC(chip, registerName);
+                        uint16_t registerValue = fTheSystemController->fReadoutChipInterface->readADC(chip, registerName);
                         LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
-                        auto theADCcalibrationMap = chip->getADCCalibrationMap();
-                        float theConversionFactor = 1000; // without the conversion factor the voltages are not visible
-                        if (registerName == "AVDD" || registerName == "DVDD" ) theConversionFactor = theConversionFactor*2; // keep into account a voltage divider
-                        auto theSlope  = theADCcalibrationMap["ADC_SLOPE"]*theConversionFactor;
-                        auto theOffset = theADCcalibrationMap["ADC_OFFSET"]*theConversionFactor;
-                        registerValue = registerValue*theSlope + theOffset;
+                        auto  theADCcalibrationMap = chip->getADCCalibrationMap();
+                        float theConversionFactor  = 1000;                                                                  // without the conversion factor the voltages are not visible
+                        if(registerName == "AVDD" || registerName == "DVDD") theConversionFactor = theConversionFactor * 2; // keep into account a voltage divider
+                        auto theSlope  = theADCcalibrationMap["ADC_SLOPE"] * theConversionFactor;
+                        auto theOffset = theADCcalibrationMap["ADC_OFFSET"] * theConversionFactor;
+                        registerValue  = registerValue * theSlope + theOffset;
                         ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
                         theMPA2RegisterContainer.getObject(board->getId())
                             ->getObject(opticalGroup->getId())

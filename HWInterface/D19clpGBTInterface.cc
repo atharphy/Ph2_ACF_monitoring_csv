@@ -199,7 +199,6 @@ void D19clpGBTInterface::hold2SModuleResets(Ph2_HwDescription::Chip* pChip)
     }
 
     // Fabio: I do not think this part should be here, but I keep it for consistency with the previous code
-
 }
 
 void D19clpGBTInterface::holdPSModuleResets(Ph2_HwDescription::Chip* pChip)

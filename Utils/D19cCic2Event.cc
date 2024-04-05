@@ -72,7 +72,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             }
         } // hybrids
     }     // opticalGroup
-    fBeId = pBoard->getId();
+    fBeId      = pBoard->getId();
     fFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
 
     this->Set(pBoard, list);

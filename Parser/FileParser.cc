@@ -490,7 +490,7 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     if(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cSSA2->setAverageNoise(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
     if(pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
     {
-        std::map < std::string, float > theADCcalibration;
+        std::map<std::string, float> theADCcalibration;
         theADCcalibration["ADC_SLOPE"]  = pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
         theADCcalibration["ADC_OFFSET"] = pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
 
@@ -643,7 +643,7 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
     if(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cMPA->setAverageNoise(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
     if(pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
     {
-        std::map < std::string, float > theADCcalibration;
+        std::map<std::string, float> theADCcalibration;
         theADCcalibration["ADC_SLOPE"]  = pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
         theADCcalibration["ADC_OFFSET"] = pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
 

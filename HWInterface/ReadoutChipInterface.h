@@ -119,7 +119,7 @@ class ReadoutChipInterface : public ChipInterface
     }
 
     /*!
-     * \brief Read the Vref register value 
+     * \brief Read the Vref register value
      * \param pChip: pointer to Chip object
      */
     virtual uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
@@ -160,18 +160,16 @@ class ReadoutChipInterface : public ChipInterface
         return 0;
     }
 
-
     /*!
-     * \brief Get the table cointaing < bias register name, < default register value, expected value in volts>> 
+     * \brief Get the table cointaing < bias register name, < default register value, expected value in volts>>
      * \param pChip: pointer to Chip object
      */
-    virtual const std::map<std::string, std::pair<uint8_t,float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pChip)
+    virtual const std::map<std::string, std::pair<uint8_t, float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pChip)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-        std::map<std::string, std::pair<uint8_t,float>> theBiasStucture;
-        theBiasStucture["empty"] = std::make_pair(255,-1);
+        std::map<std::string, std::pair<uint8_t, float>> theBiasStucture;
+        theBiasStucture["empty"] = std::make_pair(255, -1);
         return theBiasStucture;
-
     }
 
     /*!
@@ -185,7 +183,7 @@ class ReadoutChipInterface : public ChipInterface
     }
 
     /*!
-     * \brief Get the ADC Vref expected value. 
+     * \brief Get the ADC Vref expected value.
      * \param pChip: pointer to Chip object
      */
     virtual float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pChip)
@@ -195,7 +193,7 @@ class ReadoutChipInterface : public ChipInterface
     }
 
     /*!
-     * \brief Get the ADC precision. Currently estimated from 1 skeleton testing 
+     * \brief Get the ADC precision. Currently estimated from 1 skeleton testing
      * \param pChip: pointer to Chip object
      */
     virtual float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pChip)
@@ -205,7 +203,7 @@ class ReadoutChipInterface : public ChipInterface
     }
 
     /*!
-     * \brief Get the Vref allowed minimum value. 
+     * \brief Get the Vref allowed minimum value.
      * \param pChip: pointer to Chip object
      */
     virtual float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pChip)
@@ -215,7 +213,7 @@ class ReadoutChipInterface : public ChipInterface
     }
 
     /*!
-     * \brief Get the Vref allowed maximum value. 
+     * \brief Get the Vref allowed maximum value.
      * \param pChip: pointer to Chip object
      */
     virtual float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pChip)
@@ -242,7 +240,6 @@ class ReadoutChipInterface : public ChipInterface
      */
     virtual bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) = 0;
 
-
     /*!
      * \brief Disable the test pad output
      * \param pChip: pointer to Chip object
@@ -253,15 +250,14 @@ class ReadoutChipInterface : public ChipInterface
         return false;
     }
 
-
     /// @brief Tune the ADC registers. One should first tune Vref using the BandGap as reference to tune it and then tune the different bias registers.
-    /// @param theChip: pointer to Chip object 
-    /// @param theSlope: ADC slope 
+    /// @param theChip: pointer to Chip object
+    /// @param theSlope: ADC slope
     /// @param theExpectedValue: Register expected value
     /// @param theDACtoTuneName: Register name
     /// @param theDACValue: the initial register value
-    /// @param isVref: tell if the register being tuned is the reference one 
-    /// @return 
+    /// @param isVref: tell if the register being tuned is the reference one
+    /// @return
     virtual uint8_t TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;

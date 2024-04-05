@@ -121,11 +121,7 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     }
 }
 
-bool PSInterface::disableTestPadsOutput(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->disableTestPadsOutput(pPS);
-
-}
+bool PSInterface::disableTestPadsOutput(ReadoutChip* pPS) { return getInterface(pPS)->disableTestPadsOutput(pPS); }
 
 // bool PSInterface::selectTestPadsOutput(ReadoutChip* pPS, std::string theRegisterName)
 // {
@@ -133,82 +129,32 @@ bool PSInterface::disableTestPadsOutput(ReadoutChip* pPS)
 
 // }
 
-uint32_t PSInterface::readADCGround(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->readADCGround(pPS);
+uint32_t PSInterface::readADCGround(ReadoutChip* pPS) { return getInterface(pPS)->readADCGround(pPS); }
 
-}
+uint32_t PSInterface::readADC(ReadoutChip* pPS, std::string theADCName) { return getInterface(pPS)->readADC(pPS, theADCName); }
 
-uint32_t PSInterface::readADC(ReadoutChip* pPS, std::string theADCName)
-{
-    return getInterface(pPS)->readADC(pPS, theADCName);
+uint32_t PSInterface::readADCVref(ReadoutChip* pPS) { return getInterface(pPS)->readADCVref(pPS); }
 
-}
+uint32_t PSInterface::readVrefRegister(ReadoutChip* pPS) { return getInterface(pPS)->readVrefRegister(pPS); }
 
-uint32_t PSInterface::readADCVref(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->readADCVref(pPS);
+uint32_t PSInterface::readADCBandGap(ReadoutChip* pPS) { return getInterface(pPS)->readADCBandGap(pPS); }
 
-}
+bool PSInterface::setVref(ReadoutChip* pPS, uint16_t theVrefRegisterValue) { return getInterface(pPS)->setVref(pPS, theVrefRegisterValue); }
 
-uint32_t PSInterface::readVrefRegister(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->readVrefRegister(pPS);
+bool PSInterface::setVrefFromFuseID(ReadoutChip* pPS) { return getInterface(pPS)->setVrefFromFuseID(pPS); }
 
-}
+const std::map<std::string, std::pair<uint8_t, float>> PSInterface::getBiasStructureDefaultTable(ReadoutChip* pPS) { return getInterface(pPS)->getBiasStructureDefaultTable(pPS); }
 
-uint32_t PSInterface::readADCBandGap(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->readADCBandGap(pPS);
+float PSInterface::calculateADCLSB(ReadoutChip* pPS, float theVrefValue) { return getInterface(pPS)->calculateADCLSB(pPS, theVrefValue); }
 
-}
+float PSInterface::getBandGapExpectedValue(ReadoutChip* pPS) { return getInterface(pPS)->getBandGapExpectedValue(pPS); }
 
-bool PSInterface::setVref(ReadoutChip* pPS, uint16_t theVrefRegisterValue)
-{
-    return getInterface(pPS)->setVref(pPS, theVrefRegisterValue);
+float PSInterface::getVrefExpectedValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefExpectedValue(pPS); }
 
-}
+float PSInterface::getVrefPrecision(ReadoutChip* pPS) { return getInterface(pPS)->getVrefPrecision(pPS); }
 
-bool PSInterface::setVrefFromFuseID(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->setVrefFromFuseID(pPS);
-
-}
-
-const std::map<std::string, std::pair<uint8_t,float>> PSInterface::getBiasStructureDefaultTable(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->getBiasStructureDefaultTable(pPS);
-}
-
-float PSInterface::calculateADCLSB(ReadoutChip* pPS, float theVrefValue)
-{
-    return getInterface(pPS)->calculateADCLSB(pPS,theVrefValue);
-}
-
-float PSInterface::getBandGapExpectedValue(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->getBandGapExpectedValue(pPS);
-
-}
-
-float PSInterface::getVrefExpectedValue(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->getVrefExpectedValue(pPS);
-}
-
-float PSInterface::getVrefPrecision(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->getVrefPrecision(pPS);
-}
-
-float PSInterface::getVrefMinValue(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->getVrefMinValue(pPS);
-}
-float PSInterface::getVrefMaxValue(ReadoutChip* pPS)
-{
-    return getInterface(pPS)->getVrefMaxValue(pPS);
-}
+float PSInterface::getVrefMinValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefMinValue(pPS); }
+float PSInterface::getVrefMaxValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefMaxValue(pPS); }
 
 bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
@@ -259,7 +205,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
     else
         this->WriteChipReg(theChip, theDACtoTuneName, theDACMinValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t theOffsetValue = isVref == 0 ? this->readADC(theChip,theDACtoTuneName) : this->readADCBandGap(theChip);
+    uint32_t theOffsetValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
     LOG(INFO) << MAGENTA << "The register for " << theDACtoTuneName << " at " << +theDACMinValue << "  gives theOffsetValue " << theOffsetValue << " [ADC]" << RESET;
 
     // now set the DAC value to its max value
@@ -269,7 +215,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
     else
         this->WriteChipReg(theChip, theDACtoTuneName, theDACMaxValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t theMaxValue = isVref == 0 ? this->readADC(theChip,theDACtoTuneName): this->readADCBandGap(theChip);
+    uint32_t theMaxValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
     LOG(INFO) << MAGENTA << "The register for " << theDACtoTuneName << " at " << +theDACMaxValue << " gives theMaxValue " << theMaxValue << " [ADC]" << RESET;
 
     float theLSB = abs(float(theMaxValue) - float(theOffsetValue)) / float(theDACMaxValue);
@@ -280,20 +226,20 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
     theADCDExpectedValue       = theExpectedValue / theSlope + theGroundADCValue; // converted from volts to ADC
     LOG(INFO) << MAGENTA << "The register for " << theDACtoTuneName << " expected value in ADC " << theADCDExpectedValue << " [ADC]" << RESET;
 
-    // now set the DAC value to its default value and get the value at the default value 
+    // now set the DAC value to its default value and get the value at the default value
     if(isVref)
         this->setVref(theChip, theDACValue);
     else
         this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t theCurrentValue = isVref == 0 ? this->readADC(theChip,theDACtoTuneName): this->readADCBandGap(theChip);
+    uint32_t theCurrentValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
     LOG(INFO) << MAGENTA << "The register to tune at nominal value " << +theDACValue << " gives theCurrentValue " << theCurrentValue << " [ADC]" << RESET;
 
     int theStepSign = 0;
     if(theADCDExpectedValue < theCurrentValue)
-        theStepSign =(isVref) ? 1 : -1;
+        theStepSign = (isVref) ? 1 : -1;
     else
-        theStepSign =(isVref) ? -1 : 1;
+        theStepSign = (isVref) ? -1 : 1;
 
     uint8_t theSteps       = uint8_t(std::round(abs(float(theADCDExpectedValue) - float(theCurrentValue)) / float(theLSB)));
     uint8_t theDACNewValue = 0;
@@ -303,10 +249,10 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
         theDACNewValue = theDACMinValue;
     else
         theDACNewValue = theDACValue + theStepSign * theSteps;
- 
+
     theDACValue = theDACNewValue;
 
-    LOG(INFO) << MAGENTA << "Predicted number of register steps to get the expected value " << +theSteps << " giving the new register value of "<< +theDACNewValue << RESET;
+    LOG(INFO) << MAGENTA << "Predicted number of register steps to get the expected value " << +theSteps << " giving the new register value of " << +theDACNewValue << RESET;
 
     // now writing the DAC to the new value estimated above
     if(isVref)
@@ -315,15 +261,15 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
         this->WriteChipReg(theChip, theDACtoTuneName, theDACNewValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    uint32_t theNewValue = isVref == 0 ? this->readADC(theChip,theDACtoTuneName): this->readADCBandGap(theChip);
+    uint32_t theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
     LOG(INFO) << MAGENTA << "After changing value for DAC " << theDACtoTuneName << " to " << +theDACValue << " the ADC value is " << theNewValue << " [ADC]" << RESET;
 
     // Now checking if we can go even closer to the expected value
-    bool     isSearching = true;
+    bool     isSearching         = true;
     uint32_t theCurrentIteration = 0;
     while(isSearching)
     {
-        LOG(INFO) << YELLOW << "Checking if we can go closer to the expected value. Iteration "<< theCurrentIteration << RESET;
+        LOG(INFO) << YELLOW << "Checking if we can go closer to the expected value. Iteration " << theCurrentIteration << RESET;
         LOG(DEBUG) << MAGENTA << " theDACNewValue - 1 " << +theDACNewValue - 1 << RESET;
         uint8_t theDACDownValue = std::max(theDACMinValue, uint8_t(theDACNewValue - 1));
         if(isVref)
@@ -331,8 +277,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
         else
             this->WriteChipReg(theChip, theDACtoTuneName, theDACDownValue);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        uint32_t theNewValueDown =  isVref == 0 ? this->readADC(theChip,theDACtoTuneName): this->readADCBandGap(theChip);
-
+        uint32_t theNewValueDown = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
 
         uint8_t theDACUpValue = std::min(uint8_t(theDACMaxValue), uint8_t(theDACNewValue + 1));
         LOG(DEBUG) << MAGENTA << "theDACUpValue " << +theDACUpValue << RESET;
@@ -341,29 +286,30 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
         else
             this->WriteChipReg(theChip, theDACtoTuneName, theDACUpValue);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        uint32_t theNewValueUp = isVref == 0 ? this->readADC(theChip,theDACtoTuneName): this->readADCBandGap(theChip);
-    
+        uint32_t theNewValueUp = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+
         float theExpectedDifference     = std::fabs(theADCDExpectedValue - theNewValue);
         float theExpectedDifferenceDown = std::fabs(theADCDExpectedValue - theNewValueDown);
         float theExpectedDifferenceUp   = std::fabs(theADCDExpectedValue - theNewValueUp);
 
         if((theExpectedDifferenceDown < theExpectedDifference) || (theExpectedDifferenceUp < theExpectedDifference))
         {
-            LOG(INFO) << BOLDRED << "Not precise extrapolation in OTPSADCCalibration: theExpectedDifferenceDown:" << theExpectedDifferenceDown << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << RESET;
+            LOG(INFO) << BOLDRED << "Not precise extrapolation in OTPSADCCalibration: theExpectedDifferenceDown:" << theExpectedDifferenceDown
+                      << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << RESET;
             if((theExpectedDifferenceDown < theExpectedDifference))
             {
-                theDACValue     = theDACDownValue;
+                theDACValue    = theDACDownValue;
                 theDACNewValue = theDACNewValue - 1;
             }
             if((theExpectedDifferenceUp < theExpectedDifference))
             {
-                theDACValue     = theDACUpValue;
+                theDACValue    = theDACUpValue;
                 theDACNewValue = std::min(uint8_t(theDACMaxValue), uint8_t(theDACNewValue + 1));
             }
         }
         else
         {
-            LOG(INFO) << BOLDGREEN << "Good extrapolation in OTPSADCCalibration for register value "<< +theDACValue << RESET;
+            LOG(INFO) << BOLDGREEN << "Good extrapolation in OTPSADCCalibration for register value " << +theDACValue << RESET;
             if(isVref)
                 this->setVref(theChip, theDACValue);
             else
@@ -371,7 +317,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
             std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
             usleep(100000);
-            uint32_t theCheckValue = isVref == 0 ? this->readADC(theChip,theDACtoTuneName): this->readADCBandGap(theChip);
+            uint32_t theCheckValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
             LOG(DEBUG) << BOLDGREEN << "Register " << theDACtoTuneName << " gives ADC " << theCheckValue << RESET;
             isSearching = false;
         }
@@ -382,8 +328,8 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
             this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-        theNewValue = isVref == 0 ? this->readADC(theChip,theDACtoTuneName): this->readADCBandGap(theChip);
- 
+        theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+
         theCurrentIteration += 1;
     }
 
@@ -391,6 +337,5 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
 
     return theDACValue;
 }
-
 
 } // namespace Ph2_HwInterface

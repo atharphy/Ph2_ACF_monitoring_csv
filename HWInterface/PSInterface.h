@@ -84,8 +84,8 @@ class PSInterface : public ReadoutChipInterface
 
     float calculateADCLSB(Ph2_HwDescription::ReadoutChip* pPS, float theVrefValue) override;
 
-    const std::map<std::string, std::pair<uint8_t,float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pPS);
-    
+    const std::map<std::string, std::pair<uint8_t, float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pPS);
+
     float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pPS);
     float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pPS);
     float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pPS);
@@ -101,7 +101,7 @@ class PSInterface : public ReadoutChipInterface
     bool disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pPS);
     // bool selectTestPadsOutput(Ph2_HwDescription::ReadoutChip* pPS, std::string theRegisterName);
     uint8_t TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref = false);
-    void SetOptical()
+    void    SetOptical()
     {
         bool cFoundLpgbt = this->lpGBTFound();
         fTheSSA2Interface->setWithLpGBT(cFoundLpgbt);

@@ -34,11 +34,11 @@ class OTPSADCCalibration : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
-    void    CalibrateBias();
-    float   CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip, uint8_t* theVrefRegisterValue);
-    void    CalibrateChipBias(Ph2_HwDescription::ReadoutChip* theChip, float theVrefValue);
+    void  CalibrateBias();
+    float CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip, uint8_t* theVrefRegisterValue);
+    void  CalibrateChipBias(Ph2_HwDescription::ReadoutChip* theChip, float theVrefValue);
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTPSADCCalibration fDQMHistogramOTPSADCCalibration;

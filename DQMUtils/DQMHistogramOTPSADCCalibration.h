@@ -74,7 +74,6 @@ class DQMHistogramOTPSADCCalibration : public DQMHistogramBase
      */
     void fillVDDPlots(DetectorDataContainer& theVDDContainer, bool isAVDD);
 
-
   private:
     DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fChipSlopeGraphs;

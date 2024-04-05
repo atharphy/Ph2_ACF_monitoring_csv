@@ -268,8 +268,8 @@ bool MPA2Interface::WriteChipRegBits(Chip* pMPA2, const std::string& pRegNode, u
 {
     setBoard(pMPA2->getBeBoardId());
     uint16_t registerValue = pMPA2->getReg(pRegNode);
-    auto cRegMap = pMPA2->getRegMap();
-  
+    auto     cRegMap       = pMPA2->getRegMap();
+
     // Preserve the original register values changing only the needed bits
     registerValue = (registerValue & ~mask) + pValue;
 
@@ -285,7 +285,7 @@ bool MPA2Interface::WriteChipRegBits(Chip* pMPA2, const std::string& pRegNode, u
     auto theMaskRegisterUnmasked   = cRegMap[pMaskReg];
     theMaskRegisterUnmasked.fValue = 0xFF;
     success &= fBoardFW->SingleRegisterWrite(pMPA2, theMaskRegisterUnmasked, false);
-    pMPA2->setReg(pRegNode,registerValue);
+    pMPA2->setReg(pRegNode, registerValue);
     return success;
 
     // OLD WAY, problematic with monitoring, especially when writing registers composed by subregisters
@@ -294,8 +294,6 @@ bool MPA2Interface::WriteChipRegBits(Chip* pMPA2, const std::string& pRegNode, u
     // registerVector.push_back({pRegNode, pValue});
     // registerVector.push_back({pMaskReg, 0xFF});
     // bool cSuccess = WriteChipMultReg(pMPA2, registerVector, pVerify);
-
-
 }
 
 bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint16_t pValue, bool pVerify)
@@ -310,10 +308,10 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     else if(pRegName == "DL_ctrl")
         return this->setInjectionDelay(pMPA2, pValue);
     else if(pRegName == "ADC_VREF")
-    { 
-        uint8_t cRegMask  = 0x1F;
-        // return this->WriteChipReg(pMPA2, "ADCcontrol", pValue , false); 
-        return this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false); 
+    {
+        uint8_t cRegMask = 0x1F;
+        // return this->WriteChipReg(pMPA2, "ADCcontrol", pValue , false);
+        return this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false);
     }
     else if(pRegName == "Offsets") { return this->WriteChipReg(pMPA2, "TrimDAC_ALL", pValue, false); }
     else if(pRegName == "ReadoutMode") { return this->WriteChipRegBits(pMPA2, "Control_1", pValue, "Mask", 0x3, false); }
@@ -775,7 +773,7 @@ bool MPA2Interface::setAllBiasBlockRegisters(Chip* pMPA2, std::string registerNa
 uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    auto theRegister = ADC_CONTROL_TABLE.find(pRegName);
+    auto                                  theRegister = ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == ADC_CONTROL_TABLE.end())
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
@@ -808,19 +806,19 @@ uint32_t MPA2Interface::readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
 uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    return readADC(pChip,"VBG");
+    return readADC(pChip, "VBG");
 }
 
 uint32_t MPA2Interface::readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    uint32_t theVrefADC = readADC(pChip,"ADC_VREF");
+    uint32_t theVrefADC = readADC(pChip, "ADC_VREF");
     return theVrefADC;
 }
 
 uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t theVrefADC = ReadChipReg(pChip,"ADC_VREF");
+    uint32_t                              theVrefADC = ReadChipReg(pChip, "ADC_VREF");
     return theVrefADC;
 }
 
@@ -829,7 +827,7 @@ float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
     uint32_t ADCReadsAve = 0;
     for(uint32_t i = 0; i < nreads; i++)
     {
-        // this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false); 
+        // this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false);
         this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x7 << 5), "Mask", 0xE0);
         this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x6 << 5), "Mask", 0xE0);
         std::this_thread::sleep_for(std::chrono::microseconds(100));
@@ -904,49 +902,28 @@ bool MPA2Interface::setVref(ReadoutChip* pMPA2, uint16_t VREFvalue)
     // return this->WriteChipRegBits(pMPA2, "ADCcontrol", VREFvalue, "Mask", (0x1F));
 }
 
-const std::map<std::string, std::pair<uint8_t,float>> MPA2Interface::getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pMPA2)
-{
-    return MPA2_BIAS_STRUCTURE_DEFAULT;
-}
+const std::map<std::string, std::pair<uint8_t, float>> MPA2Interface::getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pMPA2) { return MPA2_BIAS_STRUCTURE_DEFAULT; }
 
-//FIXME At the moment we are setting the exepected values 
-// of bandgap and ADC_VREF to the default nominal value.
-// This will be updated once we have the real values for each chip
-float MPA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2)
-{
-    return MPA2_VBG_EXPECTED;
-
-}
-//FIXME At the moment we are setting the exepected values 
-// of bandgap and ADC_VREF to the default nominal value.
-// This will be updated once we have the real values for each chip
-float MPA2Interface::getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2)
-{
-    return MPA2_VREF_EXPECTED;
-}
-//FIXME At the moment we are setting the exepected values 
-// of bandgap and ADC_VREF to the default nominal value.
-// This will be updated once we have the real values for each chip
-float MPA2Interface::getVrefPrecision(Ph2_HwDescription::ReadoutChip* pMPA2)
-{
-    return MPA2_ADC_PRECISION;
-}
-//FIXME At the moment we are setting the exepected values 
-// of bandgap and ADC_VREF to the default nominal value.
-// This will be updated once we have the real values for each chip
-float MPA2Interface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pMPA2)
-{
-    return MPA2_VREF_MIN;
-}
-//FIXME At the moment we are setting the exepected values 
-// of bandgap and ADC_VREF to the default nominal value.
-// This will be updated once we have the real values for each chip
-float MPA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pMPA2)
-{
-    return MPA2_VREF_MAX;
-}
-
-
+// FIXME At the moment we are setting the exepected values
+//  of bandgap and ADC_VREF to the default nominal value.
+//  This will be updated once we have the real values for each chip
+float MPA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2) { return MPA2_VBG_EXPECTED; }
+// FIXME At the moment we are setting the exepected values
+//  of bandgap and ADC_VREF to the default nominal value.
+//  This will be updated once we have the real values for each chip
+float MPA2Interface::getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2) { return MPA2_VREF_EXPECTED; }
+// FIXME At the moment we are setting the exepected values
+//  of bandgap and ADC_VREF to the default nominal value.
+//  This will be updated once we have the real values for each chip
+float MPA2Interface::getVrefPrecision(Ph2_HwDescription::ReadoutChip* pMPA2) { return MPA2_ADC_PRECISION; }
+// FIXME At the moment we are setting the exepected values
+//  of bandgap and ADC_VREF to the default nominal value.
+//  This will be updated once we have the real values for each chip
+float MPA2Interface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pMPA2) { return MPA2_VREF_MIN; }
+// FIXME At the moment we are setting the exepected values
+//  of bandgap and ADC_VREF to the default nominal value.
+//  This will be updated once we have the real values for each chip
+float MPA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pMPA2) { return MPA2_VREF_MAX; }
 
 bool MPA2Interface::disableTestPadsOutput(ReadoutChip* pMPA2)
 {

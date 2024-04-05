@@ -53,14 +53,14 @@ class SSA2Interface : public ReadoutChipInterface
     uint32_t readADCVref(Ph2_HwDescription::ReadoutChip* pSSA2);
     uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pSSA2);
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pSSA2) override;
-    bool     setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pSSA2)  override;
-    bool     setVref(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t theVrefRegisterValue)  override;
+    bool     setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pSSA2) override;
+    bool     setVref(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t theVrefRegisterValue) override;
     float    calculateADCLSB(Ph2_HwDescription::ReadoutChip* pSSA2, float theVrefValue = SSA2_VREF_EXPECTED) override;
     bool     disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pSSA2);
     // bool     selectTestPadsOutput(Ph2_HwDescription::ReadoutChip* pMPA2, std::string theRegisterName);
-    bool     injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
+    bool injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
 
-    const std::map<std::string, std::pair<uint8_t,float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pSSA2);
+    const std::map<std::string, std::pair<uint8_t, float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pSSA2);
 
     float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pSSA2);
     float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pSSA2);
@@ -79,15 +79,14 @@ class SSA2Interface : public ReadoutChipInterface
         {"Temperature", 16},  {"AVDD", 17},          {"PVDD", 18},         {"DVDD", 19}};
 
     // Map of the bias structure registers
-    // < register name , <default register value (DAC) , expected value in V on the test pad> 
-    typedef std::pair<uint8_t, float>  DAC_expectedValue;
-    const std::map<std::string, DAC_expectedValue> SSA2_BIAS_STRUCTURE_DEFAULT = {
-      {"Bias_D5BFEED",  std::make_pair(0x0F, 0.082)},      
-      {"Bias_D5PREAMP", std::make_pair(0x0F, 0.082)},      
-      {"Bias_D5TDR",    std::make_pair(0x0F, 0.115)},      
-      {"Bias_D5ALLV",   std::make_pair(0x0F, 0.082)},      
-      {"Bias_D5ALLI",   std::make_pair(0x0F, 0.082)},
-      {"Bias_D5DAC8",   std::make_pair(0x0F, 0.086)}};
+    // < register name , <default register value (DAC) , expected value in V on the test pad>
+    typedef std::pair<uint8_t, float>              DAC_expectedValue;
+    const std::map<std::string, DAC_expectedValue> SSA2_BIAS_STRUCTURE_DEFAULT = {{"Bias_D5BFEED", std::make_pair(0x0F, 0.082)},
+                                                                                  {"Bias_D5PREAMP", std::make_pair(0x0F, 0.082)},
+                                                                                  {"Bias_D5TDR", std::make_pair(0x0F, 0.115)},
+                                                                                  {"Bias_D5ALLV", std::make_pair(0x0F, 0.082)},
+                                                                                  {"Bias_D5ALLI", std::make_pair(0x0F, 0.082)},
+                                                                                  {"Bias_D5DAC8", std::make_pair(0x0F, 0.086)}};
 
     // std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0}, // FIXMEEEE this map is wrong!! the one in ReadADC is correct                                                  // FIXME
     //                                            {"PreampBias", 1},

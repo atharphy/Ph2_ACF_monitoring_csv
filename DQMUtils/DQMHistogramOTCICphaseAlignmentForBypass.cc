@@ -28,7 +28,6 @@ void DQMHistogramOTCICphaseAlignmentForBypass::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-
 }
 
 //========================================================================================================================

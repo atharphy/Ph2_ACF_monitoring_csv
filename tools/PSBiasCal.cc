@@ -465,9 +465,9 @@ uint32_t PSBiasCal::CalibrateChipBias(ReadoutChip* cChip, Chip* clpGBT, uint32_t
     // uint32_t    DAC_new_val = 0;
     std::string DAC;
     // uint8_t     regIndex = 0;
-    float ADCLSB = fReadoutChipInterface->calculateADCLSB(cChip,VREFmeasured);
+    float ADCLSB = fReadoutChipInterface->calculateADCLSB(cChip, VREFmeasured);
     // if(cChip->getFrontEndType() == FrontEndType::MPA2)
-    // {   
+    // {
     //     ADCLSB = fReadoutChipInterface->calculateADCLSB(cChip); }
     // }
     // else if(cChip->getFrontEndType() == FrontEndType::SSA2)

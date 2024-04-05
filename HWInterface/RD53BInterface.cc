@@ -822,7 +822,6 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     const int         nDEM             = 16;               // Dynamic Element Matching
     const std::string regName          = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
 
-
     const std::unordered_map<std::string, std::string> observableToCalibrationConstant = {
         {"TEMPSENS_ANA_SLDO", "TEMPSENS_IDEAL_FACTOR_ANA"},
         {"TEMPSENS_DIG_SLDO", "TEMPSENS_IDEAL_FACTOR_DIG"},
