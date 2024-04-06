@@ -223,13 +223,13 @@ void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
     fDetectorContainer->setEnabledAll(true);
 }
 
-void    CalibBase::setSinglePixel(ReadoutChip* pChip, size_t row, size_t col, bool enable, bool inject)
+void CalibBase::setSinglePixel(ReadoutChip* pChip, size_t row, size_t col, bool enable, bool inject)
 {
-  RD53* pRD53 = static_cast<RD53*>(pChip);
-  
-  pRD53->enablePixel(row, col, enable);
-  pRD53->injectPixel(row, col, inject);
-  static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteRD53Mask(pRD53,2,false,row,col);
+    RD53* pRD53 = static_cast<RD53*>(pChip);
+
+    pRD53->enablePixel(row, col, enable);
+    pRD53->injectPixel(row, col, inject);
+    static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteRD53Mask(pRD53, 2, false, row, col);
 }
 
 void CalibBase::ResetBoardsReadBkFIFO()

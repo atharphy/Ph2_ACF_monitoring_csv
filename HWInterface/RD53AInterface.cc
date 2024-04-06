@@ -259,7 +259,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
     // bit[1]: broadcast to LIN FE
     // bit[0]: broadcast to DIFF FE
 
-    if (writeMode == 0)
+    if(writeMode == 0)
     {
         // #####################
         // # Set autoincrement #
@@ -340,14 +340,15 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
         }
     }
     else
-      {
-	auto data = RD53AInterface::GetPixelConfig(mask, theRow, theCol, highGain);
-	RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
-	RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, theCol / 2}, commandList);
-	RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, theRow}, commandList);
-	RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, data}, commandList);
-      }
-    
+    {
+        auto data = RD53AInterface::GetPixelConfig(mask, theRow, theCol, highGain);
+
+        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
+        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, theCol / 2}, commandList);
+        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, theRow}, commandList);
+        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, data}, commandList);
+    }
+
     // ###################################
     // # Write commands to frontend chip #
     // ###################################

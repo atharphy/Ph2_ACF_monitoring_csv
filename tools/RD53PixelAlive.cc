@@ -209,11 +209,11 @@ void PixelAlive::run()
                                             // ################
                                             // # Run analysis #
                                             // ################
-					    CalibBase::setSinglePixel(cChip, row, col, true, true);
+                                            CalibBase::setSinglePixel(cChip, row, col, true, true);
                                             this->SetTestPulse(false);
                                             this->fMaskChannelsFromOtherGroups = false;
                                             this->measureData(1, 1);
-					    CalibBase::setSinglePixel(cChip, row, col, false, false);
+                                            CalibBase::setSinglePixel(cChip, row, col, false, false);
 
                                             // #####################
                                             // # Compute next step #
