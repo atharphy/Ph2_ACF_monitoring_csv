@@ -188,13 +188,14 @@ void PixelAlive::run()
                                 size_t badPixelsCounter = 0;
                                 if((doDataIntegrity == 3) || ((doDataIntegrity == 2) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0))))
                                 {
-				    static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
+                                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                     this->fReadoutChipInterface->MaskAllChannels(cChip, true);
 
-				    const auto& ele     = std::find(suffix.begin(), suffix.end(), su);
-				    const auto  coreCol = (ele - suffix.begin()) * baseNumberOfBits + i;
-                                    LOG(WARNING) << GREEN << (doDataIntegrity == 2 ? "Found problematic ":"") << "Core-Column " << BOLDYELLOW << coreCol << RESET << GREEN << "/" << BOLDYELLOW << RD53Shared::firstChip->getNCols()/RD53Constants::NROW_CORE << RESET<<GREEN<<" --> I'll try " << (doDataIntegrity == 2 ? "to nail down the problem":"")<< "at pixel level"
-                                                 << RESET;
+                                    const auto& ele     = std::find(suffix.begin(), suffix.end(), su);
+                                    const auto  coreCol = (ele - suffix.begin()) * baseNumberOfBits + i;
+                                    LOG(WARNING) << GREEN << (doDataIntegrity == 2 ? "Found problematic " : "") << "Core-Column " << BOLDYELLOW << coreCol << RESET << GREEN << "/" << BOLDYELLOW
+                                                 << RD53Shared::firstChip->getNCols() / RD53Constants::NROW_CORE << RESET << GREEN << " --> I'll try "
+                                                 << (doDataIntegrity == 2 ? "to nail down the problem " : "") << "at pixel level" << RESET;
 
                                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                                     {
@@ -222,7 +223,7 @@ void PixelAlive::run()
                                                     statusGood = false;
                                                     break;
                                                 }
-					
+
                                             if((statusGood == false) || (RD53Event::decodedEvents.size() == 0))
                                             {
                                                 badPixelsCounter++;
@@ -280,14 +281,14 @@ void PixelAlive::run()
                                     for(auto col = colStart; col < colStart + numberOfBits * RD53Constants::NROW_CORE; col++)
                                     {
                                         const auto isBadPixel = badPixelsContainer.getObject(cBoard->getId())
-                                                                  ->getObject(cOpticalGroup->getId())
-                                                                  ->getObject(cHybrid->getId())
-                                                                  ->getObject(cChip->getId())
-                                                                  ->getChannel<uint8_t>(row, col);
+                                                                    ->getObject(cOpticalGroup->getId())
+                                                                    ->getObject(cHybrid->getId())
+                                                                    ->getObject(cChip->getId())
+                                                                    ->getChannel<uint8_t>(row, col);
 
                                         if(isBadPixel == true)
                                         {
-					  std::cout << "AAAAAAAAAAAAAAAA " << __LINE__<< std::endl;
+                                            std::cout << "AAAAAAAAAAAAAAAA " << __LINE__ << std::endl;
                                             badPixelsCounter++;
                                             static_cast<RD53*>(cChip)->enablePixel(row, col, !isBadPixel);
                                         }
