@@ -401,7 +401,12 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0, false);
 }
 
-void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
+void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, size_t theRow, size_t theCol)
+// ##################################
+// # wireMode = 0 --> all pixels    #
+// # wireMode = 1 --> sparse pixels #
+// # wireMode = 2 --> single pixel  #
+// ##################################
 {
     this->setBoard(pRD53->getBeBoardId());
 
@@ -425,7 +430,37 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     // ########################
     auto pixMode = pRD53->getRegMap().find("PIX_MODE")->second.fValue;
 
-    if(doSparse == true)
+    if(writeMode == 0)
+    {
+        for(auto col = 0u; col < RD53B::NCOLS; col += 2)
+        {
+            // #######################
+            // # Starting pixel cell #
+            // #######################
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
+
+            // ####################
+            // # Send pixels mask #
+            // ####################
+            std::vector<uint16_t> dColConfigMask;
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
+            for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigMask.push_back(RD53BInterface::GetPixelConfigMask(mask, row, col));
+
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x1}, commandList);
+            RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigMask)}, commandList);
+
+            // ####################
+            // # Send pixels TDAC #
+            // ####################
+            std::vector<uint16_t> dColConfigTDAC;
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
+            for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigTDAC.push_back(RD53BInterface::GetPixelConfigTDAC(mask, row, col));
+
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x3}, commandList);
+            RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigTDAC)}, commandList);
+        }
+    }
+    else if(writeMode == 1)
     {
         // ############################
         // # Clear whole pixel matrix #
@@ -465,36 +500,14 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                 }
         }
     }
-    else
-    {
-        for(auto col = 0u; col < RD53B::NCOLS; col += 2)
-        {
-            // #######################
-            // # Starting pixel cell #
-            // #######################
-            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
-
-            // ####################
-            // # Send pixels mask #
-            // ####################
-            std::vector<uint16_t> dColConfigMask;
-            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
-            for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigMask.push_back(RD53BInterface::GetPixelConfigMask(mask, row, col));
-
-            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x1}, commandList);
-            RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigMask)}, commandList);
-
-            // ####################
-            // # Send pixels TDAC #
-            // ####################
-            std::vector<uint16_t> dColConfigTDAC;
-            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
-            for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigTDAC.push_back(RD53BInterface::GetPixelConfigTDAC(mask, row, col));
-
-            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x3}, commandList);
-            RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigTDAC)}, commandList);
-        }
-    }
+	else
+	  {
+	    auto data = RD53BInterface::GetPixelConfig(mask, theRow, theCol);
+	    RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
+	    RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, theCol / 2}, commandList);
+	    RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, theRow}, commandList);
+	    RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_PORTAL_ADDR, data}, commandList);
+	  }
 
     RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
 

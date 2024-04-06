@@ -224,7 +224,12 @@ uint16_t RD53AInterface::GetPixelConfig(const pixelMask& mask, uint16_t row, uin
                                                           mask.Enable[row + RD53A::NROWS * (col + 0)]));
 }
 
-void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
+void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, size_t theRow, size_t theCol)
+// ##################################
+// # wireMode = 0 --> all pixels    #
+// # wireMode = 1 --> sparse pixels #
+// # wireMode = 2 --> single pixel  #
+// ##################################
 {
     this->setBoard(pRD53->getBeBoardId());
 
@@ -254,7 +259,43 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     // bit[1]: broadcast to LIN FE
     // bit[0]: broadcast to DIFF FE
 
-    if(doSparse == true)
+    if (writeMode == 0)
+    {
+        // #####################
+        // # Set autoincrement #
+        // #####################
+        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x8}, commandList);
+
+        RD53ACmd::WrRegLong wrRegLongCmd{chipID, PIX_PORTAL_ADDR, {}};
+        const size_t        nValuesLongCmd = wrRegLongCmd.values.size();
+        const size_t        nLongCommands  = RD53A::NROWS / nValuesLongCmd;
+
+        for(auto col = 0u; col < RD53A::NCOLS; col += 2)
+        {
+            // #######################
+            // # Starting pixel cell #
+            // #######################
+            RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
+            RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
+
+            for(auto longCmdId = 0u; longCmdId < nLongCommands; longCmdId++)
+            {
+                for(size_t i = 0; i < nValuesLongCmd; i++) wrRegLongCmd.values[i] = RD53AInterface::GetPixelConfig(mask, nValuesLongCmd * longCmdId + i, col, highGain);
+                RD53ACmd::serialize(wrRegLongCmd, commandList);
+            }
+
+            // ###################################
+            // # Write commands to frontend chip #
+            // ###################################
+            auto n16bitWords = commandList.size() + nLongCommands * n16bitWordsWrtLong + 2 * n16bitWordsWrt;
+            if((n16bitWords / 2 + n16bitWords % 2) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
+            {
+                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                commandList.clear();
+            }
+        }
+    }
+    else if(writeMode == 1)
     {
         // ############################
         // # Clear whole pixel matrix #
@@ -299,42 +340,14 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
         }
     }
     else
-    {
-        // #####################
-        // # Set autoincrement #
-        // #####################
-        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x8}, commandList);
-
-        RD53ACmd::WrRegLong wrRegLongCmd{chipID, PIX_PORTAL_ADDR, {}};
-        const size_t        nValuesLongCmd = wrRegLongCmd.values.size();
-        const size_t        nLongCommands  = RD53A::NROWS / nValuesLongCmd;
-
-        for(auto col = 0u; col < RD53A::NCOLS; col += 2)
-        {
-            // #######################
-            // # Starting pixel cell #
-            // #######################
-            RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
-            RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
-
-            for(auto longCmdId = 0u; longCmdId < nLongCommands; longCmdId++)
-            {
-                for(size_t i = 0; i < nValuesLongCmd; i++) wrRegLongCmd.values[i] = RD53AInterface::GetPixelConfig(mask, nValuesLongCmd * longCmdId + i, col, highGain);
-                RD53ACmd::serialize(wrRegLongCmd, commandList);
-            }
-
-            // ###################################
-            // # Write commands to frontend chip #
-            // ###################################
-            auto n16bitWords = commandList.size() + nLongCommands * n16bitWordsWrtLong + 2 * n16bitWordsWrt;
-            if((n16bitWords / 2 + n16bitWords % 2) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
-            {
-                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
-                commandList.clear();
-            }
-        }
-    }
-
+      {
+	auto data = RD53AInterface::GetPixelConfig(mask, theRow, theCol, highGain);
+	RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
+	RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, theCol / 2}, commandList);
+	RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, theRow}, commandList);
+	RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, data}, commandList);
+      }
+    
     // ###################################
     // # Write commands to frontend chip #
     // ###################################

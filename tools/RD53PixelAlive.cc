@@ -190,7 +190,8 @@ void PixelAlive::run()
                                 if(((coreCol + 1) % NCORECOLS_PRINTOUT) == 0) LOG(INFO) << GREEN << "Number of tested Core-Columns: " << BOLDYELLOW << coreCol + 1 << RESET;
 
                                 size_t badPixelsCounter = 0;
-                                if((doDataIntegrity == 2) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
+                                // if((doDataIntegrity == 2) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
+                                if(doDataIntegrity == 2)
                                 {
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                     this->fReadoutChipInterface->MaskAllChannels(cChip, true);
@@ -208,11 +209,11 @@ void PixelAlive::run()
                                             // ################
                                             // # Run analysis #
                                             // ################
-                                            static_cast<RD53*>(cChip)->enablePixel(row, col, true);
+					    CalibBase::setSinglePixel(cChip, row, col, true, true);
                                             this->SetTestPulse(false);
-                                            this->fMaskChannelsFromOtherGroups = true;
+                                            this->fMaskChannelsFromOtherGroups = false;
                                             this->measureData(1, 1);
-                                            static_cast<RD53*>(cChip)->enablePixel(row, col, false);
+					    CalibBase::setSinglePixel(cChip, row, col, false, false);
 
                                             // #####################
                                             // # Compute next step #
@@ -281,7 +282,7 @@ void PixelAlive::run()
                                 {
                                     const auto& ele      = std::find(suffix.begin(), suffix.end(), su);
                                     const auto  colStart = ((ele - suffix.begin()) * baseNumberOfBits) * RD53Constants::NROW_CORE;
-                                    for(auto col = colStart; col < colStart + baseNumberOfBits * RD53Constants::NROW_CORE; col++)
+                                    for(auto col = colStart; col < colStart + numberOfBits * RD53Constants::NROW_CORE; col++)
                                     {
                                         const auto badPixel = badPixelsContainer.getObject(cBoard->getId())
                                                                   ->getObject(cOpticalGroup->getId())
