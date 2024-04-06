@@ -156,9 +156,9 @@ void PixelAlive::run()
 
                         for(const auto& su: suffix)
                         {
-                            const auto numberOfBits = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
-			    const auto baseNumberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix[0]].fBitSize;
-                            regValueMap[su]         = RD53Shared::setBits(numberOfBits);
+                            const auto numberOfBits     = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
+                            const auto baseNumberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix[0]].fBitSize;
+                            regValueMap[su]             = RD53Shared::setBits(numberOfBits);
 
                             for(auto i = 0u; i < numberOfBits; i++)
                             {
@@ -184,10 +184,10 @@ void PixelAlive::run()
                                         statusGood = false;
                                         break;
                                     }
-				
-				const auto& ele     = std::find(suffix.begin(), suffix.end(), su);
-				const auto  coreCol = (ele - suffix.begin()) * baseNumberOfBits + i;
-				if(((coreCol+1) % NCORECOLS_PRINTOUT) == 0) LOG(INFO) << GREEN << "Number of tested Core-Columns: " << BOLDYELLOW << coreCol+1 << RESET;
+
+                                const auto& ele     = std::find(suffix.begin(), suffix.end(), su);
+                                const auto  coreCol = (ele - suffix.begin()) * baseNumberOfBits + i;
+                                if(((coreCol + 1) % NCORECOLS_PRINTOUT) == 0) LOG(INFO) << GREEN << "Number of tested Core-Columns: " << BOLDYELLOW << coreCol + 1 << RESET;
 
                                 size_t badPixelsCounter = 0;
                                 if((doDataIntegrity == 2) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
@@ -249,11 +249,11 @@ void PixelAlive::run()
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                 }
                             }
-			    
-			    // ###########################
-			    // # Download new DAC values #
-			    // ###########################
-			    this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, 0, false);
+
+                            // ###########################
+                            // # Download new DAC values #
+                            // ###########################
+                            this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, 0, false);
                         }
 
                         // ###########################
@@ -264,10 +264,10 @@ void PixelAlive::run()
                         for(const auto& su: suffix)
                         {
                             this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, regValueMap[su]);
-                            const auto numberOfBits = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
-			    const auto baseNumberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix[0]].fBitSize;
-                            uint16_t   mask         = RD53Shared::setBits(numberOfBits);
-                            const auto value        = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[su]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
+                            const auto numberOfBits     = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
+                            const auto baseNumberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix[0]].fBitSize;
+                            uint16_t   mask             = RD53Shared::setBits(numberOfBits);
+                            const auto value            = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[su]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
                                                    .to_string()
                                                    .erase(0, RD53Constants::NBIT_MAXREG - numberOfBits);
                             bool problems = (regValueMap[su] != mask);
