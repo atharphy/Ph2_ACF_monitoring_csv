@@ -162,7 +162,13 @@ void PixelAlive::run()
 
                             for(auto i = 0u; i < numberOfBits; i++)
                             {
-                                // ###########################
+			      if((cChip->getRegMap()[regName + su].fValue & (1<<i)) != 0)
+				{
+			regValueMap[su] ^= 1 << i;	  
+				  continue;
+				}
+
+			      // ###########################
                                 // # Download new DAC values #
                                 // ###########################
                                 this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, 1 << i, false);
@@ -268,7 +274,7 @@ void PixelAlive::run()
                             this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, regValueMap[su], false);
                             const auto numberOfBits     = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
                             const auto baseNumberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix[0]].fBitSize;
-                            uint16_t   mask             = RD53Shared::setBits(numberOfBits);
+                            uint16_t   mask             = cChip->getRegMap()[regName + su].fDefValue;
                             const auto value            = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[su]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
                                                    .to_string()
                                                    .erase(0, RD53Constants::NBIT_MAXREG - numberOfBits);
