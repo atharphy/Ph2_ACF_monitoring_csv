@@ -717,7 +717,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
             continue;
         }
 
-    } while((retry == true) && (nAttempts < RD53Shared::MAXATTEMPTS));
+    } while((RD53FWInterface::silentRunning == false) && (retry == true) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
     if(retry == true)
     {
