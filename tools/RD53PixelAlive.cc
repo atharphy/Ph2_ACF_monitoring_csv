@@ -162,13 +162,13 @@ void PixelAlive::run()
 
                             for(auto i = 0u; i < numberOfBits; i++)
                             {
-			      if((cChip->getRegMap()[regName + su].fValue & (1<<i)) != 0)
-				{
-			regValueMap[su] ^= 1 << i;	  
-				  continue;
-				}
+                                if((cChip->getRegMap()[regName + su].fValue & (1 << i)) != 0)
+                                {
+                                    regValueMap[su] ^= 1 << i;
+                                    continue;
+                                }
 
-			      // ###########################
+                                // ###########################
                                 // # Download new DAC values #
                                 // ###########################
                                 this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, 1 << i, false);
