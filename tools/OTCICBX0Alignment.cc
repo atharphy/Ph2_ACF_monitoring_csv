@@ -1,5 +1,7 @@
 #include "tools/OTCICBX0Alignment.h"
 #include "HWInterface/ExceptionHandler.h"
+#include "HWInterface/FastCommandInterface.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "HWDescription/BeBoard.h"
@@ -147,7 +149,11 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
             // LOG(INFO) << BOLDRED << "NOT Sending Resync !" << RESET;
             // LOG(INFO) << BOLDRED << "NOT Sending Resync !" << RESET;       
             LOG(INFO) << BOLDMAGENTA << " Sending Resync !" << RESET;     
-            fBeBoardInterface->ChipReSync(theBoard);
+            auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+            auto cFastCommandInterface = cInterface->getFastCommandInterface();
+            uint8_t theNumberOfResyncs = 5;
+            cFastCommandInterface->SendGlobalCounterResetResync(theNumberOfResyncs);
+            // fBeBoardInterface->ChipReSync(theBoard);
             for(auto theOpticalGroup: *theBoard)
             {    
                 for(auto theHybrid: *theOpticalGroup)
