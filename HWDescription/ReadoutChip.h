@@ -116,14 +116,6 @@ class ReadoutChip
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
 
-    virtual void setIsCalibrationDataUpdated(bool isLoaded) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
-
-    virtual bool getIsCalibrationDataUpdated() const
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-        return false;
-    }
-
     virtual std::map<std::string, float> getADCCalibrationMap() const
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;

@@ -72,8 +72,6 @@ class SSA2 : public ReadoutChip
     std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow) override;
     static std::string            getStripRegisterName(const std::string& theRegisterName, uint16_t strip);
 
-    void                         setIsCalibrationDataUpdated(bool isLoaded) override { fIsCalibrationMapUpdated = isLoaded; }
-    bool                         getIsCalibrationDataUpdated() const { return fIsCalibrationMapUpdated; }
     std::map<std::string, float> getADCCalibrationMap() const { return fADCcalibrationMap; }
     void                         setADCCalibrationMap(const std::map<std::string, float>& theInputMap) override;
 
@@ -81,7 +79,6 @@ class SSA2 : public ReadoutChip
     // #############################################################
     // # ADC Channel and Voltage to manually tune Vref to 0.850 mV #
     // #############################################################
-    bool fIsCalibrationMapUpdated{false};
     // Default values, will be overwritten once the calibration is performed
     std::map<std::string, float> fADCcalibrationMap = {
         {"ADC_SLOPE", 0.0002}, // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
