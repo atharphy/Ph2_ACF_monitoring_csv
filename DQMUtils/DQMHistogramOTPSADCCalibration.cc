@@ -31,15 +31,27 @@ void DQMHistogramOTPSADCCalibration::book(TFile* theOutputFile, DetectorContaine
 
     HistContainer<TH1F> theTH1FChipVref("VREFdac", "VREFdac", 32, -0.5, 31.5);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipVrefHistograms, theTH1FChipVref);
+    theTH1FChipVref.fTheHistogram->GetXaxis()->SetTitle("ADC_VREF register");
+    theTH1FChipVref.fTheHistogram->GetYaxis()->SetTitle("VREF [V]");
+
 
     GraphContainer<TGraph> theTGraphChipSlope(fGraphSize);
     theTGraphChipSlope.setNameTitle("ADC_slope", "ADC_slope");
     RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fChipSlopeGraphs, theTGraphChipSlope);
+    theTGraphChipSlope.fTheGraph->SetMarkerStyle(20);
+    theTGraphChipSlope.fTheGraph->GetXaxis()->SetTitle("ADC output [ADC]");
+    theTGraphChipSlope.fTheGraph->GetYaxis()->SetTitle("ADC output [V]");
 
     HistContainer<TH1F> theTH1FChipAVDD("AVDD", "AVDD", 4096, -0.5, 4095.5);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipAVDDHistograms, theTH1FChipAVDD);
+    theTH1FChipAVDD.fTheHistogram->GetXaxis()->SetTitle("VDD [ADC]");
+    theTH1FChipAVDD.fTheHistogram->GetYaxis()->SetTitle("VDD [V]");
+    theTH1FChipAVDD.fTheHistogram->SetMarkerStyle(20);
     HistContainer<TH1F> theTH1FChipDVDD("DVDD", "DVDD", 4096, -0.5, 4095.5);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipDVDDHistograms, theTH1FChipDVDD);
+    theTH1FChipDVDD.fTheHistogram->GetXaxis()->SetTitle("VDD [ADC]");
+    theTH1FChipDVDD.fTheHistogram->GetYaxis()->SetTitle("VDD [V]");
+    theTH1FChipDVDD.fTheHistogram->SetMarkerStyle(20);
 }
 
 //========================================================================================================================
@@ -103,8 +115,7 @@ void DQMHistogramOTPSADCCalibration::fillDACPlots(DetectorDataContainer& theVref
                                                 ->getObject(cChip->getId())
                                                 ->getSummary<std::pair<uint8_t, float>>()
                                                 .second);
-                    theVrefHistograms->GetXaxis()->SetTitle("ADC_VREF register");
-                    theVrefHistograms->GetYaxis()->SetTitle("VREF [V]");
+
                 } // chip
             }     // hybrid
         }         // optical group
@@ -139,9 +150,7 @@ void DQMHistogramOTPSADCCalibration::fillSlopePlots(DetectorDataContainer& theAD
                         theADCSlopeGraphs->SetPointX(i, ADCs[i]);
                         theADCSlopeGraphs->SetPointY(i, voltages[i]);
                     }
-                    theADCSlopeGraphs->SetMarkerStyle(20);
-                    theADCSlopeGraphs->GetXaxis()->SetTitle("ADC output [ADC]");
-                    theADCSlopeGraphs->GetYaxis()->SetTitle("ADC output [V]");
+
                     theADCSlopeGraphs->Fit("pol1", "Q");
                     LOG(DEBUG) << BLUE << " cChipContainer.fOffset " << cChipContainer.fOffset << " cChipContainer.fSlope " << cChipContainer.fSlope << RESET;
                     TF1* thePol1 = theADCSlopeGraphs->GetFunction("pol1");
@@ -221,9 +230,6 @@ void DQMHistogramOTPSADCCalibration::fillVDDPlots(DetectorDataContainer& theVDDC
                                                ->getSummary<std::pair<uint32_t, float>>()
                                                .second);
 
-                    theVDDHistograms->GetXaxis()->SetTitle("VDD [ADC]");
-                    theVDDHistograms->GetYaxis()->SetTitle("VDD [V]");
-                    theVDDHistograms->SetMarkerStyle(20);
 
                 } // chip
             }     // hybrid
