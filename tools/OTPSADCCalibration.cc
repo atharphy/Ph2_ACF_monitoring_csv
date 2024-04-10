@@ -18,20 +18,20 @@ void OTPSADCCalibration::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
 
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "ADCcontrol");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "A[0-6]");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "B[0-6]");
-    // fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "C[0-6]");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "D[0-6]");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "E[0-6]");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "ADCcontrol$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "A[0-6]$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "B[0-6]$");
+    // fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "C[0-6]$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "D[0-6]$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "E[0-6]$");
 
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "ADC_VREF");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5BFEED");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5PREAMP");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5TDR");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5ALLV");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5ALLI");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5DAC8");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "ADC_VREF$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5BFEED$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5PREAMP$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5TDR$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5ALLV$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5ALLI$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "Bias_D5DAC8$");
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
