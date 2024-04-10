@@ -71,7 +71,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignmentForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 
     Register<OTalignBoardDataWord, OTinjectionDelayOptimization>("Outer Tracker", "injectionDelayOptimization");
-    Register<OTalignBoardDataWord, OTPSADCCalibration>("Outer Tracker", "ADCBiasCalibration");
 
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
@@ -169,7 +168,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     // PS specific calibrations
     Register<PSPhysics>("PS Module", "psphysics");
-
+    Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");
     Register<PixelAlive>("Inner Tracker", "noise");
