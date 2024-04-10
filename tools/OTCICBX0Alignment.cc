@@ -19,9 +19,9 @@ OTCICBX0Alignment::~OTCICBX0Alignment() {}
 void OTCICBX0Alignment::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "BX0_DELAY");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "EXT_BX0_DELAY");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "BX0_ALIGN_CONFIG");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "^BX0_DELAY$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "^EXT_BX0_DELAY$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "^BX0_ALIGN_CONFIG$");
 
 #ifdef __USE_ROOT__ // to disable and anable ROOT by command
     // Calibration is not running on the SoC: plots are booked during initialization
