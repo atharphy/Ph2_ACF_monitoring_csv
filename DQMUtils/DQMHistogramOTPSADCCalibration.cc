@@ -244,7 +244,7 @@ bool DQMHistogramOTPSADCCalibration::fill(std::string& inputStream)
     if(theDACSerialization.attachDeserializer(inputStream))
     {
         LOG(INFO) << BOLDMAGENTA << "Matched OTPSADCCalibration Vref DAC!!!!!" << RESET;
-        DetectorDataContainer theVREFDACData = theDACSerialization.deserializeOpticalGroupContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theVREFDACData = theDACSerialization.deserializeOpticalGroupContainer<EmptyContainer, std::pair<uint32_t, float>, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillDACPlots(theVREFDACData);
         return true;
     }
@@ -253,7 +253,7 @@ bool DQMHistogramOTPSADCCalibration::fill(std::string& inputStream)
     if(theADCSlopeSerialization.attachDeserializer(inputStream))
     {
         LOG(DEBUG) << BOLDMAGENTA << "Matched OTPSADCCalibration ADC slope!!!!!" << RESET;
-        DetectorDataContainer theADCSlopeData = theADCSlopeSerialization.deserializeOpticalGroupContainer<ADCSlope, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theADCSlopeData = theADCSlopeSerialization.deserializeOpticalGroupContainer<EmptyContainer, ADCSlope, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillSlopePlots(theADCSlopeData);
         return true;
     }
@@ -262,7 +262,7 @@ bool DQMHistogramOTPSADCCalibration::fill(std::string& inputStream)
     if(theAVDDSerialization.attachDeserializer(inputStream))
     {
         LOG(DEBUG) << BOLDMAGENTA << "Matched  OTPSADCCalibration AVDD!!!!!" << RESET;
-        DetectorDataContainer theAVDDData = theAVDDSerialization.deserializeOpticalGroupContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theAVDDData = theAVDDSerialization.deserializeOpticalGroupContainer<EmptyContainer, std::pair<uint32_t, float>, EmptyContainer, EmptyContainer>(fDetectorContainer);
 
         fillVDDPlots(theAVDDData, true);
         return true;
@@ -271,7 +271,7 @@ bool DQMHistogramOTPSADCCalibration::fill(std::string& inputStream)
     if(theDVDDSerialization.attachDeserializer(inputStream))
     {
         LOG(DEBUG) << BOLDMAGENTA << "Matched OTPSADCCalibration DVDD!!!!!" << RESET;
-        DetectorDataContainer theDVDDData = theDVDDSerialization.deserializeOpticalGroupContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theDVDDData = theDVDDSerialization.deserializeOpticalGroupContainer<EmptyContainer, std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
 
         fillVDDPlots(theDVDDData, false);
         return true;
