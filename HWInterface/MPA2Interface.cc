@@ -83,10 +83,12 @@ void MPA2Interface::produceWordAlignmentPattern(ReadoutChip* pChip)
 
 void MPA2Interface::produceBX0AlignmentPattern(ReadoutChip* pChip)
 {
+    // use sync bit only
     // this->MaskAllChannels(pChip, true, false );
     // auto masked =     this->ReadChipReg(pChip, "ENFLAGS_ALL");
     // std::cout << " read back masking MPAs 0x" << std::hex <<  masked << std::dec << std::endl;
 
+    // use stubs
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
     this->injectNoiseClusters(pChip, theClusterList);
     this->WriteChipReg(pChip, "StubMode", 2); // Use pixel mode to exclude possible SSA communication issues

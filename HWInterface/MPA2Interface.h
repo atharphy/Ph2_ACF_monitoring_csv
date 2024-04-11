@@ -222,7 +222,8 @@ class MPA2Interface : public ReadoutChipInterface
     const std::map<std::string, uint8_t> PIXEL_CONFIG_TABLE = {{"ENFLAGS", 0}, {"TrimDAC", 1}, {"DigiPattern", 2}, {"ACCounter_LSB", 4}, {"ACCounter_MSB", 5}};
     std::map<uint16_t, std::string>      fMap;
     std::vector<uint8_t>                 fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
-    std::vector<uint8_t>                 fBX0AlignmentPatterns  = {0x92, 0x48, 0x12, 0x48, 0xD8};
+    std::vector<uint8_t>                 fBX0AlignmentPatterns  = {0x92, 0x48, 0x12, 0x48, 0xD8}; //stubs
+    // std::vector<uint8_t>                 fBX0AlignmentPatterns  = {0x80, 0x00, 0x00, 0x00, 0x00}; // sync bit
 
     bool                WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerify = false);
     uint16_t            ReadChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode);

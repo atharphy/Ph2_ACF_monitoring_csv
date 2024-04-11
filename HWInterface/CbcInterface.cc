@@ -923,6 +923,7 @@ void CbcInterface::produceBX0AlignmentPattern(ReadoutChip* pChip)
     // MaskAllChannels(pChip, 1);
 
 
+    // try stubs 
     WriteChipReg(pChip, "PtCut", 14);
     WriteChipReg(pChip, "ClusterCut", 4);
     selectLogicMode(pChip, "OR", true, true);
