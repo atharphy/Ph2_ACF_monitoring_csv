@@ -258,7 +258,8 @@
     <Setting name="OTinjectionDelayOptimization_MPAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
     
     <Setting name="OTMeasureOccupancy_NumberOfEvents">100000</Setting>
-    <Setting name="OTMeasureOccupancy_CBCtestPulseValue">0</Setting>
+    <Setting name="OTMeasureOccupancy_SSAtestPulseValue">90</Setting>
+    <Setting name="OTMeasureOccupancy_MPAtestPulseValue">100</Setting>
 </Settings>
 
 

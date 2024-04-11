@@ -171,7 +171,7 @@
     <Setting name="OTinjectionDelayOptimization_CBCnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 
     <Setting name="OTMeasureOccupancy_NumberOfEvents">100000</Setting>
-    <Setting name="OTMeasureOccupancy_CBCtestPulseValue">0</Setting>
+    <Setting name="OTMeasureOccupancy_CBCtestPulseValue">218</Setting>
 </Settings>
 
 

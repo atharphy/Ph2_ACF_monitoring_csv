@@ -41,6 +41,8 @@ class OTMeasureOccupancy : public Tool
 
     uint32_t fNumberOfEvents{10000};
     uint8_t  fCBCtestPulseValue{218};
+    uint8_t  fSSAtestPulseValue{90};
+    uint8_t  fMPAtestPulseValue{100};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

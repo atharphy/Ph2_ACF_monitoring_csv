@@ -23,6 +23,8 @@ void OTMeasureOccupancy::Initialise(void)
 
     fNumberOfEvents    = findValueInSettings<double>("OTMeasureOccupancy_NumberOfEvents", 10000);
     fCBCtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_CBCtestPulseValue", 218);
+    fSSAtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_SSAtestPulseValue", 90);
+    fMPAtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_MPAtestPulseValue", 100);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
