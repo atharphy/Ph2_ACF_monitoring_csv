@@ -889,7 +889,7 @@ void HybridTester::ReconstructShorts(std::array<std::vector<std::array<int, 5>>,
 void HybridTester::SetBeBoardForShortsFinding(BeBoard* pBoard)
 {
     if(pBoard->getBoardType() == BoardType::D19C) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 1);
-    setFWTestPulse();
+    setFWTestPulse(true);
 
     // (potential, group, enable test pulse, hole mode)
     setSystemTestPulse(fTestPulseAmplitude, 0x00, true, fHoleMode);

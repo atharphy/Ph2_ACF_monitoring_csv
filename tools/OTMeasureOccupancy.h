@@ -36,6 +36,7 @@ class OTMeasureOccupancy : public Tool
     static std::string fCalibrationDescription;
     
   private:
+    void measureChannelOccupancy();
     void prepareOccupancyMeasurement2S();
 
     uint32_t       fNumberOfEvents{10000};

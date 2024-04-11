@@ -4,7 +4,7 @@
 #include "pugixml.hpp"
 #include <boost/any.hpp>
 #include <string>
-#include <unordered_map>
+#include <map>
 
 class DetectorContainer;
 namespace Ph2_HwDescription
@@ -25,7 +25,7 @@ class FileDumper
     ~FileDumper();
 
     std::stringstream dumpConfigurationFiles(DetectorContainer*                                 theDetectorContainer,
-                                             const std::unordered_map<std::string, boost::any>& theSettingMap,
+                                             const std::map<std::string, boost::any>& theSettingMap,
                                              CommunicationSettingConfig*                        theCommunicationSettingConfig,
                                              DetectorMonitorConfig*                             theDetectorMonitorConfig);
 
@@ -34,7 +34,7 @@ class FileDumper
     void        dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode, Ph2_HwDescription::OpticalGroup* theOpticalGroupContainer);
     void        dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Ph2_HwDescription::Hybrid* theHybridContainer);
     void        dumpChipConfigurationFile(pugi::xml_node theMotherNode, Ph2_HwDescription::ReadoutChip* theReadoutChip);
-    void        dumpSettings(pugi::xml_node theMotherNode, const std::unordered_map<std::string, boost::any>& theSettingMap);
+    void        dumpSettings(pugi::xml_node theMotherNode, const std::map<std::string, boost::any>& theSettingMap);
     void        dumpMonitorSettings(pugi::xml_node theMotherNode, DetectorMonitorConfig* theDetectorMonitorConfig);
     void        dumpCommunicationSettings(pugi::xml_node theMotherNode, CommunicationSettingConfig* theCommunicationSettingConfig);
     std::string fOutputDirectory;

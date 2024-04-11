@@ -55,7 +55,10 @@ class DQMHistogramOTMeasureOccupancy : public DQMHistogramBase
      */
     void reset(void) override;
 
+    void fillOccupancy(const DetectorDataContainer& theOccupancyContainer);
+
   private:
     DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fOccupancyHistogramContainer;
 };
 #endif

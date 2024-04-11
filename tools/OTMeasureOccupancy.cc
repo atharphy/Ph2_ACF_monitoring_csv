@@ -4,6 +4,7 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/SSAChannelGroupHandler.h"
+#include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -20,8 +21,8 @@ void OTMeasureOccupancy::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfEvents    = findValueInSettings<double>("OTMeasureOccupancyNumberOfEvents", 10000);
-    fCBCtestPulseValue = findValueInSettings<double>("OTMeasureOccupancyCBCtestPulseValue", 218);
+    fNumberOfEvents    = findValueInSettings<double>("OTMeasureOccupancy_NumberOfEvents", 10000);
+    fCBCtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_CBCtestPulseValue", 218);
 
 #ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -38,6 +39,7 @@ void OTMeasureOccupancy::Running()
 {
     LOG(INFO) << "Starting OTMeasureOccupancy measurement.";
     Initialise();
+    measureChannelOccupancy();
     LOG(INFO) << "Done with OTMeasureOccupancy.";
     Reset();
 }
@@ -71,17 +73,37 @@ void OTMeasureOccupancy::Reset()
     fRegisterHelper->restoreSnapshot();
 }
 
+void  OTMeasureOccupancy::measureChannelOccupancy()
+{
+    bool is2SModule = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S;
+
+    if(is2SModule) prepareOccupancyMeasurement2S();
+
+    DetectorDataContainer theOccupancyContainer;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOccupancyContainer);
+    fDetectorDataContainer = &theOccupancyContainer;
+    measureData(fNumberOfEvents, 65535);
+
+#ifdef __USE_ROOT__
+    fDQMHistogramOTMeasureOccupancy.fillOccupancy(theOccupancyContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theOccupancyContainerSerialization("OTMeasureOccupancyOccupancy");
+        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theOccupancyContainer);
+    }
+#endif
+
+}
 
 void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
 {
-    this->enableTestPulse(true);
-    LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::injectionDelayScan2S - Scanning Delay for 2S module" << RESET;
+    LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurement2S - Preparing 2S to measure occupancy with injection = " << +fCBCtestPulseValue << RESET;
 
     CBCChannelGroupHandler theChannelGroupHandler;
-    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    theChannelGroupHandler.setChannelGroupParameters(16, 1, 2);
     setChannelGroupHandler(theChannelGroupHandler);
 
-    this->SetTestAllChannels(false);
     // Setting sparsification for simplicity
     for(auto theBoard: *fDetectorContainer)
     {
@@ -97,4 +119,8 @@ void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
     }
 
     setSameDac("TestPulsePotNodeSel", fCBCtestPulseValue); // injected charge
+    bool injectPulse = fCBCtestPulseValue != 0;
+    bool injectAllChannels = !injectPulse;
+    this->enableTestPulse(injectPulse);
+    this->setTestAllChannels(injectAllChannels);
 }

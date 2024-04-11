@@ -72,13 +72,13 @@ void PSPixelAlive::Initialise()
         if(cFrontEndType == FrontEndType::SSA2)
         {
             SSAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(1, 1, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
         else if(cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(1, NMPAROWS, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
     }
@@ -269,7 +269,7 @@ void PSPixelAlive::maskNoisyChannels(BoardDataContainer* board)
                             // float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
                             // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<chip->getChannel<ThresholdAndNoise>(row, col).fNoise<<" "<<fPedeNoiseLimit*fMean<<RESET;
                             // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold -cPedestal)<<"
-    "<<fPedeNoiseUntrimmedLimit<<RESET; if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(row, col).fNoise > fPedeNoiseLimit))
+    "<<fPedeNoise_UntrimmedLimit<<RESET; if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(row, col).fNoise > fPedeNoiseLimit))
                             {
                                 nMask += 1;
                                 LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(row, col).fNoise << ", which is over the limit
@@ -277,13 +277,13 @@ void PSPixelAlive::maskNoisyChannels(BoardDataContainer* board)
                                         << fPedeNoiseLimit << RESET;
                                 cOriginalMask->disableChannel(row, col); //Make version of this for masking pixels
                             }
-                            if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
+                            if(fPedeNoise_MaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) > fPedeNoise_UntrimmedLimit)
                             {
                                 uint8_t thetrim = fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(chipDC), "TrimDAC_P" + std::to_string(iChannel + 1));
 
                                 nMask += 1;
                                 LOG(INFO) << BOLDYELLOW << "Masking Channel:  " << iChannel << " with a pedestal difference of "
-                                        << std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
+                                        << std::fabs(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoise_UntrimmedLimit
                                         << " trimval: " << +thetrim << RESET;
                                 cOriginalMask->disableChannel(row, col); //This is where the channel is disabled
                             }
@@ -386,7 +386,7 @@ void PSPixelAlive::measureOccupancy()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
     //    bool originalAllChannelFlag = this->fAllChan;
-    //    this->SetTestAllChannels(true);
+    //    this->setTestAllChannels(true);
 
     this->measureData(fEventsPerPoint, fNEventsPerBurst); // Sends pulses and measures occupancy
 

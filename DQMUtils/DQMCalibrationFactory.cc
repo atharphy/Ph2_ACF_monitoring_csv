@@ -35,6 +35,7 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
+#include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 
 using namespace MessageUtils;
 
@@ -61,15 +62,11 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("alignment");
     Register<DQMMetadataOT,
-             DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
-             DQMHistogramOTverifyBoardDataWord,
-             DQMHistogramOTalignStubPackage,
-             DQMHistogramOTCICphaseAlignment,
-             DQMHistogramOTCICwordAlignment,
-             DQMHistogramOTverifyCICdataWord,
-             DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTMeasureOccupancy>("measureOccupancy");
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,

@@ -932,14 +932,17 @@ void Tool::setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTP
 void Tool::enableTestPulse(bool enableTP)
 {
     fTestPulse = enableTP;
-    if(enableTP) setFWTestPulse();
+    setFWTestPulse(enableTP);
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip: *cHybrid) { fReadoutChipInterface->enableInjection(cChip, enableTP); }
+                for(auto cChip: *cHybrid)
+                {
+                    fReadoutChipInterface->enableInjection(cChip, enableTP);
+                }
             }
         }
     }
@@ -966,31 +969,36 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
     }
 }
 
-void Tool::setFWTestPulse()
+void Tool::setFWTestPulse(bool inject)
 {
     for(auto cBoard: *fDetectorContainer)
     {
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
-        switch(cBoard->getBoardType())
-        {
-        case BoardType::D19C:
+        if(cBoard->getBoardType() == BoardType::D19C)
         {
             EventType cEventType = cBoard->getEventType();
             bool      cAsync     = (cEventType == EventType::PSAS);
 
-            if(!cAsync) { cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6}); }
+            if(!cAsync)
+            {
+                if(inject) cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+                else       cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+            }
             else
+            {
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
+                if(!inject)
+                {
+                    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Counter readout without injection not implemented, aborting" << RESET;
+                    throw("[Tool::setFWTestPulse]\tError, Counter readout without injection not implemented");
+                }
+            }
             cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-            break;
         }
-
-        default:
+        else
         {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " BeBoard type not recognized for Bebord " << cBoard->getId() << ", aborting" << RESET;
-            throw("[Tool::setFWTestPulse]\tError, BeBoard type not found");
-            break;
-        }
+            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " setFWTestPulse not available for type of board with id " << cBoard->getId() << ", aborting" << RESET;
+            throw("[Tool::setFWTestPulse]\tError, setFWTestPulse not available for board with type different from D19C");
         }
 
         fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);

@@ -23,8 +23,8 @@ void DQMHistogramOTinjectionDelayOptimization::book(TFile* theOutputFile, Detect
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    uint16_t maximumDelay = findValueInSettings<double>(pSettingsMap, "OTinjectionDelayOptimizationMaximumDelay", 150);
-    fDelayStep            = findValueInSettings<double>(pSettingsMap, "OTinjectionDelayOptimizationDelayStep", 1);
+    uint16_t maximumDelay = findValueInSettings<double>(pSettingsMap, "OTinjectionDelayOptimization_MaximumDelay", 150);
+    fDelayStep            = findValueInSettings<double>(pSettingsMap, "OTinjectionDelayOptimization_DelayStep", 1);
     uint16_t numberOfBins = maximumDelay / fDelayStep;
 
     float bitSizeInNs = 1.;

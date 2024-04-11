@@ -83,7 +83,7 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                                  const SB&                boardSummary,
                                  const SD&                detectorSummary)
 {
-    copy.reset();
+    // copy.reset();
 
     std::string detectorFolder = "Detector";
     createAndOpenRootFileFolder(theOutputFile, detectorFolder);

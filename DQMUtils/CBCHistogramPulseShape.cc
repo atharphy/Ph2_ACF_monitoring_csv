@@ -30,9 +30,9 @@ void CBCHistogramPulseShape::book(TFile* theOutputFile, DetectorContainer& theDe
     fInitialLatency        = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialLatency", 200);
     fFinalVcth             = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalVcth", 600);
     fVcthStep              = findValueInSettings<double>(pSettingsMap, "PulseShapeVCthStep", 10);
-    fInitialDelay          = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialDelay", 0);
-    fFinalDelay            = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalDelay", 25);
-    fDelayStep             = findValueInSettings<double>(pSettingsMap, "PulseShapeDelayStep", 1);
+    fInitialDelay          = findValueInSettings<double>(pSettingsMap, "PulseShape_InitialDelay", 0);
+    fFinalDelay            = findValueInSettings<double>(pSettingsMap, "PulseShape_FinalDelay", 25);
+    fDelayStep             = findValueInSettings<double>(pSettingsMap, "PulseShape_DelayStep", 1);
     fPlotPulseShapeSCurves = findValueInSettings<double>(pSettingsMap, "PlotPulseShapeSCurves", 0);
 
     uint32_t numberOfChannels = theDetectorStructure.getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->size();
