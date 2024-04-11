@@ -491,14 +491,13 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
 
     std::vector<std::pair<std::string, uint16_t>> registerVector;
     registerVector.push_back({pMaskReg, mask});
-    registerVector.push_back({pRegNode, (pValue << posOfFirstOne) });
+    registerVector.push_back({pRegNode, (pValue << posOfFirstOne)});
     registerVector.push_back({pMaskReg, 0xFF});
     bool cSuccess = WriteChipMultReg(pSSA2, registerVector, pVerify);
 
     pSSA2->setReg(pRegNode, registerValue);
 
     return cSuccess;
-
 
     // Preparing registers and masks
     // auto theMaskRegisterMasked   = cRegMap[pMaskReg];

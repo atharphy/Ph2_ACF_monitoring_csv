@@ -34,7 +34,6 @@ void DQMHistogramOTPSADCCalibration::book(TFile* theOutputFile, DetectorContaine
     theTH1FChipVref.fTheHistogram->GetXaxis()->SetTitle("ADC_VREF register");
     theTH1FChipVref.fTheHistogram->GetYaxis()->SetTitle("VREF [V]");
 
-
     GraphContainer<TGraph> theTGraphChipSlope(fGraphSize);
     theTGraphChipSlope.setNameTitle("ADC_slope", "ADC_slope");
     RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fChipSlopeGraphs, theTGraphChipSlope);
@@ -229,7 +228,6 @@ void DQMHistogramOTPSADCCalibration::fillVDDPlots(DetectorDataContainer& theVDDC
                                                ->getObject(cChip->getId())
                                                ->getSummary<std::pair<uint32_t, float>>()
                                                .second);
-
 
                 } // chip
             }     // hybrid
