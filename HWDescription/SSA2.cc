@@ -218,4 +218,9 @@ std::string SSA2::getStripRegisterName(const std::string& theRegisterName, uint1
     return stripRegisterName;
 }
 
+void SSA2::setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
+{
+    for(const auto& theInput: theInputMap) fADCcalibrationMap[theInput.first] = theInput.second;
+}
+
 } // namespace Ph2_HwDescription

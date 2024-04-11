@@ -84,6 +84,21 @@ class MPA2 : public ReadoutChip
     static std::string getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col);
     static std::string getRowRegisterName(const std::string& theRegisterName, uint16_t row);
 
+    std::map<std::string, float> getADCCalibrationMap() const { return fADCcalibrationMap; }
+    void                         setADCCalibrationMap(const std::map<std::string, float>& theInputMap) override;
+
+  private:
+    // #############################################################
+    // # ADC Channel and Voltage to manually tune Vref to 0.850 mV #
+    // #############################################################
+    // Default values, will be overwritten once the calibration is performed
+    std::map<std::string, float> fADCcalibrationMap = {
+        {"ADC_SLOPE", 0.0002}, // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
+        {"ADC_OFFSET", 0.},    // In volts, assumed 0. It depends on the ground value
+        // {"VREF_VALUE", 0.850},  // In volts, default value
+        // {"VBG_VALUE",  0.250}   // In volts, default value
+    };
+
   protected:
     static std::vector<std::string> fListOfGlobalPixelRegisters;
     static std::vector<std::string> fListOfGlobalRowRegisters;

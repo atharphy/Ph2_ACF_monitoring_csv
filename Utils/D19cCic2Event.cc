@@ -72,8 +72,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
             }
         } // hybrids
     }     // opticalGroup
-    fBeId = pBoard->getId();
-
+    fBeId      = pBoard->getId();
     fFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
 
     this->Set(pBoard, list);
@@ -136,7 +135,6 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             cL1Information.first  = (*(cIterator + 2) & 0x7FC000) >> 14;
                             cL1Information.second = (*(cIterator + 2) & 0xFF800000) >> 23;
                             int cL1Offset         = cOffset + 3;
-
                             if(fIsSparsified)
                             {
                                 size_t cEOffset                   = 3;
@@ -166,7 +164,6 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 
                                     fNPxlClusters[cHybridIndex]   = cNPxlClusters;
                                     fNStripClusters[cHybridIndex] = cNStripClusters;
-
                                     // split stream into s and p clusters
                                     std::vector<std::bitset<S_CLUSTER_WORD_SIZE>> cL1SWords(cNStripClusters, 0);
                                     this->splitStream(pData, cL1SWords, cOffset + cEOffset, cNStripClusters);

@@ -14,6 +14,7 @@
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTPSADCCalibration.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTalignBoardDataWord.h"
@@ -131,6 +132,18 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTCICwordAlignment,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
+             OTPSADCCalibration,
+             PedestalEqualization,
+             PedeNoise>("Outer Tracker", "adccalibrationandpedenoise");
+
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
              CalibrationExample>("Outer Tracker", "calibrationexample");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, LatencyScan>(
         "Outer Tracker", "otlatency");
@@ -155,7 +168,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     // PS specific calibrations
     Register<PSPhysics>("PS Module", "psphysics");
-
+    Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");
     Register<PixelAlive>("Inner Tracker", "noise");
