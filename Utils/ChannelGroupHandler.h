@@ -29,7 +29,7 @@ class ChannelGroupBase
                                    uint32_t                           groupNumber,
                                    uint32_t                           numberOfClustersPerGroup,
                                    uint16_t                           numberOfRowsPerCluster,
-                                   uint16_t                           numberOfColsPerCluster = 1) const {};
+                                   uint16_t                           numberOfColsPerCluster) const {};
     uint32_t         getNumberOfRows(void) const { return numberOfRows_; }
     uint32_t         getNumberOfCols(void) const { return numberOfCols_; }
     uint32_t         getNumberOfEnabledChannels(void) const { return numberOfEnabledChannels_; }
@@ -119,7 +119,7 @@ class ChannelGroup : public ChannelGroupBase
                                uint32_t                           groupNumber,
                                uint32_t                           numberOfClustersPerGroup,
                                uint16_t                           numberOfRowsPerCluster,
-                               uint16_t                           numberOfColsPerCluster = 1) const override
+                               uint16_t                           numberOfColsPerCluster) const override
     {
         if(numberOfClustersPerGroup * numberOfRowsPerCluster * numberOfColsPerCluster >= numberOfEnabledChannels_)
         {
@@ -198,7 +198,7 @@ class ChannelGroupHandler
     ChannelGroupHandler(ChannelGroupHandler&&)      = default;
     virtual ~ChannelGroupHandler(){};
 
-    virtual void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster = 1);
+    virtual void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster);
 
     void setCustomChannelGroup(ChannelGroupBase& customChannelGroup) { allChannelGroup_->setCustomPattern(customChannelGroup); }
 

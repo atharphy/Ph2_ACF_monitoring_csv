@@ -240,7 +240,7 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
     }
 }
 
-void FileDumper::dumpSettings(pugi::xml_node theMotherNode, const std::unordered_map<std::string, boost::any>& theSettingMap)
+void FileDumper::dumpSettings(pugi::xml_node theMotherNode, const std::map<std::string, boost::any>& theSettingMap)
 {
     pugi::xml_node theSettingMainNode = theMotherNode.append_child(SETTINGS_NODE_NAME);
     for(const auto& theSetting: theSettingMap)

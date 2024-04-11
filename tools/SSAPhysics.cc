@@ -31,7 +31,7 @@ void SSAPhysics::ConfigureCalibration()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, fOccContainer);
 
     SSAChannelGroupHandler theChannelGroupHandler;
-    theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+    theChannelGroupHandler.setChannelGroupParameters(1, 1, NSSACHANNELS); // 16*2*8
     setChannelGroupHandler(theChannelGroupHandler);
 }
 

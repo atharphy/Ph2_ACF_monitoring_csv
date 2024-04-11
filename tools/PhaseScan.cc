@@ -28,17 +28,17 @@ void PhaseScan::Initialize()
     if(cWithCBC)
     {
         CBCChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+        theChannelGroupHandler.setChannelGroupParameters(16, 1, 2); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandler);
     }
     else if(cWithPSv2)
     {
         MPAChannelGroupHandler theChannelGroupHandlerMPA;
-        theChannelGroupHandlerMPA.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
+        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NMPAROWS, NSSACHANNELS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
 
         SSAChannelGroupHandler theChannelGroupHandlerSSA;
-        theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        theChannelGroupHandlerSSA.setChannelGroupParameters(1, 1, NSSACHANNELS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA2);
     }
 

@@ -912,7 +912,7 @@ void Eudaq2Producer::EnableDigitalInjection(uint8_t pPulseAmplitude, uint8_t pTh
         // Injection pixel and strip hits
         // Enabling testpulse
         // this->enableTestPulse(true);
-        this->setFWTestPulse();
+        this->setFWTestPulse(true);
         setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", pPulseAmplitude);
 
         // Arbitrary diagonal injection

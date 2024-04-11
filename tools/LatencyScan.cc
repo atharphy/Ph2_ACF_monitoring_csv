@@ -31,17 +31,17 @@ void LatencyScan::Initialize()
     if(cWithCBC)
     {
         CBCChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+        theChannelGroupHandler.setChannelGroupParameters(16, 1, 2); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandler);
     }
     else if(cWithPSv2)
     {
         MPAChannelGroupHandler theChannelGroupHandlerMPA;
-        theChannelGroupHandlerMPA.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
+        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NMPAROWS, NSSACHANNELS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
 
         SSAChannelGroupHandler theChannelGroupHandlerSSA;
-        theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        theChannelGroupHandlerSSA.setChannelGroupParameters(1, 1, NSSACHANNELS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA2);
     }
 
@@ -59,7 +59,7 @@ void LatencyScan::Initialize()
     bool originalAllChannelFlag = this->fAllChan;
     if(fPulseAmplitude != 0 && originalAllChannelFlag && cWithCBC)
     {
-        this->SetTestAllChannels(false);
+        this->setTestAllChannels(false);
         LOG(INFO) << RED << "Cannot inject pulse for all channels, test in groups enabled. " << RESET;
     }
 
@@ -73,7 +73,7 @@ void LatencyScan::Initialize()
     {
         LOG(INFO) << BOLDYELLOW << "Enabled test pulse. " << RESET;
         this->enableTestPulse(true);
-        this->SetTestAllChannels(false);
+        this->setTestAllChannels(false);
     }
     else
     {

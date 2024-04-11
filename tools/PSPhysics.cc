@@ -104,11 +104,11 @@ void PSPhysics::ConfigureCalibration()
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
 
     SSAChannelGroupHandler theSSAChannelGroupHandler;
-    theSSAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+    theSSAChannelGroupHandler.setChannelGroupParameters(1, 1, NSSACHANNELS); // 16*2*8
     setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
 
     MPAChannelGroupHandler theMPAChannelGroupHandler;
-    theMPAChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
+    theMPAChannelGroupHandler.setChannelGroupParameters(1, NMPAROWS, NSSACHANNELS); // 16*2*8
     setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
 }
 

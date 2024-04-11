@@ -43,7 +43,7 @@ void BeamTestCheck::Initialise()
     // create groups for injection
     // set injection group
     CBCChannelGroupHandler theChannelGroupHandler;
-    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    theChannelGroupHandler.setChannelGroupParameters(16, 1, 2);
     setChannelGroupHandler(theChannelGroupHandler);
 
     // set TP amplitude and delay for 2S modules
