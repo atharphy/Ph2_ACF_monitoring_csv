@@ -88,6 +88,8 @@
 
 // Chip attibutes
 #define CHIP_NOISE_ATTRIBUTE_NAME "noise"
+#define CHIP_SLOPE_ATTRIBUTE_NAME "ADCslope"   // for PS chips only
+#define CHIP_OFFSET_ATTRIBUTE_NAME "ADCoffset" // for PS chips only
 
 // Monitoring attributes
 #define MONITORING_NODE_TYPE_ATTRIBUTE_NAME "type"

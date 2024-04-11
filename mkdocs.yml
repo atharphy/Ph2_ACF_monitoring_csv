@@ -9,6 +9,22 @@ edit_uri: 'blob/master/docs'
 
 theme:
   name: material
+  features:
+    - content.action.edit
+    - content.action.view
+    - content.code.copy
+    - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
   font: false
   palette:
     # Palette toggle for light mode
@@ -35,8 +51,11 @@ markdown_extensions:
 
 nav:
     - Introduction: index.md
-    - 'General':
-      - 'General': general/index.md
+    - General:
+      - general/index.md
+      - 'Installing AlmaLinux 9': general/alma9_install.md
+      - 'Installing additionally required software': general/required_install.md
+      - 'Setting up the Ph2_ACF software': general/ph2acf_install.md
     - 'Inner Tracker':
       - 'Inner Tracker': innerTracker/index.md
     - 'Outer Tracker':

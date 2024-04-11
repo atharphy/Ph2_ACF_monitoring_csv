@@ -34,8 +34,8 @@
             <SSA2 Id="7" enable="1" configFile="SSA2.txt" />
 
             <MPA2_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA2 Id="8" enable="1" configFile="MPA2.txt" />
-            <MPA2 Id="9" enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="8"  enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="9"  enable="1" configFile="MPA2.txt" />
             <MPA2 Id="10" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="11" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="12" enable="1" configFile="MPA2.txt" />
@@ -71,8 +71,8 @@
             <SSA2 Id="7" enable="1" configFile="SSA2.txt" />
 
             <MPA2_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA2 Id="8" enable="1" configFile="MPA2.txt" /> 
-            <MPA2 Id="9" enable="1" configFile="MPA2.txt" />
+            <MPA2 Id="8"  enable="1" configFile="MPA2.txt" /> 
+            <MPA2 Id="9"  enable="1" configFile="MPA2.txt" />
             <MPA2 Id="10" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="11" enable="1" configFile="MPA2.txt" />
             <MPA2 Id="12" enable="1" configFile="MPA2.txt" />
@@ -259,8 +259,8 @@
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
     <MonitoringElement device="MPA2"  register="CalDAC6" enable="1"/>
     <MonitoringElement device="MPA2"  register="VBG" enable="1"/>
-    <MonitoringElement device="MPA2"  register="avdd" enable="1"/> 
-    <MonitoringElement device="MPA2"  register="dvdd" enable="1"/>    
+    <MonitoringElement device="MPA2"  register="AVDD" enable="1"/> 
+    <MonitoringElement device="MPA2"  register="DVDD" enable="1"/>    
     <MonitoringElement device="SSA2"  register="AVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="DVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="VBG" enable="1"/>
