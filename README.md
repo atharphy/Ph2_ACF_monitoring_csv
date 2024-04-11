@@ -96,7 +96,7 @@ Installation of the software is documented at <https://ph2acf.docs.cern.ch/gener
 
 
 ##
-### Run in docker container
+### Run in docker container - Deprecated: update of docker registry to alma9 is required
 Docker container are provided to facilitate users and developers in setting up the framework.
 All docker containers can be found here: `https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry`
 
@@ -117,100 +117,6 @@ Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (
 Enable shared Runners (if not enabled)
 - From `settings > CI/CD` expand the `Runners` section
 - Click the `Allow shared Runners` button
-
-
-##
-### Setup on CentOs7
-1. Install devtoolset 10
-```bash
-sudo yum install -y centos-release-scl-rh
-sudo yum install -y devtoolset-10
-```
-
-2. On CC7 you also need to install `boost` v1.53 headers (default on this system) and `pugixml` as they don't ship with uHAL any more
-```bash
-sudo yum install -y boost-devel pugixml-devel json-devel
-```
-
-3. Install uHAL. SW tested with uHAL version up to 2.7.1
-Follow instructions from `https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html`
-
-4. Install ROOT
-```bash
-sudo yum install -y root
-sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
-```
-
-5. Install CMAKE3 > 3.0
-```bash
-sudo yum install -y cmake3
-```
-
-6. Install python3
-```bash
-sudo yum install -y python3 python3-devel
-```
-
-7. Install protobuf
-Follow instructions from `https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md`
-
-8. Install [pybind11](https://github.com/pybind/pybind11/) (if installed in parallel to the directory where you plan to install `Ph2_ACF`, the `setup.sh` script will point to the correct location)
-```bash
-wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
-tar zxvf v2.9.2.tar.gz
-```
-
-
-##
-### Setup on CentOs8 (deprecated)
-1. Libraries needed by `Ph2_ACF`
-```bash
-sudo yum install -y boost-devel pugixml-devel json-devel
-```
-
-2. uHAL libraries (cactus)
-```bash
-sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
-  -o /etc/yum.repos.d/ipbus-sw.repo
-sudo yum-config-manager --enable powertools
-sudo yum clean all
-sudo yum groupinstall uhal
-```
-
-3. ROOT
-```bash
-sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
-  root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
-```
-
-4. Build tools and some nice git extras
-```bash
-sudo yum install -y cmake3
-sudo yum install -y clang-tools-extra
-sudo yum install -y git-extras
-```
-
-5. Install devtoolset 10
-```bash
-sudo yum makecache --refresh
-sudo yum -y install gcc-toolset-10
-```
-
-6. Install python3
-```bash
-sudo yum install -y python3 python3-devel
-```
-
-7. Install protobuf
-Follow instructions to install protobuf from (Just install section is needed)
-https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
-
-8. Install `pybind11`
-If installed in the same directoory when you plan to install the `Ph2_ACF`, the `setup.sh` will point to the correct location
-```bash
-wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
-tar zxvf v2.9.2.tar.gz
-```
 
 
 ##
@@ -241,7 +147,7 @@ git lfs pull cms_tk_ph2
 
 ##
 ### Known issues
-uHAL exceptions and UDP timeouts when reading larger packet sizes from the GLIB board: this can happen for some users (cause not yet identified) but can be circumvented by changing the line
+uHAL exceptions and UDP timeouts when reading larger packet sizes from the FC7 board: this can happen for some users (cause not yet identified) but can be circumvented by changing the line
 
 `ipbusudp-2.0://192.168.000.175:50001`
 
