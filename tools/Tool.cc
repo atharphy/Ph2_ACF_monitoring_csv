@@ -939,10 +939,7 @@ void Tool::enableTestPulse(bool enableTP)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip: *cHybrid)
-                {
-                    fReadoutChipInterface->enableInjection(cChip, enableTP);
-                }
+                for(auto cChip: *cHybrid) { fReadoutChipInterface->enableInjection(cChip, enableTP); }
             }
         }
     }
@@ -981,8 +978,10 @@ void Tool::setFWTestPulse(bool inject)
 
             if(!cAsync)
             {
-                if(inject) cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-                else       cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+                if(inject)
+                    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+                else
+                    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
             }
             else
             {

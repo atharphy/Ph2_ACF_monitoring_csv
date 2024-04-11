@@ -3,8 +3,8 @@
 
 #include "pugixml.hpp"
 #include <boost/any.hpp>
-#include <string>
 #include <map>
+#include <string>
 
 class DetectorContainer;
 namespace Ph2_HwDescription
@@ -24,10 +24,10 @@ class FileDumper
     FileDumper(const std::string& outputDirectory);
     ~FileDumper();
 
-    std::stringstream dumpConfigurationFiles(DetectorContainer*                                 theDetectorContainer,
+    std::stringstream dumpConfigurationFiles(DetectorContainer*                       theDetectorContainer,
                                              const std::map<std::string, boost::any>& theSettingMap,
-                                             CommunicationSettingConfig*                        theCommunicationSettingConfig,
-                                             DetectorMonitorConfig*                             theDetectorMonitorConfig);
+                                             CommunicationSettingConfig*              theCommunicationSettingConfig,
+                                             DetectorMonitorConfig*                   theDetectorMonitorConfig);
 
   private:
     void        dumpBoardConfigurationFile(pugi::xml_node theMotherNode, Ph2_HwDescription::BeBoard* theBoardContainer);

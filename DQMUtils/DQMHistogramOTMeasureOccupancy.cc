@@ -1,9 +1,9 @@
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
+#include "HWDescription/ReadoutChip.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
-#include "HWDescription/ReadoutChip.h"
 #include "Utils/Occupancy.h"
 
 #include "TFile.h"
@@ -28,13 +28,13 @@ void DQMHistogramOTMeasureOccupancy::book(TFile* theOutputFile, DetectorContaine
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    auto selectCBCfunction = [] (const ChipContainer* theChip) {return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::CBC3);};
+    auto        selectCBCfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::CBC3); };
     std::string selectCBCfunctionName = "SelectCBCfunction";
 
-    auto selectSSAfunction = [] (const ChipContainer* theChip) {return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2);};
+    auto        selectSSAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     std::string selectSSAfunctionName = "SelectSSAfunction";
 
-    auto selectMPAfunction = [] (const ChipContainer* theChip) {return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2);};
+    auto        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     std::string selectMPAfunctionName = "SelectMPAfunction";
 
     fDetectorContainer->addReadoutChipQueryFunction(selectCBCfunction, selectCBCfunctionName);
@@ -78,16 +78,18 @@ void DQMHistogramOTMeasureOccupancy::fillOccupancy(const DetectorDataContainer& 
                     const ChipDataContainer* theChipContainer = fOccupancyHistogramContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId());
                     // using TH1F and TH2F inheritance from TH1
                     TH1* theOccupancyHistogram;
-                    if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2) theOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                    else theOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                    
+                    if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+                        theOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    else
+                        theOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH1F>>().fTheHistogram;
+
                     for(uint16_t row = 0; row < theChip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < theChip->getNumberOfCols(); ++col)
                         {
                             auto theOccupancy = theChip->getChannel<Occupancy>(row, col);
                             theOccupancyHistogram->SetBinContent(col + 1, row + 1, theOccupancy.fOccupancy);
-                            theOccupancyHistogram->SetBinError  (col + 1, row + 1, theOccupancy.fOccupancyError);
+                            theOccupancyHistogram->SetBinError(col + 1, row + 1, theOccupancy.fOccupancyError);
                         }
                     }
                 }
@@ -96,13 +98,11 @@ void DQMHistogramOTMeasureOccupancy::fillOccupancy(const DetectorDataContainer& 
     }
 }
 
-
 //========================================================================================================================
 void DQMHistogramOTMeasureOccupancy::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================

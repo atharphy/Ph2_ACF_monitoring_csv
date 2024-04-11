@@ -24,9 +24,9 @@
 #include "pugixml.hpp"
 #include <boost/any.hpp>
 #include <iostream>
+#include <map>
 #include <stdlib.h>
 #include <string>
-#include <map>
 #include <vector>
 
 /*!
@@ -40,8 +40,8 @@ class RegManager;
 }
 namespace Ph2_Parser
 {
-using BeBoardVec  = std::vector<Ph2_HwDescription::BeBoard*>;    /*!< Vector of Board pointers */
-using SettingsMap = std::map<std::string, boost::any>; /*!< Maps the settings */
+using BeBoardVec  = std::vector<Ph2_HwDescription::BeBoard*>; /*!< Vector of Board pointers */
+using SettingsMap = std::map<std::string, boost::any>;        /*!< Maps the settings */
 
 /*!
  * \class FileParser
