@@ -162,10 +162,12 @@ void Tool::Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize)
 
 void Tool::Start(const StartInfo& theStartInfo)
 {
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fDirectoryName = " << fDirectoryName << std::endl;
     if(fDirectoryName == "")
     {
         std::string resultDirectory = getResultDirectoryName(theStartInfo);
         CreateResultDirectory(resultDirectory, false, false);
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fDirectoryName = " << fDirectoryName << std::endl;
     }
 
     InitResultFile("Results");
@@ -632,6 +634,11 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
         LOG(INFO) << "OT Module GUI (GIPHT) result directory environmental variable set: " << std::getenv("GIPHT_RESULT_FOLDER");
         nDirname = std::getenv("GIPHT_RESULT_FOLDER");
     }
+    else if(std::getenv("OTSDAQ_RESULTS_FOLDER"))
+    {
+        LOG(INFO) << "OTSDAQ result directory environmental variable set: " << std::getenv("OTSDAQ_RESULTS_FOLDER");
+        nDirname = std::string(std::getenv("OTSDAQ_RESULTS_FOLDER")) + "/" + pDirname + "/";
+    }
     else { nDirname = pDirname; }
     if(pDate) nDirname += currentDateTime();
 
@@ -643,7 +650,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result Directory: " << e.what() << RESET;
+        LOG(ERROR) << BOLDRED << "Exception when trying to create Result Directory: " << e.what() << RESET;
     }
 
     fDirectoryName = nDirname;

@@ -17,13 +17,16 @@ using namespace Ph2_HwDescription;
 
 FileDumper::FileDumper(const std::string& outputDirectory)
 {
-    fOutputDirectory = std::string(getenv("PH2ACF_BASE_DIR")) + "/" + outputDirectory + "/";
     // Overwrite if GUI is involved
     if(std::getenv("GIPHT_RESULT_FOLDER"))
     {
         LOG(INFO) << "OT Module GUI (GIPHT) result directory environmental variable set: " << std::getenv("GIPHT_RESULT_FOLDER") << RESET;
         fOutputDirectory = std::getenv("GIPHT_RESULT_FOLDER");
         LOG(INFO) << "Use " << fOutputDirectory << " for file dump" << RESET;
+    }
+    else if(!std::getenv("OTSDAQ_RESULTS_FOLDER"))
+    {
+        fOutputDirectory = std::string(getenv("PH2ACF_BASE_DIR")) + "/" + outputDirectory + "/";
     }
 }
 
