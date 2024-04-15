@@ -377,8 +377,8 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">0</Setting>
-    <Setting name="PedeNoisePulseAmplitude">0</Setting>
+    <Setting name="PedestalEqualization_PulseAmplitude">0</Setting>
+    <Setting name="PedeNoise_PulseAmplitude">0</Setting>
     <Setting name="TriggerRate">10</Setting>
     <Setting name="StubAlignmentThreshold">590</Setting>
     <Setting name="StubAlignmentScanStart">70</Setting>

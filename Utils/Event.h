@@ -368,9 +368,14 @@ class Event
      * \brief Function to get a sparsified hit vector
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
-     * \return vector with hit channels
+     * \return vector with hit channels (row, col)
      */
-    virtual std::vector<uint32_t> GetHits(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
+    virtual std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId) const
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " not implemented! Aborting..." << std::endl;
+        abort();
+        return {};
+    }
     /*!
      * \brief Function to get an encoded SLinkEvent object
      * \param pBoard : pointer to Ph2_HwDescription::BeBoard

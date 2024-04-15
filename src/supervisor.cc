@@ -396,6 +396,7 @@ int main(int argc, char* argv[])
     // checkExitStatus(dqmControllerStatus,"DQMController");
 
     if(!batchMode) cApp.Run();
+    kill(runControllerPid, SIGKILL);
 
     return EXIT_SUCCESS;
 }

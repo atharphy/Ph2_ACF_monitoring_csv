@@ -20,7 +20,6 @@ class D19cPSEventAS : public Event
     void Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list) override;
 
     uint32_t                GetNHits(uint8_t pHybridId, uint8_t pMPAId) const override;
-    std::vector<uint32_t>   GetHits(uint8_t pHybridId, uint8_t pMPAId) const override;
     EventDataVector         fEventDataVector;
     static constexpr size_t encodeVectorIndex(const uint8_t pHybridId, const uint8_t pCbcId, const uint8_t numberOfCBCs) { return pCbcId + pHybridId * numberOfCBCs; }
     inline bool             privateDataBit(uint8_t pHybridId, uint8_t pMPAId, uint8_t i) const;

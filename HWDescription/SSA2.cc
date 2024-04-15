@@ -41,6 +41,7 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
         cMapItem.second.fControlReg = 1;
     }
     setFrontEndType(FrontEndType::SSA2);
+    fAverageNoise = 4.0;
 }
 
 SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename)
@@ -61,6 +62,7 @@ SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
         cMapItem.second.fControlReg = 1;
     }
     setFrontEndType(FrontEndType::SSA2);
+    fAverageNoise = 4.0;
 }
 
 void SSA2::initializeFreeRegisters()
@@ -214,6 +216,11 @@ std::string SSA2::getStripRegisterName(const std::string& theRegisterName, uint1
 {
     std::string stripRegisterName = theRegisterName + "_S" + std::to_string(strip + 1);
     return stripRegisterName;
+}
+
+void SSA2::setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
+{
+    for(const auto& theInput: theInputMap) fADCcalibrationMap[theInput.first] = theInput.second;
 }
 
 } // namespace Ph2_HwDescription

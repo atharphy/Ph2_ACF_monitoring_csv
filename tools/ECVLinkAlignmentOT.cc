@@ -235,72 +235,70 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
             }
         }
     }
-    for (uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
+    for(uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
     {
-        for (uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
+        for(uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
         {
             SetCICClockPolarityAndStrength(pOpticalGroup, clockPolarity == 0, clockStrength);
-            for (uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength ++)
+            for(uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength++)
             {
                 for(auto cHybrid: *pOpticalGroup)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    fCicInterface->ConfigureDriveStrength(cCic, cicStrength); 
+                    fCicInterface->ConfigureDriveStrength(cCic, cicStrength);
                 }
-                LOG (INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
-                LOG (INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
-                LOG (INFO) << BOLDRED << "CIC STRENGTH:\t" << +cicStrength << RESET;
+                LOG(INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
+                LOG(INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
+                LOG(INFO) << BOLDRED << "CIC STRENGTH:\t" << +cicStrength << RESET;
 
                 AlignLpGBTInputs(pOpticalGroup);
 
                 std::map<std::string, uint8_t> trainedPhases = flpGBTInterface->GetPhaseTapMap();
 
-                //uint8_t chosenPhase = flpGBTInterface->fChosenPhase;
+                // uint8_t chosenPhase = flpGBTInterface->fChosenPhase;
                 std::vector<uint8_t> hybridIds;
 
-//map<char, int>::iterator it;
-                for(auto it=trainedPhases.begin(); it!=trainedPhases.end(); ++it){
+                // map<char, int>::iterator it;
+                for(auto it = trainedPhases.begin(); it != trainedPhases.end(); ++it)
+                {
                     if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
                     {
-                        if (it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,6, it->second);
-                        if (it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, it->second);
-                        if (it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,1, it->second);
-                        if (it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,2, it->second);
-                        if (it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,3, it->second);
-                        if (it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,4, it->second);
-                        if (it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,0, it->second);
-                        if (it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,1, it->second);
-                        if (it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,2, it->second);
-                        if (it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,3, it->second);
-                        if (it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,4, it->second);
-                        if (it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,6, it->second);
-
+                        if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 6, it->second);
+                        if(it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 0, it->second);
+                        if(it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 1, it->second);
+                        if(it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 2, it->second);
+                        if(it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 3, it->second);
+                        if(it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 4, it->second);
+                        if(it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 0, it->second);
+                        if(it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 1, it->second);
+                        if(it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 2, it->second);
+                        if(it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 3, it->second);
+                        if(it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 4, it->second);
+                        if(it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 6, it->second);
                     }
                     if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
                     {
-                        if (it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,6, it->second);
-                        if (it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,5, it->second);
-                        if (it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,3, it->second);
-                        if (it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,4, it->second);
-                        if (it->first == "Group6Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,1, it->second);
-                        if (it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,2, it->second);
-                        if (it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,0,0, it->second);
+                        if(it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 6, it->second);
+                        if(it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 5, it->second);
+                        if(it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 3, it->second);
+                        if(it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 4, it->second);
+                        if(it->first == "Group6Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 1, it->second);
+                        if(it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 2, it->second);
+                        if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 0, it->second);
 
-                        if (it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,5, it->second);
-                        if (it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,6, it->second);
-                        if (it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,4, it->second);
-                        if (it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,3, it->second);
-                        if (it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,2, it->second);
-                        if (it->first == "Group3Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,1, it->second);
-                        if (it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength,1,0, it->second);
+                        if(it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 5, it->second);
+                        if(it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 6, it->second);
+                        if(it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 4, it->second);
+                        if(it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 3, it->second);
+                        if(it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 2, it->second);
+                        if(it->first == "Group3Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 1, it->second);
+                        if(it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 0, it->second);
                     }
                 }
-                //StoreChosenPhase(clockPolarity, clockStrength, cicStrength, chosenPhase);
+                // StoreChosenPhase(clockPolarity, clockStrength, cicStrength, chosenPhase);
             }
         }
     }
-
-
 }
 
 void ECVLinkAlignmentOT::SetlpGBTRxPhase(const OpticalGroup* pOpticalGroup, uint8_t pPhase)

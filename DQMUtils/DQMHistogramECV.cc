@@ -44,14 +44,14 @@ void DQMHistogramECV::book(TFile* theOutputFile, DetectorContainer& theDetectorS
     HistContainer<TH2F> hWordAlignmentScanPolarity1("WordAlignment_Polarity_1", "Polarity 1", 49, 0, 49, 75, 0, 75);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fWordAlignmentScanPolarity1, hWordAlignmentScanPolarity1);
 
-    HistContainer<TH2F> hPhaseTrainingPolarity0("PhaseTraining_Polarity_0", "Polarity 0", 49, 0, 49, 5,0,5);
+    HistContainer<TH2F> hPhaseTrainingPolarity0("PhaseTraining_Polarity_0", "Polarity 0", 49, 0, 49, 5, 0, 5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanPolarity0, hPhaseTrainingPolarity0);
-    HistContainer<TH2F> hPhaseTrainingPolarity1("PhaseTraining_Polarity_1", "Polarity 1", 49, 0, 49, 5,0,5);
+    HistContainer<TH2F> hPhaseTrainingPolarity1("PhaseTraining_Polarity_1", "Polarity 1", 49, 0, 49, 5, 0, 5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanPolarity1, hPhaseTrainingPolarity1);
 
-    HistContainer<TH2F> hChosenPhasePolarity0("ChosenPhase_Polarity_0", "Polarity 0", 7, 0, 7, 5,0,5);
+    HistContainer<TH2F> hChosenPhasePolarity0("ChosenPhase_Polarity_0", "Polarity 0", 7, 0, 7, 5, 0, 5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fChosenPhasePolarity0, hChosenPhasePolarity0);
-    HistContainer<TH2F> hChosenPhasePolarity1("ChosenPhase_Polarity_1", "Polarity 1", 7, 0, 7, 5,0,5);
+    HistContainer<TH2F> hChosenPhasePolarity1("ChosenPhase_Polarity_1", "Polarity 1", 7, 0, 7, 5, 0, 5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fChosenPhasePolarity1, hChosenPhasePolarity1);
 }
 
@@ -281,16 +281,15 @@ void DQMHistogramECV::fillPhases(uint8_t pClockPolarity, uint8_t pClockStrength,
     {
         for(auto opticalGroup: *board)
         {
-
-            float phase = (float) pPhase.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(pHybridId)->getSummary<uint8_t>();
+            float phase = (float)pPhase.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(pHybridId)->getSummary<uint8_t>();
             TH2F* cPhaseSummary;
 
-            if (pClockPolarity == 0)
+            if(pClockPolarity == 0)
                 cPhaseSummary = fPhaseScanPolarity0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(pHybridId)->getSummary<HistContainer<TH2F>>().fTheHistogram;
             else
                 cPhaseSummary = fPhaseScanPolarity1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(pHybridId)->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
-            cPhaseSummary->SetBinContent(   pLine*7    + pClockStrength, pCicStrength , phase );
+            cPhaseSummary->SetBinContent(pLine * 7 + pClockStrength, pCicStrength, phase);
         }
     }
 }
@@ -303,15 +302,15 @@ void DQMHistogramECV::fillChosenPhase(uint8_t pClockPolarity, uint8_t pClockStre
         {
             for(auto hybrid: *opticalGroup)
             {
-                float phase = (float) pPhase.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<uint8_t>();
+                float phase = (float)pPhase.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<uint8_t>();
                 TH2F* cPhaseSummary;
 
-                if (pClockPolarity == 0)
+                if(pClockPolarity == 0)
                     cPhaseSummary = fChosenPhasePolarity0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 else
                     cPhaseSummary = fChosenPhasePolarity1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
-                cPhaseSummary->SetBinContent(  pClockStrength, pCicStrength , phase );
+                cPhaseSummary->SetBinContent(pClockStrength, pCicStrength, phase);
             }
         }
     }

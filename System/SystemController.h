@@ -69,7 +69,6 @@ namespace Ph2_System
 {
 class RegisterHelper;
 
-// using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
 using BeBoardFWMap = std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>; /*!< Map of Board connected */
 
 /*!
