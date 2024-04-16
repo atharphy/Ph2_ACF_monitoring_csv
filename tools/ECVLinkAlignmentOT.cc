@@ -420,6 +420,16 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
     bool cAligned1 = L1WordAlignment(pOpticalGroup, fL1Debug, 1); // If one line is not aligned it is false for both lines
     ret.push_back(std::make_pair(0, std::make_pair(6, cAligned0)));
     ret.push_back(std::make_pair(1, std::make_pair(6, cAligned1)));
+    int hybridCount = 0;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        if (hybridCount == 0)
+            ret.push_back(std::make_pair(cHybrid->getId(), std::make_pair(6, cAligned0)));
+        else
+            ret.push_back(std::make_pair(cHybrid->getId(), std::make_pair(6, cAligned1)));
+        hybridCount++;
+    }
+
     return ret;
 }
 
@@ -703,8 +713,15 @@ void ECVLinkAlignmentOT::StoreTrainedPhases(uint8_t pClockPolarity, uint8_t pClo
     DetectorDataContainer cPhasesContainer;
     ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, cPhasesContainer);
 
-    for(auto cOpticalGroup: *cBoard) { cPhasesContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(pHybridId)->getSummary<uint8_t>() = pPhase; } // optical group
-    LOG(INFO) << +pLine << RESET;
+    for(auto cOpticalGroup: *cBoard)
+    {
+        cPhasesContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(pHybridId)
+                        ->getSummary<uint8_t>() = pPhase;
+        
+    } // optical group
+    LOG (INFO) << +pLine << RESET;
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillPhases(pClockPolarity, pClockStrength, pCicStrength, pHybridId, pLine, cPhasesContainer);
 #endif
@@ -719,13 +736,20 @@ void ECVLinkAlignmentOT::StoreChosenPhase(uint8_t pClockPolarity, uint8_t pClock
 
     for(auto cOpticalGroup: *cBoard)
     {
-        for(auto cHybrid: *cOpticalGroup) { cPhasesContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<uint8_t>() = pPhase; }
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            cPhasesContainer.getObject(cBoard->getId())
+                          ->getObject(cOpticalGroup->getId())
+                          ->getObject(cHybrid->getId())
+                          ->getSummary<uint8_t>() = pPhase;
+        }
     } // optical group
 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillChosenPhase(pClockPolarity, pClockStrength, pCicStrength, cPhasesContainer);
 #endif
 }
+
 
 // State machine control functions
 void ECVLinkAlignmentOT::Running()
