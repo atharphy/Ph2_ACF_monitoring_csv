@@ -420,6 +420,16 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
     bool cAligned1 = L1WordAlignment(pOpticalGroup, fL1Debug, 1); // If one line is not aligned it is false for both lines
     ret.push_back(std::make_pair(0, std::make_pair(6, cAligned0)));
     ret.push_back(std::make_pair(1, std::make_pair(6, cAligned1)));
+    int hybridCount = 0;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        if (hybridCount == 0)
+            ret.push_back(std::make_pair(cHybrid->getId(), std::make_pair(6, cAligned0)));
+        else
+            ret.push_back(std::make_pair(cHybrid->getId(), std::make_pair(6, cAligned1)));
+        hybridCount++;
+    }
+
     return ret;
 }
 
