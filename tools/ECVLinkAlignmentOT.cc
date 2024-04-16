@@ -120,7 +120,7 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
     uint8_t cicClockStrengthStart = 1, cicClockStrengthEnd = 7;
     uint8_t cicSLVSStrengthStart = 1, cicSLVSStrengthEnd = 5;
     uint8_t lpGBTPhaseStart = 0, lpGBTPhaseEnd = 14;
-
+    
     InitWordAlignStubs(pOpticalGroup);
     for(uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
     {
@@ -583,7 +583,9 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::L
             std::string l1adata;
 
             std::vector<uint32_t> l1adatawords = cDebugInterface->L1ADebug(1, false);
-            for(auto word: l1adatawords)
+            uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(pOpticalGroup);
+            auto     orderedLineOutputVector = reorderPattern(l1adatawords, numberOfBytesInSinglePacket);
+            for(auto word: orderedLineOutputVector)
             {
                 std::bitset<32> bits(word);
                 std::string     binaryWordLine = bits.to_string();
@@ -595,6 +597,8 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::L
                 LOG(INFO) << "L1A debug Hybrid " << +cHybrid->getId() << " iteration " << i << RESET;
                 LOG(INFO) << l1adata << RESET;
             }
+
+
             std::size_t     found   = l1adata.find("111111111111111111111111111");
             std::bitset<32> pattern = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) ? 0xAD55AAB5 : 0xAAAAAAAA;
             if(found != std::string::npos && (1600 - found) > (250 + 32))
@@ -772,4 +776,19 @@ void ECVLinkAlignmentOT::writeObjects()
     this->SaveResults();
     fDQMHistogrammer.process();
 #endif
+}
+bool ECVLinkAlignmentOT::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
+{
+    uint32_t header                  = 0x0ffffffe;
+    uint32_t headerMask              = 0xffffffff;
+    auto     orderedLineOutputVector = reorderPattern(theWordVector, numberOfBytesInSinglePacket);
+
+    std::pair<bool, size_t> isFoundAndWhere = matchPattern(orderedLineOutputVector, numberOfBytesInSinglePacket, header, headerMask);
+    return isFoundAndWhere.first;
+}
+
+
+uint8_t ECVLinkAlignmentOT::getNumberOfBytesInSinglePacket(const OpticalGroup* pOpticalGroup)
+{
+    return (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(pOpticalGroup->flpGBT) == 10) ? 2 : 1;
 }
