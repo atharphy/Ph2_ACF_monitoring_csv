@@ -378,16 +378,6 @@ void RD53AInterface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t r
     }
 }
 
-void RD53AInterface::ChipErrorReport(ReadoutChip* pChip)
-{
-    RD53Interface::ChipErrorReport(pChip);
-
-    LOG(INFO) << BOLDBLUE << "WNGFIFO_FULL_CNT_0  = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "WNGFIFO_FULL_CNT_0") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "WNGFIFO_FULL_CNT_1  = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "WNGFIFO_FULL_CNT_1") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "WNGFIFO_FULL_CNT_2  = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "WNGFIFO_FULL_CNT_2") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "WNGFIFO_FULL_CNT_3  = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "WNGFIFO_FULL_CNT_3") << std::setfill(' ') << std::setw(8) << "" << RESET;
-}
-
 void RD53AInterface::PackWriteCommand(Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
     RD53ACmd::serialize(RD53ACmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(regName).fAddress, data}, chipCommandList);

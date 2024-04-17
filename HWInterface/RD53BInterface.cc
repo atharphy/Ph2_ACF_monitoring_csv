@@ -179,7 +179,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ########################
     // # Aurora configuration #
     // ########################
-    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(pRD53->laneConfig.nOutputLanes), 0b011001, 0b11), false);
+    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(pRD53->laneConfig.nOutputLanes), 0b011010, 0b11), false);
     // # bit 14:    SendAltOutput
     // # bit 13:    EnablePRBS
     // # bits 9-12: ActiveLanes[3:0] --> Internal output lanes
@@ -223,7 +223,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #####################################
     // # Aurora Channel Bond configuration #
     // #####################################
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1, false);
+    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0961, false);
     // # bits 5-16: CBWait[11:0]
     // # bits 1-4:  CBSend[3:0]
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
@@ -568,16 +568,6 @@ void RD53BInterface::Reset(ReadoutChip* pChip, const size_t resetType, const siz
         RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
     else
         RD53BInterface::SendGlobalPulse(pChip, (size_t)(1 << resetType), duration);
-}
-
-void RD53BInterface::ChipErrorReport(ReadoutChip* pChip)
-{
-    RD53Interface::ChipErrorReport(pChip);
-
-    LOG(INFO) << BOLDBLUE << "READTRIG_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "READTRIG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "RDWRFIFOERROR_CNT   = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "RDWRFIFOERROR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "PIXELSEU_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "PIXELSEU_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "GLOBALCONFIGSEU_CNT = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "GLOBALCONFIGSEU_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
 }
 
 void RD53BInterface::PackWriteCommand(Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
