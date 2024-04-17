@@ -17,32 +17,62 @@ namespace Ph2_HwDescription
 // ########################################
 // # Support for different FrontEnd types #
 // ########################################
-const size_t         RD53B::NROWS = 336;
-const size_t         RD53B::NCOLS = 432;
-const RD53::FrontEnd RD53B::CROC  = {"RD53B",
-                                     {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
-                                     "DAC_KRUM_CURR_LIN",
-                                     "TriggerConfig",
-                                     "DAC_LDAC_LIN",
-                                     "VDDD",
-                                     "VDDA",
-                                     1,
-                                     32,
-                                     RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
-                                     7,
-                                     4,
-                                     4,
-                                     0,
-                                     RD53B::NCOLS - 1,
-                                     0,
-                                     0x01};
+const size_t          RD53B::NROWS   = 336;
+const size_t          RD53B::NCOLS   = 432;
+const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
+                                        {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
+                                        "DAC_KRUM_CURR_LIN",
+                                        "TriggerConfig",
+                                        "DAC_LDAC_LIN",
+                                        "VDDD",
+                                        "VDDA",
+                                        1,
+                                        32,
+                                        RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
+                                        7,
+                                        4,
+                                        4,
+                                        0,
+                                        RD53B::NCOLS - 1,
+                                        0,
+                                        0x01};
+const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
+                                        {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
+                                        "DAC_KRUM_CURR_LIN",
+                                        "TriggerConfig",
+                                        "DAC_LDAC_LIN",
+                                        "VDDD",
+                                        "VDDA",
+                                        1,
+                                        32,
+                                        RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
+                                        7,
+                                        4,
+                                        4,
+                                        0,
+                                        RD53B::NCOLS - 1,
+                                        0,
+                                        0x01};
+const RD53::FrontEnd* RD53B::RD53Bx  = &RD53B::RD53Bv2;
 
-RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
+RD53B::RD53B(const FrontEndType& frontEndType,
+             uint8_t             pBeId,
+             uint8_t             pFMCId,
+             uint8_t             pOpticalGroupId,
+             uint8_t             pHybridId,
+             uint8_t             pRD53Id,
+             uint8_t             pRD53Lane,
+             const std::string&  fileName,
+             const std::string&  cfgComment)
     : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, fileName, cfgComment)
 {
     ReadoutChip::fChipOriginalMask = std::make_shared<RD53ChannelGroup>(RD53B::NROWS, RD53B::NCOLS, true);
     RD53::loadfRegMap(fileName);
-    this->setFrontEndType(FrontEndType::RD53B);
+    this->setFrontEndType(frontEndType);
+    if(frontEndType == FrontEndType::RD53Bv1)
+        RD53B::RD53Bx = &RD53B::RD53Bv1;
+    else
+        RD53B::RD53Bx = &RD53B::RD53Bv2;
 }
 
 const DataFormatOptions& RD53B::getDataFormatOptions()

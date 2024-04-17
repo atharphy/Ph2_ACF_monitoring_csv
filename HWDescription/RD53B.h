@@ -55,14 +55,24 @@ namespace Ph2_HwDescription
 class RD53B : public RD53
 {
   public:
-    static const size_t   NROWS;
-    static const size_t   NCOLS;
-    static const FrontEnd CROC;
+    static const size_t    NROWS;
+    static const size_t    NCOLS;
+    static const FrontEnd  RD53Bv1;
+    static const FrontEnd  RD53Bv2;
+    static const FrontEnd* RD53Bx;
 
     static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const DataFormatOptions& options);
 
     RD53B() {}
-    RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
+    RD53B(const FrontEndType& frontEndType,
+          uint8_t             pBeId,
+          uint8_t             pFMCId,
+          uint8_t             pOpticalGroupId,
+          uint8_t             pHybridId,
+          uint8_t             pRD53Id,
+          uint8_t             pRD53Lane,
+          const std::string&  fileName,
+          const std::string&  cfgComment);
     RD53B(const RD53B&) = delete;
 
     size_t getMaxBCIDvalue() const override
@@ -74,7 +84,7 @@ class RD53B : public RD53
         return RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID * ((this->getRegItem("EnBCId").fValue == true) && (this->getRegItem("EnLv1Id").fValue == true) ? 1 : 2));
     }
     const DataFormatOptions& getDataFormatOptions() override;
-    const FrontEnd*          getFEtype(const size_t colStart, const size_t colStop) const override { return &RD53B::CROC; }
+    const FrontEnd*          getFEtype(const size_t colStart, const size_t colStop) const override { return RD53B::RD53Bx; }
     size_t                   getNRows() const override { return RD53B::NROWS; }
     size_t                   getNCols() const override { return RD53B::NCOLS; }
     std::vector<uint16_t>    getLaneUpInitSequence() const override { return {}; }
