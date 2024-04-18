@@ -32,13 +32,6 @@ const uint8_t NBIT_TOT        = 4;   // Number of ToT bits
 const uint8_t NBIT_CCOL       = 6;   // Number of core column bits
 } // namespace RD53BEvtEncoder
 
-namespace RD53BConstants
-{
-const uint8_t  BROADCAST_CHIPID   = 31;   // Broadcast chip ID used to send the command to multiple chips
-const uint16_t GLOBAL_PULSE_ADDR  = 0x3D; // Global Pulse Route regiser address
-const uint16_t RESET_GLOBAL_PULSE = 0x30; // If = 1 Global Pulse does reset Aurora and Serializers but not with Clear command
-} // namespace RD53BConstants
-
 // ####################################################################################
 // # Formula: Vref / ADCrange * VCal / electron_charge [C] * capacitance [F] + offset #
 // ####################################################################################
@@ -59,9 +52,11 @@ class RD53B : public RD53
     static const size_t    NCOLS;
     static const FrontEnd  RD53Bv1;
     static const FrontEnd  RD53Bv2;
-    static const FrontEnd* RD53Bx;
+    static const FrontEnd* RD53Bvx;
 
     static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const DataFormatOptions& options);
+
+    static std::map<std::string, RD53::SpecialRegInfo> specialRegMap;
 
     RD53B() {}
     RD53B(const FrontEndType& frontEndType,
@@ -75,6 +70,9 @@ class RD53B : public RD53
           const std::string&  cfgComment);
     RD53B(const RD53B&) = delete;
 
+    // #############################
+    // # Override member functions #
+    // #############################
     size_t getMaxBCIDvalue() const override
     {
         return RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID * ((this->getRegItem("EnBCId").fValue == true) && (this->getRegItem("EnLv1Id").fValue == true) ? 1 : 2));
@@ -84,14 +82,15 @@ class RD53B : public RD53
         return RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID * ((this->getRegItem("EnBCId").fValue == true) && (this->getRegItem("EnLv1Id").fValue == true) ? 1 : 2));
     }
     const DataFormatOptions& getDataFormatOptions() override;
-    const FrontEnd*          getFEtype(const size_t colStart, const size_t colStop) const override { return RD53B::RD53Bx; }
+    const FrontEnd*          getFEtype(const size_t colStart = 0, const size_t colStop = 0) override { return RD53B::RD53Bvx; }
     size_t                   getNRows() const override { return RD53B::NROWS; }
     size_t                   getNCols() const override { return RD53B::NCOLS; }
     std::vector<uint16_t>    getLaneUpInitSequence() const override { return {}; }
-    uint32_t                 getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
+    uint32_t                 getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) override;
     float                    VCal2Charge(float VCal, bool isNoise = false) const override;
     float                    Charge2VCal(float Charge) const override;
     bool                     getUseGainDualSlope() const override { return this->getRegItem("ToT6to4Mapping").fValue == 0 ? false : true; };
+    // #############################
 };
 
 } // namespace Ph2_HwDescription

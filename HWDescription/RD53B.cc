@@ -35,7 +35,24 @@ const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
                                         0,
                                         RD53B::NCOLS - 1,
                                         0,
-                                        0x01};
+                                        0x01,
+                                        31,
+                                        {{"RstChnSync", 0x0001},
+                                         {"RstCmdDecoder", 0x0002},
+                                         {"RstGlbConf", 0x0004},
+                                         {"RstServiceData", 0x0008},
+                                         {"RstAurora", 0x0010},
+                                         {"RstSerializer", 0x0020},
+                                         {"RstADC", 0x0040},
+                                         {"RstDataMerging", 0x0050},
+                                         {"RstEfuses", 0x0100},
+                                         {"RstTrigTable", 0x0200},
+                                         {"RstBCIDCnt", 0x0400},
+                                         {"SendCalReset", 0x0800},
+                                         {"ADCstatConversion", 0x1000},
+                                         {"SendStartRingOscA", 0x2000},
+                                         {"SendStartRingOscB", 0x4000},
+                                         {"SendStartEfusesPrg", 0x800}}};
 const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
                                         {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
                                         "DAC_KRUM_CURR_LIN",
@@ -52,8 +69,69 @@ const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
                                         0,
                                         RD53B::NCOLS - 1,
                                         0,
-                                        0x01};
-const RD53::FrontEnd* RD53B::RD53Bx  = &RD53B::RD53Bv2;
+                                        0x01,
+                                        31,
+                                        {{"RstChnSync", 0x0001},
+                                         {"RstCmdDecoder", 0x0002},
+                                         {"RstGlbConf", 0x0004},
+                                         {"RstAurora", 0x0008},
+                                         {"RstDataPath", 0x0010},
+                                         {"SendClearRstAurora", 0x0020},
+                                         {"RstBCIDCnt", 0x0040},       // Reset also L1ID and, Trigger counters
+                                         {"SendClearRstBCID", 0x0088}, // Reset also Trigger counter
+                                         {"RstSerializer", 0x0100},
+                                         {"RstADC", 0x0200},
+                                         {"RstEfuses", 0x0400},
+                                         {"SendCalReset", 0x0800},
+                                         {"ADCstatConversion", 0x1000},
+                                         {"SendStartRingOscA", 0x2000},
+                                         {"SendStartRingOscB", 0x4000},
+                                         {"SendStartEfusesPrg", 0x8000}}};
+const RD53::FrontEnd* RD53B::RD53Bvx = &RD53B::RD53Bv2;
+
+std::map<std::string, RD53::SpecialRegInfo> RD53B::specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
+                                                                    {"CDR_CONFIG_SEL_PD", {"CDR_CONFIG", 3}},
+
+                                                                    {"CLK_DATA_DELAY_DATA", {"CLK_DATA_DELAY", 0}},
+                                                                    {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 6}},
+
+                                                                    {"MON_ADC_TRIM", {"MON_ADC", 0}},
+
+                                                                    {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
+                                                                    {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 4}},
+
+                                                                    {"CML_CONFIG_EN_LANE", {"CML_CONFIG", 0}},
+                                                                    {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 4}},
+                                                                    {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 6}},
+
+                                                                    {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
+                                                                    {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
+                                                                    {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
+                                                                    {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}},
+
+                                                                    {"CAL_EDGE_FINE_DELAY", {"CalibrationConfig", 0}},
+                                                                    {"ANALOG_INJ_MODE", {"CalibrationConfig", 6}},
+                                                                    {"DIGITAL_INJ_EN", {"CalibrationConfig", 7}},
+
+                                                                    {"HIT_SAMPLE_MODE", {"PIX_MODE", 3}},
+                                                                    {"EN_SEU_COUNT", {"PIX_MODE", 4}},
+
+                                                                    {"SEL_CAL_RANGE", {"MEAS_CAP", 0}},
+                                                                    {"EN_INJCAP_MEAS", {"MEAS_CAP", 1}},
+                                                                    {"EN_INJCAP_PAR_MEAS", {"MEAS_CAP", 2}},
+
+                                                                    {"ToT6to4Mapping", {"ToTConfig", 9}},
+                                                                    {"ToTDualEdgeCount", {"ToTConfig", 10}},
+
+                                                                    {"EnOutputDataChipId", {"DataMerging", 8}},
+
+                                                                    {"SelfTriggerMultiplier", {"SelfTriggerConfig_0", 0}},
+                                                                    {"SelfTriggerDelay", {"SelfTriggerConfig_0", 5}},
+
+                                                                    {"SelfTriggerEn", {"SelfTriggerConfig_1", 5}},
+
+                                                                    {"ServiceFrameSkip", {"ServiceDataConf", 0}},
+                                                                    {"EnServiceData", {"ServiceDataConf", 8}}};
 
 RD53B::RD53B(const FrontEndType& frontEndType,
              uint8_t             pBeId,
@@ -70,9 +148,26 @@ RD53B::RD53B(const FrontEndType& frontEndType,
     RD53::loadfRegMap(fileName);
     this->setFrontEndType(frontEndType);
     if(frontEndType == FrontEndType::RD53Bv1)
-        RD53B::RD53Bx = &RD53B::RD53Bv1;
+    {
+        RD53B::RD53Bvx = &RD53B::RD53Bv1;
+        specialRegMap.insert({{"EnEoS", {"DataConcentratorConf", 8}},
+                              {"EnLv1Id", {"DataConcentratorConf", 9}},
+                              {"EnBCId", {"DataConcentratorConf", 10}},
+                              {"EnCRC", {"DataConcentratorConf", 11}},
+
+                              {"RawData", {"CoreColEncoderConf", 7}},
+                              {"BinaryReadOut", {"CoreColEncoderConf", 8}}});
+    }
     else
-        RD53B::RD53Bx = &RD53B::RD53Bv2;
+    {
+        RD53B::RD53Bvx = &RD53B::RD53Bv2;
+        specialRegMap.insert({{"EnLv1Id", {"DataConcentratorConf", 8}},
+                              {"EnBCId", {"DataConcentratorConf", 9}},
+                              {"EnCRC", {"DataConcentratorConf", 10}},
+
+                              {"RawData", {"CoreColEncoderConf", 12}},
+                              {"BinaryReadOut", {"CoreColEncoderConf", 13}}});
+    }
 }
 
 const DataFormatOptions& RD53B::getDataFormatOptions()
@@ -272,7 +367,7 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
     }
 }
 
-uint32_t RD53B::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const
+uint32_t RD53B::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay)
 {
     return bits::pack<1, 5, 8, 1, 5>(cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
 }

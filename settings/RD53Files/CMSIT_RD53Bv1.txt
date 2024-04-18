@@ -103,7 +103,7 @@ PrecisionToTEnable_2      0x42          0b0                     0b0             
 PrecisionToTEnable_1      0x43          0b0                     0b0                                16
 PrecisionToTEnable_0      0x44          0b0                     0b0                                16
 DataMerging               0x45          0b0000110000001         0b0000110000001                    13
-DataMergingMux            0x46          0b1110010011100100      0b1110010011100100                 16
+IOLaneMappingMux          0x46          0b1110010011100100      0b1110010011100100                 16
 EN_CORE_COL_CAL_3         0x47          0b111111                0b111111                            6
 EN_CORE_COL_CAL_2         0x48          0b1111111111111111      0b1111111111111111                 16
 EN_CORE_COL_CAL_1         0x49          0b1111111111111111      0b1111111111111111                 16
@@ -123,7 +123,7 @@ OddMask                   0x56          0b0                     0b0             
 EfusesConfig              0x57          0b0                     0b0                                16
 EfusesWriteData1          0x58          0b0                     0b0                                16
 EfusesWriteData0          0x59          0b0                     0b0                                16
-AuroraConfig              0x5A          0b00000101100111        0b00000101100111                   14
+AuroraConfig              0x5A          0b00000101100111        0b00000001011001                   14
 AURORA_CB_CONFIG1         0x5B          0b11111111              0b11111111                          8
 AURORA_CB_CONFIG0         0x5C          0b1111111111110000      0b1111111111110000                 16
 AURORA_INIT_WAIT          0x5D          0b00000100000           0b00000100000                      11
@@ -146,9 +146,9 @@ DAC_VCO_CDR               0x67          0b1111111111            0b1111111111    
 DAC_VCOBUFF_CDR           0x68          0b0111110100            0b0111110100                       10
 SER_SEL_OUT               0x69          0b01010101              0b01010101                          8
 CML_CONFIG                0x6A          0b1                     0b1                                 8
-DAC_CML_BIAS_2            0x6B          0b0                     0b0                                10
-DAC_CML_BIAS_1            0x6C          0b0                     0b0                                10
-DAC_CML_BIAS_0            0x6D          0b0111110100            0b0111110100                       10
+DAC_CML_BIAS_2            0x6B          0d0                     0d0                                10
+DAC_CML_BIAS_1            0x6C          0d0                     0d0                                10
+DAC_CML_BIAS_0            0x6D          0d500                   0d500                              10
 
 *-------------------------------------------------------------------------------------------------------
 * Test and Monitoring Functions
@@ -165,14 +165,14 @@ HITOR_MASK_3              0x74          0b0                     0b0             
 HITOR_MASK_2              0x75          0b0                     0b0                                16
 HITOR_MASK_1              0x76          0b0                     0b0                                16
 HITOR_MASK_0              0x77          0b0                     0b0                                16
-AutoRead0                 0x78          0b10010110              0b10010110                          9
-AutoRead1                 0x79          0b10010000              0b10010000                          9
-AutoRead2                 0x7A          0b10000100              0b10000100                          9
-AutoRead3                 0x7B          0b10000101              0b10000101                          9
-AutoRead4                 0x7C          0b10000111              0b10000111                          9
-AutoRead5                 0x7D          0b10001010              0b10001010                          9
-AutoRead6                 0x7E          0b10001001              0b10001001                          9
-AutoRead7                 0x7F          0b10001000              0b10001000                          9
+AutoRead0                 0x78          0d150                   0d150                               9
+AutoRead1                 0x79          0d144                   0d144                               9
+AutoRead2                 0x7A          0d132                   0d132                               9
+AutoRead3                 0x7B          0d133                   0d133                               9
+AutoRead4                 0x7C          0d135                   0d135                               9
+AutoRead5                 0x7D          0d138                   0d138                               9
+AutoRead6                 0x7E          0d137                   0d137                               9
+AutoRead7                 0x7F          0d136                   0d136                               9
 RingOscConfig             0x80          0b100000100000000       0b100000100000000                  15
 RingOscRoute              0x81          0b0                     0b0                                 9
 RING_OSC_A_OUT            0x82          0b0                     0b0                                16

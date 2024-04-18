@@ -89,7 +89,7 @@ CLK_DATA_DELAY            0x28          0b000000000             0b000000000     
 VCAL_HIGH                 0x29          0b000111110100          0b000111110100                     12
 VCAL_MED                  0x2A          0b000100101100          0b000100101100                     12
 CH_SYNC_CONF              0x2B          0b001000001000          0b001000001000                     12
-GLOBAL_PULSE_ROUTE        0x2C          0b0000000000000000      0b0000000000000000                 16
+GlobalPulseConf           0x2C          0b0000000000000000      0b0000000000000000                 16
 MONITOR_FRAME_SKIP        0x2D          0b00110010              0b00110010                          8
 EN_CORE_COL_CAL_SYNC_1    0x2E          0b1111111111111111      0b1111111111111111                 16
 EN_CORE_COL_CAL_SYNC_2    0x2F          0b1111111111111111      0b1111111111111111                 16

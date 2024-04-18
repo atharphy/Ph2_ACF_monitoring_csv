@@ -664,11 +664,17 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     // @TMP@
     if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
-        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53AConstants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
+        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
+                                                                    RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
+                                                                    RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
+                                          -1);
     else if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::Software)
     {
-        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53AConstants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
-        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53AConstants::BROADCAST_CHIPID, 0x6}), -1);
+        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
+                                                                    RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
+                                                                    RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
+                                          -1);
+        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId, 6}), -1);
         std::this_thread::sleep_for(std::chrono::microseconds(10));
         RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::ECR{}), -1);
         std::this_thread::sleep_for(std::chrono::microseconds(20));
@@ -740,13 +746,14 @@ void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)
 
 void RD53FWInterface::SendFastCommands(const FastCommandsConfig* config)
 {
-    const int GLOBAL_PULSE_WIDTH = 0x6; // @TMP@
-
     if(config == nullptr) config = &(RD53FWInterface::localCfgFastCmd);
 
-    // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
+    // @TMP@ : Prepare GlobalPulseConf to acquire zero level in SYNC FE
     if(config->autozero_source != AutozeroSource::Disabled)
-        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53AConstants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
+        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
+                                                                    RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
+                                                                    RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
+                                          -1);
 
     // ##################################
     // # Configuring fast command block #
@@ -784,7 +791,7 @@ void RD53FWInterface::SendFastCommands(const FastCommandsConfig* config)
                                // # @TMP@ Autozero configuration #
                                // ################################
                                {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)config->autozero_source},
-                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53AConstants::BROADCAST_CHIPID, 0, GLOBAL_PULSE_WIDTH, 0)}});
+                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Shared::firstChip->getFEtype()->broadcastChipId, 0, 6, 0)}});
 
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }

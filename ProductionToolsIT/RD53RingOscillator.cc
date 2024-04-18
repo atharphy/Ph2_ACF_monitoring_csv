@@ -31,7 +31,7 @@ void RingOscillator::run()
                         {
                             static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->WriteChipReg(cChip, "RING_OSC_" + std::to_string(ringOsc), 0); // Reset Oscillator
                             static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->WriteChipReg(cChip, "RING_OSC_ENABLE", 255);
-                            static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->WriteChipReg(cChip, "GLOBAL_PULSE_ROUTE", 0x2000);
+                            static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->WriteChipReg(cChip, "GlobalPulseConf", 0x2000);
                             static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->sendCommand(cChip, RD53ACmd::GlobalPulse{cChip->getId(), (size_t)gPulse});
 
                             oscCounts[ringOsc][gPulse]    = RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "RING_OSC_" + std::to_string(ringOsc)) - 4096;
@@ -48,7 +48,7 @@ void RingOscillator::run()
                             // Set up oscillators
                             static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->WriteChipReg(cChip, "RING_OSC_" + std::to_string(ringOsc), 0); // Reset Oscillator
                             static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->WriteChipReg(cChip, "RING_OSC_ENABLE", 255);
-                            static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->WriteChipReg(cChip, "GLOBAL_PULSE_ROUTE", 0x2000);
+                            static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->WriteChipReg(cChip, "GlobalPulseConf", 0x2000);
                             static_cast<RD53InterfaceRing*>(this->fReadoutChipInterface)->sendCommand(cChip, RD53ACmd::GlobalPulse{cChip->getId(), 9});
                             trimOscCounts[ringOsc][vTrim]    = RD53ChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "RING_OSC_" + std::to_string(ringOsc)) - 4096;
                             trimOscFrequency[ringOsc][vTrim] = trimOscCounts[ringOsc][vTrim] / (gloPulse[9] / 0.16);
