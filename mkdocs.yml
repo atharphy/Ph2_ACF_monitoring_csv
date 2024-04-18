@@ -43,6 +43,11 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
 
+plugins:
+  - search
+  - git-revision-date-localized:
+      fallback_to_build_date: true
+
 extra_css:
   - stylesheets/fonts.css
 
@@ -57,7 +62,8 @@ nav:
       - 'Installing additionally required software': general/required_install.md
       - 'Setting up the Ph2_ACF software': general/ph2acf_install.md
     - 'Inner Tracker':
-      - 'Inner Tracker': innerTracker/index.md
+      - innerTracker/index.md
+      - 'IT middleware setup and use': innerTracker/middleware.md
     - 'Outer Tracker':
       - 'Outer Tracker': outerTracker/index.md
     - 'Interesting links': interesting_links/index.md
