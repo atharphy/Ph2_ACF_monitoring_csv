@@ -87,7 +87,7 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
 
     for(auto theBoard: *fDetectorContainer)
     {
-        uint16_t maxAttempts = 100;
+        uint16_t maxAttempts = 1;
         uint16_t currentAttempt = 0;
         
             for(auto theOpticalGroup: *theBoard)
@@ -96,20 +96,33 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
 
-                    // configure word alignment pattern on CBCs
+
+                    //Making sure to use an enabled FE                
+                    auto theFEtoUse = theHybrid->getFirstObject(); //  *(theHybrid->begin());
+                    if(theFEtoUse == nullptr)
+                    {
+                        LOG(INFO) << BOLDRED << "No FE suitable for BX0 alignment enabled on Board id " << +cCic->getBeBoardId() << " OpticalGroup id" << +cCic->getOpticalGroupId() << " Hybrid id " << +cCic->getHybridId()
+                        << " --- Hybrid will be disabled" << RESET;
+                        ExceptionHandler::getInstance()->disableHybrid(cCic->getBeBoardId(), cCic->getOpticalGroupId(), cCic->getHybridId());
+                        return;
+                    }
+                    std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
+                    auto theFECICmapping = fCicInterface->getMapping(cCic);
+                    uint8_t theIndex = (theFEtoUse->getFrontEndType() == FrontEndType::MPA2)? theFEtoUse->getId() - 8: theFEtoUse->getId(); 
+                    uint8_t theFEId = theFECICmapping[theIndex];
+                    // configure word alignment pattern on FEs
                     std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getBX0AlignmentPatterns();
                     uint8_t pLine = 0;
                     if(theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) pLine = 4;
-                    fCicInterface->PrepareForAutomatedBX0Alignment(cCic, cAlignmentPatterns, pLine);
+                    fCicInterface->PrepareForAutomatedBX0Alignment(cCic, cAlignmentPatterns, pLine, theFEId);
                     for(uint8_t cIndex = 0; cIndex < (uint8_t)cAlignmentPatterns.size(); cIndex += 1)
                     {
                          LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns[cIndex]) << RESET;
                     }
-                    for(auto cChip: *theHybrid) 
-                    { 
-                        std::cout << " BXO alignment pattern for chip " << +cChip->getId() << std::endl;
-                        fReadoutChipInterface->produceBX0AlignmentPattern(cChip); 
-                    }
+                    
+                    std::cout << " BXO alignment pattern for chip " << +theFEtoUse->getId() << std::endl;
+                    fReadoutChipInterface->produceBX0AlignmentPattern(theFEtoUse); 
+                
 
                         // LOG(INFO) << BOLDMAGENTA << " CHECK MPA OUTPUT! " << RESET;
                         // auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());

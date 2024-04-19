@@ -449,71 +449,71 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
 }
 
 
-bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, uint8_t pLine)
+bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* theCic, std::vector<uint8_t> pAlignmentPatterns, uint8_t pLine, uint8_t pFEChip)
 {
-    setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Running automated BX0 alignment in CIC on FE" << +pChip->getHybridId() << RESET;
+    setBoard(theCic->getBeBoardId());
+    LOG(INFO) << BOLDBLUE << "Running automated BX0 alignment in CIC on FE" << +theCic->getHybridId() << RESET;
     LOG(INFO) << BOLDBLUE << "Configuring BX0 alignment patterns on CIC" << RESET;    
     bool cSuccess;
-    cSuccess = ConfigureAlignmentPatterns(pChip, pAlignmentPatterns);
-    // cSuccess = ConfigureAlignmentPatterns(pChip, {0x80,0x00,0x00,0x00,0x00}); 
+    cSuccess = ConfigureAlignmentPatterns(theCic, pAlignmentPatterns);
+    // cSuccess = ConfigureAlignmentPatterns(theCic, {0x80,0x00,0x00,0x00,0x00}); 
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Cannot configure patterns on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id " << +pChip->getHybridId()
+        LOG(INFO) << BOLDRED << "Cannot configure patterns on CIC on Board id " << +theCic->getBeBoardId() << " OpticalGroup id" << +theCic->getOpticalGroupId() << " Hybrid id " << +theCic->getHybridId()
                   << " --- Hybrid will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
+        ExceptionHandler::getInstance()->disableHybrid(theCic->getBeBoardId(), theCic->getOpticalGroupId(), theCic->getHybridId());
         return false;
     }
 
     std::string cRegName             = "BX0_ALIGN_CONFIG";
-    uint16_t    cRegValue            = this->ReadChipReg(pChip, cRegName);
+    uint16_t    cRegValue            = this->ReadChipReg(theCic, cRegName);
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG intially was set to 0x"<< std::hex <<cRegValue<< std::dec << " bin " << std::bitset<8>(cRegValue) << RESET;
 
     // set to read another chip or line then 0 0
-    uint16_t    useChip = (cRegValue & 0xC7) | (0x0 << 3);
+    uint16_t    useChip = (cRegValue & 0xC7) | (pFEChip << 3);
     std::cout << " useChip " << useChip << std::endl;
-    this->WriteChipReg(pChip, cRegName, useChip);
-    cRegValue            = this->ReadChipReg(pChip, cRegName);
+    this->WriteChipReg(theCic, cRegName, useChip);
+    cRegValue            = this->ReadChipReg(theCic, cRegName);
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << cRegValue << std::dec << " bin " << std::bitset<8>(cRegValue) << " to use another chip or line" << RESET;
 
     // set to read another chip or line then 0 0
     uint16_t    useLine = (cRegValue & 0xF8) | (pLine << 0);
     std::cout << " useLine " << useLine << std::endl;
-    this->WriteChipReg(pChip, cRegName, useLine);
-    cRegValue            = this->ReadChipReg(pChip, cRegName);
+    this->WriteChipReg(theCic, cRegName, useLine);
+    cRegValue            = this->ReadChipReg(theCic, cRegName);
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << cRegValue << std::dec << " bin " << std::bitset<8>(cRegValue) << " to use another chip or line" << RESET;
 
 
     uint16_t    useInternalBX0Delay = (cRegValue & 0x7F) | (0x0 << 7); // required for automatic alignment
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << useInternalBX0Delay << std::dec << " bin " << std::bitset<8>(useInternalBX0Delay) << " to use internal delay" << RESET;
-    cSuccess = this->WriteChipReg(pChip, cRegName, useInternalBX0Delay);
+    cSuccess = this->WriteChipReg(theCic, cRegName, useInternalBX0Delay);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Cannot disable external BX0 alignment value on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
-                  << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
+        LOG(INFO) << BOLDRED << "Cannot disable external BX0 alignment value on CIC on Board id " << +theCic->getBeBoardId() << " OpticalGroup id" << +theCic->getOpticalGroupId() << " Hybrid id "
+                  << +theCic->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        ExceptionHandler::getInstance()->disableHybrid(theCic->getBeBoardId(), theCic->getOpticalGroupId(), theCic->getHybridId());
         return false;
     }
 
-    auto BX0doneRegValue2 = ReadChipReg(pChip, "timingStatusBits");
+    auto BX0doneRegValue2 = ReadChipReg(theCic, "timingStatusBits");
     std::cout << " timingStatusBits after using internal delays "<<  std::bitset<5>(BX0doneRegValue2) << std::endl;
 
-    cRegValue                       = this->ReadChipReg(pChip, cRegName);
+    cRegValue                       = this->ReadChipReg(theCic, cRegName);
     uint16_t startAutoBX0Alignment = (cRegValue & 0xBF) | (0x1 << 6);
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << startAutoBX0Alignment << std::dec << " bin " << std::bitset<8>(startAutoBX0Alignment) << " to start BX0 alignment " << RESET;
-    cSuccess                        = this->WriteChipReg(pChip, cRegName, startAutoBX0Alignment);
+    cSuccess                        = this->WriteChipReg(theCic, cRegName, startAutoBX0Alignment);
     if(!cSuccess)
     {
-        LOG(INFO) << BOLDRED << "Cannot send external BX0 alignment request to CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
-                  << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
+        LOG(INFO) << BOLDRED << "Cannot send external BX0 alignment request to CIC on Board id " << +theCic->getBeBoardId() << " OpticalGroup id" << +theCic->getOpticalGroupId() << " Hybrid id "
+                  << +theCic->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        ExceptionHandler::getInstance()->disableHybrid(theCic->getBeBoardId(), theCic->getOpticalGroupId(), theCic->getHybridId());
         return false;
     }
 
-    BX0doneRegValue2 = ReadChipReg(pChip, "timingStatusBits");
+    BX0doneRegValue2 = ReadChipReg(theCic, "timingStatusBits");
     std::cout << " timingStatusBits after start BX0 alignment "<<  std::bitset<5>(BX0doneRegValue2) << std::endl;
 
-    auto bx0delay = this->retrieveExternalBX0AlignmentValues(pChip);
+    auto bx0delay = this->retrieveExternalBX0AlignmentValues(theCic);
     std::cout << " BXO delay before resync " << bx0delay << std::endl;
     return cSuccess;
 }
