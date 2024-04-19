@@ -612,8 +612,8 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
     auto cCounter = cInterface->GetEventCounter();
     do {
         auto nTrigger = cInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " nTriggers " << nTrigger << RESET;
-        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Delta " << nTrigger - cCounter << RESET;
+        LOG(DEBUG) << BOLDGREEN << __PRETTY_FUNCTION__ << " nTriggers " << nTrigger << RESET;
+        LOG(DEBUG) << BOLDGREEN << __PRETTY_FUNCTION__ << " Delta " << nTrigger - cCounter << RESET;
 
         if(cCounter >= fNevents || cTriggerInterface->GetTriggerState() == 0)
         {

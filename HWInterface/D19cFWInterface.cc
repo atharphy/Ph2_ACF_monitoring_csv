@@ -1149,10 +1149,15 @@ void D19cFWInterface::ChipTestPulse() { fFastCommandInterface->SendGlobalCalPuls
 
 void D19cFWInterface::ChipTrigger() { fFastCommandInterface->SendGlobalL1A(); }
 
+// bool D19cFWInterface::Bx0Alignment(uint16_t pLinkId)
 bool D19cFWInterface::Bx0Alignment()
 {
     bool     cSuccess   = false;
-    auto     cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+    // auto     cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+    // uint32_t cPkgDelay;
+    // if (pLinkId < 10) cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
+    // else cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11");
+    uint32_t cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
     {

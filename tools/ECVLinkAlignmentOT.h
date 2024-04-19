@@ -35,7 +35,7 @@ class ECVLinkAlignmentOT : public LinkAlignmentOT
 
     void writeObjects();
     bool Scan();
-
+    bool isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket);
   protected:
   private:
 #ifdef __USE_ROOT__
@@ -57,5 +57,7 @@ class ECVLinkAlignmentOT : public LinkAlignmentOT
     void StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, bool pAligned);
     void StoreTrainedPhases(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pHybridId, uint8_t pLine, uint8_t pPhase);
     void StoreChosenPhase(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase);
+    uint8_t getNumberOfBytesInSinglePacket(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+
 };
 #endif

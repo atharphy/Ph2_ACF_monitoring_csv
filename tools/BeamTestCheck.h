@@ -125,6 +125,9 @@ class BeamTestCheck : public OTTool
     void ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
     void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations = 0, uint8_t pPrintOut = 0);
     void Validate();
+    std::string GetStubLatencyRegName(int pOGId);
+    void SetStubLatencyOG(BeBoard* pBoard, int pOGId, int pStubLatency);
+    unsigned GetBitsFromStubLatency(uint32_t pStubLatency, uint8_t pOGId);
 
     std::vector<Ph2_HwInterface::Injection> fInjections;
 
