@@ -812,13 +812,10 @@ std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybri
             {
                 for(auto cCluster: GetPixelClusters(pHybridId, pReadoutChipId))
                 {
-                    for(int cId = 0; cId <= cCluster.fWidth; cId++)
+                    for(int cId = 0; cId < cCluster.fWidth; cId++)
                     {
-                        if(cCluster.fWidth > 0)
-                        {
-                            cHits.push_back({cCluster.fZpos, cCluster.fAddress});
-                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] found pixel cluster in " << cHits.back().first << " - " << cHits.back().second << std::endl;
-                        }
+                        cHits.push_back({cCluster.fZpos, cCluster.fAddress + cId});
+                        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] found pixel cluster in " << cHits.back().first << " - " << cHits.back().second << std::endl;
                     }
                 }
             }
@@ -826,13 +823,9 @@ std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybri
             {
                 for(auto cCluster: GetStripClusters(pHybridId, pReadoutChipId))
                 {
-                    for(int cId = 0; cId <= cCluster.fWidth; cId++)
+                    for(int cId = 0; cId < cCluster.fWidth; cId++)
                     {
-                        if(cCluster.fWidth > 0)
-                        {
-                            cHits.push_back({0, cCluster.fAddress});
-                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] found strip cluster in " << cHits.back().second << std::endl;
-                        }
+                        cHits.push_back({0, cCluster.fAddress + cId});
                     }
                 }
             }

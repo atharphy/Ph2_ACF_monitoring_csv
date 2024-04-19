@@ -38,6 +38,7 @@ class OTMeasureOccupancy : public Tool
   private:
     void measureChannelOccupancy();
     void prepareOccupancyMeasurement2S();
+    void prepareOccupancyMeasurementPS();
 
     uint32_t fNumberOfEvents{10000};
     uint8_t  fCBCtestPulseValue{218};
