@@ -345,7 +345,6 @@ class SystemController
             ->getObject(hybridId)
             ->getObject(chipId)
             ->getSummary<std::shared_ptr<ChannelGroupHandler>>();
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] number of groups = " << theChannelGroup->getNumberOfGroups() << " current group = " << groupNumber << " exist = " << std::boolalpha << (groupNumber < theChannelGroup->getNumberOfGroups()) << std::endl;
         if(groupNumber < theChannelGroup->getNumberOfGroups()) return theChannelGroup->getTestGroup(groupNumber);
         else return std::shared_ptr<ChannelGroupBase>();
     }
@@ -353,7 +352,6 @@ class SystemController
     inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber)
     {
         auto theChannelGroup = fChannelGroupHandlerContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->getSummary<std::shared_ptr<ChannelGroupHandler>>();
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] number of groups = " << theChannelGroup->getNumberOfGroups() << " current group = " << groupNumber << " exist = " << std::boolalpha << (groupNumber < theChannelGroup->getNumberOfGroups()) << std::endl;
         if(groupNumber < theChannelGroup->getNumberOfGroups()) return theChannelGroup->getTestGroup(groupNumber);
         else return std::shared_ptr<ChannelGroupBase>();
     }
