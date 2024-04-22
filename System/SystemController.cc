@@ -1148,9 +1148,6 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                     if(cEnd - cEventIterator == cEventSize)
                     {
                         std::vector<uint32_t> cEvent(cEventIterator, cEnd);
-                        // some useful debug information
-                        // LOG(DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
-                        //            << +cEventSize << " 32 bit words..." << RESET;
                         if(pBoard->getFrontEndType() == FrontEndType::CIC2)
                         {
                             bool cWithCBC3 = !(fEventType == EventType::VR2S);

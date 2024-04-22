@@ -207,9 +207,9 @@
 				<Register name="chip_select">0</Register>
 				<Register name="hybrid_select">0</Register>
 			</Register>
-			<Register name="stubs">
+			<!-- <Register name="stubs">
 				<Register name="stub_package_delay">7</Register>
-			</Register>
+			</Register> -->
 		</Register>
 		<Register name="readout_block">
 			<Register name="packet_nbr">999</Register>

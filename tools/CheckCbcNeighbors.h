@@ -10,7 +10,7 @@
 #ifndef CheckCbcNeighbors_h__
 #define CheckCbcNeighbors_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include <map>
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
 

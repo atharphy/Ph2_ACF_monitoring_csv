@@ -28,17 +28,17 @@ void PhaseScan::Initialize()
     if(cWithCBC)
     {
         CBCChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+        theChannelGroupHandler.setChannelGroupParameters(16, 1, 2); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandler);
     }
     else if(cWithPSv2)
     {
         MPAChannelGroupHandler theChannelGroupHandlerMPA;
-        theChannelGroupHandlerMPA.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
+        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NMPAROWS, NSSACHANNELS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
 
         SSAChannelGroupHandler theChannelGroupHandlerSSA;
-        theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        theChannelGroupHandlerSSA.setChannelGroupParameters(1, 1, NSSACHANNELS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA2);
     }
 
@@ -110,7 +110,7 @@ void PhaseScan::ScanPhase()
                                     {
                                         for(auto& cPclstr: cPclstrs)
                                         {
-                                            for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
+                                            for(uint8_t cId = 0; cId < (cPclstr.fWidth); cId++)
                                             {
                                                 cHitContainer.getObject(cBoard->getId())
                                                     ->getObject(cOpticalGroup->getId())
@@ -125,7 +125,7 @@ void PhaseScan::ScanPhase()
                                     {
                                         for(auto& cSclstr: cSclstrs)
                                         {
-                                            for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
+                                            for(uint8_t cId = 0; cId < (cSclstr.fWidth); cId++)
                                             {
                                                 cHitContainer.getObject(cBoard->getId())
                                                     ->getObject(cOpticalGroup->getId())

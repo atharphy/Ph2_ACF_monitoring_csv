@@ -74,7 +74,7 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     uint8_t cHybridIndex = getHybridIndex(hybridId);
     uint8_t cChipIndex   = getChipIndex(cHybridIndex, chipContainer->getId());
     LOG(DEBUG) << BOLDYELLOW << "HybridIndex " << +cHybridIndex << " ChipIndex " << +cChipIndex << " -- " << fCounterData.at(cHybridIndex).at(cChipIndex).size() << RESET;
-    std::vector<uint32_t> cHits = GetHits(hybridId, chipContainer->getId());
+    std::vector<uint32_t> cHits = fCounterData.at(cHybridIndex).at(cChipIndex);
     LOG(DEBUG) << BOLDYELLOW << "HybridIndex " << +cHybridIndex << " ChipIndex " << +cChipIndex << " -- " << cHits.size() << RESET;
     float  cOcc  = 0;
     size_t cChnl = 0;
@@ -85,35 +85,10 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
         uint32_t cCol = cChnl % testChannelGroup->getNumberOfCols();
         if(testChannelGroup->isChannelEnabled(cRow, cCol))
         {
-            if(cChnl < 10) LOG(DEBUG) << BOLDYELLOW << "Chnl#" << cChnl << "\t" << cHit << RESET;
-
-            // if( cChnl < 10 ) LOG (INFO) << BOLDYELLOW << "Chnl#" << cChnl << "\t" << cHit  << "Row " << cRow << " Col" << cCol << RESET;
             chipContainer->getChannel<Occupancy>(cRow, cCol).fOccupancy += cHit;
             cOcc += cHit;
         }
         cChnl++;
-    }
-    LOG(DEBUG) << BOLDYELLOW << "Chip#" << +chipContainer->getId() << " chip occupancy is " << cOcc / chipContainer->size() << RESET;
-}
-
-void D19cPSEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::vector<uint32_t>& list)
-{
-    std::cout << "MPAASEV" << std::endl;
-
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            uint32_t nc = 0;
-            for(auto cChip: *cHybrid)
-            {
-                fEventDataVector[encodeVectorIndex(cHybrid->getId(), cChip->getId(), pNMPA)] = std::vector<uint32_t>(list.begin() + nc * 1920, list.begin() + (nc + 1) * 1920);
-                // std::cout<<fEventDataVector[encodeVectorIndex (cHybrid->getId(), cChip->getId(), pNMPA)
-                // ][5]<<std::endl;
-
-                nc += 1;
-            }
-        }
     }
 }
 
@@ -126,14 +101,4 @@ uint32_t D19cPSEventAS::GetNHits(uint8_t pHybridId, uint8_t pChipId) const
     // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId,fNMPA));
     // return std::accumulate(hitVector.begin()+1, hitVector.end(), 0);
 }
-std::vector<uint32_t> D19cPSEventAS::GetHits(uint8_t pHybridId, uint8_t pChipId) const
-{
-    uint8_t cHybridIndex = getHybridIndex(pHybridId);
-    uint8_t cChipIndex   = getChipIndex(cHybridIndex, pChipId);
-    return fCounterData.at(cHybridIndex).at(cChipIndex);
-    // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId,fNMPA));
-    // LOG (INFO) << BOLDBLUE << hitVector[0] << RESET;
-    // return hitVector;
-}
-
 } // namespace Ph2_HwInterface

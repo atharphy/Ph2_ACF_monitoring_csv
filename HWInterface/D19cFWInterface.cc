@@ -815,6 +815,15 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // load trigger configuration
     // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     fTriggerInterface->ResetTriggerFSM();
+    uint16_t cAttempts                = 0;
+    uint16_t cMaxAttempts             = 5;
+    bool     cL1ReadoutInterfaceReset = false;
+    while(!cL1ReadoutInterfaceReset && (cAttempts < cMaxAttempts))
+    {
+        cL1ReadoutInterfaceReset = fL1ReadoutInterface->ResetReadout();
+        cAttempts++;
+    }
+    if(!cL1ReadoutInterfaceReset) { LOG(WARNING) << BOLDYELLOW << "Resetting DDR3 failed!" << RESET; }
     fL1ReadoutInterface->ResetReadout();
     // reset trigger
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
@@ -1140,10 +1149,15 @@ void D19cFWInterface::ChipTestPulse() { fFastCommandInterface->SendGlobalCalPuls
 
 void D19cFWInterface::ChipTrigger() { fFastCommandInterface->SendGlobalL1A(); }
 
+// bool D19cFWInterface::Bx0Alignment(uint16_t pLinkId)
 bool D19cFWInterface::Bx0Alignment()
 {
-    bool     cSuccess   = false;
-    auto     cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+    bool cSuccess = false;
+    // auto     cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
+    // uint32_t cPkgDelay;
+    // if (pLinkId < 10) cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
+    // else cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11");
+    uint32_t cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
     {

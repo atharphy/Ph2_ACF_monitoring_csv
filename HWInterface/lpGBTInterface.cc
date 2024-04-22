@@ -459,6 +459,7 @@ uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChanne
 
     return 15;
 }
+std::map<std::string, uint8_t> lpGBTInterface::GetPhaseTapMap() { return fPhaseTapMap; }
 
 // ####################################
 // # LpGBT specific routine functions #
