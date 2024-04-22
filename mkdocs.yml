@@ -60,6 +60,7 @@ nav:
       - general/index.md
       - 'Installing AlmaLinux 9': general/alma9_install.md
       - 'Installing additionally required software': general/required_install.md
+      - 'Installing rarpd': general/rarpd.md
       - 'Setting up the Ph2_ACF software': general/ph2acf_install.md
     - 'Inner Tracker':
       - innerTracker/index.md
