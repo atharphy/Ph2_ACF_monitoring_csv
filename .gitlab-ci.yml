@@ -29,7 +29,7 @@ image:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  MKDOCS_VERSION: '1.6.0'
+  MKDOCS_VERSION: '1.5.3'
   MATERIAL_VERSION: '9.5.18'
 
 
