@@ -829,7 +829,7 @@ float lpGBTInterface::GetInternalTemperature(Chip* pChip)
     WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
 
     std::vector<float> cMeasurements(0);
-    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(ReadADC(pChip, "TEMP", "VREF/2", 0)); }
+    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) cMeasurements.push_back(ReadADC(pChip, "TEMP", "VREF/2", 0));
     return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
 }
 
