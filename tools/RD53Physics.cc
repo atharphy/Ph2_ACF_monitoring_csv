@@ -158,8 +158,11 @@ void Physics::run()
             for(const auto cBoard: *fDetectorContainer)
             {
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
-                    ->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53AConstants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53AConstants::BROADCAST_CHIPID, 0x6}), -1);
+                    ->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
+                                                                 RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
+                                                                 RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
+                                       -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId, 6}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::ECR{}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(20));

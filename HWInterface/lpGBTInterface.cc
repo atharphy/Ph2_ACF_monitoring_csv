@@ -1147,18 +1147,12 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     lpGBTInterface::StartBERT(pChip, true);  // Start
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
-    LOG(INFO) << BOLDGREEN << std::fixed << std::setprecision(0) << "===== BER run starting @ " << bitPerFrame << "-bits/frame  =====" << RESET;
-    int      idx = 1;
-    uint64_t nErrors;
+    LOG(INFO) << BOLDGREEN << std::fixed << std::setprecision(0) << "===== BER run starting @ " << BOLDYELLOW << bitPerFrame << BOLDGREEN << "-bits/frame  =====" << RESET;
+    int idx = 1;
     while(lpGBTInterface::IsBERTDone(pChip) == false)
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
-
-        nErrors = lpGBTInterface::GetBERTErrors(pChip);
-
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
-        LOG(INFO) << GREEN << "Current counter: " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN
-                  << " bits with errors" << RESET;
         idx++;
     }
     LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
@@ -1166,28 +1160,26 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
         lpGBTInterface::StartBERT(pChip, false); // Stop
-        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
-                     << RESET;
+        LOG(WARNING) << BOLDRED << "All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET;
         LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
-        return 0.;
     }
 
     // ########
     // # Stop #
     // ########
-    nErrors = lpGBTInterface::GetBERTErrors(pChip);
+    uint64_t nErrors = lpGBTInterface::GetBERTErrors(pChip);
     lpGBTInterface::StartBERT(pChip, false); // Stop
 
     // ###########################
     // # Read PRBS frame counter #
     // ###########################
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
-    LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
-    LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN << " bits with errors"
-              << RESET;
-    LOG(INFO) << GREEN << "Final BER: " << BOLDYELLOW << nErrors / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / bitPerFrame / frames2run * 100 << RESET << GREEN << "%)"
-              << RESET;
+    LOG(INFO) << GREEN << "Number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
+    LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << ", i.e. bits with errors: " << BOLDYELLOW << nErrors << RESET;
+    LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / bitPerFrame / frames2run * 100 << RESET << GREEN
+              << "%)" << RESET;
+    LOG(INFO) << GREEN << "BER test result: " << (nErrors == 0 ? BOLDYELLOW : BOLDRED) << (nErrors == 0 ? "PASSED" : "NOT PASSED") << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors / frames2run;
