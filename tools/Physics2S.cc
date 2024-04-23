@@ -39,7 +39,7 @@ void Physics2S::ConfigureCalibration()
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
 
     CBCChannelGroupHandler theChannelGroupHandler;
-    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    theChannelGroupHandler.setChannelGroupParameters(16, 1, 2);
     setChannelGroupHandler(theChannelGroupHandler);
 
     CicFEAlignment cCicAligner;

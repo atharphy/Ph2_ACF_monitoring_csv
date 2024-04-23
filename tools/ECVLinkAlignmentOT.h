@@ -35,6 +35,7 @@ class ECVLinkAlignmentOT : public LinkAlignmentOT
 
     void writeObjects();
     bool Scan();
+    bool isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket);
 
   protected:
   private:
@@ -53,7 +54,10 @@ class ECVLinkAlignmentOT : public LinkAlignmentOT
     std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>>  CheckWordAlignBEdataStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void                                                       StopWordAlignStubs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>>  CheckWordAlignBEdataL1(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void StoreBERInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, float pBer);
-    void StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, bool pAligned);
+    void    StoreBERInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, float pBer);
+    void    StoreWordAlignInHistogram(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, bool pAligned);
+    void    StoreTrainedPhases(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pHybridId, uint8_t pLine, uint8_t pPhase);
+    void    StoreChosenPhase(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase);
+    uint8_t getNumberOfBytesInSinglePacket(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
 };
 #endif

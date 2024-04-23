@@ -53,9 +53,13 @@ class DQMHistogramECV : public DQMHistogramBase
     void reset(void) override;
     // virtual void summarizeHistos();
 
-    void filllWordAlign(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, DetectorDataContainer& pWordAlignSummary);
+    void fillWordAlign(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, DetectorDataContainer& pWordAlignSummary);
 
-    void filllBER(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, DetectorDataContainer& pBERSummary);
+    void fillBER(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pHybridId, uint8_t pLine, DetectorDataContainer& pBERSummary);
+
+    void fillPhases(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pHybridId, uint8_t pLine, DetectorDataContainer& pPhase);
+
+    void fillChosenPhase(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, DetectorDataContainer& pPhase);
 
   private:
     DetectorDataContainer fDetectorData;

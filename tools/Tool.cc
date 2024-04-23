@@ -1,4 +1,4 @@
-#include "Tool.h"
+#include "tools/Tool.h"
 #include <numeric>
 
 #include "HWDescription/Chip.h"
@@ -932,7 +932,7 @@ void Tool::setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTP
 void Tool::enableTestPulse(bool enableTP)
 {
     fTestPulse = enableTP;
-    if(enableTP) setFWTestPulse();
+    setFWTestPulse(enableTP);
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -966,32 +966,38 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
     }
 }
 
-void Tool::setFWTestPulse()
+void Tool::setFWTestPulse(bool inject)
 {
     for(auto cBoard: *fDetectorContainer)
     {
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
-        switch(cBoard->getBoardType())
-        {
-        case BoardType::D19C:
+        if(cBoard->getBoardType() == BoardType::D19C)
         {
             EventType cEventType = cBoard->getEventType();
             bool      cAsync     = (cEventType == EventType::PSAS);
 
             if(!cAsync)
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+            {
+                if(inject)
+                    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
+                else
+                    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+            }
             else
+            {
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
+                if(!inject)
+                {
+                    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " Counter readout without injection not implemented, aborting" << RESET;
+                    throw("[Tool::setFWTestPulse]\tError, Counter readout without injection not implemented");
+                }
+            }
             cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-            break;
         }
-
-        default:
+        else
         {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " BeBoard type not recognized for Bebord " << cBoard->getId() << ", aborting" << RESET;
-            throw("[Tool::setFWTestPulse]\tError, BeBoard type not found");
-            break;
-        }
+            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " setFWTestPulse not available for type of board with id " << cBoard->getId() << ", aborting" << RESET;
+            throw("[Tool::setFWTestPulse]\tError, setFWTestPulse not available for board with type different from D19C");
         }
 
         fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
@@ -1439,7 +1445,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                                   .fOccupancy;
                         }
                     }
-                    // LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }
@@ -1977,7 +1983,7 @@ class ScanBase
     uint32_t                     fNumberOfMSec;
     uint32_t                     fBoardId;
     const DetectorDataContainer* fChannelHandlerContainer;
-    uint                         fGroupNumber;
+    int                          fGroupNumber;
     Tool*                        fTool;
     DetectorContainer*           fDetectorContainer;
     bool                         fSameChannelGroupForAllChannels;
@@ -2020,25 +2026,15 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, i
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(groupNumber > getChannelGroupHandlerContainer()
-                                                 ->getObject(fDetectorContainer->getObject(boardId)->getId())
-                                                 ->getObject(cOpticalGroup->getId())
-                                                 ->getObject(cHybrid->getId())
-                                                 ->getObject(cChip->getId())
-                                                 ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                 ->getNumberOfGroups())
-                                continue;
+                            auto theChannelGroupHandler = getChannelGroupHandlerContainer()
+                                                              ->getObject(fDetectorContainer->getObject(boardId)->getId())
+                                                              ->getObject(cOpticalGroup->getId())
+                                                              ->getObject(cHybrid->getId())
+                                                              ->getObject(cChip->getId())
+                                                              ->getSummary<std::shared_ptr<ChannelGroupHandler>>();
+                            if(groupNumber > theChannelGroupHandler->getNumberOfGroups()) continue;
 
-                            fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
-                                                                                     getChannelGroupHandlerContainer()
-                                                                                         ->getObject(fDetectorContainer->getObject(boardId)->getId())
-                                                                                         ->getObject(cOpticalGroup->getId())
-                                                                                         ->getObject(cHybrid->getId())
-                                                                                         ->getObject(cChip->getId())
-                                                                                         ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                                                         ->getTestGroup(groupNumber),
-                                                                                     fMaskChannelsFromOtherGroups,
-                                                                                     fTestPulse);
+                            fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, theChannelGroupHandler->getTestGroup(groupNumber), fMaskChannelsFromOtherGroups, fTestPulse);
                         }
                     }
                 }
@@ -2097,6 +2093,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             uint32_t currentNumberOfEvents = uint32_t(fNumberOfEventsPerBurst);
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
             // LOG (INFO) << BOLDYELLOW << "Tool::ReadNEvents : number of events requested is " << +currentNumberOfEvents << RESET;
+
             if(fTool->ifUseReadNEvents())
                 fTool->ReadNEvents(fDetectorContainer->getObject(fBoardId), currentNumberOfEvents);
             else
@@ -2151,8 +2148,10 @@ class MeasureBeBoardDataPerGroup : public ScanBase
 void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
     MeasureBeBoardDataPerGroup theScan(this);
+
     theScan.setDataContainer(fDetectorDataContainer);
     // Make sure async mode uses ReadNEvents
+
     bool cUseReadNEvents = fUseReadNEvents;
     if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
     {
@@ -2167,8 +2166,13 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
 
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;
 
+    // const auto& theOccupancy =  fDetectorDataContainer->getObject(boardId)->getFirstObject()->getFirstObject()->getFirstObject()->getSummary<Occupancy>().fOccupancy;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Occupancy = " << theOccupancy << std::endl;
     if(fNormalize)
         fDetectorDataContainer->getObject(boardId)->normalizeAndAverageContainers(fDetectorContainer->getObject(boardId), getChannelGroupHandlerContainer()->getObject(boardId), numberOfEvents);
+
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Occupancy = " << theOccupancy << std::endl;
+
     fUseReadNEvents = cUseReadNEvents;
 }
 

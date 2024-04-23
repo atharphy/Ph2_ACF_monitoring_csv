@@ -19,7 +19,7 @@ void OTverifyMPASSAdataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
-    fNumberOfIterations = findValueInSettings<double>("OTverifyMPASSAdataWordNumberOfIterations", 1000);
+    fNumberOfIterations = findValueInSettings<double>("OTverifyMPASSAdataWord_NumberOfIterations", 1000);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization

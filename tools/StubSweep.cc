@@ -306,7 +306,7 @@ uint8_t StubSweep::getStubPosition(std::vector<Event*> pEvents, uint32_t pHybrid
         uint32_t    cNhits       = cEvent->GetNHits(pHybridId, pCbcId);
         std::string cStubsString = cEvent->StubBitString(pHybridId, pCbcId);
         // std::string cHitsString = cEvent->HitsBitString( pHybridId, pCbcId );
-        std::vector<uint32_t> cHits = cEvent->GetHits(pHybridId, pCbcId);
+        auto cHits = cEvent->GetHits(pHybridId, pCbcId);
 
         outp.str("");
         outp << BOLDGREEN << ">>> Event #" << cN++ << " [" << +cNhits << " hits].\n\t\t\t";

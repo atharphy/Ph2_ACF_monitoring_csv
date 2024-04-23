@@ -15,29 +15,6 @@ namespace Ph2_HwInterface
 {
 float Cluster::getBaricentre() { return fFirstStrip + float(fClusterWidth) / 2. - 0.5; }
 
-// Event::Event() {}
-
-// Event::Event(const Event& pEvent)
-//     : fEventDataMap(pEvent.fEventDataMap)
-//     , fEventCount(pEvent.fEventCount)
-//     , fTDC(pEvent.fTDC)
-//     , fBunch(pEvent.fBunch)
-//     , fOrbit(pEvent.fOrbit)
-//     , fLumi(pEvent.fLumi)
-//     , fEventCountCBC(pEvent.fEventCountCBC)
-//     , fEventSize(pEvent.fEventSize)
-//     , fBeId(pEvent.fBeId)
-//     , fBeFWType(pEvent.fBeFWType)
-//     , fCBCDataType(pEvent.fCBCDataType)
-//     , fNCbc(pEvent.fNCbc)
-//     , fNSSA(pEvent.fNSSA)
-//     , fNSSA2(pEvent.fNSSA2)
-//     , fNMPA(pEvent.fNMPA)
-//     , fEventDataSize(pEvent.fEventDataSize)
-//     , fBeStatus(pEvent.fBeStatus)
-// {
-// }
-// Event implementation
 bool Event::operator==(const Event& pEvent) const { return fEventDataMap == pEvent.fEventDataMap; }
 
 void Event::fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup)

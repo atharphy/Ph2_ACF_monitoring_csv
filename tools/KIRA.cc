@@ -177,7 +177,7 @@ void KIRA::determineLatency()
                             for(auto cHit: cHits)
                             {
                                 // monitor only specified sensor channels
-                                if(cHit % 2 == cLatencySensor)
+                                if(cHit.second % 2 == cLatencySensor)
                                 {
                                     cHitContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() += 1;
                                 }
@@ -396,15 +396,15 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
                     if(cHits.size() != 0) LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                     for(auto cHit: cHits)
                     {
-                        LOG(DEBUG) << "Hit: " << cHit << RESET;
+                        LOG(DEBUG) << "Hit: " << cHit.second << RESET;
                         // Fill hits in Data Container for bottom sensor
-                        if(cHit % 2 == pSensor)
+                        if(cHit.second % 2 == pSensor)
                         {
                             cHitContainer.getObject(pBoard->getId())
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
                                 ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray<float, VECSIZE>>()[int(cHit / 2)] += 1;
+                                ->getSummary<GenericDataArray<float, VECSIZE>>()[int(cHit.second / 2)] += 1;
                         }
                     }
                 } // chip vector

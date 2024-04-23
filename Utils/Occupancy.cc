@@ -17,11 +17,17 @@ void Occupancy::makeSummaryAverage(const std::vector<Occupancy>* theOccupancyVec
     }
 
     fOccupancy /= float(totalNumberOfEnableChannels);
-    fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
+    if(fOccupancy > 1)
+        fOccupancyError = sqrt(float(fOccupancy * (fOccupancy - 1) / numberOfEvents));
+    else
+        fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
 }
 
 void Occupancy::normalize(const uint32_t numberOfEvents)
 {
     fOccupancy /= float(numberOfEvents);
-    fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
+    if(fOccupancy > 1)
+        fOccupancyError = sqrt(float(fOccupancy * (fOccupancy - 1) / numberOfEvents));
+    else
+        fOccupancyError = sqrt(float(fOccupancy * (1. - fOccupancy) / numberOfEvents));
 }

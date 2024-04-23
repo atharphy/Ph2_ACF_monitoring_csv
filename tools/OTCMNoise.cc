@@ -149,7 +149,7 @@ void OTCMNoise::TakeData()
                             uint32_t cEventHitsOdd     = 0;
                             for(auto hit: hit_vec)
                             {
-                                if(hit % 2)
+                                if(hit.second % 2)
                                     cEventHitsEven++;
                                 else
                                     cEventHitsOdd++;
@@ -181,7 +181,7 @@ void OTCMNoise::TakeData()
                             // for 2d correlation, save channels with hits per chip
                             if(f2DHistograms)
                             {
-                                for(auto hit: hit_vec) { hit_channels.push_back(hit + chipOffset_module); }
+                                for(auto hit: hit_vec) { hit_channels.push_back(hit.second + chipOffset_module); }
                             }
                         }
 
