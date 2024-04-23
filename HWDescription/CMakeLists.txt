@@ -41,14 +41,10 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}HW DESCRIPTION${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/HWDescription/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    cet_set_compiler_flags(
-        EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-    )
-
     cet_make(LIBRARY_NAME Ph2_Description
-            LIBRARIES
-            Ph2_Utils
-            pthread
+             LIBRARIES
+             Ph2_Utils
+             pthread
     )
 
     install_headers()

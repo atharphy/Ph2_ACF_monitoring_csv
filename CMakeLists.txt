@@ -269,62 +269,53 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}$ENV{PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
-    # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-    # find_package(CACTUS)
+    # AMC13
+    # if(${CACTUS_AMC13_FOUND})
+    #     message(STATUS "    Enabling AMC13 component")
+    # endif(${CACTUS_AMC13_FOUND})
 
-    set (CMAKE_CXX_STANDARD 17)
+    # Antenna
+    # find_package(PH2_ANTENNA)
+    # if(PH2_ANTENNA_FOUND)
+    #     message(STATUS "    Building the Antenna components")
+    # endif(PH2_ANTENNA_FOUND)
 
-    MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
+    # ZeroMQ
+    # find_package(ZMQ)
+    # if(ZMQ_FOUND)
+    #     find_package(PH2_USBINSTLIB)
+    #     if(PH2_USBINSTLIB_FOUND)
+    #     endif(PH2_USBINSTLIB_FOUND)
+    # endif(ZMQ_FOUND)
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    
+    # EUDAQ
+    # if(${USE_EUDAQ})
+    #     set(USE_EUDAQ ON)
+    #     include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
+    #     set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
+    #     message(STATUS "EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}${Reset}")
+    # else(${USE_EUDAQ})
+    #     message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
+    # endif(${USE_EUDAQ})
+
+    # list(APPEND CMAKE_MODULE_PATH "${PH2_ACF_CMAKE_DIR}/cmake")
+
+    # find_package (CACTUS REQUIRED)
+    # if (CACTUS_FOUND)
+    #     message(STATUS "CACTUS FOUND: ${CACTUS_FOUND}")
+    # endif (CACTUS_FOUND)
+
     set(CompileForShep true)
     set(CompileForHerd false)
     set(NoDataShipping false)
 
-    # AMC13
-    if(${CACTUS_AMC13_FOUND})
-        message(STATUS "    Enabling AMC13 component")
-    endif(${CACTUS_AMC13_FOUND})
-
-    # Antenna
-    find_package(PH2_ANTENNA)
-    if(PH2_ANTENNA_FOUND)
-        message(STATUS "    Building the Antenna components")
-    endif(PH2_ANTENNA_FOUND)
-
-    # ZeroMQ
-    find_package(ZMQ)
-    if(ZMQ_FOUND)
-        find_package(PH2_USBINSTLIB)
-        if(PH2_USBINSTLIB_FOUND)
-        endif(PH2_USBINSTLIB_FOUND)
-    endif(ZMQ_FOUND)
-
-    # EUDAQ
-    if(${USE_EUDAQ})
-        set(USE_EUDAQ ON)
-        include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-        message(STATUS "EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}${Reset}")
-    else(${USE_EUDAQ})
-        message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
-    endif(${USE_EUDAQ})
-
-    list(APPEND CMAKE_MODULE_PATH "${PH2_ACF_CMAKE_DIR}/cmake")
-    find_package (CACTUS REQUIRED)
-    if (CACTUS_FOUND)
-        message(STATUS "CACTUS FOUND: ${CACTUS_FOUND}")
-    endif (CACTUS_FOUND)
-
-
-    include_directories(${CACTUS_INCLUDEDIR})
-
+    set (CMAKE_CXX_STANDARD 17)
     cet_set_compiler_flags(
         EXTRA_FLAGS -DELPP_THREAD_SAFE
     )
 
-    message("--     ${BoldCyan}#### Done ####${Reset}")
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})    
+    include_directories(${CACTUS_INCLUDEDIR})
 
     add_subdirectory(tools)
     #add_subdirectory(ProductionToolsIT)
