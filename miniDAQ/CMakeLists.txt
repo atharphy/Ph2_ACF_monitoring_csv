@@ -97,18 +97,10 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS " ")
 
 
-    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
-    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
-    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
-    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
-
-    include_directories(${UHAL_DIR}/uhal/include)
-    include_directories(${UHAL_DIR}/log/include)
-    include_directories(${UHAL_DIR}/grammars/include)
-
+    #Include dirs
     include_directories(${Protobuf_INCLUDE_DIRS})
 
-    #library dirs
+    #Library dirs
     link_directories(${Protobuf_LIBRARIES})
 
     cet_make_exec(NAME RunController
@@ -124,9 +116,11 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         Boost::regex
         Boost::program_options
         Boost::headers
-        cactus_uhal_uhal
-        cactus_uhal_log
-        cactus_uhal_grammars
+        CACTUS::uhal
+        #LORE OLD WAY if uhal is compiled in OTSDAQ
+        #LORE cactus_uhal_uhal
+        #LORE cactus_uhal_log
+        #LORE cactus_uhal_grammars
         Ph2_Interface
         Ph2_System
         Ph2_Tools

@@ -63,9 +63,13 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}HW INTERFACE${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories(${UHAL_DIR}/uhal/include)
-    include_directories(${UHAL_DIR}/log/include)
-    include_directories(${UHAL_DIR}/grammars/include)
+    # include_directories(${UHAL_DIR}/uhal/include)
+    # include_directories(${UHAL_DIR}/log/include)
+    # include_directories(${UHAL_DIR}/grammars/include)
+    include_directories(${CACTUS_INCLUDEDIR})
+    
+    message(STATUS "CACTUS INCLUDE: ${CACTUS_INCLUDEDIR}")
+
 
     cet_set_compiler_flags(
         EXTRA_FLAGS -Wno-reorder -Wl,--undefined

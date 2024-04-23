@@ -269,6 +269,9 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}$ENV{PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
+    # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+    # find_package(CACTUS)
+
     set (CMAKE_CXX_STANDARD 17)
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
@@ -307,6 +310,15 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     else(${USE_EUDAQ})
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif(${USE_EUDAQ})
+
+    list(APPEND CMAKE_MODULE_PATH "${PH2_ACF_CMAKE_DIR}/cmake")
+    find_package (CACTUS REQUIRED)
+    if (CACTUS_FOUND)
+        message(STATUS "CACTUS FOUND: ${CACTUS_FOUND}")
+    endif (CACTUS_FOUND)
+
+
+    include_directories(${CACTUS_INCLUDEDIR})
 
     cet_set_compiler_flags(
         EXTRA_FLAGS -DELPP_THREAD_SAFE
