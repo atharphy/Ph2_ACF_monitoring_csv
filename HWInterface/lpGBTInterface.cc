@@ -61,7 +61,8 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     // ##########################################################################
     if(cAddress > cMaxWriteAddress)
     {
-        LOG(WARNING) << "LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address 0x" << BOLDYELLOW << std::hex << cAddress << std::dec << RESET;
+        LOG(WARNING) << GREEN << "LpGBT read-write registers end at " << BOLDYELLOW << cMaxWriteAddress << RESET << GREEN << " ... impossible to write to address 0x" << BOLDYELLOW << std::hex
+                     << cAddress << std::dec << RESET;
         return false;
     }
 
@@ -146,19 +147,19 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
     {
         uint32_t cChipID   = 0;
         uint32_t cChipID_0 = ReadChipFusedBlock(pChip, 0, 0);
-        LOG(DEBUG) << BOLDBLUE << "1st FuseID from lpGBT 0x" << std::hex << +cChipID_0 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "1st FuseID from lpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_0 << std::dec << RESET;
         uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 8);
         cChipID_1          = ((cChipID_1 & 0xFFFFFFC0) >> 6) | ((cChipID_1 & 0x3f) << 26);
-        LOG(DEBUG) << BOLDBLUE << "2nd FuseID from lpGBT 0x" << std::hex << +cChipID_1 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "2nd FuseID from lpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_1 << std::dec << RESET;
         uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 12);
         cChipID_2          = ((cChipID_2 & 0xFFFFF000) >> 12) | ((cChipID_2 & 0xfff) << 20);
-        LOG(DEBUG) << BOLDBLUE << "3rd FuseID from lpGBT 0x" << std::hex << +cChipID_2 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "3rd FuseID from lpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_2 << std::dec << RESET;
         uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 16);
         cChipID_3          = ((cChipID_3 & 0xFFFC0000) >> 18) | ((cChipID_3 & 0x3ffff) << 14);
-        LOG(DEBUG) << BOLDBLUE << "4th FuseID from lpGBT 0x" << std::hex << +cChipID_3 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "4th FuseID from lpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_3 << std::dec << RESET;
         uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 20);
         cChipID_4          = ((cChipID_4 & 0xFF000000) >> 24) | ((cChipID_4 & 0xffffff) << 8);
-        LOG(DEBUG) << BOLDBLUE << "5th FuseID from lpGBT 0x" << std::hex << +cChipID_4 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "5th FuseID from lpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_4 << std::dec << RESET;
         for(int i = 0; i < 32; i++)
         {
             uint8_t cTemp = 0;
@@ -170,7 +171,7 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
 
         if(cChipID == 0)
         {
-            LOG(INFO) << BOLDBLUE << "No redundant lpGBT ID, only use first register" << RESET;
+            LOG(INFO) << GREEN << "No redundant lpGBT ID, only use first register" << RESET;
             cChipID = cChipID_0;
         }
         LOG(INFO) << GREEN << "FuseID from lpGBT optical group #" << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET
