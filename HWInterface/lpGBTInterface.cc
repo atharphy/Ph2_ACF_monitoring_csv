@@ -176,6 +176,7 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
         LOG(INFO) << BOLDYELLOW << "FuseID from lpGBT optical group #" << +pChip->getOpticalGroupId() << " on Board " << +pChip->getBeBoardId() << ": 0x" << std::hex << +cChipID << std::dec << RESET;
         return cChipID;
     }
+
     LOG(INFO) << BOLDYELLOW << "No FuseID for version 0 lpGBT optical group #" << +pChip->getOpticalGroupId() << " on Board " << +pChip->getBeBoardId() << RESET;
     return 0;
 }

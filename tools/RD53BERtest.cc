@@ -87,32 +87,37 @@ void BERtest::run()
     ContainerFactory::copyAndInitChip<double>(*fDetectorContainer, theBERtestContainer);
 
     if(chain2test == 0)
+        // #########
+        // # BE-FE #
+        // #########
         for(const auto cBoard: *fDetectorContainer)
         {
             const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->StartPRBSpattern(cBoard);
 
+            std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane;
             for(const auto cOpticalGroup: *cBoard)
-            {
-                std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane;
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid) hybrid_id_chip_lane.push_back(std::pair<uint16_t, uint16_t>(cHybrid->getId(), static_cast<RD53*>(cChip)->getChipLane()));
 
-                const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, hybrid_id_chip_lane, frontendSpeed);
+            const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, hybrid_id_chip_lane, frontendSpeed);
 
-                auto it = results.begin();
+            auto it = results.begin();
+            for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
                         theBERtestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>() = *it;
                         it++;
                     }
-            }
 
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->StopPRBSpattern(cBoard);
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
         }
     else if(chain2test == 1)
+        // ############
+        // # BE-LPGBT #
+        // ############
         for(const auto cBoard: *fDetectorContainer)
         {
             const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
@@ -140,6 +145,9 @@ void BERtest::run()
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
         }
     else
+        // ############
+        // # LPGBT-FE #
+        // ############
         for(const auto cBoard: *fDetectorContainer)
         {
             const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
