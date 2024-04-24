@@ -592,7 +592,6 @@ int main(int argc, char* argv[])
         cPSAlignment.Start(theStartInfo);
         cPSAlignment.waitForRunToBeCompleted();
 
-
         // Alignment of a pattern between CIC and FC7
         LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
 

@@ -131,7 +131,7 @@ run:IT:
   extends: .run
   before_script:
     - cp settings/CMSIT_CI.xml .
-    - cp settings/RD53Files/CMSIT_RD53B.txt .
+    - cp settings/RD53Files/CMSIT_RD53Bv1.txt .
   script:
     - source ./setup.sh ci
     - fpgaconfig -c CMSIT_CI.xml -i IT-L12KSU_L8DIO5_CROC_4SCC_v4-8

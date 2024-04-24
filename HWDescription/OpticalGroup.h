@@ -79,6 +79,7 @@ class OpticalGroup
   protected:
     uint8_t  fStubPackageDelay{0};
     uint16_t fStubLatency{0};
+
   private:
 };
 } // namespace Ph2_HwDescription

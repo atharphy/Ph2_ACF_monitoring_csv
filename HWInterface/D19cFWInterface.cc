@@ -1152,7 +1152,7 @@ void D19cFWInterface::ChipTrigger() { fFastCommandInterface->SendGlobalL1A(); }
 // bool D19cFWInterface::Bx0Alignment(uint16_t pLinkId)
 bool D19cFWInterface::Bx0Alignment()
 {
-    bool     cSuccess   = false;
+    bool cSuccess = false;
     // auto     cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     // uint32_t cPkgDelay;
     // if (pLinkId < 10) cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
