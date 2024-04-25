@@ -181,9 +181,9 @@
 </MonitoringSettings>
 
 <CommunicationSettings>
-    <DQM               ip="127.0.0.1" port="6000" enableConnection="1"/>
-    <MonitorDQM        ip="127.0.0.1" port="8000" enableConnection="1"/>
-    <PowerSupplyClient ip="127.0.0.1" port="7000" enableConnection="1"/>
+    <DQM               ip="127.0.0.1" port="6000" enableConnection="0"/>
+    <MonitorDQM        ip="127.0.0.1" port="8000" enableConnection="0"/>
+    <PowerSupplyClient ip="127.0.0.1" port="7000" enableConnection="0"/>
 </CommunicationSettings>
 
 </HwDescription>
