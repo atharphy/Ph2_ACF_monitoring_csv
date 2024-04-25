@@ -140,15 +140,18 @@ void PixelAlive::run()
         LOG(INFO) << GREEN << "[PixelAlive::run] Running detection of Core-Column data corruption" << RESET;
 
         for(const auto cBoard: *fDetectorContainer)
+        {
+            // ########################
+            // # Start silent running #
+            // ########################
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = true;
+
+            // ############################
+            // # Disable all core columns #
+            // ############################
+            for(const auto& su: suffix) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName + su, 0);
+
             for(const auto cOpticalGroup: *cBoard)
-            {
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = true;
-
-                // ############################
-                // # Disable all core columns #
-                // ############################
-                for(const auto& su: suffix) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName + su, 0);
-
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
@@ -272,13 +275,13 @@ void PixelAlive::run()
                         for(const auto& su: suffix)
                         {
                             this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, regValueMap[su], false);
-                            const auto numberOfBits     = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
-                            const auto baseNumberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix[0]].fBitSize;
-                            uint16_t   mask             = cChip->getRegMap()[regName + su].fDefValue;
-                            const auto value            = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[su]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
+                            const uint16_t mask             = cChip->getRegMap()[regName + su].fDefValue;
+                            const auto     numberOfBits     = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
+                            const auto     baseNumberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix[0]].fBitSize;
+                            const auto     value            = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[su]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
                                                    .to_string()
                                                    .erase(0, RD53Constants::NBIT_MAXREG - numberOfBits);
-                            bool problems = (regValueMap[su] != mask);
+                            const bool problems = (regValueMap[su] != mask);
                             LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + su << (problems ? BOLDRED : BOLDBLUE) << " = 0b" << BOLDYELLOW << value
                                       << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)" << RESET;
 
@@ -310,8 +313,12 @@ void PixelAlive::run()
                         }
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                     }
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = false;
-            }
+
+            // #######################
+            // # Stop silent running #
+            // #######################
+            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = false;
+        }
 
         // ############################
         // # Reset to original values #
