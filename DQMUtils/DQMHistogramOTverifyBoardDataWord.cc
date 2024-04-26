@@ -74,7 +74,7 @@ bool DQMHistogramOTverifyBoardDataWord::fill(std::string& inputStream)
 
     if(theMatchingEfficiencyContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTverifyBoardDataWord MatchingEfficiency!!!!\n";
+        //std::cout << "Matched OTverifyBoardDataWord MatchingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
             theMatchingEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<float>, EmptyContainer>(fDetectorContainer);
         fillPatternMatchingEfficiency(theDetectorData);

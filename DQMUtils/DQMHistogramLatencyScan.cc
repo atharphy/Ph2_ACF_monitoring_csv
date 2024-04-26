@@ -94,21 +94,21 @@ bool DQMHistogramLatencyScan::fill(std::string& inputStream)
 
     if(theDataSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched LatencyScan Data!!!!!\n";
+        //std::cout << "Matched LatencyScan Data!!!!!\n";
         DetectorDataContainer fDetectorData = theDataSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, VECSIZE>>(fDetectorContainer);
         fillLatencyPlots(fDetectorData);
         return true;
     }
     if(theStubSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched LatencyScan Stub!!!!!\n";
+        //std::cout << "Matched LatencyScan Stub!!!!!\n";
         DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, VECSIZE>>(fDetectorContainer);
         fillStubLatencyPlots(fDetectorData);
         return true;
     }
     if(the2DSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched LatencyScan 2D!!!!!\n";
+        //std::cout << "Matched LatencyScan 2D!!!!!\n";
         DetectorDataContainer fDetectorData =
             the2DSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<GenericDataArray<uint16_t, VECSIZE>, VECSIZE>>(fDetectorContainer);
         fill2DLatencyPlots(fDetectorData);
@@ -116,7 +116,7 @@ bool DQMHistogramLatencyScan::fill(std::string& inputStream)
     }
     if(theTriggerTDCSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched LatencyScan TriggerTDC!!!!!\n";
+        //std::cout << "Matched LatencyScan TriggerTDC!!!!!\n";
         DetectorDataContainer fDetectorData = theTriggerTDCSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, TDCBINS>>(fDetectorContainer);
         fillTriggerTDCPlots(fDetectorData);
         return true;

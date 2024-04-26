@@ -321,7 +321,7 @@ bool MonitorDQMPlotPS::fill(std::string& inputStream)
 
     if(theSSA2RegisterSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PSMonitor SSA2Register!!!!!\n";
+        //std::cout << "Matched PSMonitor SSA2Register!!!!!\n";
         std::string           registerName;
         DetectorDataContainer fDetectorData =
             theSSA2RegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
@@ -330,7 +330,7 @@ bool MonitorDQMPlotPS::fill(std::string& inputStream)
     }
     if(theMPA2RegisterSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PSMonitor MPA2Register!!!!!\n";
+        //std::cout << "Matched PSMonitor MPA2Register!!!!!\n";
         std::string           registerName;
         DetectorDataContainer fDetectorData =
             theMPA2RegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
@@ -339,7 +339,7 @@ bool MonitorDQMPlotPS::fill(std::string& inputStream)
     }
     if(theLpGBTRegisterSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PSMonitor LpGBTRegister!!!!!\n";
+        //std::cout << "Matched PSMonitor LpGBTRegister!!!!!\n";
         std::string           registerName;
         DetectorDataContainer fDetectorData =
             theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, registerName);
