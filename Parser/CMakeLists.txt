@@ -49,15 +49,10 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}PARSER${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/Parser/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    cet_set_compiler_flags(
-        EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-    )
-
     cet_make(LIBRARY_NAME Ph2_Parser
-            LIBRARIES
-            pugixml
-            Ph2_Description
-            #${Boost_SYSTEM_LIBRARY}
+             LIBRARIES
+             pugixml
+             Ph2_Description
     )
 
     install_headers()

@@ -28,7 +28,7 @@ bool SSAPhysicsHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched SSAPhysics Occupancy!!!!!\n";
+        //std::cout << "Matched SSAPhysics Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer);
         fillOccupancy(fDetectorData);
         return true;
