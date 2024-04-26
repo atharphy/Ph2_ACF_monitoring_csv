@@ -12,7 +12,7 @@
 #ifndef MultiplexingSetup_h__
 #define MultiplexingSetup_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 
 #include <map>
 

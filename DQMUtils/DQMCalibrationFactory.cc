@@ -5,11 +5,16 @@
 #include "DQMUtils/DQMHistogramKira.h"
 #include "DQMUtils/DQMHistogramLatencyScan.h"
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
+#include "DQMUtils/DQMHistogramOTCICphaseAlignmentForBypass.h"
 #include "DQMUtils/DQMHistogramOTCICwordAlignment.h"
 #include "DQMUtils/DQMHistogramOTCMNoise.h"
+#include "DQMUtils/DQMHistogramOTCicBypassTest.h"
+#include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
+#include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputs.h"
 #include "DQMUtils/DQMHistogramOTalignStubPackage.h"
+#include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyCICdataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyMPASSAdataWord.h"
@@ -32,7 +37,6 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
-#include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
 
 using namespace MessageUtils;
 
@@ -58,16 +62,16 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICwordAlignment,
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("alignment");
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTMeasureOccupancy>("measureOccupancy");
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
              DQMHistogramOTverifyBoardDataWord,
              DQMHistogramOTalignStubPackage,
-             DQMHistogramOTCICphaseAlignment,
-             DQMHistogramOTCICwordAlignment,
-             DQMHistogramOTverifyCICdataWord,
-             DQMHistogramOTverifyMPASSAdataWord,
-             DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
+             DQMHistogramOTCICphaseAlignmentForBypass,
+             DQMHistogramOTCicBypassTest>("testCICbypass");
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -133,6 +137,18 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("calibrationandpedenoise");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord,
+             DQMHistogramOTPSADCCalibration,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise>("adccalibrationandpedenoise");
     Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,

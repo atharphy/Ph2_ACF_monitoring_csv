@@ -25,7 +25,8 @@
 #define SSA2_NODE_NAME "SSA2"
 #define RD53_NODE_NAME "RD53"
 #define RD53A_NODE_NAME "RD53A"
-#define RD53B_NODE_NAME "RD53B"
+#define RD53Bv1_NODE_NAME "RD53Bv1"
+#define RD53Bv2_NODE_NAME "RD53Bv2"
 
 #define SETTINGS_NODE_NAME "Settings"
 #define SETTING_NODE_NAME "Setting"
@@ -85,6 +86,11 @@
 
 // Hybrid attributes
 #define HYBRID_ENABLE_ATTRIBUTE_NAME "enable"
+
+// Chip attibutes
+#define CHIP_NOISE_ATTRIBUTE_NAME "noise"
+#define CHIP_SLOPE_ATTRIBUTE_NAME "ADCslope"   // for PS chips only
+#define CHIP_OFFSET_ATTRIBUTE_NAME "ADCoffset" // for PS chips only
 
 // Monitoring attributes
 #define MONITORING_NODE_TYPE_ATTRIBUTE_NAME "type"

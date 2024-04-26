@@ -10,7 +10,7 @@
 #ifndef OTinjectionDelayOptimization_h__
 #define OTinjectionDelayOptimization_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
@@ -34,16 +34,31 @@ class OTinjectionDelayOptimization : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void optimizeInjectionDelay();
-    void injectionDelayScan2S();
-    void injectionDelayScanPS();
 
-    uint32_t fNumberOfEvents {100};
-    uint8_t fCbcTestPulseValue {150};
-    float fCbcNumberOfSigmaNoiseAwayFromPedestal {10.};
-    
+    void prepareInjectionDelayScan2S();
+    void prepareInjectionDelayScanPS();
+
+    void setLatencyAndDelay2S(uint16_t totalInjectionDelay);
+    void setLatencyAndDelayPS(uint16_t totalInjectionDelay);
+
+    std::pair<uint16_t, uint8_t> calculateDACsFromTotalDelay(uint16_t totalDelay, bool is2Smodule) const;
+
+    uint32_t       fNumberOfEvents{100};
+    uint16_t       fMaximumDelay{150};
+    uint16_t       fDelayStep{1};
+    uint8_t        fCBCtestPulseValue{218};
+    uint8_t        fSSAtestPulseValue{45};
+    uint8_t        fMPAtestPulseValue{50};
+    float          fCBCnumberOfSigmaNoiseAwayFromPedestal{5.};
+    float          fSSAnumberOfSigmaNoiseAwayFromPedestal{5.};
+    float          fMPAnumberOfSigmaNoiseAwayFromPedestal{5.};
+    const uint16_t fInitialLatency{200};
+    const int      fNumberOfDelayInClockCycle2S{25};
+    const int      fNumberOfDelayInClockCyclePS{12};
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTinjectionDelayOptimization fDQMHistogramOTinjectionDelayOptimization;

@@ -38,7 +38,7 @@ void OTalignBoardDataWord::Initialise(void)
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBitSlipContainer, initialEmptyVector);
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fAlignmentRetryContainer, initialEmptyVector);
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTalignBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -237,7 +237,6 @@ bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup, 
         theLineConfiguration.fMode       = 0;
         theLineConfiguration.fEnableL1   = 0;
         theLineConfiguration.fMasterLine = 0;
-        theAlignerInterface->ManuallyConfigureLine(theAlignerObject, theLineConfiguration);
 
         uint16_t cPatternLength = 40;
         LOG(INFO) << BOLDYELLOW << "Trying to align data with pattern length " << +cPatternLength << RESET;

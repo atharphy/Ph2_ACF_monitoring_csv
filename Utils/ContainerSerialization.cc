@@ -63,6 +63,7 @@ BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<std::pair<uint16_t, uint16_t>, EmptyContainer>)))
 
 ContainerSerialization::ContainerSerialization(const std::string& calibrationName) : fCalibrationName(calibrationName) {}
 

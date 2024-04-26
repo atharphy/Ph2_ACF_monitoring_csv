@@ -280,7 +280,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                     //}
                     // experimental
 
-                    std::vector<uint32_t> cHits = pEvent->GetHits(cHybrid->getId(), cCbc->getId());
+                    auto cHits = pEvent->GetHits(cHybrid->getId(), cCbc->getId());
                     cHitCounter += cHits.size();
 
                     for(__attribute__((unused)) auto cHit: cHits) cScurve->second->Fill(pValue);
@@ -889,7 +889,7 @@ void HybridTester::ReconstructShorts(std::array<std::vector<std::array<int, 5>>,
 void HybridTester::SetBeBoardForShortsFinding(BeBoard* pBoard)
 {
     if(pBoard->getBoardType() == BoardType::D19C) fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 1);
-    setFWTestPulse();
+    setFWTestPulse(true);
 
     // (potential, group, enable test pulse, hole mode)
     setSystemTestPulse(fTestPulseAmplitude, 0x00, true, fHoleMode);

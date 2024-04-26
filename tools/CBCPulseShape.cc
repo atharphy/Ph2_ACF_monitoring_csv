@@ -21,13 +21,13 @@ CBCPulseShape::~CBCPulseShape() {}
 
 void CBCPulseShape::Initialise(void)
 {
-    fEventsPerPoint        = findValueInSettings<double>("PulseShapeNevents", 10);
+    fEventsPerPoint        = findValueInSettings<double>("PulseShape_Nevents", 10);
     fInitialLatency        = findValueInSettings<double>("PulseShapeInitialLatency", 200);
-    fInitialDelay          = findValueInSettings<double>("PulseShapeInitialDelay", 0);
-    fFinalDelay            = findValueInSettings<double>("PulseShapeFinalDelay", 25);
-    fDelayStep             = findValueInSettings<double>("PulseShapeDelayStep", 1);
-    fPulseAmplitude        = findValueInSettings<double>("PulseShapePulseAmplitude", 150);
-    fChannelGroup          = findValueInSettings<double>("PulseShapeChannelGroup", -1);
+    fInitialDelay          = findValueInSettings<double>("PulseShape_InitialDelay", 0);
+    fFinalDelay            = findValueInSettings<double>("PulseShape_FinalDelay", 25);
+    fDelayStep             = findValueInSettings<double>("PulseShape_DelayStep", 1);
+    fPulseAmplitude        = findValueInSettings<double>("PulseShape_PulseAmplitude", 150);
+    fChannelGroup          = findValueInSettings<double>("PulseShape_ChannelGroup", -1);
     fPlotPulseShapeSCurves = findValueInSettings<double>("PlotPulseShapeSCurves", 0);
 
     fLimit = 0.01; // larger tollerance for SCurve limits
@@ -39,12 +39,12 @@ void CBCPulseShape::Initialise(void)
     CBCChannelGroupHandler theChannelGroupHandler;
     if(fChannelGroup > 0) CBCChannelGroupHandler theChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET) << (fChannelGroup * 2));
 
-    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    theChannelGroupHandler.setChannelGroupParameters(16, 1, 2);
     setChannelGroupHandler(theChannelGroupHandler);
 
     initializeRecycleBin();
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fCBCHistogramPulseShape.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

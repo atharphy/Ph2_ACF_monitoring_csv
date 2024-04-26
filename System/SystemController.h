@@ -69,7 +69,6 @@ namespace Ph2_System
 {
 class RegisterHelper;
 
-// using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
 using BeBoardFWMap = std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>; /*!< Map of Board connected */
 
 /*!
@@ -192,15 +191,6 @@ class SystemController
     bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool cStartUpSequence);
 
     void initializeExceptionHandler();
-
-    /*!
-     * \brief Run Bit Error Rate test
-     * \param chain2test     : which part of the chain to be tested
-     * \param given_time     : states if PRBS has to be run for a certain amount of time or for a certain amount of frames
-     * \param frames_or_time : time [s] or number of frames
-     * \return: none
-     */
-    void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
 
     /*!
      * \brief Read Monitor Data from pBoard

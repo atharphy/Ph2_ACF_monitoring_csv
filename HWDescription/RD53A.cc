@@ -33,7 +33,19 @@ const RD53::FrontEnd  RD53A::SYNC        = {"SYNC",
                                             0,
                                             127,
                                             50000,
-                                            0x08};
+                                            0x08,
+                                            8,
+                                            {{"RstChnSync", 0x0001},
+                                             {"RstCmdDecoder", 0x0002},
+                                             {"RstGlbConf", 0x0004},
+                                             {"RstServiceData", 0x0008},
+                                             {"RstAurora", 0x0010},
+                                             {"RstSerializer", 0x0020},
+                                             {"RstADC", 0x0040},
+                                             {"ADCstatConversion", 0x0100},
+                                             {"ActivRinOsc", 0x2000},
+                                             {"AcqureZeroSyncFE", 0x4000},
+                                             {"RstAutozeroSyncFE", 0x800}}};
 const RD53::FrontEnd  RD53A::LIN         = {"LIN",
                                             {"Vthreshold_LIN"},
                                             "KRUM_CURR_LIN",
@@ -50,7 +62,19 @@ const RD53::FrontEnd  RD53A::LIN         = {"LIN",
                                             128,
                                             263,
                                             50000,
-                                            0x08};
+                                            0x08,
+                                            8,
+                                            {{"RstChnSync", 0x0001},
+                                             {"RstCmdDecoder", 0x0002},
+                                             {"RstGlbConf", 0x0004},
+                                             {"RstServiceData", 0x0008},
+                                             {"RstAurora", 0x0010},
+                                             {"RstSerializer", 0x0020},
+                                             {"RstADC", 0x0040},
+                                             {"ADCstatConversion", 0x0100},
+                                             {"ActivRinOsc", 0x2000},
+                                             {"AcqureZeroSyncFE", 0x4000},
+                                             {"RstAutozeroSyncFE", 0x800}}};
 const RD53::FrontEnd  RD53A::DIFF        = {"DIFF",
                                             {"VTH1_DIFF"},
                                             "VFF_DIFF",
@@ -67,8 +91,46 @@ const RD53::FrontEnd  RD53A::DIFF        = {"DIFF",
                                             264,
                                             399,
                                             50000,
-                                            0x08};
+                                            0x08,
+                                            8,
+                                            {{"RstChnSync", 0x0001},
+                                             {"RstCmdDecoder", 0x0002},
+                                             {"RstGlbConf", 0x0004},
+                                             {"RstServiceData", 0x0008},
+                                             {"RstAurora", 0x0010},
+                                             {"RstSerializer", 0x0020},
+                                             {"RstADC", 0x0040},
+                                             {"StartMonitoring", 0x0100},
+                                             {"ADCstatConversion", 0x1000},
+                                             {"ActivRinOsc", 0x2000},
+                                             {"AcqureZeroSyncFE", 0x4000},
+                                             {"RstAutozeroSyncFE", 0x800}}};
 const RD53::FrontEnd* RD53A::frontEnds[] = {&RD53A::SYNC, &RD53A::LIN, &RD53A::DIFF};
+
+const std::map<std::string, RD53::SpecialRegInfo> RD53A::specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
+
+                                                                          {"CLK_DATA_DELAY_DATA", {"CLK_DATA_DELAY", 0}},
+                                                                          {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 4}},
+                                                                          {"CLK_DATA_DELAY_2INV", {"CLK_DATA_DELAY", 5}},
+
+                                                                          {"MONITOR_CONFIG_ADC", {"MonitorConfig", 0}},
+                                                                          {"MONITOR_CONFIG_BG", {"MonitorConfig", 6}},
+
+                                                                          {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
+                                                                          {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 5}},
+
+                                                                          {"CML_CONFIG_EN_LANE", {"CML_CONFIG", 0}},
+                                                                          {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 4}},
+                                                                          {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 6}},
+
+                                                                          {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
+                                                                          {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
+                                                                          {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
+                                                                          {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}},
+
+                                                                          {"CAL_EDGE_FINE_DELAY", {"INJECTION_SELECT", 0}},
+                                                                          {"DIGITAL_INJ_EN", {"INJECTION_SELECT", 4}},
+                                                                          {"ANALOG_INJ_MODE", {"INJECTION_SELECT", 5}}};
 
 RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, fileName, cfgComment)
@@ -96,7 +158,7 @@ std::vector<uint16_t> RD53A::getLaneUpInitSequence() const
     return initSequence;
 }
 
-const RD53A::FrontEnd* RD53A::getFEtype(const size_t colStart, const size_t colStop) const
+const RD53A::FrontEnd* RD53A::getFEtype(const size_t colStart, const size_t colStop)
 {
     return *std::max_element(std::begin(frontEnds),
                              std::end(frontEnds),
@@ -145,9 +207,9 @@ void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::R
     if(size == 1) chipEvent.eventStatus |= RD53EvtEncoder::CHIPNOHIT;
 }
 
-uint32_t RD53A::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const
+uint32_t RD53A::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay)
 {
-    return bits::pack<4, 1, 3, 6, 1, 5>(RD53AConstants::BROADCAST_CHIPID, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
+    return bits::pack<4, 1, 3, 6, 1, 5>(RD53A::getFEtype()->broadcastChipId, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
 }
 
 float RD53A::VCal2Charge(float VCal, bool isNoise) const

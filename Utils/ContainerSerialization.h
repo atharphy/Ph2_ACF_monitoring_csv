@@ -83,6 +83,7 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMB
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::pair<uint16_t, uint16_t>, EmptyContainer>)))
 
 #include "Utils/Occupancy.h"
 #include <arpa/inet.h>

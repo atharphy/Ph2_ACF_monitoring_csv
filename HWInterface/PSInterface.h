@@ -60,6 +60,7 @@ class PSInterface : public ReadoutChipInterface
     bool                                          WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pPS, const std::string& dacName, const ChipContainer& pValue, bool pVerifLoop = true) override;
     uint16_t                                      ReadChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
+    uint32_t                                      ReadChipFuseID(Ph2_HwDescription::Chip* pPS) override;
 
     void                 producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
     void                 produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
@@ -73,14 +74,34 @@ class PSInterface : public ReadoutChipInterface
 
     bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = false);
 
+    uint32_t readADCGround(Ph2_HwDescription::ReadoutChip* pPS);
+    uint32_t readADC(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName);
+    uint32_t readADCBandGap(Ph2_HwDescription::ReadoutChip* pPS);
+    uint32_t readADCVref(Ph2_HwDescription::ReadoutChip* pPS);
+    uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pPS);
+    bool     setVref(Ph2_HwDescription::ReadoutChip* pPS, uint16_t theVrefRegisterValue);
+    bool     setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pPS);
+
+    float calculateADCLSB(Ph2_HwDescription::ReadoutChip* pPS, float theVrefValue) override;
+
+    const std::map<std::string, std::pair<uint8_t, float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pPS);
+
+    float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pPS);
+    float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pPS);
+    float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pPS);
+    float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pPS);
+    float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pPS);
+
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pCbc, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = false);
 
     //
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pPS, bool pVerifLoop, uint32_t pBlockSize);
     //
     bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop) { return true; }
-
-    void SetOptical()
+    bool disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pPS);
+    // bool selectTestPadsOutput(Ph2_HwDescription::ReadoutChip* pPS, std::string theRegisterName);
+    uint8_t TuneDAC(Ph2_HwDescription::ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref = false);
+    void    SetOptical()
     {
         bool cFoundLpgbt = this->lpGBTFound();
         fTheSSA2Interface->setWithLpGBT(cFoundLpgbt);

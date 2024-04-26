@@ -58,19 +58,19 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(cFrontEndType == FrontEndType::CBC3)
         {
             CBCChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(16, 1, 2); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler);
         }
         else if(cFrontEndType == FrontEndType::SSA2)
         {
             SSAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(1, 1, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
         else if(cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(1, NMPAROWS, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
     }
@@ -80,18 +80,18 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fSkipMaskedChannels                = findValueInSettings<double>("SkipMaskedChannels", 0);
     fMaskChannelsFromOtherGroups       = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
     fCheckLoop                         = findValueInSettings<double>("VerificationLoop", 1);
-    fPedestalEqualizationMaskUntrimmed = findValueInSettings<double>("PedestalEqualizationMaskUntrimmed", 0);
+    fPedestalEqualizationMaskUntrimmed = findValueInSettings<double>("PedestalEqualization_MaskUntrimmed", 0);
     fFullScan                          = findValueInSettings<double>("FullScan", 0);
 
-    fPedestalEqualizationFullScanStart = findValueInSettings<double>("PedestalEqualizationFullScanStart", 110);
+    fPedestalEqualizationFullScanStart = findValueInSettings<double>("PedestalEqualization_FullScanStart", 110);
     fPedestalEqualizationFullScanCAP   = findValueInSettings<double>("PedestalEqualizationFullScanCAP", 1.0);
 
-    fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
-    fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualizationPulseAmplitudePix", fTestPulseAmplitude);
+    fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualization_PulseAmplitude", 0);
+    fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualization_PulseAmplitudePix", fTestPulseAmplitude);
 
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst         = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
+    fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualization_Occupancy", 0.56);
     uint8_t cDefTargetOffset = (fWithCBC) ? 0x7F : 0xF;
     fTargetOffset            = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset);
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
@@ -246,7 +246,7 @@ void PedestalEqualization::FindVplus()
     LOG(INFO) << BOLDBLUE << "Finding threshold at which to equalize offsets - searching for threshold where <Occupancy>/Chip is " << fOccupancyAtPedestal << RESET;
     uint8_t cTargetVcth = 0x0;
     setSameDac("Threshold", cTargetVcth);
-    this->SetTestAllChannels(true);
+    this->setTestAllChannels(true);
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -341,7 +341,7 @@ void PedestalEqualization::FindVplus()
             }
         }
     }
-    this->SetTestAllChannels(originalAllChannelFlag);
+    this->setTestAllChannels(originalAllChannelFlag);
     setNormalization(cNormalizationOrig);
 }
 

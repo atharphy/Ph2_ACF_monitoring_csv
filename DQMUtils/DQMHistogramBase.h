@@ -146,6 +146,7 @@ class DQMHistogramBase
             setZTitleFunctor(histContainer.fTheHistogram, ZTitle);
         }
 
+        dataContainer.reset();
         RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
     }
 

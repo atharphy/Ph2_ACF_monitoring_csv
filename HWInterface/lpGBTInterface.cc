@@ -61,7 +61,8 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     // ##########################################################################
     if(cAddress > cMaxWriteAddress)
     {
-        LOG(WARNING) << "LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address 0x" << BOLDYELLOW << std::hex << cAddress << std::dec << RESET;
+        LOG(WARNING) << GREEN << "LpGBT read-write registers end at " << BOLDYELLOW << cMaxWriteAddress << RESET << GREEN << " ... impossible to write to address 0x" << BOLDYELLOW << std::hex
+                     << cAddress << std::dec << RESET;
         return false;
     }
 
@@ -126,7 +127,7 @@ uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
     if(cRecent) { cReadBackValue = ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency); }
     if(cReadBackValue == 0x15)
     {
-        LOG(INFO) << BOLDYELLOW << "VTRx+ with LDD version 1.3!" << RESET;
+        LOG(INFO) << GREEN << "VTRx+ with LDD version 1.3" << RESET;
 
         for(int i = 0; i < 4; i++)
         {
@@ -136,7 +137,7 @@ uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
-    LOG(INFO) << BOLDYELLOW << "FuseID from VTRx+ 0x" << std::hex << +cChipId << std::dec << RESET;
+    LOG(INFO) << GREEN << "FuseID from VTRx+ 0x" << BOLDYELLOW << std::hex << +cChipId << std::dec << RESET;
     return cChipId;
 }
 
@@ -146,19 +147,19 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
     {
         uint32_t cChipID   = 0;
         uint32_t cChipID_0 = ReadChipFusedBlock(pChip, 0, 0);
-        LOG(DEBUG) << BOLDBLUE << "1st FuseID from lpGBT 0x" << std::hex << +cChipID_0 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "1st FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_0 << std::dec << RESET;
         uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 8);
         cChipID_1          = ((cChipID_1 & 0xFFFFFFC0) >> 6) | ((cChipID_1 & 0x3f) << 26);
-        LOG(DEBUG) << BOLDBLUE << "2nd FuseID from lpGBT 0x" << std::hex << +cChipID_1 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "2nd FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_1 << std::dec << RESET;
         uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 12);
         cChipID_2          = ((cChipID_2 & 0xFFFFF000) >> 12) | ((cChipID_2 & 0xfff) << 20);
-        LOG(DEBUG) << BOLDBLUE << "3rd FuseID from lpGBT 0x" << std::hex << +cChipID_2 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "3rd FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_2 << std::dec << RESET;
         uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 16);
         cChipID_3          = ((cChipID_3 & 0xFFFC0000) >> 18) | ((cChipID_3 & 0x3ffff) << 14);
-        LOG(DEBUG) << BOLDBLUE << "4th FuseID from lpGBT 0x" << std::hex << +cChipID_3 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "4th FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_3 << std::dec << RESET;
         uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 20);
         cChipID_4          = ((cChipID_4 & 0xFF000000) >> 24) | ((cChipID_4 & 0xffffff) << 8);
-        LOG(DEBUG) << BOLDBLUE << "5th FuseID from lpGBT 0x" << std::hex << +cChipID_4 << std::dec << RESET;
+        LOG(DEBUG) << GREEN << "5th FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_4 << std::dec << RESET;
         for(int i = 0; i < 32; i++)
         {
             uint8_t cTemp = 0;
@@ -170,13 +171,16 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
 
         if(cChipID == 0)
         {
-            LOG(INFO) << BOLDBLUE << "No redundant lpGBT ID, only use first register" << RESET;
+            LOG(DEBUG) << GREEN << "No redundant LpGBT ID, only use first register" << RESET;
             cChipID = cChipID_0;
         }
-        LOG(INFO) << BOLDYELLOW << "FuseID from lpGBT optical group #" << +pChip->getOpticalGroupId() << " on Board " << +pChip->getBeBoardId() << ": 0x" << std::hex << +cChipID << std::dec << RESET;
+        LOG(INFO) << GREEN << "FuseID from LpGBT optical group #" << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET
+                  << GREEN << ": 0x" << BOLDYELLOW << std::hex << +cChipID << std::dec << RESET;
         return cChipID;
     }
-    LOG(INFO) << BOLDYELLOW << "No FuseID for version 0 lpGBT optical group #" << +pChip->getOpticalGroupId() << " on Board " << +pChip->getBeBoardId() << RESET;
+
+    LOG(INFO) << GREEN << "No FuseID for version 0 LpGBT optical group #" << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId()
+              << RESET;
     return 0;
 }
 
@@ -185,33 +189,34 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
     WriteChipReg(pChip, "FUSEControl", 2);
     int      cReadBack = 0;
     uint32_t cResult   = 0;
+
     while(cReadBack != 4)
     {
         cReadBack = ReadChipReg(pChip, "FUSEStatus");
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        LOG(DEBUG) << GREEN << "lpgbt FUSEStatus = " << +cReadBack << RESET;
+        LOG(DEBUG) << GREEN << "LpGBT FUSEStatus = " << BOLDYELLOW << +cReadBack << RESET;
     }
     WriteChipReg(pChip, "FUSEBlowAddH", cFuseH);
     WriteChipReg(pChip, "FUSEBlowAddL", cFuseL);
 
-    LOG(DEBUG) << GREEN << "lpgbt FUSEBlowAddH = " << +cFuseH << RESET;
-    LOG(DEBUG) << GREEN << "lpgbt FUSEBlowAddL = " << +cFuseL << RESET;
+    LOG(DEBUG) << GREEN << "LpGBT FUSEBlowAddH = " << BOLDYELLOW << +cFuseH << RESET;
+    LOG(DEBUG) << GREEN << "LpGBT FUSEBlowAddL = " << BOLDYELLOW << +cFuseL << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesA");
     cResult   = cResult | (cReadBack);
-    LOG(DEBUG) << GREEN << "lpgbt FUSEValuesA = " << +cReadBack << RESET;
+    LOG(DEBUG) << GREEN << "LpGBT FUSEValuesA = " << BOLDYELLOW << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesB");
     cResult   = cResult | (cReadBack << 8);
-    LOG(DEBUG) << GREEN << "lpgbt FUSEValuesB = " << +cReadBack << RESET;
+    LOG(DEBUG) << GREEN << "LpGBT FUSEValuesB = " << BOLDYELLOW << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesC");
     cResult   = cResult | (cReadBack << 16);
-    LOG(DEBUG) << GREEN << "lpgbt FUSEValuesC = " << +cReadBack << RESET;
+    LOG(DEBUG) << GREEN << "LpGBT FUSEValuesC = " << BOLDYELLOW << +cReadBack << RESET;
 
     cReadBack = ReadChipReg(pChip, "FUSEValuesD");
     cResult   = cResult | (cReadBack << 24);
-    LOG(DEBUG) << GREEN << "lpgbt FUSEValuesD = " << +cReadBack << RESET;
+    LOG(DEBUG) << GREEN << "LpGBT FUSEValuesD = " << BOLDYELLOW << +cReadBack << RESET;
 
     WriteChipReg(pChip, "FUSEControl", 0);
 
@@ -459,6 +464,7 @@ uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChanne
 
     return 15;
 }
+std::map<std::string, uint8_t> lpGBTInterface::GetPhaseTapMap() { return fPhaseTapMap; }
 
 // ####################################
 // # LpGBT specific routine functions #
@@ -511,15 +517,16 @@ float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string&
 
 uint8_t lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip)
 {
-    const std::string pADC    = static_cast<lpGBT*>(pChip)->getTuneVrefADC();
-    uint16_t          pVinput = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
-    LOG(INFO) << BOLDYELLOW << "Tune Vref of lpGBT using input of " << pADC << " and " << pVinput << "mV" << RESET;
-    uint8_t cNbits       = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
-    uint8_t cCurrentStep = (0xFF >> (8 - cNbits));
+    const std::string pADC         = static_cast<lpGBT*>(pChip)->getTuneVrefADC();
+    uint16_t          pVinput      = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
+    uint8_t           cNbits       = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
+    uint8_t           cCurrentStep = (0xFF >> (8 - cNbits));
     SetVrefTune(pChip, cCurrentStep);
     auto     cVrefTune     = GetVrefTune(pChip);
     float    cCurrentVref  = GetVref(pChip, pADC, pVinput);
     uint16_t cPreviousStep = cCurrentStep;
+
+    LOG(INFO) << GREEN << "Tune Vref of lpGBT using input of " << BOLDYELLOW << pADC << RESET << GREEN << " and " << BOLDYELLOW << pVinput << RESET << GREEN << "mV" << RESET;
 
     for(int iBit = cNbits - 1; iBit >= 0; --iBit)
     {
@@ -540,12 +547,14 @@ uint8_t lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip)
         cCurrentVref = GetVref(pChip, pADC, pVinput);
 
         if(static_cast<lpGBT*>(pChip)->getVersion() == 0)
-            LOG(INFO) << BOLDYELLOW << " Flip Bit#" << +iBit << " Tune =  " << std::bitset<5>(cVrefTune) << " Vref = " << cCurrentVref << RESET;
+            LOG(INFO) << GREEN << " Flip Bit#" << BOLDYELLOW << +iBit << RESET << GREEN << " Tune =  " << BOLDYELLOW << std::bitset<5>(cVrefTune) << RESET << GREEN << " Vref = " << BOLDYELLOW
+                      << cCurrentVref << RESET;
         else
-            LOG(INFO) << BOLDYELLOW << " Flip Bit#" << +iBit << " Tune =  " << std::bitset<8>(cVrefTune) << " Vref = " << cCurrentVref << RESET;
+            LOG(INFO) << GREEN << " Flip Bit#" << BOLDYELLOW << +iBit << RESET << GREEN << " Tune =  " << BOLDYELLOW << std::bitset<8>(cVrefTune) << RESET << GREEN << " Vref = " << BOLDYELLOW
+                      << cCurrentVref << RESET;
     }
 
-    LOG(INFO) << BOLDYELLOW << "Vref tune set to " << +cVrefTune << " - Vref = " << cCurrentVref << RESET;
+    LOG(INFO) << GREEN << "Vref tune set to " << BOLDYELLOW << +cVrefTune << RESET << GREEN << " - Vref = " << BOLDYELLOW << cCurrentVref << RESET;
     return cVrefTune;
 }
 
@@ -828,7 +837,7 @@ float lpGBTInterface::GetInternalTemperature(Chip* pChip)
     WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
 
     std::vector<float> cMeasurements(0);
-    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(ReadADC(pChip, "TEMP", "VREF/2", 0)); }
+    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) cMeasurements.push_back(ReadADC(pChip, "TEMP", "VREF/2", 0));
     return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
 }
 
@@ -1147,18 +1156,12 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     lpGBTInterface::StartBERT(pChip, true);  // Start
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
-    LOG(INFO) << BOLDGREEN << std::fixed << std::setprecision(0) << "===== BER run starting @ " << bitPerFrame << "-bits/frame  =====" << RESET;
-    int      idx = 1;
-    uint64_t nErrors;
+    LOG(INFO) << BOLDGREEN << std::fixed << std::setprecision(0) << "===== BER run starting @ " << BOLDYELLOW << bitPerFrame << BOLDGREEN << "-bits/frame  =====" << RESET;
+    int idx = 1;
     while(lpGBTInterface::IsBERTDone(pChip) == false)
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
-
-        nErrors = lpGBTInterface::GetBERTErrors(pChip);
-
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
-        LOG(INFO) << GREEN << "Current counter: " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN
-                  << " bits with errors" << RESET;
         idx++;
     }
     LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
@@ -1166,28 +1169,26 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
         lpGBTInterface::StartBERT(pChip, false); // Stop
-        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
-                     << RESET;
+        LOG(WARNING) << BOLDRED << "All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET;
         LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
-        return 0.;
     }
 
     // ########
     // # Stop #
     // ########
-    nErrors = lpGBTInterface::GetBERTErrors(pChip);
+    uint64_t nErrors = lpGBTInterface::GetBERTErrors(pChip);
     lpGBTInterface::StartBERT(pChip, false); // Stop
 
     // ###########################
     // # Read PRBS frame counter #
     // ###########################
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
-    LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
-    LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN << " bits with errors"
-              << RESET;
-    LOG(INFO) << GREEN << "Final BER: " << BOLDYELLOW << nErrors / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / bitPerFrame / frames2run * 100 << RESET << GREEN << "%)"
-              << RESET;
+    LOG(INFO) << GREEN << "Number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
+    LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << ", i.e. bits with errors: " << BOLDYELLOW << nErrors << RESET;
+    LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / bitPerFrame / frames2run * 100 << RESET << GREEN
+              << "%)" << RESET;
+    LOG(INFO) << GREEN << "BER test result: " << (nErrors == 0 ? BOLDYELLOW : BOLDRED) << (nErrors == 0 ? "PASSED" : "NOT PASSED") << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors / frames2run;
@@ -1507,7 +1508,8 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* p
         cMeasurements.push_back(cAdcVal * pChip->getADCCalibrationData()["TEMPERATURE_UNCALVREF_SLOPE"] + pChip->getADCCalibrationData()["TEMPERATURE_UNCALVREF_OFFSET"]);
     }
     float cTemperature = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-    LOG(INFO) << GREEN << "LpGBT temperature estimate: " << BOLDYELLOW << std::setprecision(3) << cTemperature << std::setprecision(-1) << RESET << GREEN << " C" << RESET;
+
+    LOG(DEBUG) << GREEN << "LpGBT temperature estimate: " << BOLDYELLOW << std::setprecision(3) << cTemperature << std::setprecision(-1) << RESET << GREEN << " C" << RESET;
     return cTemperature;
 }
 
@@ -1734,7 +1736,7 @@ void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::lpGBT* pChip, const std::
 
 float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, bool pImprovePrecision)
 {
-    LOG(INFO) << BOLDYELLOW << "pExpectedROhm not provided. Performing auto ranging." << RESET;
+    LOG(INFO) << GREEN << "pExpectedROhm not provided. Performing auto ranging" << RESET;
 
     uint8_t cCdacCode = 1;
     float   cVAdc     = 0;

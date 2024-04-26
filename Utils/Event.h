@@ -120,14 +120,11 @@ class Event
 
     // for CBC3 use
     uint8_t  fBeId;
-    uint8_t  fBeFWType;
-    uint8_t  fCBCDataType;
     uint8_t  fNCbc;
     uint8_t  fNSSA;
     uint8_t  fNSSA2;
     uint8_t  fNMPA;
     uint16_t fEventDataSize;
-    uint32_t fBeStatus;
 
     uint16_t encodeId(const uint8_t& pHybridId, const uint8_t& pCbcId) const { return (pHybridId << 8 | pCbcId); }
 
@@ -261,12 +258,6 @@ class Event
      */
     virtual void Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list) {}
     /*!
-     * \brief Set an Event to the Event map
-     * \param pEvent : Event to set
-     * \return Aknowledgement of the Event setting (1/0)
-     */
-    virtual void SetEvent(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list) {}
-    /*!
      * \brief Convert Data to Hex string
      * \return Data string in hex
      */
@@ -344,15 +335,7 @@ class Event
      * \param i : pixel bit data number i
      * \return Data Bit
      */
-    virtual bool              DataBit(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const { return true; }
-    virtual std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const { return {}; }
-    /*!
-     * \brief Function to get GLIB flag string
-     * \param pHybridId : Hybrid Id
-     * \param pCbcId : Cbc Id
-     * \return Glib flag string
-     */
-    virtual std::string GlibFlagString(uint8_t pHybridId, uint8_t pCbcId) const { return ""; }
+    virtual bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const { return true; }
     /*!
      * \brief Function to get Stub bit
      * \param pHybridId : Hybrid Id
@@ -385,9 +368,14 @@ class Event
      * \brief Function to get a sparsified hit vector
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
-     * \return vector with hit channels
+     * \return vector with hit channels (row, col)
      */
-    virtual std::vector<uint32_t> GetHits(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
+    virtual std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId) const
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " not implemented! Aborting..." << std::endl;
+        abort();
+        return {};
+    }
     /*!
      * \brief Function to get an encoded SLinkEvent object
      * \param pBoard : pointer to Ph2_HwDescription::BeBoard

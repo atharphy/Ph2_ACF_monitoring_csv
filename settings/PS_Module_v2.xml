@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> 
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_PS.xml"/>
     <CDCE configure="0" clockRate="320"/>
         
@@ -153,38 +153,38 @@
 
 
     <Setting name="FullScan">1</Setting>
-    <Setting name="PedestalEqualizationMaskUntrimmed">1</Setting>
+    <Setting name="PedestalEqualization_MaskUntrimmed">1</Setting>
 
     <!--Full search settings (pedestal) MPA
-             <Setting name="PedestalEqualizationFullScanStart">170</Setting>
+             <Setting name="PedestalEqualization_FullScanStart">170</Setting>
     <Setting name="Nevents">500</Setting>
-    <Setting name="PedestalEqualizationOccupancy">3.</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
-    <Setting name="PedeNoisePulseAmplitude">1</Setting>-->
+    <Setting name="PedestalEqualization_Occupancy">3.</Setting>
+    <Setting name="PedestalEqualization_PulseAmplitude">1</Setting>
+    <Setting name="PedeNoise_PulseAmplitude">1</Setting>-->
 
 
     <!--Full search settings (lowcal) MPA-->
     <Setting name="Nevents">100</Setting>
-    <Setting name="PedestalEqualizationFullScanStart">220</Setting>
-    <Setting name="PedestalEqualizationOccupancy">0.5</Setting>
-    <!-- <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
-             <Setting name="PedeNoisePulseAmplitude">1</Setting>
+    <Setting name="PedestalEqualization_FullScanStart">220</Setting>
+    <Setting name="PedestalEqualization_Occupancy">0.5</Setting>
+    <!-- <Setting name="PedestalEqualization_PulseAmplitude">1</Setting>
+             <Setting name="PedeNoise_PulseAmplitude">1</Setting>
 
-    <Setting name="PedestalEqualizationPulseAmplitudePix">1</Setting>
-    <Setting name="PedeNoisePulseAmplitudePix">1</Setting> -->
+    <Setting name="PedestalEqualization_PulseAmplitudePix">1</Setting>
+    <Setting name="PedeNoise_PulseAmplitudePix">1</Setting> -->
 
-    <Setting name="PedeNoiseMaskUntrimmed">0</Setting>
-    <!--<Setting name="PedeNoiseUntrimmedLimit">3.9</Setting>Aligned to +/- one trimdac unit-->
-    <Setting name="PedeNoiseUntrimmedLimit">4.95</Setting><!--Aligned to ~5sigma sigma~=0.98-->
+    <Setting name="PedeNoise_MaskUntrimmed">0</Setting>
+    <!--<Setting name="PedeNoise_UntrimmedLimit">3.9</Setting>Aligned to +/- one trimdac unit-->
+    <Setting name="PedeNoise_UntrimmedLimit">4.95</Setting><!--Aligned to ~5sigma sigma~=0.98-->
 
-    <!-- <Setting name="PedeNoiseUseFixRange">1</Setting>
-             <Setting name="PedeNoiseMinThreshold">40</Setting>
-    <Setting name="PedeNoiseMaxThreshold">240</Setting> -->
+    <!-- <Setting name="PedeNoise_UseFixRange">1</Setting>
+             <Setting name="PedeNoise_MinThreshold">40</Setting>
+    <Setting name="PedeNoise_MaxThreshold">240</Setting> -->
     <Setting name="FullScan">0</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">70</Setting>
-    <Setting name="PedeNoisePulseAmplitude">70</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitudePix">70</Setting>
-    <Setting name="PedeNoisePulseAmplitudePix">70</Setting>
+    <Setting name="PedestalEqualization_PulseAmplitude">70</Setting>
+    <Setting name="PedeNoise_PulseAmplitude">70</Setting>
+    <Setting name="PedestalEqualization_PulseAmplitudePix">70</Setting>
+    <Setting name="PedeNoise_PulseAmplitudePix">70</Setting>
 
     <Setting name="StartPhase">0</Setting>
     <Setting name="PhaseRange">7</Setting>
@@ -240,15 +240,26 @@
     <Setting name="PSOccupancyPulseAmplitude">200</Setting>
 
     <Setting name="DoManualVrefTuning"      >  0</Setting>
-    <Setting name="OTverifyBoardDataWordNumberOfIterations">100</Setting>
-    <Setting name="OTalignLpGBTinputsNumberOfAlignmentIterations">100</Setting>
-    <Setting name="OTalignLpGBTinputsMinAlignmentSuccessRate">0.99</Setting>
+    <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>
+    <Setting name="OTalignLpGBTinputs_NumberOfAlignmentIterations">100</Setting>
+    <Setting name="OTalignLpGBTinputs_MinAlignmentSuccessRate">0.99</Setting>
 
-    <Setting name="OTCICphaseAlignmentNumberOfAlignmentIterations">100</Setting>
-    <Setting name="OTCICphaseAlignmentMinLockingSuccessRate">0.95</Setting>
-    <Setting name="OTverifyCICdataWordNumberOfIterations">1000</Setting>
-    <Setting name="OTverifyMPASSAdataWordNumberOfIterations">1000</Setting>
+    <Setting name="OTCICphaseAlignment_NumberOfAlignmentIterations">100</Setting>
+    <Setting name="OTCICphaseAlignment_MinLockingSuccessRate">0.95</Setting>
+    <Setting name="OTverifyCICdataWord_NumberOfIterations">1000</Setting>
+    <Setting name="OTverifyMPASSAdataWord_NumberOfIterations">1000</Setting>
+
+    <Setting name="OTinjectionDelayOptimization_NumberOfEvents">100</Setting>
+    <Setting name="OTinjectionDelayOptimization_MaximumDelay">150</Setting>
+    <Setting name="OTinjectionDelayOptimization_DelayStep">1</Setting>
+    <Setting name="OTinjectionDelayOptimization_SSAtestPulseValue">45</Setting> <!-- 45 roughly correspond to 1/2 MIP in 290um silicon-->
+    <Setting name="OTinjectionDelayOptimization_MPAtestPulseValue">50</Setting> <!-- 50 roughly correspond to 1/2 MIP in 290um silicon-->
+    <Setting name="OTinjectionDelayOptimization_SSAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
+    <Setting name="OTinjectionDelayOptimization_MPAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
     
+    <Setting name="OTMeasureOccupancy_NumberOfEvents">100000</Setting>
+    <Setting name="OTMeasureOccupancy_SSAtestPulseValue">90</Setting>
+    <Setting name="OTMeasureOccupancy_MPAtestPulseValue">100</Setting>
 </Settings>
 
 
@@ -257,8 +268,8 @@
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
     <MonitoringElement device="MPA2"  register="CalDAC7" enable="1"/>
     <MonitoringElement device="MPA2"  register="bandgap" enable="1"/>
-    <MonitoringElement device="MPA2"  register="avdd" enable="1"/> 
-    <MonitoringElement device="MPA2"  register="dvdd" enable="1"/>    
+    <MonitoringElement device="MPA2"  register="AVDD" enable="1"/> 
+    <MonitoringElement device="MPA2"  register="DVDD" enable="1"/>    
     <MonitoringElement device="SSA2"  register="AVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="DVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="VBG" enable="1"/>

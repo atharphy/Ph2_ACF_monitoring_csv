@@ -21,13 +21,13 @@ void OTverifyBoardDataWord::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations = findValueInSettings<double>("OTverifyBoardDataWordNumberOfIterations", 1000);
+    fNumberOfIterations = findValueInSettings<double>("OTverifyBoardDataWord_NumberOfIterations", 1000);
 
     size_t             numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
     std::vector<float> initialEmptyVector(numberOfLines, 0);
     ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer, initialEmptyVector);
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -267,10 +267,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
                 auto lineOutputVector = theFWInterface->L1ADebug(1, false);
                 if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket))
                     ++theHybridPatternMatchingEfficiency[0];
-                else
-                {
-                    LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET;
-                }
+                else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
             }
         }
     }

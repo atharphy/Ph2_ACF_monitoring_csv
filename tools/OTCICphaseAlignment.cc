@@ -25,10 +25,10 @@ void OTCICphaseAlignment::Initialise(void)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "PHY_PORT_CONFIG");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "^scPhaseSelectB[0-3]i[0-5]$");
 
-    fNumberOfAlignmentIterations = findValueInSettings<double>("OTCICphaseAlignmentNumberOfAlignmentIterations", 100);
-    fMinLockingSuccessRate       = findValueInSettings<double>("OTCICphaseAlignmentMinLockingSuccessRate", 1.);
+    fNumberOfAlignmentIterations = findValueInSettings<double>("OTCICphaseAlignment_NumberOfAlignmentIterations", 100);
+    fMinLockingSuccessRate       = findValueInSettings<double>("OTCICphaseAlignment_MinLockingSuccessRate", 1.);
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTCICphaseAlignment.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif

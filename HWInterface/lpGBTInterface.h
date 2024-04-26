@@ -226,6 +226,9 @@ class lpGBTInterface : public ChipInterface
     float   MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples = 1, bool pResetTempSensor = true);
     float   MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples = 1, bool pDisableMonitorAfterMeasurement = true);
 
+    uint8_t                        fChosenPhase;
+    std::map<std::string, uint8_t> GetPhaseTapMap();
+
   protected:
     // ##############
     // # LpGBT maps #

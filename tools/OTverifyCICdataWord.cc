@@ -25,9 +25,9 @@ void OTverifyCICdataWord::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations = findValueInSettings<double>("OTverifyCICdataWordNumberOfIterations", 1000);
+    fNumberOfIterations = findValueInSettings<double>("OTverifyCICdataWord_NumberOfIterations", 1000);
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyCICdataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -366,7 +366,7 @@ void OTverifyCICdataWord::injectStubs2S(ReadoutChip* theChip, uint8_t chipIdForC
 
 float OTverifyCICdataWord::injectAndMatch2SstubPatterns(ReadoutChip*                         theChip,
                                                         uint8_t                              chipIdForCIC,
-                                                        D19cFWInterface*                theFWInterface,
+                                                        D19cFWInterface*                     theFWInterface,
                                                         uint8_t                              numberOfBytesInSinglePacket,
                                                         std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector)
 {

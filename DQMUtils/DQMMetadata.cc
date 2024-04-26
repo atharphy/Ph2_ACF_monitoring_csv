@@ -21,8 +21,6 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
 {
     fDetectorContainer = &theDetectorStructure;
 
-    ContainerFactory::copyAndInitStructure<EmptyContainer, std::string, std::string, std::string, std::string, EmptyContainer>(theDetectorStructure, fNameContainer);
-
     EmptyContainer  theEmpty;
     StringContainer theNameStringContainer("NameId");
     RootContainerFactory::bookHistogramsFromStructure<EmptyContainer, StringContainer, StringContainer, StringContainer, StringContainer, EmptyContainer>(
