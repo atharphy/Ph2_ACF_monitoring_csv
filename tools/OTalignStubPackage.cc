@@ -704,17 +704,17 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
     // reconfigure sparsification + FEs enabled in this CIC
     LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting Sparsification" << RESET;
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
-    size_t cIndx = 0;
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, cSparsified);
-            fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
-            cIndx++;
-        }
-    }
+    // size_t cIndx = 0;
+    // for(auto cOpticalGroup: *pBoard)
+    // {
+    //     for(auto cHybrid: *cOpticalGroup)
+    //     {
+    //         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+    //         fCicInterface->SetSparsification(cCic, cSparsified);
+    //         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
+    //         cIndx++;
+    //     }
+    // }
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.global.hybrid_enable", cEnableMask);
     // and check
     // make sure you do this with internal triggers
