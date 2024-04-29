@@ -41,7 +41,7 @@ class PSInterface : public ReadoutChipInterface
     uint8_t              fMaxI2CAttempts        = 20;
     std::vector<uint8_t> fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
     std::vector<uint8_t> fBX0AlignmentPatterns  = {0x92, 0x48, 0x12, 0x48, 0xD8};
-
+    // std::vector<uint8_t> fBX0AlignmentPatterns  = {0x80, 0x00, 0x00, 0x00, 0x00};
   public:
     PSInterface(const BeBoardFWMap& pBoardMap);
     ~PSInterface();

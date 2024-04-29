@@ -121,6 +121,9 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
                     }
                     
                     std::cout << " BXO alignment pattern for chip " << +theFEtoUse->getId() << std::endl;
+                    // fReadoutChipInterface->WriteChipReg(theFEtoUse,"RetimePix",3);
+                    // auto retimepix = fReadoutChipInterface->ReadChipReg(theFEtoUse,"RetimePix");
+                    // std::cout << " retime pix " << retimepix << std::endl;
                     fReadoutChipInterface->produceBX0AlignmentPattern(theFEtoUse); 
                 
 
