@@ -44,7 +44,7 @@ const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
                                          {"RstAurora", 0x0010},
                                          {"RstSerializer", 0x0020},
                                          {"RstADC", 0x0040},
-                                         {"RstDataMerging", 0x0050},
+                                         {"RstDataMerging", 0x0080},
                                          {"RstEfuses", 0x0100},
                                          {"RstTrigTable", 0x0200},
                                          {"RstBCIDCnt", 0x0400},
@@ -78,7 +78,7 @@ const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
                                          {"RstDataPath", 0x0010},
                                          {"SendClearRstAurora", 0x0020},
                                          {"RstBCIDCnt", 0x0040},       // Reset also L1ID and, Trigger counters
-                                         {"SendClearRstBCID", 0x0088}, // Reset also Trigger counter
+                                         {"SendClearRstBCID", 0x0080}, // Reset also Trigger counter
                                          {"RstSerializer", 0x0100},
                                          {"RstADC", 0x0200},
                                          {"RstEfuses", 0x0400},
