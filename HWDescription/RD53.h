@@ -59,8 +59,8 @@ const uint32_t CHIPFWERR         = 0x00200000; // Chip event status Firmware err
 const uint32_t CHIPNS_WAS0       = 0x00400000; // Chip event status new-stream bit was 0 in the first word of the event stream
 const uint32_t CHIPNS_WAS1       = 0x00800000; // Chip event status new-stream bit was 1 before the last word of the event stream
 const uint32_t CHIPQROW          = 0x01000000; // Chip event status neighbor bit set for the first qrow
-const uint32_t CHIPTRUNC_MAXHITS = 0x02000000; // Chip event status truncation occured due to max number of hits reached per core
-const uint32_t CHIPTRUNC_TIMEOUT = 0x04000000; // Chip event status truncation occured due to readout timeout
+const uint32_t CHIPTRUNC_MAXHITS = 0x02000000; // Chip event status truncation occurred due to max number of hits reached per core
+const uint32_t CHIPTRUNC_TIMEOUT = 0x04000000; // Chip event status truncation occurred due to readout timeout
 } // namespace RD53EvtEncoder
 
 namespace Ph2_HwDescription

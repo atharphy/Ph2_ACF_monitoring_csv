@@ -317,10 +317,10 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
     }
 
     if(status & RD53EvtEncoder::CHIPTRUNC_MAXHITS)
-        LOG(ERROR) << BOLDRED << "Truncation occured due to max number of hits reached per core " << BOLDYELLOW << "--> no retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Truncation occurred due to max number of hits reached per core " << BOLDYELLOW << "--> no retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
 
     if(status & RD53EvtEncoder::CHIPTRUNC_TIMEOUT)
-        LOG(ERROR) << BOLDRED << "Truncation occured due to readout timeout" << BOLDYELLOW << "--> no retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Truncation occurred due to readout timeout" << BOLDYELLOW << "--> no retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
 
     return isGood;
 }
