@@ -232,7 +232,10 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #######################
     // # Reset communication #
     // #######################
-    RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second, 10);
+    RD53BInterface::SendGlobalPulse(pChip,
+                                    pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second |
+                                        pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second,
+                                    10);
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for RD53Bv1
