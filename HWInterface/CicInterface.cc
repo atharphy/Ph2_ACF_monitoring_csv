@@ -540,22 +540,18 @@ bool CicInterface::CheckAutomatedBX0Alignment(Chip* pChip)
 
     std::string cRegName             = "BX0_ALIGN_CONFIG";
     cRegValue = ReadChipReg(pChip, cRegName);
-    // FIXME
-    LOG(INFO) << BOLDRED << " IRENE FOR TEST!!! NOT STOPPING BXO alignment..." << RESET;
-        LOG(INFO) << BOLDRED << " IRENE FOR TEST!!! NOT STOPPING BXO alignment..." << RESET;
-            LOG(INFO) << BOLDRED << " IRENE FOR TEST!!! NOT STOPPING BXO alignment..." << RESET;
-            cSuccess = true;
-    // LOG(INFO) << BOLDBLUE << "Requesting CIC to stop automated BX0 alignment..." << RESET;
-    // uint16_t stopAutoBX0Alignment = (cRegValue & 0xBF) | (0x0 << 6);
-    // LOG(INFO) << BOLDBLUE << " BX0_ALIGN_CONFIG set to 0x"<< std::hex << stopAutoBX0Alignment << std::dec << " bin " << std::bitset<8>(stopAutoBX0Alignment) << " to stop BX0 alignment " << RESET;
-    // cSuccess                       = this->WriteChipReg(pChip, cRegName, stopAutoBX0Alignment);
-    // if(!cSuccess)
-    // {
-    //     LOG(INFO) << BOLDRED << "Cannot disable automated Word alignment request on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
-    //               << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
-    //     ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
-    //     return false;
-    // }
+
+    LOG(INFO) << BOLDBLUE << "Requesting CIC to stop automated BX0 alignment..." << RESET;
+    uint16_t stopAutoBX0Alignment = (cRegValue & 0xBF) | (0x0 << 6);
+    LOG(INFO) << BOLDBLUE << " BX0_ALIGN_CONFIG set to 0x"<< std::hex << stopAutoBX0Alignment << std::dec << " bin " << std::bitset<8>(stopAutoBX0Alignment) << " to stop BX0 alignment " << RESET;
+    cSuccess                       = this->WriteChipReg(pChip, cRegName, stopAutoBX0Alignment);
+    if(!cSuccess)
+    {
+        LOG(INFO) << BOLDRED << "Cannot disable automated Word alignment request on CIC on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
+                  << +pChip->getHybridId() << " --- Hybrid will be disabled" << RESET;
+        ExceptionHandler::getInstance()->disableHybrid(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId());
+        return false;
+    }
 
     return cSuccess && alignmentCompleted;
 }
@@ -846,14 +842,20 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip, const GenericData
     }
     return cSuccess;
 }
-bool CicInterface::ConfigureExternalBX0Alignment(Chip* pChip, const uint16_t theBX0AlignmentValues)
+bool CicInterface::ConfigureExternalBX0Delay(Chip* pChip, const uint16_t theBX0AlignmentValues)
 {
 
     bool    cSuccess = true;
     std::string cRegName = "EXT_BX0_DELAY";
     cSuccess             = cSuccess && this->WriteChipReg(pChip, cRegName, theBX0AlignmentValues);
 
+    cRegName  = "BX0_ALIGN_CONFIG";
+    uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
+    uint16_t     cValue    = ((cRegValue & 0x7F) | (0x1 << 7));
+    LOG(INFO) << BOLDBLUE << " BX0_ALIGN_CONFIG set to 0x"<<std::hex << cValue << std::dec << " bin " << std::bitset<8>(cValue) <<  RESET;
+    cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
     return cSuccess;
+
 }
 
 bool CicInterface::SetStaticWordAlignment(Chip* pChip)
@@ -865,17 +867,6 @@ bool CicInterface::SetStaticWordAlignment(Chip* pChip)
     bool cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
     return cSuccess;
 }
-
-bool CicInterface::SetStaticBX0Alignment(Chip* pChip)
-{
-    std::string cRegName  = "BX0_ALIGN_CONFIG";
-    uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
-    uint16_t     cValue    = ((cRegValue & 0x7F) | (0x1 << 7));
-    LOG(INFO) << BOLDBLUE << " BX0_ALIGN_CONFIG set to 0x"<<std::hex << cValue << std::dec << " bin " << std::bitset<8>(cValue) <<  RESET;
-    bool cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
-    return cSuccess;
-}
-
 
 GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1> CicInterface::retrieveExternalWordAlignmentValues(Chip* pChip)
 {

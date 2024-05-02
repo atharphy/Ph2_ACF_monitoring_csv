@@ -84,7 +84,6 @@ class CicInterface : public ChipInterface
     bool                        SetStaticPhaseAlignment(Ph2_HwDescription::Chip* pChip);
     bool                        SetAutomaticPhaseAlignment(Ph2_HwDescription::Chip* pChip, bool pAuto = true);
     bool                        SetStaticWordAlignment(Ph2_HwDescription::Chip* pChip);
-    bool                        SetStaticBX0Alignment(Ph2_HwDescription::Chip* pChip);
     bool                        CheckPhaseAlignerLock(Ph2_HwDescription::Chip* pChip, uint8_t pCheckValue = 0xFF);
     bool                        ResetPhaseAligner(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 1);
     bool                        ResetDLL(Ph2_HwDescription::Chip* pChip, uint16_t pWait_ms = 100);
@@ -149,7 +148,7 @@ class CicInterface : public ChipInterface
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1> retrieveExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
     bool ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip, const GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>& theWordAlignmentValues);
     uint16_t retrieveExternalBX0AlignmentValues(Ph2_HwDescription::Chip* pChip);
-    bool ConfigureExternalBX0Alignment(Ph2_HwDescription::Chip* pChip, const uint16_t theBX0AlignmentValues);
+    bool ConfigureExternalBX0Delay(Ph2_HwDescription::Chip* pChip, const uint16_t theBX0AlignmentValues);
 
     std::vector<uint8_t> getMapping(Ph2_HwDescription::Chip* pChip)
     {

@@ -183,7 +183,7 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
                                                        ->getObject(theHybrid->getId())
                                                        ->getSummary<uint16_t>();
                     theBX0AlignmentValues = fCicInterface->retrieveExternalBX0AlignmentValues(cCic);
-                    cSuccessAlign          = cSuccessAlign && fCicInterface->ConfigureExternalBX0Alignment(cCic, theBX0AlignmentValues);
+                    cSuccessAlign          = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValues);
                     if(cSuccessAlign) { LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
                     else
                     {
@@ -200,14 +200,6 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
                 } // hybrids 
             } // optical group
             ++currentAttempt;            
-        }
-        for(auto theOpticalGroup: *theBoard)
-        {    
-                for(auto theHybrid: *theOpticalGroup)
-                {
-                    auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                    fCicInterface->SetStaticBX0Alignment(cCic);
-                }
         }
     }
 
