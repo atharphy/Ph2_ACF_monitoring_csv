@@ -98,7 +98,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
               << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=Unspecified)" << RESET;
 
     if(cFEtype == 2) RegManager::WriteReg("user.ctrl_regs.reset_reg.enable_sync_word", 1);
-
+    //RegManager::WriteReg("user.ctrl_regs.nb_slow_cmd_before_synch", 200);
     // #########################
     // # Set RD53 AURORA speed #
     // #########################

@@ -182,6 +182,10 @@
         <Register name="Aurora_block">
           <Register name="self_trigger_en"> 0 </Register>
         </Register>
+        
+        <Register name="slow_cmd_sync_word">
+          <Register name="nb_slow_cmd_before_synch"> 200 </Register>
+        </Register>
 
       </Register>
     </Register>
