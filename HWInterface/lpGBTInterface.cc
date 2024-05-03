@@ -89,7 +89,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     return cSuccess;
 }
 
-uint32_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
+int32_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
 {
     this->setBoard(pChip->getBeBoardId());
     const auto cBoardType = fBoardFW->getBoardType();

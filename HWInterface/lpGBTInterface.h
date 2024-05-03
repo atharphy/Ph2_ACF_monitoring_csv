@@ -66,7 +66,7 @@ class lpGBTInterface : public ChipInterface
     // # Chip configuration functions #
     // ################################
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
-    uint32_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
+    int32_t  ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip);
     uint32_t ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip);
     uint32_t ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t version);

@@ -58,7 +58,7 @@ class PSInterface : public ReadoutChipInterface
     bool                                          WriteChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName, uint16_t pValue, bool pVerifLoop = true) override;
     bool                                          WriteChipMultReg(Ph2_HwDescription::Chip* pPS, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
     bool                                          WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pPS, const std::string& dacName, const ChipContainer& pValue, bool pVerifLoop = true) override;
-    uint32_t                                      ReadChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName) override;
+    int32_t                                       ReadChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
     uint32_t                                      ReadChipFuseID(Ph2_HwDescription::Chip* pPS) override;
 

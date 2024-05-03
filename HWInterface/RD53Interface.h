@@ -29,15 +29,15 @@ class RD53Interface : public ReadoutChipInterface
     // #############################
     // # Override member functions #
     // #############################
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, bool pVerify = true) override;
-    void     WriteBoardBroadcastChipReg(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data) override;
-    bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerify = true) override;
-    void     ReadChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue) override;
-    uint32_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName) override;
-    bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
-    bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerify = true) override;
-    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify = false) override;
-    void     DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip) override;
+    bool    WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, bool pVerify = true) override;
+    void    WriteBoardBroadcastChipReg(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data) override;
+    bool    WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerify = true) override;
+    void    ReadChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue) override;
+    int32_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName) override;
+    bool    ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
+    bool    MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerify = true) override;
+    bool    maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify = false) override;
+    void    DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip) override;
     // #############################
 
     // ##################

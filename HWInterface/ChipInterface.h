@@ -97,7 +97,7 @@ class ChipInterface
      * \param pChip
      * \param pRegNode : Node of the register to read
      */
-    virtual uint32_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) = 0;
+    virtual int32_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) = 0;
 
     virtual std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList);
 

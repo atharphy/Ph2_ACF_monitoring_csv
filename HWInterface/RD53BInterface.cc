@@ -774,7 +774,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
         RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstADC")->second, 1);
         RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("ADCstatConversion")->second, 1);
         std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Wait for end of conversion (at least 358.4 us according to manual)
-        const uint32_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+        const uint16_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
         if(val != 0)
         {
             avgVal += val;
