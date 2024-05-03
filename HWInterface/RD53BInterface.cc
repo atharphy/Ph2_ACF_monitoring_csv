@@ -607,8 +607,6 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
-    // for(auto i = 0; i < 10; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, cmdStream); // @TMP@
-    // for(auto i = 0; i < 10; i++) RD53BCmd::serialize(RD53BCmd::PLLlock{}, cmdStream); // @TMP@
     RD53BInterface::PackWriteCommand(
         pChip, "GlobalPulseConf", pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second, cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());

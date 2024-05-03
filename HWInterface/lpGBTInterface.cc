@@ -89,13 +89,13 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     return cSuccess;
 }
 
-uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
+uint32_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto cBoardType = fBoardFW->getBoardType();
+    const auto cBoardType = fBoardFW->getBoardType();
 
-    auto     cAddress = pChip->getRegItem(pDacName).fAddress;
-    uint16_t cValue   = 0x00;
+    const auto cAddress = pChip->getRegItem(pDacName).fAddress;
+    uint16_t   cValue   = 0x0;
 
     if((cBoardType != BoardType::RD53) && (pChip->isOptical() == true))
     {

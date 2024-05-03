@@ -725,7 +725,7 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
     ConfigurePage(pCbc, cRegItem.fPage);
     return fBoardFW->SingleRegisterRead(pCbc, cRegItem);
 }
-uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
+uint32_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
 {
     ChipRegItem cRegItem;
     setBoard(pCbc->getBeBoardId());

@@ -28,7 +28,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 
     bool     status      = true;
-    uint16_t actualValue = 0;
+    uint32_t actualValue = 0;
     if(pVerify == true)
     {
         if(regName == "PIX_PORTAL")
@@ -77,7 +77,7 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 }
 
-uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
+uint32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
 
@@ -93,7 +93,7 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
 
     LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED " attempts" << RESET;
 
-    return 0;
+    return 0xFFFFFFFF;
 }
 
 bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerify, uint32_t pBlockSize)
