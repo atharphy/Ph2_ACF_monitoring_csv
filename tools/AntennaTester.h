@@ -15,10 +15,10 @@
 
 #include "Channel.h"
 #include "HWInterface/BeBoardFWInterface.h"
-#include "Tool.h"
 #include "Utils/CommonVisitors.h"
 #include "Utils/Utilities.h"
 #include "Utils/Visitor.h"
+#include "tools/Tool.h"
 
 #ifdef __ANTENNA__
 #include "Antenna.h"

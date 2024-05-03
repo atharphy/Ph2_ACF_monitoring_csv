@@ -12,7 +12,7 @@
 #ifndef PULSESHAPE_H__
 #define PULSESHAPE_H__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #ifdef __USE_ROOT__
 #include "Channel.h"
 #include "TCanvas.h"

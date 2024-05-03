@@ -21,7 +21,7 @@ void OTverifyBoardDataWord::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations = findValueInSettings<double>("OTverifyBoardDataWordNumberOfIterations", 1000);
+    fNumberOfIterations = findValueInSettings<double>("OTverifyBoardDataWord_NumberOfIterations", 1000);
 
     size_t             numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
     std::vector<float> initialEmptyVector(numberOfLines, 0);

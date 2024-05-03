@@ -310,11 +310,17 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
         isGood = false;
     }
 
-    if(status & RD53EvtEncoder::CHIP_QROW)
+    if(status & RD53EvtEncoder::CHIPQROW)
     {
         LOG(ERROR) << BOLDRED << "Neighbor bit set for the first qrow " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
         isGood = false;
     }
+
+    if(status & RD53EvtEncoder::CHIPTRUNC_MAXHITS)
+        LOG(ERROR) << BOLDRED << "Truncation occurred due to max number of hits reached per core " << BOLDYELLOW << "--> no retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+
+    if(status & RD53EvtEncoder::CHIPTRUNC_TIMEOUT)
+        LOG(ERROR) << BOLDRED << "Truncation occurred due to readout timeout" << BOLDYELLOW << "--> no retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
 
     return isGood;
 }
@@ -766,7 +772,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             // ####################
             RD53B::decodeChipData(event_bits.pop_slice(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
             evt.eventStatus |= chipEvt.eventStatus;
-            if((chipEvt.eventStatus & (RD53FWEvtEncoder::MISSCHIP | RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1 | RD53EvtEncoder::CHIPPIX)) != 0) break;
+            if((chipEvt.eventStatus & (RD53FWEvtEncoder::MISSCHIP | RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1)) != 0) break;
             evt.chip_events.push_back(std::move(chipEvt));
         }
 

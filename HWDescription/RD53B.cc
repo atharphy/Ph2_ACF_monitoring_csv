@@ -44,7 +44,7 @@ const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
                                          {"RstAurora", 0x0010},
                                          {"RstSerializer", 0x0020},
                                          {"RstADC", 0x0040},
-                                         {"RstDataMerging", 0x0050},
+                                         {"RstDataMerging", 0x0080},
                                          {"RstEfuses", 0x0100},
                                          {"RstTrigTable", 0x0200},
                                          {"RstBCIDCnt", 0x0400},
@@ -78,7 +78,7 @@ const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
                                          {"RstDataPath", 0x0010},
                                          {"SendClearRstAurora", 0x0020},
                                          {"RstBCIDCnt", 0x0040},       // Reset also L1ID and, Trigger counters
-                                         {"SendClearRstBCID", 0x0088}, // Reset also Trigger counter
+                                         {"SendClearRstBCID", 0x0080}, // Reset also Trigger counter
                                          {"RstSerializer", 0x0100},
                                          {"RstADC", 0x0200},
                                          {"RstEfuses", 0x0400},
@@ -265,8 +265,8 @@ void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e)
 
 auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const DataFormatOptions& options)
 {
+    const size_t        nWords = bits.size() / 64;
     BitVector<uint32_t> payloadData;
-    size_t              nWords = bits.size() / 64;
     bool                isLast = false;
 
     for(size_t i = 0; i < nWords && !isLast; i++)
@@ -324,7 +324,7 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
         // # End-of-data conditions #
         // ##########################
         if(eventStreamView.size() < 6) return; // Good end of chip data
-        size_t ccol = eventStreamView.pop(RD53BEvtEncoder::NBIT_CCOL);
+        const size_t ccol = eventStreamView.pop(RD53BEvtEncoder::NBIT_CCOL);
         if(ccol == 0) return; // Good end of chip data
 
         if(RD53Constants::NROW_CORE * (ccol - 1) >= RD53B::NCOLS)
@@ -338,16 +338,30 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
         {
             isLast = eventStreamView.pop(1);
             size_t qrow;
-            if(eventStreamView.pop(1) == 1)
+            if(eventStreamView.pop(1) == true) // Check if "is neighbor"
             {
-                if(last_qrow[ccol - 1] == RD53B::NROWS / 2) e.eventStatus |= RD53EvtEncoder::CHIP_QROW;
+                if(last_qrow[ccol - 1] == RD53B::NROWS / 2) e.eventStatus |= RD53EvtEncoder::CHIPQROW;
                 qrow = last_qrow[ccol - 1] + 1;
             }
             else
                 qrow = eventStreamView.pop(8);
             last_qrow[ccol - 1] = qrow;
 
-            if(2 * qrow >= RD53B::NROWS) e.eventStatus |= RD53EvtEncoder::CHIPPIX;
+            // ###############################
+            // # Detect truncation mechanism #
+            // ###############################
+            if(2 * qrow >= RD53B::NROWS)
+                e.eventStatus |= RD53EvtEncoder::CHIPPIX;
+            else if((isLast == true) && (qrow == RD53BEvtEncoder::TRUNC_MAXHITS))
+            {
+                e.eventStatus |= RD53EvtEncoder::CHIPTRUNC_MAXHITS;
+                continue;
+            }
+            else if((isLast == true) && (qrow == RD53BEvtEncoder::TRUNC_TIMEOUT))
+            {
+                e.eventStatus |= RD53EvtEncoder::CHIPTRUNC_TIMEOUT;
+                continue;
+            }
 
             auto hitmap = decodeCompressedHitmap(eventStreamView);
             for(size_t row = 0; row < 2; row++)

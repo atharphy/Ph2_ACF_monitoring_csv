@@ -73,12 +73,6 @@ class D19cCic2Event : public Event
      * \return Aknowledgement of the Event setting (1/0)
      */
     void Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list) override;
-    /*!
-     * \brief Set an Event to the Event map
-     * \param pEvent : Event to set
-     * \return Aknowledgement of the Event setting (1/0)
-     */
-    void SetEvent(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list) override;
 
     /*!
      * \brief Get the Cbc Event counter
@@ -88,11 +82,8 @@ class D19cCic2Event : public Event
 
     // private members of cbc3 events only
     uint32_t getBeBoardId() const { return fBeId; }
-    uint8_t  GetFWType() const { return fBeFWType; }
-    uint32_t GetCbcDataType() const { return fCBCDataType; }
     uint32_t GetNCbc() const { return fNCbc; }
     uint32_t GetEventDataSize() const { return fEventDataSize; }
-    uint32_t GetBeStatus() const { return fBeStatus; }
     /*!
      * \brief Convert Data to Hex string
      * \return Data string in hex
@@ -150,14 +141,6 @@ class D19cCic2Event : public Event
      * \return Data Bit vector
      */
     std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId) const override;
-    std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const override;
-    /*!
-     * \brief Function to get GLIB flag string
-     * \param pHybridId : Hybrid Id
-     * \param pCbcId : Cbc Id
-     * \return Glib flag string
-     */
-    std::string GlibFlagString(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to get Stub bit
      * \param pHybridId : Hybrid Id
@@ -189,16 +172,14 @@ class D19cCic2Event : public Event
      * \brief Function to get a sparsified hit vector
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
-     * \return vector with hit channels
+     * \return vector with hit channels (row, col)
      */
-    std::vector<uint32_t> GetHits(uint8_t pHybridId, uint8_t pCbcId) const override;
-    std::vector<Cluster>  clusterize(uint8_t pHybridId) const;
-
-    std::vector<Cluster>  getClusters(uint8_t pHybridId, uint8_t pCbcId) const override;
-    uint8_t               GetNStripClusters(uint8_t pHybridId) const;
-    uint8_t               GetNPixelClusters(uint8_t pHybridId) const;
-    std::vector<SCluster> GetStripClusters(uint8_t pHybridId, uint8_t pMPAId) const;
-    std::vector<PCluster> GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId) const;
+    std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId) const override;
+    std::vector<Cluster>                       getClusters(uint8_t pHybridId, uint8_t pCbcId) const override;
+    uint8_t                                    GetNStripClusters(uint8_t pHybridId) const;
+    uint8_t                                    GetNPixelClusters(uint8_t pHybridId) const;
+    std::vector<SCluster>                      GetStripClusters(uint8_t pHybridId, uint8_t pMPAId) const;
+    std::vector<PCluster>                      GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId) const;
 
     void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
 

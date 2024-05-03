@@ -192,9 +192,9 @@ int main(int argc, char* argv[])
 
     std::cout << __PRETTY_FUNCTION__ << "Forking RunController" << std::endl;
     runControllerPid = fork();
-    if(runControllerPid == -1) // pid == -1 means error occured
+    if(runControllerPid == -1) // pid == -1 means error occurred
     {
-        LOG(ERROR) << "Can't fork RunController, error occured";
+        LOG(ERROR) << "Can't fork RunController, error occurred";
         exit(EXIT_FAILURE);
     }
     else if(runControllerPid == 0) // pid == 0 means child process created
@@ -208,18 +208,18 @@ int main(int argc, char* argv[])
         // pointer
         char* argv[] = {(char*)"RunController", NULL};
 
-        // the execv() only return if error occured.
+        // the execv() only return if error occurred.
         // The return value is -1
         execv((binDir + "RunController").c_str(), argv);
-        LOG(ERROR) << "Can't run RunController, error occured";
+        LOG(ERROR) << "Can't run RunController, error occurred";
         exit(EXIT_FAILURE);
     }
     // usleep(10000000);
     //	std::cout << "forking dqm" << std::endl;
     //	dqmControllerPid = fork();
-    //	if (dqmControllerPid == -1)// pid == -1 means error occured
+    //	if (dqmControllerPid == -1)// pid == -1 means error occurred
     //	{
-    //		LOG (ERROR) << "Can't fork DQMHistogrammer, error occured";
+    //		LOG (ERROR) << "Can't fork DQMHistogrammer, error occurred";
     //		exit(EXIT_FAILURE);
     //	}
     //
@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
     //	{
     //		char * argv[] = {"DQMController", NULL};
     //		execv((binDir + "DQMController").c_str(),NULL);
-    //		LOG (ERROR) << "Can't run DQMController, error occured";
+    //		LOG (ERROR) << "Can't run DQMController, error occurred";
     //		exit(EXIT_FAILURE);
     //	}
     //
@@ -396,6 +396,7 @@ int main(int argc, char* argv[])
     // checkExitStatus(dqmControllerStatus,"DQMController");
 
     if(!batchMode) cApp.Run();
+    kill(runControllerPid, SIGKILL);
 
     return EXIT_SUCCESS;
 }
