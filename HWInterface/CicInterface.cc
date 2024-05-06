@@ -519,7 +519,7 @@ bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* theCic, std::vector<uin
 bool CicInterface::CheckAutomatedBX0Alignment(Chip* pChip)
 {
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Check automated BX0 alignment in CIC on FE" << +pChip->getHybridId() << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Check automated BX0 alignment in CIC on FE" << +pChip->getHybridId() << RESET;
     bool cSuccess;
     bool alignmentCompleted = false;
     auto cRegValue          = ReadChipReg(pChip, "timingStatusBits");

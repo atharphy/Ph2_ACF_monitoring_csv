@@ -205,7 +205,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
                         LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns[cIndex]) << RESET;
                     }
 
-                    LOG(INFO) << BOLDMAGENTA << " BXO alignment pattern for chip " << +theFEtoUse->getId() << " with retime pix " << +theRetimePix << RESET;
+                    LOG(INFO) << BOLDMAGENTA << " BXO alignment pattern for hybrid " << +theHybrid->getId() << " on chip " << +theFEtoUse->getId() << " with retime pix " << +theRetimePix << RESET;
                     fReadoutChipInterface->WriteChipReg(theFEtoUse, "RetimePix", theRetimePix);
                     // auto retimepix = fReadoutChipInterface->ReadChipReg(theFEtoUse,"RetimePix");
                     // std::cout << " wrote retime pix " << retimepix << std::endl;
