@@ -38,6 +38,7 @@ void OTCICBX0Alignment::Running()
 {
     LOG(INFO) << "Starting OTCICBX0Alignment measurement.";
     Initialise();
+    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ScanRetimePixAndBX0Alignment();
     BX0Alignment();
     LOG(INFO) << "Done with OTCICBX0Alignment.";
     Reset();
@@ -72,9 +73,9 @@ void OTCICBX0Alignment::Reset()
     fRegisterHelper->restoreSnapshot();
 }
 
-void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
+void OTCICBX0Alignment::BX0Alignment()
 {
-    LOG(INFO) << BOLDBLUE << "Starting CIC automated BX0 alignment procedure .... " << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Starting CIC automated BX0 alignment procedure .... " << RESET;
     std::string theQueryFunction = "skipSSAQuery";
     auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
@@ -86,17 +87,117 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
     ContainerFactory::copyAndInitHybrid<uint16_t>(*fDetectorContainer, theBX0AlignmentDelayContainer);
 
     for(auto theBoard: *fDetectorContainer)
+    {    
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                //Making sure to use an enabled FE                
+                auto theFEtoUse = theHybrid->getFirstObject(); //  *(theHybrid->begin());
+                if(theFEtoUse == nullptr)
+                {
+                    LOG(INFO) << BOLDRED << "No FE suitable for BX0 alignment enabled on Board id " << +cCic->getBeBoardId() << " OpticalGroup id" << +cCic->getOpticalGroupId() << " Hybrid id " << +cCic->getHybridId()
+                    << " --- Hybrid will be disabled" << RESET;
+                    ExceptionHandler::getInstance()->disableHybrid(cCic->getBeBoardId(), cCic->getOpticalGroupId(), cCic->getHybridId());
+                    return;
+                }
+                std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
+                auto theFECICmapping = fCicInterface->getMapping(cCic);
+                uint8_t theIndex = (theFEtoUse->getFrontEndType() == FrontEndType::MPA2)? theFEtoUse->getId() - 8: theFEtoUse->getId(); 
+                uint8_t theFEId = theFECICmapping[theIndex];
+                // configure word alignment pattern on FEs
+                std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getBX0AlignmentPatterns();
+                uint8_t pLine = 0;
+                if(theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) pLine = 4;
+                fCicInterface->PrepareForAutomatedBX0Alignment(cCic, cAlignmentPatterns, pLine, theFEId);
+                for(uint8_t cIndex = 0; cIndex < (uint8_t)cAlignmentPatterns.size(); cIndex += 1)
+                {
+                     LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns[cIndex]) << RESET;
+                }
+                
+                std::cout << " BXO alignment pattern for chip " << +theFEtoUse->getId() << std::endl;
+                fReadoutChipInterface->produceBX0AlignmentPattern(theFEtoUse); 
+            } //hybrids
+        } //optical group
+
+
+        //Send Resync to all hybrids connected to one board at once       
+        LOG(INFO) << BOLDMAGENTA << " Sending Resync !" << RESET;     
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cFastCommandInterface = cInterface->getFastCommandInterface();
+        uint8_t theNumberOfResyncs = 5;
+        cFastCommandInterface->SendGlobalCounterResetResync(theNumberOfResyncs);
+        // fBeBoardInterface->ChipReSync(theBoard);
+        for(auto theOpticalGroup: *theBoard)
+        {    
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                bool  cSuccessAlign          = fCicInterface->CheckAutomatedBX0Alignment(cCic);
+
+                auto& theBX0AlignmentValue = theBX0AlignmentDelayContainer.getObject(theBoard->getId())
+                                                   ->getObject(theOpticalGroup->getId())
+                                                   ->getObject(theHybrid->getId())
+                                                   ->getSummary<uint16_t>();
+                theBX0AlignmentValue = fCicInterface->retrieveExternalBX0AlignmentValue(cCic);
+                cSuccessAlign          = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValue);
+                if(cSuccessAlign) { LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDRED << "Automated BX0 alignment procedure " << BOLDRED << " FAILED!" << RESET;
+                    LOG(INFO) << BOLDRED << "FAILED CIC BX0 alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id"
+                              << +theHybrid->getId() << " --- Hybrid will be disabled" << RESET;
+                    ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId());
+                    continue;
+                }
+            } // hybrids 
+        } // optical group
+    }
+
+#ifdef __USE_ROOT__
+    fDQMHistogramOTCICBX0Alignment.fillBX0AlignmentDelay(theBX0AlignmentDelayContainer);
+#else
+    if(fDQMStreamerEnabled)
     {
-        uint16_t maxAttempts = 1;
-        uint16_t currentAttempt = 0;
-        
+        ContainerSerialization theBX0AlignmentDelayContainerSerialization("OTCICBX0AlignmentBX0AlignmentDelay");
+        theBX0AlignmentDelayContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBX0AlignmentDelayContainer);
+    }
+#endif
+
+    fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
+}
+
+void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
+{
+    LOG(INFO) << BOLDMAGENTA << "Starting CIC automated BX0 alignment procedure for different retime pix values .... " << RESET;
+    std::string theQueryFunction = "skipSSAQuery";
+    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip) {
+        if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
+        return true;
+    };
+    fDetectorContainer->addReadoutChipQueryFunction(theSkipSSAquery, theQueryFunction);
+
+    DetectorDataContainer theBX0AlignmentDelayVsRetimePixContainer;
+    size_t theRetimePixValues = 8;              
+    std::vector<uint16_t> initialEmptyVector(theRetimePixValues, 0);
+    ContainerFactory::copyAndInitHybrid<std::vector<uint16_t>>(*fDetectorContainer, theBX0AlignmentDelayVsRetimePixContainer, initialEmptyVector);
+    // auto& theBX0AlignmentValue = theBX0AlignmentDelayVsRetimePixContainer.getObject(theBoard->getId())
+    //                                                    ->getObject(theOpticalGroup->getId())
+    //                                                    ->getObject(theHybrid->getId())
+    //                                                    ->getSummary<std::vector<uint16_t>>();
+
+
+
+    for(auto theBoard: *fDetectorContainer)
+    {   
+        for( uint8_t theRetimePix = 0; theRetimePix < theRetimePixValues; theRetimePix++)
+        { 
             for(auto theOpticalGroup: *theBoard)
             {
                 for(auto theHybrid: *theOpticalGroup)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-
-
                     //Making sure to use an enabled FE                
                     auto theFEtoUse = theHybrid->getFirstObject(); //  *(theHybrid->begin());
                     if(theFEtoUse == nullptr)
@@ -119,51 +220,17 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
                     {
                          LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns[cIndex]) << RESET;
                     }
-                    
-                    std::cout << " BXO alignment pattern for chip " << +theFEtoUse->getId() << std::endl;
-                    // fReadoutChipInterface->WriteChipReg(theFEtoUse,"RetimePix",3);
-                    // auto retimepix = fReadoutChipInterface->ReadChipReg(theFEtoUse,"RetimePix");
-                    // std::cout << " retime pix " << retimepix << std::endl;
+
+                    LOG(INFO) << BOLDMAGENTA << " BXO alignment pattern for chip " << +theFEtoUse->getId() << " with retime pix " << +theRetimePix << RESET;
+                    fReadoutChipInterface->WriteChipReg(theFEtoUse,"RetimePix",theRetimePix);
+                    auto retimepix = fReadoutChipInterface->ReadChipReg(theFEtoUse,"RetimePix");
+                    std::cout << " wrote retime pix " << retimepix << std::endl;
                     fReadoutChipInterface->produceBX0AlignmentPattern(theFEtoUse); 
-                
-
-                        // LOG(INFO) << BOLDMAGENTA << " CHECK MPA OUTPUT! " << RESET;
-                        // auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
-                        // uint8_t numberOfBytesInSinglePacket = (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10) ? 2 : 1;
-                        // D19cDebugFWInterface* theDebugInterface = cInterface->getDebugInterface();
-                        // fCicInterface->SelectOutput(cCic, false);
-                        // fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-                        // fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-                        // for(uint phyPort=0; phyPort<10; ++phyPort)
-                        // {
-                        //     uint8_t registerValue = 0x10 + phyPort;
-                        //     fCicInterface->WriteChipReg(cCic, "MUX_CTRL", registerValue);
-                        //     for(size_t iteration = 0; iteration < 1; iteration++)
-                        //     {
-
-                        //         auto lineOutputVector = theDebugInterface->StubDebug(false, 4, false);
-                        //         size_t cNlines = 4;
-                        //         for(size_t line=0; line<cNlines; ++line)
-                        //         {
-                        //             LOG(INFO) << BOLDRED << "Line " << line << " -> " <<std::hex << getPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket,true) << std::dec << RESET;
-                        //         }
-                        //     }
-
-                        // }
-
                 } //hybrids
             } //optical group
-        
-        // LOG(INFO) << BOLDRED << " Sending ONE ONLY Resync !" << RESET;     
-        // fBeBoardInterface->ChipReSync(theBoard);
 
-        while(currentAttempt < maxAttempts)
-        {
-            //Send Resync to all hybrids connected to one board at once
-            // LOG(INFO) << BOLDRED << "NOT Sending Resync !" << RESET;
-            // LOG(INFO) << BOLDRED << "NOT Sending Resync !" << RESET;
-            // LOG(INFO) << BOLDRED << "NOT Sending Resync !" << RESET;       
+
+            //Send Resync to all hybrids connected to one board at once       
             LOG(INFO) << BOLDMAGENTA << " Sending Resync !" << RESET;     
             auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             auto cFastCommandInterface = cInterface->getFastCommandInterface();
@@ -176,14 +243,15 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                     bool  cSuccessAlign          = fCicInterface->CheckAutomatedBX0Alignment(cCic);
-
-                    // bool  cSuccessAlign          = fCicInterface->AutomatedBX0Alignment(cCic, cAlignmentPatterns);
-                    auto& theBX0AlignmentValues = theBX0AlignmentDelayContainer.getObject(theBoard->getId())
+                    auto& theBX0AlignmentValues = theBX0AlignmentDelayVsRetimePixContainer.getObject(theBoard->getId())
                                                        ->getObject(theOpticalGroup->getId())
                                                        ->getObject(theHybrid->getId())
-                                                       ->getSummary<uint16_t>();
-                    theBX0AlignmentValues = fCicInterface->retrieveExternalBX0AlignmentValues(cCic);
-                    cSuccessAlign          = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValues);
+                                                       ->getSummary<std::vector<uint16_t>>();
+
+                    // bool  cSuccessAlign          = fCicInterface->AutomatedBX0Alignment(cCic, cAlignmentPatterns);
+                    theBX0AlignmentValues[theRetimePix] = fCicInterface->retrieveExternalBX0AlignmentValue(cCic);
+                    std::cout << " theBX0AlignmentValues[theRetimePix] " << theBX0AlignmentValues[theRetimePix] << std::endl;
+                    cSuccessAlign          = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValues[theRetimePix]);
                     if(cSuccessAlign) { LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
                     else
                     {
@@ -193,25 +261,33 @@ void OTCICBX0Alignment::BX0Alignment(uint32_t pWait_us)
                         ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId());
                         continue;
                     }
-                    
 
-
-
+                    // Set the again default RetimePix Value of 4
+                    auto theFEtoUse = theHybrid->getFirstObject(); //  *(theHybrid->begin());
+                    if(theFEtoUse == nullptr)
+                    {
+                        LOG(INFO) << BOLDRED << "No FE suitable for BX0 alignment enabled on Board id " << +cCic->getBeBoardId() << " OpticalGroup id" << +cCic->getOpticalGroupId() << " Hybrid id " << +cCic->getHybridId()
+                        << " --- Hybrid will be disabled" << RESET;
+                        ExceptionHandler::getInstance()->disableHybrid(cCic->getBeBoardId(), cCic->getOpticalGroupId(), cCic->getHybridId());
+                        return;
+                    }
+                    std::cout << __LINE__ << " the FE to use is " << +theFEtoUse->getId() << std::endl;
+                    fReadoutChipInterface->WriteChipReg(theFEtoUse,"RetimePix",4);
+     
                 } // hybrids 
             } // optical group
-            ++currentAttempt;            
         }
-    }
 
 #ifdef __USE_ROOT__
-    fDQMHistogramOTCICBX0Alignment.fillBX0AlignmentDelay(theBX0AlignmentDelayContainer);
+    fDQMHistogramOTCICBX0Alignment.fillBX0AlignmentDelayVsRetimePix(theBX0AlignmentDelayVsRetimePixContainer);
 #else
     if(fDQMStreamerEnabled)
     {
-        ContainerSerialization theBX0AlignmentDelayContainerSerialization("OTCICBX0AlignmentBX0AlignmentDelay");
-        theBX0AlignmentDelayContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBX0AlignmentDelayContainer);
+        ContainerSerialization theBX0AlignmentDelayVsRetimePixContainerSerialization("OTCICBX0AlignmentBX0AlignmentDelayVsRetimePix");
+        theBX0AlignmentDelayVsRetimePixContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBX0AlignmentDelayVsRetimePixContainer);
     }
 #endif
 
-    fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
+        fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
+    }
 }

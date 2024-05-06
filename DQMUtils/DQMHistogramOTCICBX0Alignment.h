@@ -56,10 +56,12 @@ class DQMHistogramOTCICBX0Alignment : public DQMHistogramBase
     void reset(void) override;
 
     void fillBX0AlignmentDelay(DetectorDataContainer& theBX0AlignmentDelayContainer);
+    void fillBX0AlignmentDelayVsRetimePix(DetectorDataContainer& theBX0AlignmentDelayContainer);
 
   private:
     DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fBX0AlignmentDelayHistogramContainer;
+    DetectorDataContainer fBX0AlignmentDelayVsRetimePixHistogramContainer;
 
 };
 #endif

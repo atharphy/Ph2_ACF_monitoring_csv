@@ -36,7 +36,8 @@ class OTCICBX0Alignment : public Tool
     static std::string fCalibrationDescription;
     
   private:
-    void BX0Alignment(uint32_t pWait_us = 10);
+    void BX0Alignment();
+    void ScanRetimePixAndBX0Alignment();
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

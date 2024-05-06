@@ -513,7 +513,7 @@ bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* theCic, std::vector<uin
     BX0doneRegValue2 = ReadChipReg(theCic, "timingStatusBits");
     std::cout << " timingStatusBits after start BX0 alignment "<<  std::bitset<5>(BX0doneRegValue2) << std::endl;
 
-    auto bx0delay = this->retrieveExternalBX0AlignmentValues(theCic);
+    auto bx0delay = this->retrieveExternalBX0AlignmentValue(theCic);
     std::cout << " BXO delay before resync " << bx0delay << std::endl;
     return cSuccess;
 }
@@ -529,7 +529,7 @@ bool CicInterface::CheckAutomatedBX0Alignment(Chip* pChip)
     std::cout << (cRegValue & 0x02) << std::endl;
     if((cRegValue & 0x02) == 2)
     {
-        auto bx0delay = this->retrieveExternalBX0AlignmentValues(pChip);
+        auto bx0delay = this->retrieveExternalBX0AlignmentValue(pChip);
         LOG(INFO)<< BOLDGREEN << " AUTO_BXO_DONE " <<  (cRegValue & 0x02) << " delay found " << bx0delay << RESET;
         std::string cRegName             = "BX0_ALIGN_CONFIG";
         uint16_t    cRegValueConfig            = this->ReadChipReg(pChip, cRegName);
@@ -651,7 +651,7 @@ bool CicInterface::AutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
                 std::cout << (cRegValue & 0x02) << std::endl;
                 if((cRegValue & 0x02) == 2)
                 {
-                    auto bx0delay = this->retrieveExternalBX0AlignmentValues(pChip);
+                    auto bx0delay = this->retrieveExternalBX0AlignmentValue(pChip);
                     std::cout << " AUTO_BXO_DONE " <<  (cRegValue & 0x02) << " delay found " << bx0delay << std::endl;
 
                     alignmentCompleted = true;
@@ -897,7 +897,7 @@ GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1
     return theWordAlignmentValues;
 }
 
-uint16_t CicInterface::retrieveExternalBX0AlignmentValues(Chip* pChip)
+uint16_t CicInterface::retrieveExternalBX0AlignmentValue(Chip* pChip)
 {
     std::string cRegName  = "BX0_DELAY";
     uint16_t theBX0AlignmentValue = ReadChipReg(pChip, cRegName);
