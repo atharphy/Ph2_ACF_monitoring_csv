@@ -140,11 +140,11 @@ class CbcInterface : public ReadoutChipInterface
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
 
   private:
-    bool                        fSortPageInc           = true;
-    std::vector<uint8_t>        fWordAlignmentPatterns = {0x7A, 0xBC, 0xD4, 0x31, 0x81};
+    bool                 fSortPageInc           = true;
+    std::vector<uint8_t> fWordAlignmentPatterns = {0x7A, 0xBC, 0xD4, 0x31, 0x81};
     // std::vector<uint8_t>        fBX0AlignmentPatterns  = {0x00, 0x00, 0x00, 0x00, 0x80};
-    std::vector<uint8_t>        fBX0AlignmentPatterns  = {0x0A, 0x0A, 0x0A, 0x99, 0x89};
-    bool                        fRetry                 = true;
+    std::vector<uint8_t>        fBX0AlignmentPatterns = {0x0A, 0x0A, 0x0A, 0x99, 0x89};
+    bool                        fRetry                = true;
     std::map<uint32_t, uint8_t> fPageMap;
     bool                        fWithlpGBT = false;
     std::bitset<NCHANNELS>      fActiveChannels;

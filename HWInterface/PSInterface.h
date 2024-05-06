@@ -68,9 +68,9 @@ class PSInterface : public ReadoutChipInterface
     void                 produceBX0AlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
     std::vector<uint8_t> getBX0AlignmentPatterns() override { return fBX0AlignmentPatterns; }
-    void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0x01);
-    std::vector<int> decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
-    bool             enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
+    void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0x01);
+    std::vector<int>     decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
+    bool                 enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
 
     bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop);
 

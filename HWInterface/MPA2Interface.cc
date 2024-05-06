@@ -94,10 +94,9 @@ void MPA2Interface::produceBX0AlignmentPattern(ReadoutChip* pChip)
     this->WriteChipReg(pChip, "StubMode", 2); // Use pixel mode to exclude possible SSA communication issues
     this->WriteChipReg(pChip, "StubWindow", 31);
     this->WriteChipReg(pChip, "CodeM10", 0x0); // bendind = 0 will ouput 0
-    
 
     LOG(INFO) << GREEN << "Producing BX0 alignment pattern on MPA#" << +pChip->getId() << RESET;
-    std::vector<uint8_t>     cRegValues{0x0}; //, fBX0AlignmentPatterns[0]};
+    std::vector<uint8_t>     cRegValues{0x0};          //, fBX0AlignmentPatterns[0]};
     std::vector<std::string> cRegNames{"ReadoutMode"}; //, "LFSR_data"};
     // std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
     // std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};}

@@ -146,9 +146,9 @@ class CicInterface : public ChipInterface
     std::vector<uint8_t>                                                              getI2CStatus() { return fI2CStatus; }
     void                                                                              setWithlpGBT(uint8_t pIsWithLpGBT) {}
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1> retrieveExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
-    bool ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip, const GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>& theWordAlignmentValues);
+    bool     ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip, const GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>& theWordAlignmentValues);
     uint16_t retrieveExternalBX0AlignmentValue(Ph2_HwDescription::Chip* pChip);
-    bool ConfigureExternalBX0Delay(Ph2_HwDescription::Chip* pChip, const uint16_t theBX0AlignmentValues);
+    bool     ConfigureExternalBX0Delay(Ph2_HwDescription::Chip* pChip, const uint16_t theBX0AlignmentValues);
 
     std::vector<uint8_t> getMapping(Ph2_HwDescription::Chip* pChip)
     {

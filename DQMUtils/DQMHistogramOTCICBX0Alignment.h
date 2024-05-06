@@ -62,6 +62,5 @@ class DQMHistogramOTCICBX0Alignment : public DQMHistogramBase
     DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fBX0AlignmentDelayHistogramContainer;
     DetectorDataContainer fBX0AlignmentDelayVsRetimePixHistogramContainer;
-
 };
 #endif

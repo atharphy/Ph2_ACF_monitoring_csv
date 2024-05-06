@@ -34,11 +34,11 @@ class OTCICBX0Alignment : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void BX0Alignment();
     void ScanRetimePixAndBX0Alignment();
-    
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTCICBX0Alignment fDQMHistogramOTCICBX0Alignment;

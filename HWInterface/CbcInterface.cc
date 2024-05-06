@@ -919,27 +919,25 @@ void CbcInterface::produceBX0AlignmentPattern(ReadoutChip* pChip)
 {
     // switch off HitOr (OR254)
     WriteChipReg(pChip, "HitOr", 0);
-    //Mask all channels (this way only the sync bit should be 1)
-    // MaskAllChannels(pChip, 1);
+    // Mask all channels (this way only the sync bit should be 1)
+    //  MaskAllChannels(pChip, 1);
 
-
-    // try stubs 
+    // try stubs
     WriteChipReg(pChip, "PtCut", 14);
     WriteChipReg(pChip, "ClusterCut", 4);
     selectLogicMode(pChip, "OR", true, true);
 
-    std::map<uint8_t, uint8_t> pBendingAndCode{{0, 0x9}, {2, 0xB}, {4, 0xF}};
+    std::map<uint8_t, uint8_t>                    pBendingAndCode{{0, 0x9}, {2, 0xB}, {4, 0xF}};
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
     theRegisterVector.push_back({"Bend7", pBendingAndCode[0]});
     theRegisterVector.push_back({"Bend8", pBendingAndCode[2]});
     theRegisterVector.push_back({"Bend9", pBendingAndCode[4]});
-    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});  // set stub window offset to 0
-    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});  // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
     WriteChipMultReg(pChip, theRegisterVector);
-    // inject 3 stubs on CBC to CIC stub lines 
+    // inject 3 stubs on CBC to CIC stub lines
     std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{0x0A, 0}, {0x0A, 0}, {0x0A, 0}};
     injectStubs(pChip, stubSeedAndBend);
-
 }
 uint32_t CbcInterface::ReadChipFuseID(Chip* pCbc)
 {
