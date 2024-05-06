@@ -471,14 +471,14 @@ bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* theCic, std::vector<uin
 
     // set to read another chip or line then 0 0
     uint16_t    useChip = (cRegValue & 0xC7) | (pFEChip << 3);
-    std::cout << " useChip " << useChip << std::endl;
+    // std::cout << " useChip " << useChip << std::endl;
     this->WriteChipReg(theCic, cRegName, useChip);
     cRegValue            = this->ReadChipReg(theCic, cRegName);
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << cRegValue << std::dec << " bin " << std::bitset<8>(cRegValue) << " to use another chip or line" << RESET;
 
     // set to read another chip or line then 0 0
     uint16_t    useLine = (cRegValue & 0xF8) | (pLine << 0);
-    std::cout << " useLine " << useLine << std::endl;
+    // std::cout << " useLine " << useLine << std::endl;
     this->WriteChipReg(theCic, cRegName, useLine);
     cRegValue            = this->ReadChipReg(theCic, cRegName);
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << cRegValue << std::dec << " bin " << std::bitset<8>(cRegValue) << " to use another chip or line" << RESET;
@@ -495,8 +495,8 @@ bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* theCic, std::vector<uin
         return false;
     }
 
-    auto BX0doneRegValue2 = ReadChipReg(theCic, "timingStatusBits");
-    std::cout << " timingStatusBits after using internal delays "<<  std::bitset<5>(BX0doneRegValue2) << std::endl;
+    // auto BX0doneRegValue2 = ReadChipReg(theCic, "timingStatusBits");
+    // std::cout << " timingStatusBits after using internal delays "<<  std::bitset<5>(BX0doneRegValue2) << std::endl;
 
     cRegValue                       = this->ReadChipReg(theCic, cRegName);
     uint16_t startAutoBX0Alignment = (cRegValue & 0xBF) | (0x1 << 6);
@@ -510,11 +510,11 @@ bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* theCic, std::vector<uin
         return false;
     }
 
-    BX0doneRegValue2 = ReadChipReg(theCic, "timingStatusBits");
-    std::cout << " timingStatusBits after start BX0 alignment "<<  std::bitset<5>(BX0doneRegValue2) << std::endl;
+    // BX0doneRegValue2 = ReadChipReg(theCic, "timingStatusBits");
+    // std::cout << " timingStatusBits after start BX0 alignment "<<  std::bitset<5>(BX0doneRegValue2) << std::endl;
 
-    auto bx0delay = this->retrieveExternalBX0AlignmentValue(theCic);
-    std::cout << " BXO delay before resync " << bx0delay << std::endl;
+    // auto bx0delay = this->retrieveExternalBX0AlignmentValue(theCic);
+    // std::cout << " BXO delay before resync " << bx0delay << std::endl;
     return cSuccess;
 }
 
@@ -525,8 +525,8 @@ bool CicInterface::CheckAutomatedBX0Alignment(Chip* pChip)
     bool cSuccess;
     bool    alignmentCompleted     = false;
     auto cRegValue = ReadChipReg(pChip, "timingStatusBits");
-    std::cout << " timingStatusBits "<<  std::bitset<5>(cRegValue) << std::endl;
-    std::cout << (cRegValue & 0x02) << std::endl;
+    // std::cout << " timingStatusBits "<<  std::bitset<5>(cRegValue) << std::endl;
+    // std::cout << (cRegValue & 0x02) << std::endl;
     if((cRegValue & 0x02) == 2)
     {
         auto bx0delay = this->retrieveExternalBX0AlignmentValue(pChip);
@@ -580,14 +580,14 @@ bool CicInterface::AutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
 
     // set to read another chip or line then 0 0
     uint16_t    useChip = (cRegValue & 0xC7) | (0x2 << 3);
-    std::cout << " useChip " << useChip << std::endl;
+    // std::cout << " useChip " << useChip << std::endl;
     this->WriteChipReg(pChip, cRegName, useChip);
     cRegValue            = this->ReadChipReg(pChip, cRegName);
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << cRegValue << std::dec << " bin " << std::bitset<8>(cRegValue) << " to use another chip or line" << RESET;
 
     // set to read another chip or line then 0 0
     uint16_t    useLine = (cRegValue & 0xF8) | (0x2 << 0);
-    std::cout << " useChip " << useLine << std::endl;
+    // std::cout << " useLine " << useLine << std::endl;
     this->WriteChipReg(pChip, cRegName, useLine);
     cRegValue            = this->ReadChipReg(pChip, cRegName);
     LOG(INFO) << BOLDBLUE << "BX0_ALIGN_CONFIG set to 0x"<< std::hex << cRegValue << std::dec << " bin " << std::bitset<8>(cRegValue) << " to use another chip or line" << RESET;
@@ -604,8 +604,8 @@ bool CicInterface::AutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
         return false;
     }
 
-    auto BX0doneRegValue2 = ReadChipReg(pChip, "timingStatusBits");
-    std::cout << " timingStatusBits after using internal delays "<<  std::bitset<5>(BX0doneRegValue2) << std::endl;
+    // auto BX0doneRegValue2 = ReadChipReg(pChip, "timingStatusBits");
+    // std::cout << " timingStatusBits after using internal delays "<<  std::bitset<5>(BX0doneRegValue2) << std::endl;
 
     cRegValue                       = this->ReadChipReg(pChip, cRegName);
     uint16_t startAutoBX0Alignment = (cRegValue & 0xBF) | (0x1 << 6);
@@ -628,11 +628,11 @@ bool CicInterface::AutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
     bool    alignmentCompleted     = false;
     while (currentTrial < trials)
     {
-        std::cout << " currentTrial " << +currentTrial << std::endl;
+        // std::cout << " currentTrial " << +currentTrial << std::endl;
         alignmentCompleted     = false;
 
-        auto BX0doneRegValue = ReadChipReg(pChip, "timingStatusBits");
-        std::cout << " timingStatusBits after starting BX0 alignment "<<  std::bitset<5>(BX0doneRegValue) << std::endl;
+        // auto BX0doneRegValue = ReadChipReg(pChip, "timingStatusBits");
+        // std::cout << " timingStatusBits after starting BX0 alignment "<<  std::bitset<5>(BX0doneRegValue) << std::endl;
         // if((BX0doneRegValue & 0x02) == 2) alignmentCompleted = true;
 
 
@@ -647,8 +647,8 @@ bool CicInterface::AutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
 
                 // std::this_thread::sleep_for(std::chrono::microseconds(10));
                 auto cRegValue = ReadChipReg(pChip, "timingStatusBits");
-                std::cout << " timingStatusBits "<<  std::bitset<5>(cRegValue) << std::endl;
-                std::cout << (cRegValue & 0x02) << std::endl;
+                // std::cout << " timingStatusBits "<<  std::bitset<5>(cRegValue) << std::endl;
+                // std::cout << (cRegValue & 0x02) << std::endl;
                 if((cRegValue & 0x02) == 2)
                 {
                     auto bx0delay = this->retrieveExternalBX0AlignmentValue(pChip);

@@ -36,11 +36,12 @@ void OTCICBX0Alignment::ConfigureCalibration()
 
 void OTCICBX0Alignment::Running()
 {
-    LOG(INFO) << "Starting OTCICBX0Alignment measurement.";
+    LOG(INFO) << BOLDMAGENTA << "Starting OTCICBX0Alignment measurement." << RESET;
     Initialise();
+    //FIXME the retime pix scan is temporary, only to verify uniformity across modules
     if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ScanRetimePixAndBX0Alignment();
     BX0Alignment();
-    LOG(INFO) << "Done with OTCICBX0Alignment.";
+    LOG(INFO) << BOLDGREEN <<  "Done with OTCICBX0Alignment." << RESET;
     Reset();
 }
 
@@ -102,7 +103,7 @@ void OTCICBX0Alignment::BX0Alignment()
                     ExceptionHandler::getInstance()->disableHybrid(cCic->getBeBoardId(), cCic->getOpticalGroupId(), cCic->getHybridId());
                     return;
                 }
-                std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
+                // std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
                 auto theFECICmapping = fCicInterface->getMapping(cCic);
                 uint8_t theIndex = (theFEtoUse->getFrontEndType() == FrontEndType::MPA2)? theFEtoUse->getId() - 8: theFEtoUse->getId(); 
                 uint8_t theFEId = theFECICmapping[theIndex];
@@ -116,7 +117,7 @@ void OTCICBX0Alignment::BX0Alignment()
                      LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns[cIndex]) << RESET;
                 }
                 
-                std::cout << " BXO alignment pattern for chip " << +theFEtoUse->getId() << std::endl;
+                // std::cout << " BXO alignment pattern for chip " << +theFEtoUse->getId() << std::endl;
                 fReadoutChipInterface->produceBX0AlignmentPattern(theFEtoUse); 
             } //hybrids
         } //optical group
@@ -168,6 +169,7 @@ void OTCICBX0Alignment::BX0Alignment()
     fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
 }
 
+//FIXME the retime pix scan is temporary, only to verify uniformity across modules
 void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
 {
     LOG(INFO) << BOLDMAGENTA << "Starting CIC automated BX0 alignment procedure for different retime pix values .... " << RESET;
@@ -207,7 +209,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
                         ExceptionHandler::getInstance()->disableHybrid(cCic->getBeBoardId(), cCic->getOpticalGroupId(), cCic->getHybridId());
                         return;
                     }
-                    std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
+                    // std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
                     auto theFECICmapping = fCicInterface->getMapping(cCic);
                     uint8_t theIndex = (theFEtoUse->getFrontEndType() == FrontEndType::MPA2)? theFEtoUse->getId() - 8: theFEtoUse->getId(); 
                     uint8_t theFEId = theFECICmapping[theIndex];
@@ -223,8 +225,8 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
 
                     LOG(INFO) << BOLDMAGENTA << " BXO alignment pattern for chip " << +theFEtoUse->getId() << " with retime pix " << +theRetimePix << RESET;
                     fReadoutChipInterface->WriteChipReg(theFEtoUse,"RetimePix",theRetimePix);
-                    auto retimepix = fReadoutChipInterface->ReadChipReg(theFEtoUse,"RetimePix");
-                    std::cout << " wrote retime pix " << retimepix << std::endl;
+                    // auto retimepix = fReadoutChipInterface->ReadChipReg(theFEtoUse,"RetimePix");
+                    // std::cout << " wrote retime pix " << retimepix << std::endl;
                     fReadoutChipInterface->produceBX0AlignmentPattern(theFEtoUse); 
                 } //hybrids
             } //optical group
@@ -250,7 +252,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
 
                     // bool  cSuccessAlign          = fCicInterface->AutomatedBX0Alignment(cCic, cAlignmentPatterns);
                     theBX0AlignmentValues[theRetimePix] = fCicInterface->retrieveExternalBX0AlignmentValue(cCic);
-                    std::cout << " theBX0AlignmentValues[theRetimePix] " << theBX0AlignmentValues[theRetimePix] << std::endl;
+                    // std::cout << " theBX0AlignmentValues[theRetimePix] " << theBX0AlignmentValues[theRetimePix] << std::endl;
                     cSuccessAlign          = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValues[theRetimePix]);
                     if(cSuccessAlign) { LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
                     else
@@ -271,7 +273,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
                         ExceptionHandler::getInstance()->disableHybrid(cCic->getBeBoardId(), cCic->getOpticalGroupId(), cCic->getHybridId());
                         return;
                     }
-                    std::cout << __LINE__ << " the FE to use is " << +theFEtoUse->getId() << std::endl;
+                    // std::cout << __LINE__ << " the FE to use is " << +theFEtoUse->getId() << std::endl;
                     fReadoutChipInterface->WriteChipReg(theFEtoUse,"RetimePix",4);
      
                 } // hybrids 
