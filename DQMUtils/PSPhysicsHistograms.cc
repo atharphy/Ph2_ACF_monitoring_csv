@@ -209,14 +209,14 @@ bool PSPhysicsHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        //std::cout << "Matched PSPhysics Occupancy!!!!!\n";
+        // std::cout << "Matched PSPhysics Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeHybridContainer<float, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillOccupancy(fDetectorData);
         return true;
     }
     if(theStubSerialization.attachDeserializer(inputStream))
     {
-        //std::cout << "Matched PSPhysics Stub!!!!!\n";
+        // std::cout << "Matched PSPhysics Stub!!!!!\n";
         DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<float, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillStub(fDetectorData);
         return true;
