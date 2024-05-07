@@ -115,7 +115,7 @@ bool DQMHistogramOTinjectionDelayOptimization::fill(std::string& inputStream)
 
     if(theDelayScanSerialization.attachDeserializer(inputStream))
     {
-        //std::cout << "Matched OTinjectionDelayOptimization DelayScan!!!!!\n";
+        // std::cout << "Matched OTinjectionDelayOptimization DelayScan!!!!!\n";
         uint16_t              delayValue;
         DetectorDataContainer theDetectorData = theDelayScanSerialization.deserializeOpticalGroupContainer<EmptyContainer, uint16_t, EmptyContainer, EmptyContainer>(fDetectorContainer, delayValue);
         fillThresholdVsDelayScan(delayValue, theDetectorData);

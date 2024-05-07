@@ -195,7 +195,7 @@ bool DQMHistogramOTCMNoise::processInputStream(std::string streamName, std::stri
     {
         if(theSerializer.attachDeserializer(inputStream))
         {
-            //LOG(INFO) << "Matched stream " << streamName << "!" << RESET;
+            // LOG(INFO) << "Matched stream " << streamName << "!" << RESET;
             DetectorDataContainer fDetectorData = theSerializer.deserializeOpticalGroupContainer<T1, T2, T3, T4>(fDetectorContainer);
             (this->*function)(fDetectorData);
             return true;

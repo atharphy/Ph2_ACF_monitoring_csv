@@ -154,14 +154,14 @@ bool Physics2SHistograms::fill(std::string& inputStream)
 
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        //std::cout << "Matched Physics2S Occupancy!!!!!\n";
+        // std::cout << "Matched Physics2S Occupancy!!!!!\n";
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeHybridContainer<Occupancy, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillOccupancy(fDetectorData);
         return true;
     }
     if(theStubSerialization.attachDeserializer(inputStream))
     {
-        //std::cout << "Matched Physics2S Stub!!!!!\n";
+        // std::cout << "Matched Physics2S Stub!!!!!\n";
         DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<float, EmptyContainer, EmptyContainer>(fDetectorContainer);
         fillStub(fDetectorData);
         return true;
