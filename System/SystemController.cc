@@ -502,6 +502,8 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             }
         }
 
+    // static_cast<RD53BInterface*>(fReadoutChipInterface)->SendGlobalPulseBroadcast(pBoard); // @TMP@ - Wolfram
+
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
     // ####################################
