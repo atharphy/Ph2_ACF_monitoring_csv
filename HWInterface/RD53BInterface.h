@@ -39,8 +39,6 @@ class RD53BInterface : public RD53Interface
     uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
     // #############################
 
-    void SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* pBoard); // @TMP@ - Wolfram
-
   private:
     void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, int writeMode, bool doDefault, size_t theRow = 0, size_t theCol = 0) override;
     std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
