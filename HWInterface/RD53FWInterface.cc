@@ -284,6 +284,7 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     bool                                          gtxRxPolarity = false;
     bool                                          fastCmdReg1   = false;
     bool                                          extTluReg2    = false;
+    bool                                          auroraSpeed   = false;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
 
     LOG(INFO) << GREEN << "Initializing board's registers" << RESET;
@@ -298,6 +299,7 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
                 if(it.first.find("gtx_rx_polarity") != std::string::npos) gtxRxPolarity = true;
                 if(it.first.find("fast_cmd_reg_1") != std::string::npos) fastCmdReg1 = true;
                 if(it.first.find("ext_tlu_reg2") != std::string::npos) extTluReg2 = true;
+                if(it.first.find("user.ctrl_regs.gtx_drp.aurora_speed") != std::string::npos) auroraSpeed = true;
             }
         }
 
@@ -307,6 +309,7 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
         if(gtxRxPolarity == true) RD53FWInterface::WriteStackReg({{"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 1}, {"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 0}});
         if(fastCmdReg1 == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
         if(extTluReg2 == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
+        if(auroraSpeed == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.gtx_drp.set_aurora_speed"); // @TMP@
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;

@@ -186,6 +186,11 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 3-8:  CCWait[5:0]
     // # bits 1-2:  CCSend[1:0]
 
+    // #######################
+    // # Reset communication #
+    // #######################
+    RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second, 10);
+
     // ################
     // # Data merging #
     // ################
@@ -229,12 +234,10 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
 
-    // #######################
-    // # Reset communication #
-    // #######################
+    // ######################
+    // # Reset Data merging #
+    // ######################
     if(pRD53->laneConfig.isPrimary == true)
-        RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second, 10);
-    else
         RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second, 10);
 }
 
@@ -524,8 +527,10 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
 void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>& cmdStream)
 {
     const int NSYNC_WORDS = 2;
-    // Compute number of 16-bit words to which we add NSYNC_WORDS sync words every RD53Constants::NWORDS_TO_SYNC:
-    // nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / RD53Constants::NWORDS_TO_SYNC = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
+    // #################################################################################################################################################################
+    // # Compute number of 16-bit words to which we add NSYNC_WORDS sync words every RD53Constants::NWORDS_TO_SYNC:                                                    #
+    // # nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / RD53Constants::NWORDS_TO_SYNC = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO)) #
+    // #################################################################################################################################################################
     constexpr size_t nWordsPerPacketExclSync = 2 * ((1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) - 1) / (1 + 2. / RD53Constants::NWORDS_TO_SYNC);
     auto             begin                   = cmdStream.begin();
 
@@ -610,18 +615,11 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
-    if(pRD53->laneConfig.isPrimary == true)
-        RD53BInterface::PackWriteCommand(pChip,
-                                         "GlobalPulseConf",
-                                         pRD53->getFEtype()->GlobalPulseConfMap.find("SendClearRstBCID")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second |
-                                             pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second,
-                                         cmdStream);
-    else
-        RD53BInterface::PackWriteCommand(pChip,
-                                         "GlobalPulseConf",
-                                         pRD53->getFEtype()->GlobalPulseConfMap.find("SendClearRstBCID")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second |
-                                             pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second,
-                                         cmdStream);
+    RD53BInterface::PackWriteCommand(pChip,
+                                     "GlobalPulseConf",
+                                     pRD53->getFEtype()->GlobalPulseConfMap.find("SendClearRstBCID")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second |
+                                         pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second,
+                                     cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
     std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
