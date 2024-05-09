@@ -232,10 +232,6 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #######################
     // # Reset communication #
     // #######################
-    RD53BInterface::SendGlobalPulse(pChip,
-                                    pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second |
-                                        pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second,
-                                    10);
     if(pRD53->laneConfig.isPrimary == true)
         RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second, 10);
     else
@@ -593,12 +589,15 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    // ###################################################################################
-    // # Make sure to set Global Pulse Route to 0b110000 = ResetAurora, ResetSerializers #
-    // ###################################################################################
-    for(auto cOpticalGroup: *pBoard)
-        for(auto cHybrid: *cOpticalGroup)
-            for(auto cChip: *cHybrid) RD53Interface::SendCommand(cChip, RD53BCmd::Clear{cChip->getId()});
+    // ##############################################################################################
+    // # Make sure to set Global Pulse Route to:                                                    #
+    // # - ResetAurora                                                                              #
+    // # - ResetSerializers                                                                         #
+    // # - SendClearRstBCID                                                                         #
+    // # - RstDataMerging                                                                           #
+    // # - RstDataPath                                                                              #
+    // ##############################################################################################
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
 }
 
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
@@ -612,35 +611,29 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
     if(pRD53->laneConfig.isPrimary == true)
-        RD53BInterface::PackWriteCommand(
-            pChip, "GlobalPulseConf", pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second, cmdStream);
+        RD53BInterface::PackWriteCommand(pChip,
+                                         "GlobalPulseConf",
+                                         pRD53->getFEtype()->GlobalPulseConfMap.find("SendClearRstBCID")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second |
+                                             pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second,
+                                         cmdStream);
     else
-        RD53BInterface::PackWriteCommand(
-            pChip, "GlobalPulseConf", pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second, cmdStream);
+        RD53BInterface::PackWriteCommand(pChip,
+                                         "GlobalPulseConf",
+                                         pRD53->getFEtype()->GlobalPulseConfMap.find("SendClearRstBCID")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second |
+                                             pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second,
+                                         cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
     std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
 }
 
-void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
+void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    std::vector<uint16_t> cmdStream;
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
 
-    RD53BCmd::serialize(RD53BCmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId, RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress, route}, cmdStream);
-    RD53BCmd::serialize(RD53BCmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId, RD53Shared::firstChip->getRegItem("GlobalPulseWidth").fAddress, pulseDuration}, cmdStream);
-    RD53BCmd::serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}, cmdStream);
-    RD53BCmd::serialize(RD53BCmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
-                                        RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
-                                        static_cast<uint16_t>(RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second |
-                                                              RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second |
-                                                              RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second |
-                                                              RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second)},
-                        cmdStream);
-    RD53Interface::SendChipCommands(pBoard, cmdStream, -1);
-
-    std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
 // ###########################

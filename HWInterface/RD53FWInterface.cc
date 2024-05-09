@@ -102,9 +102,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // #########################
     // # Set RD53 AURORA speed #
     // #########################
-    RegManager::WriteReg("user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED);
-    RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.gtx_drp.set_aurora_speed");
-    RegManager::WriteReg("user.ctrl_regs.Aurora_block.event_stream_timeout", RD53FWconstants::EVENT_STREAM_TIMEOUT);
+    RegManager::WriteStackReg(
+        {{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}}); // @TMP@
 
     // ##########
     // # Resets #
@@ -525,7 +524,7 @@ uint32_t RD53FWInterface::GetBoardEnabledHybrids(const BeBoard* pBoard)
 
 void RD53FWInterface::Start(const BeBoard* pBoard)
 {
-    // RD53Shared::chipInterface->SendBoardClear(pBoard);
+    RD53Shared::chipInterface->SendBoardClear(pBoard);
     RD53FWInterface::ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
     RD53FWInterface::ResetReadoutBlk();
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.start_trigger");
@@ -591,8 +590,8 @@ void RD53FWInterface::ResetBoard()
 void RD53FWInterface::ResetFastCmdBlk()
 {
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.ipb_reset");
-
-    RegManager::WriteReg("user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration", RD53FWconstants::IPBUS_FASTDURATION);
+    RegManager::WriteStackReg(
+        {{"user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration", RD53FWconstants::IPBUS_FASTDURATION}, {"user.ctrl_regs.Aurora_block.event_stream_timeout", RD53FWconstants::EVENT_STREAM_TIMEOUT}});
 }
 
 void RD53FWInterface::ResetSlowCmdFIFO() { RegManager::WriteStackReg({{"user.ctrl_regs.Slow_cmd.fifo_reset", 1}, {"user.ctrl_regs.Slow_cmd.fifo_reset", 0}}); }
@@ -1116,7 +1115,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
 
     // Actual readback: one word at a time
     uint32_t cRead  = 0;
-    uint8_t  nWords = (static_cast<const lpGBT*>(pChip)->getVersion() == 0 ? 7 : 6); // @TMP@ : LpGBT-v0 --> 7th; LpGBT-v1 --> 6th
+    uint8_t  nWords = (static_cast<const lpGBT*>(pChip)->getVersion() == 0 ? 7 : 6); // LpGBT-v0 --> 7th; LpGBT-v1 --> 6th
     for(uint8_t i = 0; i < nWords; i++)
     {
         RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x0}});
