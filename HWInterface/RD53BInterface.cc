@@ -234,11 +234,21 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
 
-    // ######################
-    // # Reset Data merging #
-    // ######################
     if(pRD53->laneConfig.isPrimary == true)
+    {
+        // ######################
+        // # Reset Data merging #
+        // ######################
         RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second, 10);
+
+        // #################################
+        // # Fix master input sample phase #
+        // #################################
+        // RD53Interface::WriteChipReg(pChip, "ManualChoice", 1, false); // @TMP@
+        // # bit 0:    ManualChoice
+        // # bit 1-4:  ManualMode
+        // # bit 5-12: FixedMode
+    }
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for RD53Bv1
