@@ -744,7 +744,13 @@ void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)
     RegManager::WriteStackReg({{cmdReg, 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}, {cmdReg, 0}});
 }
 
-void RD53FWInterface::ToggleRegister(const std::string& cmdReg) { RegManager::WriteStackReg({{cmdReg, 1}, {cmdReg, 0}}); }
+void RD53FWInterface::ToggleRegister(const std::string& cmdReg, bool do1and0)
+{
+    if(do1and0 == true)
+        RegManager::WriteStackReg({{cmdReg, 1}, {cmdReg, 0}});
+    else
+        RegManager::WriteStackReg({{cmdReg, 0}, {cmdReg, 1}});
+}
 
 void RD53FWInterface::SendFastCommands(const FastCommandsConfig* config)
 {
@@ -1222,7 +1228,7 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     // ############################################################################
     // # Load new settings otherwise CDCE uses whatever was in EEPROM at power up #
     // ############################################################################
-    RegManager::WriteStackReg({{"system.ctrl.cdce_sync", 0}, {"system.ctrl.cdce_sync", 1}});
+    RD53FWInterface::ToggleRegister("system.ctrl.cdce_sync", false);
 
     // #########################
     // # Save config in EEPROM #
