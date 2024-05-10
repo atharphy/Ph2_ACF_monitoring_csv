@@ -226,6 +226,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void     ConfigureDIO5(const Ph2_HwDescription::BeBoard* pBoard, DIO5Config* config);
     void     SendDIO5Cfg(const DIO5Config* config);
     void     SendBoardCommandWithStrobe(const std::string& cmdReg);
+    void     ToggleRegister(const std::string& cmdReg);
     uint32_t GetBoardEnabledChips(const Ph2_HwDescription::BeBoard* pBoard, bool primariesOnly = false);
     uint32_t GetBoardEnabledHybrids(const Ph2_HwDescription::BeBoard* pBoard);
 

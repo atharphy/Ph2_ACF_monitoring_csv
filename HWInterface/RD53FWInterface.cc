@@ -102,8 +102,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // #########################
     // # Set RD53 AURORA speed #
     // #########################
-    RegManager::WriteStackReg(
-        {{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}}); // @TMP@
+    RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
 
     // ##########
     // # Resets #
@@ -299,17 +298,17 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
                 if(it.first.find("gtx_rx_polarity") != std::string::npos) gtxRxPolarity = true;
                 if(it.first.find("fast_cmd_reg_1") != std::string::npos) fastCmdReg1 = true;
                 if(it.first.find("ext_tlu_reg2") != std::string::npos) extTluReg2 = true;
-                if(it.first.find("user.ctrl_regs.gtx_drp.aurora_speed") != std::string::npos) auroraSpeed = true;
+                if(it.first.find("gtx_drp.aurora_speed") != std::string::npos) auroraSpeed = true;
             }
         }
 
     if(cVecReg.size() != 0)
     {
         RegManager::WriteStackReg(cVecReg);
-        if(gtxRxPolarity == true) RD53FWInterface::WriteStackReg({{"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 1}, {"user.ctrl_regs.gtx_rx_polarity.cmd_strobe", 0}});
+        if(gtxRxPolarity == true) RD53FWInterface::ToggleRegister("user.ctrl_regs.gtx_rx_polarity.cmd_strobe");
         if(fastCmdReg1 == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.fast_cmd_reg_1.load_config");
-        if(extTluReg2 == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
-        if(auroraSpeed == true) RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.gtx_drp.set_aurora_speed"); // @TMP@
+        if(extTluReg2 == true) RD53FWInterface::ToggleRegister("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
+        if(auroraSpeed == true) RD53FWInterface::ToggleRegister("user.ctrl_regs.gtx_drp.set_aurora_speed");
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
@@ -364,7 +363,7 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
     // # Send command(s) to the chip #
     // ###############################
     RegManager::WriteBlockReg("user.ctrl_regs.Slow_cmd_fifo_din", commandList);
-    RegManager::WriteStackReg({{"user.ctrl_regs.Slow_cmd.dispatch_packet", 1}, {"user.ctrl_regs.Slow_cmd.dispatch_packet", 0}});
+    RD53FWInterface::ToggleRegister("user.ctrl_regs.Slow_cmd.dispatch_packet");
 
     // #####################################
     // # Check if commands were dispatched #
@@ -597,23 +596,23 @@ void RD53FWInterface::ResetFastCmdBlk()
         {{"user.ctrl_regs.fast_cmd_reg_1.ipb_fast_duration", RD53FWconstants::IPBUS_FASTDURATION}, {"user.ctrl_regs.Aurora_block.event_stream_timeout", RD53FWconstants::EVENT_STREAM_TIMEOUT}});
 }
 
-void RD53FWInterface::ResetSlowCmdFIFO() { RegManager::WriteStackReg({{"user.ctrl_regs.Slow_cmd.fifo_reset", 1}, {"user.ctrl_regs.Slow_cmd.fifo_reset", 0}}); }
+void RD53FWInterface::ResetSlowCmdFIFO() { RD53FWInterface::ToggleRegister("user.ctrl_regs.Slow_cmd.fifo_reset"); }
 
-void RD53FWInterface::ResetReadBkFIFO() { RegManager::WriteStackReg({{"user.ctrl_regs.Register_RdBack.fifo_reset", 1}, {"user.ctrl_regs.Register_RdBack.fifo_reset", 0}}); }
+void RD53FWInterface::ResetReadBkFIFO() { RD53FWInterface::ToggleRegister("user.ctrl_regs.Register_RdBack.fifo_reset"); }
 
 void RD53FWInterface::ResetReadoutBlk()
 {
     ddr3Offset = 0;
-    RegManager::WriteStackReg({{"user.ctrl_regs.reset_reg.readout_block_rst", 1}, {"user.ctrl_regs.reset_reg.readout_block_rst", 0}});
+    RD53FWInterface::ToggleRegister("user.ctrl_regs.reset_reg.readout_block_rst");
 }
 
 void RD53FWInterface::ChipReset()
 {
-    RegManager::WriteStackReg(
-        {{"user.ctrl_regs.reset_reg.scc_rst", 1}, {"user.ctrl_regs.reset_reg.scc_rst", 0}, {"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr", 1}, {"user.ctrl_regs.fast_cmd_reg_1.ipb_ecr", 0}});
+    RD53FWInterface::ToggleRegister("user.ctrl_regs.reset_reg.scc_rst");
+    RD53FWInterface::ChipReSync();
 }
 
-void RD53FWInterface::ChipReSync() { RegManager::WriteStackReg({{"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr", 1}, {"user.ctrl_regs.fast_cmd_reg_1.ipb_bcr", 0}}); }
+void RD53FWInterface::ChipReSync() { RD53FWInterface::ToggleRegister("user.ctrl_regs.fast_cmd_reg_1.ipb_bcr"); }
 
 uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {
@@ -744,6 +743,8 @@ void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)
 {
     RegManager::WriteStackReg({{cmdReg, 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 1}, {"user.ctrl_regs.fast_cmd_reg_1.cmd_strobe", 0}, {cmdReg, 0}});
 }
+
+void RD53FWInterface::ToggleRegister(const std::string& cmdReg) { RegManager::WriteStackReg({{cmdReg, 1}, {cmdReg, 0}}); }
 
 void RD53FWInterface::SendFastCommands(const FastCommandsConfig* config)
 {
@@ -1426,12 +1427,12 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     uint32_t lowFrames, highFrames;
     std::tie(highFrames, lowFrames) = bits::unpack<32, 32>(static_cast<long long>(frames2run));
     RegManager::WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames}, {"user.ctrl_regs.prbs_frames_to_run_high", highFrames}});
-    RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.PRBS_checker.load_config");
+    RD53FWInterface::ToggleRegister("user.ctrl_regs.PRBS_checker.load_config");
 
     // #########
     // # Start #
     // #########
-    RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.start_checker", 1}, {"user.ctrl_regs.PRBS_checker.start_checker", 0}});
+    RD53FWInterface::ToggleRegister("user.ctrl_regs.PRBS_checker.start_checker");
 
     // #########################################
     // # Read frame counters to check progress #
@@ -1474,7 +1475,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     // ########
     // # Stop #
     // ########
-    RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.stop_checker", 1}, {"user.ctrl_regs.PRBS_checker.stop_checker", 0}});
+    RD53FWInterface::ToggleRegister("user.ctrl_regs.PRBS_checker.stop_checker");
 
     // ###########################
     // # Read PRBS frame counter #
