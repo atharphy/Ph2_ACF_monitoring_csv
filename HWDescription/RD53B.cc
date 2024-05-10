@@ -131,7 +131,11 @@ std::map<std::string, RD53::SpecialRegInfo> RD53B::specialRegMap = {{"CDR_CONFIG
                                                                     {"SelfTriggerEn", {"SelfTriggerConfig_1", 5}},
 
                                                                     {"ServiceFrameSkip", {"ServiceDataConf", 0}},
-                                                                    {"EnServiceData", {"ServiceDataConf", 8}}};
+                                                                    {"EnServiceData", {"ServiceDataConf", 8}},
+
+                                                                    {"ManualChoice", {"PhaseDetectorConfig", 0}},
+                                                                    {"ManualMode", {"PhaseDetectorConfig", 1}},
+                                                                    {"FixedMode", {"PhaseDetectorConfig", 5}}};
 
 RD53B::RD53B(const FrontEndType& frontEndType,
              uint8_t             pBeId,
