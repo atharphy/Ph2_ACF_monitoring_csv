@@ -244,7 +244,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
         // #################################
         // # Fix master input sample phase #
         // #################################
-        // RD53Interface::WriteChipReg(pChip, "ManualChoice", 1, false); // @TMP@
+        // if(pChip->getRegMap().find("ManualChoice") != pChip->getRegMap().end()) RD53Interface::WriteChipReg(pChip, "ManualChoice", 1, false); // @TMP@
         // # bit 0:    ManualChoice
         // # bit 1-4:  ManualMode
         // # bit 5-12: FixedMode
@@ -261,64 +261,65 @@ void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* 
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "EnServiceData", 0);
 
     for(const auto cChip: *pHybrid)
-    {
-        // #################################
-        // # TAP0 optimization for modules #
-        // #################################
-
-        auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
-        fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.masterLane);
-        if(static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == false)
+        if(cChip->getFrontEndType() == FrontEndType::RD53Bv1)
         {
-            RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
+            // #################################
+            // # TAP0 optimization for modules #
+            // #################################
 
-            LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW
-                      << +static_cast<RD53*>(cChip)->getChipLane() << RESET;
-
-            const auto            maxTAP0value = RD53Shared::setBits(cChip->getNumberOfBits("DAC_CML_BIAS_0"));
-            const float           timeLimit    = 1;   // @CONST@
-            const int             nSteps       = 20;  // @CONST@
-            const int             nFrames2Read = 1e7; // @CONST@
-            const int             step         = floor(maxTAP0value / nSteps);
-            std::vector<uint32_t> vecFrameCounter;
-            std::vector<uint16_t> vecTAP0Values(nSteps);
-            uint16_t              value = 0;
-            std::generate(vecTAP0Values.begin(), vecTAP0Values.end(), [&value, &step]() { return value += step; });
-            for(auto& TAP0: vecTAP0Values)
+            auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
+            fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.masterLane);
+            if(static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == false)
             {
-                RD53Interface::WriteChipReg(cChip, "DAC_CML_BIAS_0", TAP0, false);
+                RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
 
-                fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 1);
-                fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 0);
-                fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 1);
-                fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 0);
+                LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW
+                          << +static_cast<RD53*>(cChip)->getChipLane() << RESET;
 
-                float elapsedSeconds = 0.;
-                while((fwInterface->ReadReg("user.stat_regs.aurora_frame_cntr") < nFrames2Read) && (elapsedSeconds < timeLimit))
+                const auto            maxTAP0value = RD53Shared::setBits(cChip->getNumberOfBits("DAC_CML_BIAS_0"));
+                const float           timeLimit    = 1;   // @CONST@
+                const int             nSteps       = 20;  // @CONST@
+                const int             nFrames2Read = 1e7; // @CONST@
+                const int             step         = floor(maxTAP0value / nSteps);
+                std::vector<uint32_t> vecFrameCounter;
+                std::vector<uint16_t> vecTAP0Values(nSteps);
+                uint16_t              value = 0;
+                std::generate(vecTAP0Values.begin(), vecTAP0Values.end(), [&value, &step]() { return value += step; });
+                for(auto& TAP0: vecTAP0Values)
                 {
-                    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-                    elapsedSeconds += RD53Shared::DEEPSLEEP * 1e-6;
+                    RD53Interface::WriteChipReg(cChip, "DAC_CML_BIAS_0", TAP0, false);
+
+                    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 1);
+                    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 0);
+                    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 1);
+                    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 0);
+
+                    float elapsedSeconds = 0.;
+                    while((fwInterface->ReadReg("user.stat_regs.aurora_frame_cntr") < nFrames2Read) && (elapsedSeconds < timeLimit))
+                    {
+                        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+                        elapsedSeconds += RD53Shared::DEEPSLEEP * 1e-6;
+                    }
+
+                    vecFrameCounter.push_back(round(fwInterface->ReadReg("user.stat_regs.aurora_service_blk_cntr") * RD53Shared::PRECISION) / RD53Shared::PRECISION);
                 }
 
-                vecFrameCounter.push_back(round(fwInterface->ReadReg("user.stat_regs.aurora_service_blk_cntr") * RD53Shared::PRECISION) / RD53Shared::PRECISION);
+                // ########################
+                // # Find best TAP0 value #
+                // ########################
+                auto it       = std::max_element(vecFrameCounter.begin(), vecFrameCounter.end());
+                auto maxRange = std::equal_range(it, vecFrameCounter.end(), *it);
+                it += (maxRange.second - maxRange.first) / 2;
+                auto bestTAP0 = vecTAP0Values[it - vecFrameCounter.begin()];
+
+                RD53Interface::WriteChipReg(cChip, "EnServiceData", 0, false);
+                RD53Interface::WriteChipReg(cChip, "DAC_CML_BIAS_0", bestTAP0, false);
+                if(bestTAP0 != 0)
+                    LOG(INFO) << BOLDBLUE << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " setting is: " << BOLDYELLOW << +bestTAP0 << RESET;
+                else
+                    LOG(INFO) << BOLDRED << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " not found" << RESET;
             }
-
-            // ########################
-            // # Find best TAP0 value #
-            // ########################
-            auto it       = std::max_element(vecFrameCounter.begin(), vecFrameCounter.end());
-            auto maxRange = std::equal_range(it, vecFrameCounter.end(), *it);
-            it += (maxRange.second - maxRange.first) / 2;
-            auto bestTAP0 = vecTAP0Values[it - vecFrameCounter.begin()];
-
-            RD53Interface::WriteChipReg(cChip, "EnServiceData", 0, false);
-            RD53Interface::WriteChipReg(cChip, "DAC_CML_BIAS_0", bestTAP0, false);
-            if(bestTAP0 != 0)
-                LOG(INFO) << BOLDBLUE << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " setting is: " << BOLDYELLOW << +bestTAP0 << RESET;
-            else
-                LOG(INFO) << BOLDRED << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " not found" << RESET;
         }
-    }
 
     // #######################
     // # Enable Service Data #
