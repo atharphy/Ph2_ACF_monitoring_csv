@@ -53,7 +53,7 @@ void Cic::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scDllLocked[01]$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scChannelLocked[0-5]$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^timingStatusBits$"), RegisterType::ReadOnly));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BX0_DEALY$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BX0_DELAY$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^WA_DELAY\\d{2}$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^MASK_BLOCK[0-3]$"), RegisterType::Utility));
 }

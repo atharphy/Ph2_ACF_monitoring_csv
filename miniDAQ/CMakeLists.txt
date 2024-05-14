@@ -97,22 +97,11 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS " ")
 
 
-    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
-    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
-    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
-    # MESSAGE(STATUS "BOOST is ${Boost_LIBRARIES}")
+    #Include dirs
+    include_directories(${Protobuf_INCLUDE_DIRS})
 
-    include_directories(${UHAL_DIR}/uhal/include)
-    include_directories(${UHAL_DIR}/log/include)
-    include_directories(${UHAL_DIR}/grammars/include)
-
-#    include_directories(${Protobuf_INCLUDE_DIRS})
-include_directories(${PROTOBUF_INCLUDE_DIR})
-
-    #library dirs
-#    link_directories(${Protobuf_LIBRARIES})
-    MESSAGE(STATUS "PROTOBUF is ${Protobuf_LIBRARIES}")
-    MESSAGE(STATUS "PROTOBUF is ${protobuf_LIBRARY}")
+    #Library dirs
+    link_directories(${Protobuf_LIBRARIES})
 
     cet_make_exec(NAME RunController
         SOURCE
@@ -121,19 +110,17 @@ include_directories(${PROTOBUF_INCLUDE_DIR})
         Ph2_Utils
         NetworkUtils
         Ph2_MessageUtils
-        ${PROTOBUF_LIBRARY}
-
-#             Boost::serialization
-#             Boost::thread
-#             Boost::date_time
-             Boost::iostreams
-             Boost::filesystem
+        protobuf
+        Boost::iostreams
+        Boost::filesystem
         Boost::regex
         Boost::program_options
         Boost::headers
-        cactus_uhal_uhal
-        cactus_uhal_log
-        cactus_uhal_grammars
+        CACTUS::uhal
+        #LORE OLD WAY if uhal is compiled in OTSDAQ
+        #LORE cactus_uhal_uhal
+        #LORE cactus_uhal_log
+        #LORE cactus_uhal_grammars
         Ph2_Interface
         Ph2_System
         Ph2_Tools

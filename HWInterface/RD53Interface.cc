@@ -166,19 +166,44 @@ void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
 
 void RD53Interface::ChipErrorReport(ReadoutChip* pChip)
 {
+    const uint16_t baseAddrFakeCNT = 0x200; // @CONST@
+
     this->setBoard(pChip->getBeBoardId());
 
-    LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "CMDERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HITOR_0_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HITOR_1_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HITOR_2_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HITOR_3_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BCID_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "TRIG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("BCID_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BCID_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("TRIG_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "TRIG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("READTRIG_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "READTRIG_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "READTRIG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("LOCKLOSS_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("BITFLIP_WNG_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("BITFLIP_ERR_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("CMDERR_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "CMDERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("RDWRFIFOERROR_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "RDWRFIFOERROR_CNT   = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "RDWRFIFOERROR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("HITOR_0_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "HITOR_0_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("HITOR_1_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "HITOR_1_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_1_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("HITOR_2_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "HITOR_2_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_2_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("HITOR_3_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "HITOR_3_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_3_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("GatedHITOR_0_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "GatedHITOR_0_CNT    = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "GatedHITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("GatedHITOR_1_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "GatedHITOR_1_CNT    = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "GatedHITOR_1_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("PIXELSEU_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "PIXELSEU_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "PIXELSEU_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("GLOBALCONFIGSEU_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "GLOBALCONFIGSEU_CNT = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "GLOBALCONFIGSEU_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    if(pChip->getRegItem("SKIPPED_TRIGGER_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
 }
 
 uint16_t RD53Interface::SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size)
@@ -197,8 +222,8 @@ uint16_t RD53Interface::GetFieldValue(uint16_t regValue, uint8_t start, uint8_t 
 // # PRBS generator #
 // ##################
 
-void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
-void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
+void RD53Interface::StartPRBSpattern(const BeBoard* pBoard) { RD53Interface::WriteBoardBroadcastChipReg(pBoard, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS); }
+void RD53Interface::StopPRBSpattern(const BeBoard* pBoard) { RD53Interface::WriteBoardBroadcastChipReg(pBoard, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA); }
 
 bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerify)
 {

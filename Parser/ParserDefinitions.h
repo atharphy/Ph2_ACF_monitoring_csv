@@ -25,7 +25,8 @@
 #define SSA2_NODE_NAME "SSA2"
 #define RD53_NODE_NAME "RD53"
 #define RD53A_NODE_NAME "RD53A"
-#define RD53B_NODE_NAME "RD53B"
+#define RD53Bv1_NODE_NAME "RD53Bv1"
+#define RD53Bv2_NODE_NAME "RD53Bv2"
 
 #define SETTINGS_NODE_NAME "Settings"
 #define SETTING_NODE_NAME "Setting"

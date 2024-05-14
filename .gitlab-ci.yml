@@ -12,7 +12,7 @@
 
 workflow:
     rules:
-    - if: $CI_MERGE_REQUEST_ID || $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_MERGE_REQUEST_ID || $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_BRANCH == "Dev"
       when: always
     - if: '$CI_PIPELINE_SOURCE == "push"'
       changes: # when any file matching the below is edited, create a pipeline
@@ -29,6 +29,9 @@ image:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  MKDOCS_VERSION: '1.5.3'
+  MATERIAL_VERSION: '9.5.18'
+
 
 stages:
   - validation
@@ -128,7 +131,7 @@ run:IT:
   extends: .run
   before_script:
     - cp settings/CMSIT_CI.xml .
-    - cp settings/RD53Files/CMSIT_RD53B.txt .
+    - cp settings/RD53Files/CMSIT_RD53Bv1.txt .
   script:
     - source ./setup.sh ci
     - fpgaconfig -c CMSIT_CI.xml -i IT-L12KSU_L8DIO5_CROC_4SCC_v4-8

@@ -167,7 +167,7 @@ bool MonitorDQMPlotCBC::fill(std::string& inputStream)
 
     if(theCBCRegisterSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched CBCMonitor CBCRegister!!!!!\n";
+        // std::cout << "Matched CBCMonitor CBCRegister!!!!!\n";
         std::string           registerName;
         DetectorDataContainer fDetectorData =
             theCBCRegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
@@ -176,7 +176,7 @@ bool MonitorDQMPlotCBC::fill(std::string& inputStream)
     }
     if(theLpGBTRegisterSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched CBCMonitor LpGBTRegister!!!!!\n";
+        // std::cout << "Matched CBCMonitor LpGBTRegister!!!!!\n";
         std::string           registerName;
         DetectorDataContainer fDetectorData =
             theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, registerName);

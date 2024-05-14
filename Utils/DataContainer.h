@@ -664,7 +664,7 @@ class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
         {
             return DataContainer<HybridDataContainer>::addObject(id, new HybridDataContainer(id));
         }
-        LOG(WARNING) << BOLDYELLOW << "Object Id already present: " << id << RESET;
+        LOG(WARNING) << GREEN << "Object Id already present: " << BOLDYELLOW << id << RESET;
         return DataContainer<HybridDataContainer>::getObject(id);
     }
 
@@ -708,7 +708,7 @@ class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
         {
             return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id));
         }
-        LOG(WARNING) << BOLDYELLOW << "Object Id already present: " << id << RESET;
+        LOG(WARNING) << GREEN << "Object Id already present: " << BOLDYELLOW << id << RESET;
         return DataContainer<OpticalGroupDataContainer>::getObject(id);
     }
 
@@ -756,7 +756,7 @@ class DetectorDataContainer : public DataContainer<BoardDataContainer>
         {
             return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id));
         }
-        LOG(WARNING) << BOLDYELLOW << "Object Id already present: " << id << RESET;
+        LOG(WARNING) << GREEN << "Object Id already present: " << BOLDYELLOW << id << RESET;
         return DataContainer<BoardDataContainer>::getObject(id);
     }
 

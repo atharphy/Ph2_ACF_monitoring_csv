@@ -90,26 +90,13 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}SYSTEM${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/System/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories(${UHAL_DIR}/uhal/include)
-    include_directories(${UHAL_DIR}/log/include)
-    include_directories(${UHAL_DIR}/grammars/include)
-
-    include_directories(${Protobuf_INCLUDE_DIRS})
-
-    cet_set_compiler_flags(
-                           EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-                          )
-
     cet_make(LIBRARY_NAME Ph2_System
              LIBRARIES
-             cactus_uhal_uhal
-             cactus_uhal_log
-             cactus_uhal_grammars
              Ph2_Description
              Ph2_Interface
              Ph2_Utils
              Ph2_Parser
-            )
+    )
 
     install_headers()
     install_source()

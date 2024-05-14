@@ -152,23 +152,31 @@ class RD53 : public ReadoutChip
     // ########################################
     struct FrontEnd
     {
-        const char*                    name;
-        const std::vector<const char*> thresholdRegs;
-        const char*                    gainReg;
-        const char*                    latencyReg;
-        const char*                    TDACGainReg;
-        const char*                    VDDDreadReg;
-        const char*                    VDDAreadReg;
-        size_t                         nLatencyBins2Span;
-        size_t                         nTDACvalues;
-        size_t                         maxToTvalue;
-        size_t                         splitToTvalue;
-        size_t                         nBitTrimDig;
-        size_t                         nBitTrimAna;
-        size_t                         colStart;
-        size_t                         colStop;
-        size_t                         VCalSleepTime; // [microseconds]
-        size_t                         AutoIncrementMask;
+        const char*                     name;
+        const std::vector<const char*>  thresholdRegs;
+        const char*                     gainReg;
+        const char*                     latencyReg;
+        const char*                     TDACGainReg;
+        const char*                     VDDDreadReg;
+        const char*                     VDDAreadReg;
+        size_t                          nLatencyBins2Span;
+        size_t                          nTDACvalues;
+        size_t                          maxToTvalue;
+        size_t                          splitToTvalue;
+        size_t                          nBitTrimDig;
+        size_t                          nBitTrimAna;
+        size_t                          colStart;
+        size_t                          colStop;
+        size_t                          VCalSleepTime; // [microseconds]
+        size_t                          AutoIncrementMask;
+        size_t                          broadcastChipId;
+        std::map<std::string, uint16_t> GlobalPulseConfMap;
+    };
+
+    struct SpecialRegInfo
+    {
+        std::string regName;
+        uint8_t     start; // Bit index at which the special register, i.e. field, starts
     };
 
     // ####################################
@@ -176,27 +184,31 @@ class RD53 : public ReadoutChip
     // ####################################
     LaneConfig laneConfig;
 
-    virtual size_t                   getNRows() const                                                                                                           = 0;
-    virtual size_t                   getNCols() const                                                                                                           = 0;
-    virtual size_t                   getMaxBCIDvalue() const                                                                                                    = 0;
-    virtual size_t                   getMaxTRIGIDvalue() const                                                                                                  = 0;
-    virtual std::vector<uint16_t>    getLaneUpInitSequence() const                                                                                              = 0;
-    virtual const DataFormatOptions& getDataFormatOptions()                                                                                                     = 0;
-    virtual const FrontEnd*          getFEtype(const size_t colStart, const size_t colStop) const                                                               = 0;
-    virtual uint32_t                 getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const = 0;
-    virtual float                    VCal2Charge(float VCal, bool isNoise = false) const                                                                        = 0;
-    virtual float                    Charge2VCal(float Charge) const                                                                                            = 0;
-    virtual bool                     getUseGainDualSlope() const                                                                                                = 0;
+    virtual size_t                   getNRows() const                                                                                                     = 0;
+    virtual size_t                   getNCols() const                                                                                                     = 0;
+    virtual size_t                   getMaxBCIDvalue() const                                                                                              = 0;
+    virtual size_t                   getMaxTRIGIDvalue() const                                                                                            = 0;
+    virtual std::vector<uint16_t>    getLaneUpInitSequence() const                                                                                        = 0;
+    virtual const DataFormatOptions& getDataFormatOptions()                                                                                               = 0;
+    virtual const FrontEnd*          getFEtype(const size_t colStart = 0, const size_t colStop = 0)                                                       = 0;
+    virtual uint32_t                 getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) = 0;
+    virtual float                    VCal2Charge(float VCal, bool isNoise = false) const                                                                  = 0;
+    virtual float                    Charge2VCal(float Charge) const                                                                                      = 0;
+    virtual bool                     getUseGainDualSlope() const                                                                                          = 0;
 
     RD53() : ReadoutChip(0, 0, 0, 0, 0) {}
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53&) = delete;
 
+    // #############################
+    // # Override member functions #
+    // #############################
     void              loadfRegMap(const std::string& fileName) override;
     std::stringstream getRegMapStream() override;
     uint32_t          getNumberOfChannels() const override;
     bool              isDACLocal(const std::string& regName) override;
     uint8_t           getNumberOfBits(const std::string& regName) override;
+    // #############################
 
     pixelMask& getPixelsMask() { return fPixelsMask; }
     pixelMask& getPixelsMaskDefault() { return fPixelsMaskDefault; }

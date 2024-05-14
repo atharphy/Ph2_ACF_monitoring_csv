@@ -419,14 +419,14 @@ class HWDescriptionContainer : public Container<T>
                                    // is defined
     theHW* getFirstObject()
     {
-        return static_cast<theHW*>(Container<T>::getFirstObject());
+        return static_cast<theHW*>(*(begin()));
     }
 
     template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
                                    // is defined
     const theHW* getFirstObject() const
     {
-        return static_cast<const theHW*>(Container<T>::getFirstObject());
+        return static_cast<const theHW*>(*(begin()));
     }
 
     uint16_t size() const

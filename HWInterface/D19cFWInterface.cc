@@ -732,9 +732,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(pBoard->isOptical())
     {
         LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard for optical readout" << RESET;
-        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslop " << RESET;
+        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslip " << RESET;
     }
-    else { LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslop " << RESET; }
+    else { LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslip " << RESET; }
     fOptical = pBoard->isOptical() && !cWithlpGBT;
     // if optical readout .. then configure links
     if(pBoard->isOptical() && cWithlpGBT)
@@ -1152,7 +1152,7 @@ void D19cFWInterface::ChipTrigger() { fFastCommandInterface->SendGlobalL1A(); }
 // bool D19cFWInterface::Bx0Alignment(uint16_t pLinkId)
 bool D19cFWInterface::Bx0Alignment()
 {
-    bool     cSuccess   = false;
+    bool cSuccess = false;
     // auto     cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     // uint32_t cPkgDelay;
     // if (pLinkId < 10) cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");

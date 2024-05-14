@@ -44,7 +44,7 @@ bool DQMHistogramOTverifyMPASSAdataWord::fill(std::string& inputStream)
 
     if(thePatternMatchinEfficiencyContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTverifyMPASSAdataWord PatternMatchingEfficiency!!!!\n";
+        // std::cout << "Matched OTverifyMPASSAdataWord PatternMatchingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
             thePatternMatchinEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>, EmptyContainer>(
                 fDetectorContainer);
