@@ -39,11 +39,14 @@ class OTMeasureOccupancy : public Tool
     void measureChannelOccupancy();
     void prepareOccupancyMeasurement2S();
     void prepareOccupancyMeasurementPS();
+    void applyThresholdOffset();
 
     uint32_t fNumberOfEvents{10000};
     uint8_t  fCBCtestPulseValue{218};
     uint8_t  fSSAtestPulseValue{90};
     uint8_t  fMPAtestPulseValue{100};
+    bool     fForceChannelGroup{false};
+    int      fThresholdOffset{0};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

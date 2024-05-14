@@ -385,7 +385,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t
     auto cHybridIndex = getHybridIndex(pHybridId);
     if(cHybridIndex >= fEventHitList.size())
     {
-        LOG(INFO) << BOLDRED << " D19cCic2Event::GetPixelClusters out of range..." << RESET;
+        LOG(INFO) << BOLDRED << " D19cCic2Event::GetStripClusters out of range..." << RESET;
         return cSClusters;
     }
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
@@ -815,7 +815,7 @@ std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybri
                     for(int cId = 0; cId < cCluster.fWidth; cId++)
                     {
                         cHits.push_back({cCluster.fZpos, cCluster.fAddress + cId});
-                        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] found pixel cluster in " << cHits.back().first << " - " << cHits.back().second << std::endl;
+                        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] found pixel hit in " << cHits.back().first << " - " << cHits.back().second << std::endl;
                     }
                 }
             }
