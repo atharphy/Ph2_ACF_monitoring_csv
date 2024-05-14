@@ -123,6 +123,478 @@
         </Hybrid>
     </OpticalGroup>
 
+    <OpticalGroup Id="2" FMCId="L12" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
+
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+          <Settings
+          />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
+
+        </lpGBT>
+        <Hybrid Id="0" enable="1" reset="1">
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+        <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+    </OpticalGroup>
+
+    <OpticalGroup Id="3" FMCId="L12" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
+
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+          <Settings
+          />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
+
+        </lpGBT>
+        <Hybrid Id="0" enable="1" reset="1">
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+        <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+    </OpticalGroup>
+
+    <OpticalGroup Id="4" FMCId="L8" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
+
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+          <Settings
+          />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
+
+        </lpGBT>
+        <Hybrid Id="0" enable="1" reset="1">
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+        <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+    </OpticalGroup>
+
+    <OpticalGroup Id="5" FMCId="L8" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
+
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+          <Settings
+          />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
+
+        </lpGBT>
+        <Hybrid Id="0" enable="1" reset="1">
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+        <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+    </OpticalGroup>
+
+    <OpticalGroup Id="6" FMCId="L8" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
+
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+          <Settings
+          />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
+
+        </lpGBT>
+        <Hybrid Id="0" enable="1" reset="1">
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+        <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+    </OpticalGroup>
+
+    <OpticalGroup Id="7" FMCId="L8" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
+
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+          <Settings
+          />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
+
+        </lpGBT>
+        <Hybrid Id="0" enable="1" reset="1">
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+        <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+    </OpticalGroup>
+
+    <OpticalGroup Id="8" FMCId="L8" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
+
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+          <Settings
+          />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
+
+        </lpGBT>
+        <Hybrid Id="0" enable="1" reset="1">
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+        <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+    </OpticalGroup>
+
+    <OpticalGroup Id="9" FMCId="L8" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
+
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+          <Settings
+          />
+          <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
+
+        </lpGBT>
+        <Hybrid Id="0" enable="1" reset="1">
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+        <Hybrid Id="1" enable="1" reset="1"> <!-- i2cMaster="1"> -->
+            <Global>
+                <Settings threshold="520" latency="108"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="2" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="3" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="4" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="5" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="6" enable="1" configFile="CBC3_default.txt" />
+            <CBC Id="7" enable="1" configFile="CBC3_default.txt" />
+
+            <CIC2_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" enable="1" configFile="CIC2_2S.txt" />
+        </Hybrid>
+    </OpticalGroup>
+
   </BeBoard>
 
 
