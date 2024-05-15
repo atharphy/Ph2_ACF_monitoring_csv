@@ -40,6 +40,19 @@
 #define D19C_EVENT_HEADER1_SIZE_32_CBC3 4
 #define D19C_EVENT_SIZE_32_CBC3 16
 
+// CBC
+#define CBC_VCTH_ELECTRON_UNIT 156 // conversion factor from 1 VcTh DAC into electron
+#define CBC_ELECTRON_TO_CALDAC_INTERCEPT 253.96 // Electron to CalDac calibration curve - intercept
+#define CBC_ELECTRON_TO_CALDAC_SLOPE -0.001648 // Electron to CalDac calibration curve - slope
+
+// SSA
+#define SSA_THDAC_ELECTRON_UNIT 250 // conversion factor from 1 ThDac into electron
+#define SSA_CALDAC_ELECTRON_UNIT 243 // conversion factor from 1 CalDac into electron
+
+// MPA
+#define SSA_THDAC_ELECTRON_UNIT 94 // conversion factor from 1 ThDac into electron
+#define SSA_CALDAC_ELECTRON_UNIT 220 // conversion factor from 1 CalDac into electron
+
 // SSA2
 // in float
 #define SSA2_VBG_EXPECTED 0.275   // FIXME [V] this will need to be taken from database
