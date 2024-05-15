@@ -189,7 +189,10 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // #######################
     // # Reset communication #
     // #######################
-    RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second, 10);
+    RD53BInterface::SendGlobalPulse(pChip,
+                                    pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV1")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV1")->second |
+                                        pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV2")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV2")->second,
+                                    10);
 
     // ################
     // # Data merging #
@@ -595,7 +598,7 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    if(strcmp(RD53Shared::firstChip->getFEtype()->name, "RD53Bv1") == 0)
+    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv1)
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
     else
         RD53BInterface::SendGlobalPulseBroadcast(pBoard);
@@ -613,8 +616,8 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
     RD53BInterface::PackWriteCommand(pChip,
                                      "GlobalPulseConf",
-                                     RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("RstBCIDCnt")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second |
-                                         pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second,
+                                     pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV1")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV1")->second |
+                                         pRD53->getFEtype()->GlobalPulseConfMap.find("RstBCIDCnt")->second,
                                      cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
