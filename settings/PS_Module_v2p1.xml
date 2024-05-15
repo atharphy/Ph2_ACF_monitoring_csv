@@ -152,10 +152,6 @@
     <Setting name="TestPulsePotentiometer">0x50</Setting>
     <Setting name="SyncDebug">0</Setting>
 
-
-    <Setting name="FullScan">1</Setting>
-    <Setting name="PedestalEqualization_MaskUntrimmed">1</Setting>
-
     <!--Full search settings (pedestal) MPA
     <Setting name="PedestalEqualization_FullScanStart">170</Setting>
     <Setting name="Nevents">500</Setting>
@@ -182,6 +178,7 @@
     <Setting name="PedeNoise_MinThreshold">40</Setting>
     <Setting name="PedeNoise_MaxThreshold">240</Setting> -->
     <Setting name="FullScan">0</Setting>
+    <Setting name="PedestalEqualization_MaskUntrimmed">0</Setting>
     <Setting name="PedestalEqualization_PulseAmplitude">70</Setting>
     <Setting name="PedeNoise_PulseAmplitude">70</Setting>
     <Setting name="PedestalEqualization_PulseAmplitudePix">70</Setting>
