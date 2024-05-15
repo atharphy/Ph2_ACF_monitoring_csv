@@ -220,7 +220,8 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
     uint32_t totalNumberOfChannels   = NSSACHANNELS * NMPAROWS;
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-    theRegisterVector.push_back({"Mask_ALL", 0x40});
+    // theRegisterVector.push_back({"Mask_ALL", 0x20}); // digital injection
+    theRegisterVector.push_back({"Mask_ALL", 0x40});        // analog injection
     if(numberOfEnabledChannels < totalNumberOfChannels / 2) // faster to write injected channels
     {
         theRegisterVector.push_back({"ENFLAGS_ALL", 0x00});
@@ -228,13 +229,18 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
         {
             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
             {
-                if(group->isChannelEnabled(row, col)) theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x40});
+                if(group->isChannelEnabled(row, col))
+                {
+                    // theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x20}); // digital injection
+                    theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x40}); // analog injection
+                }
             }
         }
     }
     else // faster to write not injected channels
     {
-        theRegisterVector.push_back({"ENFLAGS_ALL", 0x40});
+        // theRegisterVector.push_back({"ENFLAGS_ALL", 0x20}); // digital injection
+        theRegisterVector.push_back({"ENFLAGS_ALL", 0x40}); // analog injection
         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
         {
             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
