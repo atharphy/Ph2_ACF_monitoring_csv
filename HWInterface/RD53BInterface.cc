@@ -240,8 +240,9 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ######################
     // # Reset Data merging #
     // ######################
-    if(pRD53->laneConfig.isPrimary == true)
-        RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second, 10);
+    // @TMP@
+    // if(pRD53->laneConfig.isPrimary == true)
+    //     RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second, 10);
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for RD53Bv1
