@@ -221,7 +221,7 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
     // theRegisterVector.push_back({"Mask_ALL", 0x20}); // digital injection
-    theRegisterVector.push_back({"Mask_ALL", 0x40}); // analog injection
+    theRegisterVector.push_back({"Mask_ALL", 0x40});        // analog injection
     if(numberOfEnabledChannels < totalNumberOfChannels / 2) // faster to write injected channels
     {
         theRegisterVector.push_back({"ENFLAGS_ALL", 0x00});

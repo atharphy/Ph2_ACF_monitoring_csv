@@ -28,10 +28,10 @@ void DQMHistogramOTMeasureOccupancy::book(TFile* theOutputFile, DetectorContaine
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    double theNumberOfEvents = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_NumberOfEvents", 10000);
-    int theCBCtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_CBCtestPulseValue", 218);
-    int theSSAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_SSAtestPulseValue", 90);
-    int theMPAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_MPAtestPulseValue", 100);
+    double theNumberOfEvents    = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_NumberOfEvents", 10000);
+    int    theCBCtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_CBCtestPulseValue", 218);
+    int    theSSAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_SSAtestPulseValue", 90);
+    int    theMPAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_MPAtestPulseValue", 100);
 
     auto        selectCBCfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::CBC3); };
     std::string selectCBCfunctionName = "SelectCBCfunction";
@@ -47,7 +47,7 @@ void DQMHistogramOTMeasureOccupancy::book(TFile* theOutputFile, DetectorContaine
     theCBCoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("channel");
     theCBCoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("occupancy");
     theCBCoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
-    theCBCoccupancyHistogram.fTheHistogram->SetMinimum(theCBCtestPulseValue > 0 ? 0. : 0.5/theNumberOfEvents); // to allow go into log mode
+    theCBCoccupancyHistogram.fTheHistogram->SetMinimum(theCBCtestPulseValue > 0 ? 0. : 0.5 / theNumberOfEvents); // to allow go into log mode
     theCBCoccupancyHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer, theCBCoccupancyHistogram);
     fDetectorContainer->removeReadoutChipQueryFunction(selectCBCfunctionName);
@@ -57,7 +57,7 @@ void DQMHistogramOTMeasureOccupancy::book(TFile* theOutputFile, DetectorContaine
     theSSAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("channel");
     theSSAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("occupancy");
     theSSAoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
-    theSSAoccupancyHistogram.fTheHistogram->SetMinimum(theSSAtestPulseValue > 0 ? 0. : 0.5/theNumberOfEvents); // to allow go into log mode
+    theSSAoccupancyHistogram.fTheHistogram->SetMinimum(theSSAtestPulseValue > 0 ? 0. : 0.5 / theNumberOfEvents); // to allow go into log mode
     theSSAoccupancyHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer, theSSAoccupancyHistogram);
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
@@ -67,7 +67,7 @@ void DQMHistogramOTMeasureOccupancy::book(TFile* theOutputFile, DetectorContaine
     theMPAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("col");
     theMPAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("row");
     theMPAoccupancyHistogram.fTheHistogram->SetMaximum(1.);
-    theMPAoccupancyHistogram.fTheHistogram->SetMinimum(theMPAtestPulseValue > 0 ? 0. : 0.5/theNumberOfEvents); // to allow go into log mode
+    theMPAoccupancyHistogram.fTheHistogram->SetMinimum(theMPAtestPulseValue > 0 ? 0. : 0.5 / theNumberOfEvents); // to allow go into log mode
     theMPAoccupancyHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer, theMPAoccupancyHistogram);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);

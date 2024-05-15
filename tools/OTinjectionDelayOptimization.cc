@@ -26,10 +26,10 @@ void OTinjectionDelayOptimization::Initialise(void)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^FeCtrl&TrgLat2$");         // latency register 2
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^VCth[12]$");               // threshold
 
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^DL_ctrl[0-6]$");           // injection delay
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^DL_en$");                  // injection delay enable
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^MemoryControl_[1-2]_R\\d+$");     // latency
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC[0-6]$");             // threshold
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^DL_ctrl[0-6]$");              // injection delay
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^DL_en$");                     // injection delay enable
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^MemoryControl_[1-2]_R\\d+$"); // latency
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC[0-6]$");                // threshold
 
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Delay_line$");   // injection delay
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^control_[13]$"); // latency

@@ -1,6 +1,6 @@
+#include "tools/OTMeasureOccupancy.h"
 #include "HWInterface/MPA2Interface.h"
 #include "HWInterface/PSInterface.h"
-#include "tools/OTMeasureOccupancy.h"
 #include "System/RegisterHelper.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerSerialization.h"
@@ -70,10 +70,12 @@ void OTMeasureOccupancy::measureChannelOccupancy()
     bool is2SModule = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S;
     this->setNormalization(true);
 
-    if(is2SModule) prepareOccupancyMeasurement2S();
-    else prepareOccupancyMeasurementPS();
+    if(is2SModule)
+        prepareOccupancyMeasurement2S();
+    else
+        prepareOccupancyMeasurementPS();
 
-    if(fThresholdOffset !=0) applyThresholdOffset();
+    if(fThresholdOffset != 0) applyThresholdOffset();
 
     DetectorDataContainer theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOccupancyContainer);
@@ -123,7 +125,8 @@ void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
 
 void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
 {
-    LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurementPS - Preparing 2S to measure occupancy with pixel injection = " << +fMPAtestPulseValue << " and strip injection = " << +fSSAtestPulseValue << RESET;
+    LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurementPS - Preparing 2S to measure occupancy with pixel injection = " << +fMPAtestPulseValue
+              << " and strip injection = " << +fSSAtestPulseValue << RESET;
 
     SSAChannelGroupHandler theSSAChannelGroupHandler;
     theSSAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
@@ -133,30 +136,27 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
     theMPAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
     setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
 
-    bool injectSSApulse       = fSSAtestPulseValue != 0;
-    bool injectMPApulse       = fMPAtestPulseValue != 0;
+    bool injectSSApulse = fSSAtestPulseValue != 0;
+    bool injectMPApulse = fMPAtestPulseValue != 0;
 
     auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     std::string theMPAqueryFunctionString = "MPAqueryFunction";
     // settings for MPAs
     fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
     auto thePSinterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
-    for(auto theBoard : *fDetectorContainer)
+    for(auto theBoard: *fDetectorContainer)
     {
-        for(auto theOpticalGroup : *theBoard)
+        for(auto theOpticalGroup: *theBoard)
         {
-            for(auto theHybrid : *theOpticalGroup)
+            for(auto theHybrid: *theOpticalGroup)
             {
-                for(auto theMPA : *theHybrid)
-                {
-                    thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x0, "Mask", 0x03);
-                }
+                for(auto theMPA: *theHybrid) { thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x0, "Mask", 0x03); }
             }
         }
     }
     setSameDac("PixelControl_ALL", 0x1E);             // disable Hip cut, cluster cut to the maximum, mode select to or
     setSameDac("ENFLAGS_ALL", 0x0F);                  // Enable all channels
-    setSameDac("InjectedCharge", fMPAtestPulseValue); // injected charge               
+    setSameDac("InjectedCharge", fMPAtestPulseValue); // injected charge
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 
     auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
@@ -169,7 +169,7 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
     setSameDac("StripControl2", 0x07);                // disable HIP cut
     setSameDac("control_2", 0x0F);                    // maximize cluster cut
     setSameDac("control_1", 0x00);                    // normal readout mode
-    setSameDac("ENFLAGS", 0x40);                      // use level sampling mode                  
+    setSameDac("ENFLAGS", 0x40);                      // use level sampling mode
     fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
 
     bool injectPulse       = injectSSApulse || injectMPApulse;
@@ -186,11 +186,15 @@ void OTMeasureOccupancy::applyThresholdOffset()
     auto calculateNewThreshold = [this](ReadoutChip* theChip, uint16_t currentThreshold, uint16_t thresholdLimit, bool isUpperLimit) -> uint16_t
     {
         bool isBeyondLimit = false;
-        if(isUpperLimit) isBeyondLimit = (currentThreshold + this->fThresholdOffset) > thresholdLimit;
-        else isBeyondLimit = currentThreshold < abs(fThresholdOffset);
+        if(isUpperLimit)
+            isBeyondLimit = (currentThreshold + this->fThresholdOffset) > thresholdLimit;
+        else
+            isBeyondLimit = currentThreshold < abs(fThresholdOffset);
         if(isBeyondLimit)
         {
-            LOG(WARNING) << BOLDYELLOW << "Impossible to " << (isUpperLimit ? "increase" : "decrease") <<" threshold " << (isUpperLimit ? "above" : "below") << " " << thresholdLimit << " for Board " << +theChip->getBeBoardId() << " OpticalGroup " << +theChip->getOpticalGroupId() << " Hybrid " << +theChip->getHybridId() << " Chip " << theChip->getId() << ", setting threshold to " << thresholdLimit << RESET;
+            LOG(WARNING) << BOLDYELLOW << "Impossible to " << (isUpperLimit ? "increase" : "decrease") << " threshold " << (isUpperLimit ? "above" : "below") << " " << thresholdLimit << " for Board "
+                         << +theChip->getBeBoardId() << " OpticalGroup " << +theChip->getOpticalGroupId() << " Hybrid " << +theChip->getHybridId() << " Chip " << theChip->getId()
+                         << ", setting threshold to " << thresholdLimit << RESET;
             return thresholdLimit;
         }
         return currentThreshold + fThresholdOffset;
@@ -205,21 +209,20 @@ void OTMeasureOccupancy::applyThresholdOffset()
                 for(auto theChip: *theHybrid)
                 {
                     uint32_t theCurrentThreshold = fReadoutChipInterface->ReadChipReg(theChip, "Threshold");
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theCurrentThreshold = " << theCurrentThreshold << std::endl;
-                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fThresholdOffset = " << fThresholdOffset << std::endl;
-                    
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theCurrentThreshold = " << theCurrentThreshold << std::endl;
+                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fThresholdOffset = " << fThresholdOffset << std::endl;
+
                     uint16_t theNewThreshold;
-                    bool isThresholdIncreased = (fThresholdOffset > 0);
+                    bool     isThresholdIncreased = (fThresholdOffset > 0);
 
                     if(isThresholdIncreased)
                     {
-                        if(theChip->getFrontEndType() == FrontEndType::CBC3) theNewThreshold = calculateNewThreshold(theChip, theCurrentThreshold, 1023, isThresholdIncreased);
-                        else theNewThreshold = calculateNewThreshold(theChip, theCurrentThreshold, 255, isThresholdIncreased);
+                        if(theChip->getFrontEndType() == FrontEndType::CBC3)
+                            theNewThreshold = calculateNewThreshold(theChip, theCurrentThreshold, 1023, isThresholdIncreased);
+                        else
+                            theNewThreshold = calculateNewThreshold(theChip, theCurrentThreshold, 255, isThresholdIncreased);
                     }
-                    else
-                    {
-                        theNewThreshold = calculateNewThreshold(theChip, theCurrentThreshold, 0, isThresholdIncreased);
-                    }  
+                    else { theNewThreshold = calculateNewThreshold(theChip, theCurrentThreshold, 0, isThresholdIncreased); }
 
                     fReadoutChipInterface->WriteChipReg(theChip, "Threshold", theNewThreshold);
                 }

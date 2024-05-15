@@ -823,10 +823,7 @@ std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybri
             {
                 for(auto cCluster: GetStripClusters(pHybridId, pReadoutChipId))
                 {
-                    for(int cId = 0; cId < cCluster.fWidth; cId++)
-                    {
-                        cHits.push_back({0, cCluster.fAddress + cId});
-                    }
+                    for(int cId = 0; cId < cCluster.fWidth; cId++) { cHits.push_back({0, cCluster.fAddress + cId}); }
                 }
             }
         }
