@@ -89,8 +89,8 @@ int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
         {
             LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << BLUE << "/" << BOLDYELLOW
                          << +RD53Shared::MAXATTEMPTS << RESET;
-            // SendRD53Clear(pRD53);                                                          // @TMP@
-            // std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP)); // @TMP@
+            SendRD53Clear(pRD53);
+            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         }
         else
             return regReadback[0].second;

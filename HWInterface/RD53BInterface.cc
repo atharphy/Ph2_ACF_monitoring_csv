@@ -234,21 +234,11 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
 
+    // ######################
+    // # Reset Data merging #
+    // ######################
     if(pRD53->laneConfig.isPrimary == true)
-    {
-        // ######################
-        // # Reset Data merging #
-        // ######################
         RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second, 10);
-
-        // #################################
-        // # Fix master input sample phase #
-        // #################################
-        // if(pChip->getRegMap().find("ManualChoice") != pChip->getRegMap().end()) RD53Interface::WriteChipReg(pChip, "ManualChoice", 1, false); // @TMP@
-        // # bit 0:    ManualChoice
-        // # bit 1-4:  ManualMode
-        // # bit 5-12: FixedMode
-    }
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for RD53Bv1
@@ -605,30 +595,25 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    // ##############################################################################################
-    // # Make sure to set Global Pulse Route to:                                                    #
-    // # - ResetAurora                                                                              #
-    // # - ResetSerializers                                                                         #
-    // # - SendClearRstBCID                                                                         #
-    // # - RstDataMerging                                                                           #
-    // # - RstDataPath                                                                              #
-    // ##############################################################################################
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
+    if(strcmp(RD53Shared::firstChip->getFEtype()->name, "RD53Bv1") == 0)
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
+    else
+        RD53BInterface::SendGlobalPulseBroadcast(pBoard);
 }
 
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto pRD53 = static_cast<RD53*>(pChip);
 
     std::vector<uint16_t> cmdStream;
+    auto                  pRD53 = static_cast<RD53*>(pChip);
 
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
     RD53BInterface::PackWriteCommand(pChip,
                                      "GlobalPulseConf",
-                                     pRD53->getFEtype()->GlobalPulseConfMap.find("SendClearRstBCID")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second |
+                                     RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("RstBCIDCnt")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second |
                                          pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second,
                                      cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
@@ -768,6 +753,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t sampleNtimes  = pChip->getRegItem("SAMPLE_N_TIMES").fValue;
     const uint16_t waitMuxConfig = pChip->getRegItem("WAIT_MUX_CONFIG").fValue; // [ms]
     const uint16_t GlbPulseVal   = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
+    const uint16_t GlbPulseWidth = RD53Interface::ReadChipReg(pChip, "GlobalPulseWidth");
 
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", 1 << 12 | data, false); // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
     // After the muxes have been configured, some time has to pass before the voltage is stable (RC circuit)
@@ -795,8 +781,9 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     }
     avgVal /= (counter != 0 ? counter : 1);
 
-    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);      // Stop monitoring
-    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", GlbPulseVal); // Restore value in Global Pulse Route
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);         // Stop monitoring
+    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", GlbPulseVal);    // Restore value in Global Pulse Route
+    RD53Interface::WriteChipReg(pChip, "GlobalPulseWidth", GlbPulseWidth); // Restore value in Global Pulse Width
 
     return avgVal;
 }
