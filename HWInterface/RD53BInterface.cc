@@ -35,7 +35,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ##############
     // # Field data #
     // ##############
-    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, pVerify);
+    if(RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, pVerify) == false) RD53BInterface::InitRD53Uplinks(static_cast<ReadoutChip*>(pChip));
     // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
     // # bit 11:   EnBCId        --> Map in FormatOptions: enableBCID
     // # bit 10:   EnLv1Id       --> Map in FormatOptions: enableTriggerId
@@ -240,9 +240,11 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ######################
     // # Reset Data merging #
     // ######################
-    // @TMP@
-    // if(pRD53->laneConfig.isPrimary == true)
-    //     RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second, 10);
+    if(pRD53->laneConfig.isPrimary == true)
+    {
+        RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second, 10);
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    }
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for RD53Bv1
@@ -590,9 +592,9 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "EfusesConfig", 0x0F0F, false);
-    uint16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
-    uint16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
-    return low | (high << pChip->getNumberOfBits("EfusesReadData0"));
+    int16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
+    int16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
+    return (low < 0 || high < 0 ? 0 : low | (high << pChip->getNumberOfBits("EfusesReadData0")));
 }
 
 void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
