@@ -30,6 +30,8 @@ const uint8_t MAX_TRGTAG_ERR2 = 223; // Maximum trigger tag value for error of t
 const uint8_t NBIT_BCID       = 8;   // Number of bunch crossing ID bits
 const uint8_t NBIT_TOT        = 4;   // Number of ToT bits
 const uint8_t NBIT_CCOL       = 6;   // Number of core column bits
+const uint8_t TRUNC_MAXHITS   = 204; // Code for truncation due to max number of hits
+const uint8_t TRUNC_TIMEOUT   = 205; // Code for truncation due to readout timeout
 } // namespace RD53BEvtEncoder
 
 // ####################################################################################

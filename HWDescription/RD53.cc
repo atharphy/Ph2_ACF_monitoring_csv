@@ -16,13 +16,13 @@ LaneConfig::LaneConfig(bool                                   isPrimary,
                        const std::array<uint8_t, NCHIPLANES>& outputLanes,
                        const std::array<bool, NCHIPLANES>&    signleChannelInputLanes,
                        const std::array<bool, NCHIPLANES>&    dualChannelInputLanes)
-    : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), masterLane(masterLane), isPrimary(isPrimary)
+    : outputLaneMapping({0, 1, 2, 3})
+    , inputLaneMapping({0, 1, 2, 3})
+    , internalLanesEnabled({0, 0, 0, 0, 0})
+    , nOutputLanes(std::count_if(outputLanes.begin(), outputLanes.end(), [](auto x) { return x > 0; }))
+    , masterLane(masterLane)
+    , isPrimary(isPrimary)
 {
-    // ################
-    // # nOutputLanes #
-    // ################
-    nOutputLanes = std::count_if(outputLanes.begin(), outputLanes.end(), [](auto x) { return x > 0; });
-
     // #####################
     // # outputLaneMapping #
     // #####################

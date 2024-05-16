@@ -547,7 +547,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
 
-            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases (if any) for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases (if any and if needed) for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
             LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
         }

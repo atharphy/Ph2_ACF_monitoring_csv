@@ -18,7 +18,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto* pRD53       = static_cast<RD53*>(pChip);
+    auto  pRD53       = static_cast<RD53*>(pChip);
     auto& pRD53RegMap = pChip->getRegMap();
 
     // ########################################################################
@@ -35,7 +35,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ##############
     // # Field data #
     // ##############
-    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, pVerify);
+    if(RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, pVerify) == false)
+        RD53BInterface::SendGlobalPulse(pChip,
+                                        pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV1")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV1")->second |
+                                            pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV2")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV2")->second,
+                                        10);
     // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
     // # bit 11:   EnBCId        --> Map in FormatOptions: enableBCID
     // # bit 10:   EnLv1Id       --> Map in FormatOptions: enableTriggerId
@@ -186,6 +190,14 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 3-8:  CCWait[5:0]
     // # bits 1-2:  CCSend[1:0]
 
+    // #######################
+    // # Reset communication #
+    // #######################
+    RD53BInterface::SendGlobalPulse(pChip,
+                                    pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV1")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV1")->second |
+                                        pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV2")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV2")->second,
+                                    10);
+
     // ################
     // # Data merging #
     // ################
@@ -229,10 +241,14 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
 
-    // #######################
-    // # Reset communication #
-    // #######################
-    RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second, 10);
+    // ######################
+    // # Reset Data merging #
+    // ######################
+    if(pRD53->laneConfig.isPrimary == true)
+    {
+        RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataMerging")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstDataPath")->second, 10);
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    }
 }
 
 void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* pHybrid) // @TMP@ : temporary for RD53Bv1
@@ -245,64 +261,65 @@ void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* 
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "EnServiceData", 0);
 
     for(const auto cChip: *pHybrid)
-    {
-        // #################################
-        // # TAP0 optimization for modules #
-        // #################################
-
-        auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
-        fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.masterLane);
-        if(static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == false)
+        if(cChip->getFrontEndType() == FrontEndType::RD53Bv1)
         {
-            RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
+            // #################################
+            // # TAP0 optimization for modules #
+            // #################################
 
-            LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW
-                      << +static_cast<RD53*>(cChip)->getChipLane() << RESET;
-
-            const auto            maxTAP0value = RD53Shared::setBits(cChip->getNumberOfBits("DAC_CML_BIAS_0"));
-            const float           timeLimit    = 1;   // @CONST@
-            const int             nSteps       = 20;  // @CONST@
-            const int             nFrames2Read = 1e7; // @CONST@
-            const int             step         = floor(maxTAP0value / nSteps);
-            std::vector<uint32_t> vecFrameCounter;
-            std::vector<uint16_t> vecTAP0Values(nSteps);
-            uint16_t              value = 0;
-            std::generate(vecTAP0Values.begin(), vecTAP0Values.end(), [&value, &step]() { return value += step; });
-            for(auto& TAP0: vecTAP0Values)
+            auto* fwInterface = static_cast<RD53FWInterface*>(fBoardFW);
+            fwInterface->WriteReg("user.ctrl_regs.Aurora_block.error_cntr_chip_addr", static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.masterLane);
+            if(static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == false)
             {
-                RD53Interface::WriteChipReg(cChip, "DAC_CML_BIAS_0", TAP0, false);
+                RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
 
-                fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 1);
-                fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 0);
-                fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 1);
-                fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 0);
+                LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW
+                          << +static_cast<RD53*>(cChip)->getChipLane() << RESET;
 
-                float elapsedSeconds = 0.;
-                while((fwInterface->ReadReg("user.stat_regs.aurora_frame_cntr") < nFrames2Read) && (elapsedSeconds < timeLimit))
+                const auto            maxTAP0value = RD53Shared::setBits(cChip->getNumberOfBits("DAC_CML_BIAS_0"));
+                const float           timeLimit    = 1;   // @CONST@
+                const int             nSteps       = 20;  // @CONST@
+                const int             nFrames2Read = 1e7; // @CONST@
+                const int             step         = floor(maxTAP0value / nSteps);
+                std::vector<uint32_t> vecFrameCounter;
+                std::vector<uint16_t> vecTAP0Values(nSteps);
+                uint16_t              value = 0;
+                std::generate(vecTAP0Values.begin(), vecTAP0Values.end(), [&value, &step]() { return value += step; });
+                for(auto& TAP0: vecTAP0Values)
                 {
-                    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-                    elapsedSeconds += RD53Shared::DEEPSLEEP * 1e-6;
+                    RD53Interface::WriteChipReg(cChip, "DAC_CML_BIAS_0", TAP0, false);
+
+                    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 1);
+                    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.rst_frame_cntr", 0);
+                    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 1);
+                    fwInterface->WriteReg("user.ctrl_regs.Aurora_block.start_frame_cntr", 0);
+
+                    float elapsedSeconds = 0.;
+                    while((fwInterface->ReadReg("user.stat_regs.aurora_frame_cntr") < nFrames2Read) && (elapsedSeconds < timeLimit))
+                    {
+                        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+                        elapsedSeconds += RD53Shared::DEEPSLEEP * 1e-6;
+                    }
+
+                    vecFrameCounter.push_back(round(fwInterface->ReadReg("user.stat_regs.aurora_service_blk_cntr") * RD53Shared::PRECISION) / RD53Shared::PRECISION);
                 }
 
-                vecFrameCounter.push_back(round(fwInterface->ReadReg("user.stat_regs.aurora_service_blk_cntr") * RD53Shared::PRECISION) / RD53Shared::PRECISION);
+                // ########################
+                // # Find best TAP0 value #
+                // ########################
+                auto it       = std::max_element(vecFrameCounter.begin(), vecFrameCounter.end());
+                auto maxRange = std::equal_range(it, vecFrameCounter.end(), *it);
+                it += (maxRange.second - maxRange.first) / 2;
+                auto bestTAP0 = vecTAP0Values[it - vecFrameCounter.begin()];
+
+                RD53Interface::WriteChipReg(cChip, "EnServiceData", 0, false);
+                RD53Interface::WriteChipReg(cChip, "DAC_CML_BIAS_0", bestTAP0, false);
+                if(bestTAP0 != 0)
+                    LOG(INFO) << BOLDBLUE << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " setting is: " << BOLDYELLOW << +bestTAP0 << RESET;
+                else
+                    LOG(INFO) << BOLDRED << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " not found" << RESET;
             }
-
-            // ########################
-            // # Find best TAP0 value #
-            // ########################
-            auto it       = std::max_element(vecFrameCounter.begin(), vecFrameCounter.end());
-            auto maxRange = std::equal_range(it, vecFrameCounter.end(), *it);
-            it += (maxRange.second - maxRange.first) / 2;
-            auto bestTAP0 = vecTAP0Values[it - vecFrameCounter.begin()];
-
-            RD53Interface::WriteChipReg(cChip, "EnServiceData", 0, false);
-            RD53Interface::WriteChipReg(cChip, "DAC_CML_BIAS_0", bestTAP0, false);
-            if(bestTAP0 != 0)
-                LOG(INFO) << BOLDBLUE << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " setting is: " << BOLDYELLOW << +bestTAP0 << RESET;
-            else
-                LOG(INFO) << BOLDRED << "\t--> Best " << BOLDYELLOW << "TAP0" << BOLDBLUE << " not found" << RESET;
         }
-    }
 
     // #######################
     // # Enable Service Data #
@@ -521,8 +538,10 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
 void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>& cmdStream)
 {
     const int NSYNC_WORDS = 2;
-    // Compute number of 16-bit words to which we add NSYNC_WORDS sync words every RD53Constants::NWORDS_TO_SYNC:
-    // nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / RD53Constants::NWORDS_TO_SYNC = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
+    // #################################################################################################################################################################
+    // # Compute number of 16-bit words to which we add NSYNC_WORDS sync words every RD53Constants::NWORDS_TO_SYNC:                                                    #
+    // # nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / RD53Constants::NWORDS_TO_SYNC = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO)) #
+    // #################################################################################################################################################################
     constexpr size_t nWordsPerPacketExclSync = 2 * ((1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) - 1) / (1 + 2. / RD53Constants::NWORDS_TO_SYNC);
     auto             begin                   = cmdStream.begin();
 
@@ -577,57 +596,48 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "EfusesConfig", 0x0F0F, false);
-    uint16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
-    uint16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
-    return low | (high << pChip->getNumberOfBits("EfusesReadData0"));
+    int16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
+    int16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
+    return (low < 0 || high < 0 ? 0 : low | (high << pChip->getNumberOfBits("EfusesReadData0")));
 }
 
 void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    // ###################################################################################
-    // # Make sure to set Global Pulse Route to 0b110000 = ResetAurora, ResetSerializers #
-    // ###################################################################################
-    for(auto cOpticalGroup: *pBoard)
-        for(auto cHybrid: *cOpticalGroup)
-            for(auto cChip: *cHybrid) RD53Interface::SendCommand(cChip, RD53BCmd::Clear{cChip->getId()});
+    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv1)
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
+    else
+        RD53BInterface::SendGlobalPulseBroadcast(pBoard);
 }
 
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto pRD53 = static_cast<RD53*>(pChip);
 
     std::vector<uint16_t> cmdStream;
+    auto                  pRD53 = static_cast<RD53*>(pChip);
 
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
-    RD53BInterface::PackWriteCommand(
-        pChip, "GlobalPulseConf", pRD53->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second, cmdStream);
+    RD53BInterface::PackWriteCommand(pChip,
+                                     "GlobalPulseConf",
+                                     pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV1")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV1")->second |
+                                         pRD53->getFEtype()->GlobalPulseConfMap.find("RstBCIDCnt")->second,
+                                     cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
     std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
 }
 
-void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
+void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    std::vector<uint16_t> cmdStream;
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
 
-    RD53BCmd::serialize(RD53BCmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId, RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress, route}, cmdStream);
-    RD53BCmd::serialize(RD53BCmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId, RD53Shared::firstChip->getRegItem("GlobalPulseWidth").fAddress, pulseDuration}, cmdStream);
-    RD53BCmd::serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}, cmdStream);
-    RD53BCmd::serialize(RD53BCmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
-                                        RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
-                                        static_cast<uint16_t>(RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("RstAurora")->second |
-                                                              RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("RstSerializer")->second)},
-                        cmdStream);
-    RD53Interface::SendChipCommands(pBoard, cmdStream, -1);
-
-    std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
 // ###########################
@@ -753,6 +763,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t sampleNtimes  = pChip->getRegItem("SAMPLE_N_TIMES").fValue;
     const uint16_t waitMuxConfig = pChip->getRegItem("WAIT_MUX_CONFIG").fValue; // [ms]
     const uint16_t GlbPulseVal   = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
+    const uint16_t GlbPulseWidth = RD53Interface::ReadChipReg(pChip, "GlobalPulseWidth");
 
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", 1 << 12 | data, false); // 13 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
     // After the muxes have been configured, some time has to pass before the voltage is stable (RC circuit)
@@ -771,7 +782,7 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
         RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("RstADC")->second, 1);
         RD53BInterface::SendGlobalPulse(pChip, pRD53->getFEtype()->GlobalPulseConfMap.find("ADCstatConversion")->second, 1);
         std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Wait for end of conversion (at least 358.4 us according to manual)
-        const uint32_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+        const uint16_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
         if(val != 0)
         {
             avgVal += val;
@@ -780,8 +791,9 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     }
     avgVal /= (counter != 0 ? counter : 1);
 
-    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);      // Stop monitoring
-    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", GlbPulseVal); // Restore value in Global Pulse Route
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);         // Stop monitoring
+    RD53Interface::WriteChipReg(pChip, "GlobalPulseConf", GlbPulseVal);    // Restore value in Global Pulse Route
+    RD53Interface::WriteChipReg(pChip, "GlobalPulseWidth", GlbPulseWidth); // Restore value in Global Pulse Width
 
     return avgVal;
 }
