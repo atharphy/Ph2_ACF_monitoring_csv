@@ -1107,7 +1107,7 @@ void Tool::unmaskPair(Chip* cChip, std::pair<uint8_t, uint8_t> pPair)
         std::string cOutput   = "";
         for(auto cMaskedChannel: cMasked.second)
         {
-            uint8_t cBitShift = (cMaskedChannel)&0x7;
+            uint8_t cBitShift = (cMaskedChannel) & 0x7;
             cRegValue |= (1 << cBitShift);
             std::string cChType = ((+cMaskedChannel & 0x1) == 0) ? "seed" : "correlation";
             std::string cOut    = "Channel " + std::to_string((int)cMaskedChannel) + " in the " + cChType.c_str() + " layer\t";
