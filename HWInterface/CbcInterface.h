@@ -109,7 +109,7 @@ class CbcInterface : public ReadoutChipInterface
      * \param pCbc
      * \param pRegNode : Node of the register to read
      */
-    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode) override;
+    int32_t ReadChipReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode) override;
 
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
 

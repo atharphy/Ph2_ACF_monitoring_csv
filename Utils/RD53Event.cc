@@ -196,110 +196,110 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
 
     if(status & RD53FWEvtEncoder::EVSIZE)
     {
-        LOG(ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Invalid event size " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::EMPTY)
     {
-        LOG(ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "No data collected " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::NOEVHEADER)
     {
-        LOG(ERROR) << BOLDRED << "No event headear found in data " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "No event headear found in data " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::INCOMPLETE)
     {
-        LOG(ERROR) << BOLDRED << "Incomplete event header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Incomplete event header " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::L1A)
     {
-        LOG(ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "L1A counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::TRGTAG_ER1)
     {
-        LOG(ERROR) << BOLDRED << "Trigger tag counter mismatch " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Trigger tag counter mismatch " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::TRGTAG_ER2)
     {
-        LOG(ERROR) << BOLDRED << "Trigger tag single bit-flip detected in tag symbol of a trigger command " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Trigger tag single bit-flip detected in tag symbol of a trigger command " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::TRGTAG_ER3)
     {
-        LOG(ERROR) << BOLDRED << "Trigger tag unrecognized tag symbol " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Trigger tag unrecognized tag symbol " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::NOFRHEADER)
     {
-        LOG(ERROR) << BOLDRED << "No frame header found in data " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "No frame header found in data " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::MISSCHIP)
     {
-        LOG(ERROR) << BOLDRED << "Chip data are missing " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Chip data are missing " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53FWEvtEncoder::CORRUPTED)
     {
-        LOG(ERROR) << BOLDRED << "Corrupted event " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Corrupted event " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53EvtEncoder::CHIPHEAD)
     {
-        LOG(ERROR) << BOLDRED << "Invalid chip header " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Invalid chip header " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53EvtEncoder::CHIPID)
     {
-        LOG(ERROR) << BOLDRED << "Found conflicting chip ID " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Found conflicting chip ID " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53EvtEncoder::CHIPPIX)
     {
-        LOG(ERROR) << BOLDRED << "Invalid pixel row or column " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Invalid pixel row or column " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53EvtEncoder::CHIPTOT)
     {
-        LOG(ERROR) << BOLDRED << "Invalid TOT value " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Invalid TOT value " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53EvtEncoder::CHIPNOHIT)
     {
-        LOG(ERROR) << BOLDRED << " Hit data are missing " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << " Hit data are missing " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53EvtEncoder::CHIPFWERR)
     {
-        LOG(ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
     if(status & RD53EvtEncoder::CHIPNS_WAS0)
     {
         LOG(ERROR) << BOLDRED << "New-stream bit was 0 in the first word of the event stream (it can happen when the FW timeout fires before the chip has sent the full event) " << BOLDYELLOW
-                   << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+                   << "--> retry" << RESET;
         isGood = false;
     }
 
@@ -310,11 +310,15 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
         isGood = false;
     }
 
-    if(status & RD53EvtEncoder::CHIP_QROW)
+    if(status & RD53EvtEncoder::CHIPQROW)
     {
-        LOG(ERROR) << BOLDRED << "Neighbor bit set for the first qrow " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "Neighbor bit set for the first qrow " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
+
+    if(status & RD53EvtEncoder::CHIPTRUNC_MAXHITS) LOG(ERROR) << BOLDRED << "Truncation occurred due to max number of hits reached per core " << BOLDYELLOW << "--> no retry" << RESET;
+
+    if(status & RD53EvtEncoder::CHIPTRUNC_TIMEOUT) LOG(ERROR) << BOLDRED << "Truncation occurred due to readout timeout" << BOLDYELLOW << "--> no retry" << RESET;
 
     return isGood;
 }
@@ -766,7 +770,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             // ####################
             RD53B::decodeChipData(event_bits.pop_slice(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
             evt.eventStatus |= chipEvt.eventStatus;
-            if((chipEvt.eventStatus & (RD53FWEvtEncoder::MISSCHIP | RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1 | RD53EvtEncoder::CHIPPIX)) != 0) break;
+            if((chipEvt.eventStatus & (RD53FWEvtEncoder::MISSCHIP | RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1)) != 0) break;
             evt.chip_events.push_back(std::move(chipEvt));
         }
 
