@@ -1080,7 +1080,7 @@ bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr
         regval           = (regval & 0xEF) | (bitval << 4); // enable injection bit
         cReg.fValue      = regval;
         LOG(DEBUG) << BOLDYELLOW << "SSA2 - setting mask on channel#"
-                   << "," << cIndx << "," << bitval << "," << regval << RESET;
+                   << "," << cIndx << "," << bitval << "," << std::hex << regval << std::dec << RESET;
         cIndx++;
     }
     return fBoardFW->MultiRegisterWrite(pChip, cRegItems, true);

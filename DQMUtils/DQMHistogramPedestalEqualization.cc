@@ -54,21 +54,21 @@ bool DQMHistogramPedestalEqualization::fill(std::string& inputStream)
 
     if(theVCthSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PedestalEqualization Vcth!!!!!\n";
+        // std::cout << "Matched PedestalEqualization Vcth!!!!!\n";
         DetectorDataContainer theDetectorData = theVCthSerialization.deserializeHybridContainer<EmptyContainer, uint16_t, EmptyContainer>(fDetectorContainer);
         fillVplusPlots(theDetectorData);
         return true;
     }
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PedestalEqualization Occupancy!!!!!\n";
+        // std::cout << "Matched PedestalEqualization Occupancy!!!!!\n";
         DetectorDataContainer theDetectorData = theOccupancySerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer);
         fillOccupancyPlots(theDetectorData);
         return true;
     }
     if(theOffsetSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PedestalEqualization Offset!!!!!\n";
+        // std::cout << "Matched PedestalEqualization Offset!!!!!\n";
         DetectorDataContainer theDetectorData = theOffsetSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, uint8_t>(fDetectorContainer);
         fillOffsetPlots(theDetectorData);
         return true;

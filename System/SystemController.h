@@ -331,17 +331,20 @@ class SystemController
 
     inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
     {
-        return fChannelGroupHandlerContainer->getObject(boardId)
-            ->getObject(opticalGroupId)
-            ->getObject(hybridId)
-            ->getObject(chipId)
-            ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-            ->getTestGroup(groupNumber);
+        auto theChannelGroup = fChannelGroupHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>();
+        if(groupNumber < theChannelGroup->getNumberOfGroups())
+            return theChannelGroup->getTestGroup(groupNumber);
+        else
+            return std::shared_ptr<ChannelGroupBase>();
     }
 
     inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber)
     {
-        return fChannelGroupHandlerContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
+        auto theChannelGroup = fChannelGroupHandlerContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->getSummary<std::shared_ptr<ChannelGroupHandler>>();
+        if(groupNumber < theChannelGroup->getNumberOfGroups())
+            return theChannelGroup->getTestGroup(groupNumber);
+        else
+            return std::shared_ptr<ChannelGroupBase>();
     }
 
     void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }

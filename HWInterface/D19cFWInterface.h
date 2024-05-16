@@ -122,6 +122,7 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cDebugFWInterface*                getDebugInterface() { return fDebugInterface; }
     TriggerInterface*                    getTriggerInterface() { return fTriggerInterface; }
     L1ReadoutInterface*                  getL1ReadoutInterface() { return fL1ReadoutInterface; }
+    FastCommandInterface*                getFastCommandInterface() { return fFastCommandInterface; }
     FEConfigurationInterface*            getFEConfigurationInterface() { return fFEConfigurationInterface; }
     LinkInterface*                       getLinkInterface() { return fLinkInterface; }
     D19clpGBTSlowControlWorkerInterface* getlpGBTSlowControlInterface() { return flpGBTSlowControlWorkerInterface; }

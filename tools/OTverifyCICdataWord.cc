@@ -104,7 +104,6 @@ void OTverifyCICdataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface*
     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
     cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
-    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
 
     for(auto theOpticalGroup: *theBoard)
