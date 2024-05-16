@@ -42,9 +42,9 @@ class OTMeasureOccupancy : public Tool
     void applyThresholdOffset();
 
     uint32_t fNumberOfEvents{10000};
-    uint8_t  fCBCtestPulseValue{218};
-    uint8_t  fSSAtestPulseValue{90};
-    uint8_t  fMPAtestPulseValue{100};
+    float    fCBCtestPulseValue{1.};
+    float    fSSAtestPulseValue{1.};
+    float    fMPAtestPulseValue{1.};
     bool     fForceChannelGroup{false};
     int      fThresholdOffset{0};
 

@@ -18,6 +18,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <math.h> 
 
 namespace Ph2_HwDescription
 {
@@ -237,6 +238,18 @@ std::string MPA2::getRowRegisterName(const std::string& theRegisterName, uint16_
 void MPA2::setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
 {
     for(const auto& theInput: theInputMap) fADCcalibrationMap[theInput.first] = theInput.second;
+}
+
+uint8_t MPA2::convertMIPtoInjectedCharge(float numberOfMIPs)
+{
+    float chargeInElectron = numberOfMIPs * PSP_SENSOR_THICHNESS * NUMBER_OF_ELECTRON_PER_UM;
+    float rawInjectionValue = chargeInElectron / MPA_CALDAC_ELECTRON_UNIT;
+    if(rawInjectionValue >255)
+    {
+        LOG(WARNING) << "Impossible to inject " << numberOfMIPs << " MIP in the MPA, Injecting maximum pulse";
+        return 255;
+    }
+    return round(rawInjectionValue);
 }
 
 } // namespace Ph2_HwDescription

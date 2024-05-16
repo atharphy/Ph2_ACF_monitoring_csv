@@ -18,6 +18,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <math.h> 
 
 namespace Ph2_HwDescription
 {
@@ -181,6 +182,19 @@ std::pair<uint16_t, uint16_t> Cbc::getGlobalCoordinates(ReadoutChip* pChip, uint
     if(pChip->getHybridId() % 2 == 0) { cGlobalX = (pChip->getNumberOfCols() / 2 - cCol) + (NCHIPS_OT - pChip->getId() - 1) * pChip->getNumberOfCols() / 2; }
     else { cGlobalX = cCol + pChip->getId() * pChip->getNumberOfCols() / 2; }
     return std::make_pair(cGlobalX, cGlobalY);
+}
+
+uint8_t Cbc::convertMIPtoInjectedCharge(float numberOfMIPs)
+{
+    if(numberOfMIPs == 0) return 255;
+    float chargeInElectron = numberOfMIPs * TWOS_SENSOR_THICHNESS * NUMBER_OF_ELECTRON_PER_UM;
+    float rawInjectionValue = CBC_ELECTRON_TO_CALDAC_INTERCEPT + CBC_ELECTRON_TO_CALDAC_SLOPE * chargeInElectron;
+    if(rawInjectionValue < 0)
+    {
+        LOG(WARNING) << "Impossible to inject " << numberOfMIPs << " MIP in the CBC, Injecting maximum pulse";
+        return 0;
+    }
+    return round(rawInjectionValue);
 }
 
 } // namespace Ph2_HwDescription

@@ -7,6 +7,9 @@
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
+#include "HWDescription/Cbc.h"
+#include "HWDescription/MPA2.h"
+#include "HWDescription/SSA2.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -24,9 +27,9 @@ void OTMeasureOccupancy::Initialise(void)
     // free the registers in case any
 
     fNumberOfEvents    = findValueInSettings<double>("OTMeasureOccupancy_NumberOfEvents", 10000);
-    fCBCtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_CBCtestPulseValue", 218);
-    fSSAtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_SSAtestPulseValue", 90);
-    fMPAtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_MPAtestPulseValue", 100);
+    fCBCtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_CBCtestPulseValue", 1.);
+    fSSAtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_SSAtestPulseValue", 1.);
+    fMPAtestPulseValue = findValueInSettings<double>("OTMeasureOccupancy_MPAtestPulseValue", 1.);
     fForceChannelGroup = findValueInSettings<double>("OTMeasureOccupancy_ForceChannelGroup", 0) > 0;
     fThresholdOffset   = findValueInSettings<double>("OTMeasureOccupancy_ThresholdOffset", 0);
 
@@ -95,8 +98,10 @@ void OTMeasureOccupancy::measureChannelOccupancy()
 
 void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
 {
-    LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurement2S - Preparing 2S to measure occupancy with injection = " << +fCBCtestPulseValue << RESET;
-
+    uint8_t calPulseValue = Cbc::convertMIPtoInjectedCharge(fCBCtestPulseValue);
+    if(fCBCtestPulseValue>0) LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurement2S - Preparing 2S to measure occupancy with injection = " << +calPulseValue << RESET;
+    else LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurement2S - Preparing 2S to measure occupancy without injection" << RESET;
+    
     CBCChannelGroupHandler theChannelGroupHandler;
     theChannelGroupHandler.setChannelGroupParameters(16, 1, 2);
     setChannelGroupHandler(theChannelGroupHandler);
@@ -115,7 +120,7 @@ void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
         }
     }
 
-    setSameDac("TestPulsePotNodeSel", fCBCtestPulseValue); // injected charge
+    setSameDac("TestPulsePotNodeSel", calPulseValue); // injected charge
     bool injectPulse       = fCBCtestPulseValue != 0;
     bool injectAllChannels = !injectPulse;
     if(fForceChannelGroup) injectAllChannels = false;
@@ -125,8 +130,11 @@ void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
 
 void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
 {
-    LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurementPS - Preparing 2S to measure occupancy with pixel injection = " << +fMPAtestPulseValue
-              << " and strip injection = " << +fSSAtestPulseValue << RESET;
+    uint8_t calPulseValueSSA = SSA2::convertMIPtoInjectedCharge(fSSAtestPulseValue);
+    uint8_t calPulseValueMPA = MPA2::convertMIPtoInjectedCharge(fMPAtestPulseValue);
+
+    LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurementPS - Preparing 2S to measure occupancy with pixel injection = " << +calPulseValueMPA
+              << " and strip injection = " << +calPulseValueSSA << RESET;
 
     SSAChannelGroupHandler theSSAChannelGroupHandler;
     theSSAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
@@ -136,8 +144,8 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
     theMPAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
     setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
 
-    bool injectSSApulse = fSSAtestPulseValue != 0;
-    bool injectMPApulse = fMPAtestPulseValue != 0;
+    bool injectSSApulse = calPulseValueSSA != 0;
+    bool injectMPApulse = calPulseValueMPA != 0;
 
     auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     std::string theMPAqueryFunctionString = "MPAqueryFunction";
@@ -156,14 +164,14 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
     }
     setSameDac("PixelControl_ALL", 0x1E);             // disable Hip cut, cluster cut to the maximum, mode select to or
     setSameDac("ENFLAGS_ALL", 0x0F);                  // Enable all channels
-    setSameDac("InjectedCharge", fMPAtestPulseValue); // injected charge
+    setSameDac("InjectedCharge", calPulseValueMPA); // injected charge
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 
     auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     std::string theSSAqueryFunctionString = "SSAqueryFunction";
     // settings for SSAs
     fDetectorContainer->addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
-    setSameDac("InjectedCharge", fSSAtestPulseValue); // injected charge
+    setSameDac("InjectedCharge", calPulseValueSSA); // injected charge
     setSameDac("ReadoutMode", 0x0);                   // normal readout mode
     setSameDac("StripControl2", 0x07);                // disable HIP cut
     setSameDac("control_2", 0x1F);                    // maximize cluster cut and set calpulse duration to 1 40MHz clock cycle

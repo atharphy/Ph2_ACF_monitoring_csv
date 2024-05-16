@@ -40,18 +40,23 @@
 #define D19C_EVENT_HEADER1_SIZE_32_CBC3 4
 #define D19C_EVENT_SIZE_32_CBC3 16
 
+#define NUMBER_OF_ELECTRON_PER_UM 75 // Number of electron deposited by a MIP in silicon per um
+
 // CBC
 #define CBC_VCTH_ELECTRON_UNIT 156              // conversion factor from 1 VcTh DAC into electron
 #define CBC_ELECTRON_TO_CALDAC_INTERCEPT 253.96 // Electron to CalDac calibration curve - intercept
 #define CBC_ELECTRON_TO_CALDAC_SLOPE -0.001648  // Electron to CalDac calibration curve - slope
+#define TWOS_SENSOR_THICHNESS 290                 // 2S sensor active thickness
 
 // SSA
 #define SSA_THDAC_ELECTRON_UNIT 250  // conversion factor from 1 ThDac into electron
 #define SSA_CALDAC_ELECTRON_UNIT 243 // conversion factor from 1 CalDac into electron
+#define PSS_SENSOR_THICHNESS 290     // PSS sensor active thickness
 
 // MPA
 #define MPA_THDAC_ELECTRON_UNIT 94   // conversion factor from 1 ThDac into electron
 #define MPA_CALDAC_ELECTRON_UNIT 220 // conversion factor from 1 CalDac into electron
+#define PSP_SENSOR_THICHNESS 290     // PSP sensor active thickness
 
 // SSA2
 // in float
