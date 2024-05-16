@@ -50,8 +50,8 @@
 #define SSA_CALDAC_ELECTRON_UNIT 243 // conversion factor from 1 CalDac into electron
 
 // MPA
-#define SSA_THDAC_ELECTRON_UNIT 94 // conversion factor from 1 ThDac into electron
-#define SSA_CALDAC_ELECTRON_UNIT 220 // conversion factor from 1 CalDac into electron
+#define MPA_THDAC_ELECTRON_UNIT 94 // conversion factor from 1 ThDac into electron
+#define MPA_CALDAC_ELECTRON_UNIT 220 // conversion factor from 1 CalDac into electron
 
 // SSA2
 // in float
