@@ -946,7 +946,7 @@ uint32_t CbcInterface::ReadChipFuseID(Chip* pCbc)
     uint8_t  IDa     = ReadChipReg(pCbc, "ChipIDFuse1");
     uint8_t  IDb     = ReadChipReg(pCbc, "ChipIDFuse2");
     uint8_t  IDc     = ReadChipReg(pCbc, "ChipIDFuse3");
-    uint32_t IDeFuse = ((IDa) & 0x000000FF) + (((IDb) << 8) & 0x0000FF00) + (((IDc) << 16) & 0x000F0000);
+    uint32_t IDeFuse = ((IDa)&0x000000FF) + (((IDb) << 8) & 0x0000FF00) + (((IDc) << 16) & 0x000F0000);
     return IDeFuse;
 }
 

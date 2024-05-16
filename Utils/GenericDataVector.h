@@ -33,8 +33,8 @@ class GenericDataVector : public OccupancyAndPh
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & data1;
-        theArchive & data2;
+        theArchive& data1;
+        theArchive& data2;
     }
 };
 

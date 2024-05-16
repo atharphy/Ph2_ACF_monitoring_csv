@@ -43,10 +43,10 @@ class ThresholdAndNoise
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & fThreshold;
-        theArchive & fThresholdError;
-        theArchive & fNoise;
-        theArchive & fNoiseError;
+        theArchive& fThreshold;
+        theArchive& fThresholdError;
+        theArchive& fNoise;
+        theArchive& fNoiseError;
     }
 };
 

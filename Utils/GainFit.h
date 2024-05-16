@@ -49,16 +49,16 @@ class GainFit
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & fSlopeHighQ;
-        theArchive & fSlopeHighQError;
-        theArchive & fInterceptHighQ;
-        theArchive & fInterceptHighQError;
-        theArchive & fSlopeLowQ;
-        theArchive & fSlopeLowQError;
-        theArchive & fInterceptLowQ;
-        theArchive & fInterceptLowQError;
-        theArchive & fChi2;
-        theArchive & fDoF;
+        theArchive& fSlopeHighQ;
+        theArchive& fSlopeHighQError;
+        theArchive& fInterceptHighQ;
+        theArchive& fInterceptHighQError;
+        theArchive& fSlopeLowQ;
+        theArchive& fSlopeLowQError;
+        theArchive& fInterceptLowQ;
+        theArchive& fInterceptLowQError;
+        theArchive& fChi2;
+        theArchive& fDoF;
     }
 };
 

@@ -29,7 +29,7 @@ struct LpGBTalignmentResult
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & fResultContainer;
+        theArchive& fResultContainer;
     }
 };
 

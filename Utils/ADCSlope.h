@@ -27,11 +27,11 @@ class ADCSlope //: public streammable
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive & fSlope;
-        theArchive & fOffset;
-        theArchive & fADC_GND;
-        theArchive & fADC_VBG;
-        theArchive & fMeasured_VBG;
+        theArchive& fSlope;
+        theArchive& fOffset;
+        theArchive& fADC_GND;
+        theArchive& fADC_VBG;
+        theArchive& fMeasured_VBG;
     }
 
     float fSlope;
