@@ -47,12 +47,12 @@ class OccupancyAndPh
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive& fOccupancy;
-        theArchive& fOccupancyMedian;
-        theArchive& fPh;
-        theArchive& fPhError;
-        theArchive& fStatus;
-        theArchive& readoutError;
+        theArchive & fOccupancy;
+        theArchive & fOccupancyMedian;
+        theArchive & fPh;
+        theArchive & fPhError;
+        theArchive & fStatus;
+        theArchive & readoutError;
     }
 };
 

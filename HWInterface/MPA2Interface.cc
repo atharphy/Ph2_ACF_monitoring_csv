@@ -81,6 +81,27 @@ void MPA2Interface::produceWordAlignmentPattern(ReadoutChip* pChip)
     for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++) { this->WriteChipReg(pChip, cRegNames[cIndex], cRegValues[cIndex]); } // loop over registers
 }
 
+void MPA2Interface::produceBX0AlignmentPattern(ReadoutChip* pChip)
+{
+    // use sync bit only
+    // this->MaskAllChannels(pChip, true, false );
+    // auto masked =     this->ReadChipReg(pChip, "ENFLAGS_ALL");
+    // std::cout << " read back masking MPAs 0x" << std::hex <<  masked << std::dec << std::endl;
+
+    // use stubs
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
+    this->injectNoiseClusters(pChip, theClusterList);
+    this->WriteChipReg(pChip, "StubMode", 2); // Use pixel mode to exclude possible SSA communication issues
+    this->WriteChipReg(pChip, "StubWindow", 31);
+    this->WriteChipReg(pChip, "CodeM10", 0x0); // bendind = 0 will ouput 0
+
+    LOG(INFO) << GREEN << "Producing BX0 alignment pattern on MPA#" << +pChip->getId() << RESET;
+    std::vector<uint8_t>     cRegValues{0x0};          //, fBX0AlignmentPatterns[0]};
+    std::vector<std::string> cRegNames{"ReadoutMode"}; //, "LFSR_data"};
+    // std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
+    // std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};}
+}
+
 void MPA2Interface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
     // std::vector<uint32_t> cPixelIds(0);
@@ -199,7 +220,8 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
     uint32_t totalNumberOfChannels   = NSSACHANNELS * NMPAROWS;
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-    theRegisterVector.push_back({"Mask_ALL", 0x40});
+    // theRegisterVector.push_back({"Mask_ALL", 0x20}); // digital injection
+    theRegisterVector.push_back({"Mask_ALL", 0x40});        // analog injection
     if(numberOfEnabledChannels < totalNumberOfChannels / 2) // faster to write injected channels
     {
         theRegisterVector.push_back({"ENFLAGS_ALL", 0x00});
@@ -207,13 +229,18 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
         {
             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
             {
-                if(group->isChannelEnabled(row, col)) theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x40});
+                if(group->isChannelEnabled(row, col))
+                {
+                    // theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x20}); // digital injection
+                    theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x40}); // analog injection
+                }
             }
         }
     }
     else // faster to write not injected channels
     {
-        theRegisterVector.push_back({"ENFLAGS_ALL", 0x40});
+        // theRegisterVector.push_back({"ENFLAGS_ALL", 0x20}); // digital injection
+        theRegisterVector.push_back({"ENFLAGS_ALL", 0x40}); // analog injection
         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
         {
             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)

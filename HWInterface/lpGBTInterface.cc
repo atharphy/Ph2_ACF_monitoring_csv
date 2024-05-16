@@ -955,6 +955,7 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
 
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     // ########################################################
     // # Read differential (converted) data on two ADC inputs #
     // ########################################################

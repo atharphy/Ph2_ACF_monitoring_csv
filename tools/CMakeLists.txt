@@ -128,10 +128,11 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}TOOLS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories(${UHAL_DIR}/uhal/include)
-    include_directories(${UHAL_DIR}/log/include)
-    include_directories(${UHAL_DIR}/grammars/include)
+    # include_directories(${UHAL_DIR}/uhal/include)
+    # include_directories(${UHAL_DIR}/log/include)
+    # include_directories(${UHAL_DIR}/grammars/include)
 
+    include_directories(${CACTUS_INCLUDEDIR})
     include_directories(${Protobuf_INCLUDE_DIRS})
 
     cet_set_compiler_flags(

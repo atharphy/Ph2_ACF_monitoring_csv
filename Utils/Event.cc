@@ -58,7 +58,7 @@ void Event::GetCbcEvent(const uint8_t& pHybridId, const uint8_t& pCbcId, std::ve
             cbcData.push_back((cWord >> 24) & 0xFF);
             cbcData.push_back((cWord >> 16) & 0xFF);
             cbcData.push_back((cWord >> 8) & 0xFF);
-            cbcData.push_back((cWord)&0xFF);
+            cbcData.push_back((cWord) & 0xFF);
         }
     }
     else
