@@ -34,6 +34,7 @@ class RD53BInterface : public RD53Interface
     void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
     void     SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard) override;
+    void     SendRD53Clear(Ph2_HwDescription::RD53* pRD53) override { RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()}); }
 
     std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
     uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
@@ -47,7 +48,7 @@ class RD53BInterface : public RD53Interface
     uint16_t GetPixelConfigMask(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
     uint16_t GetPixelConfigTDAC(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
     void     SendGlobalPulse(Ph2_HwDescription::Chip* pChip, uint16_t route, uint16_t pulseDuration);
-    void     SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* pBoard, uint16_t route, uint16_t pulseDuration);
+    void     SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* pBoard);
     void     SendChipCommandsWithSync(Ph2_HwDescription::RD53* pRD53, std::vector<uint16_t>& cmdStream);
     void     ResetCoreColumns(Ph2_HwDescription::RD53* pRD53);
 

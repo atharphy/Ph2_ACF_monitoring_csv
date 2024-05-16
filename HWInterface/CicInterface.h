@@ -66,7 +66,7 @@ class CicInterface : public ChipInterface
      * \param pChip
      * \param pRegNode : Node of the register to read
      */
-    uint16_t                                      ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
+    int32_t                                       ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
 
     uint8_t ReadFCMDEdge(Ph2_HwDescription::Chip* pChip);

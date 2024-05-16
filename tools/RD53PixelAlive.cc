@@ -118,7 +118,7 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
 
 void PixelAlive::run()
 {
-    if((doDataIntegrity != 0) && (strcmp(frontEnd->name, "RD53B") == 0))
+    if((doDataIntegrity != 0) && (std::string(frontEnd->name).find("RD53B") != std::string::npos))
     {
         RD53RunProgress::turnOFF();
 
