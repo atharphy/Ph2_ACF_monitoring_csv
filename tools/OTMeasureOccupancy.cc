@@ -165,9 +165,8 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
     fDetectorContainer->addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
     setSameDac("InjectedCharge", fSSAtestPulseValue); // injected charge
     setSameDac("ReadoutMode", 0x0);                   // normal readout mode
-    setSameDac("CalPulse_duration", 1);               // set calpulse duration to 1 40MHz clock cycle
     setSameDac("StripControl2", 0x07);                // disable HIP cut
-    setSameDac("control_2", 0x0F);                    // maximize cluster cut
+    setSameDac("control_2", 0x1F);                    // maximize cluster cut and set calpulse duration to 1 40MHz clock cycle
     setSameDac("control_1", 0x00);                    // normal readout mode
     setSameDac("ENFLAGS", 0x40);                      // use level sampling mode
     fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
@@ -209,8 +208,6 @@ void OTMeasureOccupancy::applyThresholdOffset()
                 for(auto theChip: *theHybrid)
                 {
                     uint32_t theCurrentThreshold = fReadoutChipInterface->ReadChipReg(theChip, "Threshold");
-                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theCurrentThreshold = " << theCurrentThreshold << std::endl;
-                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fThresholdOffset = " << fThresholdOffset << std::endl;
 
                     uint16_t theNewThreshold;
                     bool     isThresholdIncreased = (fThresholdOffset > 0);
