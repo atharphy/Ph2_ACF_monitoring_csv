@@ -19,7 +19,13 @@ std::string OTMeasureOccupancy::fCalibrationDescription = "Measure channel occup
 
 OTMeasureOccupancy::OTMeasureOccupancy() : Tool() {}
 
-OTMeasureOccupancy::~OTMeasureOccupancy() {}
+OTMeasureOccupancy::~OTMeasureOccupancy()
+{
+#ifdef __USE_ROOT__
+    delete fDQMHistogramOTMeasureOccupancy;
+    fDQMHistogramOTMeasureOccupancy = nullptr;
+#endif
+}
 
 void OTMeasureOccupancy::Initialise(void)
 {
@@ -34,8 +40,9 @@ void OTMeasureOccupancy::Initialise(void)
     fThresholdOffset   = findValueInSettings<double>("OTMeasureOccupancy_ThresholdOffset", 0);
 
 #ifdef __USE_ROOT__
+    fDQMHistogramOTMeasureOccupancy = new DQMHistogramOTMeasureOccupancy();
     // Calibration is not running on the SoC: plots are booked during initialization
-    fDQMHistogramOTMeasureOccupancy.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    fDQMHistogramOTMeasureOccupancy->book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
@@ -55,7 +62,7 @@ void OTMeasureOccupancy::Stop(void)
     LOG(INFO) << "Stopping OTMeasureOccupancy measurement.";
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: processing the histograms
-    fDQMHistogramOTMeasureOccupancy.process();
+    fDQMHistogramOTMeasureOccupancy->process();
 #endif
     SaveResults();
     closeFileHandler();
@@ -68,7 +75,7 @@ void OTMeasureOccupancy::Resume() {}
 
 void OTMeasureOccupancy::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTMeasureOccupancy::measureChannelOccupancy()
+void OTMeasureOccupancy::measureChannelOccupancy(size_t iteration)
 {
     bool is2SModule = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S;
     this->setNormalization(true);
@@ -86,12 +93,12 @@ void OTMeasureOccupancy::measureChannelOccupancy()
     measureData(fNumberOfEvents, 65535);
 
 #ifdef __USE_ROOT__
-    fDQMHistogramOTMeasureOccupancy.fillOccupancy(theOccupancyContainer);
+    fDQMHistogramOTMeasureOccupancy->fillOccupancy(theOccupancyContainer, iteration);
 #else
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theOccupancyContainerSerialization("OTMeasureOccupancyOccupancy");
-        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theOccupancyContainer);
+        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theOccupancyContainer, iteration);
     }
 #endif
 }

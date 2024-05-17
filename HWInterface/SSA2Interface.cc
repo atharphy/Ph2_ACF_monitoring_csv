@@ -157,8 +157,8 @@ uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
     auto                                  theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == SSA2_ADC_CONTROL_TABLE.end())
     {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
-        std::runtime_error(std::string("SSA2Interface::ReadADC: Error, register not found for this chip type. Abort."));
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << " not found for this chip type - aborting." << RESET;
+        abort();
     }
     LOG(DEBUG) << BOLDMAGENTA << " converting " << pRegName << " to " << +theRegister->second << RESET;
     return SSA2Interface::ReadADC(pChip, theRegister->second);
