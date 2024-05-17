@@ -13,6 +13,7 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/easylogging++.h"
 #include <boost/math/special_functions/binomial.hpp>
+#include <boost/algorithm/string.hpp>
 
 long getTimeTook(struct timeval& pStart, bool pMili)
 {
@@ -148,6 +149,19 @@ double convertAnyDouble(const char* pRegValue)
         baseType = 2;
     if(baseType != 0) myRegValue.erase(0, 2);
     return strtod(myRegValue.c_str(), 0);
+}
+
+std::vector<float> convertStringToFloatList(std::string theListString)
+{
+    boost::erase_all(theListString, " ");
+
+    std::vector<std::string> subStringList;
+    boost::algorithm::split(subStringList, theListString, boost::algorithm::is_any_of(","));
+
+    std::vector<float> theListOfFloats;
+    for(auto subString: subStringList) theListOfFloats.push_back(strtof(subString.c_str(), nullptr));
+
+    return theListOfFloats;
 }
 
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters)

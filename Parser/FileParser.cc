@@ -1412,6 +1412,7 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
 
 void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
+    std::vector<std::string> listOfStringSettings {"RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses"};
     pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
@@ -1423,22 +1424,31 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
 
         for(pugi::xml_node nSetting = nSettings.child(SETTING_NODE_NAME); nSetting; nSetting = nSetting.next_sibling())
         {
-            if((strcmp(nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value(), "RegNameDAC2") == 0) ||
-               (strcmp(nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value(), "DataOutputDir") == 0) || (strcmp(nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value(), "KIRA_ID") == 0))
+            auto theSettingValue = nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
+            bool isStringSetting = false;
+            for(auto stringSetting: listOfStringSettings)
+            {
+                if(strcmp(theSettingValue, stringSetting.c_str()) == 0)
+                {
+                    isStringSetting = true;
+                    break;
+                }
+            }
+            if(isStringSetting)
             {
                 std::string value(nSetting.first_child().value());
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
-                pSettingsMap[nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()] = value;
+                pSettingsMap[theSettingValue] = value;
 
-                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value() << RESET << ":" << BOLDYELLOW
-                   << boost::any_cast<std::string>(pSettingsMap[nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()]) << RESET << std::endl;
+                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW
+                   << boost::any_cast<std::string>(pSettingsMap[theSettingValue]) << RESET << std::endl;
             }
             else
             {
-                pSettingsMap[nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()] = convertAnyDouble(nSetting.first_child().value());
+                pSettingsMap[theSettingValue] = convertAnyDouble(nSetting.first_child().value());
 
-                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value() << RESET << ":" << BOLDYELLOW
-                   << boost::any_cast<double>(pSettingsMap[nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()]) << RESET << std::endl;
+                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW
+                   << boost::any_cast<double>(pSettingsMap[theSettingValue]) << RESET << std::endl;
             }
         }
     }

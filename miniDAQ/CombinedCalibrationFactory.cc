@@ -43,6 +43,7 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
+#include "tools/OTinjectionOccupancyScan.h"
 
 using namespace MessageUtils;
 
@@ -81,6 +82,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignBoardDataWord, OTinjectionDelayOptimization>("Outer Tracker", "injectionDelayOptimization");
     Register<OTalignBoardDataWord, OTMeasureOccupancy>("Outer Tracker", "measureOccupancy");
+    Register<OTalignBoardDataWord, OTinjectionOccupancyScan>("Outer Tracker", "injectionOccupancyScan");
 
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,

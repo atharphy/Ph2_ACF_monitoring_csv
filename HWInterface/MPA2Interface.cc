@@ -791,7 +791,7 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
     if(theRegister == ADC_CONTROL_TABLE.end())
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
-        std::runtime_error(std::string("MPA2Interface::ReadADC: Error, register not found for this chip type. Abort."));
+        abort();
     }
     LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
     this->selectBlock(static_cast<ReadoutChip*>(pChip), theRegister->second.first, theRegister->second.second);
@@ -863,7 +863,18 @@ float MPA2Interface::calculateADCLSB(ReadoutChip* pMPA2, float theVrefValue)
     return theVrefValue / (4095.0 - offset);
 }
 
-bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn) { return this->WriteChipReg(pMPA2, "ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block), true); }
+bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn)
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    auto theCurrentMask = this->ReadChipReg(pMPA2, "Mask");
+
+    std::vector<std::pair<std::string, uint16_t>> registerList;
+    registerList.push_back({"Mask", 0xFF});
+    registerList.push_back({"ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block)});
+    registerList.push_back({"Mask", theCurrentMask});
+
+    return this->WriteChipMultReg(pMPA2, registerList, true);
+}
 
 uint32_t MPA2Interface::measureGround(ReadoutChip* pMPA2)
 {

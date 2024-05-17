@@ -35,8 +35,8 @@ class OTMeasureOccupancy : public Tool
 
     static std::string fCalibrationDescription;
 
-  private:
-    void measureChannelOccupancy();
+  protected:
+    void measureChannelOccupancy(size_t iteration = 0);
     void prepareOccupancyMeasurement2S();
     void prepareOccupancyMeasurementPS();
     void applyThresholdOffset();
@@ -50,7 +50,7 @@ class OTMeasureOccupancy : public Tool
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
-    DQMHistogramOTMeasureOccupancy fDQMHistogramOTMeasureOccupancy;
+    DQMHistogramOTMeasureOccupancy* fDQMHistogramOTMeasureOccupancy {nullptr};
 #endif
 };
 
