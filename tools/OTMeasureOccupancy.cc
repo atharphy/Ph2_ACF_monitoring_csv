@@ -39,8 +39,8 @@ void OTMeasureOccupancy::Initialise(void)
     fForceChannelGroup = findValueInSettings<double>("OTMeasureOccupancy_ForceChannelGroup", 0) > 0;
     fThresholdOffset   = findValueInSettings<double>("OTMeasureOccupancy_ThresholdOffset", 0);
 
-    fDQMHistogramOTMeasureOccupancy = new DQMHistogramOTMeasureOccupancy();
 #ifdef __USE_ROOT__
+    fDQMHistogramOTMeasureOccupancy = new DQMHistogramOTMeasureOccupancy();
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTMeasureOccupancy->book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
