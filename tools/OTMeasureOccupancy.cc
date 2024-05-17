@@ -133,7 +133,7 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
     uint8_t calPulseValueSSA = SSA2::convertMIPtoInjectedCharge(fSSAtestPulseValue);
     uint8_t calPulseValueMPA = MPA2::convertMIPtoInjectedCharge(fMPAtestPulseValue);
 
-    LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurementPS - Preparing 2S to measure occupancy with pixel injection = " << +calPulseValueMPA
+    LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurementPS - Preparing PS to measure occupancy with pixel injection = " << +calPulseValueMPA
               << " and strip injection = " << +calPulseValueSSA << RESET;
 
     SSAChannelGroupHandler theSSAChannelGroupHandler;
