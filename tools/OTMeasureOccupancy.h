@@ -50,7 +50,7 @@ class OTMeasureOccupancy : public Tool
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
-    DQMHistogramOTMeasureOccupancy* fDQMHistogramOTMeasureOccupancy {nullptr};
+    DQMHistogramOTMeasureOccupancy* fDQMHistogramOTMeasureOccupancy{nullptr};
 #endif
 };
 

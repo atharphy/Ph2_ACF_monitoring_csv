@@ -23,6 +23,7 @@
 #include "tools/OTalignLpGBTinputs.h"
 #include "tools/OTalignStubPackage.h"
 #include "tools/OTinjectionDelayOptimization.h"
+#include "tools/OTinjectionOccupancyScan.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyMPASSAdataWord.h"
@@ -43,7 +44,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTinjectionOccupancyScan.h"
 
 using namespace MessageUtils;
 

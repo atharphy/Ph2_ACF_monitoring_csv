@@ -58,8 +58,8 @@ class DQMHistogramOTMeasureOccupancy : public DQMHistogramBase
     void fillOccupancy(const DetectorDataContainer& theOccupancyContainer, size_t iteration);
 
   protected:
-    void bookPlotsForInjection(TFile* theOutputFile, double theNumberOfEvents, float theCBCtestPulseValue, float theSSAtestPulseValue, float theMPAtestPulseValue, int iteration = 0);
-    DetectorContainer*    fDetectorContainer;
+    void               bookPlotsForInjection(TFile* theOutputFile, double theNumberOfEvents, float theCBCtestPulseValue, float theSSAtestPulseValue, float theMPAtestPulseValue, int iteration = 0);
+    DetectorContainer* fDetectorContainer;
 
   private:
     std::map<int, DetectorDataContainer> fOccupancyHistogramContainer;

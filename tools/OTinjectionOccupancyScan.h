@@ -32,10 +32,10 @@ class OTinjectionOccupancyScan : public OTMeasureOccupancy
     static std::string fCalibrationDescription;
 
   private:
-    void scanInjection();
-    std::vector<float> fListOfPulseValues {0, 0.25, 0.5, 1., 2.};
-    uint32_t    fNumberOfEventsWithoutInjection{1000000};
-    uint32_t    fNumberOfEventsWithInjection{1000};
+    void               scanInjection();
+    std::vector<float> fListOfPulseValues{0, 0.25, 0.5, 1., 2.};
+    uint32_t           fNumberOfEventsWithoutInjection{1000000};
+    uint32_t           fNumberOfEventsWithInjection{1000};
 };
 
 #endif

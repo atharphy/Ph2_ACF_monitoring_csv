@@ -20,12 +20,12 @@ void OTinjectionOccupancyScan::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fListOfPulseValues           = convertStringToFloatList(findValueInSettings<std::string>("OTinjectionOccupancyScan_ListOfInjectedPulses", "0, 0.25, 0.5, 1., 2."));
+    fListOfPulseValues              = convertStringToFloatList(findValueInSettings<std::string>("OTinjectionOccupancyScan_ListOfInjectedPulses", "0, 0.25, 0.5, 1., 2."));
     fNumberOfEventsWithoutInjection = findValueInSettings<double>("OTinjectionOccupancyScan_NumberOfEventsWithoutInjection", 1000000);
     fNumberOfEventsWithInjection    = findValueInSettings<double>("OTinjectionOccupancyScan_NumberOfEventsWithInjection", 1000);
 
     fForceChannelGroup = false;
-    fThresholdOffset = 0;
+    fThresholdOffset   = 0;
 
     fDQMHistogramOTMeasureOccupancy = new DQMHistogramOTinjectionOccupancyScan();
 #ifdef __USE_ROOT__
@@ -68,7 +68,7 @@ void OTinjectionOccupancyScan::scanInjection()
     for(size_t iteration = 0; iteration < fListOfPulseValues.size(); ++iteration)
     {
         fCBCtestPulseValue = fSSAtestPulseValue = fMPAtestPulseValue = fListOfPulseValues.at(iteration);
-        fNumberOfEvents = (fCBCtestPulseValue == 0.) ? fNumberOfEventsWithoutInjection : fNumberOfEventsWithInjection;
+        fNumberOfEvents                                              = (fCBCtestPulseValue == 0.) ? fNumberOfEventsWithoutInjection : fNumberOfEventsWithInjection;
         measureChannelOccupancy(iteration);
     }
 }

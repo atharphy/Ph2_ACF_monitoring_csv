@@ -1412,8 +1412,8 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
 
 void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
-    std::vector<std::string> listOfStringSettings {"RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses"};
-    pugi::xml_document doc;
+    std::vector<std::string> listOfStringSettings{"RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses"};
+    pugi::xml_document       doc;
     openHWconfig(pFilename, doc);
 
     if(doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME) == 0) LOG(WARNING) << BOLDRED << "No -Settings- tag found in XML file: " << BOLDYELLOW << pFilename << RESET;
@@ -1440,15 +1440,15 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
                 pSettingsMap[theSettingValue] = value;
 
-                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW
-                   << boost::any_cast<std::string>(pSettingsMap[theSettingValue]) << RESET << std::endl;
+                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW << boost::any_cast<std::string>(pSettingsMap[theSettingValue])
+                   << RESET << std::endl;
             }
             else
             {
                 pSettingsMap[theSettingValue] = convertAnyDouble(nSetting.first_child().value());
 
-                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW
-                   << boost::any_cast<double>(pSettingsMap[theSettingValue]) << RESET << std::endl;
+                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW << boost::any_cast<double>(pSettingsMap[theSettingValue]) << RESET
+                   << std::endl;
             }
         }
     }

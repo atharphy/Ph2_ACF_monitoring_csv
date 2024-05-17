@@ -38,6 +38,5 @@ class DQMHistogramOTinjectionOccupancyScan : public DQMHistogramOTMeasureOccupan
      * needed (i.e. FitSCurve)
      */
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
-
 };
 #endif

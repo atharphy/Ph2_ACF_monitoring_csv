@@ -12,8 +12,8 @@
 #include "Utils/Utilities.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/easylogging++.h"
-#include <boost/math/special_functions/binomial.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/math/special_functions/binomial.hpp>
 
 long getTimeTook(struct timeval& pStart, bool pMili)
 {

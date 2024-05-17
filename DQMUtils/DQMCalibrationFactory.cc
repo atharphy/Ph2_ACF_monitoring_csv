@@ -16,6 +16,7 @@
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputs.h"
 #include "DQMUtils/DQMHistogramOTalignStubPackage.h"
 #include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
+#include "DQMUtils/DQMHistogramOTinjectionOccupancyScan.h"
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyCICdataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyMPASSAdataWord.h"
@@ -38,7 +39,6 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
-#include "DQMUtils/DQMHistogramOTinjectionOccupancyScan.h"
 
 using namespace MessageUtils;
 

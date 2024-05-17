@@ -37,7 +37,12 @@ void DQMHistogramOTMeasureOccupancy::book(TFile* theOutputFile, DetectorContaine
 
 //========================================================================================================================
 
-void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile, double theNumberOfEvents, float theCBCtestPulseValue, float theSSAtestPulseValue, float theMPAtestPulseValue, int iteration)
+void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile,
+                                                           double theNumberOfEvents,
+                                                           float  theCBCtestPulseValue,
+                                                           float  theSSAtestPulseValue,
+                                                           float  theMPAtestPulseValue,
+                                                           int    iteration)
 {
     auto        selectCBCfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::CBC3); };
     std::string selectCBCfunctionName = "SelectCBCfunction";
@@ -49,7 +54,8 @@ void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile,
     std::string selectMPAfunctionName = "SelectMPAfunction";
 
     fDetectorContainer->addReadoutChipQueryFunction(selectCBCfunction, selectCBCfunctionName);
-    HistContainer<TH1F> theCBCoccupancyHistogram(Form("ChannelOccupancy_injection_%.3f_MIP", theCBCtestPulseValue), Form("Channel Occupancy - injection = %.3f MIP", theCBCtestPulseValue), NCHANNELS, -0.5, NCHANNELS - 0.5);
+    HistContainer<TH1F> theCBCoccupancyHistogram(
+        Form("ChannelOccupancy_injection_%.3f_MIP", theCBCtestPulseValue), Form("Channel Occupancy - injection = %.3f MIP", theCBCtestPulseValue), NCHANNELS, -0.5, NCHANNELS - 0.5);
     theCBCoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("channel");
     theCBCoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("occupancy");
     theCBCoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
@@ -59,7 +65,8 @@ void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile,
     fDetectorContainer->removeReadoutChipQueryFunction(selectCBCfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
-    HistContainer<TH1F> theSSAoccupancyHistogram(Form("ChannelOccupancy_injection_%.3f_MIP", theSSAtestPulseValue), Form("Channel Occupancy - injection = %.3f MIP", theSSAtestPulseValue), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    HistContainer<TH1F> theSSAoccupancyHistogram(
+        Form("ChannelOccupancy_injection_%.3f_MIP", theSSAtestPulseValue), Form("Channel Occupancy - injection = %.3f MIP", theSSAtestPulseValue), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
     theSSAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("channel");
     theSSAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("occupancy");
     theSSAoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
@@ -69,7 +76,14 @@ void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile,
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
-    HistContainer<TH2F> theMPAoccupancyHistogram(Form("ChannelOccupancy_injection_%.3f_MIP", theMPAtestPulseValue), Form("Channel Occupancy - injection = %.3f MIP", theMPAtestPulseValue), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    HistContainer<TH2F> theMPAoccupancyHistogram(Form("ChannelOccupancy_injection_%.3f_MIP", theMPAtestPulseValue),
+                                                 Form("Channel Occupancy - injection = %.3f MIP", theMPAtestPulseValue),
+                                                 NSSACHANNELS,
+                                                 -0.5,
+                                                 NSSACHANNELS - 0.5,
+                                                 NMPAROWS,
+                                                 -0.5,
+                                                 NMPAROWS - 0.5);
     theMPAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("col");
     theMPAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("row");
     theMPAoccupancyHistogram.fTheHistogram->SetMaximum(1.);
@@ -78,7 +92,6 @@ void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile,
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, *fDetectorContainer, fOccupancyHistogramContainer[iteration], theMPAoccupancyHistogram);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 }
-
 
 //========================================================================================================================
 void DQMHistogramOTMeasureOccupancy::fillOccupancy(const DetectorDataContainer& theOccupancyContainer, size_t iteration)
@@ -138,7 +151,7 @@ bool DQMHistogramOTMeasureOccupancy::fill(std::string& inputStream)
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTMeasureOccupancy Occupancy!!!!!\n";
-        size_t iteration;
+        size_t                iteration;
         DetectorDataContainer theDetectorData = theOccupancySerialization.deserializeChipContainer<Occupancy, Occupancy, size_t>(fDetectorContainer, iteration);
         fillOccupancy(theDetectorData, iteration);
         return true;
