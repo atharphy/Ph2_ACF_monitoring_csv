@@ -308,11 +308,11 @@
     <Setting name="OTinjectionDelayOptimization_NumberOfEvents">100</Setting>
     <Setting name="OTinjectionDelayOptimization_MaximumDelay">150</Setting>
     <Setting name="OTinjectionDelayOptimization_DelayStep">1</Setting>
-    <Setting name="OTinjectionDelayOptimization_CBCtestPulseValue">218</Setting> <!-- 218 roughly correspond to 1 MIP in 290um silicon-->
+    <Setting name="OTinjectionDelayOptimization_CBCtestPulseValue">1.</Setting> <!-- MIP units -->
     <Setting name="OTinjectionDelayOptimization_CBCnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 
     <Setting name="OTMeasureOccupancy_NumberOfEvents">10000</Setting>
-    <Setting name="OTMeasureOccupancy_CBCtestPulseValue">218</Setting>
+    <Setting name="OTMeasureOccupancy_CBCtestPulseValue">1.</Setting> <!-- MIP units -->
     <Setting name="OTMeasureOccupancy_ForceChannelGroup">0</Setting>
     <Setting name="OTMeasureOccupancy_ThresholdOffset">0</Setting>
 </Settings>

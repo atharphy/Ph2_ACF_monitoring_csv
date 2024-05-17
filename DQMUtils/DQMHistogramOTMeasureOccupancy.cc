@@ -29,9 +29,9 @@ void DQMHistogramOTMeasureOccupancy::book(TFile* theOutputFile, DetectorContaine
     // SoC utilities only - END
 
     double theNumberOfEvents    = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_NumberOfEvents", 10000);
-    int    theCBCtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_CBCtestPulseValue", 218);
-    int    theSSAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_SSAtestPulseValue", 90);
-    int    theMPAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_MPAtestPulseValue", 100);
+    int    theCBCtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_CBCtestPulseValue", 1.);
+    int    theSSAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_SSAtestPulseValue", 1.);
+    int    theMPAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_MPAtestPulseValue", 1.);
 
     auto        selectCBCfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::CBC3); };
     std::string selectCBCfunctionName = "SelectCBCfunction";
