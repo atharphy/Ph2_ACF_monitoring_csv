@@ -16,9 +16,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <math.h>
 #include <sstream>
 #include <string.h>
-#include <math.h> 
 
 namespace Ph2_HwDescription
 { // open namespace
@@ -226,9 +226,9 @@ void SSA2::setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
 
 uint8_t SSA2::convertMIPtoInjectedCharge(float numberOfMIPs)
 {
-    float chargeInElectron = numberOfMIPs * PSS_SENSOR_THICHNESS * NUMBER_OF_ELECTRON_PER_UM;
+    float chargeInElectron  = numberOfMIPs * PSS_SENSOR_THICHNESS * NUMBER_OF_ELECTRON_PER_UM;
     float rawInjectionValue = chargeInElectron / SSA_CALDAC_ELECTRON_UNIT;
-    if(rawInjectionValue >255)
+    if(rawInjectionValue > 255)
     {
         LOG(WARNING) << "Impossible to inject " << numberOfMIPs << " MIP in the MPA, Injecting maximum pulse";
         return 255;

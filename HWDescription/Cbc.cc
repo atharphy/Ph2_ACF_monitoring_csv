@@ -16,9 +16,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <math.h>
 #include <sstream>
 #include <string.h>
-#include <math.h> 
 
 namespace Ph2_HwDescription
 {
@@ -187,7 +187,7 @@ std::pair<uint16_t, uint16_t> Cbc::getGlobalCoordinates(ReadoutChip* pChip, uint
 uint8_t Cbc::convertMIPtoInjectedCharge(float numberOfMIPs)
 {
     if(numberOfMIPs == 0) return 255;
-    float chargeInElectron = numberOfMIPs * TWOS_SENSOR_THICHNESS * NUMBER_OF_ELECTRON_PER_UM;
+    float chargeInElectron  = numberOfMIPs * TWOS_SENSOR_THICHNESS * NUMBER_OF_ELECTRON_PER_UM;
     float rawInjectionValue = CBC_ELECTRON_TO_CALDAC_INTERCEPT + CBC_ELECTRON_TO_CALDAC_SLOPE * chargeInElectron;
     if(rawInjectionValue < 0)
     {

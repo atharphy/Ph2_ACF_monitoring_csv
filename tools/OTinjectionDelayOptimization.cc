@@ -271,7 +271,7 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScan2S()
         }
     }
 
-    setSameDac("HitOr", 1);                                // using logical OR
+    setSameDac("HitOr", 1);                                                                 // using logical OR
     setSameDac("TestPulsePotNodeSel", Cbc::convertMIPtoInjectedCharge(fCBCtestPulseValue)); // injected charge
 }
 
@@ -301,23 +301,23 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScanPS()
     std::string theMPAqueryFunctionString = "MPAqueryFunction";
     // settings for MPAs
     fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
-    setSameDac("Control_1", 0x0);                     // set Readout mode to normal
+    setSameDac("Control_1", 0x0);                                                       // set Readout mode to normal
     setSameDac("InjectedCharge", MPA2::convertMIPtoInjectedCharge(fMPAtestPulseValue)); // injected charge
-    setSameDac("PixelControl_ALL", 0x1D);             // disable Hip cut, cluster cut to the maximum, mode select level
-    setSameDac("ENFLAGS_ALL", 0x4E);                  // use level sampling mode and enable analog pulse
-    setSameDac("DL_en", 0x7F);                        // enable injection delay on all bias blocks
+    setSameDac("PixelControl_ALL", 0x1D);                                               // disable Hip cut, cluster cut to the maximum, mode select level
+    setSameDac("ENFLAGS_ALL", 0x4E);                                                    // use level sampling mode and enable analog pulse
+    setSameDac("DL_en", 0x7F);                                                          // enable injection delay on all bias blocks
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 
     auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     std::string theSSAqueryFunctionString = "SSAqueryFunction";
     // settings for SSAs
     fDetectorContainer->addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
-    setSameDac("StripControl2", 0x07);                // disable HIP cut
+    setSameDac("StripControl2", 0x07);                                                  // disable HIP cut
     setSameDac("InjectedCharge", SSA2::convertMIPtoInjectedCharge(fSSAtestPulseValue)); // injected charge
-    setSameDac("ENFLAGS", 0x30);                      // use level sampling mode and enable analog pulse
-    setSameDac("ReadoutMode", 0x0);                   // normal readout mode
-    setSameDac("control_2", 0x0F);                    // maximize cluster cut
-    setSameDac("CalPulse_duration", 1);               // set calpulse duration to 1 40MHz clock cycle
+    setSameDac("ENFLAGS", 0x30);                                                        // use level sampling mode and enable analog pulse
+    setSameDac("ReadoutMode", 0x0);                                                     // normal readout mode
+    setSameDac("control_2", 0x0F);                                                      // maximize cluster cut
+    setSameDac("CalPulse_duration", 1);                                                 // set calpulse duration to 1 40MHz clock cycle
     fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
 
     // Enabling 1 every N columns and corresponding rows in a diagonal pattern

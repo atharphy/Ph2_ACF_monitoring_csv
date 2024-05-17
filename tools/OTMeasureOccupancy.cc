@@ -1,4 +1,7 @@
 #include "tools/OTMeasureOccupancy.h"
+#include "HWDescription/Cbc.h"
+#include "HWDescription/MPA2.h"
+#include "HWDescription/SSA2.h"
 #include "HWInterface/MPA2Interface.h"
 #include "HWInterface/PSInterface.h"
 #include "System/RegisterHelper.h"
@@ -7,9 +10,6 @@
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
-#include "HWDescription/Cbc.h"
-#include "HWDescription/MPA2.h"
-#include "HWDescription/SSA2.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -99,9 +99,11 @@ void OTMeasureOccupancy::measureChannelOccupancy()
 void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
 {
     uint8_t calPulseValue = Cbc::convertMIPtoInjectedCharge(fCBCtestPulseValue);
-    if(fCBCtestPulseValue>0) LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurement2S - Preparing 2S to measure occupancy with injection = " << +calPulseValue << RESET;
-    else LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurement2S - Preparing 2S to measure occupancy without injection" << RESET;
-    
+    if(fCBCtestPulseValue > 0)
+        LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurement2S - Preparing 2S to measure occupancy with injection = " << +calPulseValue << RESET;
+    else
+        LOG(INFO) << BOLDBLUE << "OTMeasureOccupancy::prepareOccupancyMeasurement2S - Preparing 2S to measure occupancy without injection" << RESET;
+
     CBCChannelGroupHandler theChannelGroupHandler;
     theChannelGroupHandler.setChannelGroupParameters(16, 1, 2);
     setChannelGroupHandler(theChannelGroupHandler);
@@ -162,8 +164,8 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
             }
         }
     }
-    setSameDac("PixelControl_ALL", 0x1E);             // disable Hip cut, cluster cut to the maximum, mode select to or
-    setSameDac("ENFLAGS_ALL", 0x0F);                  // Enable all channels
+    setSameDac("PixelControl_ALL", 0x1E);           // disable Hip cut, cluster cut to the maximum, mode select to or
+    setSameDac("ENFLAGS_ALL", 0x0F);                // Enable all channels
     setSameDac("InjectedCharge", calPulseValueMPA); // injected charge
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 
@@ -172,11 +174,11 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
     // settings for SSAs
     fDetectorContainer->addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
     setSameDac("InjectedCharge", calPulseValueSSA); // injected charge
-    setSameDac("ReadoutMode", 0x0);                   // normal readout mode
-    setSameDac("StripControl2", 0x07);                // disable HIP cut
-    setSameDac("control_2", 0x1F);                    // maximize cluster cut and set calpulse duration to 1 40MHz clock cycle
-    setSameDac("control_1", 0x00);                    // normal readout mode
-    setSameDac("ENFLAGS", 0x40);                      // use level sampling mode
+    setSameDac("ReadoutMode", 0x0);                 // normal readout mode
+    setSameDac("StripControl2", 0x07);              // disable HIP cut
+    setSameDac("control_2", 0x1F);                  // maximize cluster cut and set calpulse duration to 1 40MHz clock cycle
+    setSameDac("control_1", 0x00);                  // normal readout mode
+    setSameDac("ENFLAGS", 0x40);                    // use level sampling mode
     fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
 
     bool injectPulse       = injectSSApulse || injectMPApulse;

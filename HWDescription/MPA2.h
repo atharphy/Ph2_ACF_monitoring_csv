@@ -83,7 +83,7 @@ class MPA2 : public ReadoutChip
     // uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
     static std::string getPixelRegisterName(const std::string& theRegisterName, uint16_t row, uint16_t col);
     static std::string getRowRegisterName(const std::string& theRegisterName, uint16_t row);
-    static uint8_t convertMIPtoInjectedCharge(float numberOfMIPs);
+    static uint8_t     convertMIPtoInjectedCharge(float numberOfMIPs);
 
     std::map<std::string, float> getADCCalibrationMap() const { return fADCcalibrationMap; }
     void                         setADCCalibrationMap(const std::map<std::string, float>& theInputMap) override;
