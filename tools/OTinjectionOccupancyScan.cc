@@ -27,8 +27,8 @@ void OTinjectionOccupancyScan::Initialise(void)
     fForceChannelGroup = false;
     fThresholdOffset   = 0;
 
-    fDQMHistogramOTMeasureOccupancy = new DQMHistogramOTinjectionOccupancyScan();
 #ifdef __USE_ROOT__
+    fDQMHistogramOTMeasureOccupancy = new DQMHistogramOTinjectionOccupancyScan();
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTMeasureOccupancy->book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
