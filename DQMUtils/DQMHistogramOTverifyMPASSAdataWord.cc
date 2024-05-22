@@ -9,7 +9,7 @@
 #include "TH2F.h"
 
 //========================================================================================================================
-DQMHistogramOTverifyMPASSAdataWord::DQMHistogramOTverifyMPASSAdataWord() : DQMHistogramOTverifyCICdataWord() {}
+DQMHistogramOTverifyMPASSAdataWord::DQMHistogramOTverifyMPASSAdataWord() {}
 
 //========================================================================================================================
 DQMHistogramOTverifyMPASSAdataWord::~DQMHistogramOTverifyMPASSAdataWord() {}
@@ -25,15 +25,57 @@ void DQMHistogramOTverifyMPASSAdataWord::book(TFile* theOutputFile, DetectorCont
     // SoC utilities only - END
 
     HistContainer<TH2F> patternMatchingEfficiencyHistogram(
-        "PatternMatchingEfficiencyMPA_SSA", "Pattern Matching Efficiency MPA-SSA", NUMBER_OF_CIC_PORTS, 8 - 0.5, 8 + NUMBER_OF_CIC_PORTS - 0.5, 2, -0.5, 1.5);
+        "PatternMatchingEfficiencyMPA_SSA", "Pattern Matching Efficiency MPA-SSA", NUMBER_OF_CIC_PORTS, 8 - 0.5, 8 + NUMBER_OF_CIC_PORTS - 0.5, 9, -0.5, 8.5);
     patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle("MPA Id");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
-    patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(2, "Stubs");
+    for(size_t clusterLine = 0; clusterLine<8; ++clusterLine) patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(clusterLine+2, Form("Cluster line %d", int(clusterLine)));
     patternMatchingEfficiencyHistogram.fTheHistogram->SetMinimum(0);
     patternMatchingEfficiencyHistogram.fTheHistogram->SetMaximum(1);
     patternMatchingEfficiencyHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPatternMatchingEfficiencyHistogramContainer, patternMatchingEfficiencyHistogram);
+}
+
+
+//========================================================================================================================
+void DQMHistogramOTverifyMPASSAdataWord::fillPatternMatchingEfficiencyResults(DetectorDataContainer& thePatternMatchingEfficiencyContainer)
+{
+    for(auto board: thePatternMatchingEfficiencyContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                if(!hybrid->hasSummary()) continue;
+
+                auto thePatternMatchingEfficiencyVector = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>();
+
+                TH2F* patternMatchingEfficiencyHistogram = fPatternMatchingEfficiencyHistogramContainer.getObject(board->getId())
+                                                               ->getObject(opticalGroup->getId())
+                                                               ->getObject(hybrid->getId())
+                                                               ->getSummary<HistContainer<TH2F>>()
+                                                               .fTheHistogram;
+
+                for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
+                {
+                    for(size_t cLineId = 0; cLineId < 9; cLineId++) { patternMatchingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, thePatternMatchingEfficiencyVector[chipId][cLineId]); }
+                }
+            }
+        }
+    }
+}
+
+//========================================================================================================================
+void DQMHistogramOTverifyMPASSAdataWord::process()
+{
+    // This step it is not necessary, unless you want to format / draw histograms,
+    // otherwise they will be automatically saved
+}
+
+//========================================================================================================================
+void DQMHistogramOTverifyMPASSAdataWord::reset(void)
+{
+    // Clear histograms if needed
 }
 
 //========================================================================================================================
@@ -46,7 +88,7 @@ bool DQMHistogramOTverifyMPASSAdataWord::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTverifyMPASSAdataWord PatternMatchingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
-            thePatternMatchinEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>, EmptyContainer>(
+            thePatternMatchinEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>, EmptyContainer>(
                 fDetectorContainer);
         fillPatternMatchingEfficiencyResults(theDetectorData);
         return true;

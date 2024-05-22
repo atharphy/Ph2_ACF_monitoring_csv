@@ -27,6 +27,8 @@ void OTverifyCICdataWord::Initialise(void)
 
     fNumberOfIterations = findValueInSettings<double>("OTverifyCICdataWord_NumberOfIterations", 1000);
 
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyCICdataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -65,8 +67,6 @@ void OTverifyCICdataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTverifyCICdataWord::runIntegrityTest()
 {
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
-
     LOG(INFO) << BOLDYELLOW << "OTverifyCICdataWord::runIntegrityTest ... start integrity test" << RESET;
     auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
