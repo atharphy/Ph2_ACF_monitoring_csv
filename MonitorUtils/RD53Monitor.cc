@@ -120,18 +120,10 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
                 auto* lpGBTInterface = fTheSystemController->flpGBTInterface;
 
                 if(lpGBTInterface->fADCInputMap.find(registerName) != lpGBTInterface->fADCInputMap.end())
-                {
                     // #######################
                     // # Monitor environment #
                     // #######################
-                    if(registerName.find("TEMP") != std::string::npos)
-                        registerValue = lpGBTInterface->MeasureTemperature(cOpticalGroup->flpGBT, 1, true, fDetectorMonitorConfig.fSilentRunning);
-                    else if((registerName.find("VDDTX") != std::string::npos) || (registerName.find("VDDRX") != std::string::npos) || (registerName.find("VDD") != std::string::npos) ||
-                            (registerName.find("VDDA") != std::string::npos))
-                        registerValue = lpGBTInterface->MeasurePowerSupplyVoltage(cOpticalGroup->flpGBT, registerName, 1, true, fDetectorMonitorConfig.fSilentRunning);
-                    else
-                        registerValue = lpGBTInterface->ReadADC(cOpticalGroup->flpGBT, registerName);
-                }
+                    registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup->flpGBT, registerName, fDetectorMonitorConfig.fSilentRunning);
                 else
                     // #####################
                     // # Monitor registers #

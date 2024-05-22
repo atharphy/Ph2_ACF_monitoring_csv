@@ -1826,7 +1826,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
     return (std::accumulate(cRloadsVec.begin(), cRloadsVec.end(), 0.) / cRloadsVec.size());
 }
 
-float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples, bool pResetTempSensor, bool silentRunning)
+float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples, bool pResetTempSensor)
 {
     /* """Measure junction temperature
 
@@ -1863,12 +1863,11 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
 
     float cAdcVal = AdcGetVin(pChip, "TEMP", "VREF/2", 0, pSamples);
     float cTemp   = (cAdcVal * pChip->getADCCalibrationData()["TEMPERATURE_SLOPE"] + pChip->getADCCalibrationData()["TEMPERATURE_OFFSET"]);
-    if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement: " BOLDYELLOW << cTemp << BOLDBLUE << " C" << RESET;
 
     return cTemp;
 }
 
-float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples, bool pDisableMonitorAfterMeasurement, bool silentRunning)
+float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples, bool pDisableMonitorAfterMeasurement)
 {
     /* """Measure power supply voltage
 
@@ -1906,7 +1905,6 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
     // ######################
     float cVadc = AdcGetVin(pChip, pPowerSupply, "VREF/2", 0, pSamples);
     float cVsup = cVadc * (pChip->getADCCalibrationData()["VDDMON_SLOPE"] + pChip->getTemperature() * pChip->getADCCalibrationData()["VDDMON_SLOPE_TEMP"]);
-    if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << pPowerSupply << BOLDBLUE << " is " << cVsup << BOLDBLUE << " V" << RESET;
 
     // ######################################
     // # Disable VDD monitor (if requested) #
@@ -1914,5 +1912,27 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
     if(pDisableMonitorAfterMeasurement) ConfigureInternalMonitoring(pChip, false);
 
     return cVsup;
+}
+
+float lpGBTInterface::ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std::string& registerName, bool silentRunning)
+{
+    float value;
+
+    if(registerName.find("TEMP") != std::string::npos)
+    {
+        value = lpGBTInterface::MeasureTemperature(pChip);
+        if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement: " BOLDYELLOW << value << BOLDBLUE << " C" << RESET;
+    }
+    else if((registerName.find("VDDTX") != std::string::npos) || (registerName.find("VDDRX") != std::string::npos) || (registerName.find("VDD") != std::string::npos) ||
+            (registerName.find("VDDA") != std::string::npos))
+    {
+        value = lpGBTInterface::MeasurePowerSupplyVoltage(pChip, registerName);
+        if(silentRunning == false)
+            LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << registerName << BOLDBLUE << " is " << value << BOLDBLUE << " V" << RESET;
+    }
+    else
+        value = lpGBTInterface::ReadADC(pChip, registerName);
+
+    return value;
 }
 } // namespace Ph2_HwInterface
