@@ -182,7 +182,8 @@
         <Register name="Aurora_block">
           <Register name="self_trigger_en"> 0 </Register>
         </Register>
-        
+
+
         <Register name="cnf_cmd_ctrl">
           <Register name="nb_slow_cmd_before_sync"> 200 </Register>
           <Register name="nb_slow_cmd_before_pll"> 200 </Register>
