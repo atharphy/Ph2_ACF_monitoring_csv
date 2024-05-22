@@ -72,8 +72,8 @@ class OTverifyCICdataWord : public Tool
 
   private:
     DetectorDataContainer fPatternMatchingEfficiencyContainer;
-    void fillHistograms();
-    bool fIsKickoff{false};
+    void                  fillHistograms();
+    bool                  fIsKickoff{false};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

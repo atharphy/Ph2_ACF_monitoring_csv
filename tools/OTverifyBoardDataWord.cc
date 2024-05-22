@@ -23,7 +23,7 @@ void OTverifyBoardDataWord::Initialise(void)
 
     fNumberOfIterations = findValueInSettings<double>("OTverifyBoardDataWord_NumberOfIterations", 1000);
     fIsKickoff          = findValueInSettings<double>("OTverifyBoardDataWord_NumberOfIterations", 0) > 0;
-    
+
     size_t             numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
     std::vector<float> initialEmptyVector(numberOfLines, 0);
     ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer, initialEmptyVector);

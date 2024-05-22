@@ -29,13 +29,12 @@ void DQMHistogramOTverifyMPASSAdataWord::book(TFile* theOutputFile, DetectorCont
     patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle("MPA Id");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
-    for(size_t clusterLine = 0; clusterLine<8; ++clusterLine) patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(clusterLine+2, Form("Cluster%d", int(clusterLine)));
+    for(size_t clusterLine = 0; clusterLine < 8; ++clusterLine) patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(clusterLine + 2, Form("Cluster%d", int(clusterLine)));
     patternMatchingEfficiencyHistogram.fTheHistogram->SetMinimum(0);
     patternMatchingEfficiencyHistogram.fTheHistogram->SetMaximum(1);
     patternMatchingEfficiencyHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPatternMatchingEfficiencyHistogramContainer, patternMatchingEfficiencyHistogram);
 }
-
 
 //========================================================================================================================
 void DQMHistogramOTverifyMPASSAdataWord::fillPatternMatchingEfficiencyResults(DetectorDataContainer& thePatternMatchingEfficiencyContainer)

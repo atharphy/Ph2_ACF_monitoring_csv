@@ -925,7 +925,7 @@ void DQMHistogramPedeNoise::clearPedestalAndNoisePlots()
         for(auto cOpticalGroup: *cBoard)
         {
             size_t opticalGroupId = cOpticalGroup->getId();
-            bool is2Smodule = (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S);
+            bool   is2Smodule     = (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S);
             for(auto cHybrid: *cOpticalGroup)
             {
                 size_t hybridId = cHybrid->getId();
@@ -938,30 +938,27 @@ void DQMHistogramPedeNoise::clearPedestalAndNoisePlots()
                     fDetectorHybridStripNoiseEvenHistograms.getHybrid(boardId, opticalGroupId, hybridId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
                     fDetectorHybridStripNoiseOddHistograms.getHybrid(boardId, opticalGroupId, hybridId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
                 }
-                else
-                {
-                    fDetectorHybridPixelNoiseHistograms.getHybrid(boardId, opticalGroupId, hybridId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
-                }
+                else { fDetectorHybridPixelNoiseHistograms.getHybrid(boardId, opticalGroupId, hybridId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset(); }
 
                 for(auto cChip: *cHybrid)
                 {
-                    size_t chipId = cChip->getId();
+                    size_t       chipId      = cChip->getId();
                     FrontEndType theChipType = cChip->getFrontEndType();
-                    if( theChipType== FrontEndType::CBC3 || theChipType== FrontEndType::SSA2)
+                    if(theChipType == FrontEndType::CBC3 || theChipType == FrontEndType::SSA2)
                     {
                         fDetectorChipStripPedestalHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
                         fDetectorChannelStripPedestalHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
                         fDetectorChipStripNoiseHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
                         fDetectorChannelStripNoiseHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
                     }
-                    
-                    if( theChipType== FrontEndType::CBC3)
+
+                    if(theChipType == FrontEndType::CBC3)
                     {
                         fDetectorChannelStripNoiseEvenHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
                         fDetectorChannelStripNoiseOddHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
                     }
-                    
-                    if( theChipType== FrontEndType::MPA2)
+
+                    if(theChipType == FrontEndType::MPA2)
                     {
                         fDetectorChipPixelPedestalHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
                         fDetectorChannelPixelPedestalHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();

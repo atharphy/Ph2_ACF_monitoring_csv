@@ -23,12 +23,12 @@ void DQMHistogramOTalignBoardDataWord::book(TFile* theOutputFile, DetectorContai
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    size_t              numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
-    
+    size_t numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+
     auto setBitLabel = [numberOfLines](TH1I* theHistogram)
     {
         theHistogram->GetXaxis()->SetBinLabel(1, "L1");
-        for(size_t stubLine = 0; stubLine<numberOfLines; ++stubLine) theHistogram->GetXaxis()->SetBinLabel(stubLine+2, Form("Stub%d", int(stubLine)));
+        for(size_t stubLine = 0; stubLine < numberOfLines; ++stubLine) theHistogram->GetXaxis()->SetBinLabel(stubLine + 2, Form("Stub%d", int(stubLine)));
     };
 
     HistContainer<TH1I> bitSlipHistogram("BitSlipValues", "Bit slip values", numberOfLines, -0.5, numberOfLines - 0.5);

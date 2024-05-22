@@ -190,9 +190,9 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
     size_t numberOfLines = 6;
 
     auto& theLineEfficiencyArray = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
-                                  ->getObject(theMPA->getOpticalGroupId())
-                                  ->getObject(theMPA->getHybridId())
-                                  ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theMPA->getId() % 8];
+                                       ->getObject(theMPA->getOpticalGroupId())
+                                       ->getObject(theMPA->getHybridId())
+                                       ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theMPA->getId() % 8];
 
     uint8_t bendingCode = 0x05;
     fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0); // Use normal stub mode
@@ -202,14 +202,14 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theStripClusterList;
     for(size_t stripIt = 0; stripIt < numberOfSSAstubClusterLines; ++stripIt) // injecting 8 clusters of size 1 15 strips spaced
     {
-        theStripClusterList.push_back({0, 5 + 15*stripIt, 1});
+        theStripClusterList.push_back({0, 5 + 15 * stripIt, 1});
     }
     static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theSSA, theStripClusterList);
 
     size_t stripClusterLine = 0;
     for(auto stripCluster: theStripClusterList)
     {
-        auto& theStubEfficiency = theLineEfficiencyArray[stripClusterLine+1];
+        auto& theStubEfficiency = theLineEfficiencyArray[stripClusterLine + 1];
         LOG(INFO) << BOLDBLUE << "                injecting stub for strip cluster line #" << stripClusterLine << RESET;
         uint8_t rowCoordinate = 0x0A;
         uint8_t colCoordinate = std::get<1>(stripCluster);
@@ -219,11 +219,11 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
         static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, thePixelClusterList);
 
         // stubs need to be ordered by bending code (remember that the CIC orders them based on the Code[MP]XX values)
-        std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector{{rowCoordinate, colCoordinate*2, 0}};
+        std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector{{rowCoordinate, colCoordinate * 2, 0}};
 
         size_t numberOfStubs     = 8 * theStubVector.size();
         size_t maximumStubNumber = (numberOfBytesInSinglePacket == 1) ? 16 : 35; // 16 if a 5G, 35 if a 10G
-        if(numberOfStubs > maximumStubNumber)                                    // CIC aligns stubs by bending, but in pixel-pixel mode bending is 0 and it is not possible to know what the CIC will drop
+        if(numberOfStubs > maximumStubNumber) // CIC aligns stubs by bending, but in pixel-pixel mode bending is 0 and it is not possible to know what the CIC will drop
         {
             std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PS stube injected using pixel-pixel mode, more stubs than the maximum allowed!" << std::endl;
             abort();
@@ -277,7 +277,7 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
             else
             {
                 LOG(DEBUG) << BOLDRED << "OTverifyMPASSAdataWord::injectStubsPS - Error, expected stub pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup "
-                        << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
+                           << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
                 LOG(DEBUG) << BOLDRED << "Stub data received    " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
                 LOG(DEBUG) << BOLDRED << "Stub pattern expected " << getPatternPrintout(thePattern.getPattern(), numberOfBytesInSinglePacket) << RESET;
                 LOG(DEBUG) << BOLDRED << "Stub pattern mask     " << getPatternPrintout(thePattern.getMask(), numberOfBytesInSinglePacket) << RESET;
@@ -288,5 +288,4 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
         ++stripClusterLine;
         theStubEfficiency /= fNumberOfIterations;
     }
-
 }
