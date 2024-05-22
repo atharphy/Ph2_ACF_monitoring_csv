@@ -1921,14 +1921,15 @@ float lpGBTInterface::ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std
     if(registerName.find("TEMP") != std::string::npos)
     {
         value = lpGBTInterface::MeasureTemperature(pChip);
-        if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement: " BOLDYELLOW << value << BOLDBLUE << " C" << RESET;
+        if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement: " BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
     }
     else if((registerName.find("VDDTX") != std::string::npos) || (registerName.find("VDDRX") != std::string::npos) || (registerName.find("VDD") != std::string::npos) ||
             (registerName.find("VDDA") != std::string::npos))
     {
         value = lpGBTInterface::MeasurePowerSupplyVoltage(pChip, registerName);
         if(silentRunning == false)
-            LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << registerName << BOLDBLUE << " is " << value << BOLDBLUE << " V" << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << registerName << BOLDBLUE << " is " << std::setprecision(3) << value << BOLDBLUE << " V"
+                      << std::setprecision(-13) << RESET;
     }
     else
         value = lpGBTInterface::ReadADC(pChip, registerName);
