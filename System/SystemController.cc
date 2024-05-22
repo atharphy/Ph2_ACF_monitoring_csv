@@ -362,16 +362,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
         for(auto cOpticalGroup: *cBoard)
         {
-            bool cWithLpGBT    = (cOpticalGroup->flpGBT != nullptr);
-            
-            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT);
-            }
-            else if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
-            {
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT);
-            }
+            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
+
+            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT); }
+            else if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT); }
             else if(cWithLpGBT && flpGBTInterface != nullptr) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType()); }
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
