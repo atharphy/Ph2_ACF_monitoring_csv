@@ -644,7 +644,7 @@ void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard)
 // # Dedicated to monitoring #
 // ###########################
 
-int RD53BInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)
+int RD53BInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage, bool silentRunning)
 // ############################################
 // # Possible observable name values are also #
 // # - INTERNAL_NTC                           #
@@ -738,7 +738,7 @@ int RD53BInterface::getADCobservable(const std::string& observableName, bool& is
     {
         if((search = voltageMultiplexer.find(observableName)) == voltageMultiplexer.end())
         {
-            LOG(ERROR) << BOLDRED << "Wrong observable name: " << observableName << RESET;
+            if(silentRunning == false) LOG(WARNING) << BOLDRED << "Wrong observable name: " << BOLDYELLOW << observableName << RESET;
             return -1;
         }
         else

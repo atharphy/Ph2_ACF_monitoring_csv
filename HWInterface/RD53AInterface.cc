@@ -399,7 +399,7 @@ void RD53AInterface::SendBoardClear(const BeBoard* pBoard)
 // # Dedicated to monitoring #
 // ###########################
 
-int RD53AInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)
+int RD53AInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage, bool silentRunning)
 {
     uint32_t voltageObservable(0), currentObservable(0);
 
@@ -421,7 +421,7 @@ int RD53AInterface::getADCobservable(const std::string& observableName, bool& is
     {
         if((search = voltageMultiplexer.find(observableName)) == voltageMultiplexer.end())
         {
-            LOG(ERROR) << BOLDRED << "Wrong observable name: " << observableName << RESET;
+            if(silentRunning == false) LOG(WARNING) << BOLDRED << "Wrong observable name: " << BOLDYELLOW << observableName << RESET;
             return -1;
         }
         else
