@@ -174,12 +174,12 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
             LOG(DEBUG) << GREEN << "No redundant LpGBT ID, only use first register" << RESET;
             cChipID = cChipID_0;
         }
-        LOG(INFO) << GREEN << "FuseID from LpGBT optical group #" << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET
+        LOG(INFO) << GREEN << "FuseID from LpGBT optical group " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET
                   << GREEN << ": 0x" << BOLDYELLOW << std::hex << +cChipID << std::dec << RESET;
         return cChipID;
     }
 
-    LOG(INFO) << GREEN << "No FuseID for version 0 LpGBT optical group #" << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId()
+    LOG(INFO) << GREEN << "No FuseID for version 0 LpGBT optical group " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId()
               << RESET;
     return 0;
 }
@@ -1456,6 +1456,9 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
                          << +pChip->getOpticalGroupId() << BOLDRED << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
             LOG(WARNING) << BOLDBLUE << "\t--> Proceeding without LpGBT ADC calibrations" << RESET;
         }
+        else
+            LOG(WARNING) << GREEN << "Calibration data available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup ID " << BOLDYELLOW
+                         << +pChip->getOpticalGroupId() << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
     }
     else
     {
