@@ -1928,8 +1928,8 @@ float lpGBTInterface::ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std
     {
         value = lpGBTInterface::MeasurePowerSupplyVoltage(pChip, registerName);
         if(silentRunning == false)
-            LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << registerName << BOLDBLUE << " is " << std::setprecision(3) << value << BOLDBLUE << " V"
-                      << std::setprecision(-13) << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE
+                      << " V" << std::setprecision(-13) << RESET;
     }
     else
         value = lpGBTInterface::ReadADC(pChip, registerName);
