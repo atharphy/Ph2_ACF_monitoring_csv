@@ -208,6 +208,7 @@
 
 
 <Settings>
+    <Setting name="isKickoff">1</Setting>
     <!--PedestalEqualization-->
 	<Setting name="Nevents">1000</Setting>
 	<Setting name="CMNoise_Nevents">1000</Setting>
