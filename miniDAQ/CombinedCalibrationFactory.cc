@@ -75,7 +75,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
-             OTCICBX0Alignment,
+             //  OTCICBX0Alignment,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignmentForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");

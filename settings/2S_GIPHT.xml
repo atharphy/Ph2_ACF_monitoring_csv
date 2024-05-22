@@ -68,6 +68,7 @@
   </BeBoard>
 
 <Settings>
+    <Setting name="isKickoff">1</Setting>
     <!--PedestalEqualization-->
     <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
