@@ -152,7 +152,7 @@ bool DQMHistogramOTMeasureOccupancy::fill(std::string& inputStream)
     {
         std::cout << "Matched OTMeasureOccupancy Occupancy!!!!!\n";
         size_t                iteration;
-        DetectorDataContainer theDetectorData = theOccupancySerialization.deserializeChipContainer<Occupancy, Occupancy, size_t>(fDetectorContainer, iteration);
+        DetectorDataContainer theDetectorData = theOccupancySerialization.deserializeChipContainer<Occupancy, Occupancy>(fDetectorContainer, iteration);
         fillOccupancy(theDetectorData, iteration);
         return true;
     }

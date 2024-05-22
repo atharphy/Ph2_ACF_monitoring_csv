@@ -360,37 +360,18 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fBeBoardInterface->setBoard(cBoard->getId());
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureInterfaces(cBoard);
 
-        // ##########################
-        // # Set module type for OT #
-        // ##########################
-        auto cConnectedFeTypes = cBoard->connectedFrontEndTypes();
-        bool cMPAfound         = (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::MPA2); }) != cConnectedFeTypes.end());
-        bool cSSAfound         = (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::SSA2); }) != cConnectedFeTypes.end());
-        bool cCBCfound         = (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFeTypes.end());
         for(auto cOpticalGroup: *cBoard)
         {
             bool cWithLpGBT    = (cOpticalGroup->flpGBT != nullptr);
-            bool cWithPSmodule = (cMPAfound || cSSAfound) && cWithLpGBT;
-            bool cWith2Smodule = cCBCfound && cWithLpGBT;
-            bool cWithPSHybrid = (cSSAfound && !cWithLpGBT);
-            bool cWith2SHybrid = (cCBCfound && !cWithLpGBT);
-
-            if(cWithPSmodule)
+            
+            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
             {
-                cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT);
             }
-            else if(cWith2Smodule)
+            else if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
             {
-                cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT);
             }
-            else if(cWithPSHybrid)
-            {
-                LOG(INFO) << BOLDYELLOW << "HYBRIDPS" << RESET;
-                cOpticalGroup->setFrontEndType(FrontEndType::HYBRIDPS);
-            }
-            else if(cWith2SHybrid) { cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S); }
             else if(cWithLpGBT && flpGBTInterface != nullptr) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType()); }
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;

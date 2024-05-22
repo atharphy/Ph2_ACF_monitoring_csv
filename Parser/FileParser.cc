@@ -916,6 +916,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     }
                     else if(cName.find(CBC_NODE_NAME) != std::string::npos)
                     {
+                        pOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
                         parseCbcContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseGlobalCbcSettings(pHybridNode, cHybrid, os);
@@ -998,12 +999,14 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     }
                     else if(cName == SSA2_NODE_NAME)
                     {
+                        pOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
                         parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseSSA2Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == MPA2_NODE_NAME)
                     {
+                        pOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
                         parseMPA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseMPA2Settings(pHybridNode, cHybrid, os);

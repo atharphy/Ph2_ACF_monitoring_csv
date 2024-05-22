@@ -98,7 +98,7 @@ void OTMeasureOccupancy::measureChannelOccupancy(size_t iteration)
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theOccupancyContainerSerialization("OTMeasureOccupancyOccupancy");
-        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theOccupancyContainer, iteration);
+        theOccupancyContainerSerialization.streamByChipContainer(fDQMStreamer, theOccupancyContainer, iteration);
     }
 #endif
 }
