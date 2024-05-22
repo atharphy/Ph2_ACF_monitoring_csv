@@ -100,7 +100,7 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
 void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
 {
     DetectorDataContainer theRegisterContainer;
-    ContainerFactory::copyAndInitChip<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
 
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
