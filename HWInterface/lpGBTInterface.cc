@@ -1826,7 +1826,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
     return (std::accumulate(cRloadsVec.begin(), cRloadsVec.end(), 0.) / cRloadsVec.size());
 }
 
-float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples, bool pResetTempSensor)
+float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples, bool pResetTempSensor, bool silentRunning)
 {
     /* """Measure junction temperature
 
@@ -1834,7 +1834,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
             VREF should be tuned to 1V
 
         Side effects:
-            ADC settings.
+            ADC settings
 
         Arguments:
             pSamples: Number of ADC samples to average during the measurement
@@ -1854,6 +1854,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
         // ######################################
         WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
         std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+
         // #######################################
         // # Disable reset on temperature sensor #
         // #######################################
@@ -1861,12 +1862,13 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
     }
 
     float cAdcVal = AdcGetVin(pChip, "TEMP", "VREF/2", 0, pSamples);
+    float cTemp   = (cAdcVal * pChip->getADCCalibrationData()["TEMPERATURE_SLOPE"] + pChip->getADCCalibrationData()["TEMPERATURE_OFFSET"]);
+    if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement: " BOLDYELLOW << cTemp << BOLDBLUE << " C" << RESET;
 
-    float cTemp = (cAdcVal * pChip->getADCCalibrationData()["TEMPERATURE_SLOPE"] + pChip->getADCCalibrationData()["TEMPERATURE_OFFSET"]);
     return cTemp;
 }
 
-float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples, bool pDisableMonitorAfterMeasurement)
+float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples, bool pDisableMonitorAfterMeasurement, bool silentRunning)
 {
     /* """Measure power supply voltage
 
@@ -1890,20 +1892,26 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
     """ */
     if(!(pPowerSupply != "VDDTX" or pPowerSupply != "VDDRX" or pPowerSupply != "VDD" or pPowerSupply != "VDDA"))
     {
-        LOG(ERROR) << BOLDRED << "lpGBTInterface::MeasurePowerSupplyVoltage: Invalid pPowerSupply" << RESET;
+        LOG(ERROR) << BOLDRED << "[lpGBTInterface::MeasurePowerSupplyVoltage] Invalid pPowerSupply" << RESET;
         throw std::runtime_error(std::string("Invalid pPowerSupply"));
     }
 
-    // Enable VDD monitor
+    // ######################
+    // # Enable VDD monitor #
+    // ######################
     ConfigureInternalMonitoring(pChip, true);
-    // Perform conversion
+
+    // ######################
+    // # Perform conversion #
+    // ######################
     float cVadc = AdcGetVin(pChip, pPowerSupply, "VREF/2", 0, pSamples);
-
     float cVsup = cVadc * (pChip->getADCCalibrationData()["VDDMON_SLOPE"] + pChip->getTemperature() * pChip->getADCCalibrationData()["VDDMON_SLOPE_TEMP"]);
+    if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << pPowerSupply << BOLDBLUE << " is " << cVsup << BOLDBLUE << " V" << RESET;
 
-    // Disable VDD monitor (if requested)
-    if(pDisableMonitorAfterMeasurement) { ConfigureInternalMonitoring(pChip, false); }
-    LOG(DEBUG) << GREEN << "[lpGBTInterface::MeasurePowerSupplyVoltage] " << BOLDYELLOW << pPowerSupply << " " << cVsup << RESET << GREEN << " V" << RESET;
+    // ######################################
+    // # Disable VDD monitor (if requested) #
+    // ######################################
+    if(pDisableMonitorAfterMeasurement) ConfigureInternalMonitoring(pChip, false);
 
     return cVsup;
 }
