@@ -467,7 +467,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
                 LOG(INFO) << CYAN << "=== LpGBT chip " << BOLDYELLOW << +cOpticalGroup->getId() << RESET << CYAN << " configured ===" << RESET;
             }
             else
-                LOG(ERROR) << BOLDRED << "=== LpGBT chip " << BOLDYELLOW << +cOpticalGroup->getId() << BOLDRED << "not configured, reached maximum number of attempts (" << BOLDYELLOW
+                LOG(ERROR) << BOLDRED << "=== LpGBT chip " << BOLDYELLOW << +cOpticalGroup->getId() << BOLDRED << " not configured, reached maximum number of attempts (" << BOLDYELLOW
                            << +RD53Shared::MAXATTEMPTS << BOLDRED << ") ===" << RESET;
         }
     }
