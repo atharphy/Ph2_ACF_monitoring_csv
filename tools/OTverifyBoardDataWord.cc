@@ -81,7 +81,13 @@ void OTverifyBoardDataWord::runIntegrityTest()
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                for(auto& theNumberOfMatches: theHybrid->getSummary<std::vector<float>>()) theNumberOfMatches /= fNumberOfIterations;
+                for(auto& theNumberOfMatches: theHybrid->getSummary<std::vector<float>>())
+                {
+                    std::cout << " the number of matches "<<  theNumberOfMatches << " fNumberOfIterations " << fNumberOfIterations << std::endl;
+
+                    theNumberOfMatches /= fNumberOfIterations;
+                    std::cout << " the number of matches/fNumberOfIterations "<<  theNumberOfMatches << std::endl;
+                }
             }
         }
     }

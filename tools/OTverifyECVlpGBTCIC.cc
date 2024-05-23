@@ -85,8 +85,10 @@ void OTverifyECVlpGBTCIC::runECV()
                 {
                     for(auto& theNumberOfMatches: fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::vector<float>>())
                     {
+                        std::cout << " the number of matches "<<  theNumberOfMatches << " fNumberOfIterations " << fNumberOfIterations << std::endl;
+
                         theNumberOfMatches /= fNumberOfIterations;
-                        std::cout << " the number of matches "<<  theNumberOfMatches << std::endl;
+                        std::cout << " the number of matches/fNumberOfIterations "<<  theNumberOfMatches << std::endl;
                     }
                 }
             }
