@@ -27,6 +27,7 @@
 #include "tools/OTinjectionOccupancyScan.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
+#include "tools/OTverifyECVlpGBTCIC.h"
 #include "tools/OTverifyMPASSAdataWord.h"
 #include "tools/PSPhysics.h"
 #include "tools/PedeNoise.h"
@@ -57,15 +58,24 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     // OT calibrations
     Register<PedeNoise>("Outer Tracker", "noiseOT");
     Register<OTVTRXLightOff>("Outer Tracker", "vtrxoff");
+    // Register<OTalignLpGBTinputs,
+    //          OTalignBoardDataWord,
+    //          OTverifyBoardDataWord,
+    //          OTalignStubPackage,
+    //          OTCICphaseAlignment,
+    //          OTCICwordAlignment,
+    //          OTverifyCICdataWord,
+    //          OTverifyMPASSAdataWord,
+    //          ECVLinkAlignmentOT>("Outer Tracker", "ecv");
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
              OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
-             OTverifyCICdataWord,
-             OTverifyMPASSAdataWord,
-             ECVLinkAlignmentOT>("Outer Tracker", "ecv");
+            //  OTverifyCICdataWord,
+            //  OTverifyMPASSAdataWord,
+             OTverifyECVlpGBTCIC>("Outer Tracker", "OTecv");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
     Register<OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");

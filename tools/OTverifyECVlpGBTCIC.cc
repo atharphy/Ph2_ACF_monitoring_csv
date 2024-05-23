@@ -1,0 +1,141 @@
+#include "tools/OTverifyECVlpGBTCIC.h"
+#include "HWDescription/BeBoard.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "System/RegisterHelper.h"
+#include "Utils/ContainerSerialization.h"
+
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+using namespace Ph2_System;
+
+std::string OTverifyECVlpGBTCIC::fCalibrationDescription = "Performs the Electric Chain Validation between the lpGBT and the CIC using the algorithms implemented in OTverifyBoardDataWord.";
+
+OTverifyECVlpGBTCIC::OTverifyECVlpGBTCIC() : OTverifyBoardDataWord() {}
+
+OTverifyECVlpGBTCIC::~OTverifyECVlpGBTCIC() {}
+
+void OTverifyECVlpGBTCIC::Initialise(void)
+{
+    fRegisterHelper->takeSnapshot();
+    // free the registers in case any
+
+    fNumberOfIterations = findValueInSettings<double>("OTverifyECVlpGBTCIC_NumberOfIterations", 100);
+    std::cout << " fNumberOfIterations " << fNumberOfIterations << std::endl;
+    size_t             numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+    std::vector<float> initialEmptyVector(numberOfLines, 0);
+    ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer, initialEmptyVector);
+
+#ifdef __USE_ROOT__ 
+    // Calibration is not running on the SoC: plots are booked during initialization
+    fDQMHistogramOTverifyECVlpGBTCIC.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
+void OTverifyECVlpGBTCIC::ConfigureCalibration()
+{
+
+}
+
+void OTverifyECVlpGBTCIC::Running()
+{
+    LOG(INFO) << "Starting OTverifyECVlpGBTCIC measurement.";
+    Initialise();
+    runECV();
+    LOG(INFO) << "Done with OTverifyECVlpGBTCIC.";
+    Reset();
+}
+
+void OTverifyECVlpGBTCIC::runECV()
+{
+    // uint8_t clockPolarityStart = 0, clockPolarityEnd = 1;
+    // uint8_t cicClockStrengthStart = 1, cicClockStrengthEnd = 7;
+    // uint8_t cicSLVSStrengthStart = 1, cicSLVSStrengthEnd = 5;
+    uint8_t lpGBTPhaseStart = 0, lpGBTPhaseEnd = 14;
+    uint8_t cicSLVSStrengthMin = 1;
+    LOG(INFO) << BOLDYELLOW << "OTverifyECVlpGBTCIC::runIntegrityTest ... start integrity test" << RESET;
+    auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+    for(auto theBoard: *fDetectorContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto cHybrid: *theOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                auto theInitialCicSLVSStrength = fCicInterface->ReadChipReg(cCic,"SLVS_PADS_CONFIG");
+                std::cout << " theInitialCicSLVSStrength 0x"<< std::hex << theInitialCicSLVSStrength << std::dec << std::endl;
+                fCicInterface->ConfigureDriveStrength(cCic, cicSLVSStrengthMin);
+            }
+
+            for(uint8_t phase = lpGBTPhaseStart; phase <= lpGBTPhaseEnd; phase++)
+            {
+                // LOG(INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
+                // LOG(INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
+                // LOG(INFO) << BOLDRED << "CIC STRENGTH:\t" << +cicStrength << RESET;
+                LOG(INFO) << BOLDRED << "RX PHASE:\t" << +phase << RESET;
+                std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels = theOpticalGroup->getLpGBTrxGroupsAndChannels();
+                auto& clpGBT = theOpticalGroup->flpGBT;
+                flpGBTInterface->ConfigureAllRxPhase(clpGBT, phase, theGroupsAndChannels);
+
+
+
+                runStubIntegrityTest(theBoard, theFWInterface);
+                runL1IntegrityTest(theBoard, theFWInterface);
+                for(auto cHybrid: *theOpticalGroup)
+                {
+                    for(auto& theNumberOfMatches: fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::vector<float>>())
+                    {
+                        theNumberOfMatches /= fNumberOfIterations;
+                        std::cout << " the number of matches "<<  theNumberOfMatches << std::endl;
+                    }
+                }
+            }
+        }
+
+    // // normalize
+    // for(auto theBoard: fPatternMatchingEfficiencyContainer)
+    // {
+    //     for(auto theOpticalGroup: *theBoard)
+    //     {
+    //         for(auto theHybrid: *theOpticalGroup)
+    //         {
+    //             for(auto& theNumberOfMatches: theHybrid->getSummary<std::vector<float>>())
+    //             {
+    //                 theNumberOfMatches /= fNumberOfIterations;
+    //                 std::cout << " the number of matches "<<  theNumberOfMatches << std::endl;
+    //             }
+    //         }
+    //     }
+    }
+
+}
+
+
+void OTverifyECVlpGBTCIC::Stop(void)
+{
+    LOG(INFO) << "Stopping OTverifyECVlpGBTCIC measurement.";
+    #ifdef __USE_ROOT__
+        // Calibration is not running on the SoC: processing the histograms
+        fDQMHistogramOTverifyECVlpGBTCIC.process();
+    #endif
+    SaveResults();
+    closeFileHandler();
+    LOG(INFO) << "OTverifyECVlpGBTCIC stopped.";
+}
+
+void OTverifyECVlpGBTCIC::Pause()
+{
+
+}
+
+
+void OTverifyECVlpGBTCIC::Resume()
+{
+
+}
+
+
+void OTverifyECVlpGBTCIC::Reset()
+{
+    fRegisterHelper->restoreSnapshot();
+}
