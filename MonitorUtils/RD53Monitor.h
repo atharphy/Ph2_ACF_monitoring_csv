@@ -40,7 +40,7 @@ class RD53Monitor : public DetectorMonitor
 
     void runRD53RegisterMonitor(const std::string& registerName);
     void runLpGBTRegisterMonitor(const std::string& registerName);
-    void sendData(DetectorDataContainer& theRegisterContainer, const std::string& registerName);
+    void sendData(DetectorDataContainer& theRegisterContainer, const std::string& registerName, const std::string& type);
 
 #ifdef __USE_ROOT__
     MonitorDQMPlotRD53* fMonitorDQM{nullptr};

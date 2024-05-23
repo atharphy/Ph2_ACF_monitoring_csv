@@ -79,10 +79,10 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                 }
 
 #ifdef __USE_ROOT__
-    fMonitorDQM->fillRegisterPlots(theRegisterContainer, registerName);
+    fMonitorDQM->fillChipPlots(theRegisterContainer, registerName);
 #endif
 
-    RD53Monitor::sendData(theRegisterContainer, registerName);
+    RD53Monitor::sendData(theRegisterContainer, registerName, "chip");
 }
 
 void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
@@ -128,17 +128,25 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
         }
 
 #ifdef __USE_ROOT__
-    fMonitorDQM->fillRegisterPlots(theRegisterContainer, registerName);
+    fMonitorDQM->fillOptoPlots(theRegisterContainer, registerName);
 #endif
 
-    RD53Monitor::sendData(theRegisterContainer, registerName);
+    RD53Monitor::sendData(theRegisterContainer, registerName, "opto");
 }
 
-void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName)
+void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName, const std::string& type)
 {
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        ContainerSerialization theContainerSerialization("ITMonitorRegister");
-        theContainerSerialization.streamByChipContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
+        if(type == "chip")
+        {
+            ContainerSerialization theContainerSerialization("ITMonitorChipRegister");
+            theContainerSerialization.streamByChipContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
+        }
+        else if(type == "opto")
+        {
+            ContainerSerialization theContainerSerialization("ITMonitorOptoRegister");
+            theContainerSerialization.streamByOpticalGroupContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
+        }
     }
 }

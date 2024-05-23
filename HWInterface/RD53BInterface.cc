@@ -738,7 +738,7 @@ int RD53BInterface::getADCobservable(const std::string& observableName, bool& is
     {
         if((search = voltageMultiplexer.find(observableName)) == voltageMultiplexer.end())
         {
-            if(silentRunning == false) LOG(WARNING) << BOLDRED << "Wrong observable name: " << BOLDYELLOW << observableName << RESET;
+            if(silentRunning == false) LOG(DEBUG) << BOLDRED << "Wrong observable name: " << BOLDYELLOW << observableName << RESET;
             return -1;
         }
         else
