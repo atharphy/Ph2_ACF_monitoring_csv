@@ -1139,16 +1139,14 @@ bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerify)
 
 bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
 {
-    WriteChipReg(pSSA2, "ENFLAGS", 0x20); // masking all MPA and setting readout mode to OR
-    // WriteChipReg(pSSA2, "ENFLAGS", 0x20);       // masking all MPA and setting readout mode to OR
-    WriteChipReg(pSSA2, "THTRIMMING", 0x1F);    // setting trimming to the lowest (higher value = lower threshold)
+    WriteChipReg(pSSA2, "ENFLAGS", 0x20);       // masking all MPA and setting readout mode to OR
     WriteChipReg(pSSA2, "StripControl2", 0x07); // disable HIP cut
     // it looks like the trick of masking and invert polarity does not work
     std::vector<std::pair<std::string, uint16_t>> listOfRegisters;
 
     // This only works with synchronous counters by construction
-    listOfRegisters.push_back({"Bias_THDAC", 0xFF});     // set threshold to 0
-    listOfRegisters.push_back({"Bias_THDACHIGH", 0xFF}); // set hip threshold to 0
+    listOfRegisters.push_back({"Bias_THDAC", 0xFF});     // set threshold to the maximum
+    listOfRegisters.push_back({"Bias_THDACHIGH", 0xFF}); // set hip threshold to the maximum
     listOfRegisters.push_back({"control_1", 0x00});      // normal readout mode
     listOfRegisters.push_back({"control_2", 0x0F});      // maximize cluster cut
 
@@ -1157,7 +1155,7 @@ bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tup
         for(uint8_t stripIndex = 0; stripIndex < std::get<2>(theCluster); ++stripIndex)
         {
             std::string registerName = SSA2::getStripRegisterName("ENFLAGS", std::get<1>(theCluster) + stripIndex);
-            listOfRegisters.push_back({registerName, 0x23});
+            listOfRegisters.push_back({registerName, 0x23}); // Enabling the channel and inverting polarity
         }
     }
     // listOfRegisters.push_back({"mask_strip", 0xFF});
