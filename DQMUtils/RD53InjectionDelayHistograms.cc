@@ -28,10 +28,10 @@ void InjectionDelayHistograms::book(TFile* theOutputFile, DetectorContainer& the
     title << "Injection Delay (" << unitTime << " ns)";
 
     auto hInjectionDelay = CanvasContainer<TH1F>("InjectionDelay", "Injection Delay", stopValue - startValue + 1, startValue, stopValue + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, InjectionDelay, hInjectionDelay, title.str().c_str(), "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, InjectionDelay, hInjectionDelay, title.str().c_str(), "Entries");
 
     auto hOcc1D = CanvasContainer<TH1F>("InjDelayScan", "Injection Delay scan", stopValue - startValue + 1, startValue, stopValue + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, title.str().c_str(), "Efficiency");
+    bookChipImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, title.str().c_str(), "Efficiency");
 
     AreHistoBooked = true;
 }

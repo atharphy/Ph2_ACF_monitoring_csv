@@ -13,6 +13,8 @@
 #include "MonitorDQM/MonitorDQMPlotBase.h"
 #include "RootUtils/GraphContainer.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/ValueAndTime.h"
 
 class MonitorDQMPlotRD53 : public MonitorDQMPlotBase
 {
@@ -30,7 +32,5 @@ class MonitorDQMPlotRD53 : public MonitorDQMPlotBase
   private:
     const DetectorContainer*                     fDetectorContainer;
     std::map<std::string, DetectorDataContainer> fRegisterMonitorPlotMap;
-
-    void bookPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
 };
 #endif

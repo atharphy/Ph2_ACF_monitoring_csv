@@ -92,6 +92,7 @@ class MonitorDQMPlotBase
                          const DetectorContainer& theDetectorStructure,
                          DetectorDataContainer&   dataContainer,
                          GraphContainer<TGraph>&  graphContainer,
+                         const std::string&       type,
                          const char*              XTitle = nullptr,
                          const char*              YTitle = nullptr)
     {
@@ -108,7 +109,10 @@ class MonitorDQMPlotBase
         graphContainer.fTheGraph->SetMarkerStyle(20);
         graphContainer.fTheGraph->SetMarkerSize(0.4);
 
-        RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
+        if(type == "chip")
+            RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
+        else if(type == "opto")
+            RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
     }
 };
 

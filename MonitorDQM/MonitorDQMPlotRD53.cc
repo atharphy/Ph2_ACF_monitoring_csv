@@ -8,24 +8,24 @@
 */
 
 #include "MonitorDQM/MonitorDQMPlotRD53.h"
-#include "Utils/ContainerSerialization.h"
-#include "Utils/ValueAndTime.h"
 
 void MonitorDQMPlotRD53::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& fDetectorMonitorConfig)
 {
     fDetectorContainer = &theDetectorStructure;
 
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("RD53"))
-        if(registerName.second) bookPlots(theOutputFile, theDetectorStructure, registerName.first);
+        if(registerName.second)
+        {
+            auto graphContainer = GraphContainer<TGraph>(0);
+            bookImplementer(theOutputFile, theDetectorStructure, fRegisterMonitorPlotMap[registerName.first], graphContainer, "chip", "Time", registerName.first.c_str());
+        }
 
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
-        if(registerName.second) bookPlots(theOutputFile, theDetectorStructure, registerName.first);
-}
-
-void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
-{
-    auto graphContainer = GraphContainer<TGraph>(0);
-    bookImplementer(theOutputFile, theDetectorStructure, fRegisterMonitorPlotMap[registerName], graphContainer, "Time", registerName.c_str());
+        if(registerName.second)
+        {
+            auto graphContainer = GraphContainer<TGraph>(0);
+            bookImplementer(theOutputFile, theDetectorStructure, fRegisterMonitorPlotMap[registerName.first], graphContainer, "opto", "Time", registerName.first.c_str());
+        }
 }
 
 bool MonitorDQMPlotRD53::fill(std::string& inputStream)
