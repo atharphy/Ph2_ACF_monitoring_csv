@@ -141,7 +141,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
 
     uint8_t flagCharacter          = 0xea;
-    uint8_t idleCaracter           = 0xaa;
+    uint8_t idleCharacter           = 0xaa;
     uint8_t numberOfIdleCharacters = (numberOfBytesInSinglePacket == 1) ? 7 : 15;
 
     enum SearchPatternStatus
@@ -168,7 +168,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
             {
             case SearchPatternStatus::Idle: // I am in Idle, looking for flagCharacter
             {
-                if(currentByte == idleCaracter)
+                if(currentByte == idleCharacter)
                 {
                     ++numberOfConsecutiveIdleCharacters;
                     if(numberOfConsecutiveIdleCharacters > numberOfIdleCharacters) // too many Idle characters!!!
@@ -199,7 +199,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
             case SearchPatternStatus::FlagFound: // I found the flag, now I expect to fo back to Idle
             {
                 numberOfConsecutiveIdleCharacters = 0;
-                if(currentByte == idleCaracter)
+                if(currentByte == idleCharacter)
                 {
                     ++numberOfConsecutiveIdleCharacters;
                     status = SearchPatternStatus::Idle;
