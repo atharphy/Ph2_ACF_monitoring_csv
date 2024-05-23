@@ -6,7 +6,7 @@
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_2S.xml"/>
     <CDCE configure="0" clockRate="320"/>
 
-    <OpticalGroup Id="2" FMCId="L12" reset="1">
+    <OpticalGroup Id="0" FMCId="L12" reset="1">
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
         <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
 
