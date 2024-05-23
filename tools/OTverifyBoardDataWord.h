@@ -44,14 +44,18 @@ class OTverifyBoardDataWord : public Tool
     void Resume() override;
     void Reset();
 
-    static std::string fCalibrationDescription;
+    static   std::string fCalibrationDescription;
+    uint8_t  flagCharacter = 0xea;
+    uint8_t  idleCharacter = 0xaa;
+    uint32_t header        = 0x0ffffffe;
+    uint32_t headerMask    = 0xffffffff;
 
   private:
     void    runIntegrityTest();
-    void    runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
-    void    runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
-    bool    isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket);
-    bool    isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket);
+    void    runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t  flagCharacter = 0xea, uint8_t  idleCharacter = 0xaa);
+    void    runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint32_t header = 0x0ffffffe, uint32_t headerMask = 0xffffffff);
+    bool    isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t  flagCharacter = 0xea, uint8_t  idleCharacter = 0xaa);
+    bool    isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header = 0x0ffffffe, uint32_t headerMask = 0xffffffff);
     uint8_t getNumberOfBytesInSinglePacket(Ph2_HwDescription::OpticalGroup* cOpticalGroup) const;
 
     DetectorDataContainer fPatternMatchingEfficiencyContainer;

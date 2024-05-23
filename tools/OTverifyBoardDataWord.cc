@@ -97,7 +97,7 @@ void OTverifyBoardDataWord::runIntegrityTest()
 #endif
 }
 
-void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface)
+void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface, uint8_t  flagCharacter, uint8_t  idleCharacter)
 {
     LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest" << RESET;
 
@@ -134,14 +134,12 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
     }
 }
 
-bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
+bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t  flagCharacter, uint8_t  idleCharacter)
 {
     // create a mask that is 0xFF for 5G and 0xFFFF for 10G modules
     uint16_t mask = 0xFF;
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
 
-    uint8_t flagCharacter          = 0xea;
-    uint8_t idleCharacter           = 0xaa;
     uint8_t numberOfIdleCharacters = (numberOfBytesInSinglePacket == 1) ? 7 : 15;
 
     enum SearchPatternStatus
@@ -230,7 +228,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
     return true;
 }
 
-void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface)
+void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface, uint32_t header, uint32_t headerMask)
 {
     LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
     // Set board trigger configuration for L1 alignment
@@ -269,10 +267,8 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
     }
 }
 
-bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
+bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header, uint32_t headerMask)
 {
-    uint32_t header                  = 0x0ffffffe;
-    uint32_t headerMask              = 0xffffffff;
     auto     orderedLineOutputVector = reorderPattern(theWordVector, numberOfBytesInSinglePacket);
 
     std::pair<bool, size_t> isFoundAndWhere = matchPattern(orderedLineOutputVector, numberOfBytesInSinglePacket, header, headerMask);
