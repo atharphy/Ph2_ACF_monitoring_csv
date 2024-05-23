@@ -26,7 +26,7 @@ void OTverifyCICdataWord::Initialise(void)
     // free the registers in case any
 
     fNumberOfIterations = findValueInSettings<double>("OTverifyCICdataWord_NumberOfIterations", 1000);
-    fIsKickoff          = findValueInSettings<double>("OTverifyBoardDataWord_NumberOfIterations", 0) > 0;
+    fIsKickoff          = findValueInSettings<double>("isKickoff", 0) > 0;
 
     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
 
