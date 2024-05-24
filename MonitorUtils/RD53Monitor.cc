@@ -8,18 +8,6 @@
 */
 
 #include "MonitorUtils/RD53Monitor.h"
-#include "Utils/ContainerSerialization.h"
-#include "Utils/Utilities.h"
-#include "Utils/ValueAndTime.h"
-#include <array>
-
-// #######################################
-// # Libraries used for lpGBT monitoring #
-// #######################################
-#include "HWDescription/lpGBT.h"
-#include "HWInterface/RD53Interface.h"
-#include "HWInterface/RD53lpGBTInterface.h"
-#include "HWInterface/lpGBTInterface.h"
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
@@ -68,7 +56,7 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                         auto* readoutChipInterface = fTheSystemController->fReadoutChipInterface;
 
                         bool tmp;
-                        if(static_cast<Ph2_HwInterface::RD53Interface*>(readoutChipInterface)->getADCobservable(registerName, tmp) != -1)
+                        if(static_cast<Ph2_HwInterface::RD53Interface*>(readoutChipInterface)->getADCobservable(registerName, tmp, fDetectorMonitorConfig.fSilentRunning) != -1)
                             // #######################
                             // # Monitor environment #
                             // #######################
@@ -91,16 +79,16 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                 }
 
 #ifdef __USE_ROOT__
-    fMonitorDQM->fillRegisterPlots(theRegisterContainer, registerName);
+    fMonitorDQM->fillChipPlots(theRegisterContainer, registerName);
 #endif
 
-    RD53Monitor::sendData(theRegisterContainer, registerName);
+    RD53Monitor::sendData(theRegisterContainer, registerName, "chip");
 }
 
 void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
 {
     DetectorDataContainer theRegisterContainer;
-    ContainerFactory::copyAndInitChip<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
 
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -120,18 +108,10 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
                 auto* lpGBTInterface = fTheSystemController->flpGBTInterface;
 
                 if(lpGBTInterface->fADCInputMap.find(registerName) != lpGBTInterface->fADCInputMap.end())
-                {
                     // #######################
                     // # Monitor environment #
                     // #######################
-                    if(registerName.find("TEMP") != std::string::npos)
-                        registerValue = lpGBTInterface->MeasureTemperature(cOpticalGroup->flpGBT);
-                    else if((registerName.find("VDDTX") != std::string::npos) || (registerName.find("VDDRX") != std::string::npos) || (registerName.find("VDD") != std::string::npos) ||
-                            (registerName.find("VDDA") != std::string::npos))
-                        registerValue = lpGBTInterface->MeasurePowerSupplyVoltage(cOpticalGroup->flpGBT, registerName);
-                    else
-                        registerValue = lpGBTInterface->ReadADC(cOpticalGroup->flpGBT, registerName);
-                }
+                    registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup->flpGBT, registerName, fDetectorMonitorConfig.fSilentRunning);
                 else
                     // #####################
                     // # Monitor registers #
@@ -148,17 +128,25 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
         }
 
 #ifdef __USE_ROOT__
-    fMonitorDQM->fillRegisterPlots(theRegisterContainer, registerName);
+    fMonitorDQM->fillOptoPlots(theRegisterContainer, registerName);
 #endif
 
-    RD53Monitor::sendData(theRegisterContainer, registerName);
+    RD53Monitor::sendData(theRegisterContainer, registerName, "opto");
 }
 
-void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName)
+void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName, const std::string& type)
 {
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        ContainerSerialization theContainerSerialization("ITMonitorRegister");
-        theContainerSerialization.streamByChipContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
+        if(type == "chip")
+        {
+            ContainerSerialization theContainerSerialization("ITMonitorChipRegister");
+            theContainerSerialization.streamByChipContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
+        }
+        else if(type == "opto")
+        {
+            ContainerSerialization theContainerSerialization("ITMonitorOptoRegister");
+            theContainerSerialization.streamByOpticalGroupContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
+        }
     }
 }

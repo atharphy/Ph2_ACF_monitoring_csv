@@ -225,6 +225,7 @@ class lpGBTInterface : public ChipInterface
     void    VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltageV, bool pEnable = true);
     float   MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples = 1, bool pResetTempSensor = true);
     float   MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples = 1, bool pDisableMonitorAfterMeasurement = true);
+    float   ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std::string& registerName, bool silentRunning = false);
 
     uint8_t                        fChosenPhase;
     std::map<std::string, uint8_t> GetPhaseTapMap();

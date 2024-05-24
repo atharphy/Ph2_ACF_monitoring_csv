@@ -1,3 +1,6 @@
+#ifndef ValueAndTime_H
+#define ValueAndTime_H
+
 #include "Utils/ContainerSerialization.h"
 
 template <typename T>
@@ -19,3 +22,5 @@ class ValueAndTime
         theArchive & fTime;
     }
 };
+
+#endif
