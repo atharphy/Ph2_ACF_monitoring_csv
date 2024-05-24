@@ -130,13 +130,13 @@ class DQMHistogramBase
 
   protected:
     template <typename Hist>
-    void bookImplementer(TFile*                       theOutputFile,
-                         const DetectorContainer&     theDetectorStructure,
-                         DetectorDataContainer&       dataContainer,
-                         const CanvasContainer<Hist>& histContainer,
-                         const char*                  XTitle = nullptr,
-                         const char*                  YTitle = nullptr,
-                         const char*                  ZTitle = nullptr)
+    void bookChipImplementer(TFile*                       theOutputFile,
+                             const DetectorContainer&     theDetectorStructure,
+                             DetectorDataContainer&       dataContainer,
+                             const CanvasContainer<Hist>& histContainer,
+                             const char*                  XTitle = nullptr,
+                             const char*                  YTitle = nullptr,
+                             const char*                  ZTitle = nullptr)
     {
         if(XTitle != nullptr) histContainer.fTheHistogram->GetXaxis()->SetTitle(XTitle);
         if(YTitle != nullptr) histContainer.fTheHistogram->GetYaxis()->SetTitle(YTitle);

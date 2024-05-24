@@ -429,7 +429,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     {
         if(cOpticalGroup->flpGBT != nullptr)
         {
-            LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
+            LOG(INFO) << CYAN << "=== Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET << CYAN << " ===" << RESET;
 
             static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetDownLinkMapping(cOpticalGroup);
             static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetUpLinkMapping(cOpticalGroup);
@@ -439,10 +439,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true)) // @TMP@
             {
                 static_cast<RD53lpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
-                LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
+                LOG(INFO) << CYAN << "=== LpGBT chip " << BOLDYELLOW << +cOpticalGroup->getId() << RESET << CYAN << " configured ===" << RESET;
             }
             else
-                LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
+                LOG(ERROR) << BOLDRED << "=== LpGBT chip " << BOLDYELLOW << +cOpticalGroup->getId() << BOLDRED << " not configured, reached maximum number of attempts (" << BOLDYELLOW
+                           << +RD53Shared::MAXATTEMPTS << BOLDRED << ") ===" << RESET;
         }
     }
 

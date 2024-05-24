@@ -232,12 +232,12 @@ void RD53FWInterface::PrintFWstatus()
     // # Check I2C initialization #
     // ############################
     if(RegManager::ReadReg("user.stat_regs.global_reg.i2c_init") == 1)
-        LOG(INFO) << BOLDBLUE << "\t--> I2C " << BOLDYELLOW << "initialized" << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> I2C " << BOLDYELLOW << "initialized (meaningful only for optical readout)" << RESET;
     else
     {
-        LOG(ERROR) << BOLDRED << "I2C not initialized" << RESET;
+        LOG(ERROR) << BOLDRED << "I2C not initialized (meaningful only for optical readout)" << RESET;
         uint32_t status = RegManager::ReadReg("user.stat_regs.global_reg.i2c_init_err");
-        LOG(ERROR) << BOLDRED << "\t--> I2C initialization status: " << BOLDYELLOW << status << RESET;
+        LOG(ERROR) << BOLDRED << "\t--> I2C initialization status error: " << BOLDYELLOW << status << RESET;
     }
 
     if(RegManager::ReadReg("user.stat_regs.global_reg.i2c_acq_err") == 1) LOG(INFO) << GREEN << "I2C ack error during analog readout (for KSU FMC only)" << RESET;
