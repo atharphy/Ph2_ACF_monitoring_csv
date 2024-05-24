@@ -2,8 +2,10 @@
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 
 #include "TFile.h"
+#include "TH2I.h"
 
 //========================================================================================================================
 DQMHistogramOTalignStubPackage::DQMHistogramOTalignStubPackage() {}
@@ -18,8 +20,17 @@ void DQMHistogramOTalignStubPackage::book(TFile* theOutputFile, DetectorContaine
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
     // make fDetectorData ready to receive the information fromm the stream
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
+    fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
+
+    HistContainer<TH2I> bestStubPackageDelayHistogram("BestStubPackageDelay", "Best Stub Package Delay", 8, -0.5, 7.5, 2, -0.5, 1.5);
+    bestStubPackageDelayHistogram.fTheHistogram->SetStats(false);
+    bestStubPackageDelayHistogram.fTheHistogram->GetXaxis()->SetTitle("Stub package delay");
+    bestStubPackageDelayHistogram.fTheHistogram->GetYaxis()->SetTitle("Hybrid");
+    bestStubPackageDelayHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "FEHR");
+    bestStubPackageDelayHistogram.fTheHistogram->GetYaxis()->SetBinLabel(2, "FEHL");
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBestStubPackageDelayHistogramContainer, bestStubPackageDelayHistogram);
+
 }
 
 //========================================================================================================================
@@ -36,27 +47,43 @@ void DQMHistogramOTalignStubPackage::reset(void)
 }
 
 //========================================================================================================================
+void DQMHistogramOTalignStubPackage::fillBestStubPackageDelay(DetectorDataContainer& theBestStubPackageDelayContainer)
+{
+    for(auto theBoard: theBestStubPackageDelayContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            auto theBestStubPackageDelayHystogram = fBestStubPackageDelayHistogramContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                if(!theHybrid->hasSummary()) continue;
+                auto theBestStubPackageDelayVector =  theHybrid->getSummary<std::vector<bool>>();
+                for(size_t packageDelay = 0; packageDelay<8; ++packageDelay)
+                {
+                    theBestStubPackageDelayHystogram->SetBinContent(packageDelay+1, theHybrid->getId() % 2 +1, theBestStubPackageDelayVector[packageDelay] ? 1 : 0);
+                }
+            }
+        }
+    }
+}
+
+//========================================================================================================================
 bool DQMHistogramOTalignStubPackage::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
+    ContainerSerialization theBestStubPackageDelayContainerSerialization("OTalignStubPackageBestStubPackageDelay");
 
-    // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTalignStubPackage"
-    // ContainerSerialization myStreamer("OTalignStubPackage");
+    if(theBestStubPackageDelayContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTalignStubPackage BestStubPackageDelay!!!!\n";
+        DetectorDataContainer theDetectorData =
+            theBestStubPackageDelayContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<bool>, EmptyContainer>(fDetectorContainer);
+        fillBestStubPackageDelay(theDetectorData);
+        return true;
+    }
 
-    // if(myStreamer.attachDeserializer(inputStream))
-    // {
-    //     // It matched! Decoding data
-    //     std::cout << "Matched OTalignStubPackage!!!!!\n";
-    //     // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-    //     DetectorDataContainer theDetectorData = myStreamer.deserializeChannelContainer<MyType>(fDetectorContainer);
-    //     // Filling the histograms
-    //     myFillplotFunction(theDetectorData);
-    //     return true;
-    // }
-    // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
-    // for this stream)
     return false;
     // SoC utilities only - END
 }
