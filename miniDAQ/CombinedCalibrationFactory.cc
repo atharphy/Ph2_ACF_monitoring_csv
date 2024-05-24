@@ -23,6 +23,7 @@
 #include "tools/OTalignLpGBTinputs.h"
 #include "tools/OTalignStubPackage.h"
 #include "tools/OTinjectionDelayOptimization.h"
+#include "tools/OTinjectionOccupancyScan.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyMPASSAdataWord.h"
@@ -74,13 +75,14 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
-             OTCICBX0Alignment,
+             //  OTCICBX0Alignment,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignmentForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 
     Register<OTalignBoardDataWord, OTinjectionDelayOptimization>("Outer Tracker", "injectionDelayOptimization");
     Register<OTalignBoardDataWord, OTMeasureOccupancy>("Outer Tracker", "measureOccupancy");
+    Register<OTalignBoardDataWord, OTinjectionOccupancyScan>("Outer Tracker", "injectionOccupancyScan");
 
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,

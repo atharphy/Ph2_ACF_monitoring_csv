@@ -102,6 +102,8 @@ uint32_t convertAnyInt(const char* pRegValue);
 
 double convertAnyDouble(const char* pRegValue);
 
+std::vector<float> convertStringToFloatList(std::string theListString);
+
 // tokenize string
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters);
 

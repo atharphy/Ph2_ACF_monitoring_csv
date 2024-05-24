@@ -70,10 +70,10 @@ class OTverifyCICdataWord : public Tool
     // For simplicity, make sure bendind code is always greater than half value (0x7)
     std::map<uint8_t, uint8_t> fBendingAndCode{{0, 0x9}, {2, 0xB}, {4, 0xF}};
 
-    DetectorDataContainer fPatternMatchingEfficiencyContainer;
-
   private:
-    void fillHistograms();
+    DetectorDataContainer fPatternMatchingEfficiencyContainer;
+    void                  fillHistograms();
+    bool                  fIsKickoff{false};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
