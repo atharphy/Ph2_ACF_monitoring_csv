@@ -33,34 +33,34 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     const size_t TrgIDsize = RD53Shared::firstChip->getMaxTRIGIDvalue() + 1;
 
     auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, 1 + 1. / nEvents);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Efficiency", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Efficiency", "Entries");
 
     auto hOcc2D = CanvasContainer<TH2F>("PixelAlive", "Pixel Alive", nCols, 0, nCols, nRows, 0, nRows);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "Columns", "Rows");
+    bookChipImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "Columns", "Rows");
 
     auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout arrors", nCols, 0, nCols, nRows, 0, nRows);
-    bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
+    bookChipImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
 
     auto hMask1Dcol = CanvasContainer<TH1F>("Masked1Dcol", "Masked pixels projection", nCols, 0, nCols);
-    bookImplementer(theOutputFile, theDetectorStructure, Mask1Dcol, hMask1Dcol, "Columns", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, Mask1Dcol, hMask1Dcol, "Columns", "Entries");
 
     auto hMask1Drow = CanvasContainer<TH1F>("Masked1Drow", "Masked pixels projection", nRows, 0, nRows);
-    bookImplementer(theOutputFile, theDetectorStructure, Mask1Drow, hMask1Drow, "Rows", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, Mask1Drow, hMask1Drow, "Rows", "Entries");
 
     auto hToT1D = CanvasContainer<TH1F>("ToT1D", "<ToT> Distribution", ToTsize, 0, ToTsize);
-    bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
 
     auto hToT2D = CanvasContainer<TH2F>("ToT2D", "<ToT> map", nCols, 0, nCols, nRows, 0, nRows);
-    bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
+    bookChipImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 
     auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 1, BCIDsize + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, BCID, hBCID, "#DeltaBCID", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, BCID, hBCID, "#DeltaBCID", "Entries");
 
     auto hTriggerID = CanvasContainer<TH1F>("TriggerID", "TriggerID", TrgIDsize, 1, TrgIDsize + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, TriggerID, hTriggerID, "#DeltaTrigger-ID", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, TriggerID, hTriggerID, "#DeltaTrigger-ID", "Entries");
 
     auto hMasked2D = CanvasContainer<TH2F>("Masked2D", "Masked pixels", nCols, 0, nCols, nRows, 0, nRows);
-    bookImplementer(theOutputFile, theDetectorStructure, Masked2D, hMasked2D, "Columns", "Rows");
+    bookChipImplementer(theOutputFile, theDetectorStructure, Masked2D, hMasked2D, "Columns", "Rows");
 
     AreHistoBooked = true;
 }

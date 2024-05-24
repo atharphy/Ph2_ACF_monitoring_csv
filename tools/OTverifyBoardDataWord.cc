@@ -22,6 +22,7 @@ void OTverifyBoardDataWord::Initialise(void)
     // free the registers in case any
 
     fNumberOfIterations = findValueInSettings<double>("OTverifyBoardDataWord_NumberOfIterations", 1000);
+    fIsKickoff          = findValueInSettings<double>("isKickoff", 0) > 0;
 
     size_t             numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
     std::vector<float> initialEmptyVector(numberOfLines, 0);
@@ -100,11 +101,10 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
 {
     LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest" << RESET;
 
-    bool isKickoff = true;
     for(auto theOpticalGroup: *theBoard)
     {
         uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
-        if(isKickoff && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
+        if(fIsKickoff && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
             LOG(INFO) << BOLDYELLOW << "Attention! ignoring failures on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
         size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
         for(auto theHybrid: *theOpticalGroup)
@@ -124,13 +124,9 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
                 auto lineOutputVector = theFWInterface->StubDebug(true, cNlines, false);
                 for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
                 {
-                    if(isKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
-                    {
-                        continue;
-                    } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
                     if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket))
                         ++theHybridPatternMatchingEfficiency[lineIndex + 1];
-                    else
+                    else if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
                         LOG(ERROR) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
                 }
             }

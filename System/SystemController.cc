@@ -360,37 +360,12 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fBeBoardInterface->setBoard(cBoard->getId());
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureInterfaces(cBoard);
 
-        // ##########################
-        // # Set module type for OT #
-        // ##########################
-        auto cConnectedFeTypes = cBoard->connectedFrontEndTypes();
-        bool cMPAfound         = (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::MPA2); }) != cConnectedFeTypes.end());
-        bool cSSAfound         = (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::SSA2); }) != cConnectedFeTypes.end());
-        bool cCBCfound         = (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFeTypes.end());
         for(auto cOpticalGroup: *cBoard)
         {
-            bool cWithLpGBT    = (cOpticalGroup->flpGBT != nullptr);
-            bool cWithPSmodule = (cMPAfound || cSSAfound) && cWithLpGBT;
-            bool cWith2Smodule = cCBCfound && cWithLpGBT;
-            bool cWithPSHybrid = (cSSAfound && !cWithLpGBT);
-            bool cWith2SHybrid = (cCBCfound && !cWithLpGBT);
+            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
 
-            if(cWithPSmodule)
-            {
-                cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT);
-            }
-            else if(cWith2Smodule)
-            {
-                cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
-                static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT);
-            }
-            else if(cWithPSHybrid)
-            {
-                LOG(INFO) << BOLDYELLOW << "HYBRIDPS" << RESET;
-                cOpticalGroup->setFrontEndType(FrontEndType::HYBRIDPS);
-            }
-            else if(cWith2SHybrid) { cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S); }
+            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT); }
+            else if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT); }
             else if(cWithLpGBT && flpGBTInterface != nullptr) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType()); }
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
@@ -454,7 +429,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     {
         if(cOpticalGroup->flpGBT != nullptr)
         {
-            LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
+            LOG(INFO) << CYAN << "=== Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET << CYAN << " ===" << RESET;
 
             static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetDownLinkMapping(cOpticalGroup);
             static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetUpLinkMapping(cOpticalGroup);
@@ -464,10 +439,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true)) // @TMP@
             {
                 static_cast<RD53lpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
-                LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
+                LOG(INFO) << CYAN << "=== LpGBT chip " << BOLDYELLOW << +cOpticalGroup->getId() << RESET << CYAN << " configured ===" << RESET;
             }
             else
-                LOG(ERROR) << BOLDRED << ">>> LpGBT chip not configured, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") <<<" << RESET;
+                LOG(ERROR) << BOLDRED << "=== LpGBT chip " << BOLDYELLOW << +cOpticalGroup->getId() << BOLDRED << " not configured, reached maximum number of attempts (" << BOLDYELLOW
+                           << +RD53Shared::MAXATTEMPTS << BOLDRED << ") ===" << RESET;
         }
     }
 

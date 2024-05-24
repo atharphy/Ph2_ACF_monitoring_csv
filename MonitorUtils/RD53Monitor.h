@@ -12,6 +12,19 @@
 
 #include "MonitorUtils/DetectorMonitor.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
+#include "Utils/Utilities.h"
+#include "Utils/ValueAndTime.h"
+
+// ######################
+// # Specific libraries #
+// ######################
+#include "HWDescription/lpGBT.h"
+#include "HWInterface/RD53Interface.h"
+#include "HWInterface/RD53lpGBTInterface.h"
+#include "HWInterface/lpGBTInterface.h"
+
+#include <array>
 
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotRD53.h"
@@ -27,7 +40,7 @@ class RD53Monitor : public DetectorMonitor
 
     void runRD53RegisterMonitor(const std::string& registerName);
     void runLpGBTRegisterMonitor(const std::string& registerName);
-    void sendData(DetectorDataContainer& theRegisterContainer, const std::string& registerName);
+    void sendData(DetectorDataContainer& theRegisterContainer, const std::string& registerName, const std::string& type);
 
 #ifdef __USE_ROOT__
     MonitorDQMPlotRD53* fMonitorDQM{nullptr};
