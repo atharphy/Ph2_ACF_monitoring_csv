@@ -221,7 +221,7 @@
     <Setting name="OTalignLpGBTinputs_MinAlignmentSuccessRate">0.99</Setting>
 
     <Setting name="OTCICphaseAlignment_NumberOfAlignmentIterations">100</Setting>
-    <Setting name="OTCICphaseAlignment_MinLockingSuccessRate">0.80</Setting>
+    <Setting name="OTCICphaseAlignment_MinLockingSuccessRate">0.95</Setting>
     <Setting name="OTverifyCICdataWord_NumberOfIterations">1000</Setting>
     
     <Setting name="OTinjectionDelayOptimization_NumberOfEvents">100</Setting>
