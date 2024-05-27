@@ -31,17 +31,12 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 
 
 ##
-### Middleware for the Inner-Tracker (IT) system
-Installation and use of the IT system middleware is documented at <https://ph2acf.docs.cern.ch/innerTracker/middleware/>
-
-
-##
 ### The `Ph2_ACF` software
 Installation of the software is documented at <https://ph2acf.docs.cern.ch/general/ph2acf_install/>
 
 
 ##
-### Run in docker container (Deprecated: update of docker registry to Alma9 is required)
+### Run in docker container (deprecated: update of docker registry to Alma9 is required)
 Docker container are provided to facilitate users and developers in setting up the framework.
 All docker containers can be found here: `https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry`
 
