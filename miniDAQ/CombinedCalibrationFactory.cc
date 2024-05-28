@@ -67,8 +67,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              ECVLinkAlignmentOT>("Outer Tracker", "ecv");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
-    Register<OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
-    Register<OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
+    Register<OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
+    Register<OTalignBoardDataWord, OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
