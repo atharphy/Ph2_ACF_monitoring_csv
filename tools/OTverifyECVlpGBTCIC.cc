@@ -47,6 +47,9 @@ void OTverifyECVlpGBTCIC::Running()
 
 void OTverifyECVlpGBTCIC::runECV()
 {
+    // for debugging and testing purposes using a fake clock polarity and strenght value
+    // FIXME
+    uint8_t pClockPolarity = 0, pClockStrength = 1;
     // uint8_t clockPolarityStart = 0, clockPolarityEnd = 1;
     // uint8_t cicClockStrengthStart = 1, cicClockStrengthEnd = 7;
     // uint8_t cicSLVSStrengthStart = 1, cicSLVSStrengthEnd = 5;
@@ -128,7 +131,7 @@ void OTverifyECVlpGBTCIC::runECV()
                                 uint32_t header = pattern;
                                 std::cout << " header " <<  std::hex << header << std::endl;
 
-                                if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header, headerMask))
+                                if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header))
                                 {
                                     ++theHybridPatternMatchingEfficiency[0];
                                     std::cout << " header matched " << std::endl;
@@ -138,13 +141,25 @@ void OTverifyECVlpGBTCIC::runECV()
                             }
                     }
 
-
+                    uint8_t lineCounter = 0;
                     for(auto& theNumberOfMatches: fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>())
                     {
                         theNumberOfMatches /= fNumberOfIterations;
                         std::cout << " the number of matches/fNumberOfIterations "<<  theNumberOfMatches << std::endl;
+
+#ifdef __USE_ROOT__
+    fDQMHistogramOTverifyECVlpGBTCIC.fillEfficiency(pClockPolarity, pClockStrength, cicSLVSStrengthMin, phase, lineCounter, fPatternMatchingEfficiencyContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theECVlpGBTCICContainerSerialization("OTverifyECVlpGBTCICEfficiencyHistogram");
+        theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fPatternMatchingEfficiencyContainer, pClockPolarity, pClockStrength, cicSLVSStrengthMin, phase, lineCounter);
+    }
+#endif
+
                         // reset the number of matches!!
                         theNumberOfMatches = 0;
+                        lineCounter++;
                     }
                 }
 
